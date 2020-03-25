@@ -1,0 +1,28 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "outDir": "dist",
+        "allowJs": true,
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "noUnusedLocals": true,
+        "sourceMap": true,
+        "declaration": false,
+        "pretty": true,
+        "strictNullChecks": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true
+    },
+    "include": [
+        "./app.ts",
+        "./api/*",
+        "./api/**/*",
+        "./config/*.json"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

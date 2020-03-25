@@ -1,0 +1,201 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const models_1 = require("./models");
+const fetch = require("node-fetch");
+const sequelize_1 = require("sequelize");
+const socket = require("./utils/socket");
+const jsonUtils = require("./utils/json");
+const helpers = require("./helpers");
+const nodeinfo_1 = require("./utils/nodeinfo");
+const constants = require(__dirname + '/../config/constants.json');
+const env = process.env.NODE_ENV || 'development';
+const config = require('../config/app.json')[env];
+const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
+    if (env != "production") {
+        return;
+    }
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    //console.log('[hub] checking invites ping')
+    const inviteStrings = yield models_1.models.Invite.findAll({ where: { status: { [sequelize_1.Op.notIn]: [constants.invite_statuses.complete, constants.invite_statuses.expired] } } }).map(invite => invite.inviteString);
+    fetch(config.hub_api_url + '/invites/check', {
+        method: 'POST',
+        body: JSON.stringify({ invite_strings: inviteStrings }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(res => res.json())
+        .then(json => {
+        if (json.object) {
+            json.object.invites.map((object) => __awaiter(void 0, void 0, void 0, function* () {
+                const invite = object.invite;
+                const pubkey = object.pubkey;
+                const price = object.price;
+                const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite.pin } });
+                const contact = yield models_1.models.Contact.findOne({ where: { id: dbInvite.contactId } });
+                if (dbInvite.status != invite.invite_status) {
+                    dbInvite.update({ status: invite.invite_status, price: price });
+                    socket.sendJson({
+                        type: 'invite',
+                        response: jsonUtils.inviteToJson(dbInvite)
+                    });
+                    if (dbInvite.status == constants.invite_statuses.ready && contact) {
+                        sendNotification(-1, contact.alias, 'invite');
+                    }
+                }
+                if (pubkey && dbInvite.status == constants.invite_statuses.complete && contact) {
+                    contact.update({ publicKey: pubkey, status: constants.contact_statuses.confirmed });
+                    var contactJson = jsonUtils.contactToJson(contact);
+                    contactJson.invite = jsonUtils.inviteToJson(dbInvite);
+                    socket.sendJson({
+                        type: 'contact',
+                        response: contactJson
+                    });
+                    helpers.sendContactKeys({
+                        contactIds: [contact.id],
+                        sender: owner,
+                        type: constants.message_types.contact_key,
+                    });
+                }
+            }));
+        }
+    })
+        .catch(error => {
+        console.log('[hub error]', error);
+    });
+});
+const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
+    if (env != "production") {
+        return;
+    }
+    const node = yield nodeinfo_1.nodeinfo();
+    sendHubCall(Object.assign(Object.assign({}, params), { node }));
+});
+const sendHubCall = (params) => {
+    // console.log('[hub] sending ping')
+    fetch(config.hub_api_url + '/ping', {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(res => res.json())
+        .then(json => {
+        // ?
+    })
+        .catch(error => {
+        console.log('[hub error]', error);
+    });
+};
+exports.sendHubCall = sendHubCall;
+const pingHubInterval = (ms) => {
+    setInterval(pingHub, ms);
+};
+exports.pingHubInterval = pingHubInterval;
+const checkInvitesHubInterval = (ms) => {
+    setInterval(checkInviteHub, ms);
+};
+exports.checkInvitesHubInterval = checkInvitesHubInterval;
+const finishInviteInHub = (params, onSuccess, onFailure) => {
+    fetch(config.hub_api_url + '/invites/finish', {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(res => res.json())
+        .then(json => {
+        if (json.object) {
+            console.log('[hub] finished invite to hub');
+            onSuccess(json);
+        }
+        else {
+            console.log('[hub] fail to finish invite in hub');
+            onFailure(json);
+        }
+    });
+};
+exports.finishInviteInHub = finishInviteInHub;
+const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
+    fetch(config.hub_api_url + '/invites/' + invite_string + '/pay', {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(res => res.json())
+        .then(json => {
+        if (json.object) {
+            console.log('[hub] finished pay to hub');
+            onSuccess(json);
+        }
+        else {
+            console.log('[hub] fail to pay invite in hub');
+            onFailure(json);
+        }
+    });
+};
+exports.payInviteInHub = payInviteInHub;
+const createInviteInHub = (params, onSuccess, onFailure) => {
+    fetch(config.hub_api_url + '/invites', {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(res => res.json())
+        .then(json => {
+        if (json.object) {
+            console.log('[hub] sent invite to be created to hub');
+            onSuccess(json);
+        }
+        else {
+            console.log('[hub] fail to create invite in hub');
+            onFailure(json);
+        }
+    });
+};
+exports.createInviteInHub = createInviteInHub;
+const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0, function* () {
+    let message = `You have a new message from ${name}`;
+    if (type === 'invite') {
+        message = `Your invite to ${name} is ready`;
+    }
+    if (type === 'group') {
+        message = `You have been added to group ${name}`;
+    }
+    if (type === 'message' && chat.type == constants.chat_types.group && chat.name && chat.name.length) {
+        message += ` on ${chat.name}`;
+    }
+    console.log('[send notification]', { chat_id: chat.id, message });
+    if (chat.isMuted) {
+        console.log('[send notification] skipping. chat is muted.');
+        return;
+    }
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    if (!owner.deviceId) {
+        console.log('[send notification] skipping. owner.deviceId not set.');
+        return;
+    }
+    const unseenMessages = yield models_1.models.Message.findAll({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
+    const params = {
+        device_id: owner.deviceId,
+        notification: {
+            chat_id: chat.id,
+            message,
+            badge: unseenMessages.length
+        }
+    };
+    fetch("http://hub.sphinx.chat/api/v1/nodes/notify", {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(res => res.json())
+        .then(json => console.log('[hub notification]', json));
+});
+exports.sendNotification = sendNotification;
+//# sourceMappingURL=hub.js.map
