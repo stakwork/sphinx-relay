@@ -10,7 +10,7 @@ import {tokenFromTerms} from '../utils/ldat'
 const constants = require(__dirname + '/../../config/constants.json');
 
 const sendPayment = async (req, res) => {
-  const { 
+  const {
     amount,
     chat_id,
     contact_id,
@@ -20,6 +20,8 @@ const sendPayment = async (req, res) => {
     text,
     remote_text,
     dimensions,
+    remote_text_map,
+    contact_ids,
   } = req.body
 
   console.log('[send payment]', req.body)
@@ -87,8 +89,15 @@ const sendPayment = async (req, res) => {
   }
   if(remote_text) msgToSend.content = remote_text
 
+  // if contact_ids, replace that in "chat" below
+  // if remote text map, put that in
+  let theChat = chat
+  if(contact_ids){
+    theChat = {...chat.dataValues, contactIds:contact_ids}
+    if(remote_text_map) msgToSend.content = remote_text_map
+  }
   helpers.sendMessage({
-    chat: chat,
+    chat: theChat,
     sender: owner,
     type: constants.message_types.direct_payment,
     message: msgToSend,

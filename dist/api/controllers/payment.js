@@ -19,7 +19,7 @@ const lightning = require("../utils/lightning");
 const ldat_1 = require("../utils/ldat");
 const constants = require(__dirname + '/../../config/constants.json');
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, } = req.body;
+    const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, } = req.body;
     console.log('[send payment]', req.body);
     if (destination_key && !contact_id && !chat_id) {
         return helpers.performKeysendMessage({
@@ -79,8 +79,16 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     if (remote_text)
         msgToSend.content = remote_text;
+    // if contact_ids, replace that in "chat" below
+    // if remote text map, put that in
+    let theChat = chat;
+    if (contact_ids) {
+        theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: contact_ids });
+        if (remote_text_map)
+            msgToSend.content = remote_text_map;
+    }
     helpers.sendMessage({
-        chat: chat,
+        chat: theChat,
         sender: owner,
         type: constants.message_types.direct_payment,
         message: msgToSend,
