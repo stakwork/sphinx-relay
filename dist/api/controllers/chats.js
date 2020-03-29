@@ -197,7 +197,7 @@ function receiveGroupJoin(payload) {
         const msg = {
             chatId: chat.id,
             type: constants.message_types.group_join,
-            sender: sender.id,
+            sender: theSender.id,
             date: date,
             messageContent: '',
             remoteMessageContent: '',

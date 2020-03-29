@@ -94,6 +94,7 @@ const sendMessage = (params) => __awaiter(void 0, void 0, void 0, function* () {
         if (contactId == sender.id) {
             return;
         }
+        console.log('-> sending to contact #', contactId);
         const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
         const destkey = contact.publicKey;
         const finalMsg = yield msg_1.personalizeMessage(m, contactId, destkey);

@@ -90,6 +90,8 @@ const sendMessage = async (params) => {
 			return
 		}
 
+		console.log('-> sending to contact #', contactId)
+
 		const contact = await models.Contact.findOne({ where: { id: contactId } })
 		const destkey = contact.publicKey
 
