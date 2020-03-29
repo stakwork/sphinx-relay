@@ -11,6 +11,7 @@ import {parseLDAT, tokenFromTerms, urlBase64FromBytes, testLDAT} from '../utils/
 import {CronJob} from 'cron'
 import * as zbase32 from '../utils/zbase32'
 import * as schemas from './schemas'
+import {sendConfirmation} from './confirmations'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../../config/app.json')[env];
@@ -382,16 +383,8 @@ const receiveAttachment = async (payload) => {
 
   sendNotification(chat, sender.alias, 'message')
 
-  sendConfirmation({ chat, sender: owner, msg_id })
-}
-
-const sendConfirmation = ({ chat, sender, msg_id }) => {
-	helpers.sendMessage({
-		chat,
-		sender,
-    message: {id:msg_id},
-    type: constants.message_types.confirmation,
-	})
+  const theChat = {...chat.dataValues, contactIds:[sender.id]}
+  sendConfirmation({ chat:theChat, sender: owner, msg_id })
 }
 
 async function signer(req, res) {

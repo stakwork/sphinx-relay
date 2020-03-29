@@ -22,6 +22,7 @@ const ldat_1 = require("../utils/ldat");
 const cron_1 = require("cron");
 const zbase32 = require("../utils/zbase32");
 const schemas = require("./schemas");
+const confirmations_1 = require("./confirmations");
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../../config/app.json')[env];
 const constants = require(__dirname + '/../../config/constants.json');
@@ -347,17 +348,10 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         response: jsonUtils.messageToJson(message, chat)
     });
     hub_1.sendNotification(chat, sender.alias, 'message');
-    sendConfirmation({ chat, sender: owner, msg_id });
+    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
+    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveAttachment = receiveAttachment;
-const sendConfirmation = ({ chat, sender, msg_id }) => {
-    helpers.sendMessage({
-        chat,
-        sender,
-        message: { id: msg_id },
-        type: constants.message_types.confirmation,
-    });
-};
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.params.challenge)

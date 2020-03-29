@@ -17,7 +17,7 @@ const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
-const lock_1 = require("../utils/lock");
+const confirmations_1 = require("./confirmations");
 const constants = require(__dirname + '/../../config/constants.json');
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
@@ -147,76 +147,10 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         response: jsonUtils.messageToJson(message, chat)
     });
     hub_1.sendNotification(chat, sender.alias, 'message');
-    sendConfirmation({ chat, sender: owner, msg_id });
+    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
+    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveMessage = receiveMessage;
-const sendConfirmation = ({ chat, sender, msg_id }) => {
-    helpers.sendMessage({
-        chat,
-        sender,
-        message: { id: msg_id },
-        type: constants.message_types.confirmation,
-    });
-};
-const receiveConfirmation = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received confirmation', { payload });
-    const dat = payload.content || payload;
-    const chat_uuid = dat.chat.uuid;
-    const msg_id = dat.message.id;
-    const sender_pub_key = dat.sender.pub_key;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
-    const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
-    // new confirmation logic
-    if (msg_id) {
-        lock_1.default.acquire('confirmation', function (done) {
-            return __awaiter(this, void 0, void 0, function* () {
-                console.log("update status map");
-                const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
-                if (message) {
-                    let statusMap = {};
-                    try {
-                        statusMap = JSON.parse(message.statusMap || '{}');
-                    }
-                    catch (e) { }
-                    statusMap[sender.id] = constants.statuses.received;
-                    yield message.update({
-                        status: constants.statuses.received,
-                        statusMap: JSON.stringify(statusMap)
-                    });
-                    socket.sendJson({
-                        type: 'confirmation',
-                        response: jsonUtils.messageToJson(message, chat)
-                    });
-                }
-                done();
-            });
-        });
-    }
-    else { // old logic
-        const messages = yield models_1.models.Message.findAll({
-            limit: 1,
-            where: {
-                chatId: chat.id,
-                sender: owner.id,
-                type: [
-                    constants.message_types.message,
-                    constants.message_types.invoice,
-                    constants.message_types.attachment,
-                ],
-                status: constants.statuses.pending,
-            },
-            order: [['createdAt', 'desc']]
-        });
-        const message = messages[0];
-        message.update({ status: constants.statuses.received });
-        socket.sendJson({
-            type: 'confirmation',
-            response: jsonUtils.messageToJson(message, chat)
-        });
-    }
-});
-exports.receiveConfirmation = receiveConfirmation;
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = req.params.chat_id;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });

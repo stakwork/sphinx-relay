@@ -6,6 +6,7 @@ import * as decodeUtils from '../utils/decode'
 import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import { success } from '../utils/res'
+import {sendConfirmation} from './confirmations'
 
 const constants = require(__dirname + '/../../config/constants.json');
 
@@ -216,18 +217,9 @@ const receiveInvoice = async (payload) => {
 
   sendNotification(chat, sender.alias, 'message')
 
-  sendConfirmation({ chat, sender: owner, msg_id })
+  const theChat = {...chat.dataValues, contactIds:[sender.id]}
+  sendConfirmation({ chat:theChat, sender: owner, msg_id })
 }
-
-const sendConfirmation = ({ chat, sender, msg_id }) => {
-  helpers.sendMessage({
-    chat,
-    sender,
-    message: { id: msg_id },
-    type: constants.message_types.confirmation,
-  })
-}
-
 
 export {
   listInvoices,
