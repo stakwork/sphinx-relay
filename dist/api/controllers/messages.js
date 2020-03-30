@@ -144,7 +144,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     console.log('saved message', message.dataValues);
     socket.sendJson({
         type: 'message',
-        response: jsonUtils.messageToJson(message, chat)
+        response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });

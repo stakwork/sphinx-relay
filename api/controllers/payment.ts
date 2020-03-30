@@ -145,7 +145,7 @@ const receivePayment = async (payload) => {
 
   socket.sendJson({
     type: 'direct_payment',
-    response: jsonUtils.messageToJson(message, chat)
+    response: jsonUtils.messageToJson(message, chat, sender)
   })
 
   sendNotification(chat, sender.alias, 'message')

@@ -185,7 +185,7 @@ const purchase = async (req, res) => {
     message: msg,
     success: async (data) => {
       console.log('purchase sent', { data })
-      resUtils.success(res, jsonUtils.messageToJson(message))
+      resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
     failure: error=> resUtils.failure(res, error.message),
   })
@@ -318,7 +318,7 @@ const receivePurchaseAccept = async (payload) => {
   })
   socket.sendJson({
     type: 'purchase_accept',
-    response: jsonUtils.messageToJson(msg, chat)
+    response: jsonUtils.messageToJson(msg, chat, sender)
   })
 }
 
@@ -344,7 +344,7 @@ const receivePurchaseDeny = async (payload) => {
   })
   socket.sendJson({
     type: 'purchase_deny',
-    response: jsonUtils.messageToJson(msg, chat)
+    response: jsonUtils.messageToJson(msg, chat, sender)
   })
 }
 
@@ -378,7 +378,7 @@ const receiveAttachment = async (payload) => {
 
   socket.sendJson({
     type: 'attachment',
-    response: jsonUtils.messageToJson(message, chat)
+    response: jsonUtils.messageToJson(message, chat, sender)
   })
 
   sendNotification(chat, sender.alias, 'message')

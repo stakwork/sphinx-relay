@@ -194,7 +194,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     console.log('received keysend invoice message', message.id);
     socket.sendJson({
         type: 'invoice',
-        response: jsonUtils.messageToJson(message, chat)
+        response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });

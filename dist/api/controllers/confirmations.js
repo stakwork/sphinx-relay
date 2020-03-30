@@ -53,7 +53,7 @@ function receiveConfirmation(payload) {
                         });
                         socket.sendJson({
                             type: 'confirmation',
-                            response: jsonUtils.messageToJson(message, chat)
+                            response: jsonUtils.messageToJson(message, chat, sender)
                         });
                     }
                     done();
@@ -79,7 +79,7 @@ function receiveConfirmation(payload) {
             message.update({ status: constants.statuses.received });
             socket.sendJson({
                 type: 'confirmation',
-                response: jsonUtils.messageToJson(message, chat)
+                response: jsonUtils.messageToJson(message, chat, sender)
             });
         }
     });
