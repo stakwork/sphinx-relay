@@ -17,6 +17,7 @@ const decodeUtils = require("../utils/decode");
 const helpers = require("../helpers");
 const hub_1 = require("../hub");
 const res_1 = require("../utils/res");
+const confirmations_1 = require("./confirmations");
 const constants = require(__dirname + '/../../config/constants.json');
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
@@ -196,17 +197,10 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         response: jsonUtils.messageToJson(message, chat)
     });
     hub_1.sendNotification(chat, sender.alias, 'message');
-    sendConfirmation({ chat, sender: owner, msg_id });
+    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
+    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveInvoice = receiveInvoice;
-const sendConfirmation = ({ chat, sender, msg_id }) => {
-    helpers.sendMessage({
-        chat,
-        sender,
-        message: { id: msg_id },
-        type: constants.message_types.confirmation,
-    });
-};
 // lnd invoice stuff
 function decodePaymentRequest(paymentRequest) {
     var decodedPaymentRequest = decodeUtils.decode(paymentRequest);

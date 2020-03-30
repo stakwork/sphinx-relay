@@ -19,6 +19,7 @@ let controllers = {
 	chats: require('./chats'),
 	subcriptions: require('./subscriptions'),
 	media: require('./media'),
+	confirmations: require('./confirmations')
 }
 
 async function iniGrpcSubscriptions() {
@@ -31,7 +32,7 @@ async function iniGrpcSubscriptions() {
 			[types.message]: controllers.messages.receiveMessage,
 			[types.invoice]: controllers.invoices.receiveInvoice,
 			[types.direct_payment]: controllers.payments.receivePayment,
-			[types.confirmation]: controllers.messages.receiveConfirmation,
+			[types.confirmation]: controllers.confirmations.receiveConfirmation,
 			[types.attachment]: controllers.media.receiveAttachment,
 			[types.purchase]: controllers.media.receivePurchase,
 			[types.purchase_accept]: controllers.media.receivePurchaseAccept,
