@@ -13,7 +13,7 @@ function chatToJson(c) {
   })
 }
 
-function messageToJson(msg, chat = null) {
+function messageToJson(msg, chat, contact?) {
   const message = msg.dataValues||msg
   let statusMap = message.statusMap || null
   if(message.statusMap && typeof message.statusMap==='string'){
@@ -23,6 +23,7 @@ function messageToJson(msg, chat = null) {
     ...message,
     statusMap,
     chat: chat ? chatToJson(chat) : null,
+    contact: contact ? contactToJson(contact) : null
   })
 }
 

@@ -166,7 +166,7 @@ const receiveMessage = async (payload) => {
 
 	socket.sendJson({
 		type: 'message',
-		response: jsonUtils.messageToJson(message, chat)
+		response: jsonUtils.messageToJson(message, chat, sender)
 	})
 
 	sendNotification(chat, sender.alias, 'message')

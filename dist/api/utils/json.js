@@ -11,13 +11,13 @@ function chatToJson(c) {
     return case_1.toSnake(Object.assign(Object.assign({}, chat), { contactIds }));
 }
 exports.chatToJson = chatToJson;
-function messageToJson(msg, chat = null) {
+function messageToJson(msg, chat, contact) {
     const message = msg.dataValues || msg;
     let statusMap = message.statusMap || null;
     if (message.statusMap && typeof message.statusMap === 'string') {
         statusMap = JSON.parse(message.statusMap);
     }
-    return case_1.toSnake(Object.assign(Object.assign({}, message), { statusMap, chat: chat ? chatToJson(chat) : null }));
+    return case_1.toSnake(Object.assign(Object.assign({}, message), { statusMap, chat: chat ? chatToJson(chat) : null, contact: contact ? contactToJson(contact) : null }));
 }
 exports.messageToJson = messageToJson;
 const contactToJson = (contact) => case_1.toSnake(contact.dataValues || contact);

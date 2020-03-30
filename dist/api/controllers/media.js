@@ -164,7 +164,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         message: msg,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('purchase sent', { data });
-            resUtils.success(res, jsonUtils.messageToJson(message));
+            resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: error => resUtils.failure(res, error.message),
     });
@@ -287,7 +287,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
     });
     socket.sendJson({
         type: 'purchase_accept',
-        response: jsonUtils.messageToJson(msg, chat)
+        response: jsonUtils.messageToJson(msg, chat, sender)
     });
 });
 exports.receivePurchaseAccept = receivePurchaseAccept;
@@ -313,7 +313,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
     });
     socket.sendJson({
         type: 'purchase_deny',
-        response: jsonUtils.messageToJson(msg, chat)
+        response: jsonUtils.messageToJson(msg, chat, sender)
     });
 });
 exports.receivePurchaseDeny = receivePurchaseDeny;
@@ -345,7 +345,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     console.log('saved attachment', message.dataValues);
     socket.sendJson({
         type: 'attachment',
-        response: jsonUtils.messageToJson(message, chat)
+        response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });

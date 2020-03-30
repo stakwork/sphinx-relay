@@ -112,12 +112,14 @@ function subscribeInvoices(actions) {
 					createdAt: new Date(settleDate),
 					updatedAt: new Date(settleDate)
 				})
-				socket.sendJson({
-					type: 'payment',
-					response: jsonUtils.messageToJson(message, chat)
-				})
 
 				const sender = await models.Contact.findOne({ where: { id: senderId } })
+
+				socket.sendJson({
+					type: 'payment',
+					response: jsonUtils.messageToJson(message, chat, sender)
+				})
+				
 				sendNotification(chat, sender.alias, 'message')
 			}
 		});

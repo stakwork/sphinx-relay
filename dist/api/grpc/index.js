@@ -120,11 +120,11 @@ function subscribeInvoices(actions) {
                         createdAt: new Date(settleDate),
                         updatedAt: new Date(settleDate)
                     });
+                    const sender = yield models_1.models.Contact.findOne({ where: { id: senderId } });
                     socket.sendJson({
                         type: 'payment',
-                        response: jsonUtils.messageToJson(message, chat)
+                        response: jsonUtils.messageToJson(message, chat, sender)
                     });
-                    const sender = yield models_1.models.Contact.findOne({ where: { id: senderId } });
                     hub_1.sendNotification(chat, sender.alias, 'message');
                 }
             });

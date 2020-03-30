@@ -212,7 +212,7 @@ const receiveInvoice = async (payload) => {
 
   socket.sendJson({
     type: 'invoice',
-    response: jsonUtils.messageToJson(message, chat)
+    response: jsonUtils.messageToJson(message, chat, sender)
   })
 
   sendNotification(chat, sender.alias, 'message')

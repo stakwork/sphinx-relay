@@ -45,7 +45,7 @@ export async function receiveConfirmation(payload) {
 				})
 				socket.sendJson({
 					type: 'confirmation',
-					response: jsonUtils.messageToJson(message, chat)
+					response: jsonUtils.messageToJson(message, chat, sender)
 				})
 			}
 			done()
@@ -71,7 +71,7 @@ export async function receiveConfirmation(payload) {
 	
 		socket.sendJson({
 			type: 'confirmation',
-			response: jsonUtils.messageToJson(message, chat)
+			response: jsonUtils.messageToJson(message, chat, sender)
 		})
 	}
 }
