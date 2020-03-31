@@ -158,7 +158,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         amount, mediaToken, id: message.id,
     };
     helpers.sendMessage({
-        chat: Object.assign(Object.assign({}, chat), { contactIds: [contact_id] }),
+        chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
         sender: owner,
         type: constants.message_types.purchase,
         message: msg,
@@ -220,7 +220,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     }
     if (amount < price) { // didnt pay enough
         return helpers.sendMessage({
-            chat: Object.assign(Object.assign({}, chat), { contactIds: [sender.id] }),
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
             sender: owner,
             amount: amount,
             type: constants.message_types.purchase_deny,
@@ -236,7 +236,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         meta: { amt: amount },
     };
     helpers.sendMessage({
-        chat: Object.assign(Object.assign({}, chat), { contactIds: [sender.id] }),
+        chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
         sender: owner,
         type: constants.message_types.purchase_accept,
         message: {
