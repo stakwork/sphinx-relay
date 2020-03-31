@@ -179,7 +179,7 @@ const purchase = async (req, res) => {
     amount, mediaToken, id:message.id,
   }
   helpers.sendMessage({
-    chat: {...chat, contactIds:[contact_id]},
+    chat: {...chat.dataValues, contactIds:[contact_id]},
     sender: owner,
     type: constants.message_types.purchase,
     message: msg,
@@ -247,7 +247,7 @@ const receivePurchase = async (payload) => {
 
   if (amount < price) { // didnt pay enough
     return helpers.sendMessage({ // "purchase_deny"
-      chat: {...chat, contactIds:[sender.id]}, // only send back to sender
+      chat: {...chat.dataValues, contactIds:[sender.id]}, // only send back to sender
       sender: owner,
       amount: amount,
       type: constants.message_types.purchase_deny,
@@ -264,7 +264,7 @@ const receivePurchase = async (payload) => {
     meta: {amt:amount},
   }
   helpers.sendMessage({
-    chat: {...chat, contactIds:[sender.id]}, // only to sender
+    chat: {...chat.dataValues, contactIds:[sender.id]}, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
     message: {
