@@ -15,6 +15,9 @@ export default class Invite extends Model<Invite> {
   inviteString: string
 
   @Column
+  invoice: string
+
+  @Column
   welcomeMessage: string
 
   @Column(DataType.BIGINT)

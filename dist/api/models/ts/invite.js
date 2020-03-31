@@ -28,6 +28,10 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
+], Invite.prototype, "invoice", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
 ], Invite.prototype, "welcomeMessage", void 0);
 __decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),

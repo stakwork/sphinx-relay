@@ -41,10 +41,10 @@ function setVersion() {
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield models_1.sequelize.query(`update sphinx_chats SET deleted=false where deleted is null`);
+            yield models_1.sequelize.query(`alter table sphinx_invites add invoice text`);
         }
         catch (e) {
-            console.log('=> migrate failed', e);
+            //console.log('=> migrate failed',e)
         }
     });
 }
