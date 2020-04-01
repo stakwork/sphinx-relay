@@ -147,6 +147,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         recipient_id: contact_id
     });
     const message = yield models_1.models.Message.create({
+        chatId: chat.id,
         sender: owner.id,
         type: constants.message_types.purchase,
         mediaToken: media_token,

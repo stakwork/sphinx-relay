@@ -167,6 +167,7 @@ const purchase = async (req, res) => {
   })
 
   const message = await models.Message.create({
+    chatId: chat.id,
     sender: owner.id,
     type: constants.message_types.purchase,
     mediaToken: media_token,
