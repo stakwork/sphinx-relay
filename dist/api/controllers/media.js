@@ -197,14 +197,14 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!muid) {
         return console.log('no muid');
     }
-    const ogMessage = models_1.models.Message.findOne({
+    const ogMessage = yield models_1.models.Message.findOne({
         where: { mediaToken }
     });
     if (!ogMessage) {
         return console.log('no original message');
     }
     // find mediaKey for who sent
-    const mediaKey = models_1.models.MediaKey.findOne({ where: {
+    const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
             muid, receiver: sender.id,
         } });
     console.log('mediaKey found!', mediaKey);

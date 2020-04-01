@@ -224,14 +224,14 @@ const receivePurchase = async (payload) => {
     return console.log('no muid')
   }
 
-  const ogMessage = models.Message.findOne({
+  const ogMessage = await models.Message.findOne({
     where:{mediaToken}
   })
   if (!ogMessage){
     return console.log('no original message')
   }
   // find mediaKey for who sent
-  const mediaKey = models.MediaKey.findOne({where:{
+  const mediaKey = await models.MediaKey.findOne({where:{
     muid, receiver: sender.id,
   }})
   console.log('mediaKey found!',mediaKey)
