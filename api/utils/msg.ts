@@ -22,6 +22,8 @@ function addInMediaKey(full:{[k:string]:any}, contactId){
 	const m = full && full.message
 	if (!(m && m.mediaKey)) return full
 	if (!(m && m.mediaTerms)) return full
+	if (!(typeof m.mediaKey==='object')) return full
+	
 	const mediaKey = m.mediaTerms.skipSigning ? '' : m.mediaKey[contactId+'']
 	return fillmsg(full, {mediaKey})
 }

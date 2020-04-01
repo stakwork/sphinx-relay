@@ -35,6 +35,8 @@ function addInMediaKey(full, contactId) {
         return full;
     if (!(m && m.mediaTerms))
         return full;
+    if (!(typeof m.mediaKey === 'object'))
+        return full;
     const mediaKey = m.mediaTerms.skipSigning ? '' : m.mediaKey[contactId + ''];
     return fillmsg(full, { mediaKey });
 }
