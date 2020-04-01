@@ -162,8 +162,9 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         sender: owner,
         type: constants.message_types.purchase,
         message: msg,
+        amount: amount,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log('purchase sent', { data });
+            console.log('purchase sent!');
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: error => resUtils.failure(res, error.message),
@@ -226,7 +227,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             type: constants.message_types.purchase_deny,
             message: { amount, content: 'Payment Denied' },
             success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-                console.log('purchase_deny sent', { data });
+                console.log('purchase_deny sent');
             }),
             failure: error => console.log('=> couldnt send purcahse deny', error),
         });
@@ -245,7 +246,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             mediaType: ogMessage.mediaType,
         },
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log('purchase_accept sent', { data });
+            console.log('purchase_accept sent!');
         }),
         failure: error => console.log('=> couldnt send purchase accept', error),
     });

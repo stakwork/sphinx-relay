@@ -183,8 +183,9 @@ const purchase = async (req, res) => {
     sender: owner,
     type: constants.message_types.purchase,
     message: msg,
+    amount: amount,
     success: async (data) => {
-      console.log('purchase sent', { data })
+      console.log('purchase sent!')
       resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
     failure: error=> resUtils.failure(res, error.message),
@@ -253,7 +254,7 @@ const receivePurchase = async (payload) => {
       type: constants.message_types.purchase_deny,
       message: {amount,content:'Payment Denied'},
       success: async (data) => {
-        console.log('purchase_deny sent', { data })
+        console.log('purchase_deny sent')
       },
       failure: error=> console.log('=> couldnt send purcahse deny', error),
     })
@@ -273,7 +274,7 @@ const receivePurchase = async (payload) => {
       mediaType: ogMessage.mediaType,
     },
     success: async (data) => {
-      console.log('purchase_accept sent', { data })
+      console.log('purchase_accept sent!')
     },
     failure: error=> console.log('=> couldnt send purchase accept', error),
   })
