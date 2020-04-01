@@ -94,6 +94,13 @@ async function authModule(req, res, next) {
 		return
 	}
 
+	if (process.env.HOSTING_PROVIDER==='true'){
+		if (req.path === '/invoices') {
+			next()
+			return
+		}
+	}
+
 	const token = req.headers['x-user-token'] || req.cookies['x-user-token']
 
 	if (token == null) {

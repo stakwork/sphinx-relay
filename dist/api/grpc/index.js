@@ -87,9 +87,13 @@ function subscribeInvoices(actions) {
                     const invoice = yield models_1.models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } });
                     if (invoice == null) {
                         // console.log("ERROR: Invoice " + response['payment_request'] + " not found");
+                        const payReq = response['payment_request'];
+                        if (process.env.HOSTING_PROVIDER === 'true') {
+                            hub_1.sendInvoice(payReq);
+                        }
                         socket.sendJson({
                             type: 'invoice_payment',
-                            response: { invoice: response['payment_request'] }
+                            response: { invoice: payReq }
                         });
                         return;
                     }

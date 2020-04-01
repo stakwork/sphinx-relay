@@ -111,6 +111,22 @@ const checkInvitesHubInterval = (ms) => {
   setInterval(checkInviteHub, ms)
 }
 
+export function sendInvoice(payReq) {
+  console.log('[hub] sending invoice')
+  fetch(config.hub_api_url + '/invoices', {
+    method: 'POST',
+    body:    JSON.stringify({invoice:payReq}),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(res => res.json())
+  .then(json => {
+    // ?
+  })
+  .catch(error => {
+    console.log('[hub error]', error)
+  })
+}
+
 const finishInviteInHub = (params, onSuccess, onFailure) => {
   fetch(config.hub_api_url + '/invites/finish', {
     method: 'POST' ,
