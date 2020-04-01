@@ -135,10 +135,13 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId){
   var date = new Date();
   date.setMilliseconds(0)
   for (let [contactId, key] of Object.entries(mediaKeyMap)) {
-    models.MediaKey.create({
-      muid, chatId, contactId, key, messageId,
-      createdAt: date,
-    })
+    if(parseInt(contactId)!==1) {
+      models.MediaKey.create({
+        muid, chatId, key, messageId,
+        receiver: parseInt(contactId),
+        createdAt: date,
+      })
+    }
   }
 }
 
@@ -196,7 +199,7 @@ const purchase = async (req, res) => {
 /* RECEIVERS */
 
 const receivePurchase = async (payload) => {
-  console.log('received purchase', { payload })
+  console.log('=> received purchase', { payload })
 
   var date = new Date();
   date.setMilliseconds(0)
@@ -231,6 +234,7 @@ const receivePurchase = async (payload) => {
   const mediaKey = models.MediaKey.findOne({where:{
     muid, receiver: sender.id,
   }})
+  console.log('mediaKey found!',mediaKey)
 
   const terms = parseLDAT(mediaToken)
   // get info
@@ -265,6 +269,11 @@ const receivePurchase = async (payload) => {
     muid, ttl: TTL, 
     meta: {amt:amount},
   }
+  console.log("SEND THIS!", {
+    mediaTerms: acceptTerms, // converted to token in utils/msg.ts
+    mediaKey: mediaKey.key,
+    mediaType: ogMessage.mediaType,
+  })
   helpers.sendMessage({
     chat: {...chat.dataValues, contactIds:[sender.id]}, // only to sender
     sender: owner,
@@ -282,6 +291,7 @@ const receivePurchase = async (payload) => {
 }
 
 const receivePurchaseAccept = async (payload) => {
+  console.log('=> receivePurchaseAccept')
   var date = new Date();
   date.setMilliseconds(0)
 
@@ -325,6 +335,7 @@ const receivePurchaseAccept = async (payload) => {
 }
 
 const receivePurchaseDeny = async (payload) => {
+  console.log('=> receivePurchaseDeny')
   var date = new Date();
   date.setMilliseconds(0)
   const {owner, sender, chat, amount, mediaToken} = await helpers.parseReceiveParams(payload)

@@ -123,10 +123,13 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId) {
     var date = new Date();
     date.setMilliseconds(0);
     for (let [contactId, key] of Object.entries(mediaKeyMap)) {
-        models_1.models.MediaKey.create({
-            muid, chatId, contactId, key, messageId,
-            createdAt: date,
-        });
+        if (parseInt(contactId) !== 1) {
+            models_1.models.MediaKey.create({
+                muid, chatId, key, messageId,
+                receiver: parseInt(contactId),
+                createdAt: date,
+            });
+        }
     }
 }
 const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -174,7 +177,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.purchase = purchase;
 /* RECEIVERS */
 const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received purchase', { payload });
+    console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, mediaToken } = yield helpers.parseReceiveParams(payload);
@@ -204,6 +207,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     const mediaKey = models_1.models.MediaKey.findOne({ where: {
             muid, receiver: sender.id,
         } });
+    console.log('mediaKey found!', mediaKey);
     const terms = ldat_1.parseLDAT(mediaToken);
     // get info
     let TTL = terms.meta && terms.meta.ttl;
@@ -237,6 +241,11 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         muid, ttl: TTL,
         meta: { amt: amount },
     };
+    console.log("SEND THIS!", {
+        mediaTerms: acceptTerms,
+        mediaKey: mediaKey.key,
+        mediaType: ogMessage.mediaType,
+    });
     helpers.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
         sender: owner,
@@ -254,6 +263,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.receivePurchase = receivePurchase;
 const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('=> receivePurchaseAccept');
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, mediaToken, mediaKey, mediaType } = yield helpers.parseReceiveParams(payload);
@@ -294,6 +304,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
 });
 exports.receivePurchaseAccept = receivePurchaseAccept;
 const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('=> receivePurchaseDeny');
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, mediaToken } = yield helpers.parseReceiveParams(payload);
