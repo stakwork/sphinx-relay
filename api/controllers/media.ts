@@ -147,7 +147,7 @@ const purchase = async (req, res) => {
     chat_id,
     contact_id,
     amount,
-    mediaToken,
+    media_token,
   } = req.body
   var date = new Date();
   date.setMilliseconds(0)
@@ -169,14 +169,14 @@ const purchase = async (req, res) => {
   const message = await models.Message.create({
     sender: owner.id,
     type: constants.message_types.purchase,
-    mediaToken: mediaToken,
+    mediaToken: media_token,
     date: date,
     createdAt: date,
     updatedAt: date
   })
 
   const msg={
-    amount, mediaToken, id:message.id,
+    amount, mediaToken:media_token, id:message.id,
   }
   helpers.sendMessage({
     chat: {...chat.dataValues, contactIds:[contact_id]},

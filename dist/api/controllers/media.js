@@ -130,7 +130,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId) {
     }
 }
 const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { chat_id, contact_id, amount, mediaToken, } = req.body;
+    const { chat_id, contact_id, amount, media_token, } = req.body;
     var date = new Date();
     date.setMilliseconds(0);
     try {
@@ -149,13 +149,13 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const message = yield models_1.models.Message.create({
         sender: owner.id,
         type: constants.message_types.purchase,
-        mediaToken: mediaToken,
+        mediaToken: media_token,
         date: date,
         createdAt: date,
         updatedAt: date
     });
     const msg = {
-        amount, mediaToken, id: message.id,
+        amount, mediaToken: media_token, id: message.id,
     };
     helpers.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),

@@ -18,7 +18,7 @@ exports.message = message;
 const purchase = yup.object().shape({
     chat_id: yup.number().required(),
     contact_id: yup.number().required(),
-    mediaToken: yup.string().required(),
+    media_token: yup.string().required(),
     amount: yup.number().required()
 });
 exports.purchase = purchase;
