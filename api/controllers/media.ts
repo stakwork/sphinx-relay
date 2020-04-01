@@ -252,7 +252,7 @@ const receivePurchase = async (payload) => {
       sender: owner,
       amount: amount,
       type: constants.message_types.purchase_deny,
-      message: {amount,content:'Payment Denied'},
+      message: {amount,content:'Payment Denied',mediaToken},
       success: async (data) => {
         console.log('purchase_deny sent')
       },

@@ -225,7 +225,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             sender: owner,
             amount: amount,
             type: constants.message_types.purchase_deny,
-            message: { amount, content: 'Payment Denied' },
+            message: { amount, content: 'Payment Denied', mediaToken },
             success: (data) => __awaiter(void 0, void 0, void 0, function* () {
                 console.log('purchase_deny sent');
             }),
