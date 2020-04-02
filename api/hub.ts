@@ -176,7 +176,7 @@ async function payInviteInvoice(invoice, onSuccess, onFailure) {
 }
 
 const createInviteInHub = (params, onSuccess, onFailure) => {
-  fetch(config.hub_api_url + '/invites', {
+  fetch(config.hub_api_url + '/invites_new', {
     method: 'POST' ,
     body:    JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' }

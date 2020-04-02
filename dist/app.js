@@ -100,7 +100,10 @@ function authModule(req, res, next) {
             return;
         }
         if (process.env.HOSTING_PROVIDER === 'true') {
-            if (req.path === '/invoices') {
+            const domain = process.env.INVITE_SERVER;
+            const origin = req.get('origin');
+            console.log('=> origin:', origin);
+            if (domain === origin && req.path === '/invoices') {
                 next();
                 return;
             }
