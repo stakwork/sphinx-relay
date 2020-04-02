@@ -38,11 +38,13 @@ const checkInviteHub = async (params = {}) => {
         const dbInvite = await models.Invite.findOne({ where: { inviteString: invite.pin }})
         const contact = await models.Contact.findOne({ where: { id: dbInvite.contactId } })
 
+        console.log('got INVITE, status:',invite.invite_status)
+        console.log('existing status: ',dbInvite.status)
         if (dbInvite.status != invite.invite_status) {
           const updateObj:{[k:string]:any} = { status: invite.invite_status, price: price }
           if(invoice) updateObj.invoice = invoice
           console.log('update invite!', updateObj)
-          
+
           dbInvite.update(updateObj)
           
           socket.sendJson({
