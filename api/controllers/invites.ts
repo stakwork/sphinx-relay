@@ -88,7 +88,7 @@ const createInvite = async (req, res) => {
 			contactId: contact.id,
 			status: inviteCreated.invite_status,
 			inviteString: inviteCreated.pin,
-			invoice: inviteCreated.invoice,
+			// invoice: inviteCreated.invoice,
 		})
 		let contactJson = jsonUtils.contactToJson(contact)
 		if (invite) {
