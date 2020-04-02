@@ -41,6 +41,8 @@ const checkInviteHub = async (params = {}) => {
         if (dbInvite.status != invite.invite_status) {
           const updateObj:{[k:string]:any} = { status: invite.invite_status, price: price }
           if(invoice) updateObj.invoice = invoice
+          console.log('update invite!', updateObj)
+          
           dbInvite.update(updateObj)
           
           socket.sendJson({
