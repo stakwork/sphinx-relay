@@ -95,10 +95,12 @@ async function authModule(req, res, next) {
 	}
 
 	if (process.env.HOSTING_PROVIDER==='true'){
-		const domain = process.env.INVITE_SERVER
-		const host = req.headers.host
+		// const domain = process.env.INVITE_SERVER
+		const host = req.headers.origin
 		console.log('=> host:', host)
-		if (domain===host && req.path === '/invoices') {
+		const referer = req.headers.referer
+		console.log('=> referer:', referer)
+		if (req.path === '/invoices') {
 			next()
 			return
 		}

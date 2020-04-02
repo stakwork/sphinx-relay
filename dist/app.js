@@ -100,10 +100,12 @@ function authModule(req, res, next) {
             return;
         }
         if (process.env.HOSTING_PROVIDER === 'true') {
-            const domain = process.env.INVITE_SERVER;
-            const host = req.headers.host;
-            console.log('=> host:', origin);
-            if (domain === host && req.path === '/invoices') {
+            // const domain = process.env.INVITE_SERVER
+            const host = req.headers.origin;
+            console.log('=> host:', host);
+            const referer = req.headers.referer;
+            console.log('=> referer:', referer);
+            if (req.path === '/invoices') {
                 next();
                 return;
             }
