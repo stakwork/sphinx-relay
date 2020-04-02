@@ -97,7 +97,7 @@ async function authModule(req, res, next) {
 	if (process.env.HOSTING_PROVIDER==='true'){
 		const domain = process.env.INVITE_SERVER
 		const host = req.headers.host
-		console.log('=> host:', origin)
+		console.log('=> host:', host)
 		if (domain===host && req.path === '/invoices') {
 			next()
 			return
