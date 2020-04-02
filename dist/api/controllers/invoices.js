@@ -67,11 +67,13 @@ const cancelInvoice = (req, res) => {
 exports.cancelInvoice = cancelInvoice;
 const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
-    const { amount, memo, remote_memo, chat_id, contact_id } = req.body;
+    const { amount, memo, remote_memo, chat_id, contact_id, expiry, } = req.body;
     var request = {
         value: amount,
         memo: remote_memo || memo
     };
+    if (expiry)
+        request.expiry = expiry;
     if (amount == null) {
         res.status(200);
         res.json({ err: "no amount specified", });

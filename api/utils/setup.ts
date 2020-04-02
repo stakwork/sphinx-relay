@@ -28,9 +28,9 @@ async function setVersion(){
 
 async function migrate(){
   try {
-    await sequelize.query(`update sphinx_chats SET deleted=false where deleted is null`)
+    await sequelize.query(`alter table sphinx_invites add invoice text`)
   } catch(e) {
-    console.log('=> migrate failed',e)
+    //console.log('=> migrate failed',e)
   }
 }
 

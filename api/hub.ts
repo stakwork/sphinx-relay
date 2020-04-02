@@ -5,6 +5,7 @@ import * as socket from './utils/socket'
 import * as jsonUtils from './utils/json'
 import * as helpers from './helpers'
 import {nodeinfo} from './utils/nodeinfo'
+import { loadLightning } from './utils/lightning'
 
 const constants = require(__dirname + '/../config/constants.json');
 const env = process.env.NODE_ENV || 'development';
@@ -37,7 +38,11 @@ const checkInviteHub = async (params = {}) => {
         const contact = await models.Contact.findOne({ where: { id: dbInvite.contactId } })
 
         if (dbInvite.status != invite.invite_status) {
-          dbInvite.update({ status: invite.invite_status, price: price })
+          const updateObj:{[k:string]:any} = { status: invite.invite_status, price: price }
+          if(invite.invoice) updateObj.invoice = invite.invoice
+
+          dbInvite.update(updateObj)
+          
           socket.sendJson({
             type: 'invite',
             response: jsonUtils.inviteToJson(dbInvite)
@@ -106,6 +111,22 @@ const checkInvitesHubInterval = (ms) => {
   setInterval(checkInviteHub, ms)
 }
 
+export function sendInvoice(payReq, amount) {
+  console.log('[hub] sending invoice')
+  fetch(config.hub_api_url + '/invoices', {
+    method: 'POST',
+    body:    JSON.stringify({invoice:payReq, amount}),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(res => res.json())
+  .then(json => {
+    // ?
+  })
+  .catch(error => {
+    console.log('[hub error]', error)
+  })
+}
+
 const finishInviteInHub = (params, onSuccess, onFailure) => {
   fetch(config.hub_api_url + '/invites/finish', {
     method: 'POST' ,
@@ -142,8 +163,20 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
   })
 }
 
+async function payInviteInvoice(invoice, onSuccess, onFailure) {
+  const lightning = await loadLightning()
+  var call = lightning.sendPayment({})
+  call.on('data', async response => {
+    onSuccess(response)
+  })
+  call.on('error', async err => {
+    onFailure(err)
+  })
+  call.write({ payment_request:invoice })
+}
+
 const createInviteInHub = (params, onSuccess, onFailure) => {
-  fetch(config.hub_api_url + '/invites', {
+  fetch(config.hub_api_url + '/invites_new', {
     method: 'POST' ,
     body:    JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' }
@@ -215,5 +248,6 @@ export {
   sendNotification,
   createInviteInHub,
   finishInviteInHub,
-  payInviteInHub
+  payInviteInHub,
+  payInviteInvoice
 }

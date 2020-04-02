@@ -73,13 +73,15 @@ const createInvoice = async (req, res) => {
     memo,
     remote_memo,
     chat_id,
-    contact_id
+    contact_id,
+    expiry,
   } = req.body;
 
-  var request = {
+  var request:{[k:string]:any} = {
     value: amount,
     memo: remote_memo || memo
   }
+  if(expiry) request.expiry = expiry
 
   if (amount == null) {
     res.status(200);

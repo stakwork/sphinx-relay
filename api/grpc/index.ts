@@ -1,6 +1,6 @@
 import {models} from '../models'
 import * as socket from '../utils/socket'
-import { sendNotification } from '../hub'
+import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import * as decodeUtils from '../utils/decode'
 import {loadLightning, SPHINX_CUSTOM_RECORD_KEY} from '../utils/lightning'
@@ -74,9 +74,14 @@ function subscribeInvoices(actions) {
 				const invoice = await models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } })
 				if (invoice == null) {
 					// console.log("ERROR: Invoice " + response['payment_request'] + " not found");
+					const payReq = response['payment_request']
+					const amount = response['amt_paid_sat']
+					if (process.env.HOSTING_PROVIDER==='true'){
+						sendInvoice(payReq, amount)
+					}
 					socket.sendJson({
 						type: 'invoice_payment',
-						response: {invoice: response['payment_request']}
+						response: {invoice: payReq}
 					})
 					return
 				}

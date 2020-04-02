@@ -94,6 +94,18 @@ async function authModule(req, res, next) {
 		return
 	}
 
+	if (process.env.HOSTING_PROVIDER==='true'){
+		// const domain = process.env.INVITE_SERVER
+		const host = req.headers.origin
+		console.log('=> host:', host)
+		const referer = req.headers.referer
+		console.log('=> referer:', referer)
+		if (req.path === '/invoices') {
+			next()
+			return
+		}
+	}
+
 	const token = req.headers['x-user-token'] || req.cookies['x-user-token']
 
 	if (token == null) {

@@ -88,14 +88,6 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
-], Message.prototype, "mediaTerms", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
-], Message.prototype, "receipt", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
 ], Message.prototype, "mediaKey", void 0);
 __decorate([
     sequelize_typescript_1.Column,

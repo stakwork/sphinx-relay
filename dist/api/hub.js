@@ -16,6 +16,7 @@ const socket = require("./utils/socket");
 const jsonUtils = require("./utils/json");
 const helpers = require("./helpers");
 const nodeinfo_1 = require("./utils/nodeinfo");
+const lightning_1 = require("./utils/lightning");
 const constants = require(__dirname + '/../config/constants.json');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/app.json')[env];
@@ -38,10 +39,14 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                 const invite = object.invite;
                 const pubkey = object.pubkey;
                 const price = object.price;
+                const invoice = object.invoice;
                 const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite.pin } });
                 const contact = yield models_1.models.Contact.findOne({ where: { id: dbInvite.contactId } });
                 if (dbInvite.status != invite.invite_status) {
-                    dbInvite.update({ status: invite.invite_status, price: price });
+                    const updateObj = { status: invite.invite_status, price: price };
+                    if (invoice)
+                        updateObj.invoice = invoice;
+                    dbInvite.update(updateObj);
                     socket.sendJson({
                         type: 'invite',
                         response: jsonUtils.inviteToJson(dbInvite)
@@ -102,6 +107,22 @@ const checkInvitesHubInterval = (ms) => {
     setInterval(checkInviteHub, ms);
 };
 exports.checkInvitesHubInterval = checkInvitesHubInterval;
+function sendInvoice(payReq) {
+    console.log('[hub] sending invoice');
+    fetch(config.hub_api_url + '/invoices', {
+        method: 'POST',
+        body: JSON.stringify({ invoice: payReq }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(res => res.json())
+        .then(json => {
+        // ?
+    })
+        .catch(error => {
+        console.log('[hub error]', error);
+    });
+}
+exports.sendInvoice = sendInvoice;
 const finishInviteInHub = (params, onSuccess, onFailure) => {
     fetch(config.hub_api_url + '/invites/finish', {
         method: 'POST',
@@ -140,8 +161,22 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
     });
 };
 exports.payInviteInHub = payInviteInHub;
+function payInviteInvoice(invoice, onSuccess, onFailure) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const lightning = yield lightning_1.loadLightning();
+        var call = lightning.sendPayment({});
+        call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
+            onSuccess(response);
+        }));
+        call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
+            onFailure(err);
+        }));
+        call.write({ payment_request: invoice });
+    });
+}
+exports.payInviteInvoice = payInviteInvoice;
 const createInviteInHub = (params, onSuccess, onFailure) => {
-    fetch(config.hub_api_url + '/invites', {
+    fetch(config.hub_api_url + '/invites_new', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }

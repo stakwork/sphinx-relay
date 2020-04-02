@@ -60,12 +60,6 @@ export default class Message extends Model<Message> {
   subscriptionId: number
 
   @Column
-  mediaTerms: string
-
-  @Column
-  receipt: string
-
-  @Column
   mediaKey: string
 
   @Column

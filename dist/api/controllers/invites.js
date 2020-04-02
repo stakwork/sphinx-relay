@@ -34,17 +34,17 @@ const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.finishInvite = finishInvite;
 const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const params = {
-        node_ip: process.env.NODE_IP
-    };
+    // const params = {
+    // 	node_ip: process.env.NODE_IP
+    // }
     const invite_string = req.params['invite_string'];
+    const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite_string } });
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
-        const invite = response.object;
-        console.log("response", invite);
-        const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite.pin } });
-        if (dbInvite.status != invite.invite_status) {
-            dbInvite.update({ status: invite.invite_status });
-        }
+        // const invite = response.object
+        // console.log("response", invite)
+        // if (dbInvite.status != invite.invite_status) {
+        // 	dbInvite.update({ status: invite.invite_status })
+        // }
         res.status(200);
         res.json({ success: true, response: { invite: jsonUtils.inviteToJson(dbInvite) } });
         res.end();
@@ -54,7 +54,8 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.json({ success: false });
         res.end();
     };
-    hub_1.payInviteInHub(invite_string, params, onSuccess, onFailure);
+    // payInviteInHub(invite_string, params, onSuccess, onFailure)
+    hub_1.payInviteInvoice(dbInvite.invoice, onSuccess, onFailure);
 });
 exports.payInvite = payInvite;
 const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
