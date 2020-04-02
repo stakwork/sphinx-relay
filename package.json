@@ -8,7 +8,7 @@
     "build": "webpack --config webpack.config.js",
     "frontend": "webpack-dev-server --entry ./frontend.jsx",
     "start-ts": "ts-node ./app.ts",
-    "start": "ts-node ./app.ts",
+    "start": "HOSTING_PROVIDER=true ts-node ./app.ts",
     "start-hosting": "HOSTING_PROVIDER=true ts-node ./app.ts",
     "prod": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && env NODE_ENV=production node dist/app.js",
     "tsc": "rm -rf dist/ && tsc && cp -r public dist/public",

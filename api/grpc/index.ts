@@ -75,8 +75,9 @@ function subscribeInvoices(actions) {
 				if (invoice == null) {
 					// console.log("ERROR: Invoice " + response['payment_request'] + " not found");
 					const payReq = response['payment_request']
+					const amount = response['amt_paid_sat']
 					if (process.env.HOSTING_PROVIDER==='true'){
-						sendInvoice(payReq)
+						sendInvoice(payReq, amount)
 					}
 					socket.sendJson({
 						type: 'invoice_payment',

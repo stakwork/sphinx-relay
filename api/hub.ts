@@ -30,7 +30,6 @@ const checkInviteHub = async (params = {}) => {
   .then(json => {
     if (json.object) {
       json.object.invites.map(async object => {
-        console.log("CHECK OBJECT=>",object)
         const invite = object.invite
         const pubkey = object.pubkey
         const price = object.price
@@ -38,12 +37,9 @@ const checkInviteHub = async (params = {}) => {
         const dbInvite = await models.Invite.findOne({ where: { inviteString: invite.pin }})
         const contact = await models.Contact.findOne({ where: { id: dbInvite.contactId } })
 
-        console.log('got INVITE, status:',invite.invite_status)
-        console.log('existing status: ',dbInvite.status)
         if (dbInvite.status != invite.invite_status) {
           const updateObj:{[k:string]:any} = { status: invite.invite_status, price: price }
           if(invite.invoice) updateObj.invoice = invite.invoice
-          console.log('update invite!', updateObj)
 
           dbInvite.update(updateObj)
           
@@ -115,11 +111,11 @@ const checkInvitesHubInterval = (ms) => {
   setInterval(checkInviteHub, ms)
 }
 
-export function sendInvoice(payReq) {
+export function sendInvoice(payReq, amount) {
   console.log('[hub] sending invoice')
   fetch(config.hub_api_url + '/invoices', {
     method: 'POST',
-    body:    JSON.stringify({invoice:payReq}),
+    body:    JSON.stringify({invoice:payReq, amount}),
     headers: { 'Content-Type': 'application/json' }
   })
   .then(res => res.json())
