@@ -30,6 +30,7 @@ const checkInviteHub = async (params = {}) => {
   .then(json => {
     if (json.object) {
       json.object.invites.map(async object => {
+        console.log("CHECK OBJECT=>",object)
         const invite = object.invite
         const pubkey = object.pubkey
         const price = object.price
