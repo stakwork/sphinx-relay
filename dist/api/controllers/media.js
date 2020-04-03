@@ -238,14 +238,13 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             message: { amount, content: 'Payment Denied', mediaToken },
             success: (data) => __awaiter(void 0, void 0, void 0, function* () {
                 console.log('purchase_deny sent');
-                const denyMsg = {
+                const denyMsg = yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
                     type: constants.message_types.purchase_deny,
                     mediaToken: mediaToken,
                     date: date, createdAt: date, updatedAt: date
-                };
-                models_1.models.Message.create(denyMsg);
+                });
                 socket.sendJson({
                     type: 'purchase_deny',
                     response: jsonUtils.messageToJson(denyMsg, chat, sender)
@@ -270,14 +269,13 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         },
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('purchase_accept sent!');
-            const acceptMsg = {
+            const acceptMsg = yield models_1.models.Message.create({
                 chatId: chat.id,
                 sender: owner.id,
                 type: constants.message_types.purchase_accept,
                 mediaToken: theMediaToken,
                 date: date, createdAt: date, updatedAt: date
-            };
-            models_1.models.Message.create(acceptMsg);
+            });
             socket.sendJson({
                 type: 'purchase_accept',
                 response: jsonUtils.messageToJson(acceptMsg, chat, sender)
