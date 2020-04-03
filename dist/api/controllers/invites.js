@@ -81,7 +81,7 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             welcomeMessage: inviteCreated.message,
             contactId: contact.id,
             status: inviteCreated.invite_status,
-            inviteString: inviteCreated.pin
+            inviteString: inviteCreated.pin,
         });
         let contactJson = jsonUtils.contactToJson(contact);
         if (invite) {

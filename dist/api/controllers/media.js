@@ -184,7 +184,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!owner || !sender || !chat) {
         return console.log('=> group chat not found!');
     }
-    yield models_1.models.Message.create({
+    const message = {
         chatId: chat.id,
         sender: sender.id,
         type: constants.message_types.purchase,
@@ -192,6 +192,11 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         date: date,
         createdAt: date,
         updatedAt: date
+    };
+    yield models_1.models.Message.create(message);
+    socket.sendJson({
+        type: 'purchase',
+        response: jsonUtils.messageToJson(message, chat, sender)
     });
     const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1];
     if (!muid) {
@@ -233,30 +238,48 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             message: { amount, content: 'Payment Denied', mediaToken },
             success: (data) => __awaiter(void 0, void 0, void 0, function* () {
                 console.log('purchase_deny sent');
+                const denyMsg = {
+                    chatId: chat.id,
+                    sender: owner.id,
+                    type: constants.message_types.purchase_deny,
+                    mediaToken: mediaToken,
+                    date: date, createdAt: date, updatedAt: date
+                };
+                socket.sendJson({
+                    type: 'purchase_deny',
+                    response: jsonUtils.messageToJson(denyMsg, chat, sender)
+                });
             }),
             failure: error => console.log('=> couldnt send purcahse deny', error),
         });
     }
-    const acceptTerms = {
-        muid, ttl: TTL,
+    const theMediaToken = yield ldat_1.tokenFromTerms({
+        muid, ttl: TTL, host: '',
         meta: { amt: amount },
-    };
-    console.log("SEND THIS!", {
-        mediaTerms: acceptTerms,
-        mediaKey: mediaKey.key,
-        mediaType: ogMessage.mediaType,
+        pubkey: sender.publicKey,
     });
     helpers.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
         sender: owner,
         type: constants.message_types.purchase_accept,
         message: {
-            mediaTerms: acceptTerms,
+            mediaToken: theMediaToken,
             mediaKey: mediaKey.key,
             mediaType: ogMessage.mediaType,
         },
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('purchase_accept sent!');
+            const acceptMsg = {
+                chatId: chat.id,
+                sender: owner.id,
+                type: constants.message_types.purchase_accept,
+                mediaToken: theMediaToken,
+                date: date, createdAt: date, updatedAt: date
+            };
+            socket.sendJson({
+                type: 'purchase_accept',
+                response: jsonUtils.messageToJson(acceptMsg, chat, sender)
+            });
         }),
         failure: error => console.log('=> couldnt send purchase accept', error),
     });

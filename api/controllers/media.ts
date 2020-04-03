@@ -209,7 +209,7 @@ const receivePurchase = async (payload) => {
     return console.log('=> group chat not found!')
   }
 
-  await models.Message.create({
+  const message = {
     chatId: chat.id,
     sender: sender.id,
     type: constants.message_types.purchase,
@@ -217,6 +217,11 @@ const receivePurchase = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date
+  }
+  await models.Message.create(message)
+  socket.sendJson({
+    type: 'purchase',
+    response: jsonUtils.messageToJson(message, chat, sender)
   })
 
   const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1]
@@ -260,31 +265,49 @@ const receivePurchase = async (payload) => {
       message: {amount,content:'Payment Denied',mediaToken},
       success: async (data) => {
         console.log('purchase_deny sent')
+        const denyMsg = {
+          chatId: chat.id,
+          sender: owner.id,
+          type: constants.message_types.purchase_deny,
+          mediaToken: mediaToken,
+          date: date, createdAt: date, updatedAt: date
+        }
+        socket.sendJson({
+          type: 'purchase_deny',
+          response: jsonUtils.messageToJson(denyMsg, chat, sender)
+        })
       },
       failure: error=> console.log('=> couldnt send purcahse deny', error),
     })
   }
 
-  const acceptTerms = {
-    muid, ttl: TTL, 
+  const theMediaToken = await tokenFromTerms({
+    muid, ttl: TTL, host:'',
     meta: {amt:amount},
-  }
-  console.log("SEND THIS!", {
-    mediaTerms: acceptTerms, // converted to token in utils/msg.ts
-    mediaKey: mediaKey.key,
-    mediaType: ogMessage.mediaType,
+    pubkey: sender.publicKey,
   })
   helpers.sendMessage({
     chat: {...chat.dataValues, contactIds:[sender.id]}, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
     message: {
-      mediaTerms: acceptTerms, // converted to token in utils/msg.ts
+      mediaToken: theMediaToken,
       mediaKey: mediaKey.key,
       mediaType: ogMessage.mediaType,
     },
     success: async (data) => {
       console.log('purchase_accept sent!')
+      const acceptMsg = {
+        chatId: chat.id,
+        sender: owner.id,
+        type: constants.message_types.purchase_accept,
+        mediaToken: theMediaToken,
+        date: date, createdAt: date, updatedAt: date
+      }
+      socket.sendJson({
+        type: 'purchase_accept',
+        response: jsonUtils.messageToJson(acceptMsg, chat, sender)
+      })
     },
     failure: error=> console.log('=> couldnt send purchase accept', error),
   })
