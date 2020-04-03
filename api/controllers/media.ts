@@ -209,7 +209,8 @@ const receivePurchase = async (payload) => {
     return console.log('=> group chat not found!')
   }
 
-  const message = {
+  
+  const message = await models.Message.create({
     chatId: chat.id,
     sender: sender.id,
     type: constants.message_types.purchase,
@@ -217,8 +218,7 @@ const receivePurchase = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date
-  }
-  await models.Message.create(message)
+  })
   socket.sendJson({
     type: 'purchase',
     response: jsonUtils.messageToJson(message, chat, sender)

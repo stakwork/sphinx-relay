@@ -184,7 +184,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!owner || !sender || !chat) {
         return console.log('=> group chat not found!');
     }
-    const message = {
+    const message = yield models_1.models.Message.create({
         chatId: chat.id,
         sender: sender.id,
         type: constants.message_types.purchase,
@@ -192,8 +192,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         date: date,
         createdAt: date,
         updatedAt: date
-    };
-    yield models_1.models.Message.create(message);
+    });
     socket.sendJson({
         type: 'purchase',
         response: jsonUtils.messageToJson(message, chat, sender)
