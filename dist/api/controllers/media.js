@@ -245,6 +245,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
                     mediaToken: mediaToken,
                     date: date, createdAt: date, updatedAt: date
                 };
+                models_1.models.Message.create(denyMsg);
                 socket.sendJson({
                     type: 'purchase_deny',
                     response: jsonUtils.messageToJson(denyMsg, chat, sender)
@@ -276,6 +277,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
                 mediaToken: theMediaToken,
                 date: date, createdAt: date, updatedAt: date
             };
+            models_1.models.Message.create(acceptMsg);
             socket.sendJson({
                 type: 'purchase_accept',
                 response: jsonUtils.messageToJson(acceptMsg, chat, sender)

@@ -272,6 +272,7 @@ const receivePurchase = async (payload) => {
           mediaToken: mediaToken,
           date: date, createdAt: date, updatedAt: date
         }
+        models.Message.create(denyMsg)
         socket.sendJson({
           type: 'purchase_deny',
           response: jsonUtils.messageToJson(denyMsg, chat, sender)
@@ -304,6 +305,7 @@ const receivePurchase = async (payload) => {
         mediaToken: theMediaToken,
         date: date, createdAt: date, updatedAt: date
       }
+      models.Message.create(acceptMsg)
       socket.sendJson({
         type: 'purchase_accept',
         response: jsonUtils.messageToJson(acceptMsg, chat, sender)
