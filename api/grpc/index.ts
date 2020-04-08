@@ -3,11 +3,33 @@ import * as socket from '../utils/socket'
 import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import * as decodeUtils from '../utils/decode'
-import {loadLightning, SPHINX_CUSTOM_RECORD_KEY} from '../utils/lightning'
+import {loadLightning, SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 
 const constants = require(__dirname + '/../../config/constants.json');
 
-function parseKeysendInvoice(i, actions){
+// VERIFY PUBKEY OF SENDER
+async function parseAndVerifyPayload(data){
+	let payload
+	const li = data.lastIndexOf('}')
+	const msg = data.substring(0,li+1)
+	const sig = data.substring(li+1)
+	try {
+		payload = JSON.parse(msg)
+		if(payload) {
+			if(!sig) return payload // REMOVE THIS LINE (here for backward compat)
+			const v = await verifyAscii(msg, sig)
+			if(v && v.valid && v.pubkey) {
+				payload.sender = payload.sender||{}
+				payload.sender.pub_key=v.pubkey
+				return payload
+			}
+		}
+	} catch(e) {
+		return null
+	}
+}
+
+async function parseKeysendInvoice(i, actions){
 	const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
 	const data = buf && buf.toString()
@@ -17,16 +39,16 @@ function parseKeysendInvoice(i, actions){
 	let payload
 	if(data[0]==='{'){
 		try {
-			payload = JSON.parse(data)
+			payload = await parseAndVerifyPayload(data)
 		} catch(e){}
 	} else {
 		const threads = weave(data)
-		if(threads) payload = JSON.parse(threads)
+		if(threads) payload = await parseAndVerifyPayload(threads)
 	}
 	if(payload){
 		const dat = payload.content || payload
 		if(value && dat && dat.message){
-			dat.message.amount = value
+			dat.message.amount = value // ADD IN TRUE VALUE
 		}
 		if(actions[payload.type]) {
 			actions[payload.type](payload)

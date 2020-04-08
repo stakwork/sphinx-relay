@@ -16,37 +16,64 @@ const jsonUtils = require("../utils/json");
 const decodeUtils = require("../utils/decode");
 const lightning_1 = require("../utils/lightning");
 const constants = require(__dirname + '/../../config/constants.json');
-function parseKeysendInvoice(i, actions) {
-    const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
-    const buf = recs && recs[lightning_1.SPHINX_CUSTOM_RECORD_KEY];
-    const data = buf && buf.toString();
-    const value = i && i.value && parseInt(i.value);
-    if (!data)
-        return;
-    let payload;
-    if (data[0] === '{') {
+// VERIFY PUBKEY OF SENDER
+function parseAndVerifyPayload(data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let payload;
+        const li = data.lastIndexOf('}');
+        const msg = data.substring(0, li + 1);
+        const sig = data.substring(li + 1);
         try {
-            payload = JSON.parse(data);
+            payload = JSON.parse(msg);
+            if (payload) {
+                if (!sig)
+                    return payload; // REMOVE THIS LINE (here for backward compat)
+                const v = yield lightning_1.verifyAscii(msg, sig);
+                if (v && v.valid && v.pubkey) {
+                    payload.sender = payload.sender || {};
+                    payload.sender.pub_key = v.pubkey;
+                    return payload;
+                }
+            }
         }
-        catch (e) { }
-    }
-    else {
-        const threads = weave(data);
-        if (threads)
-            payload = JSON.parse(threads);
-    }
-    if (payload) {
-        const dat = payload.content || payload;
-        if (value && dat && dat.message) {
-            dat.message.amount = value;
+        catch (e) {
+            return null;
         }
-        if (actions[payload.type]) {
-            actions[payload.type](payload);
+    });
+}
+function parseKeysendInvoice(i, actions) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
+        const buf = recs && recs[lightning_1.SPHINX_CUSTOM_RECORD_KEY];
+        const data = buf && buf.toString();
+        const value = i && i.value && parseInt(i.value);
+        if (!data)
+            return;
+        let payload;
+        if (data[0] === '{') {
+            try {
+                payload = yield parseAndVerifyPayload(data);
+            }
+            catch (e) { }
         }
         else {
-            console.log('Incorrect payload type:', payload.type);
+            const threads = weave(data);
+            if (threads)
+                payload = yield parseAndVerifyPayload(threads);
         }
-    }
+        if (payload) {
+            const dat = payload.content || payload;
+            if (value && dat && dat.message) {
+                dat.message.amount = value; // ADD IN TRUE VALUE
+            }
+            if (actions[payload.type]) {
+                actions[payload.type](payload);
+            }
+            else {
+                console.log('Incorrect payload type:', payload.type);
+            }
+        }
+    });
 }
 const chunks = {};
 function weave(p) {
