@@ -133,12 +133,16 @@ const keysend = (opts) => {
   })
 }
 
-const MAX_MSG_LENGTH = 972 // 1146 - 20
+const MAX_MSG_LENGTH = 868 // 1146 - 20 ??? - 104 for sig
 async function keysendMessage(opts) {
   return new Promise(async function(resolve, reject) {
     if(!opts.data || typeof opts.data!=='string') {
       return reject('string plz')
     }
+    // SIGN HERE and append sig
+    // const sig = await signAscii(opts.data)
+    // opts.data = opts.data + sig
+
     if(opts.data.length<MAX_MSG_LENGTH){
       try {
         const res = await keysend(opts)
@@ -186,6 +190,15 @@ async function signAscii(ascii) {
   try {
     const sig = await signMessage(ascii_to_hexa(ascii))
     return sig
+  } catch(e) {
+    throw e
+  }
+}
+
+async function verifyAscii(ascii,sig): Promise<{[k:string]:any}>{
+  try {
+    const r = await verifyMessage(ascii_to_hexa(ascii),sig)
+    return r
   } catch(e) {
     throw e
   }
@@ -256,7 +269,7 @@ const signBuffer = (msg) => {
   })
 }
 
-const verifyMessage = (msg,sig) => {
+function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
   return new Promise(async(resolve, reject)=> {
     let lightning = await loadLightning()
     try {
@@ -311,6 +324,7 @@ export {
   keysendMessage,
   signMessage,
   verifyMessage,
+  verifyAscii,
   signAscii,
   signBuffer,
   LND_KEYSEND_KEY,

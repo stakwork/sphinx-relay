@@ -145,7 +145,7 @@ const keysend = (opts) => {
         });
     });
 };
-const MAX_MSG_LENGTH = 972; // 1146 - 20
+const MAX_MSG_LENGTH = 868; // 1146 - 20 ??? - 104 for sig
 function keysendMessage(opts) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise(function (resolve, reject) {
@@ -153,6 +153,9 @@ function keysendMessage(opts) {
                 if (!opts.data || typeof opts.data !== 'string') {
                     return reject('string plz');
                 }
+                // SIGN HERE and append sig
+                // const sig = await signAscii(opts.data)
+                // opts.data = opts.data + sig
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts);
@@ -212,6 +215,18 @@ function signAscii(ascii) {
     });
 }
 exports.signAscii = signAscii;
+function verifyAscii(ascii, sig) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield verifyMessage(ascii_to_hexa(ascii), sig);
+            return r;
+        }
+        catch (e) {
+            throw e;
+        }
+    });
+}
+exports.verifyAscii = verifyAscii;
 function listInvoices() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
@@ -283,8 +298,8 @@ const signBuffer = (msg) => {
     }));
 };
 exports.signBuffer = signBuffer;
-const verifyMessage = (msg, sig) => {
-    return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
+function verifyMessage(msg, sig) {
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let lightning = yield loadLightning();
         try {
             const options = {
@@ -305,7 +320,7 @@ const verifyMessage = (msg, sig) => {
             reject(e);
         }
     }));
-};
+}
 exports.verifyMessage = verifyMessage;
 function checkConnection() {
     return __awaiter(this, void 0, void 0, function* () {
