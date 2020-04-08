@@ -43,7 +43,6 @@ function parseAndVerifyPayload(data) {
 }
 function parseKeysendInvoice(i, actions) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("FULL", i);
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
         const buf = recs && recs[lightning_1.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();

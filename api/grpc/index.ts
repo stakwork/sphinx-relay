@@ -30,7 +30,6 @@ async function parseAndVerifyPayload(data){
 }
 
 async function parseKeysendInvoice(i, actions){
-	console.log("FULL",i)
 	const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
 	const data = buf && buf.toString()
