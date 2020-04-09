@@ -227,14 +227,15 @@ function newmsg(type, chat, sender, message) {
         type: type,
         chat: Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), chat.type && { type: chat.type }), chat.members && { members: chat.members }),
         message: message,
+        sender: {
+            pub_key: sender.publicKey,
+        }
     };
 }
 function newkeyexchangemsg(type, sender) {
     return {
         type: type,
-        sender: Object.assign({ 
-            // pub_key: sender.publicKey,
-            contact_key: sender.contactKey }, sender.alias && { alias: sender.alias })
+        sender: Object.assign({ pub_key: sender.publicKey, contact_key: sender.contactKey }, sender.alias && { alias: sender.alias })
     };
 }
 //# sourceMappingURL=helpers.js.map

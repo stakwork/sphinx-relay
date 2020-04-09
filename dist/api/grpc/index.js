@@ -26,6 +26,8 @@ function parseAndVerifyPayload(data) {
         try {
             payload = JSON.parse(msg);
             if (payload) {
+                if (!sig)
+                    return payload; // REMOVE THIS LINE (here for backward compat)
                 const v = yield lightning_1.verifyAscii(msg, sig);
                 if (v && v.valid && v.pubkey) {
                     payload.sender = payload.sender || {};
