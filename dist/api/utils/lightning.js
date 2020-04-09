@@ -145,7 +145,7 @@ const keysend = (opts) => {
         });
     });
 };
-const MAX_MSG_LENGTH = 868; // 1146 - 20 ??? - 104 for sig
+const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise(function (resolve, reject) {

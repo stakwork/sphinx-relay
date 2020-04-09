@@ -133,7 +133,7 @@ const keysend = (opts) => {
   })
 }
 
-const MAX_MSG_LENGTH = 868 // 1146 - 20 ??? - 104 for sig
+const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
 async function keysendMessage(opts) {
   return new Promise(async function(resolve, reject) {
     if(!opts.data || typeof opts.data!=='string') {
