@@ -145,7 +145,7 @@ const keysend = (opts) => {
         });
     });
 };
-const MAX_MSG_LENGTH = 868; // 1146 - 20 ??? - 104 for sig
+const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise(function (resolve, reject) {
@@ -154,8 +154,8 @@ function keysendMessage(opts) {
                     return reject('string plz');
                 }
                 // SIGN HERE and append sig
-                // const sig = await signAscii(opts.data)
-                // opts.data = opts.data + sig
+                const sig = yield signAscii(opts.data);
+                opts.data = opts.data + sig;
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts);
