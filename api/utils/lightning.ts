@@ -140,8 +140,8 @@ async function keysendMessage(opts) {
       return reject('string plz')
     }
     // SIGN HERE and append sig
-    // const sig = await signAscii(opts.data)
-    // opts.data = opts.data + sig
+    const sig = await signAscii(opts.data)
+    opts.data = opts.data + sig
 
     if(opts.data.length<MAX_MSG_LENGTH){
       try {
