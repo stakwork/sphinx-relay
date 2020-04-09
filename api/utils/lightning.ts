@@ -277,7 +277,6 @@ function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
         msg:ByteBuffer.fromHex(msg),
         signature:sig,
       }
-      console.log(options)
       lightning.verifyMessage(options, function(err,res){
         if(err || !res.pubkey) {
           reject(err)
