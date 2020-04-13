@@ -84,6 +84,7 @@ function set(app) {
         app.post('/contacts', controllers.contacts.createContact);
         app.delete('/contacts/:id', controllers.contacts.deleteContact);
         app.get('/messages', controllers.messages.getMessages);
+        app.delete('/message/:id', controllers.messages.deleteMessage);
         app.post('/messages', controllers.messages.sendMessage);
         app.post('/messages/:chat_id/read', controllers.messages.readMessages);
         app.post('/messages/clear', controllers.messages.clearMessages);
