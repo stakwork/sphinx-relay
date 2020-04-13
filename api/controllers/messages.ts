@@ -83,6 +83,12 @@ const getAllMessages = async (req, res) => {
 	})
 };
 
+async function deleteMessage(req, res){
+	const id = req.params.id
+	await models.Message.destroy({ where: {id} })
+	success(res, {id})
+}
+
 const sendMessage = async (req, res) => {
 	// try {
 	// 	schemas.message.validateSync(req.body)
@@ -203,5 +209,6 @@ export {
   sendMessage,
   receiveMessage,
   clearMessages,
-  readMessages
+  readMessages,
+  deleteMessage
 }

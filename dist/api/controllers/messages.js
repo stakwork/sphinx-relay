@@ -78,6 +78,14 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         confirmed_messages: []
     });
 });
+function deleteMessage(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const id = req.params.id;
+        yield models_1.models.Message.destroy({ where: { id } });
+        res_1.success(res, { id });
+    });
+}
+exports.deleteMessage = deleteMessage;
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // try {
     // 	schemas.message.validateSync(req.body)
