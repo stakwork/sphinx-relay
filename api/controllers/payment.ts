@@ -6,8 +6,9 @@ import * as helpers from '../helpers'
 import { success } from '../utils/res'
 import * as lightning from '../utils/lightning'
 import {tokenFromTerms} from '../utils/ldat'
+import * as constants from '../../config/constants.json'
 
-const constants = require(__dirname + '/../../config/constants.json');
+
 
 const sendPayment = async (req, res) => {
   const {
@@ -107,6 +108,7 @@ const sendPayment = async (req, res) => {
       success(res, jsonUtils.messageToJson(message, chat))
     },
     failure: (error) => {
+      message.update({status: constants.statuses.failed})
       res.status(200);
       res.json({ success: false, error });
       res.end();
