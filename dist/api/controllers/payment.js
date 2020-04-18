@@ -17,7 +17,7 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const lightning = require("../utils/lightning");
 const ldat_1 = require("../utils/ldat");
-const constants = require(__dirname + '/../../config/constants.json');
+const constants = require("../../config/constants.json");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, } = req.body;
     console.log('[send payment]', req.body);
@@ -98,6 +98,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res_1.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => {
+            message.update({ status: constants.statuses.failed });
             res.status(200);
             res.json({ success: false, error });
             res.end();

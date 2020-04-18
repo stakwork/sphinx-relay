@@ -130,14 +130,12 @@ const finishInviteInHub = (params, onSuccess, onFailure) => {
     })
         .then(res => res.json())
         .then(json => {
-        if (json.object) {
-            console.log('[hub] finished invite to hub');
-            onSuccess(json);
-        }
-        else {
-            console.log('[hub] fail to finish invite in hub');
-            onFailure(json);
-        }
+        console.log('[hub] finished invite to hub');
+        onSuccess(json);
+    })
+        .catch(e => {
+        console.log('[hub] fail to finish invite in hub');
+        onFailure(e);
     });
 };
 exports.finishInviteInHub = finishInviteInHub;
