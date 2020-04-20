@@ -85,7 +85,11 @@ function isClean() {
     return __awaiter(this, void 0, void 0, function* () {
         // has owner but with no auth token
         const cleanOwner = yield models_1.models.Contact.findOne({ where: { isOwner: true, authToken: null } });
-        if (cleanOwner)
+        const msgs = yield models_1.models.Message.findAll();
+        const allContacts = yield models_1.models.Contact.findAll();
+        const noMsgs = msgs.length === 0;
+        const onlyOneContact = allContacts.length === 1;
+        if (cleanOwner && noMsgs && onlyOneContact)
             return true;
         return false;
     });
