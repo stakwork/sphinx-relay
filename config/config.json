@@ -1,7 +1,7 @@
 {
   "development": {
     "dialect": "sqlite",
-    "storage": "/Users/Shared/sphinx.db"
+    "storage": "./sphinx.db"
   },
   "docker_development": {
     "dialect": "sqlite",

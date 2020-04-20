@@ -1,0 +1,35 @@
+version: '2'
+volumes:
+  node_modules:
+
+services:
+  lnd:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .lnd/:/root/.lnd
+    ports:
+      - "9735:9735"
+      - "10009:10009"
+      - "8080:8080"
+    command: 'lnd --alias=gonza-ireland --restlisten=0.0.0.0:8080 --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --bitcoin.mainnet --bitcoin.active --bitcoin.node=neutrino'
+  node_server:
+    build:
+      context: .
+      dockerfile: Dockerfile-node
+    depends_on:
+      - lnd
+    volumes:
+      - .:/relay:cached
+      - .lnd/:/relay/.lnd
+      - node_modules:/relay/node_modules
+    ports:
+      - "3000:3000"
+    tty: true
+    # command: "npm start"
+    environment:
+      - PORT=3000
+      - NODE_IP=51.37.119.104
+      - NODE_ALIAS=gonza-ireland
+      - NODE_ENV=production

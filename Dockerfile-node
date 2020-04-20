@@ -1,0 +1,26 @@
+FROM node:8
+RUN apt-get update
+RUN apt-get install -f sqlite3
+RUN mkdir /relay/
+RUN chown -R node:node /relay
+RUN chmod -R 777 /relay
+USER node
+# ENV NPM_CONFIG_PREFIX=/relay/.npm-global
+# ENV PATH=$PATH:/relay/.npm-global/bin
+WORKDIR /relay/
+COPY package.json .
+RUN npm install
+RUN npm install nodemon --save-dev
+RUN npm install express --save-dev
+RUN npm install webpack webpack-cli --save-dev
+RUN npm install sqlite3 --build-from-source --save-dev
+RUN npm install --save-dev sequelize
+RUN npm rebuild
+COPY . .
+USER root
+RUN apt-get install telnet
+RUN chmod 777 /usr/bin/telnet
+RUN chmod -R 777 /relay
+RUN chown -R node:node /relay
+USER node
+RUN npm run tsc
