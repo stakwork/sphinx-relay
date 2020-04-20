@@ -6,7 +6,7 @@ import * as crypto from 'crypto'
 import {models} from './api/models'
 import logger from './api/utils/logger'
 import {pingHubInterval, checkInvitesHubInterval} from './api/hub'
-import {setupDatabase} from './api/utils/setup'
+import {setupDatabase, printQR} from './api/utils/setup'
 import * as controllers from './api/controllers'
 import * as socket from './api/utils/socket'
 
@@ -42,6 +42,7 @@ async function mainSetup(){
 		checkInvitesHubInterval(5000)
 	}
 	await setupApp()
+	printQR()
 }
  
 async function setupApp(){

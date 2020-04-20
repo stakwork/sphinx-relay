@@ -12,6 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const lightning_1 = require("./lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
+const QRCode = require("qrcode");
+const publicIp = require("public-ip");
 const USER_VERSION = 1;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
@@ -93,4 +95,29 @@ const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.runMigrations = runMigrations;
+function printQR() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ip = process.env.NODE_IP;
+        let public_ip;
+        if (!ip) {
+            try {
+                public_ip = yield publicIp.v4();
+            }
+            catch (e) {
+                console.log(e);
+            }
+        }
+        else {
+            public_ip = ip;
+        }
+        if (!ip)
+            return;
+        const b64 = Buffer.from(`ip:${public_ip}`).toString('base64');
+        console.log('Scan this QR in Sphinx app:');
+        QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
+            console.log(url);
+        });
+    });
+}
+exports.printQR = printQR;
 //# sourceMappingURL=setup.js.map
