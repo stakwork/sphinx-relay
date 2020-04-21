@@ -102,7 +102,7 @@ async function printQR(){
   const pwd = password||''
   console.log('use password?',process.env.USE_PASSWORD)
 
-  const b64 = Buffer.from(`ip:${public_ip}:${pwd}`).toString('base64')
+  const b64 = Buffer.from(`ip::${public_ip}::${pwd}`).toString('base64')
   console.log('=>', b64)
   console.log('Scan this QR in Sphinx app:')
   QRCode.toString(b64,{type:'terminal'}, function (err, url) {

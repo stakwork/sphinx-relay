@@ -33,6 +33,9 @@ Edit the "production" section of config/app.json:
  - Change `macaroon_location` to the location of your LND admin macaroon
  - Change `tls_location` to the location of your LND cert
 
+Edit the "production" section of config/config.json
+ - Update "storage" to point to where you want your DB file to live
+
 To connect to your app
  - `export NODE_IP=x.x.x.x` (you can use a domain name instead if you have that set up)
  - For extra security, `export USE_PASSWORD=true`
