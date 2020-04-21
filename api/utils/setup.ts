@@ -97,7 +97,10 @@ async function printQR(){
   } else {
     public_ip = ip
   }
-  if(!public_ip) return
+  if(!public_ip) {
+    console.log('=> no public IP provided')
+    return
+  }
 
   const pwd = password||''
   console.log('use password?',process.env.USE_PASSWORD)

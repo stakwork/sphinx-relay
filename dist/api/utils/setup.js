@@ -111,8 +111,10 @@ function printQR() {
         else {
             public_ip = ip;
         }
-        if (!public_ip)
+        if (!public_ip) {
+            console.log('=> no public IP provided');
             return;
+        }
         const pwd = password_1.default || '';
         console.log('use password?', process.env.USE_PASSWORD);
         const b64 = Buffer.from(`ip::${public_ip}::${pwd}`).toString('base64');
