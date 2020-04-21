@@ -44,7 +44,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, authToken: null } });
     const pwd = password_1.default;
     if (process.env.USE_PASSWORD === 'true') {
-        if (pwd !== req.params['pwd']) {
+        if (pwd !== req.query.pwd) {
             res_1.failure(res, 'Wrong Password');
             return;
         }

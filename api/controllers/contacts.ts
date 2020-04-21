@@ -42,7 +42,7 @@ const generateToken = async (req, res) => {
 
 	const pwd = password
 	if(process.env.USE_PASSWORD==='true'){
-		if(pwd!==req.params['pwd']) {
+		if(pwd!==req.query.pwd) {
 			failure(res, 'Wrong Password')
 			return
 		} else {
