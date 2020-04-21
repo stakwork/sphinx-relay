@@ -231,7 +231,7 @@ const sendNotification = async (chat, name, type) => {
     }
   }
 
-  fetch("http://hub.sphinx.chat/api/v1/nodes/notify", {
+  fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {
     method: 'POST' ,
     body:    JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' }
