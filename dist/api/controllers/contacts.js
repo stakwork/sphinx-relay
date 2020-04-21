@@ -15,6 +15,7 @@ const socket = require("../utils/socket");
 const helpers = require("../helpers");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
+const password_1 = require("../utils/password");
 const constants = require(__dirname + '/../../config/constants.json');
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false }, raw: true });
@@ -41,6 +42,16 @@ exports.getContacts = getContacts;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query });
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, authToken: null } });
+    const pwd = password_1.default;
+    if (process.env.USE_PASSWORD === 'true') {
+        if (pwd !== req.query.pwd) {
+            res_1.failure(res, 'Wrong Password');
+            return;
+        }
+        else {
+            console.log("PASSWORD ACCEPTED!");
+        }
+    }
     if (owner) {
         const hash = crypto.createHash('sha256').update(req.body['token']).digest('base64');
         console.log("req.params['token']", req.params['token']);
@@ -58,13 +69,6 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
     let shouldUpdateContactKey = (contact.isOwner && contact.contactKey == null && attrs["contact_key"] != null);
-    const pwd = process.env.NODE_PASSWORD || '';
-    if (pwd) { // if NODE_PASSWORD set, needs to set submitted
-        if (pwd !== req.params['pwd']) {
-            res_1.failure(res, 'Wrong Password');
-            return;
-        }
-    }
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
     if (!shouldUpdateContactKey)

@@ -3,6 +3,7 @@ import {sequelize, models} from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as publicIp from 'public-ip'
+import password from '../utils/password'
 
 const USER_VERSION = 1
 
@@ -98,8 +99,8 @@ async function printQR(){
   }
   if(!public_ip) return
 
-  const pwd = process.env.NODE_PASSWORD || ''
-  console.log('pass:',pwd)
+  const pwd = password||''
+  console.log('use password?',process.env.USE_PASSWORD)
 
   const b64 = Buffer.from(`ip:${public_ip}:${pwd}`).toString('base64')
   console.log('=>', b64)
