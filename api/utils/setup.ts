@@ -96,7 +96,7 @@ async function printQR(){
   } else {
     public_ip = ip
   }
-  if(!ip) return
+  if(!public_ip) return
 
   const pwd = process.env.NODE_PASSWORD || ''
   console.log(pwd)
