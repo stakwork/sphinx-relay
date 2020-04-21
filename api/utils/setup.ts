@@ -4,6 +4,7 @@ import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as publicIp from 'public-ip'
 import password from '../utils/password'
+import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
 const USER_VERSION = 1
 
@@ -83,7 +84,18 @@ const runMigrations = async () => {
   });
 }
 
-export { setupDatabase, setupOwnerContact, runMigrations, printQR }
+export { setupDatabase, setupOwnerContact, runMigrations, setupDone }
+
+async function setupDone(){
+  await printGitInfo()
+  printQR()
+}
+
+async function printGitInfo(){
+  const commitHash = await checkCommitHash()
+  const tag = await checkTag()
+  console.log(`=> commit: ${commitHash}, tag: ${tag}`)
+}
 
 async function printQR(){
   const ip = process.env.NODE_IP

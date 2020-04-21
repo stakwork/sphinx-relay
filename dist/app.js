@@ -51,7 +51,7 @@ function mainSetup() {
             hub_1.checkInvitesHubInterval(5000);
         }
         yield setupApp();
-        setup_1.printQR();
+        setup_1.setupDone();
     });
 }
 function setupApp() {

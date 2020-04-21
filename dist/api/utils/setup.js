@@ -15,6 +15,7 @@ const child_process_1 = require("child_process");
 const QRCode = require("qrcode");
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
+const gitinfo_1 = require("../utils/gitinfo");
 const USER_VERSION = 1;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
@@ -96,6 +97,20 @@ const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.runMigrations = runMigrations;
+function setupDone() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield printGitInfo();
+        printQR();
+    });
+}
+exports.setupDone = setupDone;
+function printGitInfo() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const commitHash = yield gitinfo_1.checkCommitHash();
+        const tag = yield gitinfo_1.checkTag();
+        console.log(`=> commit: ${commitHash}, tag: ${tag}`);
+    });
+}
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
         const ip = process.env.NODE_IP;
@@ -125,5 +140,4 @@ function printQR() {
         });
     });
 }
-exports.printQR = printQR;
 //# sourceMappingURL=setup.js.map
