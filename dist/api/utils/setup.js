@@ -110,7 +110,7 @@ function printQR() {
         else {
             public_ip = ip;
         }
-        if (!ip)
+        if (!public_ip)
             return;
         const b64 = Buffer.from(`ip:${public_ip}`).toString('base64');
         console.log('Scan this QR in Sphinx app:');
