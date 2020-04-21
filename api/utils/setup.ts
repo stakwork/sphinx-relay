@@ -100,7 +100,7 @@ async function printQR(){
   if(!public_ip) return
 
   const pwd = password||''
-  console.log('pass:',pwd)
+  console.log('use password?',process.env.USE_PASSWORD)
 
   const b64 = Buffer.from(`ip:${public_ip}:${pwd}`).toString('base64')
   console.log('=>', b64)
