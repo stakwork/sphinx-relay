@@ -7,15 +7,20 @@ ENV GODEBUG netdns=cgo
 # Pass a tag, branch or a commit using build-arg.  This allows a docker
 # image to be built from a specified Git state.  The default image
 # will use the Git tip of master by default.
+# ARG checkout="v0.9.0-beta"
 ARG checkout="master"
 
 # Install dependencies and build the binaries.
-RUN apk add --no-cache --update alpine-sdk \
-    git \
-    make \
-    gcc \
-&&  git clone https://github.com/lightningnetwork/lnd /go/src/github.com/lightningnetwork/lnd \
-&&  cd /go/src/github.com/lightningnetwork/lnd \
+RUN apk add --no-cache --update alpine-sdk git make gcc openssh-client
+
+RUN mkdir /root/.ssh/
+ADD id_rsa /root/.ssh/id_rsa
+RUN touch /root/.ssh/known_hosts
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
+RUN git clone git@github.com:stakwork/lnd-lean.git /go/src/github.com/lightningnetwork/lnd
+
+# RUN git clone https://github.com/lightningnetwork/lnd /go/src/github.com/lightningnetwork/lnd
+RUN cd /go/src/github.com/lightningnetwork/lnd \
 &&  git checkout $checkout \
 &&  make \
 &&  make install tags="signrpc walletrpc chainrpc invoicesrpc"

@@ -13,7 +13,10 @@ services:
       - "9735:9735"
       - "10009:10009"
       - "8080:8080"
-    command: 'lnd --alias=gonza-ireland --restlisten=0.0.0.0:8080 --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --bitcoin.mainnet --bitcoin.active --bitcoin.node=neutrino'
+    command: 'lnd --accept-keysend'
+    # networks:
+    #   - lnd_relay
+    # tty: true
   node_server:
     build:
       context: .
@@ -21,13 +24,15 @@ services:
     depends_on:
       - lnd
     volumes:
-      - .:/relay:cached
+      - .:/relay
       - .lnd/:/relay/.lnd
       - node_modules:/relay/node_modules
     ports:
       - "3000:3000"
-    tty: true
-    # command: "npm start"
+    # tty: true
+    command: "npm start"
+    # networks:
+    #   - lnd_relay
     environment:
       - PORT=3000
       - NODE_IP=51.37.119.104

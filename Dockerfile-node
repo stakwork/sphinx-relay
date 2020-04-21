@@ -18,8 +18,6 @@ RUN npm install --save-dev sequelize
 RUN npm rebuild
 COPY . .
 USER root
-RUN apt-get install telnet
-RUN chmod 777 /usr/bin/telnet
 RUN chmod -R 777 /relay
 RUN chown -R node:node /relay
 USER node
