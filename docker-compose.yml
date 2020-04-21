@@ -12,11 +12,7 @@ services:
     ports:
       - "9735:9735"
       - "10009:10009"
-      - "8080:8080"
     command: 'lnd --accept-keysend'
-    # networks:
-    #   - lnd_relay
-    # tty: true
   node_server:
     build:
       context: .
@@ -29,12 +25,9 @@ services:
       - node_modules:/relay/node_modules
     ports:
       - "3000:3000"
-    # tty: true
     command: "npm start"
-    # networks:
-    #   - lnd_relay
     environment:
       - PORT=3000
-      - NODE_IP=51.37.119.104
-      - NODE_ALIAS=gonza-ireland
+      - NODE_IP=mynodeip
+      - NODE_ALIAS=myalias
       - NODE_ENV=production

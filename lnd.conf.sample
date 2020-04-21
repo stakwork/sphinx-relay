@@ -1,0 +1,11 @@
+bitcoin.mainnet=1
+bitcoin.active=1
+bitcoin.node=neutrino
+
+alias=myalias
+listen=0.0.0.0:9735
+rpclisten=0.0.0.0:10009
+
+ignore-historical-gossip-filters=true
+nobootstrap=true
+numgraphsyncpeers=1
