@@ -100,7 +100,7 @@ const sendMessage = async (params) => {
 		const opts = {
 			dest: destkey,
 			data: JSON.stringify(finalMsg),
-			amt: amount || 2,
+			amt: amount || 3,
 		}
 		try {
 			const r = await keysendMessage(opts)
@@ -121,7 +121,7 @@ const performKeysendMessage = async ({ destination_key, amount, msg, success, fa
 	const opts = {
 		dest: destination_key,
 		data: msg || JSON.stringify({}),
-		amt: amount || 2
+		amt: amount || 3
 	}
 	try {
 		const r = await keysendMessage(opts)

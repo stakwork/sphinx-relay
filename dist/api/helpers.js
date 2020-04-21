@@ -101,7 +101,7 @@ const sendMessage = (params) => __awaiter(void 0, void 0, void 0, function* () {
         const opts = {
             dest: destkey,
             data: JSON.stringify(finalMsg),
-            amt: amount || 2,
+            amt: amount || 3,
         };
         try {
             const r = yield lightning_1.keysendMessage(opts);
@@ -126,7 +126,7 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure 
     const opts = {
         dest: destination_key,
         data: msg || JSON.stringify({}),
-        amt: amount || 2
+        amt: amount || 3
     };
     try {
         const r = yield lightning_1.keysendMessage(opts);
