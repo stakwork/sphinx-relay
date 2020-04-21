@@ -61,18 +61,21 @@ const updateContact = async (req, res) => {
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
 	let shouldUpdateContactKey = (contact.isOwner && contact.contactKey == null && attrs["contact_key"] != null)
 	
+	const pwd = process.env.NODE_PASSWORD || ''
+	if(pwd){ // if NODE_PASSWORD set, needs to set submitted
+		if(pwd!==req.params['pwd']) {
+			failure(res, 'Wrong Password')
+			return 
+		}
+	}
+
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
 	success(res, jsonUtils.contactToJson(owner))
 
-	if (!shouldUpdateContactKey) {
-		return
-	}
-	// definitely "owner" now
+	if (!shouldUpdateContactKey) return
 
 	const contactIds = await models.Contact.findAll({where:{deleted:false}}).map(c => c.id)
-	if (contactIds.length == 0) {
-		return
-	}
+	if (contactIds.length == 0) return
 
 	helpers.sendContactKeys({
 		contactIds: contactIds,

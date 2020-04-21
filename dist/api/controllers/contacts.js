@@ -58,16 +58,20 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
     let shouldUpdateContactKey = (contact.isOwner && contact.contactKey == null && attrs["contact_key"] != null);
+    const pwd = process.env.NODE_PASSWORD || '';
+    if (pwd) { // if NODE_PASSWORD set, needs to set submitted
+        if (pwd !== req.params['pwd']) {
+            res_1.failure(res, 'Wrong Password');
+            return;
+        }
+    }
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
-    if (!shouldUpdateContactKey) {
+    if (!shouldUpdateContactKey)
         return;
-    }
-    // definitely "owner" now
     const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } }).map(c => c.id);
-    if (contactIds.length == 0) {
+    if (contactIds.length == 0)
         return;
-    }
     helpers.sendContactKeys({
         contactIds: contactIds,
         sender: owner,
