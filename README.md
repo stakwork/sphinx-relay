@@ -33,9 +33,15 @@ Edit the "production" section of config/app.json:
  - Change `macaroon_location` to the location of your LND admin macaroon
  - Change `tls_location` to the location of your LND cert
 
+To connect to your app
+ - `export NODE_IP=x.x.x.x` (you can use a domain name instead if you have that set up)
+ - For extra security, `export USE_PASSWORD=true`
+
 ### run
 
 `npm run prod`
+
+When Relay starts up, it will print a QR in the terminal. You can scan this in your app (right now Android only) to connect!
 
 # Roadmap
 
