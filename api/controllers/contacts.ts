@@ -4,6 +4,7 @@ import * as socket from '../utils/socket'
 import * as helpers from '../helpers'
 import * as jsonUtils from '../utils/json'
 import {success, failure} from '../utils/res'
+import password from '../utils/password'
 
 const constants = require(__dirname + '/../../config/constants.json')
 
@@ -61,8 +62,8 @@ const updateContact = async (req, res) => {
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
 	let shouldUpdateContactKey = (contact.isOwner && contact.contactKey == null && attrs["contact_key"] != null)
 	
-	const pwd = process.env.NODE_PASSWORD || ''
-	if(pwd){ // if NODE_PASSWORD set, needs to set submitted
+	const pwd = password
+	if(process.env.USE_PASSWORD==='true'){
 		if(pwd!==req.params['pwd']) {
 			failure(res, 'Wrong Password')
 			return 

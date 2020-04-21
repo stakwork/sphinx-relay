@@ -14,6 +14,7 @@ const models_1 = require("../models");
 const child_process_1 = require("child_process");
 const QRCode = require("qrcode");
 const publicIp = require("public-ip");
+const password_1 = require("../utils/password");
 const USER_VERSION = 1;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
@@ -112,7 +113,7 @@ function printQR() {
         }
         if (!public_ip)
             return;
-        const pwd = process.env.NODE_PASSWORD || '';
+        const pwd = password_1.default || '';
         console.log('pass:', pwd);
         const b64 = Buffer.from(`ip:${public_ip}:${pwd}`).toString('base64');
         console.log('=>', b64);
