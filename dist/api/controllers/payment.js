@@ -102,7 +102,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(200);
             res.json({
                 success: false,
-                message: jsonUtils.messageToJson(message, chat)
+                response: jsonUtils.messageToJson(message, chat)
             });
             res.end();
         })

@@ -110,7 +110,7 @@ const sendPayment = async (req, res) => {
       res.status(200);
       res.json({ 
         success: false, 
-        message: jsonUtils.messageToJson(message, chat)
+        response: jsonUtils.messageToJson(message, chat)
       });
       res.end();
     }
