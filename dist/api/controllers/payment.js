@@ -97,12 +97,15 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             // console.log('payment sent', { data })
             res_1.success(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: (error) => {
-            message.update({ status: constants.statuses.failed });
+        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+            yield message.update({ status: constants.statuses.failed });
             res.status(200);
-            res.json({ success: false, error });
+            res.json({
+                success: false,
+                message: jsonUtils.messageToJson(message, chat)
+            });
             res.end();
-        }
+        })
     });
 });
 exports.sendPayment = sendPayment;
