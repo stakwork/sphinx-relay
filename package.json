@@ -4,6 +4,7 @@
   "description": "",
   "main": "index-unauth.js",
   "scripts": {
+    "test": "echo 'no tests yet!' && exit 0",
     "docker-dev": "nodemon ./app.js",
     "build": "webpack --config webpack.config.js",
     "frontend": "webpack-dev-server --entry ./frontend.jsx",
