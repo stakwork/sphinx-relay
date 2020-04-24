@@ -108,7 +108,7 @@ const keysend = (opts) => {
     const randoStr = crypto.randomBytes(32).toString('hex');
     const preimage = ByteBuffer.fromHex(randoStr)
     const options = {
-      amt: opts.amt,
+      amt: Math.max(opts.amt, 3),
       final_cltv_delta: 10,
       dest: ByteBuffer.fromHex(opts.dest),
       dest_custom_records: {
