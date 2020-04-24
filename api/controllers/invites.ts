@@ -60,7 +60,7 @@ const createInvite = async (req, res) => {
 	const {
 		nickname,
 		welcome_message
-  } = req.body
+  	} = req.body
 	  
  	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
