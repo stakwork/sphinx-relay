@@ -15,6 +15,8 @@ const hub_1 = require("../hub");
 const jsonUtils = require("../utils/json");
 const decodeUtils = require("../utils/decode");
 const lightning_1 = require("../utils/lightning");
+const controllers = require("../controllers");
+const moment = require("moment");
 const constants = require(__dirname + '/../../config/constants.json');
 // VERIFY PUBKEY OF SENDER
 function parseAndVerifyPayload(data) {
@@ -168,8 +170,10 @@ function subscribeInvoices(actions) {
             reject(err);
         });
         call.on('end', function () {
-            console.log("Closed stream");
+            const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+            console.log(`Closed stream ${now}`);
             // The server has closed the stream.
+            reconnectToLND();
         });
         setTimeout(() => {
             resolve(null);
@@ -177,4 +181,21 @@ function subscribeInvoices(actions) {
     }));
 }
 exports.subscribeInvoices = subscribeInvoices;
+var i = 0;
+function reconnectToLND() {
+    return __awaiter(this, void 0, void 0, function* () {
+        i++;
+        console.log(`=> [lnd] reconnecting... attempt #${i}`);
+        try {
+            yield controllers.iniGrpcSubscriptions();
+            const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+            console.log(`=> [lnd] reconnected! ${now}`);
+        }
+        catch (e) {
+            setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                yield reconnectToLND();
+            }), 2000);
+        }
+    });
+}
 //# sourceMappingURL=index.js.map

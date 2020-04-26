@@ -4,6 +4,8 @@ import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import * as decodeUtils from '../utils/decode'
 import {loadLightning, SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
+import * as controllers from '../controllers'
+import * as moment from 'moment'
 
 const constants = require(__dirname + '/../../config/constants.json');
 
@@ -158,13 +160,30 @@ function subscribeInvoices(actions) {
 			reject(err)
 		})
 		call.on('end', function() {
-			console.log("Closed stream");
+			const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+			console.log(`Closed stream ${now}`);
 			// The server has closed the stream.
+			reconnectToLND()
 		});
 		setTimeout(()=>{
 			resolve(null)
 		},100)
 	})
+}
+
+var i = 0
+async function reconnectToLND(){
+	i++
+	console.log(`=> [lnd] reconnecting... attempt #${i}`)
+	try {
+		await controllers.iniGrpcSubscriptions()
+		const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+		console.log(`=> [lnd] reconnected! ${now}`)
+	} catch(e) {
+		setTimeout(async()=>{ // retry each 2 secs
+			await reconnectToLND()
+		},2000)
+	}
 }
 
 export {
