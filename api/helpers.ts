@@ -125,7 +125,7 @@ const performKeysendMessage = async ({ destination_key, amount, msg, success, fa
 	}
 	try {
 		const r = await keysendMessage(opts)
-		console.log("MESSAGE SENT outside SW!", r)
+		console.log("=> external keysend")
 		if (success) success(r)
 	} catch (e) {
 		console.log("MESSAGE ERROR", e)

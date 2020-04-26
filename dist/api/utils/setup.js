@@ -130,11 +130,9 @@ function printQR() {
             console.log('=> no public IP provided');
             return;
         }
-        const pwd = password_1.default || '';
-        console.log('use password?', process.env.USE_PASSWORD);
-        const b64 = Buffer.from(`ip::${public_ip}::${pwd}`).toString('base64');
-        console.log('=>', b64);
+        const b64 = Buffer.from(`ip::${public_ip}::${password_1.default || ''}`).toString('base64');
         console.log('Scan this QR in Sphinx app:');
+        console.log(b64);
         QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
             console.log(url);
         });

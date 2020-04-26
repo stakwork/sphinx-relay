@@ -130,7 +130,7 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure 
     };
     try {
         const r = yield lightning_1.keysendMessage(opts);
-        console.log("MESSAGE SENT outside SW!", r);
+        console.log("=> external keysend");
         if (success)
             success(r);
     }

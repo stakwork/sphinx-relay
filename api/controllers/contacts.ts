@@ -160,7 +160,7 @@ const deleteContact = async (req, res) => {
 }
 
 const receiveConfirmContactKey = async (payload) => {
-	console.log('=> confirm contact key', { payload })
+	console.log(`=> confirm contact key for ${payload.sender&&payload.sender.pub_key}`)
 
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key

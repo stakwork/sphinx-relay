@@ -28,6 +28,7 @@ function nodeinfo(){
         // const { balance, pending_open_balance } = channelBalance
         lightning.listChannels({}, (err, channelList) => {
           if(err) console.log(err)
+          if(!channelList) return
           const { channels } = channelList
 
           const localBalances = channels.map(c => c.local_balance)

@@ -35,6 +35,8 @@ function nodeinfo() {
                 lightning.listChannels({}, (err, channelList) => {
                     if (err)
                         console.log(err);
+                    if (!channelList)
+                        return;
                     const { channels } = channelList;
                     const localBalances = channels.map(c => c.local_balance);
                     const remoteBalances = channels.map(c => c.remote_balance);
