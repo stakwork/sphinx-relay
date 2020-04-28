@@ -146,8 +146,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const payments = [];
-    const response = yield lightning.listInvoices();
-    const invs = response && response.invoices;
+    const invs = yield lightning.listAllInvoices();
     if (invs && invs.length) {
         invs.forEach(inv => {
             const val = inv.value && parseInt(inv.value);
@@ -166,8 +165,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             }
         });
     }
-    const res2 = yield lightning.listPayments();
-    const pays = res2 && res2.payments;
+    const pays = yield lightning.listAllPayments();
     if (pays && pays.length) {
         pays.forEach(pay => {
             const val = pay.value && parseInt(pay.value);

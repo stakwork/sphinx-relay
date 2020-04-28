@@ -244,12 +244,88 @@ function listInvoices() {
     }));
 }
 exports.listInvoices = listInvoices;
-function listPayments() {
+function listAllInvoices() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const invs = yield paginateInvoices(40);
+        return invs;
+    });
+}
+exports.listAllInvoices = listAllInvoices;
+function paginateInvoices(limit, i = 0) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield listInvoicesPaginated(limit, i);
+            console.log(r);
+            const lastOffset = parseInt(r.first_index_offset);
+            if (lastOffset > 0) {
+                return r.invoices.concat(yield paginateInvoices(limit, lastOffset));
+            }
+            return r.invoices;
+        }
+        catch (e) {
+            return [];
+        }
+    });
+}
+function listInvoicesPaginated(limit, offset) {
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        const lightning = yield loadLightning();
+        lightning.listInvoices({
+            num_max_invoices: limit,
+            index_offset: offset,
+            reversed: true,
+        }, (err, response) => {
+            if (!err && response && response.invoices)
+                resolve(response);
+            else
+                reject(err);
+        });
+    }));
+}
+// need to upgrade to .10 for this
+function listAllPaymentsPaginated() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const invs = yield paginatePayments(40); // max num
+        return invs;
+    });
+}
+exports.listAllPaymentsPaginated = listAllPaymentsPaginated;
+function paginatePayments(limit, i = 0) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield listPaymentsPaginated(limit, i);
+            const lastOffset = parseInt(r.first_index_offset); // this is "first" cuz its in reverse (lowest index)
+            if (lastOffset > 0) {
+                return r.invoices.concat(yield paginatePayments(limit, lastOffset));
+            }
+            return r.invoices;
+        }
+        catch (e) {
+            return [];
+        }
+    });
+}
+function listPaymentsPaginated(limit, offset) {
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        const lightning = yield loadLightning();
+        lightning.listPayments({
+            num_max_payments: limit,
+            index_offset: offset,
+            reversed: true,
+        }, (err, response) => {
+            if (!err && response && response.payments)
+                resolve(response);
+            else
+                reject(err);
+        });
+    }));
+}
+function listAllPayments() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         lightning.listPayments({}, (err, response) => {
-            if (!err) {
-                resolve(response);
+            if (!err && response && response.payments) {
+                resolve(response.payments);
             }
             else {
                 reject(err);
@@ -257,7 +333,7 @@ function listPayments() {
         });
     }));
 }
-exports.listPayments = listPayments;
+exports.listAllPayments = listAllPayments;
 const signMessage = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         let lightning = yield loadLightning();

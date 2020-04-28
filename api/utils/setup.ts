@@ -94,7 +94,7 @@ async function setupDone(){
 async function printGitInfo(){
   const commitHash = await checkCommitHash()
   const tag = await checkTag()
-  console.log(`=> commit: ${commitHash}, tag: ${tag}`)
+  console.log(`=> Relay version: ${tag}, commit: ${commitHash}`)
 }
 
 async function printQR(){

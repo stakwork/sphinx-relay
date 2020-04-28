@@ -108,7 +108,7 @@ function printGitInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         const commitHash = yield gitinfo_1.checkCommitHash();
         const tag = yield gitinfo_1.checkTag();
-        console.log(`=> commit: ${commitHash}, tag: ${tag}`);
+        console.log(`=> Relay version: ${tag}, commit: ${commitHash}`);
     });
 }
 function printQR() {

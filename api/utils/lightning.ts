@@ -220,12 +220,74 @@ function listInvoices() {
   })
 }
 
-function listPayments() {  
+async function listAllInvoices(){
+  const invs = await paginateInvoices(40)
+  return invs
+}
+async function paginateInvoices(limit,i=0){
+  try{
+    const r:any = await listInvoicesPaginated(limit,i)
+    console.log(r)
+    const lastOffset = parseInt(r.first_index_offset)
+    if(lastOffset>0) {
+      return r.invoices.concat(await paginateInvoices(limit,lastOffset))
+    }
+    return r.invoices
+  }catch(e){
+    return []
+  }
+}
+function listInvoicesPaginated(limit, offset) {
+  return new Promise(async(resolve, reject)=> {
+    const lightning = await loadLightning()
+    lightning.listInvoices({
+      num_max_invoices: limit,
+      index_offset: offset,
+      reversed:true,
+    }, (err, response) => {
+      if(!err && response && response.invoices) resolve(response)
+      else reject(err)
+    })
+  })
+}
+
+// need to upgrade to .10 for this
+async function listAllPaymentsPaginated(){
+  const invs = await paginatePayments(40) // max num
+  return invs
+}
+async function paginatePayments(limit,i=0){
+  try{
+    const r:any = await listPaymentsPaginated(limit,i)
+    const lastOffset = parseInt(r.first_index_offset) // this is "first" cuz its in reverse (lowest index)
+    if(lastOffset>0) {
+      return r.invoices.concat(await paginatePayments(limit,lastOffset))
+    }
+    return r.invoices
+  }catch(e){
+    return []
+  }
+}
+function listPaymentsPaginated(limit, offset) {
+  return new Promise(async(resolve, reject)=> {
+    const lightning = await loadLightning()
+    lightning.listPayments({
+      num_max_payments: limit,
+      index_offset: offset,
+      reversed: true,
+    }, (err, response) => {
+      if(!err && response && response.payments) resolve(response)
+      else reject(err)
+    })
+  })
+}
+
+function listAllPayments() {  
   return new Promise(async(resolve, reject)=> {
     const lightning = await loadLightning()
     lightning.listPayments({}, (err, response) => {
-      if(!err) {
-        resolve(response)
+      if(!err && response && response.payments) {
+        resolve(response.payments)
       } else {
         reject(err)
       }
@@ -329,6 +391,8 @@ export {
   LND_KEYSEND_KEY,
   SPHINX_CUSTOM_RECORD_KEY,
   listInvoices,
-  listPayments,
+  listAllPayments,
   checkConnection,
+  listAllInvoices,
+  listAllPaymentsPaginated,
 }
