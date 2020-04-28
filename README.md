@@ -29,7 +29,7 @@ sqlite3: `apt-get install sqlite3`
 
 ### configure
 
-Make sure your LND is running with the --keysend-accept flag!
+Make sure your LND is running with the `--accept-keysend` flag! If you are using lnd.conf file, add `accept-keysend=1`
 
 Edit the "production" section of config/app.json:
  - Change `macaroon_location` to the location of your LND admin macaroon
