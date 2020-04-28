@@ -221,13 +221,13 @@ function listInvoices() {
 }
 
 async function listAllInvoices(){
+  console.log('=> list all invoices')
   const invs = await paginateInvoices(40)
   return invs
 }
 async function paginateInvoices(limit,i=0){
   try{
     const r:any = await listInvoicesPaginated(limit,i)
-    console.log(r)
     const lastOffset = parseInt(r.first_index_offset)
     if(lastOffset>0) {
       return r.invoices.concat(await paginateInvoices(limit,lastOffset))
@@ -282,7 +282,8 @@ function listPaymentsPaginated(limit, offset) {
   })
 }
 
-function listAllPayments() {  
+function listAllPayments() { 
+  console.log('=> list all payments') 
   return new Promise(async(resolve, reject)=> {
     const lightning = await loadLightning()
     lightning.listPayments({}, (err, response) => {

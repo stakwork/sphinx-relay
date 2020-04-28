@@ -246,6 +246,7 @@ function listInvoices() {
 exports.listInvoices = listInvoices;
 function listAllInvoices() {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> list all invoices');
         const invs = yield paginateInvoices(40);
         return invs;
     });
@@ -255,7 +256,6 @@ function paginateInvoices(limit, i = 0) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const r = yield listInvoicesPaginated(limit, i);
-            console.log(r);
             const lastOffset = parseInt(r.first_index_offset);
             if (lastOffset > 0) {
                 return r.invoices.concat(yield paginateInvoices(limit, lastOffset));
@@ -321,6 +321,7 @@ function listPaymentsPaginated(limit, offset) {
     }));
 }
 function listAllPayments() {
+    console.log('=> list all payments');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         lightning.listPayments({}, (err, response) => {
