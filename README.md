@@ -29,6 +29,8 @@ sqlite3: `apt-get install sqlite3`
 
 ### configure
 
+Make sure your LND is running with the --keysend-accept flag!
+
 Edit the "production" section of config/app.json:
  - Change `macaroon_location` to the location of your LND admin macaroon
  - Change `tls_location` to the location of your LND cert
