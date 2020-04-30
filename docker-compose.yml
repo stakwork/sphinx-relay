@@ -3,29 +3,18 @@ volumes:
   node_modules:
 
 services:
-  lnd:
+  relay:
     build:
       context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .lnd/:/root/.lnd
-    ports:
-      - "9735:9735"
-      - "10009:10009"
-    command: 'lnd --accept-keysend'
-  node_server:
-    build:
-      context: .
-      dockerfile: Dockerfile-node
-    depends_on:
-      - lnd
     volumes:
       - .:/relay
       - .lnd/:/relay/.lnd
       - node_modules:/relay/node_modules
     ports:
       - "3000:3000"
-    command: "npm start"
+      - "9735:9735"
+      - "10009:10009"
+    command: "lnd --accept-keysend --configfile=/relay/.lnd/lnd.conf && npm start"
     environment:
       - PORT=3000
       - NODE_IP=mynodeip
