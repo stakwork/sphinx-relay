@@ -78,6 +78,7 @@ async function set(app) {
 	app.post('/contacts', controllers.contacts.createContact)
 	app.delete('/contacts/:id', controllers.contacts.deleteContact)
 
+	app.get('/allmessages', controllers.messages.getAllMessages)
 	app.get('/messages', controllers.messages.getMessages)
 	app.delete('/message/:id', controllers.messages.deleteMessage)
 	app.post('/messages', controllers.messages.sendMessage)
