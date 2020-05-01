@@ -1,4 +1,5 @@
 FROM golang:1.13-alpine as builder
+LABEL maintainer="gonzaloaune@stakwork.com"
 
 # Force Go to use the cgo based DNS resolver. This is required to ensure DNS
 # queries required to connect to linked containers succeed.
@@ -23,15 +24,19 @@ RUN git clone https://github.com/lightningnetwork/lnd /go/src/github.com/lightni
 RUN cd /go/src/github.com/lightningnetwork/lnd \
 &&  git checkout $checkout \
 &&  make \
-&&  make install tags="signrpc walletrpc chainrpc invoicesrpc"
+&&  make install tags="signrpc walletrpc chainrpc invoicesrpc experimental"
 
 # Start a new, final image.
 FROM alpine as final
 
-RUN mkdir /relay/
-WORKDIR /relay/
+EXPOSE 80
+EXPOSE 9735/tcp
+EXPOSE 9735/udp
+EXPOSE 10009/tcp
+EXPOSE 10009/udp
 
-VOLUME /relay/.lnd
+ENV NODE_ALIAS gonza-mayo
+ENV NODE_ENV production
 
 # Add bash and ca-certs, for quality of life and SSL-related reasons.
 RUN apk --no-cache add \
@@ -42,9 +47,12 @@ RUN apk --no-cache add \
 COPY --from=builder /go/bin/lncli /bin/
 COPY --from=builder /go/bin/lnd /bin/
 
-RUN apk add --update nodejs nodejs-npm sqlite
+RUN apk add --update nodejs nodejs-npm sqlite git supervisor
 
-COPY package.json .
+RUN git clone https://github.com/stakwork/sphinx-relay /relay/
+
+WORKDIR /relay/
+
 RUN npm install
 RUN npm install nodemon --save-dev
 RUN npm install express --save-dev
@@ -56,5 +64,13 @@ RUN npm install --quiet node-gyp -g
 RUN npm install sqlite3 --build-from-source --save-dev
 RUN npm install --save-dev sequelize
 RUN npm rebuild
-COPY . .
 RUN npm run tsc
+
+RUN mkdir /relay/.lnd/
+COPY ./lnd.conf.sample /relay/.lnd/lnd.conf
+
+RUN mkdir -p /var/log/supervisor
+COPY ./supervisord.conf /etc/supervisord.conf
+COPY ./lnd_supervisor.conf /etc/supervisor.d/lnd_supervisor.ini
+COPY ./relay_supervisor.conf /etc/supervisor.d/relay_supervisor.ini
+CMD ["/usr/bin/supervisord"]

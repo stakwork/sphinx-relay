@@ -15,7 +15,7 @@
   "production": {
     "macaroon_location": "/relay/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
     "tls_location": "/relay/.lnd/tls.cert",
-    "node_ip": "172.22.0.2",
+    "node_ip": "localhost",
     "lnd_port": "10009",
     "node_http_protocol": "http",
     "node_http_port": "3000",
