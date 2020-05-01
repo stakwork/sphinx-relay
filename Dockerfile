@@ -35,7 +35,7 @@ EXPOSE 9735/udp
 EXPOSE 10009/tcp
 EXPOSE 10009/udp
 
-ENV NODE_ALIAS gonza-mayo
+ENV NODE_ALIAS mynodealias
 ENV NODE_ENV production
 
 # Add bash and ca-certs, for quality of life and SSL-related reasons.
