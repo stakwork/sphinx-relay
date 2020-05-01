@@ -15,7 +15,7 @@
     "prod": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && env NODE_ENV=production node dist/app.js",
     "tsc": "rm -rf dist/ && tsc && cp -r public dist/public",
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
-    "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries && cp config/app.json binaries/config/app.json && cp config/config.json binaries/config/config.json"
+    "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries"
   },
   "keywords": [],
   "author": "",
