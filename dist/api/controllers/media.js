@@ -23,9 +23,10 @@ const cron_1 = require("cron");
 const zbase32 = require("../utils/zbase32");
 const schemas = require("./schemas");
 const confirmations_1 = require("./confirmations");
+const path = require("path");
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/app.json')[env];
-const constants = require(__dirname + '/../../config/constants.json');
+const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 /*
 
 TODO line 233: parse that from token itself, dont use getMediaInfo at all

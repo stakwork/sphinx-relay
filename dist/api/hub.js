@@ -17,9 +17,10 @@ const jsonUtils = require("./utils/json");
 const helpers = require("./helpers");
 const nodeinfo_1 = require("./utils/nodeinfo");
 const lightning_1 = require("./utils/lightning");
-const constants = require(__dirname + '/../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../config/constants.json'));
 const env = process.env.NODE_ENV || 'development';
-const config = require('../config/app.json')[env];
+const config = require(path.join(__dirname, '../config/app.json'))[env];
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
     if (env != "production") {
         return;

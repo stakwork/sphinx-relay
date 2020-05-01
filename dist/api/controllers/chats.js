@@ -16,7 +16,8 @@ const helpers = require("../helpers");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const md5 = require("md5");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });

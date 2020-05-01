@@ -19,7 +19,8 @@ const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const rsa = require("../crypto/rsa");
 const moment = require("moment");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 // store all current running jobs in memory
 let jobs = {};
 // init jobs from DB

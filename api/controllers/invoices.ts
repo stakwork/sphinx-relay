@@ -7,8 +7,9 @@ import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json');
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 const payInvoice = async (req, res) => {
   const lightning = await loadLightning()

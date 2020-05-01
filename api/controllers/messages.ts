@@ -7,8 +7,9 @@ import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
 import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json')
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 const getMessages = async (req, res) => {
 	const dateToReturn = req.query.date;

@@ -13,8 +13,9 @@ const lightning_1 = require("../utils/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
 const nodeinfo_1 = require("../utils/nodeinfo");
+const path = require("path");
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/app.json')[env];
+const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const defaultLogFiles = [
     '/home/lnd/.pm2/logs/app-error.log',
     '/var/log/syslog',

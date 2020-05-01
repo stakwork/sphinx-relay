@@ -6,8 +6,9 @@ import * as decodeUtils from '../utils/decode'
 import {loadLightning, SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import * as controllers from '../controllers'
 import * as moment from 'moment'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json');
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 // VERIFY PUBKEY OF SENDER
 async function parseAndVerifyPayload(data){

@@ -3,6 +3,7 @@ import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as crypto from 'crypto'
+import * as path from 'path'
 import {models} from './api/models'
 import logger from './api/utils/logger'
 import {pingHubInterval, checkInvitesHubInterval} from './api/hub'
@@ -13,7 +14,7 @@ import * as socket from './api/utils/socket'
 let server: any = null
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/config/app.json')[env];
+const config = require(path.join(__dirname, 'config/app.json'))[env];
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 

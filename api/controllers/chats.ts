@@ -5,8 +5,9 @@ import * as helpers from '../helpers'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
 import * as md5 from 'md5'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json')
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 async function getChats(req, res) {
 	const chats = await models.Chat.findAll({ where:{deleted:false}, raw: true })

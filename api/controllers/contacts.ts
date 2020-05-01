@@ -5,8 +5,9 @@ import * as helpers from '../helpers'
 import * as jsonUtils from '../utils/json'
 import {success, failure} from '../utils/res'
 import password from '../utils/password'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json')
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 const getContacts = async (req, res) => {
 	const contacts = await models.Contact.findAll({ where:{deleted:false}, raw: true })

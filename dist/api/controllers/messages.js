@@ -18,7 +18,8 @@ const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
     if (!dateToReturn) {

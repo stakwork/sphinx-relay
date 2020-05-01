@@ -4,9 +4,11 @@ import * as grpc from 'grpc'
 import { sleep } from '../helpers';
 import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
+import * as path from 'path'
+
 // var protoLoader = require('@grpc/proto-loader')
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/app.json')[env];
+const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 const LND_KEYSEND_KEY = 5482373484
 const SPHINX_CUSTOM_RECORD_KEY = 133773310

@@ -17,7 +17,8 @@ const decodeUtils = require("../utils/decode");
 const lightning_1 = require("../utils/lightning");
 const controllers = require("../controllers");
 const moment = require("moment");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 // VERIFY PUBKEY OF SENDER
 function parseAndVerifyPayload(data) {
     return __awaiter(this, void 0, void 0, function* () {
