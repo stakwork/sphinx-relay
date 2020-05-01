@@ -50,6 +50,7 @@ COPY --from=builder /go/bin/lnd /bin/
 RUN apk add --update nodejs nodejs-npm sqlite git supervisor
 
 RUN git clone https://github.com/stakwork/sphinx-relay /relay/
+RUN cd /relay && git checkout feature/docker
 
 WORKDIR /relay/
 
@@ -66,7 +67,8 @@ RUN npm install --save-dev sequelize
 RUN npm rebuild
 RUN npm run tsc
 
-RUN mkdir /relay/.lnd/
+VOLUME /relay/.lnd
+
 COPY ./lnd.conf.sample /relay/.lnd/lnd.conf
 
 RUN mkdir -p /var/log/supervisor
