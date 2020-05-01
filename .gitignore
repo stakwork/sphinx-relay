@@ -3,6 +3,7 @@ todo.md
 
 # just for testing
 binaries/nodeapp-macos 
+binaries/nodeapp-alpine 
 
 dist/public/uploads
 
