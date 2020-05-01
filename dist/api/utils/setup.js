@@ -12,6 +12,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const lightning_1 = require("./lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
+const QRCode = require("qrcode");
+const publicIp = require("public-ip");
+const password_1 = require("../utils/password");
+const gitinfo_1 = require("../utils/gitinfo");
 const USER_VERSION = 1;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
@@ -93,4 +97,48 @@ const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.runMigrations = runMigrations;
+function setupDone() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield printGitInfo();
+        printQR();
+    });
+}
+exports.setupDone = setupDone;
+function printGitInfo() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const commitHash = yield gitinfo_1.checkCommitHash();
+        const tag = yield gitinfo_1.checkTag();
+        console.log(`=> Relay version: ${tag}, commit: ${commitHash}`);
+    });
+}
+function printQR() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ip = process.env.NODE_IP;
+        let public_ip;
+        if (!ip) {
+            try {
+                public_ip = yield publicIp.v4();
+            }
+            catch (e) {
+                console.log(e);
+            }
+        }
+        else {
+            public_ip = ip;
+        }
+        if (!public_ip) {
+            console.log('=> no public IP provided');
+            return;
+        }
+        let theIP = public_ip;
+        if (!theIP.includes(":"))
+            theIP = public_ip + ':3001';
+        const b64 = Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
+        console.log('Scan this QR in Sphinx app:');
+        console.log(b64);
+        QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
+            console.log(url);
+        });
+    });
+}
 //# sourceMappingURL=setup.js.map

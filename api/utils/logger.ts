@@ -2,7 +2,7 @@ import * as expressWinston from 'express-winston'
 import * as winston from 'winston'
 import * as moment from 'moment'
 
-const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD hh:mm:ss').trim();
+const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim();
 
 const logger = expressWinston.logger({
     transports: [

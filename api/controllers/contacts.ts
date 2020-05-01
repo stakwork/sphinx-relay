@@ -4,6 +4,7 @@ import * as socket from '../utils/socket'
 import * as helpers from '../helpers'
 import * as jsonUtils from '../utils/json'
 import {success, failure} from '../utils/res'
+import password from '../utils/password'
 
 const constants = require(__dirname + '/../../config/constants.json')
 
@@ -39,6 +40,16 @@ const generateToken = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true, authToken: null }})
 
+	const pwd = password
+	if(process.env.USE_PASSWORD==='true'){
+		if(pwd!==req.query.pwd) {
+			failure(res, 'Wrong Password')
+			return
+		} else {
+			console.log("PASSWORD ACCEPTED!")
+		}
+	}
+
 	if (owner) {
 		const hash = crypto.createHash('sha256').update(req.body['token']).digest('base64');
 
@@ -60,19 +71,14 @@ const updateContact = async (req, res) => {
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
 	let shouldUpdateContactKey = (contact.isOwner && contact.contactKey == null && attrs["contact_key"] != null)
-	
+
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
 	success(res, jsonUtils.contactToJson(owner))
 
-	if (!shouldUpdateContactKey) {
-		return
-	}
-	// definitely "owner" now
+	if (!shouldUpdateContactKey) return
 
 	const contactIds = await models.Contact.findAll({where:{deleted:false}}).map(c => c.id)
-	if (contactIds.length == 0) {
-		return
-	}
+	if (contactIds.length == 0) return
 
 	helpers.sendContactKeys({
 		contactIds: contactIds,
@@ -154,7 +160,7 @@ const deleteContact = async (req, res) => {
 }
 
 const receiveConfirmContactKey = async (payload) => {
-	console.log('=> confirm contact key', { payload })
+	console.log(`=> confirm contact key for ${payload.sender&&payload.sender.pub_key}`)
 
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key

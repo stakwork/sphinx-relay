@@ -221,7 +221,7 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
             badge: unseenMessages.length
         }
     };
-    fetch("http://hub.sphinx.chat/api/v1/nodes/notify", {
+    fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }

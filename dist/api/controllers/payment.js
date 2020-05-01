@@ -97,12 +97,15 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             // console.log('payment sent', { data })
             res_1.success(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: (error) => {
-            message.update({ status: constants.statuses.failed });
+        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+            yield message.update({ status: constants.statuses.failed });
             res.status(200);
-            res.json({ success: false, error });
+            res.json({
+                success: false,
+                response: jsonUtils.messageToJson(message, chat)
+            });
             res.end();
-        }
+        })
     });
 });
 exports.sendPayment = sendPayment;
@@ -143,8 +146,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const payments = [];
-    const response = yield lightning.listInvoices();
-    const invs = response && response.invoices;
+    const invs = yield lightning.listAllInvoices();
     if (invs && invs.length) {
         invs.forEach(inv => {
             const val = inv.value && parseInt(inv.value);
@@ -163,8 +165,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             }
         });
     }
-    const res2 = yield lightning.listPayments();
-    const pays = res2 && res2.payments;
+    const pays = yield lightning.listAllPayments();
     if (pays && pays.length) {
         pays.forEach(pay => {
             const val = pay.value && parseInt(pay.value);

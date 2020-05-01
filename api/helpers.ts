@@ -58,7 +58,7 @@ const sendContactKeys = async (args) => {
 		}
 		performKeysendMessage({
 			destination_key,
-			amount: 1,
+			amount: 3,
 			msg: JSON.stringify(msg),
 			success: (data) => {
 				yes = data
@@ -100,7 +100,7 @@ const sendMessage = async (params) => {
 		const opts = {
 			dest: destkey,
 			data: JSON.stringify(finalMsg),
-			amt: amount || 1,
+			amt: amount || 3,
 		}
 		try {
 			const r = await keysendMessage(opts)
@@ -121,11 +121,11 @@ const performKeysendMessage = async ({ destination_key, amount, msg, success, fa
 	const opts = {
 		dest: destination_key,
 		data: msg || JSON.stringify({}),
-		amt: amount || 1
+		amt: Math.max(amount, 3)
 	}
 	try {
 		const r = await keysendMessage(opts)
-		console.log("MESSAGE SENT outside SW!", r)
+		console.log("=> external keysend")
 		if (success) success(r)
 	} catch (e) {
 		console.log("MESSAGE ERROR", e)

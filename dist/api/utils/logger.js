@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const expressWinston = require("express-winston");
 const winston = require("winston");
 const moment = require("moment");
-const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD hh:mm:ss').trim();
+const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim();
 const logger = expressWinston.logger({
     transports: [
         new winston.transports.Console()

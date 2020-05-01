@@ -65,7 +65,7 @@ const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* ()
         }
         performKeysendMessage({
             destination_key,
-            amount: 1,
+            amount: 3,
             msg: JSON.stringify(msg),
             success: (data) => {
                 yes = data;
@@ -101,7 +101,7 @@ const sendMessage = (params) => __awaiter(void 0, void 0, void 0, function* () {
         const opts = {
             dest: destkey,
             data: JSON.stringify(finalMsg),
-            amt: amount || 1,
+            amt: amount || 3,
         };
         try {
             const r = yield lightning_1.keysendMessage(opts);
@@ -126,11 +126,11 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure 
     const opts = {
         dest: destination_key,
         data: msg || JSON.stringify({}),
-        amt: amount || 1
+        amt: Math.max(amount, 3)
     };
     try {
         const r = yield lightning_1.keysendMessage(opts);
-        console.log("MESSAGE SENT outside SW!", r);
+        console.log("=> external keysend");
         if (success)
             success(r);
     }

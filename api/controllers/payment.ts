@@ -8,8 +8,6 @@ import * as lightning from '../utils/lightning'
 import {tokenFromTerms} from '../utils/ldat'
 import * as constants from '../../config/constants.json'
 
-
-
 const sendPayment = async (req, res) => {
   const {
     amount,
@@ -107,10 +105,13 @@ const sendPayment = async (req, res) => {
       // console.log('payment sent', { data })
       success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: (error) => {
-      message.update({status: constants.statuses.failed})
+    failure: async (error) => {
+      await message.update({status: constants.statuses.failed})
       res.status(200);
-      res.json({ success: false, error });
+      res.json({ 
+        success: false, 
+        response: jsonUtils.messageToJson(message, chat)
+      });
       res.end();
     }
   })
@@ -159,8 +160,7 @@ const listPayments = async (req, res) => {
   
   const payments: any[] = []
 
-  const response:any = await lightning.listInvoices()
-  const invs = response && response.invoices
+  const invs:any = await lightning.listAllInvoices()
   if(invs && invs.length){
     invs.forEach(inv=>{
       const val = inv.value && parseInt(inv.value)
@@ -180,8 +180,7 @@ const listPayments = async (req, res) => {
     })
   }
 
-  const res2:any = await lightning.listPayments()
-  const pays = res2 && res2.payments
+  const pays:any = await lightning.listAllPayments()
   if(pays && pays.length){
     pays.forEach(pay=>{
       const val = pay.value && parseInt(pay.value)

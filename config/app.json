@@ -19,10 +19,10 @@
     "lnd_port": "10009",
     "node_http_protocol": "http",
     "node_http_port": "3000",
-    "hub_api_url": "http://hub.sphinx.chat/api/v1",
-    "hub_url": "http://hub.sphinx.chat/ping",
-    "hub_invite_url": "http://hub.sphinx.chat/invites",
-    "hub_check_invite_url": "http://hub.sphinx.chat/check_invite",
+    "hub_api_url": "https://hub.sphinx.chat/api/v1",
+    "hub_url": "https://hub.sphinx.chat/ping",
+    "hub_invite_url": "https://hub.sphinx.chat/invites",
+    "hub_check_invite_url": "https://hub.sphinx.chat/check_invite",
     "media_host": "memes.sphinx.chat"
   }
 }

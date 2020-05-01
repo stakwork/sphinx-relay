@@ -1,6 +1,10 @@
 import { loadLightning } from './lightning'
 import {sequelize, models} from '../models'
 import { exec } from 'child_process'
+import * as QRCode from 'qrcode'
+import * as publicIp from 'public-ip'
+import password from '../utils/password'
+import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
 const USER_VERSION = 1
 
@@ -80,7 +84,42 @@ const runMigrations = async () => {
   });
 }
 
-export { setupDatabase, setupOwnerContact, runMigrations }
+export { setupDatabase, setupOwnerContact, runMigrations, setupDone }
 
+async function setupDone(){
+  await printGitInfo()
+  printQR()
+}
 
+async function printGitInfo(){
+  const commitHash = await checkCommitHash()
+  const tag = await checkTag()
+  console.log(`=> Relay version: ${tag}, commit: ${commitHash}`)
+}
 
+async function printQR(){
+  const ip = process.env.NODE_IP
+  let public_ip
+  if(!ip) {
+    try {
+      public_ip = await publicIp.v4()
+    } catch(e){
+      console.log(e)
+    }
+  } else {
+    public_ip = ip
+  }
+  if(!public_ip) {
+    console.log('=> no public IP provided')
+    return
+  }
+  let theIP = public_ip
+  if(!theIP.includes(":")) theIP = public_ip+':3001'
+
+  const b64 = Buffer.from(`ip::${theIP}::${password||''}`).toString('base64')
+  console.log('Scan this QR in Sphinx app:')
+  console.log(b64)
+  QRCode.toString(b64,{type:'terminal'}, function (err, url) {
+    console.log(url)
+  })
+}
