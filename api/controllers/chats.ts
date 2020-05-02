@@ -6,6 +6,8 @@ import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
 import * as md5 from 'md5'
 import * as path from 'path'
+import * as rsa from '../crypto/rsa'
+import * as tribes from '../utils/tribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -38,6 +40,7 @@ async function createGroupChat(req, res) {
 	const {
 		name,
 		contact_ids,
+		is_public,
 	} = req.body
 
 	const members: { [k: string]: {[k:string]:string} } = {} //{pubkey:{key,alias}, ...}
@@ -54,7 +57,13 @@ async function createGroupChat(req, res) {
 		}
 	})
 
-	const chatParams = createGroupChatParams(owner, contact_ids, members, name)
+	let chatParams:any = null
+	if(is_public){
+		chatParams = await createPublicGroupChatParams(owner, contact_ids, name)
+		// and publish to tribes server? so can be discovered
+	} else {
+		chatParams = createGroupChatParams(owner, contact_ids, members, name)
+	}
 
 	helpers.sendMessage({
 		chat: { ...chatParams, members },
@@ -302,6 +311,30 @@ function createGroupChatParams(owner, contactIds, members, name) {
 		updatedAt: date,
 		name: name,
 		type: constants.chat_types.group
+	}
+}
+
+async function createPublicGroupChatParams(owner, contactIds, name) {
+	let date = new Date()
+	date.setMilliseconds(0)
+	if (!(owner && contactIds && Array.isArray(contactIds))) {
+		return
+	}
+
+	// make ts sig here w LNd pubkey - that is UUID
+	const keys:{[k:string]:string} = await rsa.genKeys()
+	const groupUUID = await tribes.genSignedTimestamp()
+	const theContactIds = contactIds.includes(owner.id) ? contactIds : [owner.id].concat(contactIds)
+	return {
+		uuid: groupUUID,
+		contactIds: JSON.stringify(theContactIds),
+		createdAt: date,
+		updatedAt: date,
+		name: name,
+		type: constants.chat_types.public_group,
+		groupKey: keys.public,
+		groupPrivateKey: keys.private,
+		host: tribes.getHost()
 	}
 }
 

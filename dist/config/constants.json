@@ -47,6 +47,7 @@
     },
     "chat_types": {
         "conversation": 0,
-        "group": 1
+        "group": 1,
+        "public_group": 2
     }
 }

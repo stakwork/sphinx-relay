@@ -225,7 +225,7 @@ function asyncForEach(array, callback) {
 function newmsg(type, chat, sender, message) {
     return {
         type: type,
-        chat: Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), chat.type && { type: chat.type }), chat.members && { members: chat.members }),
+        chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), chat.type && { type: chat.type }), chat.members && { members: chat.members }), chat.groupKey && { groupKey: chat.groupKey }), chat.host && { host: chat.host }),
         message: message,
     };
 }

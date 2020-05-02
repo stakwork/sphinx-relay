@@ -227,6 +227,8 @@ function newmsg(type, chat, sender, message){
 			...chat.name && { name: chat.name },
 			...chat.type && { type: chat.type },
 			...chat.members && { members: chat.members },
+			...chat.groupKey && { groupKey: chat.groupKey },
+			...chat.host && { host: chat.host }
 		},
 		message: message,
 		// sender: {

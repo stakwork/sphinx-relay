@@ -16,7 +16,7 @@ const QRCode = require("qrcode");
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
 const gitinfo_1 = require("../utils/gitinfo");
-const USER_VERSION = 1;
+const USER_VERSION = 2;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
@@ -44,8 +44,15 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_chats', 'group_key');
+        addTableColumn('sphinx_chats', 'group_private_key');
+        addTableColumn('sphinx_chats', 'host');
+    });
+}
+function addTableColumn(table, column, type = 'TEXT') {
+    return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield models_1.sequelize.query(`alter table sphinx_invites add invoice text`);
+            yield models_1.sequelize.query(`alter table ${table} add ${column} ${type}`);
         }
         catch (e) {
             //console.log('=> migrate failed',e)

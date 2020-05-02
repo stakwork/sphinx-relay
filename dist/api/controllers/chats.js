@@ -17,6 +17,8 @@ const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const md5 = require("md5");
 const path = require("path");
+const rsa = require("../crypto/rsa");
+const tribes = require("../utils/tribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -44,7 +46,7 @@ function mute(req, res) {
 exports.mute = mute;
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, contact_ids, } = req.body;
+        const { name, contact_ids, is_public, } = req.body;
         const members = {}; //{pubkey:{key,alias}, ...}
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         members[owner.publicKey] = {
@@ -57,7 +59,14 @@ function createGroupChat(req, res) {
                 alias: contact.alias || ''
             };
         }));
-        const chatParams = createGroupChatParams(owner, contact_ids, members, name);
+        let chatParams = null;
+        if (is_public) {
+            chatParams = yield createPublicGroupChatParams(owner, contact_ids, name);
+            // and publish to tribes server? so can be discovered
+        }
+        else {
+            chatParams = createGroupChatParams(owner, contact_ids, members, name);
+        }
         helpers.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members }),
             sender: owner,
@@ -298,6 +307,30 @@ function createGroupChatParams(owner, contactIds, members, name) {
         name: name,
         type: constants.chat_types.group
     };
+}
+function createPublicGroupChatParams(owner, contactIds, name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let date = new Date();
+        date.setMilliseconds(0);
+        if (!(owner && contactIds && Array.isArray(contactIds))) {
+            return;
+        }
+        // make ts sig here w LNd pubkey - that is UUID
+        const keys = yield rsa.genKeys();
+        const groupUUID = yield tribes.genSignedTimestamp();
+        const theContactIds = contactIds.includes(owner.id) ? contactIds : [owner.id].concat(contactIds);
+        return {
+            uuid: groupUUID,
+            contactIds: JSON.stringify(theContactIds),
+            createdAt: date,
+            updatedAt: date,
+            name: name,
+            type: constants.chat_types.public_group,
+            groupKey: keys.public,
+            groupPrivateKey: keys.private,
+            host: tribes.getHost()
+        };
+    });
 }
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {

@@ -6,7 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
-const USER_VERSION = 1
+const USER_VERSION = 2
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -31,8 +31,14 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_chats', 'group_key')
+  addTableColumn('sphinx_chats', 'group_private_key')
+  addTableColumn('sphinx_chats', 'host')
+}
+
+async function addTableColumn(table:string, column:string, type='TEXT') {
   try {
-    await sequelize.query(`alter table sphinx_invites add invoice text`)
+    await sequelize.query(`alter table ${table} add ${column} ${type}`)
   } catch(e) {
     //console.log('=> migrate failed',e)
   }

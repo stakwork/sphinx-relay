@@ -399,7 +399,7 @@ function verifyMessage(msg, sig) {
     }));
 }
 exports.verifyMessage = verifyMessage;
-function checkConnection() {
+function getInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
             const lightning = loadLightning();
@@ -414,7 +414,7 @@ function checkConnection() {
         });
     });
 }
-exports.checkConnection = checkConnection;
+exports.getInfo = getInfo;
 function ascii_to_hexa(str) {
     var arr1 = [];
     for (var n = 0, l = str.length; n < l; n++) {
