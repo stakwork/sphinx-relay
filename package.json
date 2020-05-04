@@ -14,7 +14,8 @@
     "start-hosting": "HOSTING_PROVIDER=true ts-node ./app.ts",
     "prod": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && env NODE_ENV=production node dist/app.js",
     "tsc": "rm -rf dist/ && tsc && cp -r public dist/public",
-    "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js"
+    "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
+    "start-ecs": "export NODE_ALIAS=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName)) && export NODE_IP=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName).$NODE_DOMAIN) && export NODE_ENV=production && node dist/app.js"
   },
   "keywords": [],
   "author": "",
