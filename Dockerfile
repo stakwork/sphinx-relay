@@ -35,7 +35,6 @@ EXPOSE 9735/udp
 EXPOSE 10009/tcp
 EXPOSE 10009/udp
 
-ENV NODE_ALIAS mynodealias
 ENV NODE_ENV production
 
 # Add bash and ca-certs, for quality of life and SSL-related reasons.
@@ -50,16 +49,17 @@ COPY --from=builder /go/bin/lnd /bin/
 RUN apk add --update nodejs nodejs-npm sqlite git supervisor
 
 RUN git clone https://github.com/stakwork/sphinx-relay /relay/
-RUN cd /relay && git checkout feature/docker
 
 WORKDIR /relay/
+
+RUN git checkout feature/docker
 
 RUN npm install
 RUN npm install nodemon --save-dev
 RUN npm install express --save-dev
 RUN npm install webpack webpack-cli --save-dev
 
-RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python
+RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git
 RUN npm install --quiet node-gyp -g
 
 RUN npm install sqlite3 --build-from-source --save-dev
@@ -70,6 +70,9 @@ RUN npm run tsc
 VOLUME /relay/.lnd
 
 COPY ./lnd.conf.sample /relay/.lnd/lnd.conf
+
+COPY init.sh /etc/profile.d/
+RUN sudo chmod +x /etc/profile.d/init.sh
 
 RUN mkdir -p /var/log/supervisor
 COPY ./supervisord.conf /etc/supervisord.conf
