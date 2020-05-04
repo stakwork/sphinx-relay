@@ -59,7 +59,7 @@ RUN npm install nodemon --save-dev
 RUN npm install express --save-dev
 RUN npm install webpack webpack-cli --save-dev
 
-RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git
+RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git curl
 RUN npm install --quiet node-gyp -g
 
 RUN npm install sqlite3 --build-from-source --save-dev
@@ -70,9 +70,6 @@ RUN npm run tsc
 VOLUME /relay/.lnd
 
 COPY ./lnd.conf.sample /relay/.lnd/lnd.conf
-
-COPY init.sh /etc/profile.d/
-RUN sudo chmod +x /etc/profile.d/init.sh
 
 RUN mkdir -p /var/log/supervisor
 COPY ./supervisord.conf /etc/supervisord.conf
