@@ -1,0 +1,22 @@
+version: '2'
+volumes:
+  node_modules:
+
+services:
+  relay:
+    build:
+      context: .
+    volumes:
+      - .:/relay
+      - .lnd/:/relay/.lnd
+      - node_modules:/relay/node_modules
+    ports:
+      - "3000:3000"
+      - "9735:9735"
+      - "10009:10009"
+    command: "lnd --accept-keysend --configfile=/relay/.lnd/lnd.conf && npm start"
+    environment:
+      - PORT=3000
+      - NODE_IP=mynodeip
+      - NODE_ALIAS=myalias
+      - NODE_ENV=production

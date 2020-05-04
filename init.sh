@@ -1,0 +1,2 @@
+NODE_IP=$(curl http://169.254.170.2/v4/e52231f4-0246-4fc5-bc3e-ac20df1b118e | echo $(jq -r .DockerName).$NODE_DOMAIN)
+NODE_ALIAS=$(curl http://169.254.170.2/v4/e52231f4-0246-4fc5-bc3e-ac20df1b118e | echo $(jq -r .DockerName))
