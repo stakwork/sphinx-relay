@@ -13,6 +13,6 @@
   },
   "production": {
     "dialect": "sqlite",
-    "storage": "./.lnd/sphinx.db"
+    "storage": "/home/ubuntu/sphinx.db"
   }
 }
