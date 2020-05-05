@@ -94,6 +94,7 @@ async function createGroupChat(req, res) {
 	})
 }
 
+// only owner can do for tribe?
 async function addGroupMembers(req, res) {
 	const {
 		contact_ids,
@@ -201,7 +202,7 @@ async function receiveGroupLeave(payload) {
 }
 
 // here: can only join if enough $$$!
-// need to forward to all tho?
+// forward to all over mqtt
 async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
 	const { sender_pub_key, chat_uuid, chat_members } = await helpers.parseReceiveParams(payload)
@@ -268,7 +269,7 @@ async function receiveGroupCreateOrInvite(payload) {
 		} else if(chat_type===constants.chat_types.tribe && member && member.role) {
 			if (member.role===constants.chat_roles.owner || member.role===constants.chat_roles.admin || member.role===constants.chat_roles.mode){
 				addContact = true
-			}	
+			}
 		}
 		if(addContact){
 			if (!contact) {
@@ -278,10 +279,10 @@ async function receiveGroupCreateOrInvite(payload) {
 					alias: member.alias||'Unknown',
 					status: 1
 				})
-				contacts.push({...createdContact,role:member.role})
+				contacts.push({...createdContact.dataValues,role:member.role})
 				newContacts.push(createdContact.dataValues)
 			} else {
-				contacts.push({...contact,role:member.role})
+				contacts.push({...contact.dataValues,role:member.role})
 			}
 		}
 	}
@@ -302,7 +303,8 @@ async function receiveGroupCreateOrInvite(payload) {
 		...chat_key && { groupKey: chat_key },
 	})
 
-	if(chat_type===constants.chat_types.tribe){ // IF TRIBE, ADD TO XREF
+	// IF TRIBE, ADD TO XREF
+	if(chat_type===constants.chat_types.tribe){
 		contacts.forEach(c=>{
 			models.ChatMember.create({
 				contactId: c.id,
@@ -339,7 +341,7 @@ async function receiveGroupCreateOrInvite(payload) {
 }
 
 function createGroupChatParams(owner, contactIds, members, name) {
-	let date = new Date();
+	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && members && contactIds && Array.isArray(contactIds))) {
 		return

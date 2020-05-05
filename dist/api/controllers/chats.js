@@ -96,6 +96,7 @@ function createGroupChat(req, res) {
     });
 }
 exports.createGroupChat = createGroupChat;
+// only owner can do for tribe?
 function addGroupMembers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { contact_ids, } = req.body;
@@ -196,7 +197,7 @@ function receiveGroupLeave(payload) {
 }
 exports.receiveGroupLeave = receiveGroupLeave;
 // here: can only join if enough $$$!
-// need to forward to all tho?
+// forward to all over mqtt
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');
@@ -275,11 +276,11 @@ function receiveGroupCreateOrInvite(payload) {
                         alias: member.alias || 'Unknown',
                         status: 1
                     });
-                    contacts.push(Object.assign(Object.assign({}, createdContact), { role: member.role }));
+                    contacts.push(Object.assign(Object.assign({}, createdContact.dataValues), { role: member.role }));
                     newContacts.push(createdContact.dataValues);
                 }
                 else {
-                    contacts.push(Object.assign(Object.assign({}, contact), { role: member.role }));
+                    contacts.push(Object.assign(Object.assign({}, contact.dataValues), { role: member.role }));
                 }
             }
         }
@@ -291,7 +292,8 @@ function receiveGroupCreateOrInvite(payload) {
         let date = new Date();
         date.setMilliseconds(0);
         const chat = yield models_1.models.Chat.create(Object.assign(Object.assign({ uuid: chat_uuid, contactIds: JSON.stringify(contactIds), createdAt: date, updatedAt: date, name: chat_name, type: chat_type || constants.chat_types.group }, chat_host && { host: chat_host }), chat_key && { groupKey: chat_key }));
-        if (chat_type === constants.chat_types.tribe) { // IF TRIBE, ADD TO XREF
+        // IF TRIBE, ADD TO XREF
+        if (chat_type === constants.chat_types.tribe) {
             contacts.forEach(c => {
                 models_1.models.ChatMember.create({
                     contactId: c.id,
