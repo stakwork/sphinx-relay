@@ -1,7 +1,7 @@
 import {models} from '../models'
 import * as lndService from '../grpc'
 import {checkTag} from '../utils/gitinfo'
-import {checkConnection} from '../utils/lightning'
+import {getInfo} from '../utils/lightning'
 import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
@@ -25,7 +25,7 @@ let controllers = {
 
 async function iniGrpcSubscriptions() {
 	try{
-		await checkConnection()
+		await getInfo()
 		const types = constants.message_types
 		await lndService.subscribeInvoices({
 			[types.contact_key]: controllers.contacts.receiveContactKey,

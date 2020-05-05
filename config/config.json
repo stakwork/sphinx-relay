@@ -1,7 +1,7 @@
 {
   "development": {
     "dialect": "sqlite",
-    "storage": "./sphinx.db"
+    "storage": "/Users/Shared/sphinx.db"
   },
   "docker_development": {
     "dialect": "sqlite",
@@ -13,6 +13,6 @@
   },
   "production": {
     "dialect": "sqlite",
-    "storage": "./.lnd/sphinx.db"
+    "storage": "/home/ubuntu/sphinx.db"
   }
 }

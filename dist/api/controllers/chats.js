@@ -17,6 +17,8 @@ const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const md5 = require("md5");
 const path = require("path");
+const rsa = require("../crypto/rsa");
+const tribes = require("../utils/tribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -44,7 +46,7 @@ function mute(req, res) {
 exports.mute = mute;
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, contact_ids, } = req.body;
+        const { name, contact_ids, is_tribe, is_listed, } = req.body;
         const members = {}; //{pubkey:{key,alias}, ...}
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         members[owner.publicKey] = {
@@ -57,7 +59,18 @@ function createGroupChat(req, res) {
                 alias: contact.alias || ''
             };
         }));
-        const chatParams = createGroupChatParams(owner, contact_ids, members, name);
+        let chatParams = null;
+        if (is_tribe) {
+            chatParams = yield createTribeChatParams(owner, contact_ids, name);
+            if (is_listed) {
+                // publish to tribe server
+            }
+            // make me owner when i create
+            members[owner.publicKey].role = constants.chat_roles.owner;
+        }
+        else {
+            chatParams = createGroupChatParams(owner, contact_ids, members, name);
+        }
         helpers.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members }),
             sender: owner,
@@ -69,6 +82,13 @@ function createGroupChat(req, res) {
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {
                     const chat = yield models_1.models.Chat.create(chatParams);
+                    if (chat.type === constants.chat_types.tribe) { // save me as owner when i create
+                        yield models_1.models.ChatMember.create({
+                            contactId: owner.id,
+                            chatId: chat.id,
+                            role: constants.chat_roles.owner,
+                        });
+                    }
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
             }
@@ -86,6 +106,11 @@ function addGroupMembers(req, res) {
         const contactIds = JSON.parse(chat.contactIds || '[]');
         // for all members (existing and new)
         members[owner.publicKey] = { key: owner.contactKey, alias: owner.alias };
+        if (chat.type === constants.chat_types.tribe) {
+            const me = yield models_1.models.ChatMember.findOne({ where: { contactId: owner.id, chatId: chat.id } });
+            if (me)
+                members[owner.publicKey].role = me.role;
+        }
         const allContactIds = contactIds.concat(contact_ids);
         yield asyncForEach(allContactIds, (cid) => __awaiter(this, void 0, void 0, function* () {
             const contact = yield models_1.models.Contact.findOne({ where: { id: cid } });
@@ -94,6 +119,9 @@ function addGroupMembers(req, res) {
                     key: contact.contactKey,
                     alias: contact.alias
                 };
+                const member = yield models_1.models.ChatMember.findOne({ where: { contactId: owner.id, chatId: chat.id } });
+                if (member)
+                    members[contact.publicKey].role = member.role;
             }
         }));
         res_1.success(res, jsonUtils.chatToJson(chat));
@@ -129,7 +157,7 @@ exports.deleteChat = deleteChat;
 function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupLeave');
-        const { sender_pub_key, chat_uuid } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, chat_uuid, chat_type } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
@@ -139,6 +167,9 @@ function receiveGroupLeave(payload) {
         const oldContactIds = JSON.parse(chat.contactIds || '[]');
         const contactIds = oldContactIds.filter(cid => cid !== sender.id);
         yield chat.update({ contactIds: JSON.stringify(contactIds) });
+        if (chat_type === constants.chat_types.tribe) {
+            yield models_1.models.ChatMember.destroy({ where: { chatId: chat.id, contactId: sender.id } });
+        }
         var date = new Date();
         date.setMilliseconds(0);
         const msg = {
@@ -164,6 +195,8 @@ function receiveGroupLeave(payload) {
     });
 }
 exports.receiveGroupLeave = receiveGroupLeave;
+// here: can only join if enough $$$!
+// need to forward to all tho?
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');
@@ -220,39 +253,54 @@ function receiveGroupJoin(payload) {
 exports.receiveGroupJoin = receiveGroupJoin;
 function receiveGroupCreateOrInvite(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { chat_members, chat_name, chat_uuid } = yield helpers.parseReceiveParams(payload);
-        const contactIds = [];
+        const { chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = yield helpers.parseReceiveParams(payload);
+        const contacts = [];
         const newContacts = [];
         for (let [pubkey, member] of Object.entries(chat_members)) {
             const contact = yield models_1.models.Contact.findOne({ where: { publicKey: pubkey } });
-            if (!contact && member && member.key) {
-                const createdContact = yield models_1.models.Contact.create({
-                    publicKey: pubkey,
-                    contactKey: member.key,
-                    alias: member.alias || 'Unknown',
-                    status: 1
-                });
-                contactIds.push(createdContact.id);
-                newContacts.push(createdContact.dataValues);
+            let addContact = false;
+            if (chat_type === constants.chat_types.group && member && member.key) {
+                addContact = true;
             }
-            else {
-                contactIds.push(contact.id);
+            else if (chat_type === constants.chat_types.tribe && member && member.role) {
+                if (member.role === constants.chat_roles.owner || member.role === constants.chat_roles.admin || member.role === constants.chat_roles.mode) {
+                    addContact = true;
+                }
+            }
+            if (addContact) {
+                if (!contact) {
+                    const createdContact = yield models_1.models.Contact.create({
+                        publicKey: pubkey,
+                        contactKey: member.key,
+                        alias: member.alias || 'Unknown',
+                        status: 1
+                    });
+                    contacts.push(Object.assign(Object.assign({}, createdContact), { role: member.role }));
+                    newContacts.push(createdContact.dataValues);
+                }
+                else {
+                    contacts.push(Object.assign(Object.assign({}, contact), { role: member.role }));
+                }
             }
         }
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const contactIds = contacts.map(c => c.id);
         if (!contactIds.includes(owner.id))
             contactIds.push(owner.id);
         // make chat
         let date = new Date();
         date.setMilliseconds(0);
-        const chat = yield models_1.models.Chat.create({
-            uuid: chat_uuid,
-            contactIds: JSON.stringify(contactIds),
-            createdAt: date,
-            updatedAt: date,
-            name: chat_name,
-            type: constants.chat_types.group
-        });
+        const chat = yield models_1.models.Chat.create(Object.assign(Object.assign({ uuid: chat_uuid, contactIds: JSON.stringify(contactIds), createdAt: date, updatedAt: date, name: chat_name, type: chat_type || constants.chat_types.group }, chat_host && { host: chat_host }), chat_key && { groupKey: chat_key }));
+        if (chat_type === constants.chat_types.tribe) { // IF TRIBE, ADD TO XREF
+            contacts.forEach(c => {
+                models_1.models.ChatMember.create({
+                    contactId: c.id,
+                    chatId: chat.id,
+                    role: c.role || constants.chat_roles.reader,
+                    lastActive: date,
+                });
+            });
+        }
         socket.sendJson({
             type: 'group_create',
             response: jsonUtils.messageToJson({ newContacts }, chat)
@@ -298,6 +346,30 @@ function createGroupChatParams(owner, contactIds, members, name) {
         name: name,
         type: constants.chat_types.group
     };
+}
+function createTribeChatParams(owner, contactIds, name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let date = new Date();
+        date.setMilliseconds(0);
+        if (!(owner && contactIds && Array.isArray(contactIds))) {
+            return;
+        }
+        // make ts sig here w LNd pubkey - that is UUID
+        const keys = yield rsa.genKeys();
+        const groupUUID = yield tribes.genSignedTimestamp();
+        const theContactIds = contactIds.includes(owner.id) ? contactIds : [owner.id].concat(contactIds);
+        return {
+            uuid: groupUUID,
+            contactIds: JSON.stringify(theContactIds),
+            createdAt: date,
+            updatedAt: date,
+            name: name,
+            type: constants.chat_types.tribe,
+            groupKey: keys.public,
+            groupPrivateKey: keys.private,
+            host: tribes.getHost()
+        };
+    });
 }
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {

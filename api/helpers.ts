@@ -179,6 +179,8 @@ async function parseReceiveParams(payload) {
 	const chat_type = dat.chat.type
 	const chat_members: { [k: string]: any } = dat.chat.members || {}
 	const chat_name = dat.chat.name
+	const chat_key = dat.chat.groupKey
+	const chat_host = dat.chat.host
 	const amount = dat.message.amount
 	const content = dat.message.content
 	const mediaToken = dat.message.mediaToken
@@ -186,20 +188,20 @@ async function parseReceiveParams(payload) {
 	const mediaKey = dat.message.mediaKey
 	const mediaType = dat.message.mediaType
 
-	const isGroup = chat_type && chat_type == constants.chat_types.group
+	const isConversation = chat_type && chat_type == constants.chat_types.group
 	let sender
 	let chat
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
-	if (isGroup) {
-		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
-	} else {
+	if (isConversation) {
 		sender = await findOrCreateContactByPubkey(sender_pub_key)
 		chat = await findOrCreateChatByUUID(
 			chat_uuid, [parseInt(owner.id), parseInt(sender.id)]
 		)
+	} else { // group
+		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	}
-	return { owner, sender, chat, sender_pub_key, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name }
+	return { owner, sender, chat, sender_pub_key, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key }
 }
 
 export {
@@ -227,6 +229,8 @@ function newmsg(type, chat, sender, message){
 			...chat.name && { name: chat.name },
 			...chat.type && { type: chat.type },
 			...chat.members && { members: chat.members },
+			...chat.groupKey && { groupKey: chat.groupKey },
+			...chat.host && { host: chat.host }
 		},
 		message: message,
 		// sender: {

@@ -33,7 +33,7 @@ let controllers = {
 function iniGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield lightning_1.checkConnection();
+            yield lightning_1.getInfo();
             const types = constants.message_types;
             yield lndService.subscribeInvoices({
                 [types.contact_key]: controllers.contacts.receiveContactKey,

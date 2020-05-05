@@ -1,28 +1,34 @@
 {
   "development": {
-    "macaroon_location": "/relay/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
-    "tls_location": "/relay/.lnd/tls.cert",
-    "node_ip": "172.22.0.2",
-    "lnd_port": "10009",
+    "senza_url": "http://localhost:3000/api/v2",
+    "macaroon_location": "/Users/evanfeenstra/code/lnd-dev/alice/data/chain/bitcoin/simnet/admin.macaroon",
+    "tls_location": "/Users/evanfeenstra/Library/Application Support/Lnd/tls.cert",
+    "node_ip": "127.0.0.1",
+    "lnd_port": "10001",
     "node_http_protocol": "http",
-    "node_http_port": "3000",
-    "hub_api_url": "http://hub.sphinx.chat/api/v1",
-    "hub_url": "http://hub.sphinx.chat/ping",
-    "hub_invite_url": "http://hub.sphinx.chat/invites",
-    "hub_check_invite_url": "http://hub.sphinx.chat/check_invite",
-    "media_host": "memes.sphinx.chat"
+    "node_http_port": "3001",
+    "hub_api_url": "http://lvh.me/api/v1",
+    "hub_url": "http://lvh.me/ping",
+    "hub_invite_url": "http://lvh.me/invites",
+    "hub_check_invite_url": "http://lvh.me/check_invite",
+    "media_host": "localhost:5000",
+    "tribes_host": "127.0.0.1:1883"
   },
   "production": {
-    "macaroon_location": "/relay/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
-    "tls_location": "/relay/.lnd/tls.cert",
+    "senza_url": "https://staging.senza.us/api/v2/",
+    "macaroon_location": "/home/ubuntu/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
+    "tls_location": "/home/ubuntu/.lnd/tls.cert",
+    "lnd_log_location": "/home/ubuntu/.lnd/logs/bitcoin/mainnet/lnd.log",
+    "lncli_location": "/home/ubuntu/go/bin",
     "node_ip": "localhost",
-    "lnd_port": "10009",
     "node_http_protocol": "http",
-    "node_http_port": "3000",
+    "node_http_port": "80",
+    "lnd_port": "10009",
     "hub_api_url": "https://hub.sphinx.chat/api/v1",
     "hub_url": "https://hub.sphinx.chat/ping",
     "hub_invite_url": "https://hub.sphinx.chat/invites",
     "hub_check_invite_url": "https://hub.sphinx.chat/check_invite",
-    "media_host": "memes.sphinx.chat"
+    "media_host": "memes.sphinx.chat",
+    "tribes_host": "tribes.sphinx.chat"
   }
 }

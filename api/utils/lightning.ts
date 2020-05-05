@@ -355,7 +355,7 @@ function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
   })
 }
 
-async function checkConnection(){
+async function getInfo(): Promise<{[k:string]:any}>{
 	return new Promise((resolve,reject)=>{
 		const lightning = loadLightning()
 		lightning.getInfo({}, function(err, response) {
@@ -395,7 +395,7 @@ export {
   SPHINX_CUSTOM_RECORD_KEY,
   listInvoices,
   listAllPayments,
-  checkConnection,
+  getInfo,
   listAllInvoices,
   listAllPaymentsPaginated,
 }

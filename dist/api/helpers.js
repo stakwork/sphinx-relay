@@ -193,25 +193,27 @@ function parseReceiveParams(payload) {
         const chat_type = dat.chat.type;
         const chat_members = dat.chat.members || {};
         const chat_name = dat.chat.name;
+        const chat_key = dat.chat.groupKey;
+        const chat_host = dat.chat.host;
         const amount = dat.message.amount;
         const content = dat.message.content;
         const mediaToken = dat.message.mediaToken;
         const msg_id = dat.message.id || 0;
         const mediaKey = dat.message.mediaKey;
         const mediaType = dat.message.mediaType;
-        const isGroup = chat_type && chat_type == constants.chat_types.group;
+        const isConversation = chat_type && chat_type == constants.chat_types.group;
         let sender;
         let chat;
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        if (isGroup) {
-            sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
-            chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
-        }
-        else {
+        if (isConversation) {
             sender = yield findOrCreateContactByPubkey(sender_pub_key);
             chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)]);
         }
-        return { owner, sender, chat, sender_pub_key, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name };
+        else { // group
+            sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
+            chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        }
+        return { owner, sender, chat, sender_pub_key, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key };
     });
 }
 exports.parseReceiveParams = parseReceiveParams;
@@ -225,7 +227,7 @@ function asyncForEach(array, callback) {
 function newmsg(type, chat, sender, message) {
     return {
         type: type,
-        chat: Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), chat.type && { type: chat.type }), chat.members && { members: chat.members }),
+        chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), chat.type && { type: chat.type }), chat.members && { members: chat.members }), chat.groupKey && { groupKey: chat.groupKey }), chat.host && { host: chat.host }),
         message: message,
     };
 }
