@@ -30,6 +30,7 @@ async function connectToLND(){
 	try {
 		await controllers.iniGrpcSubscriptions()
 		mainSetup()
+		tribes.connect()
 	} catch(e) {
 		setTimeout(async()=>{ // retry each 2 secs
 			await connectToLND()

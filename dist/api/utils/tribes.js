@@ -20,6 +20,7 @@ function connect() {
     return __awaiter(this, void 0, void 0, function* () {
         const pwd = yield genSignedTimestamp();
         const info = yield LND.getInfo();
+        console.log('=========> try to connect:', `tcp://${config.tribes_host}`);
         const client = mqtt.connect(`tcp://${config.tribes_host}`, {
             username: info.identity_pubkey,
             password: pwd,

@@ -37,10 +37,7 @@ function connectToLND() {
         try {
             yield controllers.iniGrpcSubscriptions();
             mainSetup();
-            const sts = yield tribes.genSignedTimestamp();
-            console.log("STS", sts);
-            tribes.verifySignedTimestamp(sts);
-            return;
+            tribes.connect();
         }
         catch (e) {
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {

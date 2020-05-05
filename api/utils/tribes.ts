@@ -12,6 +12,8 @@ export async function connect() {
     const pwd = await genSignedTimestamp()
     const info = await LND.getInfo()
 
+    console.log('=========> try to connect:',`tcp://${config.tribes_host}`)
+
     const client = mqtt.connect(`tcp://${config.tribes_host}`,{
         username:info.identity_pubkey,
         password:pwd,
