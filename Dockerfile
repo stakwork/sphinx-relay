@@ -30,10 +30,7 @@ RUN cd /go/src/github.com/lightningnetwork/lnd \
 FROM alpine as final
 
 EXPOSE 80
-EXPOSE 9735/tcp
-EXPOSE 9735/udp
-EXPOSE 10009/tcp
-EXPOSE 10009/udp
+EXPOSE 9735
 
 ENV NODE_ENV production
 
