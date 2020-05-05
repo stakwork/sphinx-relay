@@ -216,18 +216,6 @@ function signAscii(ascii) {
     });
 }
 exports.signAscii = signAscii;
-function verifyAscii(ascii, sig) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const r = yield verifyMessage(ascii_to_hexa(ascii), sig);
-            return r;
-        }
-        catch (e) {
-            throw e;
-        }
-    });
-}
-exports.verifyAscii = verifyAscii;
 function listInvoices() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
@@ -376,6 +364,18 @@ const signBuffer = (msg) => {
     }));
 };
 exports.signBuffer = signBuffer;
+function verifyBytes(msg, sig) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield verifyMessage(msg.toString('hex'), sig);
+            return r;
+        }
+        catch (e) {
+            throw e;
+        }
+    });
+}
+exports.verifyBytes = verifyBytes;
 function verifyMessage(msg, sig) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let lightning = yield loadLightning();
@@ -399,6 +399,18 @@ function verifyMessage(msg, sig) {
     }));
 }
 exports.verifyMessage = verifyMessage;
+function verifyAscii(ascii, sig) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield verifyMessage(ascii_to_hexa(ascii), sig);
+            return r;
+        }
+        catch (e) {
+            throw e;
+        }
+    });
+}
+exports.verifyAscii = verifyAscii;
 function getInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {

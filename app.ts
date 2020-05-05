@@ -10,6 +10,7 @@ import {pingHubInterval, checkInvitesHubInterval} from './api/hub'
 import {setupDatabase, setupDone} from './api/utils/setup'
 import * as controllers from './api/controllers'
 import * as socket from './api/utils/socket'
+import * as tribes from './api/utils/tribes'
 
 let server: any = null
 const port = process.env.PORT || 3001;

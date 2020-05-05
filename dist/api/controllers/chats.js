@@ -252,9 +252,25 @@ function receiveGroupJoin(payload) {
     });
 }
 exports.receiveGroupJoin = receiveGroupJoin;
+function validateTribeOwner(chat_uuid, pubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const verifiedOwnerPubkey = yield tribes.verifySignedTimestamp(chat_uuid);
+        if (verifiedOwnerPubkey === pubkey) {
+            return true;
+        }
+        return false;
+    });
+}
 function receiveGroupCreateOrInvite(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = yield helpers.parseReceiveParams(payload);
+        // maybe this just needs to move to adding tribe owner ChatMember?
+        const isTribe = chat_type === constants.chat_types.tribe;
+        if (isTribe) { // must be sent by tribe owner?????
+            const validOwner = yield validateTribeOwner(chat_uuid, sender_pub_key);
+            if (!validOwner)
+                return console.log('[tribes] invalid uuid signature!');
+        }
         const contacts = [];
         const newContacts = [];
         for (let [pubkey, member] of Object.entries(chat_members)) {
@@ -263,8 +279,8 @@ function receiveGroupCreateOrInvite(payload) {
             if (chat_type === constants.chat_types.group && member && member.key) {
                 addContact = true;
             }
-            else if (chat_type === constants.chat_types.tribe && member && member.role) {
-                if (member.role === constants.chat_roles.owner || member.role === constants.chat_roles.admin || member.role === constants.chat_roles.mode) {
+            else if (isTribe && member && member.role) {
+                if (member.role === constants.chat_roles.owner || member.role === constants.chat_roles.admin || member.role === constants.chat_roles.mod) {
                     addContact = true;
                 }
             }
@@ -292,8 +308,7 @@ function receiveGroupCreateOrInvite(payload) {
         let date = new Date();
         date.setMilliseconds(0);
         const chat = yield models_1.models.Chat.create(Object.assign(Object.assign({ uuid: chat_uuid, contactIds: JSON.stringify(contactIds), createdAt: date, updatedAt: date, name: chat_name, type: chat_type || constants.chat_types.group }, chat_host && { host: chat_host }), chat_key && { groupKey: chat_key }));
-        // IF TRIBE, ADD TO XREF
-        if (chat_type === constants.chat_types.tribe) {
+        if (isTribe) { // IF TRIBE, ADD TO XREF
             contacts.forEach(c => {
                 models_1.models.ChatMember.create({
                     contactId: c.id,

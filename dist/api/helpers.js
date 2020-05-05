@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("./models");
 const md5 = require("md5");
-const lightning_1 = require("./utils/lightning");
+const LND = require("./utils/lightning");
 const msg_1 = require("./utils/msg");
 const constants = require('../config/constants.json');
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
@@ -104,7 +104,7 @@ const sendMessage = (params) => __awaiter(void 0, void 0, void 0, function* () {
             amt: amount || 3,
         };
         try {
-            const r = yield lightning_1.keysendMessage(opts);
+            const r = yield LND.keysendMessage(opts);
             yes = r;
         }
         catch (e) {
@@ -129,7 +129,7 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure 
         amt: Math.max(amount, 3)
     };
     try {
-        const r = yield lightning_1.keysendMessage(opts);
+        const r = yield LND.keysendMessage(opts);
         console.log("=> external keysend");
         if (success)
             success(r);

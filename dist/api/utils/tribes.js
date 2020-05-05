@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const moment = require("moment");
 const zbase32 = require("./zbase32");
-const lightning_1 = require("./lightning");
+const LND = require("./lightning");
 const path = require("path");
 const mqtt = require("mqtt");
 const env = process.env.NODE_ENV || 'development';
@@ -19,7 +19,7 @@ const config = require(path.join(__dirname, '../../config/app.json'))[env];
 function connect() {
     return __awaiter(this, void 0, void 0, function* () {
         const pwd = yield genSignedTimestamp();
-        const info = yield lightning_1.getInfo();
+        const info = yield LND.getInfo();
         const client = mqtt.connect(`tcp://${config.tribes_host}`, {
             username: info.identity_pubkey,
             password: pwd,
@@ -39,7 +39,7 @@ function genSignedTimestamp() {
     return __awaiter(this, void 0, void 0, function* () {
         const now = moment().unix();
         const tsBytes = Buffer.from(now.toString(16), 'hex');
-        const sig = yield lightning_1.signBuffer(tsBytes);
+        const sig = yield LND.signBuffer(tsBytes);
         const sigBytes = zbase32.decode(sig);
         const totalLength = tsBytes.length + sigBytes.length;
         const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
@@ -47,6 +47,21 @@ function genSignedTimestamp() {
     });
 }
 exports.genSignedTimestamp = genSignedTimestamp;
+function verifySignedTimestamp(stsBase64) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const stsBuf = Buffer.from(stsBase64, 'base64');
+        const sig = stsBuf.subarray(4, 92);
+        const sigZbase32 = zbase32.encode(sig);
+        const r = yield LND.verifyBytes(stsBuf.subarray(0, 4), sigZbase32); // sig needs to be zbase32 :(
+        if (r.valid) {
+            return r.pubkey;
+        }
+        else {
+            return false;
+        }
+    });
+}
+exports.verifySignedTimestamp = verifySignedTimestamp;
 function getHost() {
     return config.tribes_host || '';
 }

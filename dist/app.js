@@ -21,6 +21,7 @@ const hub_1 = require("./api/hub");
 const setup_1 = require("./api/utils/setup");
 const controllers = require("./api/controllers");
 const socket = require("./api/utils/socket");
+const tribes = require("./api/utils/tribes");
 let server = null;
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
@@ -36,6 +37,10 @@ function connectToLND() {
         try {
             yield controllers.iniGrpcSubscriptions();
             mainSetup();
+            const sts = yield tribes.genSignedTimestamp();
+            console.log("STS", sts);
+            tribes.verifySignedTimestamp(sts);
+            return;
         }
         catch (e) {
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {

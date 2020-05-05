@@ -256,8 +256,22 @@ async function receiveGroupJoin(payload) {
 	})
 }
 
+async function validateTribeOwner(chat_uuid: string, pubkey: string){
+	const verifiedOwnerPubkey = await tribes.verifySignedTimestamp(chat_uuid)
+	if(verifiedOwnerPubkey===pubkey){
+		return true
+	}
+	return false
+}
 async function receiveGroupCreateOrInvite(payload) {
-	const { chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = await helpers.parseReceiveParams(payload)
+
+	// maybe this just needs to move to adding tribe owner ChatMember?
+	const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe){ // must be sent by tribe owner?????
+		const validOwner = await validateTribeOwner(chat_uuid, sender_pub_key)
+		if(!validOwner) return console.log('[tribes] invalid uuid signature!')
+	}
 
 	const contacts: any[] = []
 	const newContacts: any[] = []
@@ -266,8 +280,8 @@ async function receiveGroupCreateOrInvite(payload) {
 		let addContact = false
 		if (chat_type===constants.chat_types.group && member && member.key) {
 			addContact = true
-		} else if(chat_type===constants.chat_types.tribe && member && member.role) {
-			if (member.role===constants.chat_roles.owner || member.role===constants.chat_roles.admin || member.role===constants.chat_roles.mode){
+		} else if(isTribe && member && member.role) {
+			if (member.role===constants.chat_roles.owner || member.role===constants.chat_roles.admin || member.role===constants.chat_roles.mod){
 				addContact = true
 			}
 		}
@@ -303,8 +317,7 @@ async function receiveGroupCreateOrInvite(payload) {
 		...chat_key && { groupKey: chat_key },
 	})
 
-	// IF TRIBE, ADD TO XREF
-	if(chat_type===constants.chat_types.tribe){
+	if(isTribe){ // IF TRIBE, ADD TO XREF
 		contacts.forEach(c=>{
 			models.ChatMember.create({
 				contactId: c.id,

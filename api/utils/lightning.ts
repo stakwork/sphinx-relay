@@ -197,15 +197,6 @@ async function signAscii(ascii) {
   }
 }
 
-async function verifyAscii(ascii,sig): Promise<{[k:string]:any}>{
-  try {
-    const r = await verifyMessage(ascii_to_hexa(ascii),sig)
-    return r
-  } catch(e) {
-    throw e
-  }
-}
-
 function listInvoices() {  
   return new Promise(async(resolve, reject)=> {
     const lightning = await loadLightning()
@@ -334,13 +325,21 @@ const signBuffer = (msg) => {
   })
 }
 
+async function verifyBytes(msg,sig): Promise<{[k:string]:any}> {
+  try {
+    const r = await verifyMessage(msg.toString('hex'),sig)
+    return r
+  } catch(e) {
+    throw e
+  }
+}
 function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
   return new Promise(async(resolve, reject)=> {
     let lightning = await loadLightning()
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),
-        signature:sig,
+        signature:sig, // zbase32 encoded string
       }
       lightning.verifyMessage(options, function(err,res){
         if(err || !res.pubkey) {
@@ -353,6 +352,14 @@ function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
       reject(e)
     }
   })
+}
+async function verifyAscii(ascii,sig): Promise<{[k:string]:any}>{
+  try {
+    const r = await verifyMessage(ascii_to_hexa(ascii),sig)
+    return r
+  } catch(e) {
+    throw e
+  }
 }
 
 async function getInfo(): Promise<{[k:string]:any}>{
@@ -389,6 +396,7 @@ export {
   signMessage,
   verifyMessage,
   verifyAscii,
+  verifyBytes,
   signAscii,
   signBuffer,
   LND_KEYSEND_KEY,

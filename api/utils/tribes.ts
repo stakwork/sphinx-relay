@@ -1,7 +1,7 @@
 
 import * as moment from 'moment'
 import * as zbase32 from './zbase32'
-import {signBuffer, getInfo} from './lightning'
+import * as LND from './lightning'
 import * as path from 'path'
 import * as mqtt from 'mqtt'
 
@@ -10,7 +10,7 @@ const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 export async function connect() {
     const pwd = await genSignedTimestamp()
-    const info = await getInfo()
+    const info = await LND.getInfo()
 
     const client = mqtt.connect(`tcp://${config.tribes_host}`,{
         username:info.identity_pubkey,
@@ -30,11 +30,23 @@ export async function connect() {
 export async function genSignedTimestamp(){
     const now = moment().unix()
     const tsBytes = Buffer.from(now.toString(16), 'hex')
-    const sig = await signBuffer(tsBytes)
+    const sig = await LND.signBuffer(tsBytes)
     const sigBytes = zbase32.decode(sig)
     const totalLength = tsBytes.length + sigBytes.length
     const buf = Buffer.concat([tsBytes, sigBytes], totalLength)
     return urlBase64(buf)
+}
+
+export async function verifySignedTimestamp(stsBase64){
+    const stsBuf = Buffer.from(stsBase64, 'base64')
+    const sig = stsBuf.subarray(4,92)
+    const sigZbase32 = zbase32.encode(sig)
+    const r = await LND.verifyBytes(stsBuf.subarray(0,4), sigZbase32) // sig needs to be zbase32 :(
+    if (r.valid) {
+        return r.pubkey
+    } else {
+        return false
+    }
 }
 
 export function getHost() {

@@ -1,6 +1,6 @@
 import { models } from './models'
 import * as md5 from 'md5'
-import { keysendMessage } from './utils/lightning'
+import * as LND from './utils/lightning'
 import {personalizeMessage} from './utils/msg'
 
 const constants = require('../config/constants.json');
@@ -103,7 +103,7 @@ const sendMessage = async (params) => {
 			amt: amount || 3,
 		}
 		try {
-			const r = await keysendMessage(opts)
+			const r = await LND.keysendMessage(opts)
 			yes = r
 		} catch (e) {
 			console.log("KEYSEND ERROR", e)
@@ -124,7 +124,7 @@ const performKeysendMessage = async ({ destination_key, amount, msg, success, fa
 		amt: Math.max(amount, 3)
 	}
 	try {
-		const r = await keysendMessage(opts)
+		const r = await LND.keysendMessage(opts)
 		console.log("=> external keysend")
 		if (success) success(r)
 	} catch (e) {
