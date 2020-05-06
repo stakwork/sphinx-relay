@@ -109,4 +109,4 @@ $ cd
 $ cd sphinx-relay/config/
 $ npm run prod
 ```
-When Relay starts up, it will print a QR in the terminal. You can scan this in your app (right now Android only) to connect!
+When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android or iOS) to connect!
