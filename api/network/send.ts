@@ -1,8 +1,10 @@
 import { models } from '../models'
 import * as LND from '../utils/lightning'
 import {personalizeMessage} from '../utils/msg'
+import * as path from 'path'
+import * as tribes from '../utils/tribes'
 
-// const constants = require('../config/constants.json');
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export function signAndSend(opts){
 	return new Promise(async function(resolve, reject) {
@@ -16,11 +18,30 @@ export function signAndSend(opts){
 
 		console.log("DATA")
 		console.log(opts.data)
-		// if tribe 
-			// if owner pub to mqtt
-			// else keysend to owner ONLY
-		// else:
-		LND.keysendMessage({...opts,data})
+
+		try {
+			const payload = opts.data
+			if(payload.chat&&payload.chat.type===constants.chat_types.tribe) {
+				// if owner pub to mqtt all group members (but not to self!!!)
+				const chatUUID = payload.chat.uuid
+				const recipient = opts.dest
+				if(!chatUUID || !recipient) return
+				const tribeOwnerPubKey = await tribes.verifySignedTimestamp(chatUUID)
+				const owner = await models.Contact.findOne({ where: { isOwner: true } })
+				if(owner.publicKey===tribeOwnerPubKey){
+					tribes.publish(`${recipient}/${chatUUID}`, data)
+				} else {
+					// else keysend to owner ONLY
+					if(recipient===tribeOwnerPubKey) {
+						LND.keysendMessage({...opts,data})
+					}
+				}
+			} else {
+				LND.keysendMessage({...opts,data})
+			}
+		} catch(e) {
+			throw e
+		}
 	})
 }
 

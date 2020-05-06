@@ -12,7 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const LND = require("../utils/lightning");
 const msg_1 = require("../utils/msg");
-// const constants = require('../config/constants.json');
+const path = require("path");
+const tribes = require("../utils/tribes");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 function signAndSend(opts) {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25,11 +27,33 @@ function signAndSend(opts) {
             data = data + sig;
             console.log("DATA");
             console.log(opts.data);
-            // if tribe 
-            // if owner pub to mqtt
-            // else keysend to owner ONLY
-            // else:
-            LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
+            try {
+                const payload = opts.data;
+                if (payload.chat && payload.chat.type === constants.chat_types.tribe) {
+                    // if owner pub to mqtt all group members (but not to self!!!)
+                    const chatUUID = payload.chat.uuid;
+                    const recipient = opts.dest;
+                    if (!chatUUID || !recipient)
+                        return;
+                    const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chatUUID);
+                    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+                    if (owner.publicKey === tribeOwnerPubKey) {
+                        tribes.publish(`${recipient}/${chatUUID}`, data);
+                    }
+                    else {
+                        // else keysend to owner ONLY
+                        if (recipient === tribeOwnerPubKey) {
+                            LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
+                        }
+                    }
+                }
+                else {
+                    LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
+                }
+            }
+            catch (e) {
+                throw e;
+            }
         });
     });
 }

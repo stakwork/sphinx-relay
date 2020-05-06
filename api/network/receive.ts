@@ -35,11 +35,11 @@ export async function initGrpcSubscriptions() {
 }
 
 export async function initTribesSubscriptions(){
-    await tribes.connect((myPubKey)=>{ // connected callback
+	tribes.connect(myPubKey =>{ // connected callback
         // get all tribes and sub to each individually ????
         tribes.subscribe(`${myPubKey}/#`)
     }, (topic, message)=>{ // onMessage callback
-        console.log("TOPIC", topic, "MESSAGE", message)
+        console.log("=====> msg received! TOPIC", topic, "MESSAGE", message)
         // check topic is signed by sender?
         // fire off the ACTION
     })

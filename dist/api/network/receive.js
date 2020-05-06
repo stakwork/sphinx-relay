@@ -47,11 +47,11 @@ function initGrpcSubscriptions() {
 exports.initGrpcSubscriptions = initGrpcSubscriptions;
 function initTribesSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield tribes.connect((myPubKey) => {
+        tribes.connect(myPubKey => {
             // get all tribes and sub to each individually ????
             tribes.subscribe(`${myPubKey}/#`);
         }, (topic, message) => {
-            console.log("TOPIC", topic, "MESSAGE", message);
+            console.log("=====> msg received! TOPIC", topic, "MESSAGE", message);
             // check topic is signed by sender?
             // fire off the ACTION
         });

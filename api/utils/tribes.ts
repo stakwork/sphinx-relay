@@ -11,32 +11,42 @@ const config = require(path.join(__dirname,'../../config/app.json'))[env]
 let client:any
 
 export async function connect(connectedCallback, onMessage) {
-    const pwd = await genSignedTimestamp()
-    const info = await LND.getInfo()
+    try{
+        const info = await LND.getInfo()
 
-    console.log('[tribes] try to connect:',`tcp://${config.tribes_host}`)
+        async function reconnect(){
+            client = null
+            const pwd = await genSignedTimestamp()
+            console.log('[tribes] try to connect:',`tcp://${config.tribes_host}`)
+            client = mqtt.connect(`tcp://${config.tribes_host}`,{
+                username:info.identity_pubkey,
+                password:pwd,
+                reconnectPeriod:0, // dont auto reconnect
+            })
+            client.on('connect', function () {
+                console.log("[tribes] connected!")
+                if(connectedCallback) connectedCallback(info.identity_pubkey)
+            })
+            client.on('close', function () {
+                setTimeout(()=> reconnect(), 2000)
+            })
+            client.on('message', function(topic, message) {
+                if(onMessage) onMessage(topic, message)
+            })
+        }
+        reconnect()
 
-    client = mqtt.connect(`tcp://${config.tribes_host}`,{
-        username:info.identity_pubkey,
-        password:pwd,
-    })
-
-    client.on('connect', function () {
-        console.log("[tribes] connected!")
-        if(connectedCallback) connectedCallback(client, info.identity_pubkey)
-        // subscribe to all public groups here
-        // that you are NOT admin of (dont sub to your own!)
-    })
-    client.on('close', function () {
-        //console.log("MQTT CLOSED")
-    })
-    client.on('message', function(topic, message) {
-        if(onMessage) onMessage(topic, message)
-    })
+    } catch(e){
+        console.log("TRIBES ERROR",e)
+    }
 }
 
 export function subscribe(topic){
     if(client) client.subscribe(topic)
+}
+
+export function publish(topic,msg){
+    if(client) client.publish(topic,msg)
 }
 
 export async function genSignedTimestamp(){

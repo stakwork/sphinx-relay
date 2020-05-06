@@ -161,7 +161,7 @@ function parseReceiveParams(payload) {
         const msg_id = dat.message.id || 0;
         const mediaKey = dat.message.mediaKey;
         const mediaType = dat.message.mediaType;
-        const isConversation = chat_type && chat_type == constants.chat_types.group;
+        const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation);
         let sender;
         let chat;
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });

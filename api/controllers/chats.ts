@@ -161,6 +161,63 @@ const deleteChat = async (req, res) => {
 	success(res, { chat_id: id })
 }
 
+async function joinTribe(req, res){
+	console.log('=> joinTribe')
+	const { uuid, group_key, chat_name, host } = req.params
+	const ownerPubKey = await tribes.verifySignedTimestamp(uuid)
+
+	const tribeOwner = await models.Contact.findOne({ where: { publicKey: ownerPubKey } })
+
+	let theTribeOwner
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const contactIds = [owner.id]
+	if (tribeOwner) {
+		theTribeOwner = tribeOwner // might already include??
+		if(!contactIds.includes(tribeOwner.id)) contactIds.push(tribeOwner.id)
+	} else {
+		const createdContact = await models.Contact.create({
+			publicKey: ownerPubKey,
+			contactKey: '',
+			alias: 'Unknown',
+			status: 1
+		})
+		theTribeOwner = createdContact
+		contactIds.push(createdContact.id)
+	}
+	let date = new Date()
+	date.setMilliseconds(0)
+	const chat = await models.Chat.create({
+		uuid: uuid,
+		contactIds: JSON.stringify(contactIds),
+		createdAt: date,
+		updatedAt: date,
+		name: chat_name,
+		type: constants.chat_types.tribe,
+		host: host || tribes.getHost(),
+		groupKey: group_key,
+	})
+	models.ChatMember.create({
+		contactId: theTribeOwner.id,
+		chatId: chat.id,
+		role: constants.chat_roles.owner,
+		lastActive: date,
+	})
+	
+	network.sendMessage({ // send my data to tribe owner
+		chat: {
+			...chat.dataValues, members: {
+				[owner.publicKey]: {
+					key: owner.contactKey,
+					alias: owner.alias||''
+				}
+			}
+		},
+		sender: owner,
+		message: {},
+		type: constants.message_types.group_join,
+	})
+}
+
 async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
 	const { sender_pub_key, chat_uuid, chat_type } = await helpers.parseReceiveParams(payload)
@@ -204,15 +261,27 @@ async function receiveGroupLeave(payload) {
 	})
 }
 
+// only owner needs to add!
 // here: can only join if enough $$$!
 // forward to all over mqtt
 // add to ChatMember table
 async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
-	const { sender_pub_key, chat_uuid, chat_members } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_members, chat_type } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
+
+	// THIS CHECK CAN BE DONE IN NETWORK.RECEIVE --> forward to mqtt if needed to
+	const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe) {
+		const owner = await models.Contact.findOne({ where: { isOwner: true } })
+		const verifiedOwnerPubkey = await tribes.verifySignedTimestamp(chat_uuid)
+		if(verifiedOwnerPubkey!==owner.publicKey){
+			return // SKIP if not owner (not each member needs to be added)
+			// but maybe we need to add alias in there somehow? so other people can see "Evan joined"
+		}
+	}
 
 	let theSender: any = null
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
@@ -235,8 +304,18 @@ async function receiveGroupJoin(payload) {
 	}
 	await chat.update({ contactIds: JSON.stringify(contactIds) })
 
-	var date = new Date();
+	var date = new Date()
 	date.setMilliseconds(0)
+
+	if(isTribe){ // IF TRIBE, ADD TO XREF
+		models.ChatMember.create({
+			contactId: theSender.id,
+			chatId: chat.id,
+			role: constants.chat_roles.reader,
+			lastActive: date,
+		})
+	}
+
 	const msg = {
 		chatId: chat.id,
 		type: constants.message_types.group_join,
@@ -410,7 +489,8 @@ async function createTribeChatParams(owner, contactIds, name) {
 export {
 	getChats, mute, addGroupMembers,
 	receiveGroupCreateOrInvite, createGroupChat,
-	deleteChat, receiveGroupLeave, receiveGroupJoin
+	deleteChat, receiveGroupLeave, receiveGroupJoin,
+	joinTribe,
 }
 
 
