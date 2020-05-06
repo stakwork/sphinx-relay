@@ -49,7 +49,12 @@ export async function sendMessage(params) {
 	const { type, chat, message, sender, amount, success, failure } = params
 	const m = newmsg(type, chat, sender, message)
 
-	const contactIds = typeof chat.contactIds==='string' ? JSON.parse(chat.contactIds) : chat.contactIds
+	const contactIds = (typeof chat.contactIds==='string' ? JSON.parse(chat.contactIds) : chat.contactIds) || []
+	if(contactIds.length===1) {
+		if (contactIds[0]===1) {
+			return success(true) // if no contacts thats fine (like create tribe)
+		}
+	}
 
 	let yes:any = null
 	let no:any = null

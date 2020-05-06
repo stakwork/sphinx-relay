@@ -8,6 +8,7 @@ function chatToJson(c) {
     if (chat.contactIds && typeof chat.contactIds === 'string') {
         contactIds = JSON.parse(chat.contactIds);
     }
+    delete chat.groupPrivateKey;
     return case_1.toSnake(Object.assign(Object.assign({}, chat), { contactIds }));
 }
 exports.chatToJson = chatToJson;

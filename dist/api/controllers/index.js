@@ -43,6 +43,7 @@ function set(app) {
         app.post('/chats/:chat_id/:mute_unmute', controllers.chats.mute);
         app.delete('/chat/:id', controllers.chats.deleteChat);
         app.put('/chat/:id', controllers.chats.addGroupMembers);
+        app.post('/tribe', controllers.chats.joinTribe);
         app.post('/contacts/tokens', controllers.contacts.generateToken);
         app.post('/upload', controllers.uploads.avatarUpload.single('file'), controllers.uploads.uploadFile);
         app.post('/invites', controllers.invites.createInvite);

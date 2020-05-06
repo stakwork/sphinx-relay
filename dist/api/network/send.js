@@ -62,7 +62,12 @@ function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure } = params;
         const m = newmsg(type, chat, sender, message);
-        const contactIds = typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds;
+        const contactIds = (typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds) || [];
+        if (contactIds.length === 1) {
+            if (contactIds[0] === 1) {
+                return success(true); // if no contacts thats fine (like create tribe)
+            }
+        }
         let yes = null;
         let no = null;
         console.log('all contactIds', contactIds);

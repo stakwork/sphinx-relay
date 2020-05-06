@@ -7,6 +7,7 @@ function chatToJson(c) {
   if(chat.contactIds && typeof chat.contactIds==='string'){
     contactIds = JSON.parse(chat.contactIds)
   }
+  delete chat.groupPrivateKey
   return toSnake({
     ...chat,
     contactIds

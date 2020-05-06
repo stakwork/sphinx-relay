@@ -42,12 +42,12 @@ async function mute(req, res) {
 async function createGroupChat(req, res) {
 	const {
 		name,
-		contact_ids,
 		is_tribe,
 		is_listed,
 		// price_per_message,
 		// price_to_join,
 	} = req.body
+	const contact_ids = req.body.contact_ids||[]
 
 	const members: { [k: string]: {[k:string]:string} } = {} //{pubkey:{key,alias}, ...}
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
@@ -163,7 +163,7 @@ const deleteChat = async (req, res) => {
 
 async function joinTribe(req, res){
 	console.log('=> joinTribe')
-	const { uuid, group_key, chat_name, host } = req.params
+	const { uuid, group_key, name, host } = req.body
 	const ownerPubKey = await tribes.verifySignedTimestamp(uuid)
 
 	const tribeOwner = await models.Contact.findOne({ where: { publicKey: ownerPubKey } })
@@ -191,7 +191,7 @@ async function joinTribe(req, res){
 		contactIds: JSON.stringify(contactIds),
 		createdAt: date,
 		updatedAt: date,
-		name: chat_name,
+		name: name,
 		type: constants.chat_types.tribe,
 		host: host || tribes.getHost(),
 		groupKey: group_key,

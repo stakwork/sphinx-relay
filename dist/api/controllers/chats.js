@@ -49,7 +49,8 @@ exports.mute = mute;
 // or can u add contacts as members?
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, contact_ids, is_tribe, is_listed, } = req.body;
+        const { name, is_tribe, is_listed, } = req.body;
+        const contact_ids = req.body.contact_ids || [];
         const members = {}; //{pubkey:{key,alias}, ...}
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         members[owner.publicKey] = {
@@ -161,7 +162,7 @@ exports.deleteChat = deleteChat;
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
-        const { uuid, group_key, chat_name, host } = req.params;
+        const { uuid, group_key, name, host } = req.body;
         const ownerPubKey = yield tribes.verifySignedTimestamp(uuid);
         const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: ownerPubKey } });
         let theTribeOwner;
@@ -189,7 +190,7 @@ function joinTribe(req, res) {
             contactIds: JSON.stringify(contactIds),
             createdAt: date,
             updatedAt: date,
-            name: chat_name,
+            name: name,
             type: constants.chat_types.tribe,
             host: host || tribes.getHost(),
             groupKey: group_key,
