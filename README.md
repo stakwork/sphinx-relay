@@ -106,7 +106,7 @@ To connect to your app
 
 `npm run prod`
 
-When Relay starts up, it will print a QR in the terminal. You can scan this in your app (right now Android only) to connect!
+When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android & iOS) to connect!
 
 # Roadmap
 
