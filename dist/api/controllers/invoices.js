@@ -19,6 +19,7 @@ const hub_1 = require("../hub");
 const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
+const network = require("../network");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
@@ -125,7 +126,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                                 updatedAt: new Date(timestamp)
                             });
                             res_1.success(res, jsonUtils.messageToJson(message, chat));
-                            helpers.sendMessage({
+                            network.sendMessage({
                                 chat: chat,
                                 sender: owner,
                                 type: constants.message_types.invoice,

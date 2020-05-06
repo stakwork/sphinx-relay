@@ -19,6 +19,7 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
+const network = require("../network");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
@@ -121,7 +122,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
     res_1.success(res, jsonUtils.messageToJson(message, chat));
-    helpers.sendMessage({
+    network.sendMessage({
         chat: chat,
         sender: owner,
         type: constants.message_types.message,

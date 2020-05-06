@@ -18,6 +18,7 @@ const res_1 = require("../utils/res");
 const lightning = require("../utils/lightning");
 const ldat_1 = require("../utils/ldat");
 const constants = require("../../config/constants.json");
+const network = require("../network");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, } = req.body;
     console.log('[send payment]', req.body);
@@ -87,7 +88,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (remote_text_map)
             msgToSend.content = remote_text_map;
     }
-    helpers.sendMessage({
+    network.sendMessage({
         chat: theChat,
         sender: owner,
         type: constants.message_types.direct_payment,

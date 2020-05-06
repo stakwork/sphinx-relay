@@ -7,6 +7,7 @@ import { success } from '../utils/res'
 import * as lightning from '../utils/lightning'
 import {tokenFromTerms} from '../utils/ldat'
 import * as constants from '../../config/constants.json'
+import * as network from '../network'
 
 const sendPayment = async (req, res) => {
   const {
@@ -95,7 +96,7 @@ const sendPayment = async (req, res) => {
     theChat = {...chat.dataValues, contactIds:contact_ids}
     if(remote_text_map) msgToSend.content = remote_text_map
   }
-  helpers.sendMessage({
+  network.sendMessage({
     chat: theChat,
     sender: owner,
     type: constants.message_types.direct_payment,

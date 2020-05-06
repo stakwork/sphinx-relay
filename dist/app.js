@@ -36,7 +36,7 @@ function connectToLND() {
         console.log(`=> [lnd] connecting... attempt #${i}`);
         try {
             yield controllers.iniGrpcSubscriptions();
-            mainSetup();
+            yield mainSetup();
             tribes.connect();
         }
         catch (e) {

@@ -154,9 +154,6 @@ function keysendMessage(opts) {
                 if (!opts.data || typeof opts.data !== 'string') {
                     return reject('string plz');
                 }
-                // SIGN HERE and append sig
-                const sig = yield signAscii(opts.data);
-                opts.data = opts.data + sig;
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts);

@@ -1,7 +1,6 @@
 import { models } from './models'
 import * as md5 from 'md5'
-import * as LND from './utils/lightning'
-import {personalizeMessage} from './utils/msg'
+import * as network from './network'
 
 const constants = require('../config/constants.json');
 
@@ -76,47 +75,6 @@ const sendContactKeys = async (args) => {
 	}
 }
 
-const sendMessage = async (params) => {
-	const { type, chat, message, sender, amount, success, failure } = params
-	const m = newmsg(type, chat, sender, message)
-
-	const contactIds = typeof chat.contactIds==='string' ? JSON.parse(chat.contactIds) : chat.contactIds
-
-	let yes:any = null
-	let no:any = null
-	console.log('all contactIds',contactIds)
-	await asyncForEach(contactIds, async contactId => {
-		if (contactId == sender.id) {
-			return
-		}
-
-		console.log('-> sending to contact #', contactId)
-
-		const contact = await models.Contact.findOne({ where: { id: contactId } })
-		const destkey = contact.publicKey
-
-		const finalMsg = await personalizeMessage(m, contactId, destkey)
-
-		const opts = {
-			dest: destkey,
-			data: JSON.stringify(finalMsg),
-			amt: amount || 3,
-		}
-		try {
-			const r = await LND.keysendMessage(opts)
-			yes = r
-		} catch (e) {
-			console.log("KEYSEND ERROR", e)
-			no = e
-		}
-	})
-	if(yes){
-		if(success) success(yes)
-	} else {
-		if(failure) failure(no)
-	}
-}
-
 const performKeysendMessage = async ({ destination_key, amount, msg, success, failure }) => {
 	const opts = {
 		dest: destination_key,
@@ -124,7 +82,7 @@ const performKeysendMessage = async ({ destination_key, amount, msg, success, fa
 		amt: Math.max(amount, 3)
 	}
 	try {
-		const r = await LND.keysendMessage(opts)
+		const r = await network.signAndSend(opts)
 		console.log("=> external keysend")
 		if (success) success(r)
 	} catch (e) {
@@ -206,7 +164,6 @@ async function parseReceiveParams(payload) {
 
 export {
 	findOrCreateChat,
-	sendMessage,
 	sendContactKeys,
 	findOrCreateContactByPubkey,
 	findOrCreateChatByUUID,
@@ -218,25 +175,6 @@ export {
 async function asyncForEach(array, callback) {
 	for (let index = 0; index < array.length; index++) {
 	  	await callback(array[index], index, array);
-	}
-}
-
-function newmsg(type, chat, sender, message){
-	return {
-		type: type,
-		chat: {
-			uuid: chat.uuid,
-			...chat.name && { name: chat.name },
-			...chat.type && { type: chat.type },
-			...chat.members && { members: chat.members },
-			...chat.groupKey && { groupKey: chat.groupKey },
-			...chat.host && { host: chat.host }
-		},
-		message: message,
-		// sender: {
-		// 	pub_key: sender.publicKey,
-		// 	// ...sender.contactKey && {contact_key: sender.contactKey}
-		// }
 	}
 }
 

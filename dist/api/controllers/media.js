@@ -24,6 +24,7 @@ const zbase32 = require("../utils/zbase32");
 const schemas = require("./schemas");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
+const network = require("../network");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -103,7 +104,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         mediaKey: media_key_map,
         mediaType: mediaType,
     };
-    helpers.sendMessage({
+    network.sendMessage({
         chat: chat,
         sender: owner,
         type: constants.message_types.attachment,
@@ -162,7 +163,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const msg = {
         amount, mediaToken: media_token, id: message.id,
     };
-    helpers.sendMessage({
+    network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
         sender: owner,
         type: constants.message_types.purchase,
@@ -230,7 +231,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             price = 0;
     }
     if (amount < price) { // didnt pay enough
-        return helpers.sendMessage({
+        return network.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
             sender: owner,
             amount: amount,
@@ -258,7 +259,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         meta: { amt: amount },
         pubkey: sender.publicKey,
     });
-    helpers.sendMessage({
+    network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
         sender: owner,
         type: constants.message_types.purchase_accept,

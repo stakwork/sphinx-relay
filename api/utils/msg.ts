@@ -18,6 +18,17 @@ function removeRecipientFromChatMembers(full:{[k:string]:any}, destkey){
 	return fillchatmsg(full, {members})
 }
 
+function removeAllNonAdminMembersIfTribe(full:{[k:string]:any}, destkey){
+	return full
+	// const c = full && full.chat
+	// if (!(c && c.members)) return full
+	// if (!(typeof c.members==='object')) return full
+
+    // const members = {...c.members}
+	// if(members[destkey]) delete members[destkey]
+	// return fillchatmsg(full, {members})
+}
+
 function addInMediaKey(full:{[k:string]:any}, contactId){
 	const m = full && full.message
 	if (!(m && m.mediaKey)) return full
@@ -53,7 +64,8 @@ async function personalizeMessage(m,contactId,destkey){
 	const cloned = JSON.parse(JSON.stringify(m))
 	const msg = addInRemoteText(cloned, contactId)
 	const cleanMsg = removeRecipientFromChatMembers(msg, destkey)
-	const msgWithMediaKey = addInMediaKey(cleanMsg, contactId)
+	const cleanerMsg = removeAllNonAdminMembersIfTribe(msg, destkey)
+	const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId)
 	const finalMsg = await finishTermsAndReceipt(msgWithMediaKey, destkey)
     return finalMsg
 }

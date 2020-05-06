@@ -8,6 +8,7 @@ import { sendNotification } from '../hub'
 import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
+import * as network from '../network'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -140,7 +141,7 @@ const createInvoice = async (req, res) => {
               })
               success(res, jsonUtils.messageToJson(message, chat))
 
-              helpers.sendMessage({
+              network.sendMessage({
                 chat: chat,
                 sender: owner,
                 type: constants.message_types.invoice,

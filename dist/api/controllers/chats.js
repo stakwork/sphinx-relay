@@ -13,6 +13,7 @@ const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const helpers = require("../helpers");
+const network = require("../network");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const md5 = require("md5");
@@ -44,6 +45,8 @@ function mute(req, res) {
     });
 }
 exports.mute = mute;
+// just add self here if tribes
+// or can u add contacts as members?
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { name, contact_ids, is_tribe, is_listed, } = req.body;
@@ -71,7 +74,7 @@ function createGroupChat(req, res) {
         else {
             chatParams = createGroupChatParams(owner, contact_ids, members, name);
         }
-        helpers.sendMessage({
+        network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members }),
             sender: owner,
             type: constants.message_types.group_create,
@@ -126,7 +129,7 @@ function addGroupMembers(req, res) {
             }
         }));
         res_1.success(res, jsonUtils.chatToJson(chat));
-        helpers.sendMessage({
+        network.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: contact_ids, members }),
             sender: owner,
             type: constants.message_types.group_invite,
@@ -139,7 +142,7 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const { id } = req.params;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield models_1.models.Chat.findOne({ where: { id } });
-    helpers.sendMessage({
+    network.sendMessage({
         chat,
         sender: owner,
         message: {},
@@ -198,6 +201,7 @@ function receiveGroupLeave(payload) {
 exports.receiveGroupLeave = receiveGroupLeave;
 // here: can only join if enough $$$!
 // forward to all over mqtt
+// add to ChatMember table
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');
@@ -325,7 +329,7 @@ function receiveGroupCreateOrInvite(payload) {
         hub_1.sendNotification(chat, chat_name, 'group');
         if (payload.type === constants.message_types.group_invite) {
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            helpers.sendMessage({
+            network.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { members: {
                         [owner.publicKey]: {
                             key: owner.contactKey,

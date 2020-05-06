@@ -29,7 +29,7 @@ async function connectToLND(){
 	console.log(`=> [lnd] connecting... attempt #${i}`)
 	try {
 		await controllers.iniGrpcSubscriptions()
-		mainSetup()
+		await mainSetup()
 		tribes.connect()
 	} catch(e) {
 		setTimeout(async()=>{ // retry each 2 secs

@@ -11,8 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("./models");
 const md5 = require("md5");
-const LND = require("./utils/lightning");
-const msg_1 = require("./utils/msg");
+const network = require("./network");
 const constants = require('../config/constants.json');
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
@@ -83,45 +82,6 @@ const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.sendContactKeys = sendContactKeys;
-const sendMessage = (params) => __awaiter(void 0, void 0, void 0, function* () {
-    const { type, chat, message, sender, amount, success, failure } = params;
-    const m = newmsg(type, chat, sender, message);
-    const contactIds = typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds;
-    let yes = null;
-    let no = null;
-    console.log('all contactIds', contactIds);
-    yield asyncForEach(contactIds, (contactId) => __awaiter(void 0, void 0, void 0, function* () {
-        if (contactId == sender.id) {
-            return;
-        }
-        console.log('-> sending to contact #', contactId);
-        const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
-        const destkey = contact.publicKey;
-        const finalMsg = yield msg_1.personalizeMessage(m, contactId, destkey);
-        const opts = {
-            dest: destkey,
-            data: JSON.stringify(finalMsg),
-            amt: amount || 3,
-        };
-        try {
-            const r = yield LND.keysendMessage(opts);
-            yes = r;
-        }
-        catch (e) {
-            console.log("KEYSEND ERROR", e);
-            no = e;
-        }
-    }));
-    if (yes) {
-        if (success)
-            success(yes);
-    }
-    else {
-        if (failure)
-            failure(no);
-    }
-});
-exports.sendMessage = sendMessage;
 const performKeysendMessage = ({ destination_key, amount, msg, success, failure }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
@@ -129,7 +89,7 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure 
         amt: Math.max(amount, 3)
     };
     try {
-        const r = yield LND.keysendMessage(opts);
+        const r = yield network.signAndSend(opts);
         console.log("=> external keysend");
         if (success)
             success(r);
@@ -223,13 +183,6 @@ function asyncForEach(array, callback) {
             yield callback(array[index], index, array);
         }
     });
-}
-function newmsg(type, chat, sender, message) {
-    return {
-        type: type,
-        chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), chat.type && { type: chat.type }), chat.members && { members: chat.members }), chat.groupKey && { groupKey: chat.groupKey }), chat.host && { host: chat.host }),
-        message: message,
-    };
 }
 function newkeyexchangemsg(type, sender) {
     return {

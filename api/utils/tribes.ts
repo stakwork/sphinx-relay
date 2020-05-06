@@ -20,12 +20,12 @@ export async function connect() {
     })
 
     client.on('connect', function () {
-        console.log("MQTT CLIENT CONNECTED!")
+        console.log("[tribes] connected!")
         // subscribe to all public groups here
         // that you are NOT admin of (dont sub to your own!)
     })
     client.on('close', function () {
-        console.log("MQTT CLOSED")
+        //console.log("MQTT CLOSED")
     })
 }
 

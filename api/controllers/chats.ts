@@ -2,6 +2,7 @@ import { models } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as helpers from '../helpers'
+import * as network from '../network'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
 import * as md5 from 'md5'
@@ -36,6 +37,8 @@ async function mute(req, res) {
 	success(res, jsonUtils.chatToJson(chat))
 }
 
+// just add self here if tribes
+// or can u add contacts as members?
 async function createGroupChat(req, res) {
 	const {
 		name,
@@ -72,7 +75,7 @@ async function createGroupChat(req, res) {
 		chatParams = createGroupChatParams(owner, contact_ids, members, name)
 	}
 
-	helpers.sendMessage({
+	network.sendMessage({
 		chat: { ...chatParams, members },
 		sender: owner,
 		type: constants.message_types.group_create,
@@ -127,7 +130,7 @@ async function addGroupMembers(req, res) {
 
 	success(res, jsonUtils.chatToJson(chat))
 
-	helpers.sendMessage({ // send ONLY to new members
+	network.sendMessage({ // send ONLY to new members
 		chat: { ...chat.dataValues, contactIds:contact_ids, members },
 		sender: owner,
 		type: constants.message_types.group_invite,
@@ -140,7 +143,7 @@ const deleteChat = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	const chat = await models.Chat.findOne({ where: { id } })
-	helpers.sendMessage({
+	network.sendMessage({
 		chat,
 		sender: owner,
 		message: {},
@@ -203,6 +206,7 @@ async function receiveGroupLeave(payload) {
 
 // here: can only join if enough $$$!
 // forward to all over mqtt
+// add to ChatMember table
 async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
 	const { sender_pub_key, chat_uuid, chat_members } = await helpers.parseReceiveParams(payload)
@@ -337,7 +341,7 @@ async function receiveGroupCreateOrInvite(payload) {
 
 	if (payload.type === constants.message_types.group_invite) {
 		const owner = await models.Contact.findOne({ where: { isOwner: true } })
-		helpers.sendMessage({
+		network.sendMessage({
 			chat: {
 				...chat.dataValues, members: {
 					[owner.publicKey]: {

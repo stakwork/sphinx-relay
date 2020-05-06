@@ -13,11 +13,11 @@ const lock_1 = require("../utils/lock");
 const models_1 = require("../models");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
-const helpers = require("../helpers");
+const network = require("../network");
 const path = require("path");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function sendConfirmation({ chat, sender, msg_id }) {
-    helpers.sendMessage({
+    network.sendMessage({
         chat,
         sender,
         message: { id: msg_id },

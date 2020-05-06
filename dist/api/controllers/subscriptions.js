@@ -20,6 +20,7 @@ const helpers = require("../helpers");
 const rsa = require("../crypto/rsa");
 const moment = require("moment");
 const path = require("path");
+const network = require("../network");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 // store all current running jobs in memory
 let jobs = {};
@@ -126,7 +127,7 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
         const text = msgForSubPayment(owner, sub, isFirstMessage, forMe);
         const contact = yield models_1.models.Contact.findByPk(sub.contactId);
         const enc = rsa.encrypt(contact.contactKey, text);
-        helpers.sendMessage({
+        network.sendMessage({
             chat: chat,
             sender: owner,
             type: constants.message_types.direct_payment,
