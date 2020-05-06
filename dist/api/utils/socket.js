@@ -19,7 +19,8 @@ const send = (body) => {
     // connections.forEach((socket, index) => {
     //   socket.send(body)
     // })
-    lastConn.send(body);
+    if (lastConn)
+        lastConn.send(body);
 };
 exports.send = send;
 const sendJson = (object) => {

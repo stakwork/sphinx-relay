@@ -12,7 +12,7 @@
     "hub_invite_url": "http://lvh.me/invites",
     "hub_check_invite_url": "http://lvh.me/check_invite",
     "media_host": "localhost:5000",
-    "tribes_host": "tribes.sphinx.chat:1883"
+    "tribes_host": "127.0.0.1:1883"
   },
   "production": {
     "senza_url": "https://staging.senza.us/api/v2/",
