@@ -13,7 +13,8 @@ const models_1 = require("../models");
 const lndService = require("../grpc");
 const gitinfo_1 = require("../utils/gitinfo");
 const lightning_1 = require("../utils/lightning");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:", env);
 let controllers = {
@@ -83,6 +84,7 @@ function set(app) {
         app.post('/contacts/:id/keys', controllers.contacts.exchangeKeys);
         app.post('/contacts', controllers.contacts.createContact);
         app.delete('/contacts/:id', controllers.contacts.deleteContact);
+        app.get('/allmessages', controllers.messages.getAllMessages);
         app.get('/messages', controllers.messages.getMessages);
         app.delete('/message/:id', controllers.messages.deleteMessage);
         app.post('/messages', controllers.messages.sendMessage);

@@ -6,10 +6,11 @@ import * as jsonUtils from './utils/json'
 import * as helpers from './helpers'
 import {nodeinfo} from './utils/nodeinfo'
 import { loadLightning } from './utils/lightning'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../config/constants.json');
+const constants = require(path.join(__dirname, '../config/constants.json'))
 const env = process.env.NODE_ENV || 'development';
-const config = require('../config/app.json')[env];
+const config = require(path.join(__dirname,'../config/app.json'))[env];
 
 const checkInviteHub = async (params = {}) => {
   if (env != "production") {

@@ -71,6 +71,10 @@ NOTE: All lncli commands need to be prepended with `docker-compose exec lnd`, th
 
 You can run your own Sphinx node in order to have full ownership over your communication!
 
+### guide
+
+mynode users: here is a complete guide provided by someone who is running Relay at home: [MyNode Guide](https://github.com/stakwork/sphinx-relay/blob/master/install_guide_myNode.md)
+
 ### download
 
 `git clone https://github.com/stakwork/sphinx-relay`

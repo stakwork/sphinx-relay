@@ -11,8 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const zbase32 = require("./zbase32");
 const lightning_1 = require("./lightning");
+const path = require("path");
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/app.json')[env];
+const config = require(path.join(__dirname, '../../config/app.json'))[env];
 /*
 Lightning Data Access Token
 Base64 strings separated by dots:

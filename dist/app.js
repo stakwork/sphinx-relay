@@ -14,6 +14,7 @@ const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
+const path = require("path");
 const models_1 = require("./api/models");
 const logger_1 = require("./api/utils/logger");
 const hub_1 = require("./api/hub");
@@ -23,7 +24,7 @@ const socket = require("./api/utils/socket");
 let server = null;
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/config/app.json')[env];
+const config = require(path.join(__dirname, 'config/app.json'))[env];
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 var i = 0;
 // START SETUP!

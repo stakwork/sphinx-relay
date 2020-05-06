@@ -10,13 +10,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
+const path = require("path");
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/app.json')[env];
+const config = require(path.join(__dirname, '../../config/app.json'))[env];
 // setup disk storage
 var multer = require('multer');
 var avatarStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let dir = __dirname.includes('/dist/') ? __dirname + '/..' : __dirname;
+        let dir = __dirname.includes('/dist/') ? path.join(__dirname, '..') : __dirname;
         cb(null, dir + '/../../public/uploads');
     },
     filename: (req, file, cb) => {

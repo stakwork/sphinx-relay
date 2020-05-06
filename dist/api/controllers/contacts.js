@@ -16,7 +16,8 @@ const helpers = require("../helpers");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false }, raw: true });
     const invites = yield models_1.models.Invite.findAll({ raw: true });

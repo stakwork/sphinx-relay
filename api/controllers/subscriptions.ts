@@ -8,8 +8,9 @@ import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
 import * as rsa from '../crypto/rsa'
 import * as moment from 'moment'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json');
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 // store all current running jobs in memory
 let jobs = {}

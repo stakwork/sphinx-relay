@@ -15,6 +15,7 @@
     "prod": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && env NODE_ENV=production node dist/app.js",
     "tsc": "rm -rf dist/ && tsc && cp -r public dist/public",
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
+    "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
     "start-ecs": "export NODE_ALIAS=$HOSTNAME && export NODE_IP=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName).$NODE_DOMAIN) && export NODE_ENV=production && node dist/app.js"
   },
   "keywords": [],
@@ -65,7 +66,7 @@
     "sequelize": "^5.19.3",
     "sequelize-cli": "^5.5.1",
     "sequelize-typescript": "^1.1.0",
-    "sqlite3": "^4.1.1",
+    "sqlite3": "^4.2.0",
     "tail": "^2.0.3",
     "ts-node": "^8.5.4",
     "tsc": "^1.20150623.0",
@@ -87,5 +88,12 @@
     "webpack": "^4.41.0",
     "webpack-cli": "^3.3.9",
     "webpack-dev-server": "^3.8.2"
-  }
+  },
+  "pkg": {
+    "assets": [
+      "config/*",
+      "dist/config/*"
+    ]
+  },
+  "bin": "dist/app.js"
 }

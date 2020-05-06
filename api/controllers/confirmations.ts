@@ -3,8 +3,9 @@ import {models} from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json')
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export function sendConfirmation({ chat, sender, msg_id }) {
 	helpers.sendMessage({

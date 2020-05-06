@@ -7,8 +7,9 @@ import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
 import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json')
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 const getMessages = async (req, res) => {
 	const dateToReturn = req.query.date;
@@ -69,9 +70,12 @@ const getMessages = async (req, res) => {
 }
 
 const getAllMessages = async (req, res) => {
-	const messages = await models.Message.findAll({ order: [['id', 'asc']] })
+	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
+	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
+
+	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset })
 	const chatIds = messages.map(m => m.chatId)
-	console.log('=> getAllMessages, chatIds',chatIds)
+	console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
 	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: {deleted:false, id: chatIds} }) : []
 	const chatsById = indexBy(chats, 'id')
 
@@ -210,5 +214,6 @@ export {
   receiveMessage,
   clearMessages,
   readMessages,
-  deleteMessage
+  deleteMessage,
+  getAllMessages,
 }

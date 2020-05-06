@@ -18,7 +18,8 @@ const helpers = require("../helpers");
 const hub_1 = require("../hub");
 const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
     const { payment_request } = req.body;

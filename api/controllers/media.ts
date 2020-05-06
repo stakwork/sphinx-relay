@@ -12,10 +12,11 @@ import {CronJob} from 'cron'
 import * as zbase32 from '../utils/zbase32'
 import * as schemas from './schemas'
 import {sendConfirmation} from './confirmations'
+import * as path from 'path'
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/app.json')[env];
-const constants = require(__dirname + '/../../config/constants.json');
+const config = require(path.join(__dirname,'../../config/app.json'))[env]
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 /*
 

@@ -2,9 +2,10 @@ import {loadLightning} from '../utils/lightning'
 import { success, failure } from '../utils/res'
 import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo';
+import * as path from 'path'
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/app.json')[env];
+const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 const defaultLogFiles = [
 	'/home/lnd/.pm2/logs/app-error.log',

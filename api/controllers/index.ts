@@ -2,8 +2,9 @@ import {models} from '../models'
 import * as lndService from '../grpc'
 import {checkTag} from '../utils/gitinfo'
 import {checkConnection} from '../utils/lightning'
+import * as path from 'path'
 
-const constants = require(__dirname + '/../../config/constants.json');
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
@@ -78,6 +79,7 @@ async function set(app) {
 	app.post('/contacts', controllers.contacts.createContact)
 	app.delete('/contacts/:id', controllers.contacts.deleteContact)
 
+	app.get('/allmessages', controllers.messages.getAllMessages)
 	app.get('/messages', controllers.messages.getMessages)
 	app.delete('/message/:id', controllers.messages.deleteMessage)
 	app.post('/messages', controllers.messages.sendMessage)

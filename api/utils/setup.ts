@@ -114,7 +114,7 @@ async function printQR(){
     return
   }
   let theIP = public_ip
-  if(!theIP.includes(":")) theIP = public_ip+':3001'
+  // if(!theIP.includes(":")) theIP = public_ip+':3001'
 
   const b64 = Buffer.from(`ip::${theIP}::${password||''}`).toString('base64')
   console.log('Scan this QR in Sphinx app:')

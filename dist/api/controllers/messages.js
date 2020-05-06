@@ -18,7 +18,8 @@ const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
-const constants = require(__dirname + '/../../config/constants.json');
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
@@ -68,9 +69,11 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getMessages = getMessages;
 const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']] });
+    const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
+    const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+    const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit, offset });
     const chatIds = messages.map(m => m.chatId);
-    console.log('=> getAllMessages, chatIds', chatIds);
+    console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
     let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
     const chatsById = underscore_1.indexBy(chats, 'id');
     res_1.success(res, {
@@ -78,6 +81,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         confirmed_messages: []
     });
 });
+exports.getAllMessages = getAllMessages;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const id = req.params.id;
