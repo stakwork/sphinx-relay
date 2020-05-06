@@ -1,10 +1,5 @@
 import {models} from '../models'
-import * as lndService from '../grpc'
 import {checkTag} from '../utils/gitinfo'
-import {getInfo} from '../utils/lightning'
-import * as path from 'path'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
@@ -21,31 +16,6 @@ let controllers = {
 	subcriptions: require('./subscriptions'),
 	media: require('./media'),
 	confirmations: require('./confirmations')
-}
-
-async function iniGrpcSubscriptions() {
-	try{
-		await getInfo()
-		const types = constants.message_types
-		await lndService.subscribeInvoices({
-			[types.contact_key]: controllers.contacts.receiveContactKey,
-			[types.contact_key_confirmation]: controllers.contacts.receiveConfirmContactKey,
-			[types.message]: controllers.messages.receiveMessage,
-			[types.invoice]: controllers.invoices.receiveInvoice,
-			[types.direct_payment]: controllers.payments.receivePayment,
-			[types.confirmation]: controllers.confirmations.receiveConfirmation,
-			[types.attachment]: controllers.media.receiveAttachment,
-			[types.purchase]: controllers.media.receivePurchase,
-			[types.purchase_accept]: controllers.media.receivePurchaseAccept,
-			[types.purchase_deny]: controllers.media.receivePurchaseDeny,
-			[types.group_create]: controllers.chats.receiveGroupCreateOrInvite,
-			[types.group_invite]: controllers.chats.receiveGroupCreateOrInvite,
-			[types.group_join]: controllers.chats.receiveGroupJoin,
-			[types.group_leave]: controllers.chats.receiveGroupLeave,
-		})
-	} catch(e) {
-		throw e
-	}
 }
 
 async function set(app) {
@@ -140,4 +110,4 @@ const login = (req, res) => {
 	}
 }
 
-export {set, iniGrpcSubscriptions}
+export {set, controllers}

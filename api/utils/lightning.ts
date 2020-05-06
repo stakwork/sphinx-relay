@@ -157,6 +157,7 @@ async function keysendMessage(opts) {
     let fail = false
     let res:any = null
     const ts = new Date().valueOf()
+    // WEAVE MESSAGE If TOO LARGE
     await asyncForEach(Array.from(Array(n)), async(u,i)=> {
       const spliti = Math.ceil(opts.data.length/n)
       const m = opts.data.substr(i*spliti, spliti)

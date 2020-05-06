@@ -146,7 +146,7 @@ async function parseReceiveParams(payload) {
 	const mediaKey = dat.message.mediaKey
 	const mediaType = dat.message.mediaType
 
-	const isConversation = chat_type && chat_type == constants.chat_types.group
+	const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
 	let sender
 	let chat
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })

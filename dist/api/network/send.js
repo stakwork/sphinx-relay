@@ -9,23 +9,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const models_1 = require("./models");
-const LND = require("./utils/lightning");
-const msg_1 = require("./utils/msg");
+const models_1 = require("../models");
+const LND = require("../utils/lightning");
+const msg_1 = require("../utils/msg");
 // const constants = require('../config/constants.json');
-/*
-Abstracts between lightning network and MQTT depending on Chat type and sender
-*/
 function signAndSend(opts) {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!opts.data || typeof opts.data !== 'string') {
-                return reject('string plz');
+            if (!opts.data || typeof opts.data !== 'object') {
+                return reject('object plz');
             }
+            let data = JSON.stringify(opts.data);
             // SIGN HERE and append sig
-            const sig = yield LND.signAscii(opts.data);
-            opts.data = opts.data + sig;
-            LND.keysendMessage(opts);
+            const sig = yield LND.signAscii(data);
+            data = data + sig;
+            console.log("DATA");
+            console.log(opts.data);
+            // if tribe 
+            // if owner pub to mqtt
+            // else keysend to owner ONLY
+            // else:
+            LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
         });
     });
 }
@@ -48,8 +52,8 @@ function sendMessage(params) {
             const finalMsg = yield msg_1.personalizeMessage(m, contactId, destkey);
             const opts = {
                 dest: destkey,
-                data: JSON.stringify(finalMsg),
-                amt: amount || 3,
+                data: finalMsg,
+                amt: Math.max(amount, 3)
             };
             try {
                 const r = yield signAndSend(opts);
@@ -74,7 +78,7 @@ exports.sendMessage = sendMessage;
 function newmsg(type, chat, sender, message) {
     return {
         type: type,
-        chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), chat.type && { type: chat.type }), chat.members && { members: chat.members }), chat.groupKey && { groupKey: chat.groupKey }), chat.host && { host: chat.host }),
+        chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), chat.groupKey && { groupKey: chat.groupKey }), chat.host && { host: chat.host }),
         message: message,
     };
 }
@@ -85,4 +89,4 @@ function asyncForEach(array, callback) {
         }
     });
 }
-//# sourceMappingURL=network.js.map
+//# sourceMappingURL=send.js.map

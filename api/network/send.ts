@@ -1,12 +1,8 @@
-import { models } from './models'
-import * as LND from './utils/lightning'
-import {personalizeMessage} from './utils/msg'
+import { models } from '../models'
+import * as LND from '../utils/lightning'
+import {personalizeMessage} from '../utils/msg'
 
 // const constants = require('../config/constants.json');
-
-/*
-Abstracts between lightning network and MQTT depending on Chat type and sender
-*/
 
 export function signAndSend(opts){
 	return new Promise(async function(resolve, reject) {
@@ -18,6 +14,8 @@ export function signAndSend(opts){
 		const sig = await LND.signAscii(data)
 		data = data + sig
 
+		console.log("DATA")
+		console.log(opts.data)
 		// if tribe 
 			// if owner pub to mqtt
 			// else keysend to owner ONLY
@@ -73,7 +71,7 @@ function newmsg(type, chat, sender, message){
 		chat: {
 			uuid: chat.uuid,
 			...chat.name && { name: chat.name },
-			...chat.type && { type: chat.type },
+			...(chat.type||chat.type===0) && { type: chat.type },
 			...chat.members && { members: chat.members },
 			...chat.groupKey && { groupKey: chat.groupKey },
 			...chat.host && { host: chat.host }

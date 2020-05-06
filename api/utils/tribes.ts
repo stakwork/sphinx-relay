@@ -8,25 +8,35 @@ import * as mqtt from 'mqtt'
 const env = process.env.NODE_ENV || 'development'
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
-export async function connect() {
+let client:any
+
+export async function connect(connectedCallback, onMessage) {
     const pwd = await genSignedTimestamp()
     const info = await LND.getInfo()
 
-    console.log('=========> try to connect:',`tcp://${config.tribes_host}`)
+    console.log('[tribes] try to connect:',`tcp://${config.tribes_host}`)
 
-    const client = mqtt.connect(`tcp://${config.tribes_host}`,{
+    client = mqtt.connect(`tcp://${config.tribes_host}`,{
         username:info.identity_pubkey,
         password:pwd,
     })
 
     client.on('connect', function () {
         console.log("[tribes] connected!")
+        if(connectedCallback) connectedCallback(client, info.identity_pubkey)
         // subscribe to all public groups here
         // that you are NOT admin of (dont sub to your own!)
     })
     client.on('close', function () {
         //console.log("MQTT CLOSED")
     })
+    client.on('message', function(topic, message) {
+        if(onMessage) onMessage(topic, message)
+    })
+}
+
+export function subscribe(topic){
+    if(client) client.subscribe(topic)
 }
 
 export async function genSignedTimestamp(){

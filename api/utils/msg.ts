@@ -64,7 +64,7 @@ async function personalizeMessage(m,contactId,destkey){
 	const cloned = JSON.parse(JSON.stringify(m))
 	const msg = addInRemoteText(cloned, contactId)
 	const cleanMsg = removeRecipientFromChatMembers(msg, destkey)
-	const cleanerMsg = removeAllNonAdminMembersIfTribe(msg, destkey)
+	const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey)
 	const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId)
 	const finalMsg = await finishTermsAndReceipt(msgWithMediaKey, destkey)
     return finalMsg

@@ -170,6 +170,7 @@ function keysendMessage(opts) {
                 let fail = false;
                 let res = null;
                 const ts = new Date().valueOf();
+                // WEAVE MESSAGE If TOO LARGE
                 yield asyncForEach(Array.from(Array(n)), (u, i) => __awaiter(this, void 0, void 0, function* () {
                     const spliti = Math.ceil(opts.data.length / n);
                     const m = opts.data.substr(i * spliti, spliti);

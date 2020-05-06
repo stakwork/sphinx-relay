@@ -29,6 +29,15 @@ function removeRecipientFromChatMembers(full, destkey) {
         delete members[destkey];
     return fillchatmsg(full, { members });
 }
+function removeAllNonAdminMembersIfTribe(full, destkey) {
+    return full;
+    // const c = full && full.chat
+    // if (!(c && c.members)) return full
+    // if (!(typeof c.members==='object')) return full
+    // const members = {...c.members}
+    // if(members[destkey]) delete members[destkey]
+    // return fillchatmsg(full, {members})
+}
 function addInMediaKey(full, contactId) {
     const m = full && full.message;
     if (!(m && m.mediaKey))
@@ -67,7 +76,8 @@ function personalizeMessage(m, contactId, destkey) {
         const cloned = JSON.parse(JSON.stringify(m));
         const msg = addInRemoteText(cloned, contactId);
         const cleanMsg = removeRecipientFromChatMembers(msg, destkey);
-        const msgWithMediaKey = addInMediaKey(cleanMsg, contactId);
+        const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
+        const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId);
         const finalMsg = yield finishTermsAndReceipt(msgWithMediaKey, destkey);
         return finalMsg;
     });
