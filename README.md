@@ -18,6 +18,9 @@ Relay stores:
 Install docker-compose: https://medium.com/@techiebouncer/install-docker-and-docker-compose-on-raspberry-pi-4-raspbian-buster-c5b78b9a0d08
 
 Clone this repo.
+```
+git clone https://github.com/stakwork/sphinx-relay.git
+```
 
 Copy your id_rsa to clone the private lnd-lean repo.
 
@@ -106,7 +109,7 @@ To connect to your app
 
 `npm run prod`
 
-When Relay starts up, it will print a QR in the terminal. You can scan this in your app (right now Android only) to connect!
+When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android & iOS) to connect!
 
 # Roadmap
 
