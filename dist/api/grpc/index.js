@@ -18,9 +18,8 @@ const lightning_1 = require("../utils/lightning");
 const network = require("../network");
 const moment = require("moment");
 const path = require("path");
-const network_1 = require("../network");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function subscribeInvoices() {
+function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning();
         var call = lightning.subscribeInvoices();
@@ -32,7 +31,7 @@ function subscribeInvoices() {
                 }
                 // console.log("IS KEYSEND", response.is_keysend)
                 if (response.is_keysend) {
-                    network_1.parseKeysendInvoice(response);
+                    parseKeysendInvoice(response);
                 }
                 else {
                     const invoice = yield models_1.models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } });

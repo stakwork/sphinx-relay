@@ -17,7 +17,7 @@ const mqtt = require("mqtt");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 let client;
-function connect(connectedCallback, onMessage) {
+function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const info = yield LND.getInfo();
@@ -33,8 +33,7 @@ function connect(connectedCallback, onMessage) {
                     });
                     client.on('connect', function () {
                         console.log("[tribes] connected!");
-                        if (connectedCallback)
-                            connectedCallback(info.identity_pubkey);
+                        client.subscribe(`${info.identity_pubkey}/#`);
                     });
                     client.on('close', function () {
                         setTimeout(() => reconnect(), 2000);

@@ -7,11 +7,10 @@ import {loadLightning} from '../utils/lightning'
 import * as network from '../network'
 import * as moment from 'moment'
 import * as path from 'path'
-import {parseKeysendInvoice} from '../network'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-function subscribeInvoices() {	
+function subscribeInvoices(parseKeysendInvoice) {	
 	return new Promise(async(resolve,reject)=>{
 		const lightning = await loadLightning()
 

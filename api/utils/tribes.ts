@@ -10,7 +10,7 @@ const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 let client:any
 
-export async function connect(connectedCallback, onMessage) {
+export async function connect(onMessage) {
     try{
         const info = await LND.getInfo()
 
@@ -25,7 +25,7 @@ export async function connect(connectedCallback, onMessage) {
             })
             client.on('connect', function () {
                 console.log("[tribes] connected!")
-                if(connectedCallback) connectedCallback(info.identity_pubkey)
+                client.subscribe(`${info.identity_pubkey}/#`)
             })
             client.on('close', function () {
                 setTimeout(()=> reconnect(), 2000)

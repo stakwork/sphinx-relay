@@ -4,10 +4,44 @@ import {getInfo} from '../utils/lightning'
 import {controllers} from '../controllers'
 import * as tribes from '../utils/tribes'
 import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
+import { models } from '../models'
+import {sendMessage} from './send'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
-
 const types = constants.message_types
+
+const typesToForward=[
+	types.message, types.attachment, types.group_join, types.group_leave
+]
+async function onReceive(payload){
+	// if tribe, owner must forward to MQTT
+	const isTribe = payload.chat.type===constants.chat_types.tribe
+	if(isTribe && typesToForward.includes(payload.type)){
+		const tribeOwnerPubKey = await tribes.verifySignedTimestamp(payload.chat.uuid)
+		const owner = await models.Contact.findOne({where: {isOwner:true}})
+		if(owner.publicKey===tribeOwnerPubKey){
+			forwardMessageToTribe(payload)
+		}
+	}
+	if(ACTIONS[payload.type]) {
+		ACTIONS[payload.type](payload)
+	} else {
+		console.log('Incorrect payload type:', payload.type)
+	}
+}
+
+function forwardMessageToTribe(payload){
+	const chat = models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+	const sender = models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+	const type = payload.type
+	const message = payload.message
+	sendMessage({
+		chat, sender, type, message,
+		success: ()=>{},
+		receive: ()=>{}
+	})
+}
+
 const ACTIONS = {
     [types.contact_key]: controllers.contacts.receiveContactKey,
     [types.contact_key_confirmation]: controllers.contacts.receiveConfirmContactKey,
@@ -28,20 +62,19 @@ const ACTIONS = {
 export async function initGrpcSubscriptions() {
 	try{
 		await getInfo()
-		await lndService.subscribeInvoices()
+		await lndService.subscribeInvoices(parseKeysendInvoice)
 	} catch(e) {
 		throw e
 	}
 }
 
 export async function initTribesSubscriptions(){
-	tribes.connect(myPubKey =>{ // connected callback
-        // get all tribes and sub to each individually ????
-        tribes.subscribe(`${myPubKey}/#`)
-    }, (topic, message)=>{ // onMessage callback
+	tribes.connect(async(topic, message)=>{ // onMessage callback
         console.log("=====> msg received! TOPIC", topic, "MESSAGE", message)
         // check topic is signed by sender?
-        // fire off the ACTION
+		// fire off the ACTION
+		const payload = await parseAndVerifyPayload(message)
+		onReceive(payload)
     })
 }
 
@@ -83,15 +116,11 @@ export async function parseKeysendInvoice(i){
 		if(threads) payload = await parseAndVerifyPayload(threads)
 	}
 	if(payload){
-		const dat = payload.content || payload
+		const dat = payload
 		if(value && dat && dat.message){
 			dat.message.amount = value // ADD IN TRUE VALUE
         }
-		if(ACTIONS[payload.type]) {
-			ACTIONS[payload.type](payload)
-		} else {
-			console.log('Incorrect payload type:', payload.type)
-		}
+		onReceive(dat)
 	}
 }
 

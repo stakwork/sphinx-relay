@@ -15,44 +15,26 @@ const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function signAndSend(opts) {
+function signAndSend(opts, mqttTopic) {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!opts.data || typeof opts.data !== 'object') {
                 return reject('object plz');
             }
             let data = JSON.stringify(opts.data);
-            // SIGN HERE and append sig
             const sig = yield LND.signAscii(data);
             data = data + sig;
-            console.log("DATA");
-            console.log(opts.data);
             try {
-                const payload = opts.data;
-                if (payload.chat && payload.chat.type === constants.chat_types.tribe) {
-                    // if owner pub to mqtt all group members (but not to self!!!)
-                    const chatUUID = payload.chat.uuid;
-                    const recipient = opts.dest;
-                    if (!chatUUID || !recipient)
-                        return;
-                    const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chatUUID);
-                    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-                    if (owner.publicKey === tribeOwnerPubKey) {
-                        tribes.publish(`${recipient}/${chatUUID}`, data);
-                    }
-                    else {
-                        // else keysend to owner ONLY
-                        if (recipient === tribeOwnerPubKey) {
-                            LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
-                        }
-                    }
+                if (mqttTopic) {
+                    yield tribes.publish(mqttTopic, data);
                 }
                 else {
-                    LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
+                    yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
                 }
+                resolve(true);
             }
             catch (e) {
-                throw e;
+                reject(e);
             }
         });
     });
@@ -62,10 +44,27 @@ function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure } = params;
         const m = newmsg(type, chat, sender, message);
-        const contactIds = (typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds) || [];
+        let msg = m;
+        let contactIds = (typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds) || [];
         if (contactIds.length === 1) {
             if (contactIds[0] === 1) {
-                return success(true); // if no contacts thats fine (like create tribe)
+                return success(true); // if no contacts thats fine (like create public tribe)
+            }
+        }
+        let networkType = undefined;
+        const isTribe = chat.type === constants.chat_types.tribe;
+        const chatUUID = chat.uuid;
+        if (isTribe) {
+            const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chatUUID);
+            if (sender.publicKey === tribeOwnerPubKey) {
+                networkType = 'mqtt'; // broadcast to all
+                // decrypt message.content and message.mediaKey w groupKey
+                msg = yield msg_1.decryptMessage(msg, chat);
+            }
+            else {
+                // if tribe, send to owner only
+                const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: tribeOwnerPubKey } });
+                contactIds = [tribeOwner.id];
             }
         }
         let yes = null;
@@ -75,17 +74,18 @@ function sendMessage(params) {
             if (contactId == sender.id) {
                 return;
             }
-            console.log('-> sending to contact #', contactId);
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
             const destkey = contact.publicKey;
-            const finalMsg = yield msg_1.personalizeMessage(m, contactId, destkey);
+            console.log('-> sending to ', contact.id, destkey);
+            const m = yield msg_1.personalizeMessage(msg, contact);
             const opts = {
                 dest: destkey,
-                data: finalMsg,
-                amt: Math.max(amount, 3)
+                data: m,
+                amt: Math.max((amount || 0), 3)
             };
             try {
-                const r = yield signAndSend(opts);
+                const mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
+                const r = yield signAndSend(opts, mqttTopic);
                 yes = r;
             }
             catch (e) {

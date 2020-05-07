@@ -1,5 +1,8 @@
 
 import { tokenFromTerms } from './ldat'
+import * as path from 'path'
+import * as rsa from '../crypto/rsa'
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 function addInRemoteText(full:{[k:string]:any}, contactId){
 	const m = full && full.message
@@ -27,6 +30,26 @@ function removeAllNonAdminMembersIfTribe(full:{[k:string]:any}, destkey){
     // const members = {...c.members}
 	// if(members[destkey]) delete members[destkey]
 	// return fillchatmsg(full, {members})
+}
+
+// by this time the content and mediaKey are already in message as string
+async function encryptTribeBroadcast(full:{[k:string]:any}, contact){
+	const chat = full && full.chat
+	const message = full && full.message
+	if (!message || !(chat && chat.type && chat.uuid)) return full
+	const isTribe = chat.type===constants.chat_types.tribe
+	const obj: {[k:string]:any} = {}
+	if(isTribe) { // has been previously decrypted
+		if(message.content) {
+			const encContent = await rsa.encrypt(contact.contactKey, message.content)
+			obj.content = encContent
+		}
+		if(message.mediaKey) {
+			const encMediaKey = await rsa.encrypt(contact.contactKey, message.mediaKey)
+			obj.mediaKey = encMediaKey
+		}
+	}
+	return fillmsg(full, obj)
 }
 
 function addInMediaKey(full:{[k:string]:any}, contactId){
@@ -60,14 +83,50 @@ async function finishTermsAndReceipt(full:{[k:string]:any}, destkey) {
 	return fullmsg
 }
 
-async function personalizeMessage(m,contactId,destkey){
+// DECRYPT EITHER STRING OR FIRST VAL IN OBJ
+async function decryptMessage(full:{[k:string]:any},chat) {
+	if(!chat.groupPrivateKey) return full
+	const m = full && full.message
+	if (!m) return full
+
+	const obj: {[k:string]:any} = {}
+	if(m.content) {
+		let content = m.content
+		if(typeof m.content==='object') {
+			if(Object.values(m.content).length) {
+				content = Object.values(m.content)[0]
+			}
+		}
+		const decContent = rsa.decrypt(chat.groupPrivateKey, content)
+		obj.content = decContent
+	}
+	if (m.mediaKey) {
+		let mediaKey = m.mediaKey
+		if(typeof m.mediaKey==='object') {
+			if(Object.values(m.mediaKey).length) {
+				mediaKey = Object.values(m.mediaKey)[0]
+			}
+		}
+		const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey)
+		obj.mediaKey = decMediaKey
+	}
+
+	return fillmsg(full, obj)
+}
+
+async function personalizeMessage(m,contact){
+	const contactId = contact.contactId
+	const destkey = contact.publicKey
+	
 	const cloned = JSON.parse(JSON.stringify(m))
-	const msg = addInRemoteText(cloned, contactId)
-	const cleanMsg = removeRecipientFromChatMembers(msg, destkey)
+
+	const msgWithRemoteTxt = addInRemoteText(cloned, contactId)
+	const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey)
 	const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey)
 	const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId)
-	const finalMsg = await finishTermsAndReceipt(msgWithMediaKey, destkey)
-    return finalMsg
+	const msgWithMediaToken = await finishTermsAndReceipt(msgWithMediaKey, destkey)
+	const encMsg = await encryptTribeBroadcast(msgWithMediaToken, contact)
+    return encMsg
 }
 
 function fillmsg(full, props){
@@ -89,5 +148,5 @@ function fillchatmsg(full, props){
 }
 
 export {
-    personalizeMessage
+    personalizeMessage, decryptMessage,
 }

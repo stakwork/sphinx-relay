@@ -15,8 +15,43 @@ const lightning_1 = require("../utils/lightning");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
 const lightning_2 = require("../utils/lightning");
+const models_1 = require("../models");
+const send_1 = require("./send");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const types = constants.message_types;
+const typesToForward = [
+    types.message, types.attachment, types.group_join, types.group_leave
+];
+function onReceive(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // if tribe, owner must forward to MQTT
+        const isTribe = payload.chat.type === constants.chat_types.tribe;
+        if (isTribe && typesToForward.includes(payload.type)) {
+            const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(payload.chat.uuid);
+            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            if (owner.publicKey === tribeOwnerPubKey) {
+                forwardMessageToTribe(payload);
+            }
+        }
+        if (ACTIONS[payload.type]) {
+            ACTIONS[payload.type](payload);
+        }
+        else {
+            console.log('Incorrect payload type:', payload.type);
+        }
+    });
+}
+function forwardMessageToTribe(payload) {
+    const chat = models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+    const sender = models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+    const type = payload.type;
+    const message = payload.message;
+    send_1.sendMessage({
+        chat, sender, type, message,
+        success: () => { },
+        receive: () => { }
+    });
+}
 const ACTIONS = {
     [types.contact_key]: controllers_1.controllers.contacts.receiveContactKey,
     [types.contact_key_confirmation]: controllers_1.controllers.contacts.receiveConfirmContactKey,
@@ -37,7 +72,7 @@ function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield lightning_1.getInfo();
-            yield lndService.subscribeInvoices();
+            yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
             throw e;
@@ -47,14 +82,13 @@ function initGrpcSubscriptions() {
 exports.initGrpcSubscriptions = initGrpcSubscriptions;
 function initTribesSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
-        tribes.connect(myPubKey => {
-            // get all tribes and sub to each individually ????
-            tribes.subscribe(`${myPubKey}/#`);
-        }, (topic, message) => {
+        tribes.connect((topic, message) => __awaiter(this, void 0, void 0, function* () {
             console.log("=====> msg received! TOPIC", topic, "MESSAGE", message);
             // check topic is signed by sender?
             // fire off the ACTION
-        });
+            const payload = yield parseAndVerifyPayload(message);
+            onReceive(payload);
+        }));
     });
 }
 exports.initTribesSubscriptions = initTribesSubscriptions;
@@ -102,16 +136,11 @@ function parseKeysendInvoice(i) {
                 payload = yield parseAndVerifyPayload(threads);
         }
         if (payload) {
-            const dat = payload.content || payload;
+            const dat = payload;
             if (value && dat && dat.message) {
                 dat.message.amount = value; // ADD IN TRUE VALUE
             }
-            if (ACTIONS[payload.type]) {
-                ACTIONS[payload.type](payload);
-            }
-            else {
-                console.log('Incorrect payload type:', payload.type);
-            }
+            onReceive(dat);
         }
     });
 }

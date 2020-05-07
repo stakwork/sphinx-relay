@@ -1,46 +1,32 @@
 import { models } from '../models'
 import * as LND from '../utils/lightning'
-import {personalizeMessage} from '../utils/msg'
+import {personalizeMessage, decryptMessage} from '../utils/msg'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-export function signAndSend(opts){
+type NetworkType = undefined | 'mqtt' | 'lightning'
+
+export function signAndSend(opts, mqttTopic?:string){
 	return new Promise(async function(resolve, reject) {
 		if(!opts.data || typeof opts.data!=='object') {
 			return reject('object plz')
 		}
 		let data = JSON.stringify(opts.data)
-		// SIGN HERE and append sig
+
 		const sig = await LND.signAscii(data)
 		data = data + sig
 
-		console.log("DATA")
-		console.log(opts.data)
-
 		try {
-			const payload = opts.data
-			if(payload.chat&&payload.chat.type===constants.chat_types.tribe) {
-				// if owner pub to mqtt all group members (but not to self!!!)
-				const chatUUID = payload.chat.uuid
-				const recipient = opts.dest
-				if(!chatUUID || !recipient) return
-				const tribeOwnerPubKey = await tribes.verifySignedTimestamp(chatUUID)
-				const owner = await models.Contact.findOne({ where: { isOwner: true } })
-				if(owner.publicKey===tribeOwnerPubKey){
-					tribes.publish(`${recipient}/${chatUUID}`, data)
-				} else {
-					// else keysend to owner ONLY
-					if(recipient===tribeOwnerPubKey) {
-						LND.keysendMessage({...opts,data})
-					}
-				}
+			if(mqttTopic) {
+				await tribes.publish(mqttTopic, data)
 			} else {
-				LND.keysendMessage({...opts,data})
+				await LND.keysendMessage({...opts,data})
 			}
+			resolve(true)
 		} catch(e) {
-			throw e
+			reject(e)
 		}
 	})
 }
@@ -48,11 +34,28 @@ export function signAndSend(opts){
 export async function sendMessage(params) {
 	const { type, chat, message, sender, amount, success, failure } = params
 	const m = newmsg(type, chat, sender, message)
+	let msg = m
 
-	const contactIds = (typeof chat.contactIds==='string' ? JSON.parse(chat.contactIds) : chat.contactIds) || []
+	let contactIds = (typeof chat.contactIds==='string' ? JSON.parse(chat.contactIds) : chat.contactIds) || []
 	if(contactIds.length===1) {
 		if (contactIds[0]===1) {
-			return success(true) // if no contacts thats fine (like create tribe)
+			return success(true) // if no contacts thats fine (like create public tribe)
+		}
+	}
+
+	let networkType:NetworkType = undefined
+	const isTribe = chat.type===constants.chat_types.tribe
+	const chatUUID = chat.uuid
+	if(isTribe) {
+		const tribeOwnerPubKey = await tribes.verifySignedTimestamp(chatUUID)
+		if(sender.publicKey===tribeOwnerPubKey){
+			networkType = 'mqtt' // broadcast to all
+			// decrypt message.content and message.mediaKey w groupKey
+			msg = await decryptMessage(msg, chat)
+		} else {
+			// if tribe, send to owner only
+			const tribeOwner = await models.Contact.findOne({where: {publicKey:tribeOwnerPubKey}})
+			contactIds = [tribeOwner.id]
 		}
 	}
 
@@ -64,20 +67,19 @@ export async function sendMessage(params) {
 			return
 		}
 
-		console.log('-> sending to contact #', contactId)
-
 		const contact = await models.Contact.findOne({ where: { id: contactId } })
 		const destkey = contact.publicKey
+		console.log('-> sending to ', contact.id, destkey)
 
-		const finalMsg = await personalizeMessage(m, contactId, destkey)
-
+		const m = await personalizeMessage(msg, contact)
 		const opts = {
 			dest: destkey,
-			data: finalMsg,
-			amt: Math.max(amount, 3)
+			data: m,
+			amt: Math.max((amount||0), 3)
 		}
 		try {
-			const r = await signAndSend(opts)
+			const mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
+			const r = await signAndSend(opts, mqttTopic)
 			yes = r
 		} catch (e) {
 			console.log("KEYSEND ERROR", e)

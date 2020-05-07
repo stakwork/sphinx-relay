@@ -267,7 +267,7 @@ function receiveGroupJoin(payload) {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
-        // THIS CHECK CAN BE DONE IN NETWORK.RECEIVE --> forward to mqtt if needed to
+        // THIS CHECK CAN BE DONE IN NETWORK.RECEIVE? --> forward to mqtt if needed to
         const isTribe = chat_type === constants.chat_types.tribe;
         if (isTribe) {
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
