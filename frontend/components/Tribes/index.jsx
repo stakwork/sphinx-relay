@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useState} from 'react';
 import styles from '../Contacts/styles'
 import { Button, Checkbox, Form } from 'semantic-ui-react'
 import * as api from '../../api'
+import * as rsa from '../../crypto'
 
 export default class Tribes extends React.Component {
   constructor(props) {
@@ -43,8 +44,10 @@ export default class Tribes extends React.Component {
 
   render() {
     const {chats} = this.props
+    const tribes = chats&&chats.filter(c=>c.type===2)
     const {values} = this.state
     const fields = ['uuid','group_key','name']
+    const showTribes = tribes && tribes.length>0 ? true : false
     return <div>
       <div>
         <h3>JOIN TRIBE</h3>
@@ -60,7 +63,7 @@ export default class Tribes extends React.Component {
           </div>
         </Form>
       </div>
-      <div>
+      <div><br/>
         <h3>CREATE NEW TRIBE</h3>
         <Form onSubmit={() => this.onNewTribe(values)}>
           {['tribe_name'].map(field => (
@@ -74,6 +77,37 @@ export default class Tribes extends React.Component {
           </div>
         </Form>
       </div>
+      {showTribes && <div><br/>
+        <h3>TRIBES</h3>
+        {tribes.map(t=>{
+          return <Tribe {...t} key={t.uuid} />
+        })}
+      </div>}
     </div>
   }
+}
+
+function Tribe(t){
+  const [text,setText] = useState('')
+
+  async function sendMessage(){
+    const encText = await rsa.encrypt(t.group_key,text)
+    console.log(t,encText)
+    await api.media.POST('messages', {
+      chat_id: t.id,
+      remote_text_map: {
+        [t.id]: encText
+      }
+    })
+  }
+
+  return <div style={{border:'1px solid grey',borderRadius:3,marginBottom:6,padding:6}}>
+  <div><b>NAME:</b>&nbsp;{t.name}</div>
+  <div style={{wordBreak:'break-all'}}><b>UUID:</b>&nbsp;{t.uuid}</div>
+  <div style={{wordBreak:'break-all'}}><b>KEY:</b>&nbsp;{t.group_key}</div>
+  <div>
+    <input value={text} onChange={e=> setText(e.target.value)}/>
+    <button onClick={sendMessage}>SEND</button>
+  </div>
+</div>
 }

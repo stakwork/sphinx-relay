@@ -32,6 +32,9 @@ async function connectToLND(){
 		await mainSetup()						// DB + express
 		await network.initTribesSubscriptions() // MQTT
 	} catch(e) {
+		if(e.details) {
+			console.log(`=> [lnd] error details: ${e.details}`)
+		}
 		setTimeout(async()=>{ // retry each 2 secs
 			await connectToLND()
 		},2000)

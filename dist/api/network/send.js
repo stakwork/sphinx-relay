@@ -48,18 +48,23 @@ function sendMessage(params) {
         let contactIds = (typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds) || [];
         if (contactIds.length === 1) {
             if (contactIds[0] === 1) {
-                return success(true); // if no contacts thats fine (like create public tribe)
+                if (success)
+                    success(true);
+                return; // if no contacts thats fine (like create public tribe)
             }
         }
         let networkType = undefined;
         const isTribe = chat.type === constants.chat_types.tribe;
         const chatUUID = chat.uuid;
         if (isTribe) {
+            console.log("is tribe!");
             const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chatUUID);
             if (sender.publicKey === tribeOwnerPubKey) {
+                console.log('im owner! mqtt!');
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
+                console.log('msg has been decrypted with group key');
             }
             else {
                 // if tribe, send to owner only

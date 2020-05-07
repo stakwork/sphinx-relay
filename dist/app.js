@@ -40,6 +40,9 @@ function connectToLND() {
             yield network.initTribesSubscriptions(); // MQTT
         }
         catch (e) {
+            if (e.details) {
+                console.log(`=> [lnd] error details: ${e.details}`);
+            }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 yield connectToLND();
             }), 2000);
