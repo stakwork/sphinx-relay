@@ -63,6 +63,7 @@ RUN npm install sqlite3 --build-from-source --save-dev
 RUN npm install --save-dev sequelize
 RUN npm rebuild
 RUN npm run tsc
+RUN npm cache clean --force
 
 VOLUME /relay/.lnd
 
