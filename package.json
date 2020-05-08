@@ -16,8 +16,7 @@
     "tsc": "rm -rf dist/ && tsc && cp -r public dist/public",
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
     "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
-    "start-ecs": "export NODE_ALIAS=$HOSTNAME && export NODE_IP=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName).$NODE_DOMAIN) && export NODE_ENV=production && node dist/app.js",
-    "start-ecs-low-mem": "export NODE_ALIAS=$HOSTNAME && export NODE_IP=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName).$NODE_DOMAIN) && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js"
+    "start-ecs": "export NODE_ALIAS=$HOSTNAME && export NODE_IP=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName).$NODE_DOMAIN):443 && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js"
   },
   "keywords": [],
   "author": "",
