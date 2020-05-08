@@ -14,12 +14,6 @@ ARG checkout="v0.9.0-beta"
 # Install dependencies and build the binaries.
 RUN apk add --no-cache --update alpine-sdk git make gcc openssh-client
 
-# RUN mkdir /root/.ssh/
-# ADD id_rsa /root/.ssh/id_rsa
-# RUN touch /root/.ssh/known_hosts
-# RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
-# RUN git clone git@github.com:stakwork/lnd-lean.git /go/src/github.com/lightningnetwork/lnd
-
 RUN git clone https://github.com/lightningnetwork/lnd /go/src/github.com/lightningnetwork/lnd
 RUN cd /go/src/github.com/lightningnetwork/lnd \
 &&  git checkout $checkout \
@@ -33,17 +27,16 @@ EXPOSE 80
 EXPOSE 9735
 
 ENV NODE_ENV production
+ENV NODE_SCHEME http
 
 # Add bash and ca-certs, for quality of life and SSL-related reasons.
-RUN apk --no-cache add \
-    bash \
-    ca-certificates
+RUN apk --no-cache add bash ca-certificates
 
 # Copy the binaries from the builder image.
 COPY --from=builder /go/bin/lncli /bin/
 COPY --from=builder /go/bin/lnd /bin/
 
-RUN apk add --update nodejs nodejs-npm sqlite git supervisor
+RUN apk add --no-cache --update nodejs nodejs-npm sqlite git supervisor
 
 RUN git clone https://github.com/stakwork/sphinx-relay /relay/
 
