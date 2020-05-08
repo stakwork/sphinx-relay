@@ -13,6 +13,12 @@ export async function sendMessage(params) {
 	const m = newmsg(type, chat, sender, message)
 	let msg = m
 
+	console.log(type,message)
+	if(!sender) {
+		console.log("NO SENDER?????")
+		return
+	}
+
 	let contactIds = (typeof chat.contactIds==='string' ? JSON.parse(chat.contactIds) : chat.contactIds) || []
 	if(contactIds.length===1) {
 		if (contactIds[0]===1) {
@@ -23,6 +29,7 @@ export async function sendMessage(params) {
 
 	let networkType:NetworkType = undefined
 	const isTribe = chat.type===constants.chat_types.tribe
+	let isTribeOwner = false
 	const chatUUID = chat.uuid
 	if(isTribe) {
 		if(type===constants.message_types.confirmation) {
@@ -32,6 +39,7 @@ export async function sendMessage(params) {
 		const tribeOwnerPubKey = await tribes.verifySignedTimestamp(chatUUID)
 		if(sender.publicKey===tribeOwnerPubKey){
 			console.log('im owner! mqtt!')
+			isTribeOwner = true
 			networkType = 'mqtt' // broadcast to all
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
@@ -46,7 +54,7 @@ export async function sendMessage(params) {
 	let no:any = null
 	console.log('all contactIds',contactIds)
 	await asyncForEach(contactIds, async contactId => {
-		if (contactId == sender.id) {
+		if (contactId == 1) { // dont send to self
 			return
 		}
 
@@ -54,7 +62,7 @@ export async function sendMessage(params) {
 		const destkey = contact.publicKey
 		console.log('-> sending to ', contact.id, destkey)
 
-		const m = await personalizeMessage(msg, contact)
+		const m = await personalizeMessage(msg, contact, isTribeOwner)
 		const opts = {
 			dest: destkey,
 			data: m,
@@ -104,7 +112,7 @@ export function signAndSend(opts, mqttTopic?:string){
 
 function newmsg(type, chat, sender, message){
 	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
-	const includeAlias = chat.type===constants.chat_types.tribe
+	const includeAlias = sender && sender.alias && chat.type===constants.chat_types.tribe
 	return {
 		type: type,
 		chat: {

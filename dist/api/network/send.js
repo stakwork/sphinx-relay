@@ -20,6 +20,11 @@ function sendMessage(params) {
         const { type, chat, message, sender, amount, success, failure } = params;
         const m = newmsg(type, chat, sender, message);
         let msg = m;
+        console.log(type, message);
+        if (!sender) {
+            console.log("NO SENDER?????");
+            return;
+        }
         let contactIds = (typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds) || [];
         if (contactIds.length === 1) {
             if (contactIds[0] === 1) {
@@ -30,6 +35,7 @@ function sendMessage(params) {
         }
         let networkType = undefined;
         const isTribe = chat.type === constants.chat_types.tribe;
+        let isTribeOwner = false;
         const chatUUID = chat.uuid;
         if (isTribe) {
             if (type === constants.message_types.confirmation) {
@@ -39,6 +45,7 @@ function sendMessage(params) {
             const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chatUUID);
             if (sender.publicKey === tribeOwnerPubKey) {
                 console.log('im owner! mqtt!');
+                isTribeOwner = true;
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
@@ -53,13 +60,13 @@ function sendMessage(params) {
         let no = null;
         console.log('all contactIds', contactIds);
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
-            if (contactId == sender.id) {
+            if (contactId == 1) { // dont send to self
                 return;
             }
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
             const destkey = contact.publicKey;
             console.log('-> sending to ', contact.id, destkey);
-            const m = yield msg_1.personalizeMessage(msg, contact);
+            const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
             const opts = {
                 dest: destkey,
                 data: m,
@@ -116,7 +123,7 @@ function signAndSend(opts, mqttTopic) {
 exports.signAndSend = signAndSend;
 function newmsg(type, chat, sender, message) {
     const includeGroupKey = type === constants.message_types.group_create || type === constants.message_types.group_invite;
-    const includeAlias = chat.type === constants.chat_types.tribe;
+    const includeAlias = sender && sender.alias && chat.type === constants.chat_types.tribe;
     return {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),

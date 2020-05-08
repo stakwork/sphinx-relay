@@ -13,12 +13,18 @@ const ldat_1 = require("./ldat");
 const path = require("path");
 const rsa = require("../crypto/rsa");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function addInRemoteText(full, contactId) {
+function addInRemoteText(full, contactId, isTribe) {
     const m = full && full.message;
     if (!(m && m.content))
         return full;
     if (!(typeof m.content === 'object'))
         return full;
+    if (isTribe) {
+        // if just one, send it (for tribe remote_text_map... is there a better way?)
+        if (Object.values(m.content).length === 1) {
+            return fillmsg(full, { content: Object.values(m.content)[0] });
+        }
+    }
     return fillmsg(full, { content: m.content[contactId + ''] });
 }
 function removeRecipientFromChatMembers(full, destkey) {
@@ -41,16 +47,18 @@ function removeAllNonAdminMembersIfTribe(full, destkey) {
     // if(members[destkey]) delete members[destkey]
     // return fillchatmsg(full, {members})
 }
+// THIS IS ONLY FOR TRIBE OWNER
 // by this time the content and mediaKey are already in message as string
-function encryptTribeBroadcast(full, contact) {
+function encryptTribeBroadcast(full, contact, isTribe, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!isTribeOwner)
+            return full;
         const chat = full && full.chat;
         const message = full && full.message;
         if (!message || !(chat && chat.type && chat.uuid))
             return full;
-        const isTribe = chat.type === constants.chat_types.tribe;
         const obj = {};
-        if (isTribe) { // has been previously decrypted
+        if (isTribe && isTribeOwner) { // has been previously decrypted
             if (message.content) {
                 const encContent = yield rsa.encrypt(contact.contactKey, message.content);
                 obj.content = encContent;
@@ -132,17 +140,19 @@ function decryptMessage(full, chat) {
     });
 }
 exports.decryptMessage = decryptMessage;
-function personalizeMessage(m, contact) {
+function personalizeMessage(m, contact, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         const contactId = contact.contactId;
         const destkey = contact.publicKey;
         const cloned = JSON.parse(JSON.stringify(m));
-        const msgWithRemoteTxt = addInRemoteText(cloned, contactId);
+        const chat = cloned && cloned.chat;
+        const isTribe = chat.type && chat.type === constants.chat_types.tribe;
+        const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe);
         const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey);
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
         const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId);
         const msgWithMediaToken = yield finishTermsAndReceipt(msgWithMediaKey, destkey);
-        const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact);
+        const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact, isTribe, isTribeOwner);
         return encMsg;
     });
 }

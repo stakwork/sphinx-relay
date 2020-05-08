@@ -25,6 +25,7 @@ const typesToForward = [
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         // if tribe, owner must forward to MQTT
+        console.log("RECEIVED PAYLOAD", payload);
         const isTribe = payload.chat.type === constants.chat_types.tribe;
         if (isTribe && typesToForward.includes(payload.type)) {
             const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(payload.chat.uuid);
@@ -43,12 +44,15 @@ function onReceive(payload) {
 }
 function forwardMessageToTribe(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("FORWARD TO TRIBE", payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
-        const sender = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+        //const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const type = payload.type;
         const message = payload.message;
         send_1.sendMessage({
-            chat, sender, type, message,
+            sender: Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }),
+            chat, type, message,
             success: () => { },
             receive: () => { }
         });

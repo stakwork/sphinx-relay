@@ -98,7 +98,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // 	return failure(res, e.message)
     // }
     const { contact_id, text, remote_text, chat_id, remote_text_map, } = req.body;
-    console.log('[sendMessage]');
+    console.log('[sendMessage]', remote_text_map);
     var date = new Date();
     date.setMilliseconds(0);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });

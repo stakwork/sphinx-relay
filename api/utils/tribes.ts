@@ -46,7 +46,6 @@ export function subscribe(topic){
 }
 
 export function publish(topic,msg){
-    console.log("PUBLISH",client,topic,msg)
     if(client) client.publish(topic,msg)
 }
 

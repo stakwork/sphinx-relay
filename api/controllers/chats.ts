@@ -170,6 +170,7 @@ async function joinTribe(req, res){
 
 	let theTribeOwner
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	
 	const contactIds = [owner.id]
 	if (tribeOwner) {
 		theTribeOwner = tribeOwner // might already include??
@@ -302,6 +303,8 @@ async function receiveGroupJoin(payload) {
 			contactIds.push(createdContact.id)
 		}
 	}
+	if(!theSender) return // fail (no contact key?)
+
 	await chat.update({ contactIds: JSON.stringify(contactIds) })
 
 	var date = new Date()

@@ -298,6 +298,8 @@ function receiveGroupJoin(payload) {
                 contactIds.push(createdContact.id);
             }
         }
+        if (!theSender)
+            return; // fail (no contact key?)
         yield chat.update({ contactIds: JSON.stringify(contactIds) });
         var date = new Date();
         date.setMilliseconds(0);
