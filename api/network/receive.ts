@@ -30,9 +30,9 @@ async function onReceive(payload){
 	}
 }
 
-function forwardMessageToTribe(payload){
-	const chat = models.Chat.findOne({where:{uuid:payload.chat.uuid}})
-	const sender = models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+async function forwardMessageToTribe(payload){
+	const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+	const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 	const type = payload.type
 	const message = payload.message
 	sendMessage({

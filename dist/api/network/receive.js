@@ -42,14 +42,16 @@ function onReceive(payload) {
     });
 }
 function forwardMessageToTribe(payload) {
-    const chat = models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
-    const sender = models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-    const type = payload.type;
-    const message = payload.message;
-    send_1.sendMessage({
-        chat, sender, type, message,
-        success: () => { },
-        receive: () => { }
+    return __awaiter(this, void 0, void 0, function* () {
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+        const sender = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+        const type = payload.type;
+        const message = payload.message;
+        send_1.sendMessage({
+            chat, sender, type, message,
+            success: () => { },
+            receive: () => { }
+        });
     });
 }
 const ACTIONS = {

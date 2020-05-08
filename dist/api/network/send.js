@@ -32,6 +32,9 @@ function sendMessage(params) {
         const isTribe = chat.type === constants.chat_types.tribe;
         const chatUUID = chat.uuid;
         if (isTribe) {
+            if (type === constants.message_types.confirmation) {
+                return; // dont send confs for tribe
+            }
             console.log("is tribe!");
             const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chatUUID);
             if (sender.publicKey === tribeOwnerPubKey) {
@@ -112,10 +115,13 @@ function signAndSend(opts, mqttTopic) {
 }
 exports.signAndSend = signAndSend;
 function newmsg(type, chat, sender, message) {
+    const includeGroupKey = type === constants.message_types.group_create || type === constants.message_types.group_invite;
+    const includeAlias = chat.type === constants.chat_types.tribe;
     return {
         type: type,
-        chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), chat.groupKey && { groupKey: chat.groupKey }), chat.host && { host: chat.host }),
+        chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),
         message: message,
+        sender: Object.assign({}, includeAlias && { alias: sender.alias })
     };
 }
 function asyncForEach(array, callback) {

@@ -25,6 +25,9 @@ export async function sendMessage(params) {
 	const isTribe = chat.type===constants.chat_types.tribe
 	const chatUUID = chat.uuid
 	if(isTribe) {
+		if(type===constants.message_types.confirmation) {
+			return // dont send confs for tribe
+		}
 		console.log("is tribe!")
 		const tribeOwnerPubKey = await tribes.verifySignedTimestamp(chatUUID)
 		if(sender.publicKey===tribeOwnerPubKey){
@@ -100,6 +103,8 @@ export function signAndSend(opts, mqttTopic?:string){
 }
 
 function newmsg(type, chat, sender, message){
+	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
+	const includeAlias = chat.type===constants.chat_types.tribe
 	return {
 		type: type,
 		chat: {
@@ -107,14 +112,15 @@ function newmsg(type, chat, sender, message){
 			...chat.name && { name: chat.name },
 			...(chat.type||chat.type===0) && { type: chat.type },
 			...chat.members && { members: chat.members },
-			...chat.groupKey && { groupKey: chat.groupKey },
-			...chat.host && { host: chat.host }
+			...(includeGroupKey&&chat.groupKey) && { groupKey: chat.groupKey },
+			...(includeGroupKey&&chat.host) && { host: chat.host }
 		},
 		message: message,
-		// sender: {
-		// 	pub_key: sender.publicKey,
-		// 	// ...sender.contactKey && {contact_key: sender.contactKey}
-		// }
+		sender: {
+			...includeAlias && {alias: sender.alias},
+			// pub_key: sender.publicKey,
+			// ...sender.contactKey && {contact_key: sender.contactKey}
+		}
 	}
 }
 
