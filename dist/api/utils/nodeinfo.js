@@ -19,9 +19,7 @@ function nodeinfo() {
         try {
             public_ip = yield publicIp.v4();
         }
-        catch (e) {
-            console.log(e);
-        }
+        catch (e) { }
         const commitHash = yield gitinfo_1.checkCommitHash();
         const tag = yield gitinfo_1.checkTag();
         const lightning = lightning_1.loadLightning();

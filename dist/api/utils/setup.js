@@ -119,9 +119,7 @@ function printQR() {
             try {
                 public_ip = yield publicIp.v4();
             }
-            catch (e) {
-                console.log(e);
-            }
+            catch (e) { }
         }
         else {
             public_ip = ip;
