@@ -79726,8 +79726,13 @@ function createAPI(def) {
                 };
 
                 if (m === 'POST' || m === 'PUT') {
-                  headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
-                  opts.body = new URLSearchParams(data);
+                  if (def.name === 'media') {
+                    headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+                    opts.body = new URLSearchParams(data);
+                  } else {
+                    headers['Content-Type'] = 'application/json';
+                    opts.body = JSON.stringify(data);
+                  }
                 }
 
                 if (m === 'UPLOAD') {
@@ -85797,7 +85802,7 @@ function Tribe(t) {
     _sendMessage = Tribes_asyncToGenerator(
     /*#__PURE__*/
     regeneratorRuntime.mark(function _callee3() {
-      var encText;
+      var encText, body;
       return regeneratorRuntime.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
@@ -85808,13 +85813,15 @@ function Tribe(t) {
             case 2:
               encText = _context3.sent;
               console.log(t, encText);
-              _context3.next = 6;
-              return api_media.POST('messages', {
+              body = {
                 chat_id: t.id,
                 remote_text_map: Tribes_defineProperty({}, t.id, encText)
-              });
+              };
+              console.log("BODY", body);
+              _context3.next = 8;
+              return relay.POST('messages', body);
 
-            case 6:
+            case 8:
             case "end":
               return _context3.stop();
           }

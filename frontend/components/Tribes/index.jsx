@@ -93,12 +93,13 @@ function Tribe(t){
   async function sendMessage(){
     const encText = await rsa.encrypt(t.group_key,text)
     console.log(t,encText)
-    await api.media.POST('messages', {
+    const body = {
       chat_id: t.id,
       remote_text_map: {
         [t.id]: encText
       }
-    })
+    }
+    await api.relay.POST('messages', body)
   }
 
   return <div style={{border:'1px solid grey',borderRadius:3,marginBottom:6,padding:6}}>

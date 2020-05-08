@@ -106,12 +106,14 @@ function decryptMessage(full, chat) {
             return full;
         const obj = {};
         if (m.content) {
+            console.log('m.content:', m.content, typeof m.content);
             let content = m.content;
             if (typeof m.content === 'object') {
                 if (Object.values(m.content).length) {
                     content = Object.values(m.content)[0];
                 }
             }
+            console.log("CONTENT TO DECRYPT:", content);
             const decContent = rsa.decrypt(chat.groupPrivateKey, content);
             obj.content = decContent;
         }
@@ -125,6 +127,7 @@ function decryptMessage(full, chat) {
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey);
             obj.mediaKey = decMediaKey;
         }
+        console.log("OBJ FILLED", fillmsg(full, obj));
         return fillmsg(full, obj);
     });
 }

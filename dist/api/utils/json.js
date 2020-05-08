@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const case_1 = require("../utils/case");
 const cronUtils = require("./cron");
 function chatToJson(c) {
-    const chat = c.dataValues || c;
+    const ch = c.dataValues || c;
+    const chat = JSON.parse(JSON.stringify(ch));
     let contactIds = chat.contactIds || null;
     if (chat.contactIds && typeof chat.contactIds === 'string') {
         contactIds = JSON.parse(chat.contactIds);

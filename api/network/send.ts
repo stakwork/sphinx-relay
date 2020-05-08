@@ -8,29 +8,6 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
-export function signAndSend(opts, mqttTopic?:string){
-	return new Promise(async function(resolve, reject) {
-		if(!opts.data || typeof opts.data!=='object') {
-			return reject('object plz')
-		}
-		let data = JSON.stringify(opts.data)
-
-		const sig = await LND.signAscii(data)
-		data = data + sig
-
-		try {
-			if(mqttTopic) {
-				await tribes.publish(mqttTopic, data)
-			} else {
-				await LND.keysendMessage({...opts,data})
-			}
-			resolve(true)
-		} catch(e) {
-			reject(e)
-		}
-	})
-}
-
 export async function sendMessage(params) {
 	const { type, chat, message, sender, amount, success, failure } = params
 	const m = newmsg(type, chat, sender, message)
@@ -55,7 +32,6 @@ export async function sendMessage(params) {
 			networkType = 'mqtt' // broadcast to all
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
-			console.log('msg has been decrypted with group key')
 		} else {
 			// if tribe, send to owner only
 			const tribeOwner = await models.Contact.findOne({where: {publicKey:tribeOwnerPubKey}})
@@ -89,12 +65,38 @@ export async function sendMessage(params) {
 			console.log("KEYSEND ERROR", e)
 			no = e
 		}
+		await sleep(2)
 	})
 	if(yes){
 		if(success) success(yes)
 	} else {
 		if(failure) failure(no)
 	}
+}
+
+export function signAndSend(opts, mqttTopic?:string){
+	console.log('sign and send!!!!',opts.data)
+	return new Promise(async function(resolve, reject) {
+		if(!opts.data || typeof opts.data!=='object') {
+			return reject('object plz')
+		}
+		let data = JSON.stringify(opts.data)
+
+		const sig = await LND.signAscii(data)
+		data = data + sig
+
+		console.log("ACTUALLY SEND", mqttTopic)
+		try {
+			if(mqttTopic) {
+				await tribes.publish(mqttTopic, data)
+			} else {
+				await LND.keysendMessage({...opts,data})
+			}
+			resolve(true)
+		} catch(e) {
+			reject(e)
+		}
+	})
 }
 
 function newmsg(type, chat, sender, message){
@@ -120,4 +122,7 @@ async function asyncForEach(array, callback) {
 	for (let index = 0; index < array.length; index++) {
 	  	await callback(array[index], index, array);
 	}
+}
+async function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
 }

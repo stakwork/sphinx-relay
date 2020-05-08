@@ -84,19 +84,21 @@ async function finishTermsAndReceipt(full:{[k:string]:any}, destkey) {
 }
 
 // DECRYPT EITHER STRING OR FIRST VAL IN OBJ
-async function decryptMessage(full:{[k:string]:any},chat) {
+async function decryptMessage(full:{[k:string]:any}, chat) {
 	if(!chat.groupPrivateKey) return full
 	const m = full && full.message
 	if (!m) return full
 
 	const obj: {[k:string]:any} = {}
 	if(m.content) {
+		console.log('m.content:',m.content, typeof m.content)
 		let content = m.content
 		if(typeof m.content==='object') {
 			if(Object.values(m.content).length) {
 				content = Object.values(m.content)[0]
 			}
 		}
+		console.log("CONTENT TO DECRYPT:",content)
 		const decContent = rsa.decrypt(chat.groupPrivateKey, content)
 		obj.content = decContent
 	}
@@ -111,6 +113,7 @@ async function decryptMessage(full:{[k:string]:any},chat) {
 		obj.mediaKey = decMediaKey
 	}
 
+	console.log("OBJ FILLED",fillmsg(full, obj))
 	return fillmsg(full, obj)
 }
 

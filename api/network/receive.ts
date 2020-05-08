@@ -70,11 +70,13 @@ export async function initGrpcSubscriptions() {
 
 export async function initTribesSubscriptions(){
 	tribes.connect(async(topic, message)=>{ // onMessage callback
-        console.log("=====> msg received! TOPIC", topic, "MESSAGE", message)
-        // check topic is signed by sender?
-		// fire off the ACTION
-		const payload = await parseAndVerifyPayload(message)
-		onReceive(payload)
+		try{
+			const msg = message.toString()
+			console.log("=====> msg received! TOPIC", topic, "MESSAGE", msg)
+			// check topic is signed by sender?
+			const payload = await parseAndVerifyPayload(msg)
+			onReceive(payload)
+		} catch(e){}
     })
 }
 

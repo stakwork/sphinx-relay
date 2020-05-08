@@ -2,7 +2,8 @@ import {toSnake,toCamel} from '../utils/case'
 import * as cronUtils from './cron'
 
 function chatToJson(c) {
-  const chat = c.dataValues||c
+  const ch = c.dataValues||c
+  const chat = JSON.parse(JSON.stringify(ch))
   let contactIds = chat.contactIds || null
   if(chat.contactIds && typeof chat.contactIds==='string'){
     contactIds = JSON.parse(chat.contactIds)

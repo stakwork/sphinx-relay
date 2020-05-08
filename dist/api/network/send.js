@@ -15,31 +15,6 @@ const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function signAndSend(opts, mqttTopic) {
-    return new Promise(function (resolve, reject) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!opts.data || typeof opts.data !== 'object') {
-                return reject('object plz');
-            }
-            let data = JSON.stringify(opts.data);
-            const sig = yield LND.signAscii(data);
-            data = data + sig;
-            try {
-                if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data);
-                }
-                else {
-                    yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
-                }
-                resolve(true);
-            }
-            catch (e) {
-                reject(e);
-            }
-        });
-    });
-}
-exports.signAndSend = signAndSend;
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure } = params;
@@ -64,7 +39,6 @@ function sendMessage(params) {
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
-                console.log('msg has been decrypted with group key');
             }
             else {
                 // if tribe, send to owner only
@@ -97,6 +71,7 @@ function sendMessage(params) {
                 console.log("KEYSEND ERROR", e);
                 no = e;
             }
+            yield sleep(2);
         }));
         if (yes) {
             if (success)
@@ -109,6 +84,33 @@ function sendMessage(params) {
     });
 }
 exports.sendMessage = sendMessage;
+function signAndSend(opts, mqttTopic) {
+    console.log('sign and send!!!!', opts.data);
+    return new Promise(function (resolve, reject) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!opts.data || typeof opts.data !== 'object') {
+                return reject('object plz');
+            }
+            let data = JSON.stringify(opts.data);
+            const sig = yield LND.signAscii(data);
+            data = data + sig;
+            console.log("ACTUALLY SEND", mqttTopic);
+            try {
+                if (mqttTopic) {
+                    yield tribes.publish(mqttTopic, data);
+                }
+                else {
+                    yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
+                }
+                resolve(true);
+            }
+            catch (e) {
+                reject(e);
+            }
+        });
+    });
+}
+exports.signAndSend = signAndSend;
 function newmsg(type, chat, sender, message) {
     return {
         type: type,
@@ -121,6 +123,11 @@ function asyncForEach(array, callback) {
         for (let index = 0; index < array.length; index++) {
             yield callback(array[index], index, array);
         }
+    });
+}
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, ms));
     });
 }
 //# sourceMappingURL=send.js.map

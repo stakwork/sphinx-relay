@@ -31,8 +31,13 @@ function createAPI(def) {
         if (def.tokenName && token) headers['authorization'] = 'Bearer ' + token
         const opts = {mode: 'cors'}
         if (m === 'POST' || m === 'PUT') {
-          headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-          opts.body = new URLSearchParams(data)
+          if(def.name==='media') {
+            headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
+            opts.body = new URLSearchParams(data)
+          } else {
+            headers['Content-Type'] = 'application/json'
+            opts.body = JSON.stringify(data)
+          }
         }
         if (m === 'UPLOAD') {
           const file = data

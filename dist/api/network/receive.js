@@ -83,11 +83,14 @@ exports.initGrpcSubscriptions = initGrpcSubscriptions;
 function initTribesSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         tribes.connect((topic, message) => __awaiter(this, void 0, void 0, function* () {
-            console.log("=====> msg received! TOPIC", topic, "MESSAGE", message);
-            // check topic is signed by sender?
-            // fire off the ACTION
-            const payload = yield parseAndVerifyPayload(message);
-            onReceive(payload);
+            try {
+                const msg = message.toString();
+                console.log("=====> msg received! TOPIC", topic, "MESSAGE", msg);
+                // check topic is signed by sender?
+                const payload = yield parseAndVerifyPayload(msg);
+                onReceive(payload);
+            }
+            catch (e) { }
         }));
     });
 }
