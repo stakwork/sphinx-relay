@@ -86,7 +86,7 @@ Save and exit:
 `Enter`
 
 To connect to your app:
-(replace x.x.x.x with your IP)
+(replace x.x.x.x with your IP - NOTE: This is your external IP)
 ```sh 
 $ cd
 $ cd sphinx-relay/config/
