@@ -76,7 +76,7 @@ You can run your own Sphinx node in order to have full ownership over your commu
 
 ### guide
 
-mynode users: here is a complete guide provided by someone who is running Relay at home: [MyNode Guide](https://github.com/stakwork/sphinx-relay/blob/master/install_guide_myNode.md)
+mynode users: here is a complete guide provided by someone who is running Relay at home: [MyNode Guide](https://github.com/stakwork/sphinx-relay/blob/master/install_guide_myNode_and_Raspiblitz.md)
 
 ### download
 
