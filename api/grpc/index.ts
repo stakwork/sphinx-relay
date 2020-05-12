@@ -24,9 +24,12 @@ async function parseAndVerifyPayload(data){
 				payload.sender = payload.sender||{}
 				payload.sender.pub_key=v.pubkey
 				return payload
+			} else {
+				console.error('[GRPC] invalid payload signature')
 			}
 		}
 	} catch(e) {
+		console.error('[GRPC] failed to parse msg')
 		return null
 	}
 }
@@ -36,16 +39,27 @@ async function parseKeysendInvoice(i, actions){
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
 	const data = buf && buf.toString()
 	const value = i && i.value && parseInt(i.value)
-	if(!data) return
+	if(!data) {
+		console.error('[GRPC] no keysend data received')
+		return
+	}
 
 	let payload
 	if(data[0]==='{'){
 		try {
 			payload = await parseAndVerifyPayload(data)
-		} catch(e){}
+		} catch(e){
+			console.error('[GRPC] failed to parse and verify payload')
+		}
 	} else {
 		const threads = weave(data)
-		if(threads) payload = await parseAndVerifyPayload(threads)
+		if(threads) {
+			try {
+				payload = await parseAndVerifyPayload(threads)
+			} catch(e){
+				console.error('[GRPC] failed to parse and verify payload II')
+			}
+		}
 	}
 	if(payload){
 		const dat = payload.content || payload
@@ -57,6 +71,8 @@ async function parseKeysendInvoice(i, actions){
 		} else {
 			console.log('Incorrect payload type:', payload.type)
 		}
+	} else {
+		console.error('[GRPC] no payload')
 	}
 }
 
