@@ -4,11 +4,22 @@ import * as zbase32 from './zbase32'
 import * as LND from './lightning'
 import * as path from 'path'
 import * as mqtt from 'mqtt'
+import * as fetch from 'node-fetch'
 
 const env = process.env.NODE_ENV || 'development'
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 let client:any
+
+export async function testCreate(){
+    const uuid = await genSignedTimestamp()
+    const name='test'
+    console.log("DECLARE!!!!!!!")
+    declare({
+        uuid,name,groupKey:'asdf',host:config.tribes_host,
+        pricePerMessage:0,priceToJoin:0,
+    })
+}
 
 export async function connect(onMessage) {
     try{
@@ -18,7 +29,7 @@ export async function connect(onMessage) {
             client = null
             const pwd = await genSignedTimestamp()
             console.log('[tribes] try to connect:',`tls://${config.tribes_host}:8883`)
-            client = mqtt.connect(`tls://${config.tribes_host}:8883`,{
+            client = mqtt.connect(`tcp://${config.tribes_host}:1883`,{
                 username:info.identity_pubkey,
                 password:pwd,
                 reconnectPeriod:0, // dont auto reconnect
@@ -31,7 +42,7 @@ export async function connect(onMessage) {
                 setTimeout(()=> reconnect(), 2000)
             })
             client.on('error', function (e) {
-                console.log('[tribes] error: ',e)
+                console.log('[tribes] error: ',e.message||e)
             })
             client.on('message', function(topic, message) {
                 if(onMessage) onMessage(topic, message)
@@ -53,7 +64,7 @@ export function publish(topic,msg){
 }
 
 export async function declare({uuid,name,groupKey,host,pricePerMessage,priceToJoin}) {
-    const r = await fetch('https://' + host + '/tribes', {
+    const r = await fetch('http://' + host + ':5002/tribes', {
         method: 'POST' ,
         body:    JSON.stringify({
             uuid,name,groupKey,host,

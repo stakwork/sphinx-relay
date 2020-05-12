@@ -22,6 +22,7 @@ const setup_1 = require("./api/utils/setup");
 const controllers = require("./api/controllers");
 const socket = require("./api/utils/socket");
 const network = require("./api/network");
+const tribes = require("./api/utils/tribes");
 let server = null;
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
@@ -38,6 +39,7 @@ function connectToLND() {
             yield network.initGrpcSubscriptions(); // LND
             yield mainSetup(); // DB + express
             yield network.initTribesSubscriptions(); // MQTT
+            yield tribes.testCreate();
         }
         catch (e) {
             if (e.details) {

@@ -46,6 +46,9 @@ async function createGroupChat(req, res) {
 		is_listed,
 		price_per_message,
 		price_to_join,
+		img,
+		description,
+		tags,
 	} = req.body
 	const contact_ids = req.body.contact_ids||[]
 
@@ -71,7 +74,8 @@ async function createGroupChat(req, res) {
 			tribes.declare({
 				...chatParams,
 				pricePerMessage: price_per_message,
-				priceToJoin: price_to_join
+				priceToJoin: price_to_join,
+				description, tags, img,
 			})
 		}
 		// make me owner when i create

@@ -14,9 +14,22 @@ const zbase32 = require("./zbase32");
 const LND = require("./lightning");
 const path = require("path");
 const mqtt = require("mqtt");
+const fetch = require("node-fetch");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 let client;
+function testCreate() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const uuid = yield genSignedTimestamp();
+        const name = 'test';
+        console.log("DECLARE!!!!!!!");
+        declare({
+            uuid, name, groupKey: 'asdf', host: config.tribes_host,
+            pricePerMessage: 0, priceToJoin: 0,
+        });
+    });
+}
+exports.testCreate = testCreate;
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -25,8 +38,8 @@ function connect(onMessage) {
                 return __awaiter(this, void 0, void 0, function* () {
                     client = null;
                     const pwd = yield genSignedTimestamp();
-                    console.log('[tribes] try to connect:', `tls://${config.tribes_host}`);
-                    client = mqtt.connect(`tls://${config.tribes_host}`, {
+                    console.log('[tribes] try to connect:', `tls://${config.tribes_host}:8883`);
+                    client = mqtt.connect(`tcp://${config.tribes_host}:1883`, {
                         username: info.identity_pubkey,
                         password: pwd,
                         reconnectPeriod: 0,
@@ -39,7 +52,7 @@ function connect(onMessage) {
                         setTimeout(() => reconnect(), 2000);
                     });
                     client.on('error', function (e) {
-                        console.log('[tribes] error: ', e);
+                        console.log('[tribes] error: ', e.message || e);
                     });
                     client.on('message', function (topic, message) {
                         if (onMessage)
@@ -65,6 +78,22 @@ function publish(topic, msg) {
         client.publish(topic, msg);
 }
 exports.publish = publish;
+function declare({ uuid, name, groupKey, host, pricePerMessage, priceToJoin }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const r = yield fetch('http://' + host + ':5002/tribes', {
+            method: 'POST',
+            body: JSON.stringify({
+                uuid, name, groupKey, host,
+                pricePerMessage: pricePerMessage || 0,
+                priceToJoin: priceToJoin || 0
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const j = yield r.json();
+        console.log(j);
+    });
+}
+exports.declare = declare;
 function genSignedTimestamp() {
     return __awaiter(this, void 0, void 0, function* () {
         const now = moment().unix();
