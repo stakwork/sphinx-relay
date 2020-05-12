@@ -17,8 +17,8 @@ export async function connect(onMessage) {
         async function reconnect(){
             client = null
             const pwd = await genSignedTimestamp()
-            console.log('[tribes] try to connect:',`tls://${config.tribes_host}`)
-            client = mqtt.connect(`tls://${config.tribes_host}`,{
+            console.log('[tribes] try to connect:',`tls://${config.tribes_host}:8883`)
+            client = mqtt.connect(`tls://${config.tribes_host}:8883`,{
                 username:info.identity_pubkey,
                 password:pwd,
                 reconnectPeriod:0, // dont auto reconnect
@@ -50,6 +50,20 @@ export function subscribe(topic){
 
 export function publish(topic,msg){
     if(client) client.publish(topic,msg)
+}
+
+export async function declare({uuid,name,groupKey,host,pricePerMessage,priceToJoin}) {
+    const r = await fetch('https://' + host + '/tribes', {
+        method: 'POST' ,
+        body:    JSON.stringify({
+            uuid,name,groupKey,host,
+            pricePerMessage:pricePerMessage||0,
+            priceToJoin:priceToJoin||0
+        }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+    const j = await r.json()
+    console.log(j)
 }
 
 export async function genSignedTimestamp(){
