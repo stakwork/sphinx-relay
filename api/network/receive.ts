@@ -38,6 +38,8 @@ async function forwardMessageToTribe(payload){
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
 	const type = payload.type
 	const message = payload.message
+	// HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
+	// ASK xref TABLE and put alias there too?
 	sendMessage({
 		sender: {
 			...owner.dataValues, // ADD IN REAL ALIAS HERE??!

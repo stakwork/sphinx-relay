@@ -50,6 +50,8 @@ function forwardMessageToTribe(payload) {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const type = payload.type;
         const message = payload.message;
+        // HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
+        // ASK xref TABLE and put alias there too?
         send_1.sendMessage({
             sender: Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }),
             chat, type, message,

@@ -25,8 +25,8 @@ function connect(onMessage) {
                 return __awaiter(this, void 0, void 0, function* () {
                     client = null;
                     const pwd = yield genSignedTimestamp();
-                    console.log('[tribes] try to connect:', `tcp://${config.tribes_host}`);
-                    client = mqtt.connect(`tcp://${config.tribes_host}`, {
+                    console.log('[tribes] try to connect:', `tls://${config.tribes_host}`);
+                    client = mqtt.connect(`tls://${config.tribes_host}`, {
                         username: info.identity_pubkey,
                         password: pwd,
                         reconnectPeriod: 0,
@@ -35,8 +35,11 @@ function connect(onMessage) {
                         console.log("[tribes] connected!");
                         client.subscribe(`${info.identity_pubkey}/#`);
                     });
-                    client.on('close', function () {
+                    client.on('close', function (e) {
                         setTimeout(() => reconnect(), 2000);
+                    });
+                    client.on('error', function (e) {
+                        console.log('[tribes] error: ', e);
                     });
                     client.on('message', function (topic, message) {
                         if (onMessage)
