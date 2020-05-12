@@ -39,7 +39,7 @@ function connect(onMessage) {
                     client = null;
                     const pwd = yield genSignedTimestamp();
                     console.log('[tribes] try to connect:', `tls://${config.tribes_host}:8883`);
-                    client = mqtt.connect(`tcp://${config.tribes_host}:1883`, {
+                    client = mqtt.connect(`tls://${config.tribes_host}:8883`, {
                         username: info.identity_pubkey,
                         password: pwd,
                         reconnectPeriod: 0,
@@ -80,7 +80,7 @@ function publish(topic, msg) {
 exports.publish = publish;
 function declare({ uuid, name, groupKey, host, pricePerMessage, priceToJoin }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = yield fetch('http://' + host + ':5002/tribes', {
+        const r = yield fetch('https://' + host + '/tribes', {
             method: 'POST',
             body: JSON.stringify({
                 uuid, name, groupKey, host,
