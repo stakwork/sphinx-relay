@@ -297,9 +297,9 @@ function paginatePayments(limit, i = 0) {
             const r = yield listPaymentsPaginated(limit, i);
             const lastOffset = parseInt(r.first_index_offset); // this is "first" cuz its in reverse (lowest index)
             if (lastOffset > 0) {
-                return r.invoices.concat(yield paginatePayments(limit, lastOffset));
+                return r.payments.concat(yield paginatePayments(limit, lastOffset));
             }
-            return r.invoices;
+            return r.payments;
         }
         catch (e) {
             return [];

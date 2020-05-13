@@ -263,9 +263,9 @@ async function paginatePayments(limit,i=0){
     const r:any = await listPaymentsPaginated(limit,i)
     const lastOffset = parseInt(r.first_index_offset) // this is "first" cuz its in reverse (lowest index)
     if(lastOffset>0) {
-      return r.invoices.concat(await paginatePayments(limit,lastOffset))
+      return r.payments.concat(await paginatePayments(limit,lastOffset))
     }
-    return r.invoices
+    return r.payments
   }catch(e){
     return []
   }
