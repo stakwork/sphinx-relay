@@ -145,14 +145,17 @@ function personalizeMessage(m, contact, isTribeOwner) {
         const contactId = contact.contactId;
         const destkey = contact.publicKey;
         const cloned = JSON.parse(JSON.stringify(m));
+        console.log('cloned', cloned);
         const chat = cloned && cloned.chat;
         const isTribe = chat.type && chat.type === constants.chat_types.tribe;
         const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe);
+        console.log('msgWithRemoteTxt', msgWithRemoteTxt);
         const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey);
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
         const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId);
         const msgWithMediaToken = yield finishTermsAndReceipt(msgWithMediaKey, destkey);
         const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact, isTribe, isTribeOwner);
+        console.log('encMsg', encMsg);
         return encMsg;
     });
 }
