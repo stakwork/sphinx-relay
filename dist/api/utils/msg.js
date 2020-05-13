@@ -15,10 +15,14 @@ const rsa = require("../crypto/rsa");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function addInRemoteText(full, contactId, isTribe) {
     const m = full && full.message;
+    console.log('m && m.content', m && m.content);
+    console.log('typeof m.content', typeof m.content);
     if (!(m && m.content))
         return full;
     if (!(typeof m.content === 'object'))
         return full;
+    console.log('contactId', contactId);
+    console.log('isTribe', isTribe);
     if (isTribe) {
         // if just one, send it (for tribe remote_text_map... is there a better way?)
         if (Object.values(m.content).length === 1) {
