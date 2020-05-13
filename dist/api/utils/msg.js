@@ -146,7 +146,7 @@ function decryptMessage(full, chat) {
 exports.decryptMessage = decryptMessage;
 function personalizeMessage(m, contact, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
-        const contactId = contact.contactId;
+        const contactId = contact.id;
         const destkey = contact.publicKey;
         const cloned = JSON.parse(JSON.stringify(m));
         console.log('cloned', cloned);

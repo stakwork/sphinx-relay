@@ -130,7 +130,7 @@ async function decryptMessage(full:{[k:string]:any}, chat) {
 }
 
 async function personalizeMessage(m,contact,isTribeOwner:boolean){
-	const contactId = contact.contactId
+	const contactId = contact.id
 	const destkey = contact.publicKey
 	
 	const cloned = JSON.parse(JSON.stringify(m))
