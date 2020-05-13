@@ -101,7 +101,7 @@ function subscribeInvoices(actions) {
 	return new Promise(async(resolve,reject)=>{
 		const lightning = await loadLightning()
 
-		var call = lightning.subscribeInvoices();
+		var call = lightning.subscribeInvoices()
 		call.on('data', async function(response) {
 			// console.log('subscribed invoices', { response })
 			console.log('[GRPC] subscribeInvoices response', response)
@@ -172,9 +172,9 @@ function subscribeInvoices(actions) {
 		call.on('status', function(status) {
 			console.log("Status", status);
 			resolve(status)
-		});
+		})
 		call.on('error', function(err){
-			// console.log(err)
+			console.error(err)
 			reject(err)
 		})
 		call.on('end', function() {
@@ -182,7 +182,7 @@ function subscribeInvoices(actions) {
 			console.log(`Closed stream ${now}`);
 			// The server has closed the stream.
 			reconnectToLND()
-		});
+		})
 		setTimeout(()=>{
 			resolve(null)
 		},100)

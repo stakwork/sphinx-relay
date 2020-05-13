@@ -185,7 +185,7 @@ function subscribeInvoices(actions) {
             resolve(status);
         });
         call.on('error', function (err) {
-            // console.log(err)
+            console.error(err);
             reject(err);
         });
         call.on('end', function () {
