@@ -1,4 +1,4 @@
-# Guide: install Sphinx-relay on myNode.
+# Guide: install Sphinx-relay on myNode / Raspiblitz.
 
 This guide is focused on installing Sphinx-relay on top of myNode. Information about myNode can be found at: https://mynodebtc.com/.
 
@@ -48,6 +48,7 @@ $ npm install
 ```
 ### Dependencies
 sqlite3: `$ apt-get install sqlite3`
+python2: `$ apt-get install python2`
 
 ### Configure
 Edit the "production" section of config/app.json.
@@ -56,13 +57,24 @@ $ cd
 $ cd sphinx-relay/config/
 $ nano app.json
 ```
-Change the following 4 lines to:
+Change the following 4 lines:
+
+## myNode
 ``` 
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/mynode/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
 "lncli_location": "/home/bitcoin/go/bin",
 ```
+
+## Raspiblitz
+``` 
+"macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
+"tls_location": "/mnt/hdd/lnd/tls.cert",
+"lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
+"lncli_location": "/home/bitcoin/go/bin",
+```
+
 Save and exit:
 `Ctrl + X`
 
@@ -86,7 +98,7 @@ Save and exit:
 `Enter`
 
 To connect to your app:
-(replace x.x.x.x with your IP)
+(replace x.x.x.x with your IP - NOTE: This is your external IP)
 ```sh 
 $ cd
 $ cd sphinx-relay/config/
@@ -97,9 +109,23 @@ For extra security:
 $ export USE_PASSWORD=true
 ```
 ### Activate keysend
-We need LND to run with keysend activated. First we check if it is already activated on your node. To do that. Go to http://mynode.local/lnd/config and check if the line `accept-keysend=1` is included somewhere in the text.
+
+
+We need LND to run with keysend activated. First we check if it is already activated on your node. 
+
+## myNode:
+Go to http://mynode.local/lnd/config and check if the line `accept-keysend=1` is included somewhere in the text.
 
 If `accept-keysend=1` is already included you can continue without changing anything. If `accept-keysend=1` is not included, add it to a new line and click the `Save` button. This will restart your device. (Restarting could take up to several minutes but also hours, so be patient.)
+
+## Raspiblitz:
+Go to raspiblitz menu, or:
+
+```sh
+$ raspiblitz
+```
+
+Find item menu "Services" and activate Keysend
 
 ### Run
 Now it's time to run the software.
@@ -110,3 +136,55 @@ $ cd sphinx-relay/config/
 $ npm run prod
 ```
 When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android or iOS) to connect!
+
+### To make relay run continuously (also after a restart).
+Before you start this part. Make sure your app is connected and you are able to send & receive messages.
+
+Login as admin.
+```sh 
+$ sudo su admin
+```
+Create a file named sphinx-relay.service
+```sh 
+$ sudo nano /etc/systemd/system/sphinx/sphinx-relay.service
+```
+Copy and paste the following text to add it to the file:
+```sh 
+[Unit]
+Description=Sphinx Relay Service
+After=network.target
+
+[Service]
+Type=simple
+User=bitcoin
+WorkingDirectory=/home/bitcoin/sphinx-relay/config/
+ExecStart=npm run prod
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=sphinx-relay
+
+[Install]
+WantedBy=multi-user.target
+```
+Save and exit:
+`Ctrl + X`
+
+`Y`
+
+`Enter`
+
+Let's run!
+```sh 
+$ sudo systemctl enable sphinx-relay.service
+$ sudo systemctl start sphinx-relay.service
+```
+Check if relay succesfully started.
+```sh 
+$ sudo systemctl status sphinx-relay.service
+```
+### To stop the program
+```sh 
+$ sudo systemctl stop sphinx-relay.service
+```

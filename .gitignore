@@ -1,6 +1,8 @@
 notes.md
 todo.md
 
+sphinx.db
+
 # just for testing
 binaries/nodeapp-macos 
 binaries/nodeapp-alpine 
