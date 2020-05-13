@@ -254,7 +254,7 @@ function listInvoicesPaginated(limit, offset) {
 }
 
 // need to upgrade to .10 for this
-async function listAllPaymentsPaginated(){
+async function listAllPayments(){
   const invs = await paginatePayments(40) // max num
   return invs
 }
@@ -284,7 +284,7 @@ function listPaymentsPaginated(limit, offset) {
   })
 }
 
-function listAllPayments() { 
+function listAllPaymentsFull() { 
   console.log('=> list all payments') 
   return new Promise(async(resolve, reject)=> {
     const lightning = await loadLightning()
@@ -397,5 +397,5 @@ export {
   listAllPayments,
   checkConnection,
   listAllInvoices,
-  listAllPaymentsPaginated,
+  listAllPaymentsFull,
 }

@@ -284,13 +284,13 @@ function listInvoicesPaginated(limit, offset) {
     }));
 }
 // need to upgrade to .10 for this
-function listAllPaymentsPaginated() {
+function listAllPayments() {
     return __awaiter(this, void 0, void 0, function* () {
         const invs = yield paginatePayments(40); // max num
         return invs;
     });
 }
-exports.listAllPaymentsPaginated = listAllPaymentsPaginated;
+exports.listAllPayments = listAllPayments;
 function paginatePayments(limit, i = 0) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -321,7 +321,7 @@ function listPaymentsPaginated(limit, offset) {
         });
     }));
 }
-function listAllPayments() {
+function listAllPaymentsFull() {
     console.log('=> list all payments');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
@@ -335,7 +335,7 @@ function listAllPayments() {
         });
     }));
 }
-exports.listAllPayments = listAllPayments;
+exports.listAllPaymentsFull = listAllPaymentsFull;
 const signMessage = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         let lightning = yield loadLightning();
