@@ -26,7 +26,7 @@ function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         // if tribe, owner must forward to MQTT
         console.log("RECEIVED PAYLOAD", payload);
-        const isTribe = payload.chat.type === constants.chat_types.tribe;
+        const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
         if (isTribe && typesToForward.includes(payload.type)) {
             const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(payload.chat.uuid);
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
