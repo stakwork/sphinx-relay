@@ -255,8 +255,10 @@ function listInvoicesPaginated(limit, offset) {
 
 // need to upgrade to .10 for this
 async function listAllPayments(){
-  const invs = await paginatePayments(40) // max num
-  return invs
+  console.log("=> list all payments")
+  const pays = await paginatePayments(40) // max num
+  console.log('pays', pays && pays.length)
+  return pays
 }
 async function paginatePayments(limit,i=0){
   try{

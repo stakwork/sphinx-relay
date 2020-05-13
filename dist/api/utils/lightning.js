@@ -286,8 +286,10 @@ function listInvoicesPaginated(limit, offset) {
 // need to upgrade to .10 for this
 function listAllPayments() {
     return __awaiter(this, void 0, void 0, function* () {
-        const invs = yield paginatePayments(40); // max num
-        return invs;
+        console.log("=> list all payments");
+        const pays = yield paginatePayments(40); // max num
+        console.log('pays', pays && pays.length);
+        return pays;
     });
 }
 exports.listAllPayments = listAllPayments;

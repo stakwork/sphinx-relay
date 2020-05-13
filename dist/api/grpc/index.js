@@ -121,7 +121,7 @@ function subscribeInvoices(actions) {
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
                 // console.log('subscribed invoices', { response })
-                console.log('[GRPC] subscribeInvoices response', response);
+                console.log('[GRPC] subscribeInvoices received');
                 if (response['state'] !== 'SETTLED') {
                     return;
                 }

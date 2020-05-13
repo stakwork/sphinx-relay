@@ -189,7 +189,7 @@ const listPayments = async (req, res) => {
           type:'payment',
           amount:parseInt(pay.value),
           date:parseInt(pay.creation_date),
-          pubkey:pay.path[pay.path.length-1],
+          // pubkey:pay.path[pay.path.length-1],
           payment_hash: pay.payment_hash,
         })
       }
