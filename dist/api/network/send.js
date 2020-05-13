@@ -95,7 +95,7 @@ function sendMessage(params) {
 }
 exports.sendMessage = sendMessage;
 function signAndSend(opts, mqttTopic) {
-    console.log('sign and send!!!!', opts.data);
+    // console.log('sign and send!!!!',opts.data)
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!opts.data || typeof opts.data !== 'object') {

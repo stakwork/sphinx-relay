@@ -17,7 +17,7 @@ export function sendConfirmation({ chat, sender, msg_id }) {
 }
 
 export async function receiveConfirmation(payload) {
-	console.log('received confirmation', { payload })
+	console.log('=> received confirmation')
 
 	const dat = payload.content || payload
 	const chat_uuid = dat.chat.uuid
