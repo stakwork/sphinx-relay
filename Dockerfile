@@ -8,7 +8,7 @@ ENV GODEBUG netdns=cgo
 # Pass a tag, branch or a commit using build-arg.  This allows a docker
 # image to be built from a specified Git state.  The default image
 # will use the Git tip of master by default.
-ARG checkout="v0.9.0-beta"
+ARG checkout="v0.10.0-beta"
 # ARG checkout="master"
 
 # Install dependencies and build the binaries.
@@ -61,6 +61,15 @@ RUN npm cache clean --force
 VOLUME /relay/.lnd
 
 COPY ./lnd.conf.sample /relay/.lnd/lnd.conf
+
+RUN shuf -n 6 ./unique-peer.txt >> /relay/.lnd/lnd.conf
+
+RUN git clone https://github.com/stakwork/sphinx-keysend-test/ /sphinx-keysend/
+WORKDIR /sphinx-keysend/
+RUN git checkout binary
+RUN npm install
+
+WORKDIR /relay/
 
 RUN mkdir -p /var/log/supervisor
 COPY ./supervisord.conf /etc/supervisord.conf
