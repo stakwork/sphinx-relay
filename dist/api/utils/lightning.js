@@ -310,7 +310,7 @@ function listPaymentsPaginated(limit, offset) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         lightning.listPayments({
-            num_max_payments: limit,
+            max_payments: limit,
             index_offset: offset,
             reversed: true,
         }, (err, response) => {
