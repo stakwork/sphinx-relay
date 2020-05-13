@@ -120,9 +120,7 @@ async function printQR(){
   if(!ip) {
     try {
       public_ip = await publicIp.v4()
-    } catch(e){
-      console.log(e)
-    }
+    } catch(e){}
   } else {
     public_ip = ip
   }
