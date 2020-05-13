@@ -58,7 +58,7 @@ const sendContactKeys = async (args) => {
 		performKeysendMessage({
 			destination_key,
 			amount: 3,
-			msg: JSON.stringify(msg),
+			msg,
 			success: (data) => {
 				yes = data
 			},
@@ -78,7 +78,7 @@ const sendContactKeys = async (args) => {
 const performKeysendMessage = async ({ destination_key, amount, msg, success, failure }) => {
 	const opts = {
 		dest: destination_key,
-		data: msg || JSON.stringify({}),
+		data: msg || {},
 		amt: Math.max(amount, 3)
 	}
 	try {

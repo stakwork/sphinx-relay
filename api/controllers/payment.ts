@@ -28,9 +28,9 @@ const sendPayment = async (req, res) => {
 
   if (destination_key && !contact_id && !chat_id) {
     return helpers.performKeysendMessage({
-      destination_key, 
+      destination_key,
       amount,
-      msg:'{}',
+      msg:{},
       success: () => {
         console.log('payment sent!')
         success(res, {destination_key, amount})

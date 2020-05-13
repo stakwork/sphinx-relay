@@ -65,7 +65,7 @@ const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* ()
         performKeysendMessage({
             destination_key,
             amount: 3,
-            msg: JSON.stringify(msg),
+            msg,
             success: (data) => {
                 yes = data;
             },
@@ -85,7 +85,7 @@ exports.sendContactKeys = sendContactKeys;
 const performKeysendMessage = ({ destination_key, amount, msg, success, failure }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
-        data: msg || JSON.stringify({}),
+        data: msg || {},
         amt: Math.max(amount, 3)
     };
     try {

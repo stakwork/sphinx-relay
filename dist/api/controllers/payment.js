@@ -26,7 +26,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return helpers.performKeysendMessage({
             destination_key,
             amount,
-            msg: '{}',
+            msg: {},
             success: () => {
                 console.log('payment sent!');
                 res_1.success(res, { destination_key, amount });
