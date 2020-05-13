@@ -15,14 +15,10 @@ const rsa = require("../crypto/rsa");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function addInRemoteText(full, contactId, isTribe) {
     const m = full && full.message;
-    console.log('m && m.content', m && m.content);
-    console.log('typeof m.content', typeof m.content);
     if (!(m && m.content))
         return full;
     if (!(typeof m.content === 'object'))
         return full;
-    console.log('contactId', contactId);
-    console.log('isTribe', isTribe);
     if (isTribe) {
         // if just one, send it (for tribe remote_text_map... is there a better way?)
         if (Object.values(m.content).length === 1) {
@@ -149,17 +145,14 @@ function personalizeMessage(m, contact, isTribeOwner) {
         const contactId = contact.id;
         const destkey = contact.publicKey;
         const cloned = JSON.parse(JSON.stringify(m));
-        console.log('cloned', cloned);
         const chat = cloned && cloned.chat;
         const isTribe = chat.type && chat.type === constants.chat_types.tribe;
         const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe);
-        console.log('msgWithRemoteTxt', msgWithRemoteTxt);
         const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey);
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
         const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId);
         const msgWithMediaToken = yield finishTermsAndReceipt(msgWithMediaKey, destkey);
         const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact, isTribe, isTribeOwner);
-        console.log('encMsg', encMsg);
         return encMsg;
     });
 }

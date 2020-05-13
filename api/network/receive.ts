@@ -15,7 +15,7 @@ const typesToForward=[
 ]
 async function onReceive(payload){
 	// if tribe, owner must forward to MQTT
-	console.log("RECEIVED PAYLOAD",payload)
+	// console.log("RECEIVED PAYLOAD",payload)
 	const isTribe = payload.chat && payload.chat.type===constants.chat_types.tribe
 	if(isTribe && typesToForward.includes(payload.type)){
 		const tribeOwnerPubKey = await tribes.verifySignedTimestamp(payload.chat.uuid)
