@@ -160,11 +160,13 @@ const listPayments = async (req, res) => {
   
   const payments: any[] = []
 
+  const MIN_VAL=3
+
   const invs:any = await lightning.listAllInvoices()
   if(invs && invs.length){
     invs.forEach(inv=>{
       const val = inv.value && parseInt(inv.value)
-      if(val && val>1) {
+      if(val && val>MIN_VAL) {
         let payment_hash=''
         if(inv.r_hash){
           payment_hash = Buffer.from(inv.r_hash).toString('hex')
@@ -184,7 +186,7 @@ const listPayments = async (req, res) => {
   if(pays && pays.length){
     pays.forEach(pay=>{
       const val = pay.value && parseInt(pay.value)
-      if(val && val>1) {
+      if(val && val>MIN_VAL) {
         payments.push({
           type:'payment',
           amount:parseInt(pay.value),

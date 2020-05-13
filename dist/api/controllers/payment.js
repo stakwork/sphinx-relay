@@ -146,11 +146,12 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const payments = [];
+    const MIN_VAL = 3;
     const invs = yield lightning.listAllInvoices();
     if (invs && invs.length) {
         invs.forEach(inv => {
             const val = inv.value && parseInt(inv.value);
-            if (val && val > 1) {
+            if (val && val > MIN_VAL) {
                 let payment_hash = '';
                 if (inv.r_hash) {
                     payment_hash = Buffer.from(inv.r_hash).toString('hex');
@@ -169,7 +170,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (pays && pays.length) {
         pays.forEach(pay => {
             const val = pay.value && parseInt(pay.value);
-            if (val && val > 1) {
+            if (val && val > MIN_VAL) {
                 payments.push({
                     type: 'payment',
                     amount: parseInt(pay.value),
