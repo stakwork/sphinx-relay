@@ -22,10 +22,9 @@ function testCreate() {
     return __awaiter(this, void 0, void 0, function* () {
         const uuid = yield genSignedTimestamp();
         const name = 'test';
-        console.log("DECLARE!!!!!!!");
         declare({
             uuid, name, groupKey: 'asdf', host: config.tribes_host,
-            pricePerMessage: 0, priceToJoin: 0,
+            pricePerMessage: 0, priceToJoin: 0, description: '', tags: []
         });
     });
 }
@@ -78,12 +77,13 @@ function publish(topic, msg) {
         client.publish(topic, msg);
 }
 exports.publish = publish;
-function declare({ uuid, name, groupKey, host, pricePerMessage, priceToJoin }) {
+function declare({ uuid, name, description, tags, groupKey, host, pricePerMessage, priceToJoin }) {
     return __awaiter(this, void 0, void 0, function* () {
         const r = yield fetch('https://' + host + '/tribes', {
             method: 'POST',
             body: JSON.stringify({
                 uuid, name, groupKey, host,
+                description, tags,
                 pricePerMessage: pricePerMessage || 0,
                 priceToJoin: priceToJoin || 0
             }),

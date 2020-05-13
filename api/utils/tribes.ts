@@ -14,10 +14,9 @@ let client:any
 export async function testCreate(){
     const uuid = await genSignedTimestamp()
     const name='test'
-    console.log("DECLARE!!!!!!!")
     declare({
         uuid,name,groupKey:'asdf',host:config.tribes_host,
-        pricePerMessage:0,priceToJoin:0,
+        pricePerMessage:0,priceToJoin:0,description:'',tags:[]
     })
 }
 
@@ -63,11 +62,12 @@ export function publish(topic,msg){
     if(client) client.publish(topic,msg)
 }
 
-export async function declare({uuid,name,groupKey,host,pricePerMessage,priceToJoin}) {
+export async function declare({uuid,name,description,tags,groupKey,host,pricePerMessage,priceToJoin}) {
     const r = await fetch('https://' + host + '/tribes', {
         method: 'POST' ,
         body:    JSON.stringify({
             uuid,name,groupKey,host,
+            description,tags,
             pricePerMessage:pricePerMessage||0,
             priceToJoin:priceToJoin||0
         }),

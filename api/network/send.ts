@@ -96,7 +96,7 @@ export function signAndSend(opts, mqttTopic?:string){
 		const sig = await LND.signAscii(data)
 		data = data + sig
 
-		console.log("ACTUALLY SEND", mqttTopic)
+		// console.log("ACTUALLY SEND", mqttTopic)
 		try {
 			if(mqttTopic) {
 				await tribes.publish(mqttTopic, data)

@@ -104,7 +104,7 @@ function signAndSend(opts, mqttTopic) {
             let data = JSON.stringify(opts.data);
             const sig = yield LND.signAscii(data);
             data = data + sig;
-            console.log("ACTUALLY SEND", mqttTopic);
+            // console.log("ACTUALLY SEND", mqttTopic)
             try {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data);
