@@ -65,7 +65,7 @@ function createGroupChat(req, res) {
         }));
         let chatParams = null;
         if (is_tribe) {
-            chatParams = yield createTribeChatParams(owner, contact_ids, name);
+            chatParams = yield createTribeChatParams(owner, contact_ids, name, img);
             if (is_listed) {
                 // publish to tribe server
                 tribes.declare(Object.assign(Object.assign({}, chatParams), { pricePerMessage: price_per_message, priceToJoin: price_to_join, description, tags, img }));
@@ -447,7 +447,7 @@ function createGroupChatParams(owner, contactIds, members, name) {
         type: constants.chat_types.group
     };
 }
-function createTribeChatParams(owner, contactIds, name) {
+function createTribeChatParams(owner, contactIds, name, img) {
     return __awaiter(this, void 0, void 0, function* () {
         let date = new Date();
         date.setMilliseconds(0);
@@ -461,6 +461,7 @@ function createTribeChatParams(owner, contactIds, name) {
         return {
             uuid: groupUUID,
             contactIds: JSON.stringify(theContactIds),
+            photoUrl: img || '',
             createdAt: date,
             updatedAt: date,
             name: name,

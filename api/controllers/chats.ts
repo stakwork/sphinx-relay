@@ -68,7 +68,7 @@ async function createGroupChat(req, res) {
 
 	let chatParams:any = null
 	if(is_tribe){
-		chatParams = await createTribeChatParams(owner, contact_ids, name)
+		chatParams = await createTribeChatParams(owner, contact_ids, name, img)
 		if(is_listed){
 			// publish to tribe server
 			tribes.declare({
@@ -474,7 +474,7 @@ function createGroupChatParams(owner, contactIds, members, name) {
 	}
 }
 
-async function createTribeChatParams(owner, contactIds, name) {
+async function createTribeChatParams(owner, contactIds, name, img) {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -488,6 +488,7 @@ async function createTribeChatParams(owner, contactIds, name) {
 	return {
 		uuid: groupUUID,
 		contactIds: JSON.stringify(theContactIds),
+		photoUrl: img||'',
 		createdAt: date,
 		updatedAt: date,
 		name: name,
