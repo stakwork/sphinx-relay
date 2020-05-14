@@ -186,7 +186,8 @@ function subscribeInvoices(actions) {
             console.log("Status", status);
             // The server is unavailable, trying to reconnect.
             if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
-                reconnectToLND();
+                i = 0;
+                reconnectToLND(Math.random());
             }
             else {
                 resolve(status);
@@ -195,7 +196,8 @@ function subscribeInvoices(actions) {
         call.on('error', function (err) {
             console.error(err);
             if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
-                reconnectToLND();
+                i = 0;
+                reconnectToLND(Math.random());
             }
             else {
                 reject(err);
@@ -205,7 +207,8 @@ function subscribeInvoices(actions) {
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
             console.log(`Closed stream ${now}`);
             // The server has closed the stream.
-            reconnectToLND();
+            i = 0;
+            reconnectToLND(Math.random());
         });
         setTimeout(() => {
             resolve(null);
@@ -214,8 +217,10 @@ function subscribeInvoices(actions) {
 }
 exports.subscribeInvoices = subscribeInvoices;
 var i = 0;
-function reconnectToLND() {
+var ctx = 0;
+function reconnectToLND(innerCtx) {
     return __awaiter(this, void 0, void 0, function* () {
+        ctx = innerCtx;
         i++;
         console.log(`=> [lnd] reconnecting... attempt #${i}`);
         try {
@@ -225,7 +230,9 @@ function reconnectToLND() {
         }
         catch (e) {
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                yield reconnectToLND();
+                if (ctx === innerCtx) {
+                    yield reconnectToLND(innerCtx);
+                }
             }), 2000);
         }
     });
