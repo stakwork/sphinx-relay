@@ -20,6 +20,7 @@ const moment = require("moment");
 const path = require("path");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const ERR_CODE_UNAVAILABLE = 14;
+const ERR_CODE_STREAM_REMOVED = 2;
 // VERIFY PUBKEY OF SENDER
 function parseAndVerifyPayload(data) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -184,7 +185,7 @@ function subscribeInvoices(actions) {
         call.on('status', function (status) {
             console.log("Status", status);
             // The server is unavailable, trying to reconnect.
-            if (status.code == ERR_CODE_UNAVAILABLE) {
+            if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
                 reconnectToLND();
             }
             else {
@@ -193,7 +194,7 @@ function subscribeInvoices(actions) {
         });
         call.on('error', function (err) {
             console.error(err);
-            if (err.code == ERR_CODE_UNAVAILABLE) {
+            if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
                 reconnectToLND();
             }
             else {
