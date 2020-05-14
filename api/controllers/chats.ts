@@ -173,6 +173,13 @@ const deleteChat = async (req, res) => {
 async function joinTribe(req, res){
 	console.log('=> joinTribe')
 	const { uuid, group_key, name, host } = req.body
+
+	const existing = await models.Chat.findOne({where:{uuid}})
+	if(existing) {
+		console.log('[tribes] u are already in this group')
+		return
+	}
+
 	const ownerPubKey = await tribes.verifySignedTimestamp(uuid)
 
 	const tribeOwner = await models.Contact.findOne({ where: { publicKey: ownerPubKey } })

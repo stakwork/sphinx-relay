@@ -164,6 +164,11 @@ function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
         const { uuid, group_key, name, host } = req.body;
+        const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
+        if (existing) {
+            console.log('[tribes] u are already in this group');
+            return;
+        }
         const ownerPubKey = yield tribes.verifySignedTimestamp(uuid);
         const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: ownerPubKey } });
         let theTribeOwner;
