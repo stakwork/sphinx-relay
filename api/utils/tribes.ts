@@ -11,14 +11,14 @@ const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 let client:any
 
-export async function testCreate(){
-    const uuid = await genSignedTimestamp()
-    const name='test'
-    declare({
-        uuid,name,groupKey:'asdf',host:config.tribes_host,
-        pricePerMessage:0,priceToJoin:0,description:'',tags:[]
-    })
-}
+// export async function testCreate(){
+//     const uuid = await genSignedTimestamp()
+//     const name='test'
+//     declare({
+//         uuid,name,groupKey:'asdf',host:config.tribes_host,
+//         pricePerMessage:0,priceToJoin:0,description:'',tags:[]
+//     })
+// }
 
 export async function connect(onMessage) {
     try{
@@ -62,14 +62,15 @@ export function publish(topic,msg){
     if(client) client.publish(topic,msg)
 }
 
-export async function declare({uuid,name,description,tags,groupKey,host,pricePerMessage,priceToJoin}) {
+export async function declare({uuid,name,description,tags,img,groupKey,host,pricePerMessage,priceToJoin}) {
     const r = await fetch('https://' + host + '/tribes', {
         method: 'POST' ,
         body:    JSON.stringify({
-            uuid,name,groupKey,host,
-            description,tags,
+            uuid, groupKey,
+            name, description, tags, img:img||'',
             pricePerMessage:pricePerMessage||0,
-            priceToJoin:priceToJoin||0
+            priceToJoin:priceToJoin||0,
+            
         }),
         headers: { 'Content-Type': 'application/json' }
     })

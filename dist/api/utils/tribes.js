@@ -18,17 +18,14 @@ const fetch = require("node-fetch");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 let client;
-function testCreate() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const uuid = yield genSignedTimestamp();
-        const name = 'test';
-        declare({
-            uuid, name, groupKey: 'asdf', host: config.tribes_host,
-            pricePerMessage: 0, priceToJoin: 0, description: '', tags: []
-        });
-    });
-}
-exports.testCreate = testCreate;
+// export async function testCreate(){
+//     const uuid = await genSignedTimestamp()
+//     const name='test'
+//     declare({
+//         uuid,name,groupKey:'asdf',host:config.tribes_host,
+//         pricePerMessage:0,priceToJoin:0,description:'',tags:[]
+//     })
+// }
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -77,15 +74,15 @@ function publish(topic, msg) {
         client.publish(topic, msg);
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, groupKey, host, pricePerMessage, priceToJoin }) {
+function declare({ uuid, name, description, tags, img, groupKey, host, pricePerMessage, priceToJoin }) {
     return __awaiter(this, void 0, void 0, function* () {
         const r = yield fetch('https://' + host + '/tribes', {
             method: 'POST',
             body: JSON.stringify({
-                uuid, name, groupKey, host,
-                description, tags,
+                uuid, groupKey,
+                name, description, tags, img: img || '',
                 pricePerMessage: pricePerMessage || 0,
-                priceToJoin: priceToJoin || 0
+                priceToJoin: priceToJoin || 0,
             }),
             headers: { 'Content-Type': 'application/json' }
         });
