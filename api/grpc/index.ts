@@ -9,6 +9,8 @@ import * as moment from 'moment'
 import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
+const ERR_CODE_UNAVAILABLE = 14
+const ERR_CODE_STREAM_REMOVED = 2
 
 // VERIFY PUBKEY OF SENDER
 async function parseAndVerifyPayload(data){
@@ -165,17 +167,26 @@ function subscribeInvoices(actions) {
 					type: 'payment',
 					response: jsonUtils.messageToJson(message, chat, sender)
 				})
-				
+
 				sendNotification(chat, sender.alias, 'message')
 			}
 		});
 		call.on('status', function(status) {
 			console.log("Status", status);
-			resolve(status)
+			// The server is unavailable, trying to reconnect.
+			if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
+				reconnectToLND();
+			} else {
+				resolve(status);
+			}
 		})
 		call.on('error', function(err){
 			console.error(err)
-			reject(err)
+			if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
+				reconnectToLND();
+			} else {
+				reject(err)
+			}
 		})
 		call.on('end', function() {
 			const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
