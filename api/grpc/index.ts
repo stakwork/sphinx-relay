@@ -10,7 +10,6 @@ import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const ERR_CODE_UNAVAILABLE = 14
-const ERR_CODE_UNIMPLEMENTED = 12
 
 // VERIFY PUBKEY OF SENDER
 async function parseAndVerifyPayload(data){
@@ -174,7 +173,7 @@ function subscribeInvoices(actions) {
 		call.on('status', function(status) {
 			console.log("Status", status);
 			// The server is unavailable, trying to reconnect.
-			if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_UNIMPLEMENTED) {
+			if (status.code == ERR_CODE_UNAVAILABLE) {
 				reconnectToLND();
 			} else {
 				resolve(status);
@@ -182,7 +181,11 @@ function subscribeInvoices(actions) {
 		})
 		call.on('error', function(err){
 			console.error(err)
-			reject(err)
+			if (err.code == ERR_CODE_UNAVAILABLE) {
+				reconnectToLND();
+			} else {
+				reject(err)
+			}
 		})
 		call.on('end', function() {
 			const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
