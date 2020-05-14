@@ -212,6 +212,14 @@ function joinTribe(req, res) {
             sender: owner,
             message: {},
             type: constants.message_types.group_join,
+            failure: function (e) {
+                res_1.failure(res, e);
+            },
+            success: function () {
+                return __awaiter(this, void 0, void 0, function* () {
+                    res_1.success(res, jsonUtils.chatToJson(chat));
+                });
+            }
         });
     });
 }

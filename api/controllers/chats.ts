@@ -225,6 +225,12 @@ async function joinTribe(req, res){
 		sender: owner,
 		message: {},
 		type: constants.message_types.group_join,
+		failure: function (e) {
+			failure(res, e)
+		},
+		success: async function () {
+			success(res, jsonUtils.chatToJson(chat))
+		}
 	})
 }
 
