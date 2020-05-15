@@ -11,3 +11,4 @@ ignore-historical-gossip-filters=true
 numgraphsyncpeers=7
 routing.assumechanvalid=1
 autopilot.active=false
+
