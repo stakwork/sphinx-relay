@@ -43,8 +43,7 @@ export default function Media(props) {
     const ttl = 60*60*24*7 // one week
     const file = files[0] || {}
     var start = new Date();
-    const r = await api.media.UPLOAD('upload/attachment',file,{
-      chat_uuid: '1234567890',
+    const r = await api.media.UPLOAD('file',file,{
       name: file.name||'filename',
       description: description||'description',
       ttl: ttl,
@@ -52,12 +51,12 @@ export default function Media(props) {
     var end  = new Date();
     var time = end.getTime() - start.getTime();
     console.log('Upload Timer: finished in', time, 'ms');
-    // await api.relay.POST('attachment', {
-    //   muid: r.muid,
-    //   file_name: r.filename,
-    //   chat_id: 13,
-    //   ttl: ttl,
-    // })
+    await api.relay.POST('attachment', {
+      muid: r.muid,
+      file_name: r.filename,
+      chat_id: 13,
+      ttl: ttl,
+    })
   }, [description]) // subscribe to "description"
 
   async function search(){

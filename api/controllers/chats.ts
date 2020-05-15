@@ -68,7 +68,7 @@ async function createGroupChat(req, res) {
 
 	let chatParams:any = null
 	if(is_tribe){
-		chatParams = await createTribeChatParams(owner, contact_ids, name, img)
+		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join)
 		if(is_listed){
 			// publish to tribe server
 			tribes.declare({
@@ -243,20 +243,27 @@ async function joinTribe(req, res){
 
 async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
-	const { sender_pub_key, chat_uuid, chat_type } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
 
-	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-	if (!sender) return
+	const isTribe = chat_type===constants.chat_types.tribe
 
-	const oldContactIds = JSON.parse(chat.contactIds || '[]')
-	const contactIds = oldContactIds.filter(cid => cid !== sender.id)
-	await chat.update({ contactIds: JSON.stringify(contactIds) })
+	let sender
+	if(!isTribe || isTribeOwner) {
+		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		if (!sender) return
 
-	if(chat_type===constants.chat_types.tribe){
-		await models.ChatMember.destroy({where:{chatId: chat.id, contactId: sender.id}})
+		const oldContactIds = JSON.parse(chat.contactIds || '[]')
+		const contactIds = oldContactIds.filter(cid => cid !== sender.id)
+		await chat.update({ contactIds: JSON.stringify(contactIds) })
+
+		if(isTribeOwner) {
+			if(chat_type===constants.chat_types.tribe){
+				await models.ChatMember.destroy({where:{chatId: chat.id, contactId: sender.id}})
+			}
+		}
 	}
 
 	var date = new Date();
@@ -264,9 +271,9 @@ async function receiveGroupLeave(payload) {
 	const msg = {
 		chatId: chat.id,
 		type: constants.message_types.group_leave,
-		sender: sender.id,
+		sender: (sender && sender.id) || 0,
 		date: date,
-		messageContent: '',
+		messageContent: `${sender_alias} has left the group`,
 		remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		createdAt: date,
@@ -284,69 +291,60 @@ async function receiveGroupLeave(payload) {
 	})
 }
 
-// only owner needs to add!
-// here: can only join if enough $$$!
-// forward to all over mqtt
-// add to ChatMember table
 async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
-	const { sender_pub_key, chat_uuid, chat_members, chat_type } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
 
-	// THIS CHECK CAN BE DONE IN NETWORK.RECEIVE? --> forward to mqtt if needed to
 	const isTribe = chat_type===constants.chat_types.tribe
-	if(isTribe) {
-		const owner = await models.Contact.findOne({ where: { isOwner: true } })
-		const verifiedOwnerPubkey = await tribes.verifySignedTimestamp(chat_uuid)
-		if(verifiedOwnerPubkey!==owner.publicKey){
-			return // SKIP if not owner (not each member needs to be added)
-			// but maybe we need to add alias in there somehow? so other people can see "Evan joined"
-		}
-	}
-
-	let theSender: any = null
-	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-	const contactIds = JSON.parse(chat.contactIds || '[]')
-	if (sender) {
-		theSender = sender // might already include??
-		if(!contactIds.includes(sender.id)) contactIds.push(sender.id)
-	} else {
-		const member = chat_members[sender_pub_key]
-		if(member && member.key) {
-			const createdContact = await models.Contact.create({
-				publicKey: sender_pub_key,
-				contactKey: member.key,
-				alias: member.alias||'Unknown',
-				status: 1
-			})
-			theSender = createdContact
-			contactIds.push(createdContact.id)
-		}
-	}
-	if(!theSender) return // fail (no contact key?)
-
-	await chat.update({ contactIds: JSON.stringify(contactIds) })
 
 	var date = new Date()
 	date.setMilliseconds(0)
 
-	if(isTribe){ // IF TRIBE, ADD TO XREF
-		models.ChatMember.create({
-			contactId: theSender.id,
-			chatId: chat.id,
-			role: constants.chat_roles.reader,
-			lastActive: date,
-		})
+	let theSender: any = null
+	const member = chat_members[sender_pub_key]
+	const senderAlias = (member && member.alias) || 'Unknown'
+
+	if(!isTribe || isTribeOwner) { // dont need to create contacts for these
+		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		const contactIds = JSON.parse(chat.contactIds || '[]')
+		if (sender) {
+			theSender = sender // might already include??
+			if(!contactIds.includes(sender.id)) contactIds.push(sender.id)
+		} else {
+			if(member && member.key) {
+				const createdContact = await models.Contact.create({
+					publicKey: sender_pub_key,
+					contactKey: member.key,
+					alias: senderAlias,
+					status: 1
+				})
+				theSender = createdContact
+				contactIds.push(createdContact.id)
+			}
+		}
+		if(!theSender) return // fail (no contact key?)
+
+		await chat.update({ contactIds: JSON.stringify(contactIds) })
+
+		if(isTribeOwner){ // IF TRIBE, ADD TO XREF
+			models.ChatMember.create({
+				contactId: theSender.id,
+				chatId: chat.id,
+				role: constants.chat_roles.reader,
+				lastActive: date,
+			})
+		}
 	}
 
 	const msg = {
 		chatId: chat.id,
 		type: constants.message_types.group_join,
-		sender: theSender.id,
+		sender: (theSender && theSender.id) || 0,
 		date: date,
-		messageContent: '',
+		messageContent: `${senderAlias} has joined the group`,
 		remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		createdAt: date,
@@ -357,7 +355,7 @@ async function receiveGroupJoin(payload) {
 	socket.sendJson({
 		type: 'group_join',
 		response: {
-			contact: jsonUtils.contactToJson(theSender),
+			contact: jsonUtils.contactToJson(theSender||{}),
 			chat: jsonUtils.chatToJson(chat),
 			message: jsonUtils.messageToJson(message, null)
 		}
@@ -487,7 +485,7 @@ function createGroupChatParams(owner, contactIds, members, name) {
 	}
 }
 
-async function createTribeChatParams(owner, contactIds, name, img) {
+async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join) {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -508,7 +506,9 @@ async function createTribeChatParams(owner, contactIds, name, img) {
 		type: constants.chat_types.tribe,
 		groupKey: keys.public,
 		groupPrivateKey: keys.private,
-		host: tribes.getHost()
+		host: tribes.getHost(),
+		pricePerMessage: price_per_message||0,
+		priceToJoin: price_to_join||0,
 	}
 }
 

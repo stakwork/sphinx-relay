@@ -149,6 +149,7 @@ function parseReceiveParams(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
+        const sender_alias = dat.sender.alias;
         const chat_uuid = dat.chat.uuid;
         const chat_type = dat.chat.type;
         const chat_members = dat.chat.members || {};
@@ -161,6 +162,7 @@ function parseReceiveParams(payload) {
         const msg_id = dat.message.id || 0;
         const mediaKey = dat.message.mediaKey;
         const mediaType = dat.message.mediaType;
+        const isTribeOwner = dat.isTribeOwner ? true : false;
         const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation);
         let sender;
         let chat;
@@ -173,7 +175,7 @@ function parseReceiveParams(payload) {
             sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         }
-        return { owner, sender, chat, sender_pub_key, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key };
+        return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key };
     });
 }
 exports.parseReceiveParams = parseReceiveParams;

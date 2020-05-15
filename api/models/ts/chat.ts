@@ -54,4 +54,10 @@ export default class Chat extends Model<Chat> {
   @Column
   host: string
 
+  @Column
+  priceToJoin: number
+
+  @Column
+  pricePerMessage: number
+
 }

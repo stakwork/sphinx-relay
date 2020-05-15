@@ -17,33 +17,59 @@ const tribes = require("../utils/tribes");
 const lightning_2 = require("../utils/lightning");
 const models_1 = require("../models");
 const send_1 = require("./send");
+const modify_1 = require("./modify");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-const types = constants.message_types;
+const msgtypes = constants.message_types;
 const typesToForward = [
-    types.message, types.attachment, types.group_join, types.group_leave
+    msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
+];
+const typesToModify = [
+    msgtypes.attachment
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         // if tribe, owner must forward to MQTT
-        // console.log("RECEIVED PAYLOAD",payload)
+        let doAction = true;
+        const toAddIn = {};
         const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
         if (isTribe && typesToForward.includes(payload.type)) {
             const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(payload.chat.uuid);
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             if (owner.publicKey === tribeOwnerPubKey) {
-                forwardMessageToTribe(payload);
+                // CHECK PRICES
+                toAddIn.isTribeOwner = true;
+                const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+                if (payload.type === msgtypes.group_join) {
+                    if (payload.message.amount < chat.priceToJoin)
+                        doAction = false;
+                }
+                if (payload.type === msgtypes.message) {
+                    if (payload.message.amount < chat.pricePerMessage)
+                        doAction = false;
+                }
+                if (doAction)
+                    forwardMessageToTribe(payload);
             }
         }
-        if (ACTIONS[payload.type]) {
-            ACTIONS[payload.type](payload);
-        }
-        else {
-            console.log('Incorrect payload type:', payload.type);
+        if (doAction) {
+            if (ACTIONS[payload.type]) {
+                ACTIONS[payload.type](Object.assign(Object.assign({}, payload), toAddIn));
+            }
+            else {
+                console.log('Incorrect payload type:', payload.type);
+            }
         }
     });
 }
-function forwardMessageToTribe(payload) {
+function forwardMessageToTribe(ogpayload) {
     return __awaiter(this, void 0, void 0, function* () {
+        let payload;
+        if (typesToModify.includes(ogpayload.type)) {
+            payload = yield modify_1.modifyPayload(ogpayload);
+        }
+        else {
+            payload = ogpayload;
+        }
         console.log("FORWARD TO TRIBE", payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
         //const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
@@ -61,20 +87,20 @@ function forwardMessageToTribe(payload) {
     });
 }
 const ACTIONS = {
-    [types.contact_key]: controllers_1.controllers.contacts.receiveContactKey,
-    [types.contact_key_confirmation]: controllers_1.controllers.contacts.receiveConfirmContactKey,
-    [types.message]: controllers_1.controllers.messages.receiveMessage,
-    [types.invoice]: controllers_1.controllers.invoices.receiveInvoice,
-    [types.direct_payment]: controllers_1.controllers.payments.receivePayment,
-    [types.confirmation]: controllers_1.controllers.confirmations.receiveConfirmation,
-    [types.attachment]: controllers_1.controllers.media.receiveAttachment,
-    [types.purchase]: controllers_1.controllers.media.receivePurchase,
-    [types.purchase_accept]: controllers_1.controllers.media.receivePurchaseAccept,
-    [types.purchase_deny]: controllers_1.controllers.media.receivePurchaseDeny,
-    [types.group_create]: controllers_1.controllers.chats.receiveGroupCreateOrInvite,
-    [types.group_invite]: controllers_1.controllers.chats.receiveGroupCreateOrInvite,
-    [types.group_join]: controllers_1.controllers.chats.receiveGroupJoin,
-    [types.group_leave]: controllers_1.controllers.chats.receiveGroupLeave,
+    [msgtypes.contact_key]: controllers_1.controllers.contacts.receiveContactKey,
+    [msgtypes.contact_key_confirmation]: controllers_1.controllers.contacts.receiveConfirmContactKey,
+    [msgtypes.message]: controllers_1.controllers.messages.receiveMessage,
+    [msgtypes.invoice]: controllers_1.controllers.invoices.receiveInvoice,
+    [msgtypes.direct_payment]: controllers_1.controllers.payments.receivePayment,
+    [msgtypes.confirmation]: controllers_1.controllers.confirmations.receiveConfirmation,
+    [msgtypes.attachment]: controllers_1.controllers.media.receiveAttachment,
+    [msgtypes.purchase]: controllers_1.controllers.media.receivePurchase,
+    [msgtypes.purchase_accept]: controllers_1.controllers.media.receivePurchaseAccept,
+    [msgtypes.purchase_deny]: controllers_1.controllers.media.receivePurchaseDeny,
+    [msgtypes.group_create]: controllers_1.controllers.chats.receiveGroupCreateOrInvite,
+    [msgtypes.group_invite]: controllers_1.controllers.chats.receiveGroupCreateOrInvite,
+    [msgtypes.group_join]: controllers_1.controllers.chats.receiveGroupJoin,
+    [msgtypes.group_leave]: controllers_1.controllers.chats.receiveGroupLeave,
 };
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {

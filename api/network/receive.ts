@@ -6,32 +6,54 @@ import * as tribes from '../utils/tribes'
 import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
 import {sendMessage} from './send'
+import {modifyPayload} from './modify'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
-const types = constants.message_types
+const msgtypes = constants.message_types
 
 const typesToForward=[
-	types.message, types.attachment, types.group_join, types.group_leave
+	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
+]
+const typesToModify=[
+	msgtypes.attachment
 ]
 async function onReceive(payload){
 	// if tribe, owner must forward to MQTT
-	// console.log("RECEIVED PAYLOAD",payload)
+	let doAction = true
+	const toAddIn:{[k:string]:any} = {}
 	const isTribe = payload.chat && payload.chat.type===constants.chat_types.tribe
 	if(isTribe && typesToForward.includes(payload.type)){
 		const tribeOwnerPubKey = await tribes.verifySignedTimestamp(payload.chat.uuid)
 		const owner = await models.Contact.findOne({where: {isOwner:true}})
 		if(owner.publicKey===tribeOwnerPubKey){
-			forwardMessageToTribe(payload)
+			// CHECK PRICES
+			toAddIn.isTribeOwner = true
+			const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+			if(payload.type===msgtypes.group_join) {
+				if(payload.message.amount<chat.priceToJoin) doAction=false
+			}
+			if(payload.type===msgtypes.message) {
+				if(payload.message.amount<chat.pricePerMessage) doAction=false
+			}
+			if(doAction) forwardMessageToTribe(payload)
 		}
 	}
-	if(ACTIONS[payload.type]) {
-		ACTIONS[payload.type](payload)
-	} else {
-		console.log('Incorrect payload type:', payload.type)
+	if(doAction) {
+		if(ACTIONS[payload.type]) {
+			ACTIONS[payload.type]({...payload, ...toAddIn})
+		} else {
+			console.log('Incorrect payload type:', payload.type)
+		}
 	}
 }
 
-async function forwardMessageToTribe(payload){
+async function forwardMessageToTribe(ogpayload){
+	let payload
+	if(typesToModify.includes(ogpayload.type)){
+		payload = await modifyPayload(ogpayload)
+	} else {
+		payload = ogpayload
+	}
 	console.log("FORWARD TO TRIBE",payload)
 	const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 	//const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
@@ -52,20 +74,20 @@ async function forwardMessageToTribe(payload){
 }
 
 const ACTIONS = {
-    [types.contact_key]: controllers.contacts.receiveContactKey,
-    [types.contact_key_confirmation]: controllers.contacts.receiveConfirmContactKey,
-    [types.message]: controllers.messages.receiveMessage,
-    [types.invoice]: controllers.invoices.receiveInvoice,
-    [types.direct_payment]: controllers.payments.receivePayment,
-    [types.confirmation]: controllers.confirmations.receiveConfirmation,
-    [types.attachment]: controllers.media.receiveAttachment,
-    [types.purchase]: controllers.media.receivePurchase,
-    [types.purchase_accept]: controllers.media.receivePurchaseAccept,
-    [types.purchase_deny]: controllers.media.receivePurchaseDeny,
-    [types.group_create]: controllers.chats.receiveGroupCreateOrInvite,
-    [types.group_invite]: controllers.chats.receiveGroupCreateOrInvite,
-    [types.group_join]: controllers.chats.receiveGroupJoin,
-    [types.group_leave]: controllers.chats.receiveGroupLeave,
+    [msgtypes.contact_key]: controllers.contacts.receiveContactKey,
+    [msgtypes.contact_key_confirmation]: controllers.contacts.receiveConfirmContactKey,
+    [msgtypes.message]: controllers.messages.receiveMessage,
+    [msgtypes.invoice]: controllers.invoices.receiveInvoice,
+    [msgtypes.direct_payment]: controllers.payments.receivePayment,
+    [msgtypes.confirmation]: controllers.confirmations.receiveConfirmation,
+    [msgtypes.attachment]: controllers.media.receiveAttachment,
+    [msgtypes.purchase]: controllers.media.receivePurchase,
+    [msgtypes.purchase_accept]: controllers.media.receivePurchaseAccept,
+    [msgtypes.purchase_deny]: controllers.media.receivePurchaseDeny,
+    [msgtypes.group_create]: controllers.chats.receiveGroupCreateOrInvite,
+    [msgtypes.group_invite]: controllers.chats.receiveGroupCreateOrInvite,
+    [msgtypes.group_join]: controllers.chats.receiveGroupJoin,
+    [msgtypes.group_leave]: controllers.chats.receiveGroupLeave,
 }
 
 export async function initGrpcSubscriptions() {
