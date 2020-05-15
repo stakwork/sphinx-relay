@@ -48,14 +48,16 @@ async function onReceive(payload){
 }
 
 async function forwardMessageToTribe(ogpayload){
+	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
+
 	let payload
 	if(typesToModify.includes(ogpayload.type)){
-		payload = await modifyPayload(ogpayload)
+		payload = await modifyPayload(ogpayload, chat)
 	} else {
 		payload = ogpayload
 	}
 	console.log("FORWARD TO TRIBE",payload)
-	const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+	
 	//const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
 	const type = payload.type

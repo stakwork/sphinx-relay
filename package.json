@@ -41,6 +41,7 @@
     "decamelize": "^3.1.1",
     "express": "^4.16.4",
     "express-winston": "^4.0.2",
+    "fetch-blob": "^1.0.5",
     "fs": "^0.0.1-security",
     "grpc": "^1.24.2",
     "helmet": "^3.21.1",
@@ -63,11 +64,13 @@
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
+    "rncryptor-js": "0.0.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.88.1",
     "sequelize": "^5.19.3",
     "sequelize-cli": "^5.5.1",
     "sequelize-typescript": "^1.1.0",
+    "sjcl": "^1.0.8",
     "tail": "^2.0.3",
     "ts-node": "^8.5.4",
     "tsc": "^1.20150623.0",
@@ -82,14 +85,14 @@
     "babel-polyfill": "^6.26.0",
     "mini-css-extract-plugin": "^0.8.0",
     "mocha": "^6.2.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.14.1",
     "nodemon": "^2.0.1",
     "sass-loader": "^8.0.0",
     "sqlite3": "^4.2.0",
     "style-loader": "^1.0.0",
     "webpack": "^4.41.0",
     "webpack-cli": "^3.3.9",
-    "webpack-dev-server": "^3.8.2"
+    "webpack-dev-server": "^3.11.0"
   },
   "pkg": {
     "assets": [
