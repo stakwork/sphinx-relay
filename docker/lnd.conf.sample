@@ -7,7 +7,7 @@ bitcoin.node=neutrino
 accept-keysend=1
 
 ignore-historical-gossip-filters=true
-nobootstrap=true
+#nobootstrap=true
 numgraphsyncpeers=7
 routing.assumechanvalid=1
 autopilot.active=false
