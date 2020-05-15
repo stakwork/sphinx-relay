@@ -31891,8 +31891,7 @@ function Media(props) {
               file = files[0] || {};
               start = new Date();
               _context2.next = 5;
-              return api_media.UPLOAD('upload/attachment', file, {
-                chat_uuid: '1234567890',
+              return api_media.UPLOAD('file', file, {
                 name: file.name || 'filename',
                 description: description || 'description',
                 ttl: ttl
@@ -31902,14 +31901,15 @@ function Media(props) {
               r = _context2.sent;
               end = new Date();
               time = end.getTime() - start.getTime();
-              console.log('Upload Timer: finished in', time, 'ms'); // await api.relay.POST('attachment', {
+              console.log('Upload Timer: finished in', time, 'ms');
+              console.log(r); // await api.relay.POST('attachment', {
               //   muid: r.muid,
               //   file_name: r.filename,
               //   chat_id: 13,
               //   ttl: ttl,
               // })
 
-            case 9:
+            case 10:
             case "end":
               return _context2.stop();
           }

@@ -10,6 +10,7 @@ import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const ERR_CODE_UNAVAILABLE = 14
+const ERR_CODE_STREAM_REMOVED = 2
 
 // VERIFY PUBKEY OF SENDER
 async function parseAndVerifyPayload(data){
@@ -173,16 +174,18 @@ function subscribeInvoices(actions) {
 		call.on('status', function(status) {
 			console.log("Status", status);
 			// The server is unavailable, trying to reconnect.
-			if (status.code == ERR_CODE_UNAVAILABLE) {
-				reconnectToLND();
+			if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
+				i = 0
+				reconnectToLND(Math.random());
 			} else {
 				resolve(status);
 			}
 		})
 		call.on('error', function(err){
 			console.error(err)
-			if (err.code == ERR_CODE_UNAVAILABLE) {
-				reconnectToLND();
+			if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
+				i = 0
+				reconnectToLND(Math.random());
 			} else {
 				reject(err)
 			}
@@ -191,7 +194,8 @@ function subscribeInvoices(actions) {
 			const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
 			console.log(`Closed stream ${now}`);
 			// The server has closed the stream.
-			reconnectToLND()
+			i = 0
+			reconnectToLND(Math.random())
 		})
 		setTimeout(()=>{
 			resolve(null)
@@ -200,7 +204,9 @@ function subscribeInvoices(actions) {
 }
 
 var i = 0
-async function reconnectToLND(){
+var ctx = 0
+async function reconnectToLND(innerCtx:number){
+	ctx = innerCtx
 	i++
 	console.log(`=> [lnd] reconnecting... attempt #${i}`)
 	try {
@@ -209,7 +215,9 @@ async function reconnectToLND(){
 		console.log(`=> [lnd] reconnected! ${now}`)
 	} catch(e) {
 		setTimeout(async()=>{ // retry each 2 secs
-			await reconnectToLND()
+			if(ctx===innerCtx) { // if another retry fires, then this will not run
+				await reconnectToLND(innerCtx)
+			}
 		},2000)
 	}
 }

@@ -20,6 +20,7 @@ const moment = require("moment");
 const path = require("path");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const ERR_CODE_UNAVAILABLE = 14;
+const ERR_CODE_STREAM_REMOVED = 2;
 // VERIFY PUBKEY OF SENDER
 function parseAndVerifyPayload(data) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -184,8 +185,9 @@ function subscribeInvoices(actions) {
         call.on('status', function (status) {
             console.log("Status", status);
             // The server is unavailable, trying to reconnect.
-            if (status.code == ERR_CODE_UNAVAILABLE) {
-                reconnectToLND();
+            if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
+                i = 0;
+                reconnectToLND(Math.random());
             }
             else {
                 resolve(status);
@@ -193,8 +195,9 @@ function subscribeInvoices(actions) {
         });
         call.on('error', function (err) {
             console.error(err);
-            if (err.code == ERR_CODE_UNAVAILABLE) {
-                reconnectToLND();
+            if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
+                i = 0;
+                reconnectToLND(Math.random());
             }
             else {
                 reject(err);
@@ -204,7 +207,8 @@ function subscribeInvoices(actions) {
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
             console.log(`Closed stream ${now}`);
             // The server has closed the stream.
-            reconnectToLND();
+            i = 0;
+            reconnectToLND(Math.random());
         });
         setTimeout(() => {
             resolve(null);
@@ -213,8 +217,10 @@ function subscribeInvoices(actions) {
 }
 exports.subscribeInvoices = subscribeInvoices;
 var i = 0;
-function reconnectToLND() {
+var ctx = 0;
+function reconnectToLND(innerCtx) {
     return __awaiter(this, void 0, void 0, function* () {
+        ctx = innerCtx;
         i++;
         console.log(`=> [lnd] reconnecting... attempt #${i}`);
         try {
@@ -224,7 +230,9 @@ function reconnectToLND() {
         }
         catch (e) {
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                yield reconnectToLND();
+                if (ctx === innerCtx) {
+                    yield reconnectToLND(innerCtx);
+                }
             }), 2000);
         }
     });
