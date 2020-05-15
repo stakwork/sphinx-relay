@@ -60,9 +60,9 @@ RUN npm cache clean --force
 
 VOLUME /relay/.lnd
 
-COPY ./lnd.conf.sample /relay/.lnd/lnd.conf
+COPY ./docker/lnd.conf.sample /relay/.lnd/lnd.conf
 
-RUN shuf -n 6 ./unique-peer.txt >> /relay/.lnd/lnd.conf
+RUN shuf -n 6 ./docker/unique-peer.txt >> /relay/.lnd/lnd.conf
 
 RUN git clone https://github.com/stakwork/sphinx-keysend-test/ /sphinx-keysend/
 WORKDIR /sphinx-keysend/
@@ -72,7 +72,8 @@ RUN npm install
 WORKDIR /relay/
 
 RUN mkdir -p /var/log/supervisor
-COPY ./supervisord.conf /etc/supervisord.conf
-COPY ./lnd_supervisor.conf /etc/supervisor.d/lnd_supervisor.ini
-COPY ./relay_supervisor.conf /etc/supervisor.d/relay_supervisor.ini
-CMD ["/usr/bin/supervisord"]
+COPY ./docker/supervisord.conf /etc/supervisord.conf
+COPY ./docker/lnd_supervisor.conf /etc/supervisor.d/lnd_supervisor.ini
+COPY ./docker/relay_supervisor.conf /etc/supervisor.d/relay_supervisor.ini
+
+ENTRYPOINT [ "./docker/entrypoint.sh" ]

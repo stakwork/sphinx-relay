@@ -8,6 +8,6 @@ rpclisten=0.0.0.0:10009
 
 ignore-historical-gossip-filters=true
 nobootstrap=true
-numgraphsyncpeers=1
+numgraphsyncpeers=7
 routing.assumechanvalid=1
 autopilot.active=false
