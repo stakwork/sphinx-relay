@@ -62,8 +62,6 @@ VOLUME /relay/.lnd
 
 COPY ./docker/lnd.conf.sample /relay/.lnd/lnd.conf
 
-RUN shuf -n 6 ./docker/unique-peer.txt >> /relay/.lnd/lnd.conf
-
 RUN git clone https://github.com/stakwork/sphinx-keysend-test/ /sphinx-keysend/
 WORKDIR /sphinx-keysend/
 RUN git checkout binary

@@ -3,6 +3,8 @@
 # turn on bash's job control
 set -m
 
+shuf -n 6 /relay/docker/unique-peer.txt >> /relay/.lnd/lnd.conf
+
 echo "Setting ENV vars..."
 export NODE_DOMAIN=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName).$NODE_DOMAIN)
 # export NODE_DOMAIN=lvh.me
