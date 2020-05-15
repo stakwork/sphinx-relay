@@ -159,6 +159,10 @@ async function parseReceiveParams(payload) {
 		)
 	} else { // group
 		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		// inject a "sender" with an alias
+		if(!sender && chat_type == constants.chat_types.tribe){
+			sender = {id:0, alias:sender_alias}
+		}
 		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	}
 	return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key }

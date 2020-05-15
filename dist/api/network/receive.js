@@ -63,15 +63,15 @@ function onReceive(payload) {
 }
 function forwardMessageToTribe(ogpayload) {
     return __awaiter(this, void 0, void 0, function* () {
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
         let payload;
         if (typesToModify.includes(ogpayload.type)) {
-            payload = yield modify_1.modifyPayload(ogpayload);
+            payload = yield modify_1.modifyPayload(ogpayload, chat);
         }
         else {
             payload = ogpayload;
         }
         console.log("FORWARD TO TRIBE", payload);
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
         //const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const type = payload.type;

@@ -38,12 +38,12 @@ RNCryptor.Encrypt = function (password, plaintext, options) {
     message = sjcl.bitArray.concat(message, hmac_salt);
     message = sjcl.bitArray.concat(message, iv);
     var aes = new sjcl.cipher.aes(encryption_key);
-    sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+    //   sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
     var encrypted = sjcl.mode.cbc.encrypt(aes, plaintext, iv);
     message = sjcl.bitArray.concat(message, encrypted);
     var hmac = new sjcl.misc.hmac(hmac_key).encrypt(message);
     message = sjcl.bitArray.concat(message, hmac);
-    return message;
+    return sjcl.codec.utf8String.fromBits(message);
 };
 /*
   Takes password string and message (ciphertext) bitArray
@@ -71,8 +71,8 @@ RNCryptor.Decrypt = function (password, message, options) {
         throw new sjcl.exception.corrupt("HMAC mismatch or bad password.");
     }
     var aes = new sjcl.cipher.aes(encryption_key);
-    sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+    //   sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
     var decrypted = sjcl.mode.cbc.decrypt(aes, ciphertext, iv);
-    return decrypted;
+    return sjcl.codec.utf8String.fromBits(decrypted);
 };
 //# sourceMappingURL=rncryptor.js.map

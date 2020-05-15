@@ -42,7 +42,6 @@ export async function modifyPayload(payload, chat) {
       if(!json.muid) return payload
 
       // PUT NEW TERMS, to finish in personalizeMessage
-
       const amt = terms.meta&&terms.meta.amt
       const ttl = terms.meta&&terms.meta.ttl
       const mediaTerms: {[k:string]:any} = {
