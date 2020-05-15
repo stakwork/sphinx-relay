@@ -71,9 +71,14 @@ RUN npm install
 
 WORKDIR /relay/
 
+RUN apk --no-cache add expect bash
+
 RUN mkdir -p /var/log/supervisor
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 COPY ./docker/lnd_supervisor.conf /etc/supervisor.d/lnd_supervisor.ini
 COPY ./docker/relay_supervisor.conf /etc/supervisor.d/relay_supervisor.ini
+COPY ./docker/aliases.sh /etc/profile.d/aliases.sh
 
-ENTRYPOINT [ "./docker/entrypoint.sh" ]
+ENV ENV="/etc/profile"
+
+ENTRYPOINT [ "bash", "/relay/docker/entrypoint.sh" ]
