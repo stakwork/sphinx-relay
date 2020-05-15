@@ -12,3 +12,4 @@ numgraphsyncpeers=7
 routing.assumechanvalid=1
 autopilot.active=false
 
+neutrino.addpeer=195.95.224.11
