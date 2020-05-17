@@ -188,3 +188,99 @@ $ sudo systemctl status sphinx-relay.service
 ```sh 
 $ sudo systemctl stop sphinx-relay.service
 ```
+
+# To update Sphinx-Relay
+(This probably is not the most efficient way to update. But it works so we got that goin which is nice. Feel free to optimize the process and contribute. :) )
+
+Login as Admin and stop the program.
+```sh 
+$ sudo systemctl stop sphinx-relay.service
+```
+login as user bitcoin.
+```sh
+$ sudo su bitcoin
+$ cd
+```
+## Remove the old version
+```sh
+$ rm -rf sphinx-relay
+```
+## Download the new version
+Clone the repository from Github and install the package.
+```sh 
+$ git clone https://github.com/stakwork/sphinx-relay
+$ cd sphinx-relay
+$ npm install
+```
+### Configure
+Edit the "production" section of config/app.json.
+```sh 
+$ cd
+$ cd sphinx-relay/config/
+$ nano app.json
+```
+Change the following 4 lines:
+
+## myNode
+``` 
+"macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
+"tls_location": "/mnt/hdd/mynode/lnd/tls.cert",
+"lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
+"lncli_location": "/home/bitcoin/go/bin",
+```
+
+## Raspiblitz
+``` 
+"macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
+"tls_location": "/mnt/hdd/lnd/tls.cert",
+"lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
+"lncli_location": "/home/bitcoin/go/bin",
+```
+
+Save and exit:
+`Ctrl + X`
+
+`Y`
+
+`Enter`
+
+Edit the "production" section of config/config.json
+```sh 
+$ nano config.json
+```
+Change to following line to:
+``` 
+"storage": "/home/bitcoin/sphinx.db"
+```
+Save and exit:
+`Ctrl + X`
+
+`Y`
+
+`Enter`
+
+To connect to your app:
+(replace x.x.x.x with your IP - NOTE: This is your external IP)
+```sh 
+$ cd
+$ cd sphinx-relay/config/
+$ export NODE_IP=x.x.x.x:3001
+```
+For extra security:
+```sh
+$ export USE_PASSWORD=true
+```
+### Turn on the service.
+Login as admin.
+```sh 
+$ su admin
+```
+Or
+```sh 
+$ exit
+```
+Turn the service on and check the status.
+```sh 
+$ sudo systemctl enable sphinx-relay.service
+$ sudo systemctl start sphinx-relay.service
+```
