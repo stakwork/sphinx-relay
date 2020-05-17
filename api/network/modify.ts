@@ -27,11 +27,11 @@ export async function modifyPayload(payload, chat) {
 
       const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key)
    
-      const imgUTF8 = RNCryptor.Decrypt(decMediaKey, buf.toString())
+      const imgBase64 = RNCryptor.Decrypt(decMediaKey, buf.toString('base64'))
 
       const newKey = crypto.randomBytes(20).toString('hex')
 
-      const encImg = RNCryptor.Encrypt(newKey, imgUTF8)
+      const encImg = RNCryptor.Encrypt(newKey, imgBase64)
 
       const resp = await fetch(`https://${terms.host}/file`, {
         method: 'POST',

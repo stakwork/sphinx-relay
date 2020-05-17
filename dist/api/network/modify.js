@@ -34,9 +34,9 @@ function modifyPayload(payload, chat) {
                 const r = yield fetch(`https://${terms.host}/file/${mt}`);
                 const buf = yield r.buffer();
                 const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
-                const imgUTF8 = rncryptor_1.default.Decrypt(decMediaKey, buf.toString());
+                const imgBase64 = rncryptor_1.default.Decrypt(decMediaKey, buf.toString('base64'));
                 const newKey = crypto.randomBytes(20).toString('hex');
-                const encImg = rncryptor_1.default.Encrypt(newKey, imgUTF8);
+                const encImg = rncryptor_1.default.Encrypt(newKey, imgBase64);
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
                     body: new Blob([encImg], { type: typ || 'image/jpg', name: 'file', filename: 'Image.jpg' })

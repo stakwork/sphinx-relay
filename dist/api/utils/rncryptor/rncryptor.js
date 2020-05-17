@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var sjcl = require('sjcl');
+var sjcl = require('./sjcl');
 var RNCryptor = {};
-exports.RNCryptor = RNCryptor;
 /*
     Takes password string and salt WordArray
     Returns key bitArray
@@ -17,14 +14,15 @@ RNCryptor.KeyForPassword = function (password, salt) {
     return sjcl.misc.pbkdf2(password, salt, 10000, 32 * 8, hmacSHA1);
 };
 /*
-  Takes password string and plaintext bitArray
+  Takes password string and plaintext base64
   options:
     iv
     encryption_salt
     html_salt
-  Returns ciphertext bitArray
+  Returns ciphertext base64
 */
-RNCryptor.Encrypt = function (password, plaintext, options) {
+RNCryptor.Encrypt = function (password, plaintextBase64, options) {
+    var plaintext = sjcl.codec.base64.toBits(plaintextBase64);
     options = options || {};
     var encryption_salt = options["encryption_salt"] || sjcl.random.randomWords(8 / 4); // FIXME: Need to seed PRNG
     var encryption_key = RNCryptor.KeyForPassword(password, encryption_salt);
@@ -38,22 +36,23 @@ RNCryptor.Encrypt = function (password, plaintext, options) {
     message = sjcl.bitArray.concat(message, hmac_salt);
     message = sjcl.bitArray.concat(message, iv);
     var aes = new sjcl.cipher.aes(encryption_key);
-    //   sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+    sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
     var encrypted = sjcl.mode.cbc.encrypt(aes, plaintext, iv);
     message = sjcl.bitArray.concat(message, encrypted);
     var hmac = new sjcl.misc.hmac(hmac_key).encrypt(message);
     message = sjcl.bitArray.concat(message, hmac);
-    return sjcl.codec.utf8String.fromBits(message);
+    return sjcl.codec.base64.fromBits(message);
 };
 /*
-  Takes password string and message (ciphertext) bitArray
+  Takes password string and message (ciphertext) base64
   options:
     iv
     encryption_salt
     html_salt
-  Returns plaintext bitArray
+  Returns plaintext base64
 */
-RNCryptor.Decrypt = function (password, message, options) {
+RNCryptor.Decrypt = function (password, messageBase64, options) {
+    var message = sjcl.codec.base64.toBits(messageBase64);
     options = options || {};
     var version = sjcl.bitArray.extract(message, 0 * 8, 8);
     var options = sjcl.bitArray.extract(message, 1 * 8, 8);
@@ -71,8 +70,9 @@ RNCryptor.Decrypt = function (password, message, options) {
         throw new sjcl.exception.corrupt("HMAC mismatch or bad password.");
     }
     var aes = new sjcl.cipher.aes(encryption_key);
-    //   sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+    sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
     var decrypted = sjcl.mode.cbc.decrypt(aes, ciphertext, iv);
-    return sjcl.codec.utf8String.fromBits(decrypted);
+    return sjcl.codec.base64.fromBits(decrypted);
 };
+module.exports = RNCryptor;
 //# sourceMappingURL=rncryptor.js.map

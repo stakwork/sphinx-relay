@@ -1,4 +1,4 @@
-var sjcl = require('sjcl')
+var sjcl = require('./sjcl')
 
 var RNCryptor = {};
 
@@ -18,14 +18,16 @@ RNCryptor.KeyForPassword = function(password, salt) {
 }
 
 /*
-  Takes password string and plaintext bitArray
+  Takes password string and plaintext base64
   options:
     iv
     encryption_salt
     html_salt
-  Returns ciphertext bitArray
+  Returns ciphertext base64
 */
-RNCryptor.Encrypt = function(password, plaintext, options) {
+RNCryptor.Encrypt = function(password, plaintextBase64, options) {
+  var plaintext = sjcl.codec.base64.toBits(plaintextBase64);
+
   options = options || {}
   var encryption_salt = options["encryption_salt"] || sjcl.random.randomWords(8 / 4); // FIXME: Need to seed PRNG
   var encryption_key = RNCryptor.KeyForPassword(password, encryption_salt);
@@ -44,7 +46,7 @@ RNCryptor.Encrypt = function(password, plaintext, options) {
   message = sjcl.bitArray.concat(message, iv);
 
   var aes = new sjcl.cipher.aes(encryption_key);
-//   sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+  sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
   var encrypted = sjcl.mode.cbc.encrypt(aes, plaintext, iv);
 
   message = sjcl.bitArray.concat(message, encrypted);
@@ -52,18 +54,20 @@ RNCryptor.Encrypt = function(password, plaintext, options) {
   var hmac = new sjcl.misc.hmac(hmac_key).encrypt(message);
   message = sjcl.bitArray.concat(message, hmac);
 
-  return sjcl.codec.utf8String.fromBits(message);
+  return sjcl.codec.base64.fromBits(message);
 }
 
 /*
-  Takes password string and message (ciphertext) bitArray
+  Takes password string and message (ciphertext) base64
   options:
     iv
     encryption_salt
     html_salt
-  Returns plaintext bitArray
+  Returns plaintext base64
 */
-RNCryptor.Decrypt = function(password, message, options) {
+RNCryptor.Decrypt = function(password, messageBase64, options) {
+  var message = sjcl.codec.base64.toBits(messageBase64);
+
   options = options || {}
 
   var version = sjcl.bitArray.extract(message, 0 * 8, 8);
@@ -91,10 +95,10 @@ RNCryptor.Decrypt = function(password, message, options) {
   }
 
   var aes = new sjcl.cipher.aes(encryption_key);
-//   sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+  sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
   var decrypted = sjcl.mode.cbc.decrypt(aes, ciphertext, iv);
 
-  return sjcl.codec.utf8String.fromBits(decrypted);
+  return sjcl.codec.base64.fromBits(decrypted);
 }
 
-export {RNCryptor}
+module.exports = RNCryptor
