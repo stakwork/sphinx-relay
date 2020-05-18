@@ -42,8 +42,6 @@ function set(app) {
         if (testTribe && testTribe === 'true') {
             controllers.chats.testCreateTribe();
         }
-        console.log('TEST_TRIBE', process.env.TEST_TRIBE);
-        console.log('ENV_TEST_TRIBE', process.env.ENV_TEST_TRIBE);
         app.get('/chats', controllers.chats.getChats);
         app.post('/group', controllers.chats.createGroupChat);
         app.post('/chats/:chat_id/:mute_unmute', controllers.chats.mute);

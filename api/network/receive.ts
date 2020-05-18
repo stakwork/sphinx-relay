@@ -37,7 +37,7 @@ async function onReceive(payload){
 				if(payload.message.amount<chat.pricePerMessage) doAction=false
 			}
 			if(doAction) forwardMessageToTribe(payload)
-			else console.log('insufficient payment for this action')
+			else console.log('=> insufficient payment for this action')
 		}
 	}
 	if(doAction) {
@@ -68,7 +68,7 @@ async function forwardMessageToTribe(ogpayload){
 	// ASK xref TABLE and put alias there too?
 	sendMessage({
 		sender: {
-			...owner.dataValues, // ADD IN REAL ALIAS HERE??!
+			...owner.dataValues,
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias}
 		},
 		chat, type, message,

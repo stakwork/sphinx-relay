@@ -80,4 +80,7 @@ export default class Message extends Model<Message> {
 
   @Column
   updatedAt: Date
+
+  @Column
+  senderAlias: string // for tribes, no "sender" id maybe
 }

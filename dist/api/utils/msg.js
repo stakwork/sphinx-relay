@@ -104,6 +104,7 @@ function finishTermsAndReceipt(full, destkey) {
         return fullmsg;
     });
 }
+// this is only for tribes
 // DECRYPT EITHER STRING OR FIRST VAL IN OBJ
 function decryptMessage(full, chat) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -114,14 +115,12 @@ function decryptMessage(full, chat) {
             return full;
         const obj = {};
         if (m.content) {
-            console.log('m.content:', m.content, typeof m.content);
             let content = m.content;
             if (typeof m.content === 'object') {
                 if (Object.values(m.content).length) {
                     content = Object.values(m.content)[0];
                 }
             }
-            console.log("CONTENT TO DECRYPT:", content);
             const decContent = rsa.decrypt(chat.groupPrivateKey, content);
             obj.content = decContent;
         }

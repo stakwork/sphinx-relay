@@ -91,6 +91,7 @@ async function finishTermsAndReceipt(full:{[k:string]:any}, destkey) {
 	return fullmsg
 }
 
+// this is only for tribes
 // DECRYPT EITHER STRING OR FIRST VAL IN OBJ
 async function decryptMessage(full:{[k:string]:any}, chat) {
 	if(!chat.groupPrivateKey) return full
@@ -99,14 +100,12 @@ async function decryptMessage(full:{[k:string]:any}, chat) {
 
 	const obj: {[k:string]:any} = {}
 	if(m.content) {
-		console.log('m.content:',m.content, typeof m.content)
 		let content = m.content
 		if(typeof m.content==='object') {
 			if(Object.values(m.content).length) {
 				content = Object.values(m.content)[0]
 			}
 		}
-		console.log("CONTENT TO DECRYPT:",content)
 		const decContent = rsa.decrypt(chat.groupPrivateKey, content)
 		obj.content = decContent
 	}

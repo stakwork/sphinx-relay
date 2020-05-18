@@ -51,7 +51,7 @@ function onReceive(payload) {
                 if (doAction)
                     forwardMessageToTribe(payload);
                 else
-                    console.log('insufficient payment for this action');
+                    console.log('=> insufficient payment for this action');
             }
         }
         if (doAction) {

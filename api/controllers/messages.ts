@@ -155,13 +155,13 @@ const receiveMessage = async (payload) => {
 	date.setMilliseconds(0)
 
 	const total_spent = 1
-	const {owner, sender, chat, content, msg_id} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
 	const text = content
 
-	const message = await models.Message.create({
+	const msg:{[k:string]:any} = {
 		chatId: chat.id,
 		type: constants.message_types.message,
 		asciiEncodedTotal: total_spent,
@@ -171,7 +171,11 @@ const receiveMessage = async (payload) => {
 		createdAt: date,
 		updatedAt: date,
 		status: constants.statuses.received
-	})
+	}
+	if(chat_type===constants.chat_types.tribe) {
+		msg.senderAlias = sender_alias
+	}
+	const message = await models.Message.create(msg)
 
 	console.log('saved message', message.dataValues)
 

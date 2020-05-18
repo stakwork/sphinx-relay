@@ -113,6 +113,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], Message.prototype, "updatedAt", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Message.prototype, "senderAlias", void 0);
 Message = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_messages', underscored: true })
 ], Message);

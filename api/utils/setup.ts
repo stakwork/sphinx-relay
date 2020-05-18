@@ -36,6 +36,7 @@ async function migrate(){
   addTableColumn('sphinx_chats', 'host')
   addTableColumn('sphinx_chats', 'price_to_join', 'BIGINT')
   addTableColumn('sphinx_chats', 'price_per_message', 'BIGINT')
+  addTableColumn('sphinx_contacts', 'sender_alias')
   try{
     await sequelize.query(`
 CREATE TABLE sphinx_chat_members (
