@@ -222,7 +222,7 @@ function joinTribe(req, res) {
         }
         let date = new Date();
         date.setMilliseconds(0);
-        const chat = yield models_1.models.Chat.create({
+        const chatParams = {
             uuid: uuid,
             contactIds: JSON.stringify(contactIds),
             createdAt: date,
@@ -231,15 +231,9 @@ function joinTribe(req, res) {
             type: constants.chat_types.tribe,
             host: host || tribes.getHost(),
             groupKey: group_key,
-        });
-        models_1.models.ChatMember.create({
-            contactId: theTribeOwner.id,
-            chatId: chat.id,
-            role: constants.chat_roles.owner,
-            lastActive: date,
-        });
+        };
         network.sendMessage({
-            chat: Object.assign(Object.assign({}, chat.dataValues), { members: {
+            chat: Object.assign(Object.assign({}, chatParams), { members: {
                     [owner.publicKey]: {
                         key: owner.contactKey,
                         alias: owner.alias || ''
@@ -253,6 +247,13 @@ function joinTribe(req, res) {
             },
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {
+                    const chat = yield models_1.models.Chat.create(chatParams);
+                    models_1.models.ChatMember.create({
+                        contactId: theTribeOwner.id,
+                        chatId: chat.id,
+                        role: constants.chat_roles.owner,
+                        lastActive: date,
+                    });
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
             }

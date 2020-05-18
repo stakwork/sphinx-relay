@@ -18,6 +18,7 @@ const typesToModify=[
 	msgtypes.attachment
 ]
 async function onReceive(payload){
+	console.log("=>>> onReceive",payload)
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}
@@ -36,6 +37,7 @@ async function onReceive(payload){
 				if(payload.message.amount<chat.pricePerMessage) doAction=false
 			}
 			if(doAction) forwardMessageToTribe(payload)
+			else console.log('insufficient payment for this action')
 		}
 	}
 	if(doAction) {

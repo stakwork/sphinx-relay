@@ -201,7 +201,7 @@ const deleteChat = async (req, res) => {
 
 async function joinTribe(req, res){
 	console.log('=> joinTribe')
-	const { uuid, group_key, name, host } = req.body
+	const { uuid, group_key, name, host, amount } = req.body
 
 	const existing = await models.Chat.findOne({where:{uuid}})
 	if(existing) {
@@ -232,7 +232,8 @@ async function joinTribe(req, res){
 	}
 	let date = new Date()
 	date.setMilliseconds(0)
-	const chat = await models.Chat.create({
+
+	const chatParams = {
 		uuid: uuid,
 		contactIds: JSON.stringify(contactIds),
 		createdAt: date,
@@ -241,23 +242,18 @@ async function joinTribe(req, res){
 		type: constants.chat_types.tribe,
 		host: host || tribes.getHost(),
 		groupKey: group_key,
-	})
-	models.ChatMember.create({
-		contactId: theTribeOwner.id,
-		chatId: chat.id,
-		role: constants.chat_roles.owner,
-		lastActive: date,
-	})
+	}
 	
 	network.sendMessage({ // send my data to tribe owner
 		chat: {
-			...chat.dataValues, members: {
+			...chatParams, members: {
 				[owner.publicKey]: {
 					key: owner.contactKey,
 					alias: owner.alias||''
 				}
 			}
 		},
+		amount:amount||0,
 		sender: owner,
 		message: {},
 		type: constants.message_types.group_join,
@@ -265,6 +261,13 @@ async function joinTribe(req, res){
 			failure(res, e)
 		},
 		success: async function () {
+			const chat = await models.Chat.create(chatParams)
+			models.ChatMember.create({
+				contactId: theTribeOwner.id,
+				chatId: chat.id,
+				role: constants.chat_roles.owner,
+				lastActive: date,
+			})
 			success(res, jsonUtils.chatToJson(chat))
 		}
 	})
