@@ -50,11 +50,13 @@ function migrate() {
         addTableColumn('sphinx_chats', 'price_to_join', 'BIGINT');
         addTableColumn('sphinx_chats', 'price_per_message', 'BIGINT');
         addTableColumn('sphinx_messages', 'sender_alias');
+        addTableColumn('sphinx_chat_members', 'alias');
         try {
             yield models_1.sequelize.query(`
 CREATE TABLE sphinx_chat_members (
   chat_id INT,
   contact_id INT,
+  alias TEXT,
   role INT,
   total_spent INT,
   total_messages INT,
