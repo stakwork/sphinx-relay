@@ -68,6 +68,7 @@ export async function sendMessage(params) {
 			data: m,
 			amt: Math.max((amount||0), 3)
 		}
+		console.log("OPTS",opts)
 		try {
 			const mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
 			const r = await signAndSend(opts, mqttTopic)
