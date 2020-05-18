@@ -58,7 +58,7 @@ async function forwardMessageToTribe(ogpayload){
 	} else {
 		payload = ogpayload
 	}
-	console.log("FORWARD TO TRIBE",payload)
+	console.log("FORWARD TO TRIBE",payload) // filter out the sender?
 	
 	//const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
@@ -72,6 +72,7 @@ async function forwardMessageToTribe(ogpayload){
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias}
 		},
 		chat, type, message,
+		skipPubKey: payload.sender.pub_key, 
 		success: ()=>{},
 		receive: ()=>{}
 	})

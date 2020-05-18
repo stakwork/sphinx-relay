@@ -9,7 +9,7 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
 export async function sendMessage(params) {
-	const { type, chat, message, sender, amount, success, failure } = params
+	const { type, chat, message, sender, amount, success, failure, skipPubKey } = params
 	const m = newmsg(type, chat, sender, message)
 	let msg = m
 
@@ -60,6 +60,9 @@ export async function sendMessage(params) {
 
 		const contact = await models.Contact.findOne({ where: { id: contactId } })
 		const destkey = contact.publicKey
+		if(destkey===skipPubKey) {
+			return // skip (for tribe owner broadcasting, not back to the sender)
+		}
 		console.log('-> sending to ', contact.id, destkey)
 
 		const m = await personalizeMessage(msg, contact, isTribeOwner)
@@ -68,7 +71,7 @@ export async function sendMessage(params) {
 			data: m,
 			amt: Math.max((amount||0), 3)
 		}
-		console.log("OPTS",opts)
+
 		try {
 			const mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
 			const r = await signAndSend(opts, mqttTopic)

@@ -17,7 +17,7 @@ const tribes = require("../utils/tribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { type, chat, message, sender, amount, success, failure } = params;
+        const { type, chat, message, sender, amount, success, failure, skipPubKey } = params;
         const m = newmsg(type, chat, sender, message);
         let msg = m;
         console.log(type, message);
@@ -65,6 +65,9 @@ function sendMessage(params) {
             }
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
             const destkey = contact.publicKey;
+            if (destkey === skipPubKey) {
+                return; // skip (for tribe owner broadcasting, not back to the sender)
+            }
             console.log('-> sending to ', contact.id, destkey);
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
             const opts = {
@@ -72,7 +75,6 @@ function sendMessage(params) {
                 data: m,
                 amt: Math.max((amount || 0), 3)
             };
-            console.log("OPTS", opts);
             try {
                 const mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
                 const r = yield signAndSend(opts, mqttTopic);
