@@ -194,7 +194,7 @@ exports.deleteChat = deleteChat;
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
-        const { uuid, group_key, name, host } = req.body;
+        const { uuid, group_key, name, host, amount } = req.body;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
         if (existing) {
             console.log('[tribes] u are already in this group');
@@ -232,6 +232,7 @@ function joinTribe(req, res) {
             host: host || tribes.getHost(),
             groupKey: group_key,
         };
+        console.log("JOIN TRIBE AMOUNT", amount);
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members: {
                     [owner.publicKey]: {
@@ -239,6 +240,7 @@ function joinTribe(req, res) {
                         alias: owner.alias || ''
                     }
                 } }),
+            amount: amount || 0,
             sender: owner,
             message: {},
             type: constants.message_types.group_join,

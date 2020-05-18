@@ -244,6 +244,7 @@ async function joinTribe(req, res){
 		groupKey: group_key,
 	}
 	
+	console.log("JOIN TRIBE AMOUNT",amount)
 	network.sendMessage({ // send my data to tribe owner
 		chat: {
 			...chatParams, members: {
