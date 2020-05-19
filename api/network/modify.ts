@@ -12,7 +12,6 @@ const msgtypes = constants.message_types
 
 export async function modifyPayload(payload, chat) {
   if(payload.type===msgtypes.attachment) {
-    console.log("MODIFY, ", payload)
 
     const mt = payload.message && payload.message.mediaToken
     const key = payload.message && payload.message.mediaKey
@@ -20,7 +19,6 @@ export async function modifyPayload(payload, chat) {
     if(!mt || !key) return payload
 
     const terms = parseLDAT(mt)
-    console.log("[modify] terms", terms)
     if(!terms.host) return payload
 
     try {
@@ -28,21 +26,16 @@ export async function modifyPayload(payload, chat) {
         headers: {'Authorization': `Bearer ${meme.mediaToken}`}
       })
       const buf = await r.buffer()
-      console.log("[modify] buf.length", buf.length) // "Unauthorized"
 
       const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key)
-      console.log("[modify] decMediaKey", decMediaKey)
    
       const imgBase64 = RNCryptor.Decrypt(decMediaKey, buf.toString('base64'))
-      console.log("[modify] imgBase64.length", imgBase64.length)
 
       const newKey = crypto.randomBytes(20).toString('hex')
 
       const encImg = RNCryptor.Encrypt(newKey, imgBase64)
-      console.log("[modify] encImg.length", encImg.length)
 
       var encImgBuffer = Buffer.from(encImg,'base64');
-      console.log("[modify] encImgBuffer.length", encImgBuffer.length)
 
       const form = new FormData()
       form.append('file', encImgBuffer, {
@@ -54,14 +47,13 @@ export async function modifyPayload(payload, chat) {
       const resp = await fetch(`https://${terms.host}/file`, {
         method: 'POST',
         headers: {
-          ...formHeaders,
+          ...formHeaders, // THIS IS REQUIRED!!!
           'Authorization': `Bearer ${meme.mediaToken}`,
         },
         body:form
       })
 
       let json = await resp.json()
-      console.log("[modify] post json", json)
       if(!json.muid) return payload
 
       // PUT NEW TERMS, to finish in personalizeMessage
@@ -72,10 +64,8 @@ export async function modifyPayload(payload, chat) {
         meta:{...amt && {amt}},
         skipSigning: amt ? true : false // only sign if its free
       }
-      console.log("[modify] new terms", mediaTerms)
 
       const encKey = rsa.encrypt(chat.groupKey, newKey)
-      console.log("[modify] new encKey", encKey)
 
       return fillmsg(payload, {mediaTerms,mediaKey:encKey}) // key is re-encrypted later
     } catch(e) {

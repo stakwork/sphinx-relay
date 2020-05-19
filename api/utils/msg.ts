@@ -10,8 +10,8 @@ function addInRemoteText(full:{[k:string]:any}, contactId, isTribe:boolean){
 	if (!(typeof m.content==='object')) return full
 	if(isTribe) {
 		// if just one, send it (for tribe remote_text_map... is there a better way?)
-		if(Object.values(m.content).length===1) {
-			return fillmsg(full, {content: Object.values(m.content)[0]})
+		if(m.content['chat']) {
+			return fillmsg(full, {content: m.content['chat']})
 		}
 	}
 	return fillmsg(full, {content: m.content[contactId+'']})
@@ -67,8 +67,8 @@ function addInMediaKey(full:{[k:string]:any}, contactId, isTribe:boolean){
 	if (!(typeof m.mediaKey==='object')) return full
 
 	if(isTribe) {
-		if(Object.values(m.mediaKey).length===1) {
-			const tribeMediaKey = m.mediaTerms.skipSigning?'':Object.values(m.mediaKey)[0]
+		if(m.mediaKey['chat']) { // "chat" is the key for tribes
+			const tribeMediaKey = m.mediaTerms.skipSigning?'':m.mediaKey['chat']
 			return fillmsg(full, {mediaKey:tribeMediaKey})
 		}
 	}
@@ -108,8 +108,8 @@ async function decryptMessage(full:{[k:string]:any}, chat) {
 	if(m.content) {
 		let content = m.content
 		if(typeof m.content==='object') {
-			if(Object.values(m.content).length) {
-				content = Object.values(m.content)[0]
+			if(m.content['chat']) {
+				content = m.content['chat']
 			}
 		}
 		const decContent = rsa.decrypt(chat.groupPrivateKey, content)
@@ -118,8 +118,8 @@ async function decryptMessage(full:{[k:string]:any}, chat) {
 	if (m.mediaKey) {
 		let mediaKey = m.mediaKey
 		if(typeof m.mediaKey==='object') {
-			if(Object.values(m.mediaKey).length) {
-				mediaKey = Object.values(m.mediaKey)[0]
+			if(m.mediaKey['chat']) {
+				mediaKey = m.mediaKey['chat']
 			}
 		}
 		const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey)
