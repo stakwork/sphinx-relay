@@ -57,7 +57,7 @@ export async function modifyPayload(payload, chat) {
           ...formHeaders,
           'Authorization': `Bearer ${meme.mediaToken}`,
         },
-        body:form.getBuffer()
+        body:form
       })
 
       let json = await resp.json()

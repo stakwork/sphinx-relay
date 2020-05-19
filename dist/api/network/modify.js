@@ -57,7 +57,7 @@ function modifyPayload(payload, chat) {
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
                     headers: Object.assign(Object.assign({}, formHeaders), { 'Authorization': `Bearer ${meme.mediaToken}` }),
-                    body: form.getBuffer()
+                    body: form
                 });
                 let json = yield resp.json();
                 console.log("[modify] post json", json);
