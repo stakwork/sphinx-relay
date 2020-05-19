@@ -1,5 +1,5 @@
 
 
-import {RNCryptor} from './rncryptor'
+import * as RNCryptor from './rncryptor'
 
 export default RNCryptor

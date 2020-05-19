@@ -25,7 +25,7 @@ export async function modifyPayload(payload, chat) {
     try {
       const r = await fetch(`https://${terms.host}/file/${mt}`)
       const buf = await r.buffer()
-      console.log("[modify] buf.length", buf.length)
+      console.log("[modify] buf.length", buf.length) // "Unauthorized"
 
       const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key)
       console.log("[modify] decMediaKey", decMediaKey)
@@ -59,7 +59,7 @@ export async function modifyPayload(payload, chat) {
 
       const encKey = rsa.encrypt(chat.groupKey, newKey)
       console.log("[modify] new encKey", encKey)
-      
+
       return fillmsg(payload, {mediaTerms,mediaKey:encKey}) // key is re-encrypted later
     } catch(e) {
       console.log("[modify] error", e)

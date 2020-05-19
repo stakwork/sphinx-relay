@@ -34,7 +34,7 @@ function modifyPayload(payload, chat) {
             try {
                 const r = yield fetch(`https://${terms.host}/file/${mt}`);
                 const buf = yield r.buffer();
-                console.log("[modify] buf.length", buf.length);
+                console.log("[modify] buf.length", buf.length); // "Unauthorized"
                 const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
                 console.log("[modify] decMediaKey", decMediaKey);
                 const imgBase64 = rncryptor_1.default.Decrypt(decMediaKey, buf.toString('base64'));

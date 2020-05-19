@@ -80,7 +80,6 @@ function addInMediaKey(full, contactId, isTribe) {
     if (!(typeof m.mediaKey === 'object'))
         return full;
     if (isTribe) {
-        // if just one, send it (for tribe remote_text_map... is there a better way?)
         if (Object.values(m.mediaKey).length === 1) {
             const tribeMediaKey = m.mediaTerms.skipSigning ? '' : Object.values(m.mediaKey)[0];
             return fillmsg(full, { mediaKey: tribeMediaKey });

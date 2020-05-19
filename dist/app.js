@@ -22,6 +22,8 @@ const setup_1 = require("./api/utils/setup");
 const controllers = require("./api/controllers");
 const socket = require("./api/utils/socket");
 const network = require("./api/network");
+const rncryptor_1 = require("./api/utils/rncryptor");
+console.log("===========================================", rncryptor_1.default);
 let server = null;
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
