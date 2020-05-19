@@ -28,20 +28,26 @@ function modifyPayload(payload, chat) {
             if (!mt || !key)
                 return payload;
             const terms = ldat_1.parseLDAT(mt);
+            console.log("[modify] terms", terms);
             if (!terms.host)
                 return payload;
             try {
                 const r = yield fetch(`https://${terms.host}/file/${mt}`);
                 const buf = yield r.buffer();
+                console.log("[modify] buf.length", buf.length);
                 const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
+                console.log("[modify] decMediaKey", decMediaKey);
                 const imgBase64 = rncryptor_1.default.Decrypt(decMediaKey, buf.toString('base64'));
+                console.log("[modify] imgBase64.length", imgBase64.length);
                 const newKey = crypto.randomBytes(20).toString('hex');
                 const encImg = rncryptor_1.default.Encrypt(newKey, imgBase64);
+                console.log("[modify] encImg.length", encImg.length);
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
                     body: new Blob([encImg], { type: typ || 'image/jpg', name: 'file', filename: 'Image.jpg' })
                 });
                 let json = resp.json();
+                console.log("[modify] post json", json);
                 if (!json.muid)
                     return payload;
                 // PUT NEW TERMS, to finish in personalizeMessage
@@ -52,10 +58,13 @@ function modifyPayload(payload, chat) {
                     meta: Object.assign({}, amt && { amt }),
                     skipSigning: amt ? true : false // only sign if its free
                 };
+                console.log("[modify] new terms", mediaTerms);
                 const encKey = rsa.encrypt(chat.groupKey, newKey);
+                console.log("[modify] new encKey", encKey);
                 return fillmsg(payload, { mediaTerms, mediaKey: encKey }); // key is re-encrypted later
             }
             catch (e) {
+                console.log("[modify] error", e);
                 return payload;
             }
             // how to link w og msg? ogMediaToken?
