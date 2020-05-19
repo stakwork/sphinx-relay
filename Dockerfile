@@ -62,6 +62,9 @@ VOLUME /relay/.lnd
 
 COPY ./docker/lnd.conf.sample /relay/.lnd/lnd.conf
 
+#Uncomment if you have a copy of the channel.db you want to use.
+#COPY ./channel.db /relay/.lnd/data/graph/mainnet/
+
 RUN git clone https://github.com/stakwork/sphinx-keysend-test/ /sphinx-keysend/
 WORKDIR /sphinx-keysend/
 RUN git checkout binary
