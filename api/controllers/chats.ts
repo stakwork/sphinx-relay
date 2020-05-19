@@ -201,7 +201,7 @@ const deleteChat = async (req, res) => {
 
 async function joinTribe(req, res){
 	console.log('=> joinTribe')
-	const { uuid, group_key, name, host, amount } = req.body
+	const { uuid, group_key, name, host, amount, img } = req.body
 
 	const existing = await models.Chat.findOne({where:{uuid}})
 	if(existing) {
@@ -236,6 +236,7 @@ async function joinTribe(req, res){
 	const chatParams = {
 		uuid: uuid,
 		contactIds: JSON.stringify(contactIds),
+		photoUrl: img||'',
 		createdAt: date,
 		updatedAt: date,
 		name: name,

@@ -194,7 +194,7 @@ exports.deleteChat = deleteChat;
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
-        const { uuid, group_key, name, host, amount } = req.body;
+        const { uuid, group_key, name, host, amount, img } = req.body;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
         if (existing) {
             console.log('[tribes] u are already in this group');
@@ -225,6 +225,7 @@ function joinTribe(req, res) {
         const chatParams = {
             uuid: uuid,
             contactIds: JSON.stringify(contactIds),
+            photoUrl: img || '',
             createdAt: date,
             updatedAt: date,
             name: name,
