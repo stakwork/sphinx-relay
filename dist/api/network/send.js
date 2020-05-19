@@ -66,7 +66,7 @@ function sendMessage(params) {
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
             const destkey = contact.publicKey;
             if (destkey === skipPubKey) {
-                return; // skip (for tribe owner broadcasting, not back to the sender)
+                //return // skip (for tribe owner broadcasting, not back to the sender)
             }
             console.log('-> sending to ', contact.id, destkey);
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);

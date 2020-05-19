@@ -61,7 +61,7 @@ export async function sendMessage(params) {
 		const contact = await models.Contact.findOne({ where: { id: contactId } })
 		const destkey = contact.publicKey
 		if(destkey===skipPubKey) {
-			return // skip (for tribe owner broadcasting, not back to the sender)
+			//return // skip (for tribe owner broadcasting, not back to the sender)
 		}
 		console.log('-> sending to ', contact.id, destkey)
 
