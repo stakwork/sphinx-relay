@@ -230,7 +230,7 @@ function reconnectToLND(innerCtx) {
         }
         catch (e) {
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                if (ctx === innerCtx) {
+                if (ctx === innerCtx) { // if another retry fires, then this will not run
                     yield reconnectToLND(innerCtx);
                 }
             }), 2000);
