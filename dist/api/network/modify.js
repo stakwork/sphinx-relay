@@ -16,6 +16,7 @@ const ldat_1 = require("../utils/ldat");
 const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
 const Blob = require("fetch-blob");
+const meme = require("../utils/meme");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 function modifyPayload(payload, chat) {
@@ -32,7 +33,10 @@ function modifyPayload(payload, chat) {
             if (!terms.host)
                 return payload;
             try {
-                const r = yield fetch(`https://${terms.host}/file/${mt}`);
+                console.log(`Bearer ${meme.mediaToken}`);
+                const r = yield fetch(`https://${terms.host}/file/${mt}`, {
+                    headers: { 'Authorization': `Bearer ${meme.mediaToken}` }
+                });
                 const buf = yield r.buffer();
                 console.log("[modify] buf.length", buf.length); // "Unauthorized"
                 const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);

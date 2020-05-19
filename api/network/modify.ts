@@ -5,6 +5,7 @@ import {parseLDAT} from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
 import * as Blob from 'fetch-blob'
+import * as meme from '../utils/meme'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -23,7 +24,10 @@ export async function modifyPayload(payload, chat) {
     if(!terms.host) return payload
 
     try {
-      const r = await fetch(`https://${terms.host}/file/${mt}`)
+      console.log(`Bearer ${meme.mediaToken}`)
+      const r = await fetch(`https://${terms.host}/file/${mt}`, {
+        headers: {'Authorization': `Bearer ${meme.mediaToken}`}
+      })
       const buf = await r.buffer()
       console.log("[modify] buf.length", buf.length) // "Unauthorized"
 

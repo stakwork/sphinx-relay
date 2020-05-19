@@ -14,6 +14,7 @@ import * as schemas from './schemas'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
 import * as network from '../network'
+import * as meme from '../utils/meme'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
@@ -210,7 +211,6 @@ const receivePurchase = async (payload) => {
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
-
   
   const message = await models.Message.create({
     chatId: chat.id,
@@ -467,7 +467,10 @@ async function cycleMediaToken() {
     if (process.env.TEST_LDAT) testLDAT()
 
     const mt = await getMediaToken(null)
-    if(mt) console.log('=> [meme] authed!')
+    if(mt) {
+      console.log('=> [meme] authed!')
+      meme.setMediaToken(mt)
+    }
 
     new CronJob('1 * * * *', function() { // every hour
       getMediaToken(true)
@@ -478,9 +481,9 @@ async function cycleMediaToken() {
 }
 
 const mediaURL = 'http://' + config.media_host + '/'
-let mediaToken;
+
 async function getMediaToken(force) {
-  if(!force && mediaToken) return mediaToken
+  if(!force && meme.mediaToken) return meme.mediaToken
   await helpers.sleep(3000)
   try {
     const res = await rp.get(mediaURL+'ask')
@@ -508,7 +511,7 @@ async function getMediaToken(force) {
     if(!(body && body.token)){
       throw new Error('no token')
     }
-    mediaToken = body.token
+    meme.setMediaToken(body.token)
     return body.token
   } catch(e) {
     throw e

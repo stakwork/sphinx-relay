@@ -25,6 +25,7 @@ const schemas = require("./schemas");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
 const network = require("../network");
+const meme = require("../utils/meme");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -441,8 +442,10 @@ function cycleMediaToken() {
             if (process.env.TEST_LDAT)
                 ldat_1.testLDAT();
             const mt = yield getMediaToken(null);
-            if (mt)
+            if (mt) {
                 console.log('=> [meme] authed!');
+                meme.setMediaToken(mt);
+            }
             new cron_1.CronJob('1 * * * *', function () {
                 getMediaToken(true);
             });
@@ -454,11 +457,10 @@ function cycleMediaToken() {
 }
 exports.cycleMediaToken = cycleMediaToken;
 const mediaURL = 'http://' + config.media_host + '/';
-let mediaToken;
 function getMediaToken(force) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!force && mediaToken)
-            return mediaToken;
+        if (!force && meme.mediaToken)
+            return meme.mediaToken;
         yield helpers.sleep(3000);
         try {
             const res = yield rp.get(mediaURL + 'ask');
@@ -482,7 +484,7 @@ function getMediaToken(force) {
             if (!(body && body.token)) {
                 throw new Error('no token');
             }
-            mediaToken = body.token;
+            meme.setMediaToken(body.token);
             return body.token;
         }
         catch (e) {
