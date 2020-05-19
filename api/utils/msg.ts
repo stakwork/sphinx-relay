@@ -60,12 +60,18 @@ async function encryptTribeBroadcast(full:{[k:string]:any}, contact, isTribe:boo
 	return fillmsg(full, obj)
 }
 
-function addInMediaKey(full:{[k:string]:any}, contactId){
+function addInMediaKey(full:{[k:string]:any}, contactId, isTribe:boolean){
 	const m = full && full.message
 	if (!(m && m.mediaKey)) return full
 	if (!(m && m.mediaTerms)) return full
 	if (!(typeof m.mediaKey==='object')) return full
-	
+
+	if(isTribe) {
+		if(Object.values(m.mediaKey).length===1) {
+			const tribeMediaKey = m.mediaTerms.skipSigning?'':Object.values(m.mediaKey)[0]
+			return fillmsg(full, {mediaKey:tribeMediaKey})
+		}
+	}
 	const mediaKey = m.mediaTerms.skipSigning ? '' : m.mediaKey[contactId+'']
 	return fillmsg(full, {mediaKey})
 }
@@ -136,7 +142,7 @@ async function personalizeMessage(m,contact,isTribeOwner:boolean){
 	const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe)
 	const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey)
 	const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey)
-	const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId)
+	const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId, isTribe)
 	const msgWithMediaToken = await finishTermsAndReceipt(msgWithMediaKey, destkey)
 	const encMsg = await encryptTribeBroadcast(msgWithMediaToken, contact, isTribe, isTribeOwner)
     return encMsg

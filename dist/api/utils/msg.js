@@ -71,7 +71,7 @@ function encryptTribeBroadcast(full, contact, isTribe, isTribeOwner) {
         return fillmsg(full, obj);
     });
 }
-function addInMediaKey(full, contactId) {
+function addInMediaKey(full, contactId, isTribe) {
     const m = full && full.message;
     if (!(m && m.mediaKey))
         return full;
@@ -79,6 +79,13 @@ function addInMediaKey(full, contactId) {
         return full;
     if (!(typeof m.mediaKey === 'object'))
         return full;
+    if (isTribe) {
+        // if just one, send it (for tribe remote_text_map... is there a better way?)
+        if (Object.values(m.mediaKey).length === 1) {
+            const tribeMediaKey = m.mediaTerms.skipSigning ? '' : Object.values(m.mediaKey)[0];
+            return fillmsg(full, { mediaKey: tribeMediaKey });
+        }
+    }
     const mediaKey = m.mediaTerms.skipSigning ? '' : m.mediaKey[contactId + ''];
     return fillmsg(full, { mediaKey });
 }
@@ -149,7 +156,7 @@ function personalizeMessage(m, contact, isTribeOwner) {
         const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe);
         const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey);
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
-        const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId);
+        const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId, isTribe);
         const msgWithMediaToken = yield finishTermsAndReceipt(msgWithMediaKey, destkey);
         const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact, isTribe, isTribeOwner);
         return encMsg;
