@@ -46,10 +46,11 @@ function modifyPayload(payload, chat) {
                 const newKey = crypto.randomBytes(20).toString('hex');
                 const encImg = rncryptor_1.default.Encrypt(newKey, imgBase64);
                 console.log("[modify] encImg.length", encImg.length);
+                var encImgBuffer = Buffer.from(encImg, 'base64');
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${meme.mediaToken}` },
-                    body: new Blob([encImg], { type: typ || 'image/jpg', name: 'file', filename: 'Image.jpg' })
+                    body: new Blob([encImgBuffer], { type: typ || 'image/jpg', name: 'file', filename: 'Image.jpg' })
                 });
                 let json = yield resp.json();
                 console.log("[modify] post json", json);

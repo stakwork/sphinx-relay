@@ -42,10 +42,12 @@ export async function modifyPayload(payload, chat) {
       const encImg = RNCryptor.Encrypt(newKey, imgBase64)
       console.log("[modify] encImg.length", encImg.length)
 
+      var encImgBuffer = Buffer.from(encImg,'base64');
+
       const resp = await fetch(`https://${terms.host}/file`, {
         method: 'POST',
         headers: {'Authorization': `Bearer ${meme.mediaToken}`},
-        body: new Blob([encImg], { type: typ||'image/jpg', name:'file', filename:'Image.jpg' })
+        body: new Blob([encImgBuffer], { type: typ||'image/jpg', name:'file', filename:'Image.jpg' })
       })
 
       let json = await resp.json()
