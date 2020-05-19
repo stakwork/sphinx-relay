@@ -380,7 +380,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     if (mediaType)
         msg.mediaType = mediaType;
     const message = yield models_1.models.Message.create(msg);
-    console.log('saved attachment', message.dataValues);
+    // console.log('saved attachment', message.dataValues)
     socket.sendJson({
         type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender)

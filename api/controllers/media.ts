@@ -412,7 +412,7 @@ const receiveAttachment = async (payload) => {
 
   const message = await models.Message.create(msg)
 
-  console.log('saved attachment', message.dataValues)
+  // console.log('saved attachment', message.dataValues)
 
   socket.sendJson({
     type: 'attachment',

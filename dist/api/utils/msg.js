@@ -140,7 +140,7 @@ function decryptMessage(full, chat) {
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey);
             obj.mediaKey = decMediaKey;
         }
-        console.log("OBJ FILLED", fillmsg(full, obj));
+        // console.log("OBJ FILLED",fillmsg(full, obj))
         return fillmsg(full, obj);
     });
 }
