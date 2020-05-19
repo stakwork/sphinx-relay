@@ -4,8 +4,8 @@ import * as fetch from 'node-fetch'
 import {parseLDAT} from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
-import * as Blob from 'fetch-blob'
 import * as meme from '../utils/meme'
+import * as FormData from 'form-data'   
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -43,11 +43,20 @@ export async function modifyPayload(payload, chat) {
       console.log("[modify] encImg.length", encImg.length)
 
       var encImgBuffer = Buffer.from(encImg,'base64');
+      console.log("[modify] encImgBuffer.length", encImgBuffer.length)
 
+      const bod = new FormData()
+      bod.append('file', encImgBuffer, {
+        contentType: typ||'image/jpg',
+        filename: 'Image.jpg',
+      })
       const resp = await fetch(`https://${terms.host}/file`, {
         method: 'POST',
-        headers: {'Authorization': `Bearer ${meme.mediaToken}`},
-        body: new Blob([encImgBuffer], { type: typ||'image/jpg', name:'file', filename:'Image.jpg' })
+        headers: {
+          'Authorization': `Bearer ${meme.mediaToken}`,
+          'Content-Type': 'multipart/form-data'
+        },
+        body:bod
       })
 
       let json = await resp.json()
@@ -73,8 +82,9 @@ export async function modifyPayload(payload, chat) {
       return payload
     }
     // how to link w og msg? ogMediaToken?
+  } else {
+    return payload
   }
-  return payload
 }
 
 function fillmsg(full, props){

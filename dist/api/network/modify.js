@@ -15,8 +15,8 @@ const fetch = require("node-fetch");
 const ldat_1 = require("../utils/ldat");
 const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
-const Blob = require("fetch-blob");
 const meme = require("../utils/meme");
+const FormData = require("form-data");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 function modifyPayload(payload, chat) {
@@ -47,10 +47,19 @@ function modifyPayload(payload, chat) {
                 const encImg = rncryptor_1.default.Encrypt(newKey, imgBase64);
                 console.log("[modify] encImg.length", encImg.length);
                 var encImgBuffer = Buffer.from(encImg, 'base64');
+                console.log("[modify] encImgBuffer.length", encImgBuffer.length);
+                const bod = new FormData();
+                bod.append('file', encImgBuffer, {
+                    contentType: typ || 'image/jpg',
+                    filename: 'Image.jpg',
+                });
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${meme.mediaToken}` },
-                    body: new Blob([encImgBuffer], { type: typ || 'image/jpg', name: 'file', filename: 'Image.jpg' })
+                    headers: {
+                        'Authorization': `Bearer ${meme.mediaToken}`,
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    body: bod
                 });
                 let json = yield resp.json();
                 console.log("[modify] post json", json);
@@ -75,7 +84,9 @@ function modifyPayload(payload, chat) {
             }
             // how to link w og msg? ogMediaToken?
         }
-        return payload;
+        else {
+            return payload;
+        }
     });
 }
 exports.modifyPayload = modifyPayload;
