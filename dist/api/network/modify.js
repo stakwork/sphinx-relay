@@ -33,7 +33,6 @@ function modifyPayload(payload, chat) {
             if (!terms.host)
                 return payload;
             try {
-                console.log(`Bearer ${meme.mediaToken}`);
                 const r = yield fetch(`https://${terms.host}/file/${mt}`, {
                     headers: { 'Authorization': `Bearer ${meme.mediaToken}` }
                 });
@@ -52,6 +51,7 @@ function modifyPayload(payload, chat) {
                 bod.append('file', encImgBuffer, {
                     contentType: typ || 'image/jpg',
                     filename: 'Image.jpg',
+                    knownLength: encImgBuffer.length,
                 });
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
