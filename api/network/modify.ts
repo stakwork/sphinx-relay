@@ -47,7 +47,7 @@ export async function modifyPayload(payload, chat) {
         body: new Blob([encImg], { type: typ||'image/jpg', name:'file', filename:'Image.jpg' })
       })
 
-      let json = resp.json()
+      let json = await resp.json()
       console.log("[modify] post json", json)
       if(!json.muid) return payload
 
