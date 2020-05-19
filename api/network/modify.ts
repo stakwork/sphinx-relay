@@ -44,19 +44,20 @@ export async function modifyPayload(payload, chat) {
       var encImgBuffer = Buffer.from(encImg,'base64');
       console.log("[modify] encImgBuffer.length", encImgBuffer.length)
 
-      const bod = new FormData()
-      bod.append('file', encImgBuffer, {
+      const form = new FormData()
+      form.append('file', encImgBuffer, {
         contentType: typ||'image/jpg',
         filename: 'Image.jpg',
         knownLength:encImgBuffer.length,
       })
+      const formHeaders = form.getHeaders()
       const resp = await fetch(`https://${terms.host}/file`, {
         method: 'POST',
         headers: {
+          ...formHeaders,
           'Authorization': `Bearer ${meme.mediaToken}`,
-          'Content-Type': 'multipart/form-data'
         },
-        body:bod
+        body:form.getBuffer()
       })
 
       let json = await resp.json()

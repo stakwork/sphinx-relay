@@ -47,19 +47,17 @@ function modifyPayload(payload, chat) {
                 console.log("[modify] encImg.length", encImg.length);
                 var encImgBuffer = Buffer.from(encImg, 'base64');
                 console.log("[modify] encImgBuffer.length", encImgBuffer.length);
-                const bod = new FormData();
-                bod.append('file', encImgBuffer, {
+                const form = new FormData();
+                form.append('file', encImgBuffer, {
                     contentType: typ || 'image/jpg',
                     filename: 'Image.jpg',
                     knownLength: encImgBuffer.length,
                 });
+                const formHeaders = form.getHeaders();
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${meme.mediaToken}`,
-                        'Content-Type': 'multipart/form-data'
-                    },
-                    body: bod
+                    headers: Object.assign(Object.assign({}, formHeaders), { 'Authorization': `Bearer ${meme.mediaToken}` }),
+                    body: form.getBuffer()
                 });
                 let json = yield resp.json();
                 console.log("[modify] post json", json);
