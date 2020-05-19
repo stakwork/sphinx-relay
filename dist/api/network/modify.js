@@ -48,6 +48,7 @@ function modifyPayload(payload, chat) {
                 console.log("[modify] encImg.length", encImg.length);
                 const resp = yield fetch(`https://${terms.host}/file`, {
                     method: 'POST',
+                    headers: { 'Authorization': `Bearer ${meme.mediaToken}` },
                     body: new Blob([encImg], { type: typ || 'image/jpg', name: 'file', filename: 'Image.jpg' })
                 });
                 let json = yield resp.json();

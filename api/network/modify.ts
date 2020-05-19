@@ -44,6 +44,7 @@ export async function modifyPayload(payload, chat) {
 
       const resp = await fetch(`https://${terms.host}/file`, {
         method: 'POST',
+        headers: {'Authorization': `Bearer ${meme.mediaToken}`},
         body: new Blob([encImg], { type: typ||'image/jpg', name:'file', filename:'Image.jpg' })
       })
 
