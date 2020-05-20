@@ -40,14 +40,14 @@ function removeAllNonAdminMembersIfTribe(full:{[k:string]:any}, destkey){
 
 // THIS IS ONLY FOR TRIBE OWNER
 // by this time the content and mediaKey are already in message as string
-async function encryptTribeBroadcast(full:{[k:string]:any}, contact, isTribe:boolean, isTribeOwner:boolean){
+async function encryptTribeBroadcast(full:{[k:string]:any}, contact, isTribeOwner:boolean){
 	if(!isTribeOwner) return full
 
 	const chat = full && full.chat
 	const message = full && full.message
 	if (!message || !(chat && chat.type && chat.uuid)) return full
 	const obj: {[k:string]:any} = {}
-	if(isTribe && isTribeOwner) { // has been previously decrypted
+	if(isTribeOwner) { // has been previously decrypted
 		if(message.content) {
 			const encContent = await rsa.encrypt(contact.contactKey, message.content)
 			obj.content = encContent
@@ -144,7 +144,7 @@ async function personalizeMessage(m,contact,isTribeOwner:boolean){
 	const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey)
 	const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId, isTribe)
 	const msgWithMediaToken = await finishTermsAndReceipt(msgWithMediaKey, destkey)
-	const encMsg = await encryptTribeBroadcast(msgWithMediaToken, contact, isTribe, isTribeOwner)
+	const encMsg = await encryptTribeBroadcast(msgWithMediaToken, contact, isTribeOwner)
     return encMsg
 }
 
@@ -167,5 +167,5 @@ function fillchatmsg(full, props){
 }
 
 export {
-    personalizeMessage, decryptMessage,
+    personalizeMessage, decryptMessage, encryptTribeBroadcast,
 }

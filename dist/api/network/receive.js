@@ -18,6 +18,7 @@ const lightning_2 = require("../utils/lightning");
 const models_1 = require("../models");
 const send_1 = require("./send");
 const modify_1 = require("./modify");
+const msg_1 = require("../utils/msg");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 const typesToForward = [
@@ -54,13 +55,25 @@ function onReceive(payload) {
                     console.log('=> insufficient payment for this action');
             }
         }
-        if (doAction) {
-            if (ACTIONS[payload.type]) {
-                ACTIONS[payload.type](Object.assign(Object.assign({}, payload), toAddIn));
-            }
-            else {
-                console.log('Incorrect payload type:', payload.type);
-            }
+        if (doAction)
+            doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
+    });
+}
+function doTheAction(data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let payload = data;
+        if (payload.isTribeOwner) {
+            // decrypt and re-encrypt with self pubkey
+            const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+            const pld = yield msg_1.decryptMessage(data, chat);
+            const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
+        }
+        if (ACTIONS[payload.type]) {
+            ACTIONS[payload.type](payload);
+        }
+        else {
+            console.log('Incorrect payload type:', payload.type);
         }
     });
 }

@@ -7,6 +7,7 @@ import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
 import {sendMessage} from './send'
 import {modifyPayload} from './modify'
+import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -40,12 +41,22 @@ async function onReceive(payload){
 			else console.log('=> insufficient payment for this action')
 		}
 	}
-	if(doAction) {
-		if(ACTIONS[payload.type]) {
-			ACTIONS[payload.type]({...payload, ...toAddIn})
-		} else {
-			console.log('Incorrect payload type:', payload.type)
-		}
+	if(doAction) doTheAction({...payload, ...toAddIn})
+}
+
+async function doTheAction(data){
+	let payload = data
+	if(payload.isTribeOwner) {
+		// decrypt and re-encrypt with self pubkey
+		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+		const pld = await decryptMessage(data, chat)
+		const me = await models.Contact.findOne({where:{isOwner:true}})
+		payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
+	}
+	if(ACTIONS[payload.type]) {
+		ACTIONS[payload.type](payload)
+	} else {
+		console.log('Incorrect payload type:', payload.type)
 	}
 }
 

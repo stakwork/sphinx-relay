@@ -49,7 +49,7 @@ function removeAllNonAdminMembersIfTribe(full, destkey) {
 }
 // THIS IS ONLY FOR TRIBE OWNER
 // by this time the content and mediaKey are already in message as string
-function encryptTribeBroadcast(full, contact, isTribe, isTribeOwner) {
+function encryptTribeBroadcast(full, contact, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!isTribeOwner)
             return full;
@@ -58,7 +58,7 @@ function encryptTribeBroadcast(full, contact, isTribe, isTribeOwner) {
         if (!message || !(chat && chat.type && chat.uuid))
             return full;
         const obj = {};
-        if (isTribe && isTribeOwner) { // has been previously decrypted
+        if (isTribeOwner) { // has been previously decrypted
             if (message.content) {
                 const encContent = yield rsa.encrypt(contact.contactKey, message.content);
                 obj.content = encContent;
@@ -71,6 +71,7 @@ function encryptTribeBroadcast(full, contact, isTribe, isTribeOwner) {
         return fillmsg(full, obj);
     });
 }
+exports.encryptTribeBroadcast = encryptTribeBroadcast;
 function addInMediaKey(full, contactId, isTribe) {
     const m = full && full.message;
     if (!(m && m.mediaKey))
@@ -157,7 +158,7 @@ function personalizeMessage(m, contact, isTribeOwner) {
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
         const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId, isTribe);
         const msgWithMediaToken = yield finishTermsAndReceipt(msgWithMediaKey, destkey);
-        const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact, isTribe, isTribeOwner);
+        const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact, isTribeOwner);
         return encMsg;
     });
 }
