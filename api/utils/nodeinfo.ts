@@ -64,6 +64,7 @@ function nodeinfo(){
                   synced_to_graph: info.synced_to_graph,
                   best_header_timestamp: info.best_header_timestamp,
                   testnet: info.testnet,
+                  lnd_status: 'ok',
                   clean,
                 }
                 resolve(node)
@@ -74,6 +75,11 @@ function nodeinfo(){
       });
     } catch(e){
       console.log('=>',e)
+      const node = {
+        pubkey: owner.publicKey,
+        lnd_status: e
+      }
+      resolve(node)
     }
   })
 }
