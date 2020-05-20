@@ -10,6 +10,17 @@ import {pingHubInterval, checkInvitesHubInterval} from './api/hub'
 import {setupDatabase, setupDone} from './api/utils/setup'
 import * as controllers from './api/controllers'
 import * as socket from './api/utils/socket'
+import * as signer from './api/utils/signer'
+
+async function testSigner(){
+	try{
+	await signer.loadSigner()
+	const sig = await signer.signAscii('asdf')
+	console.log("SIG", sig)
+	}catch(e){
+		console.log(e)
+	}
+}
 
 let server: any = null
 const port = process.env.PORT || 3001;
@@ -44,6 +55,7 @@ async function mainSetup(){
 	}
 	await setupApp()
 	setupDone()
+	testSigner()
 }
  
 async function setupApp(){

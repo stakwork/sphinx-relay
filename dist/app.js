@@ -21,6 +21,19 @@ const hub_1 = require("./api/hub");
 const setup_1 = require("./api/utils/setup");
 const controllers = require("./api/controllers");
 const socket = require("./api/utils/socket");
+const signer = require("./api/utils/signer");
+function testSigner() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield signer.loadSigner();
+            const sig = yield signer.signAscii('asdf');
+            console.log("SIG", sig);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    });
+}
 let server = null;
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
@@ -53,6 +66,7 @@ function mainSetup() {
         }
         yield setupApp();
         setup_1.setupDone();
+        testSigner();
     });
 }
 function setupApp() {

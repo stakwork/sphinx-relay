@@ -361,7 +361,7 @@ async function checkConnection(){
 	return new Promise((resolve,reject)=>{
 		const lightning = loadLightning()
 		lightning.getInfo({}, function(err, response) {
-			if (err == null) {	
+			if (err == null) {
 				resolve(response)
 			} else {
 				reject(err)
