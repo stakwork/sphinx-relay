@@ -2,6 +2,7 @@ import {toSnake,toCamel} from '../utils/case'
 import * as cronUtils from './cron'
 
 function chatToJson(c) {
+  if(!c) return {}
   const ch = c.dataValues||c
   const chat = JSON.parse(JSON.stringify(ch))
   let contactIds = chat.contactIds || null
@@ -16,6 +17,7 @@ function chatToJson(c) {
 }
 
 function messageToJson(msg, chat, contact?) {
+  if(!msg) return {}
   const message = msg.dataValues||msg
   let statusMap = message.statusMap || null
   if(message.statusMap && typeof message.statusMap==='string'){
@@ -29,7 +31,10 @@ function messageToJson(msg, chat, contact?) {
   })
 }
 
-const contactToJson = (contact) => toSnake(contact.dataValues||contact)
+function contactToJson(contact){
+  if(!contact) return {}
+  return toSnake(contact.dataValues||contact)
+} 
 
 const inviteToJson = (invite) => toSnake(invite.dataValues||invite)
 

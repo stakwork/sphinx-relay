@@ -295,7 +295,9 @@ async function receiveGroupLeave(payload) {
 
 		if(isTribeOwner) {
 			if(chat_type===constants.chat_types.tribe){
-				await models.ChatMember.destroy({where:{chatId: chat.id, contactId: sender.id}})
+				try {
+					await models.ChatMember.destroy({where:{chatId: chat.id, contactId: sender.id}})
+				} catch(e) {}
 			}
 		}
 	}

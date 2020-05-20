@@ -282,7 +282,10 @@ function receiveGroupLeave(payload) {
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) {
                 if (chat_type === constants.chat_types.tribe) {
-                    yield models_1.models.ChatMember.destroy({ where: { chatId: chat.id, contactId: sender.id } });
+                    try {
+                        yield models_1.models.ChatMember.destroy({ where: { chatId: chat.id, contactId: sender.id } });
+                    }
+                    catch (e) { }
                 }
             }
         }

@@ -15,11 +15,11 @@ let ChatMember = class ChatMember extends sequelize_typescript_1.Model {
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
-], ChatMember.prototype, "chat_id", void 0);
+], ChatMember.prototype, "chatId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
-], ChatMember.prototype, "contact_id", void 0);
+], ChatMember.prototype, "contactId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)

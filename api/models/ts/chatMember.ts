@@ -4,10 +4,10 @@ import { Table, Column, Model } from 'sequelize-typescript';
 export default class ChatMember extends Model<ChatMember> {
 
   @Column
-  chat_id: number
+  chatId: number
 
   @Column
-  contact_id: number
+  contactId: number
 
   @Column
   role: number
