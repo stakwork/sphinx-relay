@@ -33,7 +33,10 @@ export const signMessage = (msg) => {
   return new Promise(async(resolve, reject)=> {
     let signer = await loadSigner()
     try {
-      const options = {msg:ByteBuffer.fromHex(msg)}
+      const options = {
+        msg:ByteBuffer.fromHex(msg),
+        key_loc:{key_family:6, key_index:0},
+      }
       signer.signMessage(options, function(err,sig){
         if(err || !sig.signature) {
           reject(err)

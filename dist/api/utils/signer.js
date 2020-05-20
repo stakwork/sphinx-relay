@@ -41,7 +41,10 @@ exports.signMessage = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();
         try {
-            const options = { msg: ByteBuffer.fromHex(msg) };
+            const options = {
+                msg: ByteBuffer.fromHex(msg),
+                key_loc: { key_family: 6, key_index: 0 },
+            };
             signer.signMessage(options, function (err, sig) {
                 if (err || !sig.signature) {
                     reject(err);
