@@ -42,7 +42,9 @@ RUN git clone https://github.com/stakwork/sphinx-relay /relay/
 
 WORKDIR /relay/
 
-RUN git checkout feature/docker
+ARG sphinx_checkout="master"
+
+RUN git checkout $sphinx_checkout
 
 RUN npm install
 RUN npm install nodemon --save-dev
