@@ -114,7 +114,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -134,13 +134,16 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.mediaType = mediaType;
     if (mediaToken)
         msg.mediaToken = mediaToken;
+    if (chat_type === constants.chat_types.tribe) {
+        msg.senderAlias = sender_alias;
+    }
     const message = yield models_1.models.Message.create(msg);
     console.log('saved message', message.dataValues);
     socket.sendJson({
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

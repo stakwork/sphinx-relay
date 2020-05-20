@@ -392,7 +392,7 @@ const receiveAttachment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -409,6 +409,10 @@ const receiveAttachment = async (payload) => {
   if(mediaToken) msg.mediaToken = mediaToken
   if(mediaKey) msg.mediaKey = mediaKey
   if(mediaType) msg.mediaType = mediaType
+  const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe) {
+		msg.senderAlias = sender_alias
+	}
 
   const message = await models.Message.create(msg)
 
@@ -419,7 +423,7 @@ const receiveAttachment = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 
   const theChat = {...chat.dataValues, contactIds:[sender.id]}
   sendConfirmation({ chat:theChat, sender: owner, msg_id })

@@ -124,7 +124,7 @@ const receivePayment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, content, mediaType, mediaToken} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -142,6 +142,9 @@ const receivePayment = async (payload) => {
   if(content) msg.messageContent = content
   if(mediaType) msg.mediaType = mediaType
   if(mediaToken) msg.mediaToken = mediaToken
+  if(chat_type===constants.chat_types.tribe) {
+		msg.senderAlias = sender_alias
+	}
   
   const message = await models.Message.create(msg)
 
@@ -152,7 +155,7 @@ const receivePayment = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 }
 
 const listPayments = async (req, res) => {

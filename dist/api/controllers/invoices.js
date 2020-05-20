@@ -174,12 +174,12 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     const payment_request = dat.message.invoice;
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, msg_id } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
     const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request);
-    const message = yield models_1.models.Message.create({
+    const msg = {
         chatId: chat.id,
         type: constants.message_types.invoice,
         sender: sender.id,
@@ -194,13 +194,18 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         status: constants.statuses.pending,
         createdAt: date,
         updatedAt: date
-    });
+    };
+    const isTribe = chat_type === constants.chat_types.tribe;
+    if (isTribe) {
+        msg.senderAlias = sender_alias;
+    }
+    const message = yield models_1.models.Message.create(msg);
     console.log('received keysend invoice message', message.id);
     socket.sendJson({
         type: 'invoice',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });

@@ -184,7 +184,7 @@ const receiveMessage = async (payload) => {
 		response: jsonUtils.messageToJson(message, chat, sender)
 	})
 
-	sendNotification(chat, sender.alias, 'message')
+	sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 
 	const theChat = {...chat.dataValues, contactIds:[sender.id]}
 	sendConfirmation({ chat:theChat, sender: owner, msg_id })

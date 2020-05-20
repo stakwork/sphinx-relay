@@ -359,7 +359,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     console.log('received attachment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -379,13 +379,17 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         msg.mediaKey = mediaKey;
     if (mediaType)
         msg.mediaType = mediaType;
+    const isTribe = chat_type === constants.chat_types.tribe;
+    if (isTribe) {
+        msg.senderAlias = sender_alias;
+    }
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved attachment', message.dataValues)
     socket.sendJson({
         type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });

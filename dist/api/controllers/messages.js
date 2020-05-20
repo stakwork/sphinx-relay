@@ -163,7 +163,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });

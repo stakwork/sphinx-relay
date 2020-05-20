@@ -102,8 +102,8 @@ async function createGroupChat(req, res) {
 			// publish to tribe server
 			tribes.declare({
 				...chatParams,
-				pricePerMessage: price_per_message,
-				priceToJoin: price_to_join,
+				pricePerMessage: price_per_message||0,
+				priceToJoin: price_to_join||0,
 				description, tags, img,
 			})
 		}

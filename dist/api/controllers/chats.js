@@ -99,7 +99,7 @@ function createGroupChat(req, res) {
             chatParams = yield createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join);
             if (is_listed && chatParams.uuid) {
                 // publish to tribe server
-                tribes.declare(Object.assign(Object.assign({}, chatParams), { pricePerMessage: price_per_message, priceToJoin: price_to_join, description, tags, img }));
+                tribes.declare(Object.assign(Object.assign({}, chatParams), { pricePerMessage: price_per_message || 0, priceToJoin: price_to_join || 0, description, tags, img }));
             }
             // make me owner when i create
             members[owner.publicKey].role = constants.chat_roles.owner;
