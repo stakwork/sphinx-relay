@@ -299,6 +299,9 @@ function receiveGroupLeave(payload) {
             createdAt: date,
             updatedAt: date
         };
+        if (isTribe) {
+            msg.senderAlias = sender_alias;
+        }
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
             type: 'group_leave',
@@ -314,7 +317,7 @@ exports.receiveGroupLeave = receiveGroupLeave;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');
-        const { sender_pub_key, chat_uuid, chat_members, chat_type, isTribeOwner } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
@@ -323,7 +326,7 @@ function receiveGroupJoin(payload) {
         date.setMilliseconds(0);
         let theSender = null;
         const member = chat_members[sender_pub_key];
-        const senderAlias = (member && member.alias) || 'Unknown';
+        const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
         if (!isTribe || isTribeOwner) { // dont need to create contacts for these
             const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             const contactIds = JSON.parse(chat.contactIds || '[]');
@@ -367,6 +370,9 @@ function receiveGroupJoin(payload) {
             createdAt: date,
             updatedAt: date
         };
+        if (isTribe) {
+            msg.senderAlias = sender_alias;
+        }
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
             type: 'group_join',

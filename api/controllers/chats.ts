@@ -302,7 +302,7 @@ async function receiveGroupLeave(payload) {
 
 	var date = new Date();
 	date.setMilliseconds(0)
-	const msg = {
+	const msg:{[k:string]:any} = {
 		chatId: chat.id,
 		type: constants.message_types.group_leave,
 		sender: (sender && sender.id) || 0,
@@ -312,6 +312,9 @@ async function receiveGroupLeave(payload) {
 		status: constants.statuses.confirmed,
 		createdAt: date,
 		updatedAt: date
+	}
+	if(isTribe) {
+		msg.senderAlias = sender_alias
 	}
 	const message = await models.Message.create(msg)
 
@@ -327,7 +330,7 @@ async function receiveGroupLeave(payload) {
 
 async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
-	const { sender_pub_key, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -339,7 +342,7 @@ async function receiveGroupJoin(payload) {
 
 	let theSender: any = null
 	const member = chat_members[sender_pub_key]
-	const senderAlias = (member && member.alias) || 'Unknown'
+	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
 
 	if(!isTribe || isTribeOwner) { // dont need to create contacts for these
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
@@ -373,7 +376,7 @@ async function receiveGroupJoin(payload) {
 		}
 	}
 
-	const msg = {
+	const msg:{[k:string]:any} = {
 		chatId: chat.id,
 		type: constants.message_types.group_join,
 		sender: (theSender && theSender.id) || 0,
@@ -383,6 +386,9 @@ async function receiveGroupJoin(payload) {
 		status: constants.statuses.confirmed,
 		createdAt: date,
 		updatedAt: date
+	}
+	if(isTribe) {
+		msg.senderAlias = sender_alias
 	}
 	const message = await models.Message.create(msg)
 
