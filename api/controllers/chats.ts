@@ -181,6 +181,12 @@ const deleteChat = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	const chat = await models.Chat.findOne({ where: { id } })
+
+	const tribeOwnerPubKey = await tribes.verifySignedTimestamp(chat.uuid)
+	if(owner.publicKey===tribeOwnerPubKey) {
+		return failure(res, "cannot leave your own tribe")
+	}
+
 	network.sendMessage({
 		chat,
 		sender: owner,
