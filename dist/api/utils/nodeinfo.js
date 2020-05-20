@@ -51,6 +51,7 @@ function nodeinfo() {
                                 const node = {
                                     node_alias: process.env.NODE_ALIAS,
                                     ip: process.env.NODE_IP,
+                                    lnd_port: process.env.NODE_LND_PORT,
                                     relay_commit: commitHash,
                                     public_ip: public_ip,
                                     pubkey: owner.publicKey,
