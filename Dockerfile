@@ -69,7 +69,10 @@ COPY ./docker/lnd.conf.sample /relay/.lnd/lnd.conf
 
 RUN git clone https://github.com/stakwork/sphinx-keysend-test/ /sphinx-keysend/
 WORKDIR /sphinx-keysend/
-RUN git checkout binary
+
+ARG sphinx_keysend_checkout="binary"
+
+RUN git checkout $sphinx_keysend_checkout
 RUN npm install
 
 WORKDIR /relay/
