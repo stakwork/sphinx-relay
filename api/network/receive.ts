@@ -149,6 +149,7 @@ async function parseAndVerifyPayload(data){
 		}
 	} catch(e) {
 		console.log('err',e)
+		if(payload) return payload // => RM THIS
 		return null
 	}
 }
