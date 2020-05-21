@@ -36,6 +36,7 @@ async function migrate(){
   addTableColumn('sphinx_chats', 'host')
   addTableColumn('sphinx_chats', 'price_to_join', 'BIGINT')
   addTableColumn('sphinx_chats', 'price_per_message', 'BIGINT')
+  addTableColumn('sphinx_chats', 'owner_pubkey')
   addTableColumn('sphinx_messages', 'sender_alias')
   addTableColumn('sphinx_chat_members', 'alias')
   try{

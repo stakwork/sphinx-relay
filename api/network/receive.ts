@@ -25,12 +25,13 @@ async function onReceive(payload){
 	const toAddIn:{[k:string]:any} = {}
 	const isTribe = payload.chat && payload.chat.type===constants.chat_types.tribe
 	if(isTribe && typesToForward.includes(payload.type)){
-		const tribeOwnerPubKey = await tribes.verifySignedTimestamp(payload.chat.uuid)
+		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+		const tribeOwnerPubKey = chat.ownerPubkey
 		const owner = await models.Contact.findOne({where: {isOwner:true}})
 		if(owner.publicKey===tribeOwnerPubKey){
 			// CHECK PRICES
 			toAddIn.isTribeOwner = true
-			const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+			
 			if(payload.type===msgtypes.group_join) {
 				if(payload.message.amount<chat.priceToJoin) doAction=false
 			}

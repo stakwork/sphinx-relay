@@ -99,7 +99,7 @@ function createGroupChat(req, res) {
             chatParams = yield createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join);
             if (is_listed && chatParams.uuid) {
                 // publish to tribe server
-                tribes.declare(Object.assign(Object.assign({}, chatParams), { pricePerMessage: price_per_message || 0, priceToJoin: price_to_join || 0, description, tags, img }));
+                tribes.declare(Object.assign(Object.assign({}, chatParams), { pricePerMessage: price_per_message || 0, priceToJoin: price_to_join || 0, description, tags, img, ownerPubkey: owner.publicKey, ownerAlias: owner.alias }));
             }
             // make me owner when i create
             members[owner.publicKey].role = constants.chat_roles.owner;
@@ -175,7 +175,7 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const { id } = req.params;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield models_1.models.Chat.findOne({ where: { id } });
-    const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chat.uuid);
+    const tribeOwnerPubKey = chat.ownerPubkey;
     if (owner.publicKey === tribeOwnerPubKey) {
         return res_1.failure(res, "cannot leave your own tribe");
     }
@@ -188,6 +188,9 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     yield chat.update({
         deleted: true,
         uuid: '',
+        groupKey: '',
+        host: '',
+        photoUrl: '',
         contactIds: '[]',
         name: ''
     });
@@ -198,13 +201,18 @@ exports.deleteChat = deleteChat;
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
-        const { uuid, group_key, name, host, amount, img } = req.body;
+        const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias } = req.body;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
         if (existing) {
-            console.log('[tribes] u are already in this group');
+            console.log('[tribes] u are already in this tribe');
             return;
         }
-        const ownerPubKey = yield tribes.verifySignedTimestamp(uuid);
+        if (!owner_pubkey || !group_key || !uuid) {
+            console.log('[tribes] missing required params');
+            return;
+        }
+        const ownerPubKey = owner_pubkey;
+        // verify signature here?
         const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: ownerPubKey } });
         let theTribeOwner;
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -218,7 +226,7 @@ function joinTribe(req, res) {
             const createdContact = yield models_1.models.Contact.create({
                 publicKey: ownerPubKey,
                 contactKey: '',
-                alias: 'Unknown',
+                alias: owner_alias || 'Unknown',
                 status: 1
             });
             theTribeOwner = createdContact;
@@ -236,8 +244,8 @@ function joinTribe(req, res) {
             type: constants.chat_types.tribe,
             host: host || tribes.getHost(),
             groupKey: group_key,
+            ownerPubkey: owner_pubkey,
         };
-        console.log("JOIN TRIBE AMOUNT", amount);
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members: {
                     [owner.publicKey]: {
@@ -517,6 +525,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
         const theContactIds = contactIds.includes(owner.id) ? contactIds : [owner.id].concat(contactIds);
         return {
             uuid: groupUUID,
+            ownerPubkey: owner.publicKey,
             contactIds: JSON.stringify(theContactIds),
             photoUrl: img || '',
             createdAt: date,

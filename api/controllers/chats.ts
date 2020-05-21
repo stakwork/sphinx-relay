@@ -105,6 +105,8 @@ async function createGroupChat(req, res) {
 				pricePerMessage: price_per_message||0,
 				priceToJoin: price_to_join||0,
 				description, tags, img,
+				ownerPubkey: owner.publicKey,
+				ownerAlias: owner.alias,
 			})
 		}
 		// make me owner when i create
@@ -182,7 +184,7 @@ const deleteChat = async (req, res) => {
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	const chat = await models.Chat.findOne({ where: { id } })
 
-	const tribeOwnerPubKey = await tribes.verifySignedTimestamp(chat.uuid)
+	const tribeOwnerPubKey = chat.ownerPubkey
 	if(owner.publicKey===tribeOwnerPubKey) {
 		return failure(res, "cannot leave your own tribe")
 	}
@@ -197,6 +199,9 @@ const deleteChat = async (req, res) => {
 	await chat.update({
 		deleted: true, 
 		uuid:'', 
+		groupKey:'',
+		host:'',
+		photoUrl:'',
 		contactIds:'[]',
 		name:''
 	})
@@ -207,15 +212,21 @@ const deleteChat = async (req, res) => {
 
 async function joinTribe(req, res){
 	console.log('=> joinTribe')
-	const { uuid, group_key, name, host, amount, img } = req.body
+	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias } = req.body
 
 	const existing = await models.Chat.findOne({where:{uuid}})
 	if(existing) {
-		console.log('[tribes] u are already in this group')
+		console.log('[tribes] u are already in this tribe')
 		return
 	}
 
-	const ownerPubKey = await tribes.verifySignedTimestamp(uuid)
+	if(!owner_pubkey || !group_key || !uuid) {
+		console.log('[tribes] missing required params')
+		return
+	}
+
+	const ownerPubKey = owner_pubkey
+	// verify signature here?
 
 	const tribeOwner = await models.Contact.findOne({ where: { publicKey: ownerPubKey } })
 
@@ -230,7 +241,7 @@ async function joinTribe(req, res){
 		const createdContact = await models.Contact.create({
 			publicKey: ownerPubKey,
 			contactKey: '',
-			alias: 'Unknown',
+			alias: owner_alias||'Unknown',
 			status: 1
 		})
 		theTribeOwner = createdContact
@@ -249,9 +260,9 @@ async function joinTribe(req, res){
 		type: constants.chat_types.tribe,
 		host: host || tribes.getHost(),
 		groupKey: group_key,
+		ownerPubkey: owner_pubkey,
 	}
 	
-	console.log("JOIN TRIBE AMOUNT",amount)
 	network.sendMessage({ // send my data to tribe owner
 		chat: {
 			...chatParams, members: {
@@ -546,6 +557,7 @@ async function createTribeChatParams(owner, contactIds, name, img, price_per_mes
 	const theContactIds = contactIds.includes(owner.id) ? contactIds : [owner.id].concat(contactIds)
 	return {
 		uuid: groupUUID,
+		ownerPubkey: owner.publicKey,
 		contactIds: JSON.stringify(theContactIds),
 		photoUrl: img||'',
 		createdAt: date,

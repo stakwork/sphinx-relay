@@ -60,4 +60,7 @@ export default class Chat extends Model<Chat> {
   @Column
   pricePerMessage: number
 
+  @Column 
+  ownerPubkey: string
+
 }

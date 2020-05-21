@@ -20,7 +20,6 @@ function sendMessage(params) {
         const { type, chat, message, sender, amount, success, failure, skipPubKey } = params;
         const m = newmsg(type, chat, sender, message);
         let msg = m;
-        console.log("MESSAGE TO SEND", msg);
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
             console.log("NO SENDER?????");
@@ -43,7 +42,7 @@ function sendMessage(params) {
                 return; // dont send confs for tribe
             }
             console.log("is tribe!");
-            const tribeOwnerPubKey = yield tribes.verifySignedTimestamp(chatUUID);
+            const tribeOwnerPubKey = chat.ownerPubkey;
             if (sender.publicKey === tribeOwnerPubKey) {
                 console.log('im owner! mqtt!');
                 isTribeOwner = true;
