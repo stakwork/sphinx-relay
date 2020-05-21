@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const LND = require("../utils/lightning");
-const signer = require("../utils/signer");
 const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
@@ -106,9 +105,8 @@ function signAndSend(opts, pubkey, mqttTopic) {
                 return reject('object plz');
             }
             let data = JSON.stringify(opts.data);
-            const sig = yield signer.signAscii(data);
-            console.log("BASE 64 PUBKEY", urlBase64FromHex(pubkey), urlBase64FromHex(pubkey).length);
-            data = data + urlBase64FromHex(pubkey) + ':' + urlBase64FromBytes(sig);
+            const sig = yield LND.signAscii(data);
+            data = data + sig;
             // console.log("ACTUALLY SEND", mqttTopic)
             try {
                 if (mqttTopic) {
@@ -133,7 +131,7 @@ function newmsg(type, chat, sender, message) {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),
         message: message,
-        sender: Object.assign({}, includeAlias && { alias: sender.alias })
+        sender: Object.assign(Object.assign({}, includeAlias && { alias: sender.alias }), { pub_key: sender.publicKey })
     };
 }
 function asyncForEach(array, callback) {
@@ -148,10 +146,10 @@ function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     });
 }
-function urlBase64FromHex(ascii) {
-    return Buffer.from(ascii, 'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
-}
-function urlBase64FromBytes(buf) {
-    return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
-}
+// function urlBase64FromHex(ascii){
+//     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
+// }
+// function urlBase64FromBytes(buf){
+//     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
+// }
 //# sourceMappingURL=send.js.map

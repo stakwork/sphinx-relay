@@ -1,6 +1,5 @@
 import { models } from '../models'
 import * as LND from '../utils/lightning'
-import * as signer from '../utils/signer'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
@@ -98,9 +97,8 @@ export function signAndSend(opts, pubkey, mqttTopic?:string){
 		}
 		let data = JSON.stringify(opts.data)
 
-		const sig = await signer.signAscii(data)
-		console.log("BASE 64 PUBKEY",urlBase64FromHex(pubkey),urlBase64FromHex(pubkey).length)
-		data = data + urlBase64FromHex(pubkey) + ':' + urlBase64FromBytes(sig)
+		const sig = await LND.signAscii(data)
+		data = data + sig
 
 		// console.log("ACTUALLY SEND", mqttTopic)
 		try {
@@ -132,7 +130,7 @@ function newmsg(type, chat, sender, message){
 		message: message,
 		sender: {
 			...includeAlias && {alias: sender.alias},
-			// pub_key: sender.publicKey,
+			pub_key: sender.publicKey,
 			// ...sender.contactKey && {contact_key: sender.contactKey}
 		}
 	}
@@ -147,9 +145,9 @@ async function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function urlBase64FromHex(ascii){
-    return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-}
-function urlBase64FromBytes(buf){
-    return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-}
+// function urlBase64FromHex(ascii){
+//     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
+// }
+// function urlBase64FromBytes(buf){
+//     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
+// }

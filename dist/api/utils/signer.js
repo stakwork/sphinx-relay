@@ -17,27 +17,6 @@ const ByteBuffer = require("bytebuffer");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 var signerClient = null;
-function urlBase64FromHex(ascii) {
-    return Buffer.from(ascii, 'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
-}
-function testSigner() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            console.log("TEST SIGNER");
-            const sig = yield signAscii("hello");
-            console.log("SIG", sig);
-            const pubkey = '02df97eb735e185e066fd617f813aed25babd03eb0a06ee58424e67e3d036a8897';
-            const v = yield verifyAscii("hello", sig, pubkey);
-            console.log("VERIFY", v);
-            const b64 = urlBase64FromHex(pubkey);
-            console.log(b64.length);
-        }
-        catch (e) {
-            console.log("ERROR", e);
-        }
-    });
-}
-exports.testSigner = testSigner;
 exports.loadSigner = () => {
     console.log("LOAD SIGNER RRRRRR", signerClient ? true : false);
     if (signerClient) {

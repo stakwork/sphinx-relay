@@ -106,7 +106,7 @@ const getRoute = async (pub_key, amt, callback) => {
 const keysend = (opts) => {
   return new Promise(async function(resolve, reject) {
     let lightning = await loadLightning()
-
+    console.log("FIRST OPTS",opts)
     const randoStr = crypto.randomBytes(32).toString('hex');
     const preimage = ByteBuffer.fromHex(randoStr)
     const options = {
@@ -120,6 +120,7 @@ const keysend = (opts) => {
       payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
       dest_features:[9],
     }
+    console.log("FINAL OPTIONS",options)
     const call = lightning.sendPayment()
     call.on('data', function(payment) {
       if(payment.payment_error){
@@ -342,7 +343,6 @@ function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
         signature:sig, // zbase32 encoded string
       }
       lightning.verifyMessage(options, function(err,res){
-        console.log("VERIFY MESSAGE",err,res)
         if(err || !res.pubkey) {
           reject(err)
         } else {

@@ -15,7 +15,6 @@ const lightning_1 = require("../utils/lightning");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
 const lightning_2 = require("../utils/lightning");
-const signer = require("../utils/signer");
 const models_1 = require("../models");
 const send_1 = require("./send");
 const modify_1 = require("./modify");
@@ -153,18 +152,18 @@ function parseAndVerifyPayload(data) {
         let payload;
         const li = data.lastIndexOf('}');
         const msg = data.substring(0, li + 1);
-        const pubkeyandsig = data.substring(li + 1);
-        const ci = pubkeyandsig.indexOf(':');
-        const pubkeyb64 = pubkeyandsig.substring(0, ci + 1);
-        const sigb64 = pubkeyandsig.substring(ci + 1);
+        const sig = data.substring(li + 1);
         try {
             payload = JSON.parse(msg);
             if (payload) {
-                const v = yield signer.verifyAscii(msg, Buffer.from(sigb64, 'base64'), b64toHex(pubkeyb64));
+                const v = yield lightning_2.verifyAscii(msg, sig);
                 if (v && v.valid && v.pubkey) {
                     payload.sender = payload.sender || {};
                     payload.sender.pub_key = v.pubkey;
                     return payload;
+                }
+                else {
+                    return payload; // => RM THIS
                 }
             }
         }
@@ -223,8 +222,5 @@ function weave(p) {
         delete chunks[ts];
         return payload;
     }
-}
-function b64toHex(b64) {
-    return Buffer.from(b64, 'base64').toString('hex');
 }
 //# sourceMappingURL=receive.js.map

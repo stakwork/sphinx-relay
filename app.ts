@@ -11,7 +11,6 @@ import {setupDatabase, setupDone} from './api/utils/setup'
 import * as controllers from './api/controllers'
 import * as socket from './api/utils/socket'
 import * as network from './api/network'
-import * as signer from './api/utils/signer'
 
 let server: any = null
 const port = process.env.PORT || 3001;
@@ -50,7 +49,6 @@ async function mainSetup(){
 	}
 	await setupApp()
 	setupDone()
-	signer.testSigner()
 }
  
 async function setupApp(){

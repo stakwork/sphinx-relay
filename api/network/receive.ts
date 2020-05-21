@@ -3,8 +3,7 @@ import * as lndService from '../grpc'
 import {getInfo} from '../utils/lightning'
 import {controllers} from '../controllers'
 import * as tribes from '../utils/tribes'
-import {SPHINX_CUSTOM_RECORD_KEY} from '../utils/lightning'
-import * as signer from '../utils/signer'
+import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
 import {sendMessage} from './send'
 import {modifyPayload} from './modify'
@@ -133,18 +132,17 @@ async function parseAndVerifyPayload(data){
 	let payload
 	const li = data.lastIndexOf('}')
 	const msg = data.substring(0,li+1)
-	const pubkeyandsig = data.substring(li+1)
-	const ci = pubkeyandsig.indexOf(':')
-	const pubkeyb64 = pubkeyandsig.substring(0,ci+1)
-	const sigb64 = pubkeyandsig.substring(ci+1)
+	const sig = data.substring(li+1)
 	try {
 		payload = JSON.parse(msg)
 		if(payload) {
-			const v = await signer.verifyAscii(msg, Buffer.from(sigb64,'base64'), b64toHex(pubkeyb64))
+			const v = await verifyAscii(msg, sig)
 			if(v && v.valid && v.pubkey) {
 				payload.sender = payload.sender||{}
 				payload.sender.pub_key=v.pubkey
 				return payload
+			} else {
+				return payload // => RM THIS
 			}
 		}
 	} catch(e) {
@@ -197,12 +195,3 @@ function weave(p){
 		return payload
 	}
 }
-
-function b64toHex(b64){
-    return Buffer.from(b64,'base64').toString('hex')
-}
-
-
-
-
-
