@@ -143,11 +143,12 @@ async function parseAndVerifyPayload(data){
 				payload.sender.pub_key=v.pubkey
 				return payload
 			} else {
+				console.log('return payload',payload)
 				return payload // => RM THIS
 			}
 		}
 	} catch(e) {
-		console.log(e)
+		console.log('err',e)
 		return null
 	}
 }
