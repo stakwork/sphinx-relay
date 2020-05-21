@@ -53,7 +53,7 @@ function sendMessage(params) {
             else {
                 // if tribe, send to owner only
                 const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: tribeOwnerPubKey } });
-                contactIds = [tribeOwner.id];
+                contactIds = tribeOwner ? [tribeOwner.id] : [];
             }
         }
         let yes = null;

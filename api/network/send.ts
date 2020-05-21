@@ -46,7 +46,7 @@ export async function sendMessage(params) {
 		} else {
 			// if tribe, send to owner only
 			const tribeOwner = await models.Contact.findOne({where: {publicKey:tribeOwnerPubKey}})
-			contactIds = [tribeOwner.id]
+			contactIds = tribeOwner ? [tribeOwner.id] : []
 		}
 	}
 
