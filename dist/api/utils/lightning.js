@@ -270,22 +270,24 @@ function listInvoicesPaginated(limit, offset) {
     }));
 }
 // need to upgrade to .10 for this
-function listAllPaymentsPaginated() {
+function listAllPayments() {
     return __awaiter(this, void 0, void 0, function* () {
-        const invs = yield paginatePayments(40); // max num
-        return invs;
+        console.log("=> list all payments");
+        const pays = yield paginatePayments(40); // max num
+        console.log('pays', pays && pays.length);
+        return pays;
     });
 }
-exports.listAllPaymentsPaginated = listAllPaymentsPaginated;
+exports.listAllPayments = listAllPayments;
 function paginatePayments(limit, i = 0) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const r = yield listPaymentsPaginated(limit, i);
             const lastOffset = parseInt(r.first_index_offset); // this is "first" cuz its in reverse (lowest index)
             if (lastOffset > 0) {
-                return r.invoices.concat(yield paginatePayments(limit, lastOffset));
+                return r.payments.concat(yield paginatePayments(limit, lastOffset));
             }
-            return r.invoices;
+            return r.payments;
         }
         catch (e) {
             return [];
@@ -296,7 +298,7 @@ function listPaymentsPaginated(limit, offset) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         lightning.listPayments({
-            num_max_payments: limit,
+            max_payments: limit,
             index_offset: offset,
             reversed: true,
         }, (err, response) => {
@@ -307,7 +309,7 @@ function listPaymentsPaginated(limit, offset) {
         });
     }));
 }
-function listAllPayments() {
+function listAllPaymentsFull() {
     console.log('=> list all payments');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
@@ -321,7 +323,7 @@ function listAllPayments() {
         });
     }));
 }
-exports.listAllPayments = listAllPayments;
+exports.listAllPaymentsFull = listAllPaymentsFull;
 const signMessage = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         let lightning = yield loadLightning();
@@ -383,6 +385,7 @@ function verifyMessage(msg, sig) {
                 signature: sig,
             };
             lightning.verifyMessage(options, function (err, res) {
+                console.log("VERIFY MESSAGE", err, res);
                 if (err || !res.pubkey) {
                     reject(err);
                 }

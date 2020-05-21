@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const LND = require("../utils/lightning");
+const signer = require("../utils/signer");
 const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
@@ -21,7 +22,7 @@ function sendMessage(params) {
         const m = newmsg(type, chat, sender, message);
         let msg = m;
         // console.log(type,message)
-        if (!sender) {
+        if (!(sender && sender.publicKey)) {
             console.log("NO SENDER?????");
             return;
         }
@@ -77,7 +78,7 @@ function sendMessage(params) {
             };
             try {
                 const mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
-                const r = yield signAndSend(opts, mqttTopic);
+                const r = yield signAndSend(opts, sender.publicKey, mqttTopic);
                 yes = r;
             }
             catch (e) {
@@ -97,7 +98,7 @@ function sendMessage(params) {
     });
 }
 exports.sendMessage = sendMessage;
-function signAndSend(opts, mqttTopic) {
+function signAndSend(opts, pubkey, mqttTopic) {
     // console.log('sign and send!!!!',opts.data)
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -105,8 +106,9 @@ function signAndSend(opts, mqttTopic) {
                 return reject('object plz');
             }
             let data = JSON.stringify(opts.data);
-            const sig = yield LND.signAscii(data);
-            data = data + sig;
+            const sig = yield signer.signAscii(data);
+            console.log("BASE 64 PUBKEY", urlBase64FromHex(pubkey), urlBase64FromHex(pubkey).length);
+            data = data + urlBase64FromHex(pubkey) + ':' + urlBase64FromBytes(sig);
             // console.log("ACTUALLY SEND", mqttTopic)
             try {
                 if (mqttTopic) {
@@ -145,5 +147,11 @@ function sleep(ms) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise(resolve => setTimeout(resolve, ms));
     });
+}
+function urlBase64FromHex(ascii) {
+    return Buffer.from(ascii, 'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+}
+function urlBase64FromBytes(buf) {
+    return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
 }
 //# sourceMappingURL=send.js.map

@@ -22,6 +22,7 @@ const setup_1 = require("./api/utils/setup");
 const controllers = require("./api/controllers");
 const socket = require("./api/utils/socket");
 const network = require("./api/network");
+const signer = require("./api/utils/signer");
 let server = null;
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
@@ -58,6 +59,7 @@ function mainSetup() {
         }
         yield setupApp();
         setup_1.setupDone();
+        signer.testSigner();
     });
 }
 function setupApp() {

@@ -19,13 +19,14 @@ const network = require("../network");
 const moment = require("moment");
 const path = require("path");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+const ERR_CODE_UNAVAILABLE = 14;
+const ERR_CODE_STREAM_REMOVED = 2;
 function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning();
         var call = lightning.subscribeInvoices();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                // console.log('subscribeInvoices received')
                 if (response['state'] !== 'SETTLED') {
                     return;
                 }
@@ -86,17 +87,31 @@ function subscribeInvoices(parseKeysendInvoice) {
         });
         call.on('status', function (status) {
             console.log("Status", status);
-            resolve(status);
+            // The server is unavailable, trying to reconnect.
+            if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
+                i = 0;
+                reconnectToLND(Math.random());
+            }
+            else {
+                resolve(status);
+            }
         });
         call.on('error', function (err) {
-            // console.log(err)
-            reject(err);
+            console.error(err);
+            if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
+                i = 0;
+                reconnectToLND(Math.random());
+            }
+            else {
+                reject(err);
+            }
         });
         call.on('end', function () {
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
             console.log(`Closed stream ${now}`);
             // The server has closed the stream.
-            reconnectToLND();
+            i = 0;
+            reconnectToLND(Math.random());
         });
         setTimeout(() => {
             resolve(null);
@@ -105,8 +120,10 @@ function subscribeInvoices(parseKeysendInvoice) {
 }
 exports.subscribeInvoices = subscribeInvoices;
 var i = 0;
-function reconnectToLND() {
+var ctx = 0;
+function reconnectToLND(innerCtx) {
     return __awaiter(this, void 0, void 0, function* () {
+        ctx = innerCtx;
         i++;
         console.log(`=> [lnd] reconnecting... attempt #${i}`);
         try {
@@ -116,7 +133,9 @@ function reconnectToLND() {
         }
         catch (e) {
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                yield reconnectToLND();
+                if (ctx === innerCtx) { // if another retry fires, then this will not run
+                    yield reconnectToLND(innerCtx);
+                }
             }), 2000);
         }
     });

@@ -56,6 +56,7 @@ const sendContactKeys = async (args) => {
 			destination_key = contact.publicKey
 		}
 		performKeysendMessage({
+			sender,
 			destination_key,
 			amount: 3,
 			msg,
@@ -75,14 +76,14 @@ const sendContactKeys = async (args) => {
 	}
 }
 
-const performKeysendMessage = async ({ destination_key, amount, msg, success, failure }) => {
+const performKeysendMessage = async ({ destination_key, amount, msg, success, failure, sender }) => {
 	const opts = {
 		dest: destination_key,
 		data: msg || {},
 		amt: Math.max(amount, 3)
 	}
 	try {
-		const r = await network.signAndSend(opts)
+		const r = await network.signAndSend(opts, sender.publicKey)
 		console.log("=> external keysend")
 		if (success) success(r)
 	} catch (e) {

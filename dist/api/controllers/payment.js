@@ -22,8 +22,10 @@ const network = require("../network");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, } = req.body;
     console.log('[send payment]', req.body);
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (destination_key && !contact_id && !chat_id) {
         return helpers.performKeysendMessage({
+            sender: owner,
             destination_key,
             amount,
             msg: {},
@@ -38,7 +40,6 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             }
         });
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield helpers.findOrCreateChat({
         chat_id,
         owner_id: owner.id,
@@ -150,11 +151,12 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const payments = [];
+    const MIN_VAL = 3;
     const invs = yield lightning.listAllInvoices();
     if (invs && invs.length) {
         invs.forEach(inv => {
             const val = inv.value && parseInt(inv.value);
-            if (val && val > 1) {
+            if (val && val > MIN_VAL) {
                 let payment_hash = '';
                 if (inv.r_hash) {
                     payment_hash = Buffer.from(inv.r_hash).toString('hex');
@@ -173,12 +175,12 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (pays && pays.length) {
         pays.forEach(pay => {
             const val = pay.value && parseInt(pay.value);
-            if (val && val > 1) {
+            if (val && val > MIN_VAL) {
                 payments.push({
                     type: 'payment',
                     amount: parseInt(pay.value),
                     date: parseInt(pay.creation_date),
-                    pubkey: pay.path[pay.path.length - 1],
+                    // pubkey:pay.path[pay.path.length-1],
                     payment_hash: pay.payment_hash,
                 });
             }

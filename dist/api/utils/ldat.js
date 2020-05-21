@@ -154,4 +154,8 @@ function urlBase64FromAscii(ascii) {
     return Buffer.from(ascii, 'ascii').toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
 }
 exports.urlBase64FromAscii = urlBase64FromAscii;
+function urlBase64FromHex(ascii) {
+    return Buffer.from(ascii, 'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+}
+exports.urlBase64FromHex = urlBase64FromHex;
 //# sourceMappingURL=ldat.js.map

@@ -63,6 +63,7 @@ const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* ()
             destination_key = contact.publicKey;
         }
         performKeysendMessage({
+            sender,
             destination_key,
             amount: 3,
             msg,
@@ -82,14 +83,14 @@ const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.sendContactKeys = sendContactKeys;
-const performKeysendMessage = ({ destination_key, amount, msg, success, failure }) => __awaiter(void 0, void 0, void 0, function* () {
+const performKeysendMessage = ({ destination_key, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
         data: msg || {},
         amt: Math.max(amount, 3)
     };
     try {
-        const r = yield network.signAndSend(opts);
+        const r = yield network.signAndSend(opts, sender.publicKey);
         console.log("=> external keysend");
         if (success)
             success(r);

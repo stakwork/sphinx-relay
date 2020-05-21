@@ -1,5 +1,6 @@
 import { models } from '../models'
 import * as LND from '../utils/lightning'
+import * as signer from '../utils/signer'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
@@ -14,7 +15,7 @@ export async function sendMessage(params) {
 	let msg = m
 
 	// console.log(type,message)
-	if(!sender) {
+	if(!(sender&&sender.publicKey)) {
 		console.log("NO SENDER?????")
 		return
 	}
@@ -74,7 +75,7 @@ export async function sendMessage(params) {
 
 		try {
 			const mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
-			const r = await signAndSend(opts, mqttTopic)
+			const r = await signAndSend(opts, sender.publicKey, mqttTopic)
 			yes = r
 		} catch (e) {
 			console.log("KEYSEND ERROR", e)
@@ -89,7 +90,7 @@ export async function sendMessage(params) {
 	}
 }
 
-export function signAndSend(opts, mqttTopic?:string){
+export function signAndSend(opts, pubkey, mqttTopic?:string){
 	// console.log('sign and send!!!!',opts.data)
 	return new Promise(async function(resolve, reject) {
 		if(!opts.data || typeof opts.data!=='object') {
@@ -97,8 +98,9 @@ export function signAndSend(opts, mqttTopic?:string){
 		}
 		let data = JSON.stringify(opts.data)
 
-		const sig = await LND.signAscii(data)
-		data = data + sig
+		const sig = await signer.signAscii(data)
+		console.log("BASE 64 PUBKEY",urlBase64FromHex(pubkey),urlBase64FromHex(pubkey).length)
+		data = data + urlBase64FromHex(pubkey) + ':' + urlBase64FromBytes(sig)
 
 		// console.log("ACTUALLY SEND", mqttTopic)
 		try {
@@ -143,4 +145,11 @@ async function asyncForEach(array, callback) {
 }
 async function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function urlBase64FromHex(ascii){
+    return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
+}
+function urlBase64FromBytes(buf){
+    return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 }
