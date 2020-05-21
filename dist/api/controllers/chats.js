@@ -45,37 +45,6 @@ function mute(req, res) {
     });
 }
 exports.mute = mute;
-function testCreateTribe() {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log("=======> TEST CREATE TRIBE");
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const contact_ids = [1];
-        const img = 'https://i.pinimg.com/originals/54/7a/9c/547a9cc6b93e10261f1dd8a8af474e03.jpg';
-        const price_per_message = 0;
-        const price_to_join = 100;
-        const name = `Evan's test tribe`;
-        const chatParams = yield createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join);
-        // publish to tribe server
-        tribes.declare({
-            name: chatParams.name,
-            uuid: chatParams.uuid,
-            host: chatParams.host,
-            groupKey: chatParams.groupKey,
-            pricePerMessage: price_per_message,
-            priceToJoin: price_to_join,
-            description: 'This is a test group',
-            tags: ['Bitcoin', 'Lightning'],
-            img,
-        });
-        const chat = yield models_1.models.Chat.create(chatParams);
-        yield models_1.models.ChatMember.create({
-            contactId: owner.id,
-            chatId: chat.id,
-            role: constants.chat_roles.owner,
-        });
-    });
-}
-exports.testCreateTribe = testCreateTribe;
 // just add self here if tribes
 // or can u add contacts as members?
 function createGroupChat(req, res) {

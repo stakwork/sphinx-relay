@@ -38,10 +38,6 @@ function set(app) {
         catch (e) {
             console.log('=> could not auth with media server', e.message);
         }
-        const testTribe = process.env.TEST_TRIBE;
-        if (testTribe && testTribe === 'true') {
-            controllers.chats.testCreateTribe();
-        }
         app.get('/chats', controllers.chats.getChats);
         app.post('/group', controllers.chats.createGroupChat);
         app.post('/chats/:chat_id/:mute_unmute', controllers.chats.mute);

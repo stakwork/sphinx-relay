@@ -11,15 +11,6 @@ const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 let client:any
 
-// export async function testCreate(){
-//     const uuid = await genSignedTimestamp()
-//     const name='test'
-//     declare({
-//         uuid,name,groupKey:'asdf',host:config.tribes_host,
-//         pricePerMessage:0,priceToJoin:0,description:'',tags:[]
-//     })
-// }
-
 export async function connect(onMessage) {
     try{
         const info = await LND.getInfo()
@@ -62,7 +53,7 @@ export function publish(topic,msg){
     if(client) client.publish(topic,msg)
 }
 
-export async function declare({uuid,name,description,tags,img,groupKey,host,pricePerMessage,priceToJoin}) {
+export async function declare({uuid,name,description,tags,img,groupKey,host,pricePerMessage,priceToJoin,ownerAlias,ownerPubkey}) {
     const r = await fetch('https://' + host + '/tribes', {
         method: 'POST' ,
         body:    JSON.stringify({
@@ -70,6 +61,7 @@ export async function declare({uuid,name,description,tags,img,groupKey,host,pric
             name, description, tags, img:img||'',
             pricePerMessage:pricePerMessage||0,
             priceToJoin:priceToJoin||0,
+            ownerAlias, ownerPubkey,
             
         }),
         headers: { 'Content-Type': 'application/json' }
