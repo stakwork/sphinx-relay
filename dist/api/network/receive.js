@@ -156,7 +156,7 @@ function parseAndVerifyPayload(data) {
         try {
             payload = JSON.parse(msg);
             if (payload) {
-                const v = yield lightning_2.verifyAscii(msg, sig);
+                const v = yield lightning_2.verifyAscii(msg, sig + 'a');
                 if (v && v.valid && v.pubkey) {
                     payload.sender = payload.sender || {};
                     payload.sender.pub_key = v.pubkey;

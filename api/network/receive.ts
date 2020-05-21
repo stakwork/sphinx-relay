@@ -136,7 +136,7 @@ async function parseAndVerifyPayload(data){
 	try {
 		payload = JSON.parse(msg)
 		if(payload) {
-			const v = await verifyAscii(msg, sig)
+			const v = await verifyAscii(msg, sig+'a')
 			if(v && v.valid && v.pubkey) {
 				payload.sender = payload.sender||{}
 				payload.sender.pub_key=v.pubkey
