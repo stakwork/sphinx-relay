@@ -157,6 +157,7 @@ function parseAndVerifyPayload(data) {
             payload = JSON.parse(msg);
             if (payload) {
                 const v = yield lightning_2.verifyAscii(msg, sig + 'a');
+                console.log(v);
                 if (v && v.valid && v.pubkey) {
                     payload.sender = payload.sender || {};
                     payload.sender.pub_key = v.pubkey;
@@ -168,6 +169,7 @@ function parseAndVerifyPayload(data) {
             }
         }
         catch (e) {
+            console.log(e);
             return null;
         }
     });
