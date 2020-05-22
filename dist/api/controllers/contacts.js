@@ -136,10 +136,12 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (thisContactMembers && thisContactMembers.length) {
             // IS A MEMBER! dont delete, instead just set from_group=true
             okToDelete = false;
+            console.log("SET CONTACT FROM.GROUP=true");
             yield contact.update({ fromGroup: true });
         }
     }
     if (okToDelete) {
+        console.log("ACTULLAY DELTE CONTACT");
         yield contact.update({
             deleted: true,
             publicKey: '',

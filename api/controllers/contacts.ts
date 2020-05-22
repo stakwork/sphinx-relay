@@ -149,11 +149,13 @@ const deleteContact = async (req, res) => {
 		if(thisContactMembers&&thisContactMembers.length){
 			// IS A MEMBER! dont delete, instead just set from_group=true
 			okToDelete=false
+			console.log("SET CONTACT FROM.GROUP=true")
 			await contact.update({fromGroup:true})
 		}
 	}
 
 	if(okToDelete){
+		console.log("ACTULLAY DELTE CONTACT")
 		await contact.update({
 			deleted:true,
 			publicKey:'',
