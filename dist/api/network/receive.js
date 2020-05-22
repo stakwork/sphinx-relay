@@ -39,6 +39,11 @@ function onReceive(payload) {
             const tribeOwnerPubKey = chat.ownerPubkey;
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             if (owner.publicKey === tribeOwnerPubKey) {
+                // CHECK THEY ARE IN THE GROUP
+                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+                const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                if (!senderMember)
+                    doAction = false;
                 // CHECK PRICES
                 toAddIn.isTribeOwner = true;
                 if (payload.type === msgtypes.group_join) {

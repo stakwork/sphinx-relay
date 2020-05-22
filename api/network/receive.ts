@@ -29,9 +29,12 @@ async function onReceive(payload){
 		const tribeOwnerPubKey = chat.ownerPubkey
 		const owner = await models.Contact.findOne({where: {isOwner:true}})
 		if(owner.publicKey===tribeOwnerPubKey){
+			// CHECK THEY ARE IN THE GROUP
+			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+			const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+			if(!senderMember) doAction=false
 			// CHECK PRICES
 			toAddIn.isTribeOwner = true
-			
 			if(payload.type===msgtypes.group_join) {
 				if(payload.message.amount<chat.priceToJoin) doAction=false
 			}

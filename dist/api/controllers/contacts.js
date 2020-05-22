@@ -100,6 +100,14 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     console.log('=> createContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'] } }));
+    if (existing) {
+        const updateObj = { from_group: false };
+        if (attrs['alias'])
+            updateObj.alias = attrs['alias'];
+        yield existing.update(updateObj);
+        return res_1.success(res, jsonUtils.contactToJson(existing));
+    }
     const createdContact = yield models_1.models.Contact.create(attrs);
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(contact));
@@ -117,13 +125,29 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
     const contact = yield models_1.models.Contact.findOne({ where: { id } });
-    yield contact.update({
-        deleted: true,
-        publicKey: '',
-        photoUrl: '',
-        alias: 'Unknown',
-        contactKey: '',
-    });
+    if (!contact)
+        return;
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const tribesImAdminOf = yield models_1.models.Chat.findAll({ where: { ownerPubkey: owner.publicKey } });
+    const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t => t.id);
+    let okToDelete = true;
+    if (tribesIdArray && tribesIdArray.length) {
+        const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { id: { in: tribesIdArray } } });
+        if (thisContactMembers && thisContactMembers.length) {
+            // IS A MEMBER! dont delete, instead just set from_group=true
+            okToDelete = false;
+            yield contact.update({ fromGroup: true });
+        }
+    }
+    if (okToDelete) {
+        yield contact.update({
+            deleted: true,
+            publicKey: '',
+            photoUrl: '',
+            alias: 'Unknown',
+            contactKey: '',
+        });
+    }
     // find and destroy chat & messages
     const chats = yield models_1.models.Chat.findAll({ where: { deleted: false } });
     chats.map((chat) => __awaiter(void 0, void 0, void 0, function* () {
