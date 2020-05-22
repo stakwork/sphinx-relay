@@ -111,12 +111,10 @@ const createContact = async (req, res) => {
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
 	const existing = attrs['public_key'] && await models.Contact.findOne({where:{publicKey:attrs['public_key']}})
-	console.log("EXISTING?",existing?true:false)
 	if(existing) {
 		const updateObj:{[k:string]:any} = {fromGroup:false}
 		if(attrs['alias']) updateObj.alias = attrs['alias']
 		await existing.update(updateObj)
-		console.log("UDPATE!",existing.dataValues)
 		return success(res, jsonUtils.contactToJson(existing))
 	}
 
@@ -144,7 +142,9 @@ const deleteContact = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const tribesImAdminOf = await models.Chat.findAll({where:{ownerPubkey:owner.publicKey}})
+	console.log("TRIES IM ADMIJ OF", tribesImAdminOf)
 	const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t=>t.id)
+	console.log("TRIES ID ARRAY",tribesIdArray)
 	let okToDelete = true
 	if(tribesIdArray && tribesIdArray.length) {
 		const thisContactMembers = await models.ChatMember.findAll({where:{id:{in:tribesIdArray}}})

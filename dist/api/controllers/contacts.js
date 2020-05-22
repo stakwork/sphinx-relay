@@ -101,13 +101,11 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     let attrs = extractAttrs(req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'] } }));
-    console.log("EXISTING?", existing ? true : false);
     if (existing) {
         const updateObj = { fromGroup: false };
         if (attrs['alias'])
             updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);
-        console.log("UDPATE!", existing.dataValues);
         return res_1.success(res, jsonUtils.contactToJson(existing));
     }
     const createdContact = yield models_1.models.Contact.create(attrs);
@@ -131,7 +129,9 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const tribesImAdminOf = yield models_1.models.Chat.findAll({ where: { ownerPubkey: owner.publicKey } });
+    console.log("TRIES IM ADMIJ OF", tribesImAdminOf);
     const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t => t.id);
+    console.log("TRIES ID ARRAY", tribesIdArray);
     let okToDelete = true;
     if (tribesIdArray && tribesIdArray.length) {
         const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { id: { in: tribesIdArray } } });
