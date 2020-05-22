@@ -97,7 +97,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, } = req.body;
     console.log('[sendMessage]', remote_text_map);
     var date = new Date();
     date.setMilliseconds(0);
@@ -112,12 +112,13 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         chatId: chat.id,
         type: constants.message_types.message,
         sender: owner.id,
+        amount: amount,
         date: date,
         messageContent: text,
         remoteMessageContent,
         status: constants.statuses.pending,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
     };
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
@@ -125,6 +126,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     network.sendMessage({
         chat: chat,
         sender: owner,
+        amount: amount,
         type: constants.message_types.message,
         message: {
             id: message.id,

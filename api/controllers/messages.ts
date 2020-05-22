@@ -106,6 +106,7 @@ const sendMessage = async (req, res) => {
 		remote_text,
 		chat_id,
 		remote_text_map,
+		amount,
 	} = req.body
 
 	console.log('[sendMessage]',remote_text_map)
@@ -125,12 +126,13 @@ const sendMessage = async (req, res) => {
 		chatId: chat.id,
 		type: constants.message_types.message,
 		sender: owner.id,
+		amount: amount,
 		date: date,
 		messageContent: text,
 		remoteMessageContent,
 		status: constants.statuses.pending,
 		createdAt: date,
-		updatedAt: date
+		updatedAt: date,
 	}
 	// console.log(msg)
 	const message = await models.Message.create(msg)
@@ -140,6 +142,7 @@ const sendMessage = async (req, res) => {
 	network.sendMessage({
 		chat: chat,
 		sender: owner,
+		amount: amount,
 		type: constants.message_types.message,
 		message: {
 			id: message.id,

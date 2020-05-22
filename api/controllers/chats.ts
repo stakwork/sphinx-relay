@@ -213,7 +213,8 @@ async function joinTribe(req, res){
 			publicKey: ownerPubKey,
 			contactKey: '',
 			alias: owner_alias||'Unknown',
-			status: 1
+			status: 1,
+			fromGroup: true,
 		})
 		theTribeOwner = createdContact
 		contactIds.push(createdContact.id)
@@ -346,7 +347,8 @@ async function receiveGroupJoin(payload) {
 					publicKey: sender_pub_key,
 					contactKey: member.key,
 					alias: senderAlias,
-					status: 1
+					status: 1,
+					fromGroup: true,
 				})
 				theSender = createdContact
 				contactIds.push(createdContact.id)
@@ -427,7 +429,8 @@ async function receiveGroupCreateOrInvite(payload) {
 					publicKey: pubkey,
 					contactKey: member.key,
 					alias: member.alias||'Unknown',
-					status: 1
+					status: 1,
+					fromGroup: true,
 				})
 				contacts.push({...createdContact.dataValues,role:member.role})
 				newContacts.push(createdContact.dataValues)

@@ -54,4 +54,7 @@ export default class Contact extends Model<Contact> {
   @Column
   updatedAt: Date
 
+  @Column
+  fromGroup: boolean
+
 }

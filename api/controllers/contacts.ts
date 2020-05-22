@@ -225,7 +225,7 @@ const receiveContactKey = async (payload) => {
 }
 
 const extractAttrs = body => {
-	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key"]
+	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group"]
 	let attrs = {}
 	Object.keys(body).forEach(key => {
 		if (fields_to_update.includes(key)) {
