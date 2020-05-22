@@ -142,12 +142,13 @@ const deleteContact = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const tribesImAdminOf = await models.Chat.findAll({where:{ownerPubkey:owner.publicKey}})
-	console.log("TRIES IM ADMIJ OF", tribesImAdminOf)
+	console.log("TRIES IM ADMIN OF", tribesImAdminOf)
 	const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t=>t.id)
 	console.log("TRIES ID ARRAY",tribesIdArray)
 	let okToDelete = true
 	if(tribesIdArray && tribesIdArray.length) {
-		const thisContactMembers = await models.ChatMember.findAll({where:{id:{in:tribesIdArray}}})
+		const thisContactMembers = await models.ChatMember.findAll({where:{chatId:{in:tribesIdArray}}})
+		console.log("thisContactMembers",thisContactMembers)
 		if(thisContactMembers&&thisContactMembers.length){
 			// IS A MEMBER! dont delete, instead just set from_group=true
 			okToDelete=false
