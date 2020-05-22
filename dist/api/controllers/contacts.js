@@ -130,22 +130,17 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const tribesImAdminOf = yield models_1.models.Chat.findAll({ where: { ownerPubkey: owner.publicKey } });
-    console.log("TRIES IM ADMIN OF", tribesImAdminOf);
     const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t => t.id);
-    console.log("TRIES ID ARRAY", tribesIdArray);
     let okToDelete = true;
     if (tribesIdArray && tribesIdArray.length) {
         const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { contactId: id, chatId: { [sequelize_1.Op.in]: tribesIdArray } } });
-        console.log("thisContactMembers for this guy", thisContactMembers);
         if (thisContactMembers && thisContactMembers.length) {
             // IS A MEMBER! dont delete, instead just set from_group=true
             okToDelete = false;
-            console.log("SET CONTACT FROM.GROUP=true");
             yield contact.update({ fromGroup: true });
         }
     }
     if (okToDelete) {
-        console.log("ACTULLAY DELTE CONTACT");
         yield contact.update({
             deleted: true,
             publicKey: '',

@@ -143,23 +143,18 @@ const deleteContact = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const tribesImAdminOf = await models.Chat.findAll({where:{ownerPubkey:owner.publicKey}})
-	console.log("TRIES IM ADMIN OF", tribesImAdminOf)
 	const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t=>t.id)
-	console.log("TRIES ID ARRAY",tribesIdArray)
 	let okToDelete = true
 	if(tribesIdArray && tribesIdArray.length) {
 		const thisContactMembers = await models.ChatMember.findAll({where:{contactId:id,chatId:{[Op.in]:tribesIdArray}}})
-		console.log("thisContactMembers for this guy",thisContactMembers)
 		if(thisContactMembers&&thisContactMembers.length){
 			// IS A MEMBER! dont delete, instead just set from_group=true
 			okToDelete=false
-			console.log("SET CONTACT FROM.GROUP=true")
 			await contact.update({fromGroup:true})
 		}
 	}
 
 	if(okToDelete){
-		console.log("ACTULLAY DELTE CONTACT")
 		await contact.update({
 			deleted:true,
 			publicKey:'',
