@@ -112,7 +112,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         chatId: chat.id,
         type: constants.message_types.message,
         sender: owner.id,
-        amount: amount,
+        amount: amount || 0,
         date: date,
         messageContent: text,
         remoteMessageContent,
@@ -126,7 +126,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     network.sendMessage({
         chat: chat,
         sender: owner,
-        amount: amount,
+        amount: amount || 0,
         type: constants.message_types.message,
         message: {
             id: message.id,

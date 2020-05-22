@@ -126,7 +126,7 @@ const sendMessage = async (req, res) => {
 		chatId: chat.id,
 		type: constants.message_types.message,
 		sender: owner.id,
-		amount: amount,
+		amount: amount||0,
 		date: date,
 		messageContent: text,
 		remoteMessageContent,
@@ -142,7 +142,7 @@ const sendMessage = async (req, res) => {
 	network.sendMessage({
 		chat: chat,
 		sender: owner,
-		amount: amount,
+		amount: amount||0,
 		type: constants.message_types.message,
 		message: {
 			id: message.id,
