@@ -27,6 +27,9 @@ const typesToForward = [
 const typesToModify = [
     msgtypes.attachment
 ];
+const typesThatNeedPricePerMessage = [
+    msgtypes.message, msgtypes.attachment
+];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("=>>> onReceive", payload);
@@ -35,23 +38,27 @@ function onReceive(payload) {
         const toAddIn = {};
         const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
         if (isTribe && typesToForward.includes(payload.type)) {
+            const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             const tribeOwnerPubKey = chat.ownerPubkey;
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             if (owner.publicKey === tribeOwnerPubKey) {
-                // CHECK THEY ARE IN THE GROUP
-                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-                const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
-                if (!senderMember)
-                    doAction = false;
-                // CHECK PRICES
                 toAddIn.isTribeOwner = true;
-                if (payload.type === msgtypes.group_join) {
-                    if (payload.message.amount < chat.priceToJoin)
+                // CHECK THEY ARE IN THE GROUP if message
+                if (needsPricePerJoin) {
+                    const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+                    const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                    if (!senderMember)
                         doAction = false;
                 }
-                if (payload.type === msgtypes.message) {
+                // CHECK PRICES
+                if (needsPricePerJoin) {
                     if (payload.message.amount < chat.pricePerMessage)
+                        doAction = false;
+                }
+                // check price to join
+                if (payload.type === msgtypes.group_join) {
+                    if (payload.message.amount < chat.priceToJoin)
                         doAction = false;
                 }
                 if (doAction)

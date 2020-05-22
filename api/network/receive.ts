@@ -18,6 +18,9 @@ const typesToForward=[
 const typesToModify=[
 	msgtypes.attachment
 ]
+const typesThatNeedPricePerMessage = [
+	msgtypes.message, msgtypes.attachment
+]
 async function onReceive(payload){
 	console.log("=>>> onReceive",payload)
 	// if tribe, owner must forward to MQTT
@@ -25,21 +28,25 @@ async function onReceive(payload){
 	const toAddIn:{[k:string]:any} = {}
 	const isTribe = payload.chat && payload.chat.type===constants.chat_types.tribe
 	if(isTribe && typesToForward.includes(payload.type)){
+		const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type)
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		const tribeOwnerPubKey = chat.ownerPubkey
 		const owner = await models.Contact.findOne({where: {isOwner:true}})
 		if(owner.publicKey===tribeOwnerPubKey){
-			// CHECK THEY ARE IN THE GROUP
-			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-			const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
-			if(!senderMember) doAction=false
-			// CHECK PRICES
 			toAddIn.isTribeOwner = true
+			// CHECK THEY ARE IN THE GROUP if message
+			if(needsPricePerJoin) {
+				const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+				const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+				if(!senderMember) doAction=false
+			}
+			// CHECK PRICES
+			if(needsPricePerJoin) {
+				if(payload.message.amount<chat.pricePerMessage) doAction=false
+			}
+			// check price to join
 			if(payload.type===msgtypes.group_join) {
 				if(payload.message.amount<chat.priceToJoin) doAction=false
-			}
-			if(payload.type===msgtypes.message) {
-				if(payload.message.amount<chat.pricePerMessage) doAction=false
 			}
 			if(doAction) forwardMessageToTribe(payload)
 			else console.log('=> insufficient payment for this action')
