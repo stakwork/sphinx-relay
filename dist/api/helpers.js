@@ -171,6 +171,9 @@ function parseReceiveParams(payload) {
         if (isConversation) {
             sender = yield findOrCreateContactByPubkey(sender_pub_key);
             chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)]);
+            if (sender.fromGroup === true) { // if a private msg received, update the contact
+                yield sender.update({ fromGroup: false });
+            }
         }
         else { // group
             sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });

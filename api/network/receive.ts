@@ -30,7 +30,7 @@ async function onReceive(payload){
 	if(isTribe && typesToForward.includes(payload.type)){
 		const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type)
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
-		const tribeOwnerPubKey = chat.ownerPubkey
+		const tribeOwnerPubKey = chat && chat.ownerPubkey
 		const owner = await models.Contact.findOne({where: {isOwner:true}})
 		if(owner.publicKey===tribeOwnerPubKey){
 			toAddIn.isTribeOwner = true

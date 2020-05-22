@@ -158,6 +158,9 @@ async function parseReceiveParams(payload) {
 		chat = await findOrCreateChatByUUID(
 			chat_uuid, [parseInt(owner.id), parseInt(sender.id)]
 		)
+		if(sender.fromGroup===true) { // if a private msg received, update the contact
+			await sender.update({fromGroup:false})
+		}
 	} else { // group
 		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
 		// inject a "sender" with an alias

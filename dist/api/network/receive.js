@@ -40,7 +40,7 @@ function onReceive(payload) {
         if (isTribe && typesToForward.includes(payload.type)) {
             const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
-            const tribeOwnerPubKey = chat.ownerPubkey;
+            const tribeOwnerPubKey = chat && chat.ownerPubkey;
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             if (owner.publicKey === tribeOwnerPubKey) {
                 toAddIn.isTribeOwner = true;
