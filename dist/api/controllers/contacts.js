@@ -101,11 +101,13 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     let attrs = extractAttrs(req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'] } }));
+    console.log("EXISTING?", existing ? true : false);
     if (existing) {
         const updateObj = { from_group: false };
         if (attrs['alias'])
             updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);
+        console.log("UDPATE!", existing.dataValues);
         return res_1.success(res, jsonUtils.contactToJson(existing));
     }
     const createdContact = yield models_1.models.Contact.create(attrs);
