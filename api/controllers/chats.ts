@@ -154,6 +154,9 @@ const deleteChat = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	const chat = await models.Chat.findOne({ where: { id } })
+	if(!chat) {
+		return failure(res, "you are not in this group")
+	}
 
 	const tribeOwnerPubKey = chat.ownerPubkey
 	if(owner.publicKey===tribeOwnerPubKey) {

@@ -144,6 +144,9 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const { id } = req.params;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield models_1.models.Chat.findOne({ where: { id } });
+    if (!chat) {
+        return res_1.failure(res, "you are not in this group");
+    }
     const tribeOwnerPubKey = chat.ownerPubkey;
     if (owner.publicKey === tribeOwnerPubKey) {
         return res_1.failure(res, "cannot leave your own tribe");
