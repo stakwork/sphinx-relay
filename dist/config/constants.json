@@ -47,6 +47,15 @@
     },
     "chat_types": {
         "conversation": 0,
-        "group": 1
+        "group": 1,
+        "tribe": 2
+    },
+    "chat_roles": {
+        "-": 0,
+        "owner": 1,
+        "admin": 2,
+        "mod": 3,
+        "writer": 4,
+        "reader": 5
     }
 }

@@ -11,7 +11,8 @@
     "hub_url": "http://lvh.me/ping",
     "hub_invite_url": "http://lvh.me/invites",
     "hub_check_invite_url": "http://lvh.me/check_invite",
-    "media_host": "localhost:5000"
+    "media_host": "localhost:5000",
+    "tribes_host": "tribes.sphinx.chat"
   },
   "production": {
     "senza_url": "https://staging.senza.us/api/v2/",
@@ -26,6 +27,7 @@
     "hub_url": "https://hub.sphinx.chat/ping",
     "hub_invite_url": "https://hub.sphinx.chat/invites",
     "hub_check_invite_url": "https://hub.sphinx.chat/check_invite",
-    "media_host": "memes.sphinx.chat"
+    "media_host": "memes.sphinx.chat",
+    "tribes_host": "tribes.sphinx.chat"
   }
 }

@@ -154,9 +154,6 @@ function keysendMessage(opts) {
                 if (!opts.data || typeof opts.data !== 'string') {
                     return reject('string plz');
                 }
-                // SIGN HERE and append sig
-                const sig = yield signAscii(opts.data);
-                opts.data = opts.data + sig;
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts);
@@ -173,6 +170,7 @@ function keysendMessage(opts) {
                 let fail = false;
                 let res = null;
                 const ts = new Date().valueOf();
+                // WEAVE MESSAGE If TOO LARGE
                 yield asyncForEach(Array.from(Array(n)), (u, i) => __awaiter(this, void 0, void 0, function* () {
                     const spliti = Math.ceil(opts.data.length / n);
                     const m = opts.data.substr(i * spliti, spliti);
@@ -216,18 +214,6 @@ function signAscii(ascii) {
     });
 }
 exports.signAscii = signAscii;
-function verifyAscii(ascii, sig) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const r = yield verifyMessage(ascii_to_hexa(ascii), sig);
-            return r;
-        }
-        catch (e) {
-            throw e;
-        }
-    });
-}
-exports.verifyAscii = verifyAscii;
 function listInvoices() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
@@ -378,6 +364,18 @@ const signBuffer = (msg) => {
     }));
 };
 exports.signBuffer = signBuffer;
+function verifyBytes(msg, sig) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield verifyMessage(msg.toString('hex'), sig);
+            return r;
+        }
+        catch (e) {
+            throw e;
+        }
+    });
+}
+exports.verifyBytes = verifyBytes;
 function verifyMessage(msg, sig) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let lightning = yield loadLightning();
@@ -401,7 +399,19 @@ function verifyMessage(msg, sig) {
     }));
 }
 exports.verifyMessage = verifyMessage;
-function checkConnection() {
+function verifyAscii(ascii, sig) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield verifyMessage(ascii_to_hexa(ascii), sig);
+            return r;
+        }
+        catch (e) {
+            throw e;
+        }
+    });
+}
+exports.verifyAscii = verifyAscii;
+function getInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
             const lightning = loadLightning();
@@ -416,7 +426,7 @@ function checkConnection() {
         });
     });
 }
-exports.checkConnection = checkConnection;
+exports.getInfo = getInfo;
 function ascii_to_hexa(str) {
     var arr1 = [];
     for (var n = 0, l = str.length; n < l; n++) {

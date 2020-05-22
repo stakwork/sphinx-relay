@@ -19,6 +19,7 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
+const network = require("../network");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
@@ -96,8 +97,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, } = req.body;
-    console.log('[sendMessage]');
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, } = req.body;
+    console.log('[sendMessage]', remote_text_map);
     var date = new Date();
     date.setMilliseconds(0);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -111,19 +112,21 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         chatId: chat.id,
         type: constants.message_types.message,
         sender: owner.id,
+        amount: amount || 0,
         date: date,
         messageContent: text,
         remoteMessageContent,
         status: constants.statuses.pending,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
     };
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
     res_1.success(res, jsonUtils.messageToJson(message, chat));
-    helpers.sendMessage({
+    network.sendMessage({
         chat: chat,
         sender: owner,
+        amount: amount || 0,
         type: constants.message_types.message,
         message: {
             id: message.id,
@@ -137,12 +140,12 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     var date = new Date();
     date.setMilliseconds(0);
     const total_spent = 1;
-    const { owner, sender, chat, content, msg_id } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
     const text = content;
-    const message = yield models_1.models.Message.create({
+    const msg = {
         chatId: chat.id,
         type: constants.message_types.message,
         asciiEncodedTotal: total_spent,
@@ -152,13 +155,17 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         createdAt: date,
         updatedAt: date,
         status: constants.statuses.received
-    });
+    };
+    if (chat_type === constants.chat_types.tribe) {
+        msg.senderAlias = sender_alias;
+    }
+    const message = yield models_1.models.Message.create(msg);
     console.log('saved message', message.dataValues);
     socket.sendJson({
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });

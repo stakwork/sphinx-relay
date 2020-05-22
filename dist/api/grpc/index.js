@@ -15,121 +15,24 @@ const hub_1 = require("../hub");
 const jsonUtils = require("../utils/json");
 const decodeUtils = require("../utils/decode");
 const lightning_1 = require("../utils/lightning");
-const controllers = require("../controllers");
+const network = require("../network");
 const moment = require("moment");
 const path = require("path");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
-// VERIFY PUBKEY OF SENDER
-function parseAndVerifyPayload(data) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let payload;
-        const li = data.lastIndexOf('}');
-        const msg = data.substring(0, li + 1);
-        const sig = data.substring(li + 1);
-        try {
-            payload = JSON.parse(msg);
-            if (payload) {
-                const v = yield lightning_1.verifyAscii(msg, sig);
-                if (v && v.valid && v.pubkey) {
-                    payload.sender = payload.sender || {};
-                    payload.sender.pub_key = v.pubkey;
-                    return payload;
-                }
-                else {
-                    console.error('[GRPC] invalid payload signature');
-                }
-            }
-        }
-        catch (e) {
-            console.error('[GRPC] failed to parse msg');
-            return null;
-        }
-    });
-}
-function parseKeysendInvoice(i, actions) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
-        const buf = recs && recs[lightning_1.SPHINX_CUSTOM_RECORD_KEY];
-        const data = buf && buf.toString();
-        const value = i && i.value && parseInt(i.value);
-        if (!data) {
-            console.error('[GRPC] no keysend data received');
-            return;
-        }
-        let payload;
-        if (data[0] === '{') {
-            try {
-                payload = yield parseAndVerifyPayload(data);
-            }
-            catch (e) {
-                console.error('[GRPC] failed to parse and verify payload');
-            }
-        }
-        else {
-            const threads = weave(data);
-            if (threads) {
-                try {
-                    payload = yield parseAndVerifyPayload(threads);
-                }
-                catch (e) {
-                    console.error('[GRPC] failed to parse and verify payload II');
-                }
-            }
-        }
-        if (payload) {
-            const dat = payload.content || payload;
-            if (value && dat && dat.message) {
-                dat.message.amount = value; // ADD IN TRUE VALUE
-            }
-            if (actions[payload.type]) {
-                actions[payload.type](payload);
-            }
-            else {
-                console.log('Incorrect payload type:', payload.type);
-            }
-        }
-        else {
-            console.error('[GRPC] no payload');
-        }
-    });
-}
-const chunks = {};
-function weave(p) {
-    const pa = p.split('_');
-    if (pa.length < 4)
-        return;
-    const ts = pa[0];
-    const i = pa[1];
-    const n = pa[2];
-    const m = pa.filter((u, i) => i > 2).join('_');
-    chunks[ts] = chunks[ts] ? [...chunks[ts], { i, n, m }] : [{ i, n, m }];
-    if (chunks[ts].length === parseInt(n)) {
-        // got em all!
-        const all = chunks[ts];
-        let payload = '';
-        all.slice().sort((a, b) => a.i - b.i).forEach(obj => {
-            payload += obj.m;
-        });
-        delete chunks[ts];
-        return payload;
-    }
-}
-function subscribeInvoices(actions) {
+function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning();
         var call = lightning.subscribeInvoices();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                // console.log('subscribed invoices', { response })
-                console.log('[GRPC] subscribeInvoices received');
                 if (response['state'] !== 'SETTLED') {
                     return;
                 }
                 // console.log("IS KEYSEND", response.is_keysend)
                 if (response.is_keysend) {
-                    parseKeysendInvoice(response, actions);
+                    parseKeysendInvoice(response);
                 }
                 else {
                     const invoice = yield models_1.models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } });
@@ -224,7 +127,7 @@ function reconnectToLND(innerCtx) {
         i++;
         console.log(`=> [lnd] reconnecting... attempt #${i}`);
         try {
-            yield controllers.iniGrpcSubscriptions();
+            yield network.initGrpcSubscriptions();
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
             console.log(`=> [lnd] reconnected! ${now}`);
         }

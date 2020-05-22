@@ -6,7 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
-const USER_VERSION = 1
+const USER_VERSION = 2
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -31,8 +31,32 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_chats', 'group_key')
+  addTableColumn('sphinx_chats', 'group_private_key')
+  addTableColumn('sphinx_chats', 'host')
+  addTableColumn('sphinx_chats', 'price_to_join', 'BIGINT')
+  addTableColumn('sphinx_chats', 'price_per_message', 'BIGINT')
+  addTableColumn('sphinx_chats', 'owner_pubkey')
+  addTableColumn('sphinx_messages', 'sender_alias')
+  addTableColumn('sphinx_chat_members', 'alias')
+  addTableColumn('sphinx_contacts', 'from_group')
+  try{
+    await sequelize.query(`
+CREATE TABLE sphinx_chat_members (
+  chat_id INT,
+  contact_id INT,
+  alias TEXT,
+  role INT,
+  total_spent INT,
+  total_messages INT,
+  last_active DATETIME
+)`)
+  } catch(e){}
+}
+
+async function addTableColumn(table:string, column:string, type='TEXT') {
   try {
-    await sequelize.query(`alter table sphinx_invites add invoice text`)
+    await sequelize.query(`alter table ${table} add ${column} ${type}`)
   } catch(e) {
     //console.log('=> migrate failed',e)
   }

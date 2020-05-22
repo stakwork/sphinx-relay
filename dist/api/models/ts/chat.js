@@ -65,6 +65,30 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], Chat.prototype, "deleted", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Chat.prototype, "groupKey", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Chat.prototype, "groupPrivateKey", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Chat.prototype, "host", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Chat.prototype, "priceToJoin", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Chat.prototype, "pricePerMessage", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Chat.prototype, "ownerPubkey", void 0);
 Chat = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);

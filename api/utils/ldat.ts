@@ -87,7 +87,8 @@ function parseLDAT(ldat){
 export {
     startLDAT, parseLDAT, tokenFromTerms,
     urlBase64, urlBase64FromAscii, 
-    urlBase64FromBytes, testLDAT
+    urlBase64FromBytes, testLDAT,
+    urlBase64FromHex
 }
 
 async function testLDAT(){
@@ -151,4 +152,7 @@ function urlBase64FromBytes(buf){
 }
 function urlBase64FromAscii(ascii){
     return Buffer.from(ascii,'ascii').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
+}
+function urlBase64FromHex(ascii){
+    return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 }

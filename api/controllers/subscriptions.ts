@@ -9,6 +9,7 @@ import * as helpers from '../helpers'
 import * as rsa from '../crypto/rsa'
 import * as moment from 'moment'
 import * as path from 'path'
+import * as network from '../network'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -121,7 +122,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage) {
   const contact = await models.Contact.findByPk(sub.contactId)
   const enc = rsa.encrypt(contact.contactKey, text)
 
-  helpers.sendMessage({
+  network.sendMessage({
     chat: chat,
     sender: owner,
     type: constants.message_types.direct_payment,

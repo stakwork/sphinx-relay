@@ -7,6 +7,7 @@ import { success } from '../utils/res'
 import * as lightning from '../utils/lightning'
 import {tokenFromTerms} from '../utils/ldat'
 import * as constants from '../../config/constants.json'
+import * as network from '../network'
 
 const sendPayment = async (req, res) => {
   const {
@@ -25,11 +26,14 @@ const sendPayment = async (req, res) => {
 
   console.log('[send payment]', req.body)
 
+  const owner = await models.Contact.findOne({ where: { isOwner: true }})
+
   if (destination_key && !contact_id && !chat_id) {
     return helpers.performKeysendMessage({
-      destination_key, 
+      sender:owner,
+      destination_key,
       amount,
-      msg:'{}',
+      msg:{},
       success: () => {
         console.log('payment sent!')
         success(res, {destination_key, amount})
@@ -41,8 +45,6 @@ const sendPayment = async (req, res) => {
       }
     })
   }
-
-  const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
   const chat = await helpers.findOrCreateChat({
     chat_id,
@@ -95,7 +97,7 @@ const sendPayment = async (req, res) => {
     theChat = {...chat.dataValues, contactIds:contact_ids}
     if(remote_text_map) msgToSend.content = remote_text_map
   }
-  helpers.sendMessage({
+  network.sendMessage({
     chat: theChat,
     sender: owner,
     type: constants.message_types.direct_payment,
@@ -123,7 +125,7 @@ const receivePayment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, content, mediaType, mediaToken} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -141,6 +143,9 @@ const receivePayment = async (payload) => {
   if(content) msg.messageContent = content
   if(mediaType) msg.mediaType = mediaType
   if(mediaToken) msg.mediaToken = mediaToken
+  if(chat_type===constants.chat_types.tribe) {
+		msg.senderAlias = sender_alias
+	}
   
   const message = await models.Message.create(msg)
 
@@ -151,7 +156,7 @@ const receivePayment = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 }
 
 const listPayments = async (req, res) => {

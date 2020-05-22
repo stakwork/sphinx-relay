@@ -1,7 +1,6 @@
 import { models } from './models'
 import * as md5 from 'md5'
-import { keysendMessage } from './utils/lightning'
-import {personalizeMessage} from './utils/msg'
+import * as network from './network'
 
 const constants = require('../config/constants.json');
 
@@ -57,9 +56,10 @@ const sendContactKeys = async (args) => {
 			destination_key = contact.publicKey
 		}
 		performKeysendMessage({
+			sender,
 			destination_key,
 			amount: 3,
-			msg: JSON.stringify(msg),
+			msg,
 			success: (data) => {
 				yes = data
 			},
@@ -76,55 +76,14 @@ const sendContactKeys = async (args) => {
 	}
 }
 
-const sendMessage = async (params) => {
-	const { type, chat, message, sender, amount, success, failure } = params
-	const m = newmsg(type, chat, sender, message)
-
-	const contactIds = typeof chat.contactIds==='string' ? JSON.parse(chat.contactIds) : chat.contactIds
-
-	let yes:any = null
-	let no:any = null
-	console.log('all contactIds',contactIds)
-	await asyncForEach(contactIds, async contactId => {
-		if (contactId == sender.id) {
-			return
-		}
-
-		console.log('-> sending to contact #', contactId)
-
-		const contact = await models.Contact.findOne({ where: { id: contactId } })
-		const destkey = contact.publicKey
-
-		const finalMsg = await personalizeMessage(m, contactId, destkey)
-
-		const opts = {
-			dest: destkey,
-			data: JSON.stringify(finalMsg),
-			amt: amount || 3,
-		}
-		try {
-			const r = await keysendMessage(opts)
-			yes = r
-		} catch (e) {
-			console.log("KEYSEND ERROR", e)
-			no = e
-		}
-	})
-	if(yes){
-		if(success) success(yes)
-	} else {
-		if(failure) failure(no)
-	}
-}
-
-const performKeysendMessage = async ({ destination_key, amount, msg, success, failure }) => {
+const performKeysendMessage = async ({ destination_key, amount, msg, success, failure, sender }) => {
 	const opts = {
 		dest: destination_key,
-		data: msg || JSON.stringify({}),
+		data: msg || {},
 		amt: Math.max(amount, 3)
 	}
 	try {
-		const r = await keysendMessage(opts)
+		const r = await network.signAndSend(opts, sender.publicKey)
 		console.log("=> external keysend")
 		if (success) success(r)
 	} catch (e) {
@@ -175,36 +134,46 @@ async function sleep(ms) {
 async function parseReceiveParams(payload) {
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
+	const sender_alias = dat.sender.alias
 	const chat_uuid = dat.chat.uuid
 	const chat_type = dat.chat.type
 	const chat_members: { [k: string]: any } = dat.chat.members || {}
 	const chat_name = dat.chat.name
+	const chat_key = dat.chat.groupKey
+	const chat_host = dat.chat.host
 	const amount = dat.message.amount
 	const content = dat.message.content
 	const mediaToken = dat.message.mediaToken
 	const msg_id = dat.message.id||0
 	const mediaKey = dat.message.mediaKey
 	const mediaType = dat.message.mediaType
+	const isTribeOwner = dat.isTribeOwner?true:false
 
-	const isGroup = chat_type && chat_type == constants.chat_types.group
+	const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
 	let sender
 	let chat
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
-	if (isGroup) {
-		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
-	} else {
+	if (isConversation) {
 		sender = await findOrCreateContactByPubkey(sender_pub_key)
 		chat = await findOrCreateChatByUUID(
 			chat_uuid, [parseInt(owner.id), parseInt(sender.id)]
 		)
+		if(sender.fromGroup) { // if a private msg received, update the contact
+			await sender.update({fromGroup:false})
+		}
+	} else { // group
+		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		// inject a "sender" with an alias
+		if(!sender && chat_type == constants.chat_types.tribe){
+			sender = {id:0, alias:sender_alias}
+		}
+		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	}
-	return { owner, sender, chat, sender_pub_key, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name }
+	return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key }
 }
 
 export {
 	findOrCreateChat,
-	sendMessage,
 	sendContactKeys,
 	findOrCreateContactByPubkey,
 	findOrCreateChatByUUID,
@@ -216,23 +185,6 @@ export {
 async function asyncForEach(array, callback) {
 	for (let index = 0; index < array.length; index++) {
 	  	await callback(array[index], index, array);
-	}
-}
-
-function newmsg(type, chat, sender, message){
-	return {
-		type: type,
-		chat: {
-			uuid: chat.uuid,
-			...chat.name && { name: chat.name },
-			...chat.type && { type: chat.type },
-			...chat.members && { members: chat.members },
-		},
-		message: message,
-		// sender: {
-		// 	pub_key: sender.publicKey,
-		// 	// ...sender.contactKey && {contact_key: sender.contactKey}
-		// }
 	}
 }
 

@@ -10,6 +10,7 @@ import {pingHubInterval, checkInvitesHubInterval} from './api/hub'
 import {setupDatabase, setupDone} from './api/utils/setup'
 import * as controllers from './api/controllers'
 import * as socket from './api/utils/socket'
+import * as network from './api/network'
 
 let server: any = null
 const port = process.env.PORT || 3001;
@@ -27,9 +28,13 @@ async function connectToLND(){
 	i++
 	console.log(`=> [lnd] connecting... attempt #${i}`)
 	try {
-		await controllers.iniGrpcSubscriptions()
-		mainSetup()
+		await network.initGrpcSubscriptions()   // LND
+		await mainSetup()						// DB + express
+		await network.initTribesSubscriptions() // MQTT
 	} catch(e) {
+		if(e.details) {
+			console.log(`=> [lnd] error details: ${e.details}`)
+		}
 		setTimeout(async()=>{ // retry each 2 secs
 			await connectToLND()
 		},2000)

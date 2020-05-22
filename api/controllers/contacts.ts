@@ -6,6 +6,7 @@ import * as jsonUtils from '../utils/json'
 import {success, failure} from '../utils/res'
 import password from '../utils/password'
 import * as path from 'path'
+import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -110,6 +111,14 @@ const createContact = async (req, res) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
+	const existing = attrs['public_key'] && await models.Contact.findOne({where:{publicKey:attrs['public_key']}})
+	if(existing) {
+		const updateObj:{[k:string]:any} = {fromGroup:false}
+		if(attrs['alias']) updateObj.alias = attrs['alias']
+		await existing.update(updateObj)
+		return success(res, jsonUtils.contactToJson(existing))
+	}
+
 	const createdContact = await models.Contact.create(attrs)
 	const contact = await createdContact.update(jsonUtils.jsonToContact(attrs))
 
@@ -130,13 +139,30 @@ const deleteContact = async (req, res) => {
 	}
 
 	const contact = await models.Contact.findOne({ where: { id } })
-	await contact.update({
-		deleted:true,
-		publicKey:'',
-		photoUrl:'',
-		alias:'Unknown',
-		contactKey:'',
-	})
+	if(!contact) return
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true }})
+	const tribesImAdminOf = await models.Chat.findAll({where:{ownerPubkey:owner.publicKey}})
+	const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t=>t.id)
+	let okToDelete = true
+	if(tribesIdArray && tribesIdArray.length) {
+		const thisContactMembers = await models.ChatMember.findAll({where:{contactId:id,chatId:{[Op.in]:tribesIdArray}}})
+		if(thisContactMembers&&thisContactMembers.length){
+			// IS A MEMBER! dont delete, instead just set from_group=true
+			okToDelete=false
+			await contact.update({fromGroup:true})
+		}
+	}
+
+	if(okToDelete){
+		await contact.update({
+			deleted:true,
+			publicKey:'',
+			photoUrl:'',
+			alias:'Unknown',
+			contactKey:'',
+		})
+	}
 
 	// find and destroy chat & messages
 	const chats = await models.Chat.findAll({where:{deleted:false}})
@@ -225,7 +251,7 @@ const receiveContactKey = async (payload) => {
 }
 
 const extractAttrs = body => {
-	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key"]
+	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group"]
 	let attrs = {}
 	Object.keys(body).forEach(key => {
 		if (fields_to_update.includes(key)) {

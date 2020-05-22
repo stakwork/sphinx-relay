@@ -8,6 +8,7 @@ import * as helpers from '../helpers'
 import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
+import * as network from '../network'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -105,9 +106,10 @@ const sendMessage = async (req, res) => {
 		remote_text,
 		chat_id,
 		remote_text_map,
+		amount,
 	} = req.body
 
-	console.log('[sendMessage]',)
+	console.log('[sendMessage]',remote_text_map)
 
 	var date = new Date();
 	date.setMilliseconds(0)
@@ -124,21 +126,23 @@ const sendMessage = async (req, res) => {
 		chatId: chat.id,
 		type: constants.message_types.message,
 		sender: owner.id,
+		amount: amount||0,
 		date: date,
 		messageContent: text,
 		remoteMessageContent,
 		status: constants.statuses.pending,
 		createdAt: date,
-		updatedAt: date
+		updatedAt: date,
 	}
 	// console.log(msg)
 	const message = await models.Message.create(msg)
 
 	success(res, jsonUtils.messageToJson(message, chat))
 
-	helpers.sendMessage({
+	network.sendMessage({
 		chat: chat,
 		sender: owner,
+		amount: amount||0,
 		type: constants.message_types.message,
 		message: {
 			id: message.id,
@@ -154,13 +158,13 @@ const receiveMessage = async (payload) => {
 	date.setMilliseconds(0)
 
 	const total_spent = 1
-	const {owner, sender, chat, content, msg_id} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
 	const text = content
 
-	const message = await models.Message.create({
+	const msg:{[k:string]:any} = {
 		chatId: chat.id,
 		type: constants.message_types.message,
 		asciiEncodedTotal: total_spent,
@@ -170,7 +174,11 @@ const receiveMessage = async (payload) => {
 		createdAt: date,
 		updatedAt: date,
 		status: constants.statuses.received
-	})
+	}
+	if(chat_type===constants.chat_types.tribe) {
+		msg.senderAlias = sender_alias
+	}
+	const message = await models.Message.create(msg)
 
 	console.log('saved message', message.dataValues)
 
@@ -179,7 +187,7 @@ const receiveMessage = async (payload) => {
 		response: jsonUtils.messageToJson(message, chat, sender)
 	})
 
-	sendNotification(chat, sender.alias, 'message')
+	sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 
 	const theChat = {...chat.dataValues, contactIds:[sender.id]}
 	sendConfirmation({ chat:theChat, sender: owner, msg_id })

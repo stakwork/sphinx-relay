@@ -3,15 +3,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const case_1 = require("../utils/case");
 const cronUtils = require("./cron");
 function chatToJson(c) {
-    const chat = c.dataValues || c;
+    if (!c)
+        return {};
+    const ch = c.dataValues || c;
+    const chat = JSON.parse(JSON.stringify(ch));
     let contactIds = chat.contactIds || null;
     if (chat.contactIds && typeof chat.contactIds === 'string') {
         contactIds = JSON.parse(chat.contactIds);
     }
+    delete chat.groupPrivateKey;
     return case_1.toSnake(Object.assign(Object.assign({}, chat), { contactIds }));
 }
 exports.chatToJson = chatToJson;
 function messageToJson(msg, chat, contact) {
+    if (!msg)
+        return {};
     const message = msg.dataValues || msg;
     let statusMap = message.statusMap || null;
     if (message.statusMap && typeof message.statusMap === 'string') {
@@ -20,7 +26,11 @@ function messageToJson(msg, chat, contact) {
     return case_1.toSnake(Object.assign(Object.assign({}, message), { statusMap, chat: chat ? chatToJson(chat) : null, contact: contact ? contactToJson(contact) : null }));
 }
 exports.messageToJson = messageToJson;
-const contactToJson = (contact) => case_1.toSnake(contact.dataValues || contact);
+function contactToJson(contact) {
+    if (!contact)
+        return {};
+    return case_1.toSnake(contact.dataValues || contact);
+}
 exports.contactToJson = contactToJson;
 const inviteToJson = (invite) => case_1.toSnake(invite.dataValues || invite);
 exports.inviteToJson = inviteToJson;

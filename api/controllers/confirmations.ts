@@ -2,13 +2,13 @@ import lock from '../utils/lock'
 import {models} from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
-import * as helpers from '../helpers'
+import * as network from '../network'
 import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export function sendConfirmation({ chat, sender, msg_id }) {
-	helpers.sendMessage({
+	network.sendMessage({
 		chat,
 		sender,
 		message: {id:msg_id},
@@ -17,7 +17,7 @@ export function sendConfirmation({ chat, sender, msg_id }) {
 }
 
 export async function receiveConfirmation(payload) {
-	console.log('received confirmation', { payload })
+	console.log('=> received confirmation')
 
 	const dat = payload.content || payload
 	const chat_uuid = dat.chat.uuid

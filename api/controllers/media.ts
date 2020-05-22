@@ -13,6 +13,8 @@ import * as zbase32 from '../utils/zbase32'
 import * as schemas from './schemas'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
+import * as network from '../network'
+import * as meme from '../utils/meme'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
@@ -115,7 +117,7 @@ const sendAttachmentMessage = async (req, res) => {
     mediaKey: media_key_map,
     mediaType: mediaType,
   }
-  helpers.sendMessage({
+  network.sendMessage({
     chat: chat,
     sender: owner,
     type: constants.message_types.attachment,
@@ -183,7 +185,7 @@ const purchase = async (req, res) => {
   const msg={
     amount, mediaToken:media_token, id:message.id,
   }
-  helpers.sendMessage({
+  network.sendMessage({
     chat: {...chat.dataValues, contactIds:[contact_id]},
     sender: owner,
     type: constants.message_types.purchase,
@@ -209,7 +211,6 @@ const receivePurchase = async (payload) => {
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
-
   
   const message = await models.Message.create({
     chatId: chat.id,
@@ -258,7 +259,7 @@ const receivePurchase = async (payload) => {
   }
 
   if (amount < price) { // didnt pay enough
-    return helpers.sendMessage({ // "purchase_deny"
+    return network.sendMessage({ // "purchase_deny"
       chat: {...chat.dataValues, contactIds:[sender.id]}, // only send back to sender
       sender: owner,
       amount: amount,
@@ -287,7 +288,7 @@ const receivePurchase = async (payload) => {
     meta: {amt:amount},
     pubkey: sender.publicKey,
   })
-  helpers.sendMessage({
+  network.sendMessage({
     chat: {...chat.dataValues, contactIds:[sender.id]}, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
@@ -391,7 +392,7 @@ const receiveAttachment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -408,17 +409,21 @@ const receiveAttachment = async (payload) => {
   if(mediaToken) msg.mediaToken = mediaToken
   if(mediaKey) msg.mediaKey = mediaKey
   if(mediaType) msg.mediaType = mediaType
+  const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe) {
+		msg.senderAlias = sender_alias
+	}
 
   const message = await models.Message.create(msg)
 
-  console.log('saved attachment', message.dataValues)
+  // console.log('saved attachment', message.dataValues)
 
   socket.sendJson({
     type: 'attachment',
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 
   const theChat = {...chat.dataValues, contactIds:[sender.id]}
   sendConfirmation({ chat:theChat, sender: owner, msg_id })
@@ -466,7 +471,10 @@ async function cycleMediaToken() {
     if (process.env.TEST_LDAT) testLDAT()
 
     const mt = await getMediaToken(null)
-    if(mt) console.log('=> [meme] authed!')
+    if(mt) {
+      console.log('=> [meme] authed!')
+      meme.setMediaToken(mt)
+    }
 
     new CronJob('1 * * * *', function() { // every hour
       getMediaToken(true)
@@ -477,9 +485,9 @@ async function cycleMediaToken() {
 }
 
 const mediaURL = 'http://' + config.media_host + '/'
-let mediaToken;
+
 async function getMediaToken(force) {
-  if(!force && mediaToken) return mediaToken
+  if(!force && meme.mediaToken) return meme.mediaToken
   await helpers.sleep(3000)
   try {
     const res = await rp.get(mediaURL+'ask')
@@ -507,7 +515,7 @@ async function getMediaToken(force) {
     if(!(body && body.token)){
       throw new Error('no token')
     }
-    mediaToken = body.token
+    meme.setMediaToken(body.token)
     return body.token
   } catch(e) {
     throw e

@@ -21,6 +21,7 @@ const hub_1 = require("./api/hub");
 const setup_1 = require("./api/utils/setup");
 const controllers = require("./api/controllers");
 const socket = require("./api/utils/socket");
+const network = require("./api/network");
 let server = null;
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
@@ -34,10 +35,14 @@ function connectToLND() {
         i++;
         console.log(`=> [lnd] connecting... attempt #${i}`);
         try {
-            yield controllers.iniGrpcSubscriptions();
-            mainSetup();
+            yield network.initGrpcSubscriptions(); // LND
+            yield mainSetup(); // DB + express
+            yield network.initTribesSubscriptions(); // MQTT
         }
         catch (e) {
+            if (e.details) {
+                console.log(`=> [lnd] error details: ${e.details}`);
+            }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 yield connectToLND();
             }), 2000);

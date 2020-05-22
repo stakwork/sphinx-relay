@@ -7,6 +7,7 @@ import Login from './Login.jsx'
 import {ctx} from './context.jsx'
 import Subscriptions from './Subscriptions/index.jsx';
 import Media from './Media/index.jsx';
+import Tribes from './Tribes/index.jsx';
 
 class Root extends React.Component {
   constructor(props) {
@@ -88,19 +89,22 @@ class Root extends React.Component {
 
   getMessages() {
     fetch('/messages').then(r => r.json()).then(body => {
+      console.log("MESSAGES",body.response)
       this.setState({ messages: body.response.new_messages })
     })
   }
 
   getContacts() {
-    console.log("get contacts")
     fetch('/contacts').then(r => r.json()).then(body => {
-      this.setState({ contacts: body.response.contacts })
+      this.setState({
+        contacts: body.response.contacts,
+      })
     })
   }
 
   getChats() {
     fetch('/chats').then(r => r.json()).then(body => {
+      console.log("CHATS",body.response)
       this.setState({ chats: body.response })
     })
   }
@@ -134,6 +138,7 @@ class Root extends React.Component {
                 contacts={contacts} chats={chats}
                 identity_pubkey={identity_pubkey}
               /></Tab.Pane> },
+              { menuItem: 'Tribes', render: () => <Tab.Pane><Tribes chats={chats}/></Tab.Pane> },
             ]}
             renderActiveOnly={true}
           />

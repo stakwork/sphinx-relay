@@ -8,6 +8,7 @@ import { sendNotification } from '../hub'
 import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
+import * as network from '../network'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -140,7 +141,7 @@ const createInvoice = async (req, res) => {
               })
               success(res, jsonUtils.messageToJson(message, chat))
 
-              helpers.sendMessage({
+              network.sendMessage({
                 chat: chat,
                 sender: owner,
                 type: constants.message_types.invoice,
@@ -188,14 +189,14 @@ const receiveInvoice = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const { owner, sender, chat, msg_id } = await helpers.parseReceiveParams(payload)
+  const { owner, sender, chat, msg_id, chat_type, sender_alias } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
 
   const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request)
 
-  const message = await models.Message.create({
+  const msg:{[k:string]:any} = {
     chatId: chat.id,
     type: constants.message_types.invoice,
     sender: sender.id,
@@ -210,7 +211,12 @@ const receiveInvoice = async (payload) => {
     status: constants.statuses.pending,
     createdAt: date,
     updatedAt: date
-  })
+  }
+  const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe) {
+		msg.senderAlias = sender_alias
+	}
+  const message = await models.Message.create(msg)
   console.log('received keysend invoice message', message.id)
 
   socket.sendJson({
@@ -218,7 +224,7 @@ const receiveInvoice = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 
   const theChat = {...chat.dataValues, contactIds:[sender.id]}
   sendConfirmation({ chat:theChat, sender: owner, msg_id })

@@ -1,0 +1,24 @@
+import { Table, Column, Model } from 'sequelize-typescript';
+
+@Table({tableName: 'sphinx_chat_members', underscored: true})
+export default class ChatMember extends Model<ChatMember> {
+
+  @Column
+  chatId: number
+
+  @Column
+  contactId: number
+
+  @Column
+  role: number
+
+  @Column
+  totalSpent: number
+
+  @Column
+  totalMessages: number
+
+  @Column
+  lastActive: Date
+
+}

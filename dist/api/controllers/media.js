@@ -24,6 +24,8 @@ const zbase32 = require("../utils/zbase32");
 const schemas = require("./schemas");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
+const network = require("../network");
+const meme = require("../utils/meme");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -103,7 +105,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         mediaKey: media_key_map,
         mediaType: mediaType,
     };
-    helpers.sendMessage({
+    network.sendMessage({
         chat: chat,
         sender: owner,
         type: constants.message_types.attachment,
@@ -162,7 +164,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const msg = {
         amount, mediaToken: media_token, id: message.id,
     };
-    helpers.sendMessage({
+    network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
         sender: owner,
         type: constants.message_types.purchase,
@@ -230,7 +232,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             price = 0;
     }
     if (amount < price) { // didnt pay enough
-        return helpers.sendMessage({
+        return network.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
             sender: owner,
             amount: amount,
@@ -258,7 +260,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         meta: { amt: amount },
         pubkey: sender.publicKey,
     });
-    helpers.sendMessage({
+    network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
         sender: owner,
         type: constants.message_types.purchase_accept,
@@ -357,7 +359,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     console.log('received attachment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -377,13 +379,17 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         msg.mediaKey = mediaKey;
     if (mediaType)
         msg.mediaType = mediaType;
+    const isTribe = chat_type === constants.chat_types.tribe;
+    if (isTribe) {
+        msg.senderAlias = sender_alias;
+    }
     const message = yield models_1.models.Message.create(msg);
-    console.log('saved attachment', message.dataValues);
+    // console.log('saved attachment', message.dataValues)
     socket.sendJson({
         type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
@@ -440,8 +446,10 @@ function cycleMediaToken() {
             if (process.env.TEST_LDAT)
                 ldat_1.testLDAT();
             const mt = yield getMediaToken(null);
-            if (mt)
+            if (mt) {
                 console.log('=> [meme] authed!');
+                meme.setMediaToken(mt);
+            }
             new cron_1.CronJob('1 * * * *', function () {
                 getMediaToken(true);
             });
@@ -453,11 +461,10 @@ function cycleMediaToken() {
 }
 exports.cycleMediaToken = cycleMediaToken;
 const mediaURL = 'http://' + config.media_host + '/';
-let mediaToken;
 function getMediaToken(force) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!force && mediaToken)
-            return mediaToken;
+        if (!force && meme.mediaToken)
+            return meme.mediaToken;
         yield helpers.sleep(3000);
         try {
             const res = yield rp.get(mediaURL + 'ask');
@@ -481,7 +488,7 @@ function getMediaToken(force) {
             if (!(body && body.token)) {
                 throw new Error('no token');
             }
-            mediaToken = body.token;
+            meme.setMediaToken(body.token);
             return body.token;
         }
         catch (e) {

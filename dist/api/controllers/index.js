@@ -10,11 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
-const lndService = require("../grpc");
 const gitinfo_1 = require("../utils/gitinfo");
-const lightning_1 = require("../utils/lightning");
-const path = require("path");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:", env);
 let controllers = {
@@ -30,34 +26,7 @@ let controllers = {
     media: require('./media'),
     confirmations: require('./confirmations')
 };
-function iniGrpcSubscriptions() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            yield lightning_1.checkConnection();
-            const types = constants.message_types;
-            yield lndService.subscribeInvoices({
-                [types.contact_key]: controllers.contacts.receiveContactKey,
-                [types.contact_key_confirmation]: controllers.contacts.receiveConfirmContactKey,
-                [types.message]: controllers.messages.receiveMessage,
-                [types.invoice]: controllers.invoices.receiveInvoice,
-                [types.direct_payment]: controllers.payments.receivePayment,
-                [types.confirmation]: controllers.confirmations.receiveConfirmation,
-                [types.attachment]: controllers.media.receiveAttachment,
-                [types.purchase]: controllers.media.receivePurchase,
-                [types.purchase_accept]: controllers.media.receivePurchaseAccept,
-                [types.purchase_deny]: controllers.media.receivePurchaseDeny,
-                [types.group_create]: controllers.chats.receiveGroupCreateOrInvite,
-                [types.group_invite]: controllers.chats.receiveGroupCreateOrInvite,
-                [types.group_join]: controllers.chats.receiveGroupJoin,
-                [types.group_leave]: controllers.chats.receiveGroupLeave,
-            });
-        }
-        catch (e) {
-            throw e;
-        }
-    });
-}
-exports.iniGrpcSubscriptions = iniGrpcSubscriptions;
+exports.controllers = controllers;
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         if (models_1.models && models_1.models.Subscription) {
@@ -74,6 +43,7 @@ function set(app) {
         app.post('/chats/:chat_id/:mute_unmute', controllers.chats.mute);
         app.delete('/chat/:id', controllers.chats.deleteChat);
         app.put('/chat/:id', controllers.chats.addGroupMembers);
+        app.post('/tribe', controllers.chats.joinTribe);
         app.post('/contacts/tokens', controllers.contacts.generateToken);
         app.post('/upload', controllers.uploads.avatarUpload.single('file'), controllers.uploads.uploadFile);
         app.post('/invites', controllers.invites.createInvite);

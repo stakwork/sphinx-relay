@@ -106,7 +106,6 @@ const getRoute = async (pub_key, amt, callback) => {
 const keysend = (opts) => {
   return new Promise(async function(resolve, reject) {
     let lightning = await loadLightning()
-
     const randoStr = crypto.randomBytes(32).toString('hex');
     const preimage = ByteBuffer.fromHex(randoStr)
     const options = {
@@ -141,9 +140,6 @@ async function keysendMessage(opts) {
     if(!opts.data || typeof opts.data!=='string') {
       return reject('string plz')
     }
-    // SIGN HERE and append sig
-    const sig = await signAscii(opts.data)
-    opts.data = opts.data + sig
 
     if(opts.data.length<MAX_MSG_LENGTH){
       try {
@@ -160,6 +156,7 @@ async function keysendMessage(opts) {
     let fail = false
     let res:any = null
     const ts = new Date().valueOf()
+    // WEAVE MESSAGE If TOO LARGE
     await asyncForEach(Array.from(Array(n)), async(u,i)=> {
       const spliti = Math.ceil(opts.data.length/n)
       const m = opts.data.substr(i*spliti, spliti)
@@ -192,15 +189,6 @@ async function signAscii(ascii) {
   try {
     const sig = await signMessage(ascii_to_hexa(ascii))
     return sig
-  } catch(e) {
-    throw e
-  }
-}
-
-async function verifyAscii(ascii,sig): Promise<{[k:string]:any}>{
-  try {
-    const r = await verifyMessage(ascii_to_hexa(ascii),sig)
-    return r
   } catch(e) {
     throw e
   }
@@ -336,13 +324,21 @@ const signBuffer = (msg) => {
   })
 }
 
+async function verifyBytes(msg,sig): Promise<{[k:string]:any}> {
+  try {
+    const r = await verifyMessage(msg.toString('hex'),sig)
+    return r
+  } catch(e) {
+    throw e
+  }
+}
 function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
   return new Promise(async(resolve, reject)=> {
     let lightning = await loadLightning()
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),
-        signature:sig,
+        signature:sig, // zbase32 encoded string
       }
       lightning.verifyMessage(options, function(err,res){
         if(err || !res.pubkey) {
@@ -356,12 +352,20 @@ function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
     }
   })
 }
+async function verifyAscii(ascii,sig): Promise<{[k:string]:any}>{
+  try {
+    const r = await verifyMessage(ascii_to_hexa(ascii),sig)
+    return r
+  } catch(e) {
+    throw e
+  }
+}
 
-async function checkConnection(){
+async function getInfo(): Promise<{[k:string]:any}>{
 	return new Promise((resolve,reject)=>{
 		const lightning = loadLightning()
 		lightning.getInfo({}, function(err, response) {
-			if (err == null) {	
+			if (err == null) {
 				resolve(response)
 			} else {
 				reject(err)
@@ -391,13 +395,14 @@ export {
   signMessage,
   verifyMessage,
   verifyAscii,
+  verifyBytes,
   signAscii,
   signBuffer,
   LND_KEYSEND_KEY,
   SPHINX_CUSTOM_RECORD_KEY,
   listInvoices,
   listAllPayments,
-  checkConnection,
+  getInfo,
   listAllInvoices,
   listAllPaymentsFull,
 }

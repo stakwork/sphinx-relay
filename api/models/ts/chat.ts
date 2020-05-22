@@ -45,4 +45,22 @@ export default class Chat extends Model<Chat> {
   })
   deleted: boolean
 
+  @Column
+  groupKey: string
+
+  @Column
+  groupPrivateKey: string
+
+  @Column
+  host: string
+
+  @Column
+  priceToJoin: number
+
+  @Column
+  pricePerMessage: number
+
+  @Column 
+  ownerPubkey: string
+
 }

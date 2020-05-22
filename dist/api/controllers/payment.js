@@ -18,14 +18,17 @@ const res_1 = require("../utils/res");
 const lightning = require("../utils/lightning");
 const ldat_1 = require("../utils/ldat");
 const constants = require("../../config/constants.json");
+const network = require("../network");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, } = req.body;
     console.log('[send payment]', req.body);
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (destination_key && !contact_id && !chat_id) {
         return helpers.performKeysendMessage({
+            sender: owner,
             destination_key,
             amount,
-            msg: '{}',
+            msg: {},
             success: () => {
                 console.log('payment sent!');
                 res_1.success(res, { destination_key, amount });
@@ -37,7 +40,6 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             }
         });
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield helpers.findOrCreateChat({
         chat_id,
         owner_id: owner.id,
@@ -87,7 +89,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (remote_text_map)
             msgToSend.content = remote_text_map;
     }
-    helpers.sendMessage({
+    network.sendMessage({
         chat: theChat,
         sender: owner,
         type: constants.message_types.direct_payment,
@@ -113,7 +115,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -133,13 +135,16 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.mediaType = mediaType;
     if (mediaToken)
         msg.mediaToken = mediaToken;
+    if (chat_type === constants.chat_types.tribe) {
+        msg.senderAlias = sender_alias;
+    }
     const message = yield models_1.models.Message.create(msg);
     console.log('saved message', message.dataValues);
     socket.sendJson({
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
