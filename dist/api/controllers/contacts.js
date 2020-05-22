@@ -17,6 +17,7 @@ const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
 const path = require("path");
+const sequelize_1 = require("sequelize");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false }, raw: true });
@@ -134,8 +135,8 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     console.log("TRIES ID ARRAY", tribesIdArray);
     let okToDelete = true;
     if (tribesIdArray && tribesIdArray.length) {
-        const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { chatId: { in: tribesIdArray } } });
-        console.log("thisContactMembers", thisContactMembers);
+        const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { contactId: id, chatId: { [sequelize_1.Op.in]: tribesIdArray } } });
+        console.log("thisContactMembers for this guy", thisContactMembers);
         if (thisContactMembers && thisContactMembers.length) {
             // IS A MEMBER! dont delete, instead just set from_group=true
             okToDelete = false;

@@ -6,6 +6,7 @@ import * as jsonUtils from '../utils/json'
 import {success, failure} from '../utils/res'
 import password from '../utils/password'
 import * as path from 'path'
+import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -147,8 +148,8 @@ const deleteContact = async (req, res) => {
 	console.log("TRIES ID ARRAY",tribesIdArray)
 	let okToDelete = true
 	if(tribesIdArray && tribesIdArray.length) {
-		const thisContactMembers = await models.ChatMember.findAll({where:{chatId:{in:tribesIdArray}}})
-		console.log("thisContactMembers",thisContactMembers)
+		const thisContactMembers = await models.ChatMember.findAll({where:{contactId:id,chatId:{[Op.in]:tribesIdArray}}})
+		console.log("thisContactMembers for this guy",thisContactMembers)
 		if(thisContactMembers&&thisContactMembers.length){
 			// IS A MEMBER! dont delete, instead just set from_group=true
 			okToDelete=false
