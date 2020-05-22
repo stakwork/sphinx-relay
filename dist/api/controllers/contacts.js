@@ -103,7 +103,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'] } }));
     console.log("EXISTING?", existing ? true : false);
     if (existing) {
-        const updateObj = { from_group: false };
+        const updateObj = { fromGroup: false };
         if (attrs['alias'])
             updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);

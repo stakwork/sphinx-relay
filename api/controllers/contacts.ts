@@ -113,7 +113,7 @@ const createContact = async (req, res) => {
 	const existing = attrs['public_key'] && await models.Contact.findOne({where:{publicKey:attrs['public_key']}})
 	console.log("EXISTING?",existing?true:false)
 	if(existing) {
-		const updateObj:{[k:string]:any} = {from_group:false}
+		const updateObj:{[k:string]:any} = {fromGroup:false}
 		if(attrs['alias']) updateObj.alias = attrs['alias']
 		await existing.update(updateObj)
 		console.log("UDPATE!",existing.dataValues)
