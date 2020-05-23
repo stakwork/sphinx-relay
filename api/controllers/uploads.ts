@@ -24,14 +24,22 @@ var avatarStorage = multer.diskStorage({
 })
 var avatarUpload = multer({ storage: avatarStorage })
 
+function hasProtocol(ip){
+  if(ip.startsWith('https://')) return true
+  if(ip.startsWith('http://')) return true
+  return false
+}
+
 const uploadFile = async (req, res) => {
   const { contact_id, chat_id } = req.body
   const { file } = req
 
-  const photo_url = 
-    config.node_http_protocol + 
-    '://' +
-    process.env.NODE_IP +
+  const ip = String(process.env.NODE_IP) 
+  let theIP = ip
+  if(!hasProtocol(ip)) {
+    theIP=config.node_http_protocol + '://' + ip
+  }
+  const photo_url = theIP +
     '/static/uploads/' + 
     file.filename
 
