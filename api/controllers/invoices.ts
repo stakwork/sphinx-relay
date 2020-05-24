@@ -16,6 +16,15 @@ const payInvoice = async (req, res) => {
   const lightning = await loadLightning()
   const { payment_request } = req.body;
 
+  if(!payment_request){
+    console.log('[pay invoice] "payment_request" is empty')
+    res.status(400)
+    res.json({success:false, error:'payment_request is empty'})
+    res.end()
+    return
+  }
+  console.log(`[pay invoice] ${payment_request}`)
+
   var call = lightning.sendPayment({})
 
   call.on('data', async response => {

@@ -24,6 +24,14 @@ const constants = require(path.join(__dirname, '../../config/constants.json'));
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
     const { payment_request } = req.body;
+    if (!payment_request) {
+        console.log('[pay invoice] "payment_request" is empty');
+        res.status(400);
+        res.json({ success: false, error: 'payment_request is empty' });
+        res.end();
+        return;
+    }
+    console.log(`[pay invoice] ${payment_request}`);
     var call = lightning.sendPayment({});
     call.on('data', (response) => __awaiter(void 0, void 0, void 0, function* () {
         console.log('[pay invoice data]', response);
