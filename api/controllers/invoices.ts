@@ -12,9 +12,14 @@ import * as network from '../network'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
+function stripLightningPrefix(s){
+  if(s.toLowerCase().startsWith('lightning:')) return s.substring(10)
+  return s
+}
+
 const payInvoice = async (req, res) => {
   const lightning = await loadLightning()
-  const { payment_request } = req.body;
+  const payment_request = stripLightningPrefix(req.body.payment_request)
 
   if(!payment_request){
     console.log('[pay invoice] "payment_request" is empty')
