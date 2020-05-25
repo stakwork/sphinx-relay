@@ -221,14 +221,14 @@ const sendNotification = async (chat, name, type) => {
     return
   }
 
-  const unseenMessages = await models.Message.findAll({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
+  const unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
 
   const params = {
     device_id: owner.deviceId,
-    notification: { 
-      chat_id: chat.id, 
+    notification: {
+      chat_id: chat.id,
       message,
-      badge: unseenMessages.length
+      badge: unseenMessages
     }
   }
 
