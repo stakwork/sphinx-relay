@@ -213,13 +213,13 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         console.log('[send notification] skipping. owner.deviceId not set.');
         return;
     }
-    const unseenMessages = yield models_1.models.Message.findAll({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
+    const unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
     const params = {
         device_id: owner.deviceId,
         notification: {
             chat_id: chat.id,
             message,
-            badge: unseenMessages.length
+            badge: unseenMessages
         }
     };
     fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {

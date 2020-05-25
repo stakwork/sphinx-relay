@@ -83,10 +83,10 @@ export {nodeinfo}
 async function isClean(){
   // has owner but with no auth token
   const cleanOwner = await models.Contact.findOne({ where: { isOwner: true, authToken: null }})
-  const msgs = await models.Message.findAll()
-  const allContacts = await models.Contact.findAll()
-  const noMsgs = msgs.length===0
-  const onlyOneContact = allContacts.length===1
+  const msgs = await models.Message.count()
+  const allContacts = await models.Contact.count()
+  const noMsgs = msgs===0
+  const onlyOneContact = allContacts===1
   if(cleanOwner && noMsgs && onlyOneContact) return true
   return false
 }
