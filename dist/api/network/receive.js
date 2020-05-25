@@ -32,7 +32,6 @@ const typesThatNeedPricePerMessage = [
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=>>> onReceive", payload);
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};

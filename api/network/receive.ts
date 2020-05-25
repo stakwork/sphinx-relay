@@ -22,7 +22,6 @@ const typesThatNeedPricePerMessage = [
 	msgtypes.message, msgtypes.attachment
 ]
 async function onReceive(payload){
-	console.log("=>>> onReceive",payload)
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}

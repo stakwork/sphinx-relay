@@ -109,8 +109,6 @@ const sendMessage = async (req, res) => {
 		amount,
 	} = req.body
 
-	console.log('[sendMessage]',remote_text_map)
-
 	var date = new Date();
 	date.setMilliseconds(0)
 
