@@ -8,6 +8,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
 
 const defaultLogFiles = [
+	'/var/log/supervisor/relay.log',
 	'/home/lnd/.pm2/logs/app-error.log',
 	'/var/log/syslog',
 ]
