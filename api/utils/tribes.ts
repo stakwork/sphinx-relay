@@ -55,7 +55,7 @@ export function publish(topic, msg) {
 
 export async function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
   try {
-    const r = await fetch('https://' + host + '/tribes', {
+    await fetch('https://' + host + '/tribes', {
       method: 'POST',
       body: JSON.stringify({
         uuid, group_key,
@@ -66,25 +66,17 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
       }),
       headers: { 'Content-Type': 'application/json' }
     })
-    const j = await r.json()
-    console.log(j)
+    // const j = await r.json()
   } catch (e) {
     console.log('[tribes] unauthorized to declare')
+    throw e
   }
 }
 
-export async function edit({ uuid, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
+export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
   try {
     const token = await genSignedTimestamp()
-    console.log('https://' + getHost() + '/tribe?token=' + token)
-    console.log({
-      uuid,
-      name, description, tags, img: img || '',
-      price_per_message: price_per_message || 0,
-      price_to_join: price_to_join || 0,
-      owner_alias,
-    })
-    const r = await fetch('https://' + getHost() + '/tribe?token=' + token, {
+    await fetch('https://' + host + '/tribe?token=' + token, {
       method: 'PUT',
       body: JSON.stringify({
         uuid,
@@ -95,10 +87,10 @@ export async function edit({ uuid, name, description, tags, img, price_per_messa
       }),
       headers: { 'Content-Type': 'application/json' }
     })
-    const j = await r.json()
-    console.log(j)
+    // const j = await r.json()
   } catch(e) {
     console.log('[tribes] unauthorized to edit')
+    throw e
   }
 }
 

@@ -69,7 +69,7 @@ exports.publish = publish;
 function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield fetch('https://' + host + '/tribes', {
+            yield fetch('https://' + host + '/tribes', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid, group_key,
@@ -80,28 +80,20 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
-            const j = yield r.json();
-            console.log(j);
+            // const j = await r.json()
         }
         catch (e) {
             console.log('[tribes] unauthorized to declare');
+            throw e;
         }
     });
 }
 exports.declare = declare;
-function edit({ uuid, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
-            console.log('https://' + getHost() + '/tribe?token=' + token);
-            console.log({
-                uuid,
-                name, description, tags, img: img || '',
-                price_per_message: price_per_message || 0,
-                price_to_join: price_to_join || 0,
-                owner_alias,
-            });
-            const r = yield fetch('https://' + getHost() + '/tribe?token=' + token, {
+            yield fetch('https://' + host + '/tribe?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid,
@@ -112,11 +104,11 @@ function edit({ uuid, name, description, tags, img, price_per_message, price_to_
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
-            const j = yield r.json();
-            console.log(j);
+            // const j = await r.json()
         }
         catch (e) {
             console.log('[tribes] unauthorized to edit');
+            throw e;
         }
     });
 }

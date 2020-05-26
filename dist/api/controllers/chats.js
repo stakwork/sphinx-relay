@@ -56,28 +56,37 @@ function editTribe(req, res) {
             return res_1.failure(res, 'cant find chat');
         }
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        let okToUpdate = true;
         if (is_listed) {
-            tribes.edit({
-                uuid: chat.uuid,
+            try {
+                yield tribes.edit({
+                    uuid: chat.uuid,
+                    name: name,
+                    host: chat.host,
+                    price_per_message: price_per_message || 0,
+                    price_to_join: price_to_join || 0,
+                    description,
+                    tags,
+                    img,
+                    owner_alias: owner.alias,
+                });
+            }
+            catch (e) {
+                okToUpdate = false;
+            }
+        }
+        if (okToUpdate) {
+            yield chat.update({
+                photoUrl: img || '',
                 name: name,
-                price_per_message: price_per_message || 0,
-                price_to_join: price_to_join || 0,
-                description,
-                tags,
-                img,
-                owner_alias: owner.alias,
+                pricePerMessage: price_per_message || 0,
+                priceToJoin: price_to_join || 0
             });
+            res_1.success(res, jsonUtils.chatToJson(chat));
         }
         else {
-            // remove from tribes server? or at least just "unlist"
+            res_1.failure(res, 'failed to update tribe');
         }
-        yield chat.update({
-            photoUrl: img || '',
-            name: name,
-            pricePerMessage: price_per_message || 0,
-            priceToJoin: price_to_join || 0
-        });
-        res_1.success(res, jsonUtils.chatToJson(chat));
     });
 }
 exports.editTribe = editTribe;
@@ -100,27 +109,36 @@ function createGroupChat(req, res) {
             };
         }));
         let chatParams = null;
+        let okToCreate = true;
         if (is_tribe) {
             chatParams = yield createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join);
             if (is_listed && chatParams.uuid) {
                 // publish to tribe server
-                tribes.declare({
-                    uuid: chatParams.uuid,
-                    name: chatParams.name,
-                    host: chatParams.host,
-                    group_key: chatParams.groupKey,
-                    price_per_message: price_per_message || 0,
-                    price_to_join: price_to_join || 0,
-                    description, tags, img,
-                    owner_pubkey: owner.publicKey,
-                    owner_alias: owner.alias,
-                });
+                try {
+                    yield tribes.declare({
+                        uuid: chatParams.uuid,
+                        name: chatParams.name,
+                        host: chatParams.host,
+                        group_key: chatParams.groupKey,
+                        price_per_message: price_per_message || 0,
+                        price_to_join: price_to_join || 0,
+                        description, tags, img,
+                        owner_pubkey: owner.publicKey,
+                        owner_alias: owner.alias,
+                    });
+                }
+                catch (e) {
+                    okToCreate = false;
+                }
             }
             // make me owner when i create
             members[owner.publicKey].role = constants.chat_roles.owner;
         }
         else {
             chatParams = createGroupChatParams(owner, contact_ids, members, name);
+        }
+        if (!okToCreate) {
+            return res_1.failure(res, 'could not create tribe');
         }
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members }),
