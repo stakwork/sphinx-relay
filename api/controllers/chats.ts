@@ -39,7 +39,6 @@ async function mute(req, res) {
 
 async function editTribe(req, res) {
 	const {
-		uuid,
 		name,
 		is_listed,
 		price_per_message,
@@ -48,37 +47,39 @@ async function editTribe(req, res) {
 		description,
 		tags,
 	} = req.body
+	const { id } = req.params
 
-	if(!uuid) return failure(res, 'group uuid is required')
+	if(!id) return failure(res, 'group id is required')
+
+	const chat = await models.Chat.findOne({where:{id}})
+	if(!chat) {
+		return failure(res, 'cant find chat')
+	}
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
-	const params={
-		photoUrl: img||'',
-		name: name,
-		pricePerMessage: price_per_message||0,
-		priceToJoin: price_to_join||0
-	}
 	if(is_listed) {
 		tribes.edit({
-			uuid,
-			...params,
+			uuid: chat.uuid,
+			name: name,
 			price_per_message: price_per_message||0,
 			price_to_join: price_to_join||0,
-			description, tags, img,
+			description, 
+			tags, 
+			img,
 			owner_alias: owner.alias,
 		})
 	} else {
 		// remove from tribes server? or at least just "unlist"
 	}
 
-	const chat = await models.Chat.findOne({where:{uuid}})
-	if(chat) {
-		await chat.update(params)
-		success(res, jsonUtils.chatToJson(chat))
-	} else {
-		failure(res, 'cant find chat')
-	}
+	await chat.update({
+		photoUrl: img||'',
+		name: name,
+		pricePerMessage: price_per_message||0,
+		priceToJoin: price_to_join||0
+	})
+	success(res, jsonUtils.chatToJson(chat))
 }
 
 // just add self here if tribes

@@ -92,7 +92,8 @@ exports.declare = declare;
 function edit({ uuid, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield fetch('https://' + getHost() + '/tribes', {
+            const token = yield genSignedTimestamp();
+            const r = yield fetch('https://' + getHost() + '/tribes?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid,

@@ -47,30 +47,37 @@ function mute(req, res) {
 exports.mute = mute;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { uuid, name, is_listed, price_per_message, price_to_join, img, description, tags, } = req.body;
-        if (!uuid)
-            return res_1.failure(res, 'group uuid is required');
+        const { name, is_listed, price_per_message, price_to_join, img, description, tags, } = req.body;
+        const { id } = req.params;
+        if (!id)
+            return res_1.failure(res, 'group id is required');
+        const chat = yield models_1.models.Chat.findOne({ where: { id } });
+        if (!chat) {
+            return res_1.failure(res, 'cant find chat');
+        }
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const params = {
-            photoUrl: img || '',
-            name: name,
-            pricePerMessage: price_per_message || 0,
-            priceToJoin: price_to_join || 0
-        };
         if (is_listed) {
-            tribes.edit(Object.assign(Object.assign({ uuid }, params), { price_per_message: price_per_message || 0, price_to_join: price_to_join || 0, description, tags, img, owner_alias: owner.alias }));
+            tribes.edit({
+                uuid: chat.uuid,
+                name: name,
+                price_per_message: price_per_message || 0,
+                price_to_join: price_to_join || 0,
+                description,
+                tags,
+                img,
+                owner_alias: owner.alias,
+            });
         }
         else {
             // remove from tribes server? or at least just "unlist"
         }
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid } });
-        if (chat) {
-            yield chat.update(params);
-            res_1.success(res, jsonUtils.chatToJson(chat));
-        }
-        else {
-            res_1.failure(res, 'cant find chat');
-        }
+        yield chat.update({
+            photoUrl: img || '',
+            name: name,
+            pricePerMessage: price_per_message || 0,
+            priceToJoin: price_to_join || 0
+        });
+        res_1.success(res, jsonUtils.chatToJson(chat));
     });
 }
 exports.editTribe = editTribe;
