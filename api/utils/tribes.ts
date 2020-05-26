@@ -76,6 +76,14 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
 export async function edit({ uuid, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
   try {
     const token = await genSignedTimestamp()
+    console.log('https://' + getHost() + '/tribes?token=' + token)
+    console.log({
+      uuid,
+      name, description, tags, img: img || '',
+      price_per_message: price_per_message || 0,
+      price_to_join: price_to_join || 0,
+      owner_alias,
+    })
     const r = await fetch('https://' + getHost() + '/tribes?token=' + token, {
       method: 'PUT',
       body: JSON.stringify({

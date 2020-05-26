@@ -93,6 +93,14 @@ function edit({ uuid, name, description, tags, img, price_per_message, price_to_
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
+            console.log('https://' + getHost() + '/tribes?token=' + token);
+            console.log({
+                uuid,
+                name, description, tags, img: img || '',
+                price_per_message: price_per_message || 0,
+                price_to_join: price_to_join || 0,
+                owner_alias,
+            });
             const r = yield fetch('https://' + getHost() + '/tribes?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
