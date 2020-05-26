@@ -93,7 +93,7 @@ function edit({ uuid, name, description, tags, img, price_per_message, price_to_
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
-            console.log('https://' + getHost() + '/tribes?token=' + token);
+            console.log('https://' + getHost() + '/tribe?token=' + token);
             console.log({
                 uuid,
                 name, description, tags, img: img || '',

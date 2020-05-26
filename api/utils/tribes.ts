@@ -76,7 +76,7 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
 export async function edit({ uuid, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
   try {
     const token = await genSignedTimestamp()
-    console.log('https://' + getHost() + '/tribes?token=' + token)
+    console.log('https://' + getHost() + '/tribe?token=' + token)
     console.log({
       uuid,
       name, description, tags, img: img || '',
