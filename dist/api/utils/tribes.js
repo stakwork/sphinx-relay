@@ -66,16 +66,16 @@ function publish(topic, msg) {
         client.publish(topic, msg);
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, groupKey, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const r = yield fetch('https://' + host + '/tribes', {
                 method: 'POST',
                 body: JSON.stringify({
-                    uuid, groupKey,
+                    uuid, group_key,
                     name, description, tags, img: img || '',
-                    pricePerMessage: price_per_message || 0,
-                    priceToJoin: price_to_join || 0,
+                    price_per_message: price_per_message || 0,
+                    price_to_join: price_to_join || 0,
                     owner_alias, owner_pubkey,
                 }),
                 headers: { 'Content-Type': 'application/json' }
@@ -97,8 +97,8 @@ function edit({ uuid, name, description, tags, img, price_per_message, price_to_
                 body: JSON.stringify({
                     uuid,
                     name, description, tags, img: img || '',
-                    pricePerMessage: price_per_message || 0,
-                    priceToJoin: price_to_join || 0,
+                    price_per_message: price_per_message || 0,
+                    price_to_join: price_to_join || 0,
                     owner_alias,
                 }),
                 headers: { 'Content-Type': 'application/json' }
