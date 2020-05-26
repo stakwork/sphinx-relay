@@ -84,6 +84,24 @@ function declare({ uuid, name, description, tags, img, groupKey, host, pricePerM
     });
 }
 exports.declare = declare;
+function edit({ uuid, name, description, tags, img, pricePerMessage, priceToJoin, ownerAlias }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const r = yield fetch('https://' + getHost() + '/tribes', {
+            method: 'POST',
+            body: JSON.stringify({
+                uuid,
+                name, description, tags, img: img || '',
+                pricePerMessage: pricePerMessage || 0,
+                priceToJoin: priceToJoin || 0,
+                ownerAlias,
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const j = yield r.json();
+        console.log(j);
+    });
+}
+exports.edit = edit;
 function genSignedTimestamp() {
     return __awaiter(this, void 0, void 0, function* () {
         const now = moment().unix();

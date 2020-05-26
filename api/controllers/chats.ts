@@ -37,6 +37,50 @@ async function mute(req, res) {
 	success(res, jsonUtils.chatToJson(chat))
 }
 
+async function editTribe(req, res) {
+	const {
+		uuid,
+		name,
+		is_listed,
+		price_per_message,
+		price_to_join,
+		img,
+		description,
+		tags,
+	} = req.body
+
+	if(!uuid) return failure(res, 'group uuid is required')
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
+	const params={
+		photoUrl: img||'',
+		name: name,
+		pricePerMessage: price_per_message||0,
+		priceToJoin: price_to_join||0
+	}
+	if(is_listed) {
+		tribes.edit({
+			uuid,
+			...params,
+			pricePerMessage: price_per_message||0,
+			priceToJoin: price_to_join||0,
+			description, tags, img,
+			ownerAlias: owner.alias,
+		})
+	} else {
+		// remove from tribes server? or at least just "unlist"
+	}
+
+	const chat = await models.Chat.findOne({where:{uuid}})
+	if(chat) {
+		await chat.update(params)
+		success(res, jsonUtils.chatToJson(chat))
+	} else {
+		failure(res, 'cant find chat')
+	}
+}
+
 // just add self here if tribes
 // or can u add contacts as members?
 async function createGroupChat(req, res) {
@@ -536,9 +580,9 @@ async function createTribeChatParams(owner, contactIds, name, img, price_per_mes
 		uuid: groupUUID,
 		ownerPubkey: owner.publicKey,
 		contactIds: JSON.stringify(theContactIds),
-		photoUrl: img||'',
 		createdAt: date,
 		updatedAt: date,
+		photoUrl: img||'',
 		name: name,
 		type: constants.chat_types.tribe,
 		groupKey: keys.public,
@@ -553,7 +597,7 @@ export {
 	getChats, mute, addGroupMembers,
 	receiveGroupCreateOrInvite, createGroupChat,
 	deleteChat, receiveGroupLeave, receiveGroupJoin,
-	joinTribe,
+	joinTribe, editTribe,
 }
 
 
