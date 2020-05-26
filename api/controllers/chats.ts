@@ -116,7 +116,10 @@ async function createGroupChat(req, res) {
 		if(is_listed && chatParams.uuid){
 			// publish to tribe server
 			tribes.declare({
-				...chatParams,
+				uuid: chatParams.uuid,
+				name: chatParams.name,
+				host: chatParams.host,
+				group_key: chatParams.groupKey,
 				price_per_message: price_per_message||0,
 				price_to_join: price_to_join||0,
 				description, tags, img,
