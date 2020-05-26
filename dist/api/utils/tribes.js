@@ -101,7 +101,7 @@ function edit({ uuid, name, description, tags, img, price_per_message, price_to_
                 price_to_join: price_to_join || 0,
                 owner_alias,
             });
-            const r = yield fetch('https://' + getHost() + '/tribes?token=' + token, {
+            const r = yield fetch('https://' + getHost() + '/tribe?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid,

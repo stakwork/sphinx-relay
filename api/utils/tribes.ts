@@ -84,7 +84,7 @@ export async function edit({ uuid, name, description, tags, img, price_per_messa
       price_to_join: price_to_join || 0,
       owner_alias,
     })
-    const r = await fetch('https://' + getHost() + '/tribes?token=' + token, {
+    const r = await fetch('https://' + getHost() + '/tribe?token=' + token, {
       method: 'PUT',
       body: JSON.stringify({
         uuid,
