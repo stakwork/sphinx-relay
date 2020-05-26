@@ -66,7 +66,7 @@ function publish(topic, msg) {
         client.publish(topic, msg);
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, groupKey, host, pricePerMessage, priceToJoin, ownerAlias, ownerPubkey }) {
+function declare({ uuid, name, description, tags, img, groupKey, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const r = yield fetch('https://' + host + '/tribes', {
@@ -74,9 +74,9 @@ function declare({ uuid, name, description, tags, img, groupKey, host, pricePerM
                 body: JSON.stringify({
                     uuid, groupKey,
                     name, description, tags, img: img || '',
-                    pricePerMessage: pricePerMessage || 0,
-                    priceToJoin: priceToJoin || 0,
-                    ownerAlias, ownerPubkey,
+                    pricePerMessage: price_per_message || 0,
+                    priceToJoin: price_to_join || 0,
+                    owner_alias, owner_pubkey,
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -89,17 +89,17 @@ function declare({ uuid, name, description, tags, img, groupKey, host, pricePerM
     });
 }
 exports.declare = declare;
-function edit({ uuid, name, description, tags, img, pricePerMessage, priceToJoin, ownerAlias }) {
+function edit({ uuid, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const r = yield fetch('https://' + getHost() + '/tribes', {
-                method: 'POST',
+                method: 'PUT',
                 body: JSON.stringify({
                     uuid,
                     name, description, tags, img: img || '',
-                    pricePerMessage: pricePerMessage || 0,
-                    priceToJoin: priceToJoin || 0,
-                    ownerAlias,
+                    pricePerMessage: price_per_message || 0,
+                    priceToJoin: price_to_join || 0,
+                    owner_alias,
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });

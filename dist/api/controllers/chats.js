@@ -58,7 +58,7 @@ function editTribe(req, res) {
             priceToJoin: price_to_join || 0
         };
         if (is_listed) {
-            tribes.edit(Object.assign(Object.assign({ uuid }, params), { pricePerMessage: price_per_message || 0, priceToJoin: price_to_join || 0, description, tags, img, ownerAlias: owner.alias }));
+            tribes.edit(Object.assign(Object.assign({ uuid }, params), { price_per_message: price_per_message || 0, price_to_join: price_to_join || 0, description, tags, img, owner_alias: owner.alias }));
         }
         else {
             // remove from tribes server? or at least just "unlist"
@@ -97,7 +97,7 @@ function createGroupChat(req, res) {
             chatParams = yield createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join);
             if (is_listed && chatParams.uuid) {
                 // publish to tribe server
-                tribes.declare(Object.assign(Object.assign({}, chatParams), { pricePerMessage: price_per_message || 0, priceToJoin: price_to_join || 0, description, tags, img, ownerPubkey: owner.publicKey, ownerAlias: owner.alias }));
+                tribes.declare(Object.assign(Object.assign({}, chatParams), { price_per_message: price_per_message || 0, price_to_join: price_to_join || 0, description, tags, img, owner_pubkey: owner.publicKey, owner_alias: owner.alias }));
             }
             // make me owner when i create
             members[owner.publicKey].role = constants.chat_roles.owner;
@@ -351,6 +351,12 @@ function receiveGroupJoin(payload) {
                 theSender = sender; // might already include??
                 if (!contactIds.includes(sender.id))
                     contactIds.push(sender.id);
+                // update sender contacT_key in case they reset?
+                if (member && member.key) {
+                    if (sender.contactKey !== member.key) {
+                        yield sender.update({ contactKey: member.key });
+                    }
+                }
             }
             else {
                 if (member && member.key) {

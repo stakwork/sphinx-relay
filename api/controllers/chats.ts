@@ -63,10 +63,10 @@ async function editTribe(req, res) {
 		tribes.edit({
 			uuid,
 			...params,
-			pricePerMessage: price_per_message||0,
-			priceToJoin: price_to_join||0,
+			price_per_message: price_per_message||0,
+			price_to_join: price_to_join||0,
 			description, tags, img,
-			ownerAlias: owner.alias,
+			owner_alias: owner.alias,
 		})
 	} else {
 		// remove from tribes server? or at least just "unlist"
@@ -117,11 +117,11 @@ async function createGroupChat(req, res) {
 			// publish to tribe server
 			tribes.declare({
 				...chatParams,
-				pricePerMessage: price_per_message||0,
-				priceToJoin: price_to_join||0,
+				price_per_message: price_per_message||0,
+				price_to_join: price_to_join||0,
 				description, tags, img,
-				ownerPubkey: owner.publicKey,
-				ownerAlias: owner.alias,
+				owner_pubkey: owner.publicKey,
+				owner_alias: owner.alias,
 			})
 		}
 		// make me owner when i create
@@ -388,6 +388,12 @@ async function receiveGroupJoin(payload) {
 		if (sender) {
 			theSender = sender // might already include??
 			if(!contactIds.includes(sender.id)) contactIds.push(sender.id)
+			// update sender contacT_key in case they reset?
+			if(member && member.key) {
+				if(sender.contactKey!==member.key) {
+					await sender.update({contactKey:member.key})
+				}
+			}
 		} else {
 			if(member && member.key) {
 				const createdContact = await models.Contact.create({

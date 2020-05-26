@@ -53,16 +53,16 @@ export function publish(topic, msg) {
   if (client) client.publish(topic, msg)
 }
 
-export async function declare({ uuid, name, description, tags, img, groupKey, host, pricePerMessage, priceToJoin, ownerAlias, ownerPubkey }) {
+export async function declare({ uuid, name, description, tags, img, groupKey, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
   try {
     const r = await fetch('https://' + host + '/tribes', {
       method: 'POST',
       body: JSON.stringify({
         uuid, groupKey,
         name, description, tags, img: img || '',
-        pricePerMessage: pricePerMessage || 0,
-        priceToJoin: priceToJoin || 0,
-        ownerAlias, ownerPubkey,
+        pricePerMessage: price_per_message || 0,
+        priceToJoin: price_to_join || 0,
+        owner_alias, owner_pubkey,
       }),
       headers: { 'Content-Type': 'application/json' }
     })
@@ -73,16 +73,16 @@ export async function declare({ uuid, name, description, tags, img, groupKey, ho
   }
 }
 
-export async function edit({ uuid, name, description, tags, img, pricePerMessage, priceToJoin, ownerAlias }) {
+export async function edit({ uuid, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
   try {
     const r = await fetch('https://' + getHost() + '/tribes', {
-      method: 'POST',
+      method: 'PUT',
       body: JSON.stringify({
         uuid,
         name, description, tags, img: img || '',
-        pricePerMessage: pricePerMessage || 0,
-        priceToJoin: priceToJoin || 0,
-        ownerAlias,
+        pricePerMessage: price_per_message || 0,
+        priceToJoin: price_to_join || 0,
+        owner_alias,
       }),
       headers: { 'Content-Type': 'application/json' }
     })
