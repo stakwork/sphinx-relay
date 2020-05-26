@@ -68,37 +68,47 @@ function publish(topic, msg) {
 exports.publish = publish;
 function declare({ uuid, name, description, tags, img, groupKey, host, pricePerMessage, priceToJoin, ownerAlias, ownerPubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = yield fetch('https://' + host + '/tribes', {
-            method: 'POST',
-            body: JSON.stringify({
-                uuid, groupKey,
-                name, description, tags, img: img || '',
-                pricePerMessage: pricePerMessage || 0,
-                priceToJoin: priceToJoin || 0,
-                ownerAlias, ownerPubkey,
-            }),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const j = yield r.json();
-        console.log(j);
+        try {
+            const r = yield fetch('https://' + host + '/tribes', {
+                method: 'POST',
+                body: JSON.stringify({
+                    uuid, groupKey,
+                    name, description, tags, img: img || '',
+                    pricePerMessage: pricePerMessage || 0,
+                    priceToJoin: priceToJoin || 0,
+                    ownerAlias, ownerPubkey,
+                }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const j = yield r.json();
+            console.log(j);
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to declare');
+        }
     });
 }
 exports.declare = declare;
 function edit({ uuid, name, description, tags, img, pricePerMessage, priceToJoin, ownerAlias }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = yield fetch('https://' + getHost() + '/tribes', {
-            method: 'POST',
-            body: JSON.stringify({
-                uuid,
-                name, description, tags, img: img || '',
-                pricePerMessage: pricePerMessage || 0,
-                priceToJoin: priceToJoin || 0,
-                ownerAlias,
-            }),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const j = yield r.json();
-        console.log(j);
+        try {
+            const r = yield fetch('https://' + getHost() + '/tribes', {
+                method: 'POST',
+                body: JSON.stringify({
+                    uuid,
+                    name, description, tags, img: img || '',
+                    pricePerMessage: pricePerMessage || 0,
+                    priceToJoin: priceToJoin || 0,
+                    ownerAlias,
+                }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const j = yield r.json();
+            console.log(j);
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to edit');
+        }
     });
 }
 exports.edit = edit;
