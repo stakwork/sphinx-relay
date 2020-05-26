@@ -66,24 +66,53 @@ function publish(topic, msg) {
         client.publish(topic, msg);
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, groupKey, host, pricePerMessage, priceToJoin, ownerAlias, ownerPubkey }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = yield fetch('https://' + host + '/tribes', {
-            method: 'POST',
-            body: JSON.stringify({
-                uuid, groupKey,
-                name, description, tags, img: img || '',
-                pricePerMessage: pricePerMessage || 0,
-                priceToJoin: priceToJoin || 0,
-                ownerAlias, ownerPubkey,
-            }),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const j = yield r.json();
-        console.log(j);
+        try {
+            yield fetch('https://' + host + '/tribes', {
+                method: 'POST',
+                body: JSON.stringify({
+                    uuid, group_key,
+                    name, description, tags, img: img || '',
+                    price_per_message: price_per_message || 0,
+                    price_to_join: price_to_join || 0,
+                    owner_alias, owner_pubkey,
+                }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            // const j = await r.json()
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to declare');
+            throw e;
+        }
     });
 }
 exports.declare = declare;
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield genSignedTimestamp();
+            yield fetch('https://' + host + '/tribe?token=' + token, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    uuid,
+                    name, description, tags, img: img || '',
+                    price_per_message: price_per_message || 0,
+                    price_to_join: price_to_join || 0,
+                    owner_alias,
+                }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            // const j = await r.json()
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to edit');
+            throw e;
+        }
+    });
+}
+exports.edit = edit;
 function genSignedTimestamp() {
     return __awaiter(this, void 0, void 0, function* () {
         const now = moment().unix();

@@ -44,6 +44,7 @@ function set(app) {
         app.delete('/chat/:id', controllers.chats.deleteChat);
         app.put('/chat/:id', controllers.chats.addGroupMembers);
         app.post('/tribe', controllers.chats.joinTribe);
+        app.put('/group/:id', controllers.chats.editTribe);
         app.post('/contacts/tokens', controllers.contacts.generateToken);
         app.post('/upload', controllers.uploads.avatarUpload.single('file'), controllers.uploads.uploadFile);
         app.post('/invites', controllers.invites.createInvite);

@@ -37,6 +37,60 @@ async function mute(req, res) {
 	success(res, jsonUtils.chatToJson(chat))
 }
 
+async function editTribe(req, res) {
+	const {
+		name,
+		is_listed,
+		price_per_message,
+		price_to_join,
+		img,
+		description,
+		tags,
+	} = req.body
+	const { id } = req.params
+
+	if(!id) return failure(res, 'group id is required')
+
+	const chat = await models.Chat.findOne({where:{id}})
+	if(!chat) {
+		return failure(res, 'cant find chat')
+	}
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
+	let okToUpdate = true
+	if(is_listed) {
+		try{
+			await tribes.edit({
+				uuid: chat.uuid,
+				name: name,
+				host: chat.host,
+				price_per_message: price_per_message||0,
+				price_to_join: price_to_join||0,
+				description, 
+				tags, 
+				img,
+				owner_alias: owner.alias,
+			})
+		} catch(e) {
+			okToUpdate = false
+		}
+	}
+
+	if(okToUpdate) {
+		await chat.update({
+			photoUrl: img||'',
+			name: name,
+			pricePerMessage: price_per_message||0,
+			priceToJoin: price_to_join||0
+		})
+		success(res, jsonUtils.chatToJson(chat))
+	} else {
+		failure(res, 'failed to update tribe')
+	}
+	
+}
+
 // just add self here if tribes
 // or can u add contacts as members?
 async function createGroupChat(req, res) {
@@ -67,23 +121,35 @@ async function createGroupChat(req, res) {
 	})
 
 	let chatParams:any = null
+	let okToCreate = true
 	if(is_tribe){
 		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join)
 		if(is_listed && chatParams.uuid){
 			// publish to tribe server
-			tribes.declare({
-				...chatParams,
-				pricePerMessage: price_per_message||0,
-				priceToJoin: price_to_join||0,
-				description, tags, img,
-				ownerPubkey: owner.publicKey,
-				ownerAlias: owner.alias,
-			})
+			try {
+				await tribes.declare({
+					uuid: chatParams.uuid,
+					name: chatParams.name,
+					host: chatParams.host,
+					group_key: chatParams.groupKey,
+					price_per_message: price_per_message||0,
+					price_to_join: price_to_join||0,
+					description, tags, img,
+					owner_pubkey: owner.publicKey,
+					owner_alias: owner.alias,
+				})
+			} catch(e) {
+				okToCreate = false
+			}
 		}
 		// make me owner when i create
 		members[owner.publicKey].role = constants.chat_roles.owner
 	} else {
 		chatParams = createGroupChatParams(owner, contact_ids, members, name)
+	}
+
+	if(!okToCreate) {
+		return failure(res, 'could not create tribe')
 	}
 
 	network.sendMessage({
@@ -344,6 +410,12 @@ async function receiveGroupJoin(payload) {
 		if (sender) {
 			theSender = sender // might already include??
 			if(!contactIds.includes(sender.id)) contactIds.push(sender.id)
+			// update sender contacT_key in case they reset?
+			if(member && member.key) {
+				if(sender.contactKey!==member.key) {
+					await sender.update({contactKey:member.key})
+				}
+			}
 		} else {
 			if(member && member.key) {
 				const createdContact = await models.Contact.create({
@@ -536,9 +608,9 @@ async function createTribeChatParams(owner, contactIds, name, img, price_per_mes
 		uuid: groupUUID,
 		ownerPubkey: owner.publicKey,
 		contactIds: JSON.stringify(theContactIds),
-		photoUrl: img||'',
 		createdAt: date,
 		updatedAt: date,
+		photoUrl: img||'',
 		name: name,
 		type: constants.chat_types.tribe,
 		groupKey: keys.public,
@@ -553,7 +625,7 @@ export {
 	getChats, mute, addGroupMembers,
 	receiveGroupCreateOrInvite, createGroupChat,
 	deleteChat, receiveGroupLeave, receiveGroupJoin,
-	joinTribe,
+	joinTribe, editTribe,
 }
 
 
