@@ -157,6 +157,7 @@ function replayChatHistory(chat, contact) {
             if (m.type !== constants.message_types.message)
                 return; // only for message for now
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
+            console.log('sender', sender);
             let content = '';
             try {
                 content = JSON.parse(m.remoteMessageContent);
@@ -165,9 +166,12 @@ function replayChatHistory(chat, contact) {
             if (!content)
                 return;
             let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, m.mediaKey && { mediaKey: m.mediaKey }), m.mediaType && { mediaType: m.mediaType }), m.mediaToken && { mediaToken: m.mediaToken }));
+            console.log('msg', msg);
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
+            console.log({ data });
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
+            return;
             yield network.signAndSend({ data }, owner.publicKey, mqttTopic);
         }));
     });

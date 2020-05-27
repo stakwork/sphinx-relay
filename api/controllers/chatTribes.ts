@@ -161,6 +161,7 @@ async function replayChatHistory(chat, contact) {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
 		}
+		console.log('sender',sender)
 		let content = ''
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
 		if(!content) return
@@ -170,10 +171,12 @@ async function replayChatHistory(chat, contact) {
 			...m.mediaType && {mediaType: m.mediaType},
 			...m.mediaToken && {mediaToken: m.mediaToken}
 		})
+		console.log('msg',msg)
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)
-	
+		console.log({data})
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
+		return
 		await network.signAndSend({data}, owner.publicKey, mqttTopic)
 	})
 }
