@@ -147,7 +147,7 @@ async function editTribe(req, res) {
 
 async function replayChatHistory(chat, contact) {
 	const msgs = await models.Message.findAll({ order: [['id', 'asc']], limit:40 })
-	msgs.forEach(m=> console.log('m',m))
+	msgs.forEach(m=> console.log('m',m.dataValues))
 
 }
 

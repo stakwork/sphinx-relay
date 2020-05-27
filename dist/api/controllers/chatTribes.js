@@ -144,7 +144,7 @@ exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
         const msgs = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit: 40 });
-        msgs.forEach(m => console.log('m', m));
+        msgs.forEach(m => console.log('m', m.dataValues));
     });
 }
 exports.replayChatHistory = replayChatHistory;
