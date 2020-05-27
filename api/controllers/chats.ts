@@ -8,7 +8,7 @@ import { sendNotification } from '../hub'
 import * as md5 from 'md5'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
-import {createTribeChatParams} from './chatTribes'
+import {replayChatHistory,createTribeChatParams} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -250,7 +250,7 @@ async function receiveGroupJoin(payload) {
 				role: constants.chat_roles.reader,
 				lastActive: date,
 			})
-			// replayChatHistory(chat, theSender)
+			replayChatHistory(chat, theSender)
 		}
 	}
 

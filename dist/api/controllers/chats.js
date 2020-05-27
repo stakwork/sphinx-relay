@@ -239,7 +239,7 @@ function receiveGroupJoin(payload) {
                     role: constants.chat_roles.reader,
                     lastActive: date,
                 });
-                // replayChatHistory(chat, theSender)
+                chatTribes_1.replayChatHistory(chat, theSender);
             }
         }
         const msg = {

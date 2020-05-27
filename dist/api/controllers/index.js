@@ -29,10 +29,6 @@ console.log("=> env:", env);
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
-        const chat = yield models_1.models.Chat.findOne({ where: { id: 31 } });
-        const contact = yield models_1.models.Contact.findOne({ where: { id: 21 } });
-        if (chat && contact)
-            chatTribes.replayChatHistory(chat, contact);
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
         }
