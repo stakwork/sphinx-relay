@@ -25,11 +25,11 @@ function joinTribe(req, res) {
         const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
         if (existing) {
             console.log('[tribes] u are already in this tribe');
-            return;
+            return res_1.failure(res, 'cant find tribe');
         }
         if (!owner_pubkey || !group_key || !uuid) {
             console.log('[tribes] missing required params');
-            return;
+            return res_1.failure(res, 'missing required params');
         }
         const ownerPubKey = owner_pubkey;
         // verify signature here?
@@ -145,7 +145,14 @@ exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> test replay');
-        const msgs = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit: 40 });
+        if (!(chat && chat.id && contact && contact.id)) {
+            console.log('[tribes] cant replay history');
+        }
+        const msgs = yield models_1.models.Message.findAll({
+            where: { chatId: chat.id },
+            order: [['id', 'asc']],
+            limit: 40
+        });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });

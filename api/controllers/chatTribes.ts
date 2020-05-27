@@ -16,12 +16,12 @@ async function joinTribe(req, res){
 	const existing = await models.Chat.findOne({where:{uuid}})
 	if(existing) {
 		console.log('[tribes] u are already in this tribe')
-		return
+		return failure(res, 'cant find tribe')
 	}
 
 	if(!owner_pubkey || !group_key || !uuid) {
 		console.log('[tribes] missing required params')
-		return
+		return failure(res, 'missing required params')
 	}
 
 	const ownerPubKey = owner_pubkey
@@ -148,7 +148,14 @@ async function editTribe(req, res) {
 
 async function replayChatHistory(chat, contact) {
 	console.log('=> test replay')
-	const msgs = await models.Message.findAll({ order: [['id', 'asc']], limit:40 })
+	if(!(chat&&chat.id&&contact&&contact.id)){
+		console.log('[tribes] cant replay history')
+	}
+	const msgs = await models.Message.findAll({ 
+		where:{chatId:chat.id}, 
+		order: [['id', 'asc']], 
+		limit:40 
+	})
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
 		const sender = {
