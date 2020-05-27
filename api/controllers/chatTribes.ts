@@ -147,6 +147,7 @@ async function editTribe(req, res) {
 }
 
 async function replayChatHistory(chat, contact) {
+	console.log('=> test replay')
 	const msgs = await models.Message.findAll({ order: [['id', 'asc']], limit:40 })
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{

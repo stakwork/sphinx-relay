@@ -144,6 +144,7 @@ function editTribe(req, res) {
 exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> test replay');
         const msgs = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit: 40 });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
