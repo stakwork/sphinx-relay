@@ -162,8 +162,11 @@ async function replayChatHistory(chat, contact) {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
 		}
+		let content = ''
+		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
+		if(!content) return
 		let msg = network.newmsg(m.type, chat, sender, {
-			content: m.remoteMessageContent, // replace with the received content (u are owner)
+			content, // replace with the remoteMessageContent (u are owner)
 			...m.mediaKey && {mediaKey: m.mediaKey},
 			...m.mediaType && {mediaType: m.mediaType},
 			...m.mediaToken && {mediaToken: m.mediaToken}

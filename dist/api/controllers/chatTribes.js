@@ -157,7 +157,14 @@ function replayChatHistory(chat, contact) {
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
             console.log('==> m', m.dataValues);
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
-            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content: m.remoteMessageContent }, m.mediaKey && { mediaKey: m.mediaKey }), m.mediaType && { mediaType: m.mediaType }), m.mediaToken && { mediaToken: m.mediaToken }));
+            let content = '';
+            try {
+                content = JSON.parse(m.remoteMessageContent);
+            }
+            catch (e) { }
+            if (!content)
+                return;
+            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, m.mediaKey && { mediaKey: m.mediaKey }), m.mediaType && { mediaType: m.mediaType }), m.mediaToken && { mediaToken: m.mediaToken }));
             console.log('==> msg', msg);
             msg = yield msg_1.decryptMessage(msg, chat);
             console.log('==> msg decrypted', msg);
