@@ -1,7 +1,7 @@
 import * as path from 'path'
 import * as lndService from '../grpc'
 import {getInfo} from '../utils/lightning'
-import {controllers} from '../controllers'
+import {ACTIONS} from '../controllers'
 import * as tribes from '../utils/tribes'
 import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
@@ -99,23 +99,6 @@ async function forwardMessageToTribe(ogpayload){
 		success: ()=>{},
 		receive: ()=>{}
 	})
-}
-
-const ACTIONS = {
-    [msgtypes.contact_key]: controllers.contacts.receiveContactKey,
-    [msgtypes.contact_key_confirmation]: controllers.contacts.receiveConfirmContactKey,
-    [msgtypes.message]: controllers.messages.receiveMessage,
-    [msgtypes.invoice]: controllers.invoices.receiveInvoice,
-    [msgtypes.direct_payment]: controllers.payments.receivePayment,
-    [msgtypes.confirmation]: controllers.confirmations.receiveConfirmation,
-    [msgtypes.attachment]: controllers.media.receiveAttachment,
-    [msgtypes.purchase]: controllers.media.receivePurchase,
-    [msgtypes.purchase_accept]: controllers.media.receivePurchaseAccept,
-    [msgtypes.purchase_deny]: controllers.media.receivePurchaseDeny,
-    [msgtypes.group_create]: controllers.chats.receiveGroupCreateOrInvite,
-    [msgtypes.group_invite]: controllers.chats.receiveGroupCreateOrInvite,
-    [msgtypes.group_join]: controllers.chats.receiveGroupJoin,
-    [msgtypes.group_leave]: controllers.chats.receiveGroupLeave,
 }
 
 export async function initGrpcSubscriptions() {
