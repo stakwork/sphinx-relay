@@ -134,6 +134,7 @@ function newmsg(type, chat, sender, message) {
         sender: Object.assign(Object.assign({}, includeAlias && { alias: sender.alias }), { pub_key: sender.publicKey })
     };
 }
+exports.newmsg = newmsg;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

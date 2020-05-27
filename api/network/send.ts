@@ -114,7 +114,7 @@ export function signAndSend(opts, pubkey, mqttTopic?:string){
 	})
 }
 
-function newmsg(type, chat, sender, message){
+export function newmsg(type, chat, sender, message){
 	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
 	const includeAlias = sender && sender.alias && chat.type===constants.chat_types.tribe
 	return {

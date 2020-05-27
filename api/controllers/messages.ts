@@ -156,7 +156,7 @@ const receiveMessage = async (payload) => {
 	date.setMilliseconds(0)
 
 	const total_spent = 1
-	const {owner, sender, chat, content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -175,6 +175,7 @@ const receiveMessage = async (payload) => {
 	}
 	if(chat_type===constants.chat_types.tribe) {
 		msg.senderAlias = sender_alias
+		if(remote_content) msg.remoteMessageContent=remote_content
 	}
 	const message = await models.Message.create(msg)
 

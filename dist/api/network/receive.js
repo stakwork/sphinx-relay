@@ -74,14 +74,17 @@ function doTheAction(data) {
     return __awaiter(this, void 0, void 0, function* () {
         let payload = data;
         if (payload.isTribeOwner) {
-            // decrypt and re-encrypt with self pubkey
+            const ogContent = data.message && data.message.content;
+            // decrypt and re-encrypt with phone's pubkey for storage
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             const pld = yield msg_1.decryptMessage(data, chat);
             const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
+            if (ogContent)
+                payload.message.remoteContent = ogContent;
         }
-        if (ACTIONS[payload.type]) {
-            ACTIONS[payload.type](payload);
+        if (controllers_1.ACTIONS[payload.type]) {
+            controllers_1.ACTIONS[payload.type](payload);
         }
         else {
             console.log('Incorrect payload type:', payload.type);
@@ -114,22 +117,6 @@ function forwardMessageToTribe(ogpayload) {
         });
     });
 }
-const ACTIONS = {
-    [msgtypes.contact_key]: controllers_1.controllers.contacts.receiveContactKey,
-    [msgtypes.contact_key_confirmation]: controllers_1.controllers.contacts.receiveConfirmContactKey,
-    [msgtypes.message]: controllers_1.controllers.messages.receiveMessage,
-    [msgtypes.invoice]: controllers_1.controllers.invoices.receiveInvoice,
-    [msgtypes.direct_payment]: controllers_1.controllers.payments.receivePayment,
-    [msgtypes.confirmation]: controllers_1.controllers.confirmations.receiveConfirmation,
-    [msgtypes.attachment]: controllers_1.controllers.media.receiveAttachment,
-    [msgtypes.purchase]: controllers_1.controllers.media.receivePurchase,
-    [msgtypes.purchase_accept]: controllers_1.controllers.media.receivePurchaseAccept,
-    [msgtypes.purchase_deny]: controllers_1.controllers.media.receivePurchaseDeny,
-    [msgtypes.group_create]: controllers_1.controllers.chats.receiveGroupCreateOrInvite,
-    [msgtypes.group_invite]: controllers_1.controllers.chats.receiveGroupCreateOrInvite,
-    [msgtypes.group_join]: controllers_1.controllers.chats.receiveGroupJoin,
-    [msgtypes.group_leave]: controllers_1.controllers.chats.receiveGroupLeave,
-};
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
