@@ -144,9 +144,8 @@ function editTribe(req, res) {
 exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> test replay');
         if (!(chat && chat.id && contact && contact.id)) {
-            console.log('[tribes] cant replay history');
+            return console.log('[tribes] cant replay history');
         }
         const msgs = yield models_1.models.Message.findAll({
             where: { chatId: chat.id },
@@ -155,7 +154,6 @@ function replayChatHistory(chat, contact) {
         });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
-            console.log('==> m', m.dataValues);
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
             let content = '';
             try {
@@ -165,13 +163,10 @@ function replayChatHistory(chat, contact) {
             if (!content)
                 return;
             let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, m.mediaKey && { mediaKey: m.mediaKey }), m.mediaType && { mediaType: m.mediaType }), m.mediaToken && { mediaToken: m.mediaToken }));
-            console.log('==> msg', msg);
             msg = yield msg_1.decryptMessage(msg, chat);
-            console.log('==> msg decrypted', msg);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
-            console.log('replay ======>', mqttTopic, { data });
-            //await network.signAndSend({data}, owner.publicKey, mqttTopic)
+            yield network.signAndSend({ data }, owner.publicKey, mqttTopic);
         }));
     });
 }
