@@ -139,7 +139,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     var date = new Date();
     date.setMilliseconds(0);
     const total_spent = 1;
-    const { owner, sender, chat, content, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -157,6 +157,8 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     };
     if (chat_type === constants.chat_types.tribe) {
         msg.senderAlias = sender_alias;
+        if (remote_content)
+            msg.remoteMessageContent = remote_content;
     }
     const message = yield models_1.models.Message.create(msg);
     console.log('saved message', message.dataValues);

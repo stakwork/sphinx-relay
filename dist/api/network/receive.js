@@ -74,11 +74,14 @@ function doTheAction(data) {
     return __awaiter(this, void 0, void 0, function* () {
         let payload = data;
         if (payload.isTribeOwner) {
+            const ogContent = data.message && data.message.content;
             // decrypt and re-encrypt with self pubkey
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             const pld = yield msg_1.decryptMessage(data, chat);
             const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
+            if (ogContent)
+                payload.message.remoteContent = ogContent;
         }
         if (ACTIONS[payload.type]) {
             ACTIONS[payload.type](payload);

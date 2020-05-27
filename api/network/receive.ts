@@ -57,11 +57,13 @@ async function onReceive(payload){
 async function doTheAction(data){
 	let payload = data
 	if(payload.isTribeOwner) {
+		const ogContent = data.message && data.message.content
 		// decrypt and re-encrypt with self pubkey
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		const pld = await decryptMessage(data, chat)
 		const me = await models.Contact.findOne({where:{isOwner:true}})
 		payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
+		if(ogContent) payload.message.remoteContent = ogContent
 	}
 	if(ACTIONS[payload.type]) {
 		ACTIONS[payload.type](payload)
