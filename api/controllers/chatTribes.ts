@@ -156,15 +156,16 @@ async function replayChatHistory(chat, contact) {
 		}
 		let msg = network.newmsg(m.type, chat, sender, {
 			content: m.remoteContent, // replace with the received content (u are owner)
-			mediaKey: m.mediaKey,
-			mediaType: m.mediaType,
-			mediaToken: m.mediaToken
+			...m.mediaKey && {mediaKey: m.mediaKey},
+			...m.mediaType && {mediaType: m.mediaType},
+			...m.mediaToken && {mediaToken: m.mediaToken}
 		})
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)
 	
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
-		await network.signAndSend({data}, owner.publicKey, mqttTopic)
+		console.log('replay ======>',mqttTopic,{data})
+		//await network.signAndSend({data}, owner.publicKey, mqttTopic)
 	})
 }
 

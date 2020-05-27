@@ -148,16 +148,12 @@ function replayChatHistory(chat, contact) {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
-            let msg = network.newmsg(m.type, chat, sender, {
-                content: m.remoteContent,
-                mediaKey: m.mediaKey,
-                mediaType: m.mediaType,
-                mediaToken: m.mediaToken
-            });
+            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content: m.remoteContent }, m.mediaKey && { mediaKey: m.mediaKey }), m.mediaType && { mediaType: m.mediaType }), m.mediaToken && { mediaToken: m.mediaToken }));
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
-            yield network.signAndSend({ data }, owner.publicKey, mqttTopic);
+            console.log('replay ======>', mqttTopic, { data });
+            //await network.signAndSend({data}, owner.publicKey, mqttTopic)
         }));
     });
 }
