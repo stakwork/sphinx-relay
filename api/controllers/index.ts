@@ -20,10 +20,6 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 async function set(app) {
 
-	const c = await models.Chat.findOne({where:{id:31}})
-	const co = await models.Chat.findOne({where:{id:1}})
-	chatTribes.replayChatHistory(c,co)
-
 	if(models && models.Subscription){
 		subcriptions.initializeCronJobs()
 	}
