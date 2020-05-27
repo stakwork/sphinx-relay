@@ -157,7 +157,7 @@ async function replayChatHistory(chat, contact) {
 	})
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
-		console.log('==> msg',m.dataValues)
+		console.log('==> m',m.dataValues)
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
@@ -168,7 +168,9 @@ async function replayChatHistory(chat, contact) {
 			...m.mediaType && {mediaType: m.mediaType},
 			...m.mediaToken && {mediaToken: m.mediaToken}
 		})
+		console.log('==> msg',msg)
 		msg = await decryptMessage(msg, chat)
+		console.log('==> msg decrypted',msg)
 		const data = await personalizeMessage(msg, contact, true)
 	
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
