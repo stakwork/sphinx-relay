@@ -143,7 +143,6 @@ async function editTribe(req, res) {
 	} else {
 		failure(res, 'failed to update tribe')
 	}
-	
 }
 
 async function replayChatHistory(chat, contact) {
@@ -158,6 +157,7 @@ async function replayChatHistory(chat, contact) {
 	})
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
+		console.log('==> msg',m.dataValues)
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
