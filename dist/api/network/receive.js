@@ -81,7 +81,7 @@ function doTheAction(data) {
             const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
             if (ogContent)
-                payload.message.remoteContent = ogContent;
+                payload.message.remoteContent = JSON.stringify({ 'chat': ogContent }); // this is the key
         }
         if (controllers_1.ACTIONS[payload.type]) {
             controllers_1.ACTIONS[payload.type](payload);

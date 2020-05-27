@@ -63,7 +63,7 @@ async function doTheAction(data){
 		const pld = await decryptMessage(data, chat)
 		const me = await models.Contact.findOne({where:{isOwner:true}})
 		payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
-		if(ogContent) payload.message.remoteContent = ogContent
+		if(ogContent) payload.message.remoteContent = JSON.stringify({'chat':ogContent}) // this is the key
 	}
 	if(ACTIONS[payload.type]) {
 		ACTIONS[payload.type](payload)
