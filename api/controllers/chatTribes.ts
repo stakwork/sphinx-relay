@@ -5,6 +5,7 @@ import * as network from '../network'
 import * as rsa from '../crypto/rsa'
 import * as tribes from '../utils/tribes'
 import * as path from 'path'
+import {personalizeMessage, decryptMessage} from '../utils/msg'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -147,8 +148,24 @@ async function editTribe(req, res) {
 
 async function replayChatHistory(chat, contact) {
 	const msgs = await models.Message.findAll({ order: [['id', 'asc']], limit:40 })
-	msgs.forEach(m=> console.log('m',m.dataValues))
-
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	asyncForEach(msgs, async m=>{
+		const sender = {
+			...owner.dataValues,
+			...m.senderAlias && {alias: m.senderAlias},
+		}
+		let msg = network.newmsg(m.type, chat, sender, {
+			content: m.remoteContent, // replace with the received content (u are owner)
+			mediaKey: m.mediaKey,
+			mediaType: m.mediaType,
+			mediaToken: m.mediaToken
+		})
+		msg = await decryptMessage(msg, chat)
+		const data = await personalizeMessage(msg, contact, true)
+	
+		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
+		await network.signAndSend({data}, owner.publicKey, mqttTopic)
+	})
 }
 
 
@@ -184,4 +201,10 @@ export {
     joinTribe, editTribe,
     replayChatHistory,
     createTribeChatParams
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+	  	await callback(array[index], index, array);
+	}
 }

@@ -16,6 +16,7 @@ const network = require("../network");
 const rsa = require("../crypto/rsa");
 const tribes = require("../utils/tribes");
 const path = require("path");
+const msg_1 = require("../utils/msg");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -144,7 +145,20 @@ exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
         const msgs = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit: 40 });
-        msgs.forEach(m => console.log('m', m.dataValues));
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
+            const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
+            let msg = network.newmsg(m.type, chat, sender, {
+                content: m.remoteContent,
+                mediaKey: m.mediaKey,
+                mediaType: m.mediaType,
+                mediaToken: m.mediaToken
+            });
+            msg = yield msg_1.decryptMessage(msg, chat);
+            const data = yield msg_1.personalizeMessage(msg, contact, true);
+            const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
+            yield network.signAndSend({ data }, owner.publicKey, mqttTopic);
+        }));
     });
 }
 exports.replayChatHistory = replayChatHistory;
@@ -177,4 +191,11 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
     });
 }
 exports.createTribeChatParams = createTribeChatParams;
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
+}
 //# sourceMappingURL=chatTribes.js.map

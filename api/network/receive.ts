@@ -58,7 +58,7 @@ async function doTheAction(data){
 	let payload = data
 	if(payload.isTribeOwner) {
 		const ogContent = data.message && data.message.content
-		// decrypt and re-encrypt with self pubkey
+		// decrypt and re-encrypt with phone's pubkey for storage
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		const pld = await decryptMessage(data, chat)
 		const me = await models.Contact.findOne({where:{isOwner:true}})
