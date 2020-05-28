@@ -64,15 +64,13 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
                     meta: Object.assign({}, amt && { amt }),
                     skipSigning: amt ? true : false // only sign if its free
                 };
-                const keyToEncrypt = newKey.slice();
-                const encKey = rsa.encrypt(chat.groupKey, keyToEncrypt);
-                const keyToSave = encKey.slice();
+                const encKey = rsa.encrypt(chat.groupKey, newKey.slice());
                 var date = new Date();
                 date.setMilliseconds(0);
                 console.log('[modify] save media key!', {
                     muid: json.muid,
                     chatId: chat.id,
-                    key: keyToSave,
+                    key: encKey,
                     messageId: (payload.message && payload.message.id) || 0,
                     receiver: 0,
                     sender: sender.id,

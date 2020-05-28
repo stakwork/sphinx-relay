@@ -156,7 +156,7 @@ async function replayChatHistory(chat, contact) {
 	})
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
-		if(!network.typesToForward.includes(m.type)) return // only for message for now
+		if(!network.typesToReplay.includes(m.type)) return // only for message for now
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
