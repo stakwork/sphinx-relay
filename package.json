@@ -72,6 +72,7 @@
     "sequelize": "^5.19.3",
     "sequelize-cli": "^5.5.1",
     "sequelize-typescript": "^1.1.0",
+    "short-uuid": "^3.1.1",
     "sjcl": "^1.0.8",
     "tail": "^2.0.3",
     "ts-node": "^8.5.4",

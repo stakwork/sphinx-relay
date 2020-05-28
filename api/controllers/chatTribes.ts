@@ -16,12 +16,12 @@ async function joinTribe(req, res){
 	const existing = await models.Chat.findOne({where:{uuid}})
 	if(existing) {
 		console.log('[tribes] u are already in this tribe')
-		return
+		return failure(res, 'cant find tribe')
 	}
 
 	if(!owner_pubkey || !group_key || !uuid) {
 		console.log('[tribes] missing required params')
-		return
+		return failure(res, 'missing required params')
 	}
 
 	const ownerPubKey = owner_pubkey
@@ -143,26 +143,48 @@ async function editTribe(req, res) {
 	} else {
 		failure(res, 'failed to update tribe')
 	}
-	
 }
 
 async function replayChatHistory(chat, contact) {
-	const msgs = await models.Message.findAll({ order: [['id', 'asc']], limit:40 })
+	if(!(chat&&chat.id&&contact&&contact.id)){
+		return console.log('[tribes] cant replay history')
+	}
+	const msgs = await models.Message.findAll({ 
+		where:{chatId:chat.id}, 
+		order: [['id', 'asc']], 
+		limit:40 
+	})
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
+		if(!network.typesToReplay.includes(m.type)) return // only for message for now
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
 		}
+		let content = ''
+		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
+
+		let mediaKeyMap
+		let newMediaTerms
+		if(m.type===constants.message_types.attachment) {
+			if(m.mediaKey&&m.mediaToken) {
+				const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1]
+				const mediaKey = await models.MediaKey.findOne({where:{
+					muid, chatId: chat.id,
+				}})
+				console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+				mediaKeyMap = {chat: mediaKey.key}
+				newMediaTerms = {muid: mediaKey.muid}
+			}
+		}
 		let msg = network.newmsg(m.type, chat, sender, {
-			content: m.remoteContent, // replace with the received content (u are owner)
-			mediaKey: m.mediaKey,
-			mediaType: m.mediaType,
-			mediaToken: m.mediaToken
+			content, // replaced with the remoteMessageContent (u are owner) {}
+			...mediaKeyMap && {mediaKey: mediaKeyMap},
+			...newMediaTerms && {mediaToken: newMediaTerms},
+			...m.mediaType && {mediaType: m.mediaType},
 		})
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)
-	
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
 		await network.signAndSend({data}, owner.publicKey, mqttTopic)
 	})

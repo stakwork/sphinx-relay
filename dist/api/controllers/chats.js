@@ -239,7 +239,7 @@ function receiveGroupJoin(payload) {
                     role: constants.chat_roles.reader,
                     lastActive: date,
                 });
-                // replayChatHistory(chat, theSender)
+                chatTribes_1.replayChatHistory(chat, theSender);
             }
         }
         const msg = {
@@ -247,7 +247,7 @@ function receiveGroupJoin(payload) {
             type: constants.message_types.group_join,
             sender: (theSender && theSender.id) || 0,
             date: date,
-            messageContent: `${senderAlias} has joined the group`,
+            messageContent: '',
             remoteMessageContent: '',
             status: constants.statuses.confirmed,
             createdAt: date,
@@ -300,7 +300,7 @@ function receiveGroupLeave(payload) {
             type: constants.message_types.group_leave,
             sender: (sender && sender.id) || 0,
             date: date,
-            messageContent: `${sender_alias} has left the group`,
+            messageContent: '',
             remoteMessageContent: '',
             status: constants.statuses.confirmed,
             createdAt: date,

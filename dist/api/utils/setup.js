@@ -44,6 +44,7 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_media_keys', 'sender', 'BIGINT');
         addTableColumn('sphinx_chats', 'group_key');
         addTableColumn('sphinx_chats', 'group_private_key');
         addTableColumn('sphinx_chats', 'host');

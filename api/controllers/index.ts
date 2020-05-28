@@ -19,7 +19,7 @@ console.log("=> env:",env)
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 async function set(app) {
-
+	
 	if(models && models.Subscription){
 		subcriptions.initializeCronJobs()
 	}

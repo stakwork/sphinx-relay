@@ -17,9 +17,10 @@ const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
 const meme = require("../utils/meme");
 const FormData = require("form-data");
+// import { models } from '../models'
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
-function modifyPayload(payload, chat) {
+function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         if (payload.type === msgtypes.attachment) {
             const mt = payload.message && payload.message.mediaToken;
@@ -59,11 +60,32 @@ function modifyPayload(payload, chat) {
                 const amt = terms.meta && terms.meta.amt;
                 const ttl = terms.meta && terms.meta.ttl;
                 const mediaTerms = {
-                    muid: json.muid, ttl: ttl || 31536000,
+                    muid: json.muid, ttl: ttl || 31536000, host: '',
                     meta: Object.assign({}, amt && { amt }),
                     skipSigning: amt ? true : false // only sign if its free
                 };
-                const encKey = rsa.encrypt(chat.groupKey, newKey);
+                const encKey = rsa.encrypt(chat.groupKey, newKey.slice());
+                var date = new Date();
+                date.setMilliseconds(0);
+                console.log('[modify] save media key!', {
+                    muid: json.muid,
+                    chatId: chat.id,
+                    key: encKey,
+                    messageId: (payload.message && payload.message.id) || 0,
+                    receiver: 0,
+                    sender: sender.id,
+                    createdAt: date,
+                });
+                // await sleep(1)
+                // await models.MediaKey.create({
+                //   muid:json.muid,
+                //   chatId:chat.id,
+                //   key:encKey,
+                //   messageId: (payload.message&&payload.message.id)||0,
+                //   receiver: 0,
+                //   sender: sender.id, // the og sender
+                //   createdAt: date,
+                // })
                 return fillmsg(payload, { mediaTerms, mediaKey: encKey }); // key is re-encrypted later
             }
             catch (e) {
@@ -77,8 +99,11 @@ function modifyPayload(payload, chat) {
         }
     });
 }
-exports.modifyPayload = modifyPayload;
+exports.modifyPayloadAndSaveMediaKey = modifyPayloadAndSaveMediaKey;
 function fillmsg(full, props) {
     return Object.assign(Object.assign({}, full), { message: Object.assign(Object.assign({}, full.message), props) });
 }
+// async function sleep(ms) {
+// 	return new Promise(resolve => setTimeout(resolve, ms))
+// }
 //# sourceMappingURL=modify.js.map

@@ -25,11 +25,11 @@ function joinTribe(req, res) {
         const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
         if (existing) {
             console.log('[tribes] u are already in this tribe');
-            return;
+            return res_1.failure(res, 'cant find tribe');
         }
         if (!owner_pubkey || !group_key || !uuid) {
             console.log('[tribes] missing required params');
-            return;
+            return res_1.failure(res, 'missing required params');
         }
         const ownerPubKey = owner_pubkey;
         // verify signature here?
@@ -144,16 +144,38 @@ function editTribe(req, res) {
 exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
-        const msgs = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit: 40 });
+        if (!(chat && chat.id && contact && contact.id)) {
+            return console.log('[tribes] cant replay history');
+        }
+        const msgs = yield models_1.models.Message.findAll({
+            where: { chatId: chat.id },
+            order: [['id', 'asc']],
+            limit: 40
+        });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
+            if (!network.typesToReplay.includes(m.type))
+                return; // only for message for now
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
-            let msg = network.newmsg(m.type, chat, sender, {
-                content: m.remoteContent,
-                mediaKey: m.mediaKey,
-                mediaType: m.mediaType,
-                mediaToken: m.mediaToken
-            });
+            let content = '';
+            try {
+                content = JSON.parse(m.remoteMessageContent);
+            }
+            catch (e) { }
+            let mediaKeyMap;
+            let newMediaTerms;
+            if (m.type === constants.message_types.attachment) {
+                if (m.mediaKey && m.mediaToken) {
+                    const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
+                    const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
+                            muid, chatId: chat.id,
+                        } });
+                    console.log("FOUND MEDIA KEY!!", mediaKey.dataValues);
+                    mediaKeyMap = { chat: mediaKey.key };
+                    newMediaTerms = { muid: mediaKey.muid };
+                }
+            }
+            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }));
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;

@@ -6,13 +6,13 @@ import * as tribes from '../utils/tribes'
 import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
 import {sendMessage} from './send'
-import {modifyPayload} from './modify'
+import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
-const typesToForward=[
+export const typesToForward=[
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
 ]
 const typesToModify=[
@@ -20,6 +20,9 @@ const typesToModify=[
 ]
 const typesThatNeedPricePerMessage = [
 	msgtypes.message, msgtypes.attachment
+]
+export const typesToReplay=[ // should match typesToForward
+	msgtypes.message, msgtypes.group_join, msgtypes.group_leave
 ]
 async function onReceive(payload){
 	// if tribe, owner must forward to MQTT
@@ -34,8 +37,8 @@ async function onReceive(payload){
 		if(owner.publicKey===tribeOwnerPubKey){
 			toAddIn.isTribeOwner = true
 			// CHECK THEY ARE IN THE GROUP if message
+			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			if(needsPricePerJoin) {
-				const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 				const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
 				if(!senderMember) doAction=false
 			}
@@ -47,7 +50,7 @@ async function onReceive(payload){
 			if(payload.type===msgtypes.group_join) {
 				if(payload.message.amount<chat.priceToJoin) doAction=false
 			}
-			if(doAction) forwardMessageToTribe(payload)
+			if(doAction) forwardMessageToTribe(payload, senderContact)
 			else console.log('=> insufficient payment for this action')
 		}
 	}
@@ -58,12 +61,14 @@ async function doTheAction(data){
 	let payload = data
 	if(payload.isTribeOwner) {
 		const ogContent = data.message && data.message.content
-		// decrypt and re-encrypt with phone's pubkey for storage
+		// const ogMediaKey = data.message && data.message.mediaKey
+		/* decrypt and re-encrypt with phone's pubkey for storage */
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		const pld = await decryptMessage(data, chat)
 		const me = await models.Contact.findOne({where:{isOwner:true}})
 		payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
-		if(ogContent) payload.message.remoteContent = ogContent
+		if(ogContent) payload.message.remoteContent = JSON.stringify({'chat':ogContent}) // this is the key
+		//if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
 	}
 	if(ACTIONS[payload.type]) {
 		ACTIONS[payload.type](payload)
@@ -72,12 +77,12 @@ async function doTheAction(data){
 	}
 }
 
-async function forwardMessageToTribe(ogpayload){
+async function forwardMessageToTribe(ogpayload, sender){
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
 	let payload
 	if(typesToModify.includes(ogpayload.type)){
-		payload = await modifyPayload(ogpayload, chat)
+		payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat, sender)
 	} else {
 		payload = ogpayload
 	}
