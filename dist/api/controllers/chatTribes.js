@@ -154,7 +154,7 @@ function replayChatHistory(chat, contact) {
         });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
-            if (m.type !== constants.message_types.message)
+            if (!network.typesToReplay.includes(m.type))
                 return; // only for message for now
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
             let content = '';

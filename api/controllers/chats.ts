@@ -259,8 +259,8 @@ async function receiveGroupJoin(payload) {
 		type: constants.message_types.group_join,
 		sender: (theSender && theSender.id) || 0,
 		date: date,
-		messageContent: `${senderAlias} has joined the group`,
-		remoteMessageContent: '',
+		messageContent:'',//`${senderAlias} has joined the group`,
+		remoteMessageContent:'',
 		status: constants.statuses.confirmed,
 		createdAt: date,
 		updatedAt: date
@@ -314,8 +314,8 @@ async function receiveGroupLeave(payload) {
 		type: constants.message_types.group_leave,
 		sender: (sender && sender.id) || 0,
 		date: date,
-		messageContent: `${sender_alias} has left the group`,
-		remoteMessageContent: '',
+		messageContent:'', //`${sender_alias} has left the group`,
+		remoteMessageContent:'',
 		status: constants.statuses.confirmed,
 		createdAt: date,
 		updatedAt: date

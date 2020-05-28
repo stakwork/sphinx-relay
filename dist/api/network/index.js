@@ -8,4 +8,5 @@ const receive_1 = require("./receive");
 exports.initGrpcSubscriptions = receive_1.initGrpcSubscriptions;
 exports.initTribesSubscriptions = receive_1.initTribesSubscriptions;
 exports.parseKeysendInvoice = receive_1.parseKeysendInvoice;
+exports.typesToReplay = receive_1.typesToReplay;
 //# sourceMappingURL=index.js.map

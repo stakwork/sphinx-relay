@@ -21,6 +21,9 @@ const typesToModify=[
 const typesThatNeedPricePerMessage = [
 	msgtypes.message, msgtypes.attachment
 ]
+export const typesToReplay=[ // should match typesToForward
+	msgtypes.message, msgtypes.group_join, msgtypes.group_leave
+]
 async function onReceive(payload){
 	// if tribe, owner must forward to MQTT
 	let doAction = true
@@ -58,12 +61,14 @@ async function doTheAction(data){
 	let payload = data
 	if(payload.isTribeOwner) {
 		const ogContent = data.message && data.message.content
-		// decrypt and re-encrypt with phone's pubkey for storage
+		// const ogMediaKey = data.message && data.message.mediaKey
+		/* decrypt and re-encrypt with phone's pubkey for storage */
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		const pld = await decryptMessage(data, chat)
 		const me = await models.Contact.findOne({where:{isOwner:true}})
 		payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
 		if(ogContent) payload.message.remoteContent = JSON.stringify({'chat':ogContent}) // this is the key
+		//if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
 	}
 	if(ACTIONS[payload.type]) {
 		ACTIONS[payload.type](payload)

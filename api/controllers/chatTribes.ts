@@ -156,7 +156,7 @@ async function replayChatHistory(chat, contact) {
 	})
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
-		if(m.type!==constants.message_types.message) return // only for message for now
+		if(!network.typesToReplay.includes(m.type)) return // only for message for now
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
@@ -165,7 +165,7 @@ async function replayChatHistory(chat, contact) {
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
 		if(!content) return
 		let msg = network.newmsg(m.type, chat, sender, {
-			content, // replace with the remoteMessageContent (u are owner)
+			content, // replaced with the remoteMessageContent (u are owner) {}
 			...m.mediaKey && {mediaKey: m.mediaKey},
 			...m.mediaType && {mediaType: m.mediaType},
 			...m.mediaToken && {mediaToken: m.mediaToken}

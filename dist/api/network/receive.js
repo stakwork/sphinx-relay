@@ -30,6 +30,9 @@ const typesToModify = [
 const typesThatNeedPricePerMessage = [
     msgtypes.message, msgtypes.attachment
 ];
+exports.typesToReplay = [
+    msgtypes.message, msgtypes.group_join, msgtypes.group_leave
+];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         // if tribe, owner must forward to MQTT
@@ -75,13 +78,15 @@ function doTheAction(data) {
         let payload = data;
         if (payload.isTribeOwner) {
             const ogContent = data.message && data.message.content;
-            // decrypt and re-encrypt with phone's pubkey for storage
+            // const ogMediaKey = data.message && data.message.mediaKey
+            /* decrypt and re-encrypt with phone's pubkey for storage */
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             const pld = yield msg_1.decryptMessage(data, chat);
             const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
             if (ogContent)
                 payload.message.remoteContent = JSON.stringify({ 'chat': ogContent }); // this is the key
+            //if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
         }
         if (controllers_1.ACTIONS[payload.type]) {
             controllers_1.ACTIONS[payload.type](payload);
