@@ -139,9 +139,10 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId){
   date.setMilliseconds(0)
   for (let [contactId, key] of Object.entries(mediaKeyMap)) {
     if(parseInt(contactId)!==1) {
+      const receiverID = parseInt(contactId) || 0 // 0 is for a tribe
       models.MediaKey.create({
         muid, chatId, key, messageId,
-        receiver: parseInt(contactId),
+        receiver: receiverID,
         createdAt: date,
       })
     }

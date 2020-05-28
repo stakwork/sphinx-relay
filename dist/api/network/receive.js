@@ -101,7 +101,7 @@ function forwardMessageToTribe(ogpayload) {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
         let payload;
         if (typesToModify.includes(ogpayload.type)) {
-            payload = yield modify_1.modifyPayload(ogpayload, chat);
+            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat);
         }
         else {
             payload = ogpayload;

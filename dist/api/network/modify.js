@@ -17,9 +17,10 @@ const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
 const meme = require("../utils/meme");
 const FormData = require("form-data");
+const models_1 = require("../models");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
-function modifyPayload(payload, chat) {
+function modifyPayloadAndSaveMediaKey(payload, chat) {
     return __awaiter(this, void 0, void 0, function* () {
         if (payload.type === msgtypes.attachment) {
             const mt = payload.message && payload.message.mediaToken;
@@ -64,6 +65,16 @@ function modifyPayload(payload, chat) {
                     skipSigning: amt ? true : false // only sign if its free
                 };
                 const encKey = rsa.encrypt(chat.groupKey, newKey);
+                var date = new Date();
+                date.setMilliseconds(0);
+                models_1.models.MediaKey.create({
+                    muid: json.muid,
+                    chatId: chat.id,
+                    key: encKey,
+                    messageId: (payload.message && payload.message.id) || 0,
+                    receiver: 0,
+                    createdAt: date,
+                });
                 return fillmsg(payload, { mediaTerms, mediaKey: encKey }); // key is re-encrypted later
             }
             catch (e) {
@@ -77,7 +88,7 @@ function modifyPayload(payload, chat) {
         }
     });
 }
-exports.modifyPayload = modifyPayload;
+exports.modifyPayloadAndSaveMediaKey = modifyPayloadAndSaveMediaKey;
 function fillmsg(full, props) {
     return Object.assign(Object.assign({}, full), { message: Object.assign(Object.assign({}, full.message), props) });
 }

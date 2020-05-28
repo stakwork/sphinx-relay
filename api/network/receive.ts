@@ -6,7 +6,7 @@ import * as tribes from '../utils/tribes'
 import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
 import {sendMessage} from './send'
-import {modifyPayload} from './modify'
+import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
@@ -82,7 +82,7 @@ async function forwardMessageToTribe(ogpayload){
 
 	let payload
 	if(typesToModify.includes(ogpayload.type)){
-		payload = await modifyPayload(ogpayload, chat)
+		payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat)
 	} else {
 		payload = ogpayload
 	}
