@@ -17,7 +17,7 @@ const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
 const meme = require("../utils/meme");
 const FormData = require("form-data");
-// import { models } from '../models'
+const models_1 = require("../models");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
@@ -76,15 +76,15 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
                     sender: sender.id,
                     createdAt: date,
                 });
-                // models.MediaKey.create({
-                //   muid:json.muid,
-                //   chatId:chat.id,
-                //   key:encKey,
-                //   messageId: (payload.message&&payload.message.id)||0,
-                //   receiver: 0,
-                //   sender: sender.id, // the og sender
-                //   createdAt: date,
-                // })
+                yield models_1.models.MediaKey.create({
+                    muid: json.muid,
+                    chatId: chat.id,
+                    key: encKey,
+                    messageId: (payload.message && payload.message.id) || 0,
+                    receiver: 0,
+                    sender: sender.id,
+                    createdAt: date,
+                });
                 return fillmsg(payload, { mediaTerms, mediaKey: encKey }); // key is re-encrypted later
             }
             catch (e) {

@@ -6,7 +6,7 @@ import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
 import * as meme from '../utils/meme'
 import * as FormData from 'form-data'   
-// import { models } from '../models'
+import { models } from '../models'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -79,15 +79,15 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
         sender: sender.id, // the og sender
         createdAt: date,
       })
-      // models.MediaKey.create({
-      //   muid:json.muid,
-      //   chatId:chat.id,
-      //   key:encKey,
-      //   messageId: (payload.message&&payload.message.id)||0,
-      //   receiver: 0,
-      //   sender: sender.id, // the og sender
-      //   createdAt: date,
-      // })
+      await models.MediaKey.create({
+        muid:json.muid,
+        chatId:chat.id,
+        key:encKey,
+        messageId: (payload.message&&payload.message.id)||0,
+        receiver: 0,
+        sender: sender.id, // the og sender
+        createdAt: date,
+      })
 
       return fillmsg(payload, {mediaTerms,mediaKey:encKey}) // key is re-encrypted later
     } catch(e) {
