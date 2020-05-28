@@ -70,6 +70,7 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
 
       var date = new Date();
       date.setMilliseconds(0)
+      console.log('[modify] save media key!',json.muid)
       models.MediaKey.create({
         muid:json.muid,
         chatId:chat.id,

@@ -67,6 +67,7 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
                 const encKey = rsa.encrypt(chat.groupKey, newKey);
                 var date = new Date();
                 date.setMilliseconds(0);
+                console.log('[modify] save media key!', json.muid);
                 models_1.models.MediaKey.create({
                     muid: json.muid,
                     chatId: chat.id,
