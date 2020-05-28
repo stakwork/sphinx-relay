@@ -20,7 +20,7 @@ const FormData = require("form-data");
 const models_1 = require("../models");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
-function modifyPayloadAndSaveMediaKey(payload, chat) {
+function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         if (payload.type === msgtypes.attachment) {
             const mt = payload.message && payload.message.mediaToken;
@@ -60,7 +60,7 @@ function modifyPayloadAndSaveMediaKey(payload, chat) {
                 const amt = terms.meta && terms.meta.amt;
                 const ttl = terms.meta && terms.meta.ttl;
                 const mediaTerms = {
-                    muid: json.muid, ttl: ttl || 31536000,
+                    muid: json.muid, ttl: ttl || 31536000, host: '',
                     meta: Object.assign({}, amt && { amt }),
                     skipSigning: amt ? true : false // only sign if its free
                 };
@@ -73,6 +73,7 @@ function modifyPayloadAndSaveMediaKey(payload, chat) {
                     key: encKey,
                     messageId: (payload.message && payload.message.id) || 0,
                     receiver: 0,
+                    sender: sender.id,
                     createdAt: date,
                 });
                 return fillmsg(payload, { mediaTerms, mediaKey: encKey }); // key is re-encrypted later

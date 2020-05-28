@@ -11,7 +11,7 @@ import { models } from '../models'
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
-export async function modifyPayloadAndSaveMediaKey(payload, chat) {
+export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
   if(payload.type===msgtypes.attachment) {
 
     const mt = payload.message && payload.message.mediaToken
@@ -61,7 +61,7 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat) {
       const amt = terms.meta&&terms.meta.amt
       const ttl = terms.meta&&terms.meta.ttl
       const mediaTerms: {[k:string]:any} = {
-        muid:json.muid, ttl:ttl||31536000,
+        muid:json.muid, ttl:ttl||31536000, host:'',
         meta:{...amt && {amt}},
         skipSigning: amt ? true : false // only sign if its free
       }
@@ -76,6 +76,7 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat) {
         key:encKey,
         messageId: (payload.message&&payload.message.id)||0,
         receiver: 0,
+        sender: sender.id, // the og sender
         createdAt: date,
       })
 

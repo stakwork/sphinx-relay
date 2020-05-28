@@ -12,7 +12,7 @@ import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
-const typesToForward=[
+export const typesToForward=[
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
 ]
 const typesToModify=[
@@ -37,8 +37,8 @@ async function onReceive(payload){
 		if(owner.publicKey===tribeOwnerPubKey){
 			toAddIn.isTribeOwner = true
 			// CHECK THEY ARE IN THE GROUP if message
+			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			if(needsPricePerJoin) {
-				const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 				const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
 				if(!senderMember) doAction=false
 			}
@@ -50,7 +50,7 @@ async function onReceive(payload){
 			if(payload.type===msgtypes.group_join) {
 				if(payload.message.amount<chat.priceToJoin) doAction=false
 			}
-			if(doAction) forwardMessageToTribe(payload)
+			if(doAction) forwardMessageToTribe(payload, senderContact)
 			else console.log('=> insufficient payment for this action')
 		}
 	}
@@ -77,12 +77,12 @@ async function doTheAction(data){
 	}
 }
 
-async function forwardMessageToTribe(ogpayload){
+async function forwardMessageToTribe(ogpayload, sender){
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
 	let payload
 	if(typesToModify.includes(ogpayload.type)){
-		payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat)
+		payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat, sender)
 	} else {
 		payload = ogpayload
 	}

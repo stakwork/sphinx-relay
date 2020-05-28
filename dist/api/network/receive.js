@@ -21,7 +21,7 @@ const modify_1 = require("./modify");
 const msg_1 = require("../utils/msg");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
-const typesToForward = [
+exports.typesToForward = [
     msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
 ];
 const typesToModify = [
@@ -39,7 +39,7 @@ function onReceive(payload) {
         let doAction = true;
         const toAddIn = {};
         const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
-        if (isTribe && typesToForward.includes(payload.type)) {
+        if (isTribe && exports.typesToForward.includes(payload.type)) {
             const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
@@ -47,8 +47,8 @@ function onReceive(payload) {
             if (owner.publicKey === tribeOwnerPubKey) {
                 toAddIn.isTribeOwner = true;
                 // CHECK THEY ARE IN THE GROUP if message
+                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 if (needsPricePerJoin) {
-                    const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                     const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
                     if (!senderMember)
                         doAction = false;
@@ -64,7 +64,7 @@ function onReceive(payload) {
                         doAction = false;
                 }
                 if (doAction)
-                    forwardMessageToTribe(payload);
+                    forwardMessageToTribe(payload, senderContact);
                 else
                     console.log('=> insufficient payment for this action');
             }
@@ -96,12 +96,12 @@ function doTheAction(data) {
         }
     });
 }
-function forwardMessageToTribe(ogpayload) {
+function forwardMessageToTribe(ogpayload, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
         let payload;
         if (typesToModify.includes(ogpayload.type)) {
-            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat);
+            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender);
         }
         else {
             payload = ogpayload;

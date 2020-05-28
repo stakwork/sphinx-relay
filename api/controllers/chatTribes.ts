@@ -156,19 +156,32 @@ async function replayChatHistory(chat, contact) {
 	})
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
-		if(!network.typesToReplay.includes(m.type)) return // only for message for now
+		if(!network.typesToForward.includes(m.type)) return // only for message for now
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
 		}
 		let content = ''
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
-		if(!content) return
+
+		let mediaKeyMap
+		let newMediaTerms
+		if(m.type===constants.message_types.attachment) {
+			if(m.mediaKey&&m.mediaToken) {
+				const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1]
+				const mediaKey = await models.MediaKey.findOne({where:{
+					muid, chatId: chat.id,
+				}})
+				console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+				mediaKeyMap = {chat: mediaKey.key}
+				newMediaTerms = {muid: mediaKey.muid}
+			}
+		}
 		let msg = network.newmsg(m.type, chat, sender, {
 			content, // replaced with the remoteMessageContent (u are owner) {}
-			...m.mediaKey && {mediaKey: m.mediaKey},
+			...mediaKeyMap && {mediaKey: mediaKeyMap},
+			...newMediaTerms && {mediaToken: newMediaTerms},
 			...m.mediaType && {mediaType: m.mediaType},
-			...m.mediaToken && {mediaToken: m.mediaToken}
 		})
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)

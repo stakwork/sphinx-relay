@@ -154,7 +154,7 @@ function replayChatHistory(chat, contact) {
         });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
-            if (!network.typesToReplay.includes(m.type))
+            if (!network.typesToForward.includes(m.type))
                 return; // only for message for now
             const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
             let content = '';
@@ -162,9 +162,20 @@ function replayChatHistory(chat, contact) {
                 content = JSON.parse(m.remoteMessageContent);
             }
             catch (e) { }
-            if (!content)
-                return;
-            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, m.mediaKey && { mediaKey: m.mediaKey }), m.mediaType && { mediaType: m.mediaType }), m.mediaToken && { mediaToken: m.mediaToken }));
+            let mediaKeyMap;
+            let newMediaTerms;
+            if (m.type === constants.message_types.attachment) {
+                if (m.mediaKey && m.mediaToken) {
+                    const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
+                    const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
+                            muid, chatId: chat.id,
+                        } });
+                    console.log("FOUND MEDIA KEY!!", mediaKey.dataValues);
+                    mediaKeyMap = { chat: mediaKey.key };
+                    newMediaTerms = { muid: mediaKey.muid };
+                }
+            }
+            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }));
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;

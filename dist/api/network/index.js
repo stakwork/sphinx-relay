@@ -9,4 +9,5 @@ exports.initGrpcSubscriptions = receive_1.initGrpcSubscriptions;
 exports.initTribesSubscriptions = receive_1.initTribesSubscriptions;
 exports.parseKeysendInvoice = receive_1.parseKeysendInvoice;
 exports.typesToReplay = receive_1.typesToReplay;
+exports.typesToForward = receive_1.typesToForward;
 //# sourceMappingURL=index.js.map
