@@ -34,10 +34,10 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
 
       const newKey = crypto.randomBytes(20).toString('hex')
 
-      const encImgBuffer = RNCryptor.Encrypt(imgBuf, newKey)
-      console.log('encImgBuffer.length',encImgBuffer.length,typeof encImgBuffer)
+      const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey)
+      console.log('encImgBase64.length',encImgBase64.length,typeof encImgBase64)
 
-      // var encImgBuffer = Buffer.from(encImg,'base64');
+      var encImgBuffer = Buffer.from(encImgBase64,'base64');
 
       const form = new FormData()
       form.append('file', encImgBuffer, {
