@@ -15,6 +15,7 @@ import {sendConfirmation} from './confirmations'
 import * as path from 'path'
 import * as network from '../network'
 import * as meme from '../utils/meme'
+import * as short from 'short-uuid'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
@@ -88,8 +89,10 @@ const sendAttachmentMessage = async (req, res) => {
   const mediaType = media_type || ''
   const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
   
+  const uuid = short.generate()
   const message = await models.Message.create({
     chatId: chat.id,
+    uuid: uuid,
     sender: owner.id,
     type: constants.message_types.attachment,
     status: constants.statuses.pending,
@@ -113,6 +116,7 @@ const sendAttachmentMessage = async (req, res) => {
   const msg: {[k:string]:any} = {
     mediaTerms, // this gets converted to mediaToken
     id: message.id,
+    uuid: uuid,
     content: remote_text_map||remote_text||text||file_name||'',
     mediaKey: media_key_map,
     mediaType: mediaType,
@@ -175,6 +179,7 @@ const purchase = async (req, res) => {
 
   const message = await models.Message.create({
     chatId: chat.id,
+    uuid: short.generate(),
     sender: owner.id,
     type: constants.message_types.purchase,
     mediaToken: media_token,
@@ -184,7 +189,7 @@ const purchase = async (req, res) => {
   })
 
   const msg={
-    amount, mediaToken:media_token, id:message.id,
+    amount, mediaToken:media_token, id:message.id, uuid:message.uuid,
   }
   network.sendMessage({
     chat: {...chat.dataValues, contactIds:[contact_id]},
@@ -208,13 +213,14 @@ const receivePurchase = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, mediaToken} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, msg_uuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
   
   const message = await models.Message.create({
     chatId: chat.id,
+    uuid: msg_uuid,
     sender: sender.id,
     type: constants.message_types.purchase,
     mediaToken: mediaToken,
@@ -393,13 +399,14 @@ const receiveAttachment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
 
   const msg: {[k:string]:any} = {
     chatId: chat.id,
+    uuid: msg_uuid,
     type: constants.message_types.attachment,
     sender: sender.id,
     date: date,

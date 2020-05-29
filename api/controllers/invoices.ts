@@ -9,6 +9,7 @@ import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
 import * as network from '../network'
+import * as short from 'short-uuid'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -74,7 +75,6 @@ const payInvoice = async (req, res) => {
   call.write({ payment_request })
 };
 
-
 const cancelInvoice = (req, res) => {
   res.status(200);
   res.json({ success: false });
@@ -139,6 +139,7 @@ const createInvoice = async (req, res) => {
             } else {
               const message = await models.Message.create({
                 chatId: chat.id,
+                uuid: short.generate(),
                 sender: owner.id,
                 type: constants.message_types.invoice,
                 amount: parseInt(invoice.num_satoshis),
@@ -203,7 +204,7 @@ const receiveInvoice = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const { owner, sender, chat, msg_id, chat_type, sender_alias } = await helpers.parseReceiveParams(payload)
+  const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -212,6 +213,7 @@ const receiveInvoice = async (payload) => {
 
   const msg:{[k:string]:any} = {
     chatId: chat.id,
+    uuid: msg_uuid,
     type: constants.message_types.invoice,
     sender: sender.id,
     amount: sat,

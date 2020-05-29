@@ -19,6 +19,7 @@ const lightning = require("../utils/lightning");
 const ldat_1 = require("../utils/ldat");
 const constants = require("../../config/constants.json");
 const network = require("../network");
+const short = require("short-uuid");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, } = req.body;
     console.log('[send payment]', req.body);
@@ -49,6 +50,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     date.setMilliseconds(0);
     const msg = {
         chatId: chat.id,
+        uuid: short.generate(),
         sender: owner.id,
         type: constants.message_types.direct_payment,
         amount: amount,
@@ -73,6 +75,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const message = yield models_1.models.Message.create(msg);
     const msgToSend = {
         id: message.id,
+        uuid: message.uuid,
         amount,
     };
     if (muid) {
@@ -115,12 +118,13 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
     const msg = {
         chatId: chat.id,
+        uuid: msg_uuid,
         type: constants.message_types.direct_payment,
         sender: sender.id,
         amount: amount,

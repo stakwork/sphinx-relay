@@ -26,6 +26,7 @@ const confirmations_1 = require("./confirmations");
 const path = require("path");
 const network = require("../network");
 const meme = require("../utils/meme");
+const short = require("short-uuid");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -78,8 +79,10 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     const myMediaKey = (media_key_map && media_key_map[owner.id]) || '';
     const mediaType = media_type || '';
     const remoteMessageContent = remote_text_map ? JSON.stringify(remote_text_map) : remote_text;
+    const uuid = short.generate();
     const message = yield models_1.models.Message.create({
         chatId: chat.id,
+        uuid: uuid,
         sender: owner.id,
         type: constants.message_types.attachment,
         status: constants.statuses.pending,
@@ -101,6 +104,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     const msg = {
         mediaTerms,
         id: message.id,
+        uuid: uuid,
         content: remote_text_map || remote_text || text || file_name || '',
         mediaKey: media_key_map,
         mediaType: mediaType,
@@ -155,6 +159,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     });
     const message = yield models_1.models.Message.create({
         chatId: chat.id,
+        uuid: short.generate(),
         sender: owner.id,
         type: constants.message_types.purchase,
         mediaToken: media_token,
@@ -163,7 +168,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         updatedAt: date
     });
     const msg = {
-        amount, mediaToken: media_token, id: message.id,
+        amount, mediaToken: media_token, id: message.id, uuid: message.uuid,
     };
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
@@ -184,12 +189,13 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, mediaToken } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, mediaToken, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> group chat not found!');
     }
     const message = yield models_1.models.Message.create({
         chatId: chat.id,
+        uuid: msg_uuid,
         sender: sender.id,
         type: constants.message_types.purchase,
         mediaToken: mediaToken,
@@ -360,12 +366,13 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     console.log('received attachment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
     const msg = {
         chatId: chat.id,
+        uuid: msg_uuid,
         type: constants.message_types.attachment,
         sender: sender.id,
         date: date,

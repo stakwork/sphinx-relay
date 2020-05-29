@@ -8,6 +8,7 @@ import * as lightning from '../utils/lightning'
 import {tokenFromTerms} from '../utils/ldat'
 import * as constants from '../../config/constants.json'
 import * as network from '../network'
+import * as short from 'short-uuid'
 
 const sendPayment = async (req, res) => {
   const {
@@ -57,6 +58,7 @@ const sendPayment = async (req, res) => {
 
   const msg: {[k:string]:any} = {
     chatId: chat.id,
+    uuid: short.generate(),
     sender: owner.id,
     type: constants.message_types.direct_payment,
     amount: amount,
@@ -82,6 +84,7 @@ const sendPayment = async (req, res) => {
 
   const msgToSend: {[k:string]:any} = {
     id:message.id,
+    uuid:message.uuid,
     amount,
   }
   if(muid) {
@@ -125,13 +128,14 @@ const receivePayment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
 
   const msg: {[k:string]:any} = {
     chatId: chat.id,
+    uuid: msg_uuid,
     type: constants.message_types.direct_payment,
     sender: sender.id,
     amount: amount,

@@ -20,6 +20,7 @@ const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
 const network = require("../network");
+const short = require("short-uuid");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
@@ -109,6 +110,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const remoteMessageContent = remote_text_map ? JSON.stringify(remote_text_map) : remote_text;
     const msg = {
         chatId: chat.id,
+        uuid: short.generate(),
         type: constants.message_types.message,
         sender: owner.id,
         amount: amount || 0,
@@ -139,13 +141,14 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     var date = new Date();
     date.setMilliseconds(0);
     const total_spent = 1;
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
     const text = content;
     const msg = {
         chatId: chat.id,
+        uuid: msg_uuid,
         type: constants.message_types.message,
         asciiEncodedTotal: total_spent,
         sender: sender.id,

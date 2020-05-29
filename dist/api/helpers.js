@@ -162,6 +162,7 @@ function parseReceiveParams(payload) {
         const remote_content = dat.message.remoteContent;
         const mediaToken = dat.message.mediaToken;
         const msg_id = dat.message.id || 0;
+        const msg_uuid = dat.message.uuid || '';
         const mediaKey = dat.message.mediaKey;
         const mediaType = dat.message.mediaType;
         const isTribeOwner = dat.isTribeOwner ? true : false;
@@ -184,7 +185,7 @@ function parseReceiveParams(payload) {
             }
             chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         }
-        return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content };
+        return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid };
     });
 }
 exports.parseReceiveParams = parseReceiveParams;

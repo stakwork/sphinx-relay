@@ -11,6 +11,9 @@ export default class Message extends Model<Message> {
   })
   id: number
 
+  @Column
+  uuid: string
+
   @Column(DataType.BIGINT)
   chatId: number
 
