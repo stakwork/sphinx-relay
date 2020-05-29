@@ -182,9 +182,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     if (sender_photo_url) {
         // download and store photo locally
     }
-    console.log('sender_pub_key', sender_pub_key);
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
-    console.log('sender', sender);
     if (sender_contact_key && sender) {
         if (!sender.alias || sender.alias === 'Unknown') {
             sender.update({ contactKey: sender_contact_key, alias: sender_alias });
