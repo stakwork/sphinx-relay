@@ -199,6 +199,7 @@ const receiveConfirmContactKey = async (payload) => {
 		// download and store photo locally
 	}
 
+	console.log('sender_pub_key',sender_pub_key)
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
 	console.log('sender',sender)
 	if (sender_contact_key && sender) {
