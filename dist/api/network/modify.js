@@ -40,7 +40,6 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
                 const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), decMediaKey);
                 const newKey = crypto.randomBytes(20).toString('hex');
                 const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey);
-                console.log('encImgBase64.length', encImgBase64.length, typeof encImgBase64);
                 var encImgBuffer = Buffer.from(encImgBase64, 'base64');
                 const form = new FormData();
                 form.append('file', encImgBuffer, {
@@ -55,7 +54,6 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
                     body: form
                 });
                 let json = yield resp.json();
-                console.log('json.muid', json.muid);
                 if (!json.muid)
                     return payload;
                 // PUT NEW TERMS, to finish in personalizeMessage
@@ -88,7 +86,6 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
                 //   sender: sender.id, // the og sender
                 //   createdAt: date,
                 // })
-                console.log('{mediaTerms,mediaKey:encKey}', { mediaTerms, mediaKey: encKey });
                 return fillmsg(payload, { mediaTerms, mediaKey: encKey }); // key is re-encrypted later
             }
             catch (e) {

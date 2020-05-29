@@ -35,7 +35,6 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
       const newKey = crypto.randomBytes(20).toString('hex')
 
       const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey)
-      console.log('encImgBase64.length',encImgBase64.length,typeof encImgBase64)
 
       var encImgBuffer = Buffer.from(encImgBase64,'base64');
 
@@ -56,7 +55,6 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
       })
 
       let json = await resp.json()
-      console.log('json.muid',json.muid)
       if(!json.muid) return payload
 
       // PUT NEW TERMS, to finish in personalizeMessage
@@ -91,7 +89,6 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
       //   sender: sender.id, // the og sender
       //   createdAt: date,
       // })
-      console.log('{mediaTerms,mediaKey:encKey}',{mediaTerms,mediaKey:encKey})
       return fillmsg(payload, {mediaTerms,mediaKey:encKey}) // key is re-encrypted later
     } catch(e) {
       console.log("[modify] error", e)
