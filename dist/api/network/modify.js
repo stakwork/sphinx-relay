@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const rncryptor_1 = require("../utils/rncryptor");
 const fetch = require("node-fetch");
 const ldat_1 = require("../utils/ldat");
 const rsa = require("../crypto/rsa");
@@ -18,6 +17,7 @@ const crypto = require("crypto");
 const meme = require("../utils/meme");
 const FormData = require("form-data");
 // import { models } from '../models'
+const RNCryptor = require("jscryptor");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
@@ -37,10 +37,10 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
                 });
                 const buf = yield r.buffer();
                 const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
-                const imgBase64 = rncryptor_1.default.Decrypt(decMediaKey, buf.toString('base64'));
+                const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), decMediaKey);
                 const newKey = crypto.randomBytes(20).toString('hex');
-                const encImg = rncryptor_1.default.Encrypt(newKey, imgBase64);
-                var encImgBuffer = Buffer.from(encImg, 'base64');
+                const encImgBuffer = RNCryptor.Encrypt(imgBuf, newKey);
+                // var encImgBuffer = Buffer.from(encImg,'base64');
                 const form = new FormData();
                 form.append('file', encImgBuffer, {
                     contentType: typ || 'image/jpg',

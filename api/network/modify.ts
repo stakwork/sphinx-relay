@@ -1,5 +1,4 @@
 import * as path from 'path'
-import RNCryptor from '../utils/rncryptor'
 import * as fetch from 'node-fetch'
 import {parseLDAT} from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
@@ -7,6 +6,7 @@ import * as crypto from 'crypto'
 import * as meme from '../utils/meme'
 import * as FormData from 'form-data'   
 // import { models } from '../models'
+import * as RNCryptor from 'jscryptor'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -30,13 +30,13 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
 
       const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key)
    
-      const imgBase64 = RNCryptor.Decrypt(decMediaKey, buf.toString('base64'))
+      const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), decMediaKey)
 
       const newKey = crypto.randomBytes(20).toString('hex')
 
-      const encImg = RNCryptor.Encrypt(newKey, imgBase64)
+      const encImgBuffer = RNCryptor.Encrypt(imgBuf, newKey)
 
-      var encImgBuffer = Buffer.from(encImg,'base64');
+      // var encImgBuffer = Buffer.from(encImg,'base64');
 
       const form = new FormData()
       form.append('file', encImgBuffer, {
