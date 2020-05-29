@@ -110,7 +110,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return res_1.success(res, jsonUtils.contactToJson(existing));
     }
     if (attrs['public_key'].length > 66)
-        attrs['public_key'] = attrs['public_key'].subtring(0, 66);
+        attrs['public_key'] = attrs['public_key'].substring(0, 66);
     const createdContact = yield models_1.models.Contact.create(attrs);
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(contact));

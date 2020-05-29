@@ -119,7 +119,7 @@ const createContact = async (req, res) => {
 		return success(res, jsonUtils.contactToJson(existing))
 	}
 
-	if(attrs['public_key'].length>66) attrs['public_key'] = attrs['public_key'].subtring(0,66)
+	if(attrs['public_key'].length>66) attrs['public_key'] = attrs['public_key'].substring(0,66)
 	const createdContact = await models.Contact.create(attrs)
 	const contact = await createdContact.update(jsonUtils.jsonToContact(attrs))
 
