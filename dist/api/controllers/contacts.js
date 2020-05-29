@@ -171,7 +171,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.deleteContact = deleteContact;
 const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`);
+    console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`, JSON.stringify(payload));
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_contact_key = dat.sender.contact_key;
