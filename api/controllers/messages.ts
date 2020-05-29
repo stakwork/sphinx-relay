@@ -146,6 +146,7 @@ const sendMessage = async (req, res) => {
 		type: constants.message_types.message,
 		message: {
 			id: message.id,
+			uuid: message.uuid,
 			content: remote_text_map || remote_text || text
 		}
 	})

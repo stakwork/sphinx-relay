@@ -131,6 +131,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         type: constants.message_types.message,
         message: {
             id: message.id,
+            uuid: message.uuid,
             content: remote_text_map || remote_text || text
         }
     });
