@@ -64,7 +64,6 @@ Change the following 4 lines:
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/mynode/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
-"lncli_location": "/home/bitcoin/go/bin",
 ```
 
 ## Raspiblitz
@@ -72,7 +71,6 @@ Change the following 4 lines:
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
-"lncli_location": "/home/bitcoin/go/bin",
 ```
 
 Save and exit:
@@ -226,7 +224,6 @@ Change the following 4 lines:
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/mynode/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
-"lncli_location": "/home/bitcoin/go/bin",
 ```
 
 ## Raspiblitz
@@ -234,7 +231,6 @@ Change the following 4 lines:
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
-"lncli_location": "/home/bitcoin/go/bin",
 ```
 
 Save and exit:
@@ -281,6 +277,6 @@ $ exit
 ```
 Turn the service on and check the status.
 ```sh 
-$ sudo systemctl enable sphinx-relay.service
 $ sudo systemctl start sphinx-relay.service
+$ sudo systemctl status sphinx-relay.service
 ```
