@@ -105,14 +105,13 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   const existingMediaKey = await models.MediaKey.findOne({where:{muid}})
   if(existingMediaKey) return // no need, its already been sent
 
-  console.log("DOWNLOAD AND REIP:OAD",mt)
-  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender)
-
   const host = mt.split('.')[0]
   const ogPurchaseMessage = await models.Message.findOne({where:{
     mediaToken: {[Op.like]: `${host}.${muid}%`},
     type: msgtypes.purchase,
   }})
+
+  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender,ogPurchaseMessage.amount)
 
   console.log('ogPurchaseMessage',ogPurchaseMessage.dataValues)
 
@@ -151,7 +150,7 @@ async function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender){
+export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, injectedAmount?:number){
   const mt = payload.message && payload.message.mediaToken
   const key = payload.message && payload.message.mediaKey
   const typ = payload.message && payload.message.mediaType
@@ -198,7 +197,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
     if(!json.muid) throw new Error('no muid')
 
     // PUT NEW TERMS, to finish in personalizeMessage
-    const amt = terms.meta&&terms.meta.amt
+    const amt = (terms.meta&&terms.meta.amt)||injectedAmount
     const ttl = terms.meta&&terms.meta.ttl
     const mediaTerms: {[k:string]:any} = {
       muid:json.muid, ttl:ttl||31536000, host:'',

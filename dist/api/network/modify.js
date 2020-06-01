@@ -114,13 +114,12 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const existingMediaKey = yield models_1.models.MediaKey.findOne({ where: { muid } });
         if (existingMediaKey)
             return; // no need, its already been sent
-        console.log("DOWNLOAD AND REIP:OAD", mt);
-        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
         const host = mt.split('.')[0];
         const ogPurchaseMessage = yield models_1.models.Message.findOne({ where: {
                 mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
                 type: msgtypes.purchase,
             } });
+        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, ogPurchaseMessage.amount);
         console.log('ogPurchaseMessage', ogPurchaseMessage.dataValues);
         // send it to the purchaser
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -144,7 +143,7 @@ function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     });
 }
-function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender) {
+function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, injectedAmount) {
     return __awaiter(this, void 0, void 0, function* () {
         const mt = payload.message && payload.message.mediaToken;
         const key = payload.message && payload.message.mediaKey;
@@ -181,7 +180,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender) {
             if (!json.muid)
                 throw new Error('no muid');
             // PUT NEW TERMS, to finish in personalizeMessage
-            const amt = terms.meta && terms.meta.amt;
+            const amt = (terms.meta && terms.meta.amt) || injectedAmount;
             const ttl = terms.meta && terms.meta.ttl;
             const mediaTerms = {
                 muid: json.muid, ttl: ttl || 31536000, host: '',
