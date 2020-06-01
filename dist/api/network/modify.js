@@ -118,7 +118,8 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
         const host = mt.split('.')[0];
         const ogPurchaseMessage = yield models_1.models.Message.findOne({ where: {
-                mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` }
+                mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
+                type: msgtypes.purchase,
             } });
         console.log('ogPurchaseMessage', ogPurchaseMessage.dataValues);
         // send it to the purchaser

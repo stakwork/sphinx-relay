@@ -110,7 +110,8 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 
   const host = mt.split('.')[0]
   const ogPurchaseMessage = await models.Message.findOne({where:{
-    mediaToken: {[Op.like]: `${host}.${muid}%`}
+    mediaToken: {[Op.like]: `${host}.${muid}%`},
+    type: msgtypes.purchase,
   }})
 
   console.log('ogPurchaseMessage',ogPurchaseMessage.dataValues)
