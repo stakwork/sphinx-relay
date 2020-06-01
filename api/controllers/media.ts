@@ -213,7 +213,7 @@ const receivePurchase = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, mediaToken, msg_uuid} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
@@ -244,9 +244,12 @@ const receivePurchase = async (payload) => {
   if (!ogMessage){
     return console.log('no original message')
   }
+  
+  const isTribe = chat_type===constants.chat_types.tribe
+
   // find mediaKey for who sent
   const mediaKey = await models.MediaKey.findOne({where:{
-    muid, receiver: sender.id,
+    muid, receiver: isTribe?0:sender.id,
   }})
   console.log('mediaKey found!',mediaKey)
   if(!mediaKey) return // this is from another person (admin is forwarding)
