@@ -153,7 +153,7 @@ const receivePayment = async (payload) => {
   
   const message = await models.Message.create(msg)
 
-  console.log('saved message', message.dataValues)
+  // console.log('saved message', message.dataValues)
 
   socket.sendJson({
     type: 'direct_payment',

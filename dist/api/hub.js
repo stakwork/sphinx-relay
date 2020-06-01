@@ -228,7 +228,9 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         headers: { 'Content-Type': 'application/json' }
     })
         .then(res => res.json())
-        .then(json => console.log('[hub notification]', json));
+        .then(json => {
+        // console.log('[hub notification]', json)
+    });
 });
 exports.sendNotification = sendNotification;
 //# sourceMappingURL=hub.js.map

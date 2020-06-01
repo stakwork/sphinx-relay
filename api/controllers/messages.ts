@@ -153,7 +153,7 @@ const sendMessage = async (req, res) => {
 }
 
 const receiveMessage = async (payload) => {
-	console.log('received message', { payload })
+	// console.log('received message', { payload })
 
 	var date = new Date();
 	date.setMilliseconds(0)
@@ -183,7 +183,7 @@ const receiveMessage = async (payload) => {
 	}
 	const message = await models.Message.create(msg)
 
-	console.log('saved message', message.dataValues)
+	// console.log('saved message', message.dataValues)
 
 	socket.sendJson({
 		type: 'message',

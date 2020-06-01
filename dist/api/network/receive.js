@@ -17,8 +17,8 @@ const tribes = require("../utils/tribes");
 const lightning_2 = require("../utils/lightning");
 const models_1 = require("../models");
 const send_1 = require("./send");
-// import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
 const modify_1 = require("./modify");
+// import {modifyPayloadAndSaveMediaKey} from './modify'
 const msg_1 = require("../utils/msg");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
@@ -72,15 +72,15 @@ function onReceive(payload) {
             else
                 console.log('=> insufficient payment for this action');
         }
-        // if(isTribeOwner && payload.type===msgtypes.purchase) {
-        // 	const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-        // 	purchaseFromOriginalSender(payload, chat, senderContact)
-        // }
-        // if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
-        // 	// store media key?
-        // 	const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-        // 	sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
-        // }
+        if (isTribeOwner && payload.type === msgtypes.purchase) {
+            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+            modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
+        }
+        if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
+            // store media key?
+            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+            modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
+        }
         if (doAction)
             doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
     });

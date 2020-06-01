@@ -6,8 +6,8 @@ import * as tribes from '../utils/tribes'
 import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
 import {sendMessage} from './send'
-// import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
-import {modifyPayloadAndSaveMediaKey} from './modify'
+import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
+// import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
@@ -57,15 +57,15 @@ async function onReceive(payload){
 		if(doAction) forwardMessageToTribe(payload, senderContact)
 		else console.log('=> insufficient payment for this action')
 	}
-	// if(isTribeOwner && payload.type===msgtypes.purchase) {
-	// 	const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-	// 	purchaseFromOriginalSender(payload, chat, senderContact)
-	// }
-	// if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
-	// 	// store media key?
-	// 	const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-	// 	sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
-	// }
+	if(isTribeOwner && payload.type===msgtypes.purchase) {
+		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+		purchaseFromOriginalSender(payload, chat, senderContact)
+	}
+	if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
+		// store media key?
+		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+		sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
+	}
 	if(doAction) doTheAction({...payload, ...toAddIn})
 }
 

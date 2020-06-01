@@ -13,22 +13,18 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
 export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
-  if(payload.type===msgtypes.attachment) {
-    try{
-      const ret = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender)
-      return fillmsg(payload, ret) // key is re-encrypted later
-    } catch(e) {
-      console.log("[modify] error", e)
-      return payload
-    }
-    // how to link w og msg? ogMediaToken?
-  } else {
+  if(payload.type!==msgtypes.attachment) return payload
+  try{
+    const ret = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender)
+    return fillmsg(payload, ret) // key is re-encrypted later
+  } catch(e) {
+    console.log("[modify] error", e)
     return payload
   }
 }
 
 // "purchase" type
-export async function purchaseFromOriginalSender(payload, chat, sender){
+export async function purchaseFromOriginalSender(payload, chat, purchaser){
   if(payload.type!==msgtypes.purchase) return
 
   const mt = payload.message && payload.message.mediaToken
@@ -42,16 +38,45 @@ export async function purchaseFromOriginalSender(payload, chat, sender){
   let price = terms.meta && terms.meta.amt
   if(amount<price) return // not enough sats
 
-  if(mediaKey) { // ALREADY BEEN PURHCASED! simply send 
+  const owner = await models.Contact.findOne({where: {isOwner:true}})
+
+  if(mediaKey) { // ALREADY BEEN PURHCASED! simply send
+    console.log("MEDIA KEY EXISTS ALREADY",mediaKey) 
     // send back the new mediaToken and key
-    // const mediaTerms: {[k:string]:any} = {
-    //   muid, ttl:31536000, host:'',
-    //   meta:{...amount && {amt:amount}},
-    // }
+    const mediaTerms: {[k:string]:any} = {
+      muid, ttl:31536000, host:'',
+      meta:{...amount && {amt:amount}},
+    }
     // send full new key and token
+    const msg = {mediaTerms, mediaKey:mediaKey.key}
+    console.log("SEND PURCHASE ACCEPT FROM STORED KEY")
+    sendMessage({
+      chat: {...chat.dataValues, contactIds:[purchaser.id]},
+      sender: owner,
+      type: constants.message_types.purchase_accept,
+      message: msg,
+      success: ()=>{},
+      failure: ()=>{}
+    })
   } else {
-    await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
+    console.log("NO MEDIA KEY EXISTS YET") 
+    const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
+    const ogSender = await models.Contact.findOne({where:{id:ogmsg.sender}})
     // purchase it from creator (send "purchase")
+    const msg={amount, mediaToken:mt}
+    console.log("GO AHEARD AND BUY!!!")
+    sendMessage({
+      chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
+      sender: {
+        ...owner.dataValues,
+        ...ogSender&&ogSender.alias && {alias:ogSender.alias}
+      },
+      type: constants.message_types.purchase,
+      message: msg,
+      amount: amount,
+      success: ()=>{},
+      failure: ()=>{}
+    })
   }
 }
 
@@ -67,17 +92,21 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   const existingMediaKey = await models.MediaKey.findOne({where:{muid}})
   if(existingMediaKey) return // no need, its already been sent
 
+  console.log("DOWNLOAD AND REIP:OAD")
   const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender)
 
   const msg = await models.Message.findOne({where:{mediaToken:mt,type:msgtypes.purchase}})
-  const originalSender = await models.Contact.findOne({where:{id:msg.sender}})
+  console.log("OG MSG",msg.dataValues)
+  const ogSender = await models.Contact.findOne({where:{id:msg.sender}})
+  console.log("OG SENDER",ogSender.dataValues)
   // find "purchase" Message with the OG muid
   // send it to the purchaser
   const owner = await models.Contact.findOne({where: {isOwner:true}})
+  console.log("SEND firST PURHCASE ACCEPT MSG!")
   sendMessage({
 		sender: {
 			...owner.dataValues,
-			...originalSender&&originalSender.alias && {alias:originalSender.alias}
+			...ogSender&&ogSender.alias && {alias:ogSender.alias}
 		},
     chat:{
       ...chat.dataValues,

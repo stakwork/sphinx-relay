@@ -138,7 +138,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.sendMessage = sendMessage;
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received message', { payload });
+    // console.log('received message', { payload })
     var date = new Date();
     date.setMilliseconds(0);
     const total_spent = 1;
@@ -165,7 +165,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
             msg.remoteMessageContent = remote_content;
     }
     const message = yield models_1.models.Message.create(msg);
-    console.log('saved message', message.dataValues);
+    // console.log('saved message', message.dataValues)
     socket.sendJson({
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender)

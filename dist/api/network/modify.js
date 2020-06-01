@@ -23,25 +23,21 @@ const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (payload.type === msgtypes.attachment) {
-            try {
-                const ret = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
-                return fillmsg(payload, ret); // key is re-encrypted later
-            }
-            catch (e) {
-                console.log("[modify] error", e);
-                return payload;
-            }
-            // how to link w og msg? ogMediaToken?
+        if (payload.type !== msgtypes.attachment)
+            return payload;
+        try {
+            const ret = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
+            return fillmsg(payload, ret); // key is re-encrypted later
         }
-        else {
+        catch (e) {
+            console.log("[modify] error", e);
             return payload;
         }
     });
 }
 exports.modifyPayloadAndSaveMediaKey = modifyPayloadAndSaveMediaKey;
 // "purchase" type
-function purchaseFromOriginalSender(payload, chat, sender) {
+function purchaseFromOriginalSender(payload, chat, purchaser) {
     return __awaiter(this, void 0, void 0, function* () {
         if (payload.type !== msgtypes.purchase)
             return;
@@ -55,17 +51,42 @@ function purchaseFromOriginalSender(payload, chat, sender) {
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
             return; // not enough sats
-        if (mediaKey) { // ALREADY BEEN PURHCASED! simply send 
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        if (mediaKey) { // ALREADY BEEN PURHCASED! simply send
+            console.log("MEDIA KEY EXISTS ALREADY", mediaKey);
             // send back the new mediaToken and key
-            // const mediaTerms: {[k:string]:any} = {
-            //   muid, ttl:31536000, host:'',
-            //   meta:{...amount && {amt:amount}},
-            // }
+            const mediaTerms = {
+                muid, ttl: 31536000, host: '',
+                meta: Object.assign({}, amount && { amt: amount }),
+            };
             // send full new key and token
+            const msg = { mediaTerms, mediaKey: mediaKey.key };
+            console.log("SEND PURCHASE ACCEPT FROM STORED KEY");
+            send_1.sendMessage({
+                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
+                sender: owner,
+                type: constants.message_types.purchase_accept,
+                message: msg,
+                success: () => { },
+                failure: () => { }
+            });
         }
         else {
-            yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } });
+            console.log("NO MEDIA KEY EXISTS YET");
+            const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } });
+            const ogSender = yield models_1.models.Contact.findOne({ where: { id: ogmsg.sender } });
             // purchase it from creator (send "purchase")
+            const msg = { amount, mediaToken: mt };
+            console.log("GO AHEARD AND BUY!!!");
+            send_1.sendMessage({
+                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
+                sender: Object.assign(Object.assign({}, owner.dataValues), ogSender && ogSender.alias && { alias: ogSender.alias }),
+                type: constants.message_types.purchase,
+                message: msg,
+                amount: amount,
+                success: () => { },
+                failure: () => { }
+            });
         }
     });
 }
@@ -84,14 +105,18 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const existingMediaKey = yield models_1.models.MediaKey.findOne({ where: { muid } });
         if (existingMediaKey)
             return; // no need, its already been sent
+        console.log("DOWNLOAD AND REIP:OAD");
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
         const msg = yield models_1.models.Message.findOne({ where: { mediaToken: mt, type: msgtypes.purchase } });
-        const originalSender = yield models_1.models.Contact.findOne({ where: { id: msg.sender } });
+        console.log("OG MSG", msg.dataValues);
+        const ogSender = yield models_1.models.Contact.findOne({ where: { id: msg.sender } });
+        console.log("OG SENDER", ogSender.dataValues);
         // find "purchase" Message with the OG muid
         // send it to the purchaser
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        console.log("SEND firST PURHCASE ACCEPT MSG!");
         send_1.sendMessage({
-            sender: Object.assign(Object.assign({}, owner.dataValues), originalSender && originalSender.alias && { alias: originalSender.alias }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), ogSender && ogSender.alias && { alias: ogSender.alias }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
             type: msgtypes.purchase_accept,
             message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ }),

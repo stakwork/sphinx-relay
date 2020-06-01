@@ -143,7 +143,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.senderAlias = sender_alias;
     }
     const message = yield models_1.models.Message.create(msg);
-    console.log('saved message', message.dataValues);
+    // console.log('saved message', message.dataValues)
     socket.sendJson({
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender)
