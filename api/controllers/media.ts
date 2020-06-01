@@ -249,6 +249,7 @@ const receivePurchase = async (payload) => {
     muid, receiver: sender.id,
   }})
   console.log('mediaKey found!',mediaKey)
+  if(!mediaKey) return // this is from another person (admin is forwarding)
 
   const terms = parseLDAT(mediaToken)
   // get info
@@ -394,7 +395,7 @@ const receivePurchaseDeny = async (payload) => {
 }
 
 const receiveAttachment = async (payload) => {
-  console.log('received attachment', { payload })
+  // console.log('received attachment', { payload })
 
   var date = new Date();
   date.setMilliseconds(0)

@@ -61,15 +61,25 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   } else {
     console.log("NO MEDIA KEY EXISTS YET") 
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
-    const ogSender = await models.Contact.findOne({where:{id:ogmsg.sender}})
     // purchase it from creator (send "purchase")
     const msg={amount, mediaToken:mt}
-    console.log("GO AHEARD AND BUY!!!")
+    console.log("GO AHEARD AND BUY!!! from:",ogmsg.sender,{
+      chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
+      sender: {
+        ...owner.dataValues,
+        ...purchaser&&purchaser.alias && {alias:purchaser.alias}
+      },
+      type: constants.message_types.purchase,
+      message: msg,
+      amount: amount,
+      success: ()=>{},
+      failure: ()=>{}
+    })
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
       sender: {
         ...owner.dataValues,
-        ...ogSender&&ogSender.alias && {alias:ogSender.alias}
+        ...purchaser&&purchaser.alias && {alias:purchaser.alias}
       },
       type: constants.message_types.purchase,
       message: msg,
@@ -82,6 +92,8 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
 
 export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   if(payload.type!==msgtypes.purchase_accept) return
+
+  console.log("PURCHASE ACCEPT!!!!!")
 
   const mt = payload.message && payload.message.mediaToken
   const typ = payload.message && payload.message.mediaType

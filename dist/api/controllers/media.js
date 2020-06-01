@@ -222,6 +222,8 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             muid, receiver: sender.id,
         } });
     console.log('mediaKey found!', mediaKey);
+    if (!mediaKey)
+        return; // this is from another person (admin is forwarding)
     const terms = ldat_1.parseLDAT(mediaToken);
     // get info
     let TTL = terms.meta && terms.meta.ttl;
@@ -363,7 +365,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.receivePurchaseDeny = receivePurchaseDeny;
 const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received attachment', { payload });
+    // console.log('received attachment', { payload })
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
