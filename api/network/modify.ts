@@ -41,7 +41,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   const owner = await models.Contact.findOne({where: {isOwner:true}})
 
   if(mediaKey) { // ALREADY BEEN PURHCASED! simply send
-    console.log("MEDIA KEY EXISTS ALREADY",mediaKey) 
+    console.log("MEDIA KEY EXISTS ALREADY",mediaKey)
     // send back the new mediaToken and key
     const mediaTerms: {[k:string]:any} = {
       muid, ttl:31536000, host:'',
@@ -59,7 +59,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       failure: ()=>{}
     })
   } else {
-    console.log("NO MEDIA KEY EXISTS YET") 
+    console.log("NO MEDIA KEY EXISTS YET")
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
     // purchase it from creator (send "purchase")
     const msg={amount, mediaToken:mt}
@@ -107,6 +107,13 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   console.log("DOWNLOAD AND REIP:OAD",mt)
   const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender)
 
+  const host = mt.split('.')[0]
+  const ogPurchaseMessage = await models.Message.findOne({where:{
+    mediaToken: {$like: `${host}.${muid}%`}
+  }})
+
+  console.log('ogPurchaseMessage',ogPurchaseMessage.dataValues)
+
   // send it to the purchaser
   const owner = await models.Contact.findOne({where: {isOwner:true}})
   console.log("SEND firST PURHCASE ACCEPT MSG!")
@@ -117,7 +124,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 		},
     chat:{
       ...chat.dataValues,
-      contactIds:[sender.id],
+      contactIds:[ogPurchaseMessage.sender],
     },
     type:msgtypes.purchase_accept, 
     message:{
