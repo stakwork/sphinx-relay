@@ -115,16 +115,11 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
             return; // no need, its already been sent
         console.log("DOWNLOAD AND REIP:OAD", mt);
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
-        const msg = yield models_1.models.Message.findOne({ where: { mediaToken: mt, type: msgtypes.attachment } });
-        console.log("OG MSG", msg.dataValues); // not found
-        const ogSender = yield models_1.models.Contact.findOne({ where: { id: msg.sender } });
-        console.log("OG SENDER", ogSender.dataValues);
-        // find "purchase" Message with the OG muid
         // send it to the purchaser
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         console.log("SEND firST PURHCASE ACCEPT MSG!");
         send_1.sendMessage({
-            sender: Object.assign(Object.assign({}, owner.dataValues), ogSender && ogSender.alias && { alias: ogSender.alias }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
             type: msgtypes.purchase_accept,
             message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ }),

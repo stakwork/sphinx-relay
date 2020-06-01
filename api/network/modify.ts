@@ -107,18 +107,13 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   console.log("DOWNLOAD AND REIP:OAD",mt)
   const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender)
 
-  const msg = await models.Message.findOne({where:{mediaToken:mt,type:msgtypes.attachment}})
-  console.log("OG MSG",msg.dataValues) // not found
-  const ogSender = await models.Contact.findOne({where:{id:msg.sender}})
-  console.log("OG SENDER",ogSender.dataValues)
-  // find "purchase" Message with the OG muid
   // send it to the purchaser
   const owner = await models.Contact.findOne({where: {isOwner:true}})
   console.log("SEND firST PURHCASE ACCEPT MSG!")
   sendMessage({
 		sender: {
 			...owner.dataValues,
-			...ogSender&&ogSender.alias && {alias:ogSender.alias}
+			...sender&&sender.alias && {alias:sender.alias}
 		},
     chat:{
       ...chat.dataValues,
