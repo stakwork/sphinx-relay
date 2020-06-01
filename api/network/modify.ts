@@ -104,11 +104,11 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   const existingMediaKey = await models.MediaKey.findOne({where:{muid}})
   if(existingMediaKey) return // no need, its already been sent
 
-  console.log("DOWNLOAD AND REIP:OAD")
+  console.log("DOWNLOAD AND REIP:OAD",mt)
   const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender)
 
-  const msg = await models.Message.findOne({where:{mediaToken:mt,type:msgtypes.purchase}})
-  console.log("OG MSG",msg.dataValues)
+  const msg = await models.Message.findOne({where:{mediaToken:mt,type:msgtypes.attachment}})
+  console.log("OG MSG",msg.dataValues) // not found
   const ogSender = await models.Contact.findOne({where:{id:msg.sender}})
   console.log("OG SENDER",ogSender.dataValues)
   // find "purchase" Message with the OG muid

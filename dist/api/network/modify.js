@@ -113,10 +113,10 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const existingMediaKey = yield models_1.models.MediaKey.findOne({ where: { muid } });
         if (existingMediaKey)
             return; // no need, its already been sent
-        console.log("DOWNLOAD AND REIP:OAD");
+        console.log("DOWNLOAD AND REIP:OAD", mt);
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
-        const msg = yield models_1.models.Message.findOne({ where: { mediaToken: mt, type: msgtypes.purchase } });
-        console.log("OG MSG", msg.dataValues);
+        const msg = yield models_1.models.Message.findOne({ where: { mediaToken: mt, type: msgtypes.attachment } });
+        console.log("OG MSG", msg.dataValues); // not found
         const ogSender = yield models_1.models.Contact.findOne({ where: { id: msg.sender } });
         console.log("OG SENDER", ogSender.dataValues);
         // find "purchase" Message with the OG muid
