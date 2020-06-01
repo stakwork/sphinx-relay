@@ -19,6 +19,7 @@ const FormData = require("form-data");
 const models_1 = require("../models");
 const RNCryptor = require("jscryptor");
 const send_1 = require("./send");
+const sequelize_1 = require("sequelize");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
@@ -117,7 +118,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
         const host = mt.split('.')[0];
         const ogPurchaseMessage = yield models_1.models.Message.findOne({ where: {
-                mediaToken: { $like: `${host}.${muid}%` }
+                mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` }
             } });
         console.log('ogPurchaseMessage', ogPurchaseMessage.dataValues);
         // send it to the purchaser

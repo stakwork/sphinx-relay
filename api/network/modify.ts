@@ -8,6 +8,7 @@ import * as FormData from 'form-data'
 import { models } from '../models'
 import * as RNCryptor from 'jscryptor'
 import {sendMessage} from './send'
+import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -109,7 +110,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 
   const host = mt.split('.')[0]
   const ogPurchaseMessage = await models.Message.findOne({where:{
-    mediaToken: {$like: `${host}.${muid}%`}
+    mediaToken: {[Op.like]: `${host}.${muid}%`}
   }})
 
   console.log('ogPurchaseMessage',ogPurchaseMessage.dataValues)
