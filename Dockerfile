@@ -48,14 +48,17 @@ RUN git checkout $sphinx_checkout
 
 RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git curl libmcrypt-dev
 
-RUN npm -g config set user root
+USER root
 
+RUN rm -rf node_modules/
 RUN npm install
-RUN npm install --quiet node-gyp@0.12.0 -g
+RUN npm install --quiet node-gyp@3.8.0 -g
+RUN npm -g config set user root
 RUN npm install nw-gyp -g
-RUN npm install sqlite3@4.1.1 --build-from-source --runtime=node-webkit --target_arch=x64 --target=0.42.0
-RUN npm uninstall sqlite3@4.1.1
-RUN npm install sqlite3@4.1.1 --build-from-source --runtime=node-webkit --target_arch=x64 --target=0.42.0
+RUN npm uninstall sqlite3
+RUN npm install sqlite3 --build-from-source --runtime=node-webkit --target_arch=x64 --target=0.42.0
+RUN npm uninstall sqlite3
+RUN npm install sqlite3 --build-from-source --runtime=node-webkit --target_arch=x64 --target=0.42.0
 RUN npm rebuild
 RUN npm run tsc
 
