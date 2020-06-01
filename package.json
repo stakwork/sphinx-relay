@@ -69,7 +69,7 @@
     "secp256k1": "^4.0.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.88.1",
-    "sequelize": "^5.19.3",
+    "sequelize": "5.19.3",
     "sequelize-cli": "^5.5.1",
     "sequelize-typescript": "^1.1.0",
     "short-uuid": "^3.1.1",

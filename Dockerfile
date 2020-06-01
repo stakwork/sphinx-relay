@@ -21,7 +21,7 @@ RUN cd /go/src/github.com/lightningnetwork/lnd \
 &&  make install tags="signrpc walletrpc chainrpc invoicesrpc experimental"
 
 # Start a new, final image.
-FROM alpine as final
+FROM alpine:3.11 as final
 
 EXPOSE 80
 EXPOSE 9735
@@ -36,7 +36,7 @@ RUN apk --no-cache add bash ca-certificates
 COPY --from=builder /go/bin/lncli /bin/
 COPY --from=builder /go/bin/lnd /bin/
 
-RUN apk add --no-cache --update nodejs nodejs-npm sqlite git supervisor
+RUN apk add --no-cache --update nodejs=12.15.0-r1 nodejs-npm=12.15.0-r1 sqlite=3.30.1-r2 git supervisor
 
 RUN git clone https://github.com/stakwork/sphinx-relay /relay/
 
@@ -46,19 +46,14 @@ ARG sphinx_checkout="master"
 
 RUN git checkout $sphinx_checkout
 
+RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git curl libmcrypt-dev
+
 RUN npm install
-RUN npm install nodemon --save-dev
-RUN npm install express --save-dev
-RUN npm install webpack webpack-cli --save-dev
-
-RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git curl
 RUN npm install --quiet node-gyp -g
-
 RUN npm install sqlite3 --build-from-source --save-dev
-RUN npm install --save-dev sequelize
+RUN npm install --save-dev sequelize@5.19.3
 RUN npm rebuild
 RUN npm run tsc
-RUN npm cache clean --force
 
 VOLUME /relay/.lnd
 
