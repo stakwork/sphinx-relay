@@ -202,7 +202,6 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
     const mediaTerms: {[k:string]:any} = {
       muid:json.muid, ttl:ttl||31536000, host:'',
       meta:{...amt && {amt}},
-      skipSigning: amt ? true : false // only sign if its free
     }
 
     const encKey = rsa.encrypt(chat.groupKey, newKey.slice())

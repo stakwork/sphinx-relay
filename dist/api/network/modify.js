@@ -185,7 +185,6 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, inj
             const mediaTerms = {
                 muid: json.muid, ttl: ttl || 31536000, host: '',
                 meta: Object.assign({}, amt && { amt }),
-                skipSigning: amt ? true : false // only sign if its free
             };
             const encKey = rsa.encrypt(chat.groupKey, newKey.slice());
             var date = new Date();
