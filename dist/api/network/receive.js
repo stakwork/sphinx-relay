@@ -17,6 +17,7 @@ const tribes = require("../utils/tribes");
 const lightning_2 = require("../utils/lightning");
 const models_1 = require("../models");
 const send_1 = require("./send");
+// import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
 const modify_1 = require("./modify");
 const msg_1 = require("../utils/msg");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -39,36 +40,47 @@ function onReceive(payload) {
         let doAction = true;
         const toAddIn = {};
         const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
-        if (isTribe && exports.typesToForward.includes(payload.type)) {
-            const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
-            const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+        let isTribeOwner = false;
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+        if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            if (owner.publicKey === tribeOwnerPubKey) {
-                toAddIn.isTribeOwner = true;
-                // CHECK THEY ARE IN THE GROUP if message
-                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-                if (needsPricePerJoin) {
-                    const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
-                    if (!senderMember)
-                        doAction = false;
-                }
-                // CHECK PRICES
-                if (needsPricePerJoin) {
-                    if (payload.message.amount < chat.pricePerMessage)
-                        doAction = false;
-                }
-                // check price to join
-                if (payload.type === msgtypes.group_join) {
-                    if (payload.message.amount < chat.priceToJoin)
-                        doAction = false;
-                }
-                if (doAction)
-                    forwardMessageToTribe(payload, senderContact);
-                else
-                    console.log('=> insufficient payment for this action');
-            }
+            isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
+        if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
+            const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
+            toAddIn.isTribeOwner = true;
+            // CHECK THEY ARE IN THE GROUP if message
+            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+            if (needsPricePerJoin) {
+                const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                if (!senderMember)
+                    doAction = false;
+            }
+            // CHECK PRICES
+            if (needsPricePerJoin) {
+                if (payload.message.amount < chat.pricePerMessage)
+                    doAction = false;
+            }
+            // check price to join
+            if (payload.type === msgtypes.group_join) {
+                if (payload.message.amount < chat.priceToJoin)
+                    doAction = false;
+            }
+            if (doAction)
+                forwardMessageToTribe(payload, senderContact);
+            else
+                console.log('=> insufficient payment for this action');
+        }
+        // if(isTribeOwner && payload.type===msgtypes.purchase) {
+        // 	const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+        // 	purchaseFromOriginalSender(payload, chat, senderContact)
+        // }
+        // if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
+        // 	// store media key?
+        // 	const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+        // 	sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
+        // }
         if (doAction)
             doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
     });
