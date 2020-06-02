@@ -61,7 +61,12 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 meta: Object.assign({}, amount && { amt: amount }),
             };
             // send full new key and token
-            const msg = { mediaTerms, mediaKey: mediaKey.key };
+            const msg = {
+                mediaTerms,
+                mediaKey: mediaKey.key,
+                originalMuid: mediaKey.originalMuid,
+                mediaType: mediaKey.mediaType
+            };
             console.log("SEND PURCHASE ACCEPT FROM STORED KEY");
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
@@ -77,15 +82,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } });
             // purchase it from creator (send "purchase")
             const msg = { amount, mediaToken: mt };
-            console.log("GO AHEARD AND BUY!!! from:", ogmsg.sender, {
-                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
-                sender: Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }),
-                type: constants.message_types.purchase,
-                message: msg,
-                amount: amount,
-                success: () => { },
-                failure: () => { }
-            });
+            console.log("GO AHEARD AND BUY!!!");
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
                 sender: Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }),
@@ -128,7 +125,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
             sender: Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaseMessage.sender] }),
             type: msgtypes.purchase_accept,
-            message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ }),
+            message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ, originalMuid: muid }),
             success: () => { },
             receive: () => { }
         });
@@ -208,6 +205,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, inj
                 sender: sender.id,
                 createdAt: date,
                 originalMuid: ogmuid,
+                mediaType: typ,
             });
             return { mediaTerms, mediaKey: encKey };
         }

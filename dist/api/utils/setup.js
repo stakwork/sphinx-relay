@@ -44,7 +44,9 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_media_keys', 'media_type');
         addTableColumn('sphinx_media_keys', 'original_muid');
+        addTableColumn('sphinx_messages', 'original_muid');
         addTableColumn('sphinx_messages', 'uuid');
         addTableColumn('sphinx_messages', 'reply_uuid');
         addTableColumn('sphinx_media_keys', 'sender', 'BIGINT');

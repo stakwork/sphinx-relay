@@ -95,7 +95,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         createdAt: date,
         updatedAt: date
     });
-    saveMediaKeys(muid, media_key_map, chat.id, message.id);
+    saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType);
     const mediaTerms = {
         muid, ttl: TTL,
         meta: Object.assign({}, amt && { amt }),
@@ -122,7 +122,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     });
 });
 exports.sendAttachmentMessage = sendAttachmentMessage;
-function saveMediaKeys(muid, mediaKeyMap, chatId, messageId) {
+function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
     if (typeof mediaKeyMap !== 'object') {
         console.log('wrong type for mediaKeyMap');
         return;
@@ -136,6 +136,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId) {
                 muid, chatId, key, messageId,
                 receiver: receiverID,
                 createdAt: date,
+                mediaType
             });
         }
     }
@@ -303,7 +304,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
     console.log('=> receivePurchaseAccept');
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -330,6 +331,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
         mediaToken,
         mediaKey,
         mediaType,
+        originalMuid: originalMuid || '',
         date: date,
         createdAt: date,
         updatedAt: date

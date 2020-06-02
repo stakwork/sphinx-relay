@@ -49,7 +49,12 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       meta:{...amount && {amt:amount}},
     }
     // send full new key and token
-    const msg = {mediaTerms, mediaKey:mediaKey.key}
+    const msg = {
+      mediaTerms,
+      mediaKey:mediaKey.key,
+      originalMuid:mediaKey.originalMuid,
+      mediaType:mediaKey.mediaType
+    }
     console.log("SEND PURCHASE ACCEPT FROM STORED KEY")
     sendMessage({
       chat: {...chat.dataValues, contactIds:[purchaser.id]},
@@ -64,18 +69,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
     // purchase it from creator (send "purchase")
     const msg={amount, mediaToken:mt}
-    console.log("GO AHEARD AND BUY!!! from:",ogmsg.sender,{
-      chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
-      sender: {
-        ...owner.dataValues,
-        ...purchaser&&purchaser.alias && {alias:purchaser.alias}
-      },
-      type: constants.message_types.purchase,
-      message: msg,
-      amount: amount,
-      success: ()=>{},
-      failure: ()=>{}
-    })
+    console.log("GO AHEARD AND BUY!!!")
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
       sender: {
@@ -131,6 +125,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
     message:{
       ...termsAndKey,
       mediaType: typ,
+      originalMuid:muid,
     },
 		success: ()=>{},
 		receive: ()=>{}
@@ -227,6 +222,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
       sender: sender.id, // the og sender
       createdAt: date,
       originalMuid: ogmuid,
+      mediaType:typ,
     })
     return {mediaTerms,mediaKey:encKey}
   } catch(e) {

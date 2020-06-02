@@ -106,7 +106,7 @@ const sendAttachmentMessage = async (req, res) => {
     updatedAt: date
   })
 
-  saveMediaKeys(muid, media_key_map, chat.id, message.id)
+  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType)
 
   const mediaTerms: {[k:string]:any} = {
     muid, ttl:TTL,
@@ -134,7 +134,7 @@ const sendAttachmentMessage = async (req, res) => {
   })
 }
 
-function saveMediaKeys(muid, mediaKeyMap, chatId, messageId){
+function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType){
   if (typeof mediaKeyMap!=='object'){
     console.log('wrong type for mediaKeyMap')
     return
@@ -148,6 +148,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId){
         muid, chatId, key, messageId,
         receiver: receiverID,
         createdAt: date,
+        mediaType
       })
     }
   }
@@ -333,7 +334,7 @@ const receivePurchaseAccept = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -362,6 +363,7 @@ const receivePurchaseAccept = async (payload) => {
     mediaToken,
     mediaKey,
     mediaType,
+    originalMuid:originalMuid||'',
     date: date,
     createdAt: date,
     updatedAt: date

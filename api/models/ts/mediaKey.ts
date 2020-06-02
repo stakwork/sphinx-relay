@@ -37,6 +37,9 @@ export default class MediaKey extends Model<MediaKey> {
   @Column
   createdAt: Date
 
+  @Column
+  mediaType: string
+
   @Column(DataType.BIGINT)
   sender: number // for tribe, remember the sender
 
