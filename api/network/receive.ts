@@ -9,6 +9,7 @@ import {sendMessage} from './send'
 import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
 // import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
+import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -58,14 +59,32 @@ async function onReceive(payload){
 		else console.log('=> insufficient payment for this action')
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase) {
-		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-		purchaseFromOriginalSender(payload, chat, senderContact)
+		// if hes purchasing my attachment, just pass thru
+		const mt = payload.message.mediaToken
+		const myMediaMessage = await models.Message.findOne({ where:{
+			mediaToken: mt, sender: 1, type:msgtypes.attachment
+		} })
+		if(!myMediaMessage) {
+			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+			purchaseFromOriginalSender(payload, chat, senderContact)
+			doAction = false // incoming "purchase" dont save its is a forward
+		}
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
-		// store media key?
-		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-		sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
-		doAction = false // dont store this locally, its for someone else
+		// IF I WAS THE PURCHASER, just pass thru
+		const mt = payload.message.mediaToken
+		const host = mt && mt.split('.').length && mt.split('.')[0]
+		const muid = mt && mt.split('.').length && mt.split('.')[1]
+		const ogPurchaseMessage = await models.Message.findOne({where:{
+			mediaToken: {[Op.like]: `${host}.${muid}%`},
+			type: msgtypes.purchase,
+			sender: 1,
+		}})
+		if(!ogPurchaseMessage) {
+			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+			sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
+			doAction = false // dont store this locally, its for someone else
+		}
 	}
 	if(doAction) doTheAction({...payload, ...toAddIn})
 }

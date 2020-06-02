@@ -20,6 +20,7 @@ const send_1 = require("./send");
 const modify_1 = require("./modify");
 // import {modifyPayloadAndSaveMediaKey} from './modify'
 const msg_1 = require("../utils/msg");
+const sequelize_1 = require("sequelize");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 exports.typesToForward = [
@@ -73,14 +74,32 @@ function onReceive(payload) {
                 console.log('=> insufficient payment for this action');
         }
         if (isTribeOwner && payload.type === msgtypes.purchase) {
-            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-            modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
+            // if hes purchasing my attachment, just pass thru
+            const mt = payload.message.mediaToken;
+            const myMediaMessage = yield models_1.models.Message.findOne({ where: {
+                    mediaToken: mt, sender: 1, type: msgtypes.attachment
+                } });
+            if (!myMediaMessage) {
+                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+                modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
+                doAction = false; // incoming "purchase" dont save its is a forward
+            }
         }
         if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
-            // store media key?
-            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-            modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
-            doAction = false; // dont store this locally, its for someone else
+            // IF I WAS THE PURCHASER, just pass thru
+            const mt = payload.message.mediaToken;
+            const host = mt && mt.split('.').length && mt.split('.')[0];
+            const muid = mt && mt.split('.').length && mt.split('.')[1];
+            const ogPurchaseMessage = yield models_1.models.Message.findOne({ where: {
+                    mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
+                    type: msgtypes.purchase,
+                    sender: 1,
+                } });
+            if (!ogPurchaseMessage) {
+                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+                modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
+                doAction = false; // dont store this locally, its for someone else
+            }
         }
         if (doAction)
             doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
