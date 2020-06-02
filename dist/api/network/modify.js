@@ -57,7 +57,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             console.log("MEDIA KEY EXISTS ALREADY", mediaKey);
             // send back the new mediaToken and key
             const mediaTerms = {
-                muid, ttl: 31536000, host: '',
+                muid: mediaKey.muid, ttl: 31536000, host: '',
                 meta: Object.assign({}, amount && { amt: amount }),
             };
             // send full new key and token
