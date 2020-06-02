@@ -74,20 +74,17 @@ function onReceive(payload) {
                 console.log('=> insufficient payment for this action');
         }
         if (isTribeOwner && payload.type === msgtypes.purchase) {
-            // if hes purchasing my attachment, just pass thru
             const mt = payload.message.mediaToken;
             const myMediaMessage = yield models_1.models.Message.findOne({ where: {
                     mediaToken: mt, sender: 1, type: msgtypes.attachment
                 } });
-            if (!myMediaMessage) {
+            if (!myMediaMessage) { // someone else's attachment
                 console.log("=> NO MEDIA MESSAGE BY ME, purchaseFromOriginalSender");
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
-                // doAction = false // incoming "purchase" dont save its is a forward
             }
         }
         if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
-            // IF I WAS THE PURCHASER, just pass thru
             const mt = payload.message.mediaToken;
             const host = mt && mt.split('.').length && mt.split('.')[0];
             const muid = mt && mt.split('.').length && mt.split('.')[1];
@@ -96,11 +93,11 @@ function onReceive(payload) {
                     type: msgtypes.purchase,
                     sender: 1,
                 } });
-            if (!ogPurchaseMessage) {
+            if (!ogPurchaseMessage) { // for someone else
                 console.log("=> NO OG PURCHASE MESSAGE BY ME, sendFinalMemeIfFirstPurchaser");
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
-                // doAction = false // dont store this locally, its for someone else
+                doAction = false;
             }
         }
         if (doAction)
