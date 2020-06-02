@@ -254,7 +254,7 @@ const receivePurchase = async (payload) => {
   const mediaKey = await models.MediaKey.findOne({where:{
     muid, receiver: isTribe?0:sender.id,
   }})
-  console.log('mediaKey found!',mediaKey)
+  // console.log('mediaKey found!',mediaKey.dataValues)
   if(!mediaKey) return // this is from another person (admin is forwarding)
 
   const terms = parseLDAT(mediaToken)

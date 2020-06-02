@@ -65,9 +65,10 @@ async function onReceive(payload){
 			mediaToken: mt, sender: 1, type:msgtypes.attachment
 		} })
 		if(!myMediaMessage) {
+			console.log("=> NO MEDIA MESSAGE BY ME, purchaseFromOriginalSender")
 			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			purchaseFromOriginalSender(payload, chat, senderContact)
-			doAction = false // incoming "purchase" dont save its is a forward
+			// doAction = false // incoming "purchase" dont save its is a forward
 		}
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
@@ -81,9 +82,10 @@ async function onReceive(payload){
 			sender: 1,
 		}})
 		if(!ogPurchaseMessage) {
+			console.log("=> NO OG PURCHASE MESSAGE BY ME, sendFinalMemeIfFirstPurchaser")
 			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
-			doAction = false // dont store this locally, its for someone else
+			// doAction = false // dont store this locally, its for someone else
 		}
 	}
 	if(doAction) doTheAction({...payload, ...toAddIn})

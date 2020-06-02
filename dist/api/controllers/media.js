@@ -225,7 +225,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
             muid, receiver: isTribe ? 0 : sender.id,
         } });
-    console.log('mediaKey found!', mediaKey);
+    // console.log('mediaKey found!',mediaKey.dataValues)
     if (!mediaKey)
         return; // this is from another person (admin is forwarding)
     const terms = ldat_1.parseLDAT(mediaToken);
