@@ -38,9 +38,9 @@ async function onReceive(payload){
 		const owner = await models.Contact.findOne({where: {isOwner:true}})
 		isTribeOwner = owner.publicKey===tribeOwnerPubKey
 	}
+	if(isTribeOwner) toAddIn.isTribeOwner = true
 	if(isTribeOwner && typesToForward.includes(payload.type)){
 		const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type)
-		toAddIn.isTribeOwner = true
 		// CHECK THEY ARE IN THE GROUP if message
 		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 		if(needsPricePerJoin) {

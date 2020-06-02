@@ -48,9 +48,10 @@ function onReceive(payload) {
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
+        if (isTribeOwner)
+            toAddIn.isTribeOwner = true;
         if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
             const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
-            toAddIn.isTribeOwner = true;
             // CHECK THEY ARE IN THE GROUP if message
             const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
             if (needsPricePerJoin) {
