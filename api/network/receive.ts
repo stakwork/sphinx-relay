@@ -6,8 +6,10 @@ import * as tribes from '../utils/tribes'
 import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
 import { models } from '../models'
 import {sendMessage} from './send'
-import {modifyPayloadAndSaveMediaKey} from './modify'
+import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
+// import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
+import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -29,29 +31,57 @@ async function onReceive(payload){
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}
 	const isTribe = payload.chat && payload.chat.type===constants.chat_types.tribe
-	if(isTribe && typesToForward.includes(payload.type)){
-		const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type)
-		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+	let isTribeOwner = false
+	const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+	if(isTribe) {
 		const tribeOwnerPubKey = chat && chat.ownerPubkey
 		const owner = await models.Contact.findOne({where: {isOwner:true}})
-		if(owner.publicKey===tribeOwnerPubKey){
-			toAddIn.isTribeOwner = true
-			// CHECK THEY ARE IN THE GROUP if message
+		isTribeOwner = owner.publicKey===tribeOwnerPubKey
+	}
+	if(isTribeOwner) toAddIn.isTribeOwner = true
+	if(isTribeOwner && typesToForward.includes(payload.type)){
+		const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type)
+		// CHECK THEY ARE IN THE GROUP if message
+		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+		if(needsPricePerJoin) {
+			const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+			if(!senderMember) doAction=false
+		}
+		// CHECK PRICES
+		if(needsPricePerJoin) {
+			if(payload.message.amount<chat.pricePerMessage) doAction=false
+		}
+		// check price to join
+		if(payload.type===msgtypes.group_join) {
+			if(payload.message.amount<chat.priceToJoin) doAction=false
+		}
+		if(doAction) forwardMessageToTribe(payload, senderContact)
+		else console.log('=> insufficient payment for this action')
+	}
+	if(isTribeOwner && payload.type===msgtypes.purchase) {
+		const mt = payload.message.mediaToken
+		const myMediaMessage = await models.Message.findOne({ where:{
+			mediaToken: mt, sender: 1, type:msgtypes.attachment
+		} })
+		if(!myMediaMessage) { // someone else's attachment
 			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
-			if(needsPricePerJoin) {
-				const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
-				if(!senderMember) doAction=false
-			}
-			// CHECK PRICES
-			if(needsPricePerJoin) {
-				if(payload.message.amount<chat.pricePerMessage) doAction=false
-			}
-			// check price to join
-			if(payload.type===msgtypes.group_join) {
-				if(payload.message.amount<chat.priceToJoin) doAction=false
-			}
-			if(doAction) forwardMessageToTribe(payload, senderContact)
-			else console.log('=> insufficient payment for this action')
+			purchaseFromOriginalSender(payload, chat, senderContact)
+			// we do pass thru, to store... so that we know who the og purchaser was
+		}
+	}
+	if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
+		const mt = payload.message.mediaToken
+		const host = mt && mt.split('.').length && mt.split('.')[0]
+		const muid = mt && mt.split('.').length && mt.split('.')[1]
+		const ogPurchaseMessage = await models.Message.findOne({where:{
+			mediaToken: {[Op.like]: `${host}.${muid}%`},
+			type: msgtypes.purchase,
+			sender: 1,
+		}})
+		if(!ogPurchaseMessage) { // for someone else
+			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+			sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
+			doAction = false // skip this! we dont need it
 		}
 	}
 	if(doAction) doTheAction({...payload, ...toAddIn})

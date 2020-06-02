@@ -238,7 +238,9 @@ const sendNotification = async (chat, name, type) => {
     headers: { 'Content-Type': 'application/json' }
   })
   .then(res => res.json())
-  .then(json => console.log('[hub notification]', json))  
+  .then(json => {
+    // console.log('[hub notification]', json)
+  })  
 }
 
 export {

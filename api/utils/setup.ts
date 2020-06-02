@@ -31,6 +31,13 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_media_keys', 'media_type')
+  addTableColumn('sphinx_media_keys', 'original_muid')
+  addTableColumn('sphinx_messages', 'original_muid')
+
+  addTableColumn('sphinx_messages', 'uuid')
+  addTableColumn('sphinx_messages', 'reply_uuid')
+
   addTableColumn('sphinx_media_keys', 'sender', 'BIGINT')
 
   addTableColumn('sphinx_chats', 'group_key')

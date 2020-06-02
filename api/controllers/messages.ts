@@ -9,6 +9,7 @@ import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
 import * as network from '../network'
+import * as short from 'short-uuid'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -122,6 +123,7 @@ const sendMessage = async (req, res) => {
 	const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
 	const msg={
 		chatId: chat.id,
+		uuid: short.generate(),
 		type: constants.message_types.message,
 		sender: owner.id,
 		amount: amount||0,
@@ -144,19 +146,20 @@ const sendMessage = async (req, res) => {
 		type: constants.message_types.message,
 		message: {
 			id: message.id,
+			uuid: message.uuid,
 			content: remote_text_map || remote_text || text
 		}
 	})
 }
 
 const receiveMessage = async (payload) => {
-	console.log('received message', { payload })
+	// console.log('received message', { payload })
 
 	var date = new Date();
 	date.setMilliseconds(0)
 
 	const total_spent = 1
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -164,6 +167,7 @@ const receiveMessage = async (payload) => {
 
 	const msg:{[k:string]:any} = {
 		chatId: chat.id,
+		uuid: msg_uuid,
 		type: constants.message_types.message,
 		asciiEncodedTotal: total_spent,
 		sender: sender.id,
@@ -179,7 +183,7 @@ const receiveMessage = async (payload) => {
 	}
 	const message = await models.Message.create(msg)
 
-	console.log('saved message', message.dataValues)
+	// console.log('saved message', message.dataValues)
 
 	socket.sendJson({
 		type: 'message',

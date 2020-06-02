@@ -22,6 +22,10 @@ __decorate([
     __metadata("design:type", Number)
 ], Message.prototype, "id", void 0);
 __decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Message.prototype, "uuid", void 0);
+__decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "chatId", void 0);
@@ -117,6 +121,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Message.prototype, "senderAlias", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Message.prototype, "originalMuid", void 0);
 Message = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_messages', underscored: true })
 ], Message);

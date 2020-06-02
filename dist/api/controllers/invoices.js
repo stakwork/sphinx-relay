@@ -20,6 +20,7 @@ const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
 const network = require("../network");
+const short = require("short-uuid");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function stripLightningPrefix(s) {
     if (s.toLowerCase().startsWith('lightning:'))
@@ -124,6 +125,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                         else {
                             const message = yield models_1.models.Message.create({
                                 chatId: chat.id,
+                                uuid: short.generate(),
                                 sender: owner.id,
                                 type: constants.message_types.invoice,
                                 amount: parseInt(invoice.num_satoshis),
@@ -187,13 +189,14 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     const payment_request = dat.message.invoice;
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, msg_id, chat_type, sender_alias } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
     const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request);
     const msg = {
         chatId: chat.id,
+        uuid: msg_uuid,
         type: constants.message_types.invoice,
         sender: sender.id,
         amount: sat,

@@ -15,6 +15,7 @@ import {sendConfirmation} from './confirmations'
 import * as path from 'path'
 import * as network from '../network'
 import * as meme from '../utils/meme'
+import * as short from 'short-uuid'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
@@ -88,8 +89,10 @@ const sendAttachmentMessage = async (req, res) => {
   const mediaType = media_type || ''
   const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
   
+  const uuid = short.generate()
   const message = await models.Message.create({
     chatId: chat.id,
+    uuid: uuid,
     sender: owner.id,
     type: constants.message_types.attachment,
     status: constants.statuses.pending,
@@ -103,7 +106,7 @@ const sendAttachmentMessage = async (req, res) => {
     updatedAt: date
   })
 
-  saveMediaKeys(muid, media_key_map, chat.id, message.id)
+  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType)
 
   const mediaTerms: {[k:string]:any} = {
     muid, ttl:TTL,
@@ -113,6 +116,7 @@ const sendAttachmentMessage = async (req, res) => {
   const msg: {[k:string]:any} = {
     mediaTerms, // this gets converted to mediaToken
     id: message.id,
+    uuid: uuid,
     content: remote_text_map||remote_text||text||file_name||'',
     mediaKey: media_key_map,
     mediaType: mediaType,
@@ -130,7 +134,7 @@ const sendAttachmentMessage = async (req, res) => {
   })
 }
 
-function saveMediaKeys(muid, mediaKeyMap, chatId, messageId){
+function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType){
   if (typeof mediaKeyMap!=='object'){
     console.log('wrong type for mediaKeyMap')
     return
@@ -144,6 +148,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId){
         muid, chatId, key, messageId,
         receiver: receiverID,
         createdAt: date,
+        mediaType
       })
     }
   }
@@ -175,8 +180,10 @@ const purchase = async (req, res) => {
 
   const message = await models.Message.create({
     chatId: chat.id,
+    uuid: short.generate(),
     sender: owner.id,
     type: constants.message_types.purchase,
+    amount: amount||0,
     mediaToken: media_token,
     date: date,
     createdAt: date,
@@ -184,7 +191,7 @@ const purchase = async (req, res) => {
   })
 
   const msg={
-    amount, mediaToken:media_token, id:message.id,
+    amount, mediaToken:media_token, id:message.id, uuid:message.uuid,
   }
   network.sendMessage({
     chat: {...chat.dataValues, contactIds:[contact_id]},
@@ -208,15 +215,17 @@ const receivePurchase = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, mediaToken} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
   
   const message = await models.Message.create({
     chatId: chat.id,
+    uuid: msg_uuid,
     sender: sender.id,
     type: constants.message_types.purchase,
+    amount: amount||0,
     mediaToken: mediaToken,
     date: date,
     createdAt: date,
@@ -238,11 +247,15 @@ const receivePurchase = async (payload) => {
   if (!ogMessage){
     return console.log('no original message')
   }
+  
+  const isTribe = chat_type===constants.chat_types.tribe
+
   // find mediaKey for who sent
   const mediaKey = await models.MediaKey.findOne({where:{
-    muid, receiver: sender.id,
+    muid, receiver: isTribe?0:sender.id,
   }})
-  console.log('mediaKey found!',mediaKey)
+  // console.log('mediaKey found!',mediaKey.dataValues)
+  if(!mediaKey) return // this is from another person (admin is forwarding)
 
   const terms = parseLDAT(mediaToken)
   // get info
@@ -321,7 +334,7 @@ const receivePurchaseAccept = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -350,6 +363,7 @@ const receivePurchaseAccept = async (payload) => {
     mediaToken,
     mediaKey,
     mediaType,
+    originalMuid:originalMuid||'',
     date: date,
     createdAt: date,
     updatedAt: date
@@ -388,18 +402,19 @@ const receivePurchaseDeny = async (payload) => {
 }
 
 const receiveAttachment = async (payload) => {
-  console.log('received attachment', { payload })
+  // console.log('received attachment', { payload })
 
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
 
   const msg: {[k:string]:any} = {
     chatId: chat.id,
+    uuid: msg_uuid,
     type: constants.message_types.attachment,
     sender: sender.id,
     date: date,

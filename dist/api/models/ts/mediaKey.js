@@ -53,9 +53,17 @@ __decorate([
     __metadata("design:type", Date)
 ], MediaKey.prototype, "createdAt", void 0);
 __decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], MediaKey.prototype, "mediaType", void 0);
+__decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], MediaKey.prototype, "sender", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], MediaKey.prototype, "originalMuid", void 0);
 MediaKey = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_media_keys', underscored: true })
 ], MediaKey);

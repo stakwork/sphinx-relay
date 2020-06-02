@@ -196,8 +196,6 @@ const deleteChat = async (req, res) => {
 	success(res, { chat_id: id })
 }
 
-
-
 async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
 	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)

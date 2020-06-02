@@ -11,6 +11,9 @@ export default class Message extends Model<Message> {
   })
   id: number
 
+  @Column
+  uuid: string
+
   @Column(DataType.BIGINT)
   chatId: number
 
@@ -83,4 +86,7 @@ export default class Message extends Model<Message> {
 
   @Column
   senderAlias: string // for tribes, no "sender" id maybe
+
+  @Column
+  originalMuid: string // for tribe, remember the og muid
 }

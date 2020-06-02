@@ -18,7 +18,9 @@ const lightning_2 = require("../utils/lightning");
 const models_1 = require("../models");
 const send_1 = require("./send");
 const modify_1 = require("./modify");
+// import {modifyPayloadAndSaveMediaKey} from './modify'
 const msg_1 = require("../utils/msg");
+const sequelize_1 = require("sequelize");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 exports.typesToForward = [
@@ -39,34 +41,63 @@ function onReceive(payload) {
         let doAction = true;
         const toAddIn = {};
         const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
-        if (isTribe && exports.typesToForward.includes(payload.type)) {
-            const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
-            const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+        let isTribeOwner = false;
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+        if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            if (owner.publicKey === tribeOwnerPubKey) {
-                toAddIn.isTribeOwner = true;
-                // CHECK THEY ARE IN THE GROUP if message
+            isTribeOwner = owner.publicKey === tribeOwnerPubKey;
+        }
+        if (isTribeOwner)
+            toAddIn.isTribeOwner = true;
+        if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
+            const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
+            // CHECK THEY ARE IN THE GROUP if message
+            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+            if (needsPricePerJoin) {
+                const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                if (!senderMember)
+                    doAction = false;
+            }
+            // CHECK PRICES
+            if (needsPricePerJoin) {
+                if (payload.message.amount < chat.pricePerMessage)
+                    doAction = false;
+            }
+            // check price to join
+            if (payload.type === msgtypes.group_join) {
+                if (payload.message.amount < chat.priceToJoin)
+                    doAction = false;
+            }
+            if (doAction)
+                forwardMessageToTribe(payload, senderContact);
+            else
+                console.log('=> insufficient payment for this action');
+        }
+        if (isTribeOwner && payload.type === msgtypes.purchase) {
+            const mt = payload.message.mediaToken;
+            const myMediaMessage = yield models_1.models.Message.findOne({ where: {
+                    mediaToken: mt, sender: 1, type: msgtypes.attachment
+                } });
+            if (!myMediaMessage) { // someone else's attachment
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-                if (needsPricePerJoin) {
-                    const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
-                    if (!senderMember)
-                        doAction = false;
-                }
-                // CHECK PRICES
-                if (needsPricePerJoin) {
-                    if (payload.message.amount < chat.pricePerMessage)
-                        doAction = false;
-                }
-                // check price to join
-                if (payload.type === msgtypes.group_join) {
-                    if (payload.message.amount < chat.priceToJoin)
-                        doAction = false;
-                }
-                if (doAction)
-                    forwardMessageToTribe(payload, senderContact);
-                else
-                    console.log('=> insufficient payment for this action');
+                modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
+                // we do pass thru, to store... so that we know who the og purchaser was
+            }
+        }
+        if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
+            const mt = payload.message.mediaToken;
+            const host = mt && mt.split('.').length && mt.split('.')[0];
+            const muid = mt && mt.split('.').length && mt.split('.')[1];
+            const ogPurchaseMessage = yield models_1.models.Message.findOne({ where: {
+                    mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
+                    type: msgtypes.purchase,
+                    sender: 1,
+                } });
+            if (!ogPurchaseMessage) { // for someone else
+                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+                modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
+                doAction = false; // skip this! we dont need it
             }
         }
         if (doAction)
