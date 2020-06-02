@@ -42,7 +42,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   const owner = await models.Contact.findOne({where: {isOwner:true}})
 
   if(mediaKey) { // ALREADY BEEN PURHCASED! simply send
-    console.log("MEDIA KEY EXISTS ALREADY",mediaKey)
     // send back the new mediaToken and key
     const mediaTerms: {[k:string]:any} = {
       muid:mediaKey.muid, ttl:31536000, host:'',
@@ -55,7 +54,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       originalMuid:mediaKey.originalMuid,
       mediaType:mediaKey.mediaType
     }
-    console.log("SEND PURCHASE ACCEPT FROM STORED KEY")
     sendMessage({
       chat: {...chat.dataValues, contactIds:[purchaser.id]},
       sender: owner,
@@ -65,11 +63,9 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       failure: ()=>{}
     })
   } else {
-    console.log("NO MEDIA KEY EXISTS YET")
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
     // purchase it from creator (send "purchase")
     const msg={amount, mediaToken:mt}
-    console.log("GO AHEARD AND BUY!!!")
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
       sender: {
@@ -88,8 +84,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
 export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   if(payload.type!==msgtypes.purchase_accept) return
 
-  console.log("PURCHASE ACCEPT!!!!!")
-
   const mt = payload.message && payload.message.mediaToken
   const typ = payload.message && payload.message.mediaType
   if(!mt) return
@@ -107,11 +101,8 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 
   const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender,ogPurchaseMessage.amount)
 
-  console.log('ogPurchaseMessage',ogPurchaseMessage.dataValues)
-
   // send it to the purchaser
   const owner = await models.Contact.findOne({where: {isOwner:true}})
-  console.log("SEND firST PURHCASE ACCEPT MSG!")
   sendMessage({
 		sender: {
 			...owner.dataValues,
@@ -203,15 +194,6 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
     var date = new Date()
 
     date.setMilliseconds(0)
-    console.log('[modify] save media key!',{
-      muid:json.muid,
-      chatId:chat.id,
-      key: encKey,
-      messageId: (payload.message&&payload.message.id)||0,
-      receiver: 0,
-      sender: sender.id, // the og sender
-      createdAt: date,
-    })
     await sleep(1)
     await models.MediaKey.create({
       muid:json.muid,
