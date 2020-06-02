@@ -80,6 +80,7 @@ function onReceive(payload) {
             // store media key?
             const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
             modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
+            doAction = false; // dont store this locally, its for someone else
         }
         if (doAction)
             doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
