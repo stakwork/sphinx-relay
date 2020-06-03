@@ -149,7 +149,7 @@ export async function initTribesSubscriptions(){
 	tribes.connect(async(topic, message)=>{ // onMessage callback
 		try{
 			const msg = message.toString()
-			console.log("=====> msg received! TOPIC", topic, "MESSAGE", msg)
+			// console.log("=====> msg received! TOPIC", topic, "MESSAGE", msg)
 			// check topic is signed by sender?
 			const payload = await parseAndVerifyPayload(msg)
 			onReceive(payload)
