@@ -240,6 +240,11 @@ function receiveGroupJoin(payload) {
                     lastActive: date,
                 });
                 chatTribes_1.replayChatHistory(chat, theSender);
+                tribes.putstats({
+                    uuid: chat.uuid,
+                    host: chat.host,
+                    member_count: contactIds.length,
+                });
             }
         }
         const msg = {
@@ -290,6 +295,11 @@ function receiveGroupLeave(payload) {
                         yield models_1.models.ChatMember.destroy({ where: { chatId: chat.id, contactId: sender.id } });
                     }
                     catch (e) { }
+                    tribes.putstats({
+                        uuid: chat.uuid,
+                        host: chat.host,
+                        member_count: contactIds.length,
+                    });
                 }
             }
         }

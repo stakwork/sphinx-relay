@@ -5,6 +5,7 @@ import * as LND from './lightning'
 import * as path from 'path'
 import * as mqtt from 'mqtt'
 import * as fetch from 'node-fetch'
+import { models } from '../models'
 
 const env = process.env.NODE_ENV || 'development'
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
@@ -27,6 +28,7 @@ export async function connect(onMessage) {
       client.on('connect', function () {
         console.log("[tribes] connected!")
         client.subscribe(`${info.identity_pubkey}/#`)
+        updateTribeStats(info.identity_pubkey)
       })
       client.on('close', function (e) {
         setTimeout(() => reconnect(), 2000)
@@ -43,6 +45,20 @@ export async function connect(onMessage) {
   } catch (e) {
     console.log("TRIBES ERROR", e)
   }
+}
+
+async function updateTribeStats(myPubkey){
+  const myTribes = await models.Chat.findAll({where:{
+    ownerPubkey:myPubkey
+  }})
+  await asyncForEach(myTribes, async(tribe)=>{
+    try {
+      const contactIds = JSON.parse(tribe.contactIds)
+      const member_count = (contactIds&&contactIds.length)||0
+      await putstats({uuid:tribe.uuid, host:tribe.host, member_count})
+    } catch(e) {}
+  })
+  console.log(`[tribes] updated stats for ${myTribes.length} tribes`)
 }
 
 export function subscribe(topic) {
@@ -94,6 +110,20 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
   }
 }
 
+export async function putstats({ uuid, host, member_count }) {
+  try {
+    const token = await genSignedTimestamp()
+    await fetch('https://' + host + '/tribestats?token=' + token, {
+      method: 'PUT',
+      body: JSON.stringify({uuid, member_count}),
+      headers: { 'Content-Type': 'application/json' }
+    })
+  } catch(e) {
+    console.log('[tribes] unauthorized to putstats')
+    throw e
+  }
+}
+
 export async function genSignedTimestamp() {
   const now = moment().unix()
   const tsBytes = Buffer.from(now.toString(16), 'hex')
@@ -122,4 +152,10 @@ export function getHost() {
 
 function urlBase64(buf) {
   return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+	  	await callback(array[index], index, array);
+	}
 }

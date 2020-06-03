@@ -15,6 +15,7 @@ const LND = require("./lightning");
 const path = require("path");
 const mqtt = require("mqtt");
 const fetch = require("node-fetch");
+const models_1 = require("../models");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 let client;
@@ -35,6 +36,7 @@ function connect(onMessage) {
                     client.on('connect', function () {
                         console.log("[tribes] connected!");
                         client.subscribe(`${info.identity_pubkey}/#`);
+                        updateTribeStats(info.identity_pubkey);
                     });
                     client.on('close', function (e) {
                         setTimeout(() => reconnect(), 2000);
@@ -56,6 +58,22 @@ function connect(onMessage) {
     });
 }
 exports.connect = connect;
+function updateTribeStats(myPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const myTribes = yield models_1.models.Chat.findAll({ where: {
+                ownerPubkey: myPubkey
+            } });
+        yield asyncForEach(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const contactIds = JSON.parse(tribe.contactIds);
+                const member_count = (contactIds && contactIds.length) || 0;
+                yield putstats({ uuid: tribe.uuid, host: tribe.host, member_count });
+            }
+            catch (e) { }
+        }));
+        console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
+    });
+}
 function subscribe(topic) {
     if (client)
         client.subscribe(topic);
@@ -113,6 +131,23 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     });
 }
 exports.edit = edit;
+function putstats({ uuid, host, member_count }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield genSignedTimestamp();
+            yield fetch('https://' + host + '/tribestats?token=' + token, {
+                method: 'PUT',
+                body: JSON.stringify({ uuid, member_count }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to putstats');
+            throw e;
+        }
+    });
+}
+exports.putstats = putstats;
 function genSignedTimestamp() {
     return __awaiter(this, void 0, void 0, function* () {
         const now = moment().unix();
@@ -146,5 +181,12 @@ function getHost() {
 exports.getHost = getHost;
 function urlBase64(buf) {
     return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+}
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
 }
 //# sourceMappingURL=tribes.js.map
