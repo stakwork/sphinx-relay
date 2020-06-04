@@ -166,8 +166,8 @@ async function replayChatHistory(chat, contact) {
 		let content = ''
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
 
-		console.log(m.date, typeof m.date)
-
+		console.log(m.date, typeof m.date, m.data.toISOString())
+		const dateString = m.date&&m.date.toISOString()
 		let mediaKeyMap
 		let newMediaTerms
 		if(m.type===constants.message_types.attachment) {
@@ -176,7 +176,7 @@ async function replayChatHistory(chat, contact) {
 				const mediaKey = await models.MediaKey.findOne({where:{
 					muid, chatId: chat.id,
 				}})
-				console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+				// console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
 				mediaKeyMap = {chat: mediaKey.key}
 				newMediaTerms = {muid: mediaKey.muid}
 			}
@@ -186,6 +186,7 @@ async function replayChatHistory(chat, contact) {
 			...mediaKeyMap && {mediaKey: mediaKeyMap},
 			...newMediaTerms && {mediaToken: newMediaTerms},
 			...m.mediaType && {mediaType: m.mediaType},
+			...dateString && {date: dateString}
 		})
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)

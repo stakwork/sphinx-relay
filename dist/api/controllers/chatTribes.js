@@ -164,7 +164,8 @@ function replayChatHistory(chat, contact) {
                 content = JSON.parse(m.remoteMessageContent);
             }
             catch (e) { }
-            console.log(m.date, typeof m.date);
+            console.log(m.date, typeof m.date, m.data.toISOString());
+            const dateString = m.date && m.date.toISOString();
             let mediaKeyMap;
             let newMediaTerms;
             if (m.type === constants.message_types.attachment) {
@@ -173,12 +174,12 @@ function replayChatHistory(chat, contact) {
                     const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
                             muid, chatId: chat.id,
                         } });
-                    console.log("FOUND MEDIA KEY!!", mediaKey.dataValues);
+                    // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
                     mediaKeyMap = { chat: mediaKey.key };
                     newMediaTerms = { muid: mediaKey.muid };
                 }
             }
-            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }));
+            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }));
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
