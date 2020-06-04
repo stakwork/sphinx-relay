@@ -192,13 +192,15 @@ exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');
-        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
         const isTribe = chat_type === constants.chat_types.tribe;
         var date = new Date();
         date.setMilliseconds(0);
+        if (date_string)
+            date = new Date(date_string);
         let theSender = null;
         const member = chat_members[sender_pub_key];
         const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
@@ -276,7 +278,7 @@ exports.receiveGroupJoin = receiveGroupJoin;
 function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupLeave');
-        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
@@ -305,6 +307,8 @@ function receiveGroupLeave(payload) {
         }
         var date = new Date();
         date.setMilliseconds(0);
+        if (date_string)
+            date = new Date(date_string);
         const msg = {
             chatId: chat.id,
             type: constants.message_types.group_leave,
