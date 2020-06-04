@@ -267,8 +267,8 @@ function debounce(func, id, delay) {
     if (tribeCounts[id] || tribeCounts[id] === 0)
         tribeCounts[id] += 1;
     bounceTimeouts[id] = setTimeout(() => {
-        tribeCounts[id] = 0;
         func.apply(context, args);
+        setTimeout(() => tribeCounts[id] = 0, 15);
     }, delay);
 }
 //# sourceMappingURL=hub.js.map
