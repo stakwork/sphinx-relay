@@ -32,7 +32,10 @@ async function onReceive(payload){
 	const toAddIn:{[k:string]:any} = {}
 	const isTribe = payload.chat && payload.chat.type===constants.chat_types.tribe
 	let isTribeOwner = false
-	const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+	let chat
+	if(payload.chat) {
+		chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
+	}
 	if(isTribe) {
 		const tribeOwnerPubKey = chat && chat.ownerPubkey
 		const owner = await models.Contact.findOne({where: {isOwner:true}})

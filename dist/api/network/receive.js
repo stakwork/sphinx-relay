@@ -42,7 +42,10 @@ function onReceive(payload) {
         const toAddIn = {};
         const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
         let isTribeOwner = false;
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+        let chat;
+        if (payload.chat) {
+            chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+        }
         if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
