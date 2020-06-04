@@ -223,12 +223,6 @@ const sendNotification = async (chat, name, type) => {
 
   const unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
 
-  // if(type==='message' && chat.type==constants.chat_types.tribe){
-  //   debounce(()=>{
-      
-  //   },)
-  // }
-  
   const params = {
     device_id: owner.deviceId,
     notification: {
@@ -238,6 +232,23 @@ const sendNotification = async (chat, name, type) => {
     }
   }
 
+  if(type==='message' && chat.type==constants.chat_types.tribe){
+    debounce(()=>{
+      const count = tribeCounts[chat.id]?tribeCounts[chat.id]+' ':''
+      triggerNotification({
+        device_id: owner.deviceId,
+        notification: {
+          chat_id: chat.id, badge: unseenMessages,
+          message: `You have ${count}new messages in ${chat.name}`
+        }
+      })
+    }, chat.id, 30000)
+  } else {
+    triggerNotification(params)
+  }
+}
+
+function triggerNotification(params){
   fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {
     method: 'POST' ,
     body:    JSON.stringify(params),
@@ -267,3 +278,16 @@ export {
 //   clearTimeout(inDebounce)
 //   inDebounce = setTimeout(() => func.apply(context, args), delay)
 // }
+
+const bounceTimeouts={}
+const tribeCounts = {}
+function debounce(func, id, delay) {
+  const context = this
+  const args = arguments
+  if(bounceTimeouts[id]) clearTimeout(bounceTimeouts[id])
+  if(tribeCounts[id]||tribeCounts[id]===0) tribeCounts[id]+=1
+  bounceTimeouts[id] = setTimeout(() => {
+    tribeCounts[id]=0
+    func.apply(context, args)
+  }, delay)
+}
