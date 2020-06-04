@@ -98,7 +98,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, } = req.body;
     var date = new Date();
     date.setMilliseconds(0);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -121,19 +121,24 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         createdAt: date,
         updatedAt: date,
     };
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
     res_1.success(res, jsonUtils.messageToJson(message, chat));
+    const msgToSend = {
+        id: message.id,
+        uuid: message.uuid,
+        content: remote_text_map || remote_text || text
+    };
+    if (reply_uuid)
+        msgToSend.replyUuid = reply_uuid;
     network.sendMessage({
         chat: chat,
         sender: owner,
         amount: amount || 0,
         type: constants.message_types.message,
-        message: {
-            id: message.id,
-            uuid: message.uuid,
-            content: remote_text_map || remote_text || text
-        }
+        message: msgToSend,
     });
 });
 exports.sendMessage = sendMessage;
@@ -142,7 +147,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     var date = new Date();
     date.setMilliseconds(0);
     const total_spent = 1;
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -166,6 +171,8 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         if (remote_content)
             msg.remoteMessageContent = remote_content;
     }
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved message', message.dataValues)
     socket.sendJson({

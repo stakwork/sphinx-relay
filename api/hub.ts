@@ -223,6 +223,12 @@ const sendNotification = async (chat, name, type) => {
 
   const unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
 
+  // if(type==='message' && chat.type==constants.chat_types.tribe){
+  //   debounce(()=>{
+      
+  //   },)
+  // }
+  
   const params = {
     device_id: owner.deviceId,
     notification: {
@@ -253,3 +259,11 @@ export {
   payInviteInHub,
   payInviteInvoice
 }
+
+// let inDebounce
+// function debounce(func, delay) {
+//   const context = this
+//   const args = arguments
+//   clearTimeout(inDebounce)
+//   inDebounce = setTimeout(() => func.apply(context, args), delay)
+// }

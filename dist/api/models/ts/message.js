@@ -125,6 +125,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Message.prototype, "originalMuid", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Message.prototype, "replyUuid", void 0);
 Message = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_messages', underscored: true })
 ], Message);

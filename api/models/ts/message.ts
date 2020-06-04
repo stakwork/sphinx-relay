@@ -89,4 +89,7 @@ export default class Message extends Model<Message> {
 
   @Column
   originalMuid: string // for tribe, remember the og muid
+
+  @Column
+  replyUuid: string
 }

@@ -214,6 +214,10 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         return;
     }
     const unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
+    // if(type==='message' && chat.type==constants.chat_types.tribe){
+    //   debounce(()=>{
+    //   },)
+    // }
     const params = {
         device_id: owner.deviceId,
         notification: {
@@ -233,4 +237,11 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
     });
 });
 exports.sendNotification = sendNotification;
+// let inDebounce
+// function debounce(func, delay) {
+//   const context = this
+//   const args = arguments
+//   clearTimeout(inDebounce)
+//   inDebounce = setTimeout(() => func.apply(context, args), delay)
+// }
 //# sourceMappingURL=hub.js.map
