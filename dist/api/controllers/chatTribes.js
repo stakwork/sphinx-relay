@@ -164,6 +164,7 @@ function replayChatHistory(chat, contact) {
                 content = JSON.parse(m.remoteMessageContent);
             }
             catch (e) { }
+            console.log(m.date, typeof m.date);
             let mediaKeyMap;
             let newMediaTerms;
             if (m.type === constants.message_types.attachment) {

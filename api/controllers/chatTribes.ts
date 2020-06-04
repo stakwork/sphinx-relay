@@ -166,6 +166,8 @@ async function replayChatHistory(chat, contact) {
 		let content = ''
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
 
+		console.log(m.date, typeof m.date)
+
 		let mediaKeyMap
 		let newMediaTerms
 		if(m.type===constants.message_types.attachment) {
