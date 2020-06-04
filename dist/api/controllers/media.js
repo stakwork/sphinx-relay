@@ -53,7 +53,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     // } catch(e) {
     //   return resUtils.failure(res, e.message)
     // }
-    const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, file_name, ttl, price, } = req.body;
+    const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, } = req.body;
     console.log('[send attachment]', req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield helpers.findOrCreateChat({
@@ -86,6 +86,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         sender: owner.id,
         type: constants.message_types.attachment,
         status: constants.statuses.pending,
+        amount: amount || 0,
         messageContent: text || file_name || '',
         remoteMessageContent,
         mediaToken: myMediaToken,
@@ -113,6 +114,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         chat: chat,
         sender: owner,
         type: constants.message_types.attachment,
+        amount: amount || 0,
         message: msg,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('attachment sent', { data });

@@ -55,6 +55,7 @@ const sendAttachmentMessage = async (req, res) => {
     remote_text_map,
     media_key_map,
     media_type,
+    amount,
     file_name,
     ttl,
     price, // IF AMOUNT>0 THEN do NOT sign or send receipt
@@ -96,6 +97,7 @@ const sendAttachmentMessage = async (req, res) => {
     sender: owner.id,
     type: constants.message_types.attachment,
     status: constants.statuses.pending,
+    amount: amount||0,
     messageContent: text||file_name||'',
     remoteMessageContent,
     mediaToken: myMediaToken,
@@ -125,6 +127,7 @@ const sendAttachmentMessage = async (req, res) => {
     chat: chat,
     sender: owner,
     type: constants.message_types.attachment,
+    amount: amount||0,
     message: msg,
     success: async (data) => {
       console.log('attachment sent', { data })
