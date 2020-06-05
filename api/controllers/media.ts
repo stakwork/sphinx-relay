@@ -218,7 +218,7 @@ const receivePurchase = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
@@ -239,6 +239,14 @@ const receivePurchase = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
+  const isTribe = chat_type===constants.chat_types.tribe
+
+  // if sats forwarded from tribe owner, for the >1 time
+  // dont need to send back token, because admin already has it
+  if(isTribe && skip_payment_processing) {
+    return console.log('=> skip payment processing')
+  }
+
   const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1]
   if(!muid){
     return console.log('no muid')
@@ -250,8 +258,6 @@ const receivePurchase = async (payload) => {
   if (!ogMessage){
     return console.log('no original message')
   }
-  
-  const isTribe = chat_type===constants.chat_types.tribe
 
   // find mediaKey for who sent
   const mediaKey = await models.MediaKey.findOne({where:{

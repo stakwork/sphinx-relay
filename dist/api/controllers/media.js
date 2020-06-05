@@ -193,7 +193,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> group chat not found!');
     }
@@ -212,6 +212,12 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         type: 'purchase',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
+    const isTribe = chat_type === constants.chat_types.tribe;
+    // if sats forwarded from tribe owner, for the >1 time
+    // dont need to send back token, because admin already has it
+    if (isTribe && skip_payment_processing) {
+        return console.log('=> skip payment processing');
+    }
     const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1];
     if (!muid) {
         return console.log('no muid');
@@ -222,7 +228,6 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!ogMessage) {
         return console.log('no original message');
     }
-    const isTribe = chat_type === constants.chat_types.tribe;
     // find mediaKey for who sent
     const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
             muid, receiver: isTribe ? 0 : sender.id,

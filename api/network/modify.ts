@@ -55,17 +55,30 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       mediaType:mediaKey.mediaType
     }
     sendMessage({
-      chat: {...chat.dataValues, contactIds:[purchaser.id]},
+      chat: {...chat.dataValues, contactIds:[mediaKey.sender]}, // the merchant id
       sender: owner,
       type: constants.message_types.purchase_accept,
       message: msg,
       success: ()=>{},
       failure: ()=>{}
     })
+    // PAY THE OG POSTER HERE!!!
+    sendMessage({
+      chat: {...chat.dataValues, contactIds:[purchaser.id]},
+      sender: owner,
+      type: constants.message_types.purchase_accept,
+      amount: amount,
+      message: {
+        mediaToken: mt,
+        skipPaymentProcessing: true,
+      },
+      success: ()=>{},
+      failure: ()=>{}
+    })
   } else {
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
     // purchase it from creator (send "purchase")
-    const msg={amount, mediaToken:mt}
+    const msg={mediaToken:mt}
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
       sender: {
@@ -201,7 +214,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
       key:encKey,
       messageId: (payload.message&&payload.message.id)||0,
       receiver: 0,
-      sender: sender.id, // the og sender
+      sender: sender.id, // the og sender (merchant) who is sending the completed media token
       createdAt: date,
       originalMuid: ogmuid,
       mediaType:typ,

@@ -67,10 +67,23 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 mediaType: mediaKey.mediaType
             };
             send_1.sendMessage({
-                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
+                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
                 sender: owner,
                 type: constants.message_types.purchase_accept,
                 message: msg,
+                success: () => { },
+                failure: () => { }
+            });
+            // PAY THE OG POSTER HERE!!!
+            send_1.sendMessage({
+                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
+                sender: owner,
+                type: constants.message_types.purchase_accept,
+                amount: amount,
+                message: {
+                    mediaToken: mt,
+                    skipPaymentProcessing: true,
+                },
                 success: () => { },
                 failure: () => { }
             });
@@ -78,7 +91,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
         else {
             const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } });
             // purchase it from creator (send "purchase")
-            const msg = { amount, mediaToken: mt };
+            const msg = { mediaToken: mt };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
                 sender: Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }),
