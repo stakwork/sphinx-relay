@@ -108,6 +108,8 @@ const sendAttachmentMessage = async (req, res) => {
     updatedAt: date
   })
 
+  console.log('saved attachment msg from me',message.id)
+
   saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType)
 
   const mediaTerms: {[k:string]:any} = {
@@ -173,7 +175,6 @@ const purchase = async (req, res) => {
     return resUtils.failure(res, e.message)
   }
 
-  console.log('purchase!')
   const owner = await models.Contact.findOne({ where: { isOwner: true }})
   const chat = await helpers.findOrCreateChat({
     chat_id,
@@ -194,7 +195,8 @@ const purchase = async (req, res) => {
   })
 
   const msg={
-    amount, mediaToken:media_token, id:message.id, uuid:message.uuid,
+    mediaToken:media_token, id:message.id, uuid:message.uuid,
+    purchaser: owner.id, // for tribe, knows who sent
   }
   network.sendMessage({
     chat: {...chat.dataValues, contactIds:[contact_id]},
@@ -218,7 +220,7 @@ const receivePurchase = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
@@ -239,6 +241,14 @@ const receivePurchase = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
+  const isTribe = chat_type===constants.chat_types.tribe
+
+  // if sats forwarded from tribe owner, for the >1 time
+  // dont need to send back token, because admin already has it
+  if(isTribe && skip_payment_processing) {
+    return console.log('=> skip payment processing')
+  }
+
   const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1]
   if(!muid){
     return console.log('no muid')
@@ -250,8 +260,6 @@ const receivePurchase = async (payload) => {
   if (!ogMessage){
     return console.log('no original message')
   }
-  
-  const isTribe = chat_type===constants.chat_types.tribe
 
   // find mediaKey for who sent
   const mediaKey = await models.MediaKey.findOne({where:{
@@ -305,15 +313,17 @@ const receivePurchase = async (payload) => {
     meta: {amt:amount},
     pubkey: sender.publicKey,
   })
+  const msgToSend:{[k:string]:any}={
+    mediaToken: theMediaToken,
+    mediaKey: mediaKey.key,
+    mediaType: ogMessage.mediaType,
+  }
+  if(purchaser_id) msgToSend.purchaser=purchaser_id
   network.sendMessage({
     chat: {...chat.dataValues, contactIds:[sender.id]}, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
-    message: {
-      mediaToken: theMediaToken,
-      mediaKey: mediaKey.key,
-      mediaType: ogMessage.mediaType,
-    },
+    message: msgToSend,
     success: async (data) => {
       console.log('purchase_accept sent!')
       const acceptMsg = await models.Message.create({

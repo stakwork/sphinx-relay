@@ -6,6 +6,7 @@ import * as rsa from '../crypto/rsa'
 import * as tribes from '../utils/tribes'
 import * as path from 'path'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
+import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -150,10 +151,11 @@ async function replayChatHistory(chat, contact) {
 		return console.log('[tribes] cant replay history')
 	}
 	const msgs = await models.Message.findAll({ 
-		where:{chatId:chat.id}, 
-		order: [['id', 'asc']], 
-		limit:40 
+		where:{chatId:chat.id, type:{[Op.in]:network.typesToReplay}}, 
+		order: [['id', 'desc']], 
+		limit: 40
 	})
+	msgs.reverse()
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
 		if(!network.typesToReplay.includes(m.type)) return // only for message for now
@@ -164,6 +166,7 @@ async function replayChatHistory(chat, contact) {
 		let content = ''
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
 
+		const dateString = m.date&&m.date.toISOString()
 		let mediaKeyMap
 		let newMediaTerms
 		if(m.type===constants.message_types.attachment) {
@@ -172,7 +175,7 @@ async function replayChatHistory(chat, contact) {
 				const mediaKey = await models.MediaKey.findOne({where:{
 					muid, chatId: chat.id,
 				}})
-				console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+				// console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
 				mediaKeyMap = {chat: mediaKey.key}
 				newMediaTerms = {muid: mediaKey.muid}
 			}
@@ -182,6 +185,7 @@ async function replayChatHistory(chat, contact) {
 			...mediaKeyMap && {mediaKey: mediaKeyMap},
 			...newMediaTerms && {mediaToken: newMediaTerms},
 			...m.mediaType && {mediaType: m.mediaType},
+			...dateString && {date: dateString}
 		})
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)

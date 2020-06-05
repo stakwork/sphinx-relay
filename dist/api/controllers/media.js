@@ -96,6 +96,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         createdAt: date,
         updatedAt: date
     });
+    console.log('saved attachment msg from me', message.id);
     saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType);
     const mediaTerms = {
         muid, ttl: TTL,
@@ -153,7 +154,6 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     catch (e) {
         return resUtils.failure(res, e.message);
     }
-    console.log('purchase!');
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield helpers.findOrCreateChat({
         chat_id,
@@ -172,7 +172,8 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         updatedAt: date
     });
     const msg = {
-        amount, mediaToken: media_token, id: message.id, uuid: message.uuid,
+        mediaToken: media_token, id: message.id, uuid: message.uuid,
+        purchaser: owner.id,
     };
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
@@ -193,7 +194,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> group chat not found!');
     }
@@ -212,6 +213,12 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         type: 'purchase',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
+    const isTribe = chat_type === constants.chat_types.tribe;
+    // if sats forwarded from tribe owner, for the >1 time
+    // dont need to send back token, because admin already has it
+    if (isTribe && skip_payment_processing) {
+        return console.log('=> skip payment processing');
+    }
     const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1];
     if (!muid) {
         return console.log('no muid');
@@ -222,7 +229,6 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!ogMessage) {
         return console.log('no original message');
     }
-    const isTribe = chat_type === constants.chat_types.tribe;
     // find mediaKey for who sent
     const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
             muid, receiver: isTribe ? 0 : sender.id,
@@ -275,15 +281,18 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         meta: { amt: amount },
         pubkey: sender.publicKey,
     });
+    const msgToSend = {
+        mediaToken: theMediaToken,
+        mediaKey: mediaKey.key,
+        mediaType: ogMessage.mediaType,
+    };
+    if (purchaser_id)
+        msgToSend.purchaser = purchaser_id;
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
         sender: owner,
         type: constants.message_types.purchase_accept,
-        message: {
-            mediaToken: theMediaToken,
-            mediaKey: mediaKey.key,
-            mediaType: ogMessage.mediaType,
-        },
+        message: msgToSend,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('purchase_accept sent!');
             const acceptMsg = yield models_1.models.Message.create({

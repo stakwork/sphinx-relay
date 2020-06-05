@@ -17,6 +17,7 @@ const rsa = require("../crypto/rsa");
 const tribes = require("../utils/tribes");
 const path = require("path");
 const msg_1 = require("../utils/msg");
+const sequelize_1 = require("sequelize");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -148,10 +149,11 @@ function replayChatHistory(chat, contact) {
             return console.log('[tribes] cant replay history');
         }
         const msgs = yield models_1.models.Message.findAll({
-            where: { chatId: chat.id },
-            order: [['id', 'asc']],
+            where: { chatId: chat.id, type: { [sequelize_1.Op.in]: network.typesToReplay } },
+            order: [['id', 'desc']],
             limit: 40
         });
+        msgs.reverse();
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
             if (!network.typesToReplay.includes(m.type))
@@ -162,6 +164,7 @@ function replayChatHistory(chat, contact) {
                 content = JSON.parse(m.remoteMessageContent);
             }
             catch (e) { }
+            const dateString = m.date && m.date.toISOString();
             let mediaKeyMap;
             let newMediaTerms;
             if (m.type === constants.message_types.attachment) {
@@ -170,12 +173,12 @@ function replayChatHistory(chat, contact) {
                     const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
                             muid, chatId: chat.id,
                         } });
-                    console.log("FOUND MEDIA KEY!!", mediaKey.dataValues);
+                    // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
                     mediaKeyMap = { chat: mediaKey.key };
                     newMediaTerms = { muid: mediaKey.muid };
                 }
             }
-            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }));
+            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }));
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;

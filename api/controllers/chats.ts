@@ -198,7 +198,7 @@ const deleteChat = async (req, res) => {
 
 async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
-	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -207,6 +207,7 @@ async function receiveGroupJoin(payload) {
 
 	var date = new Date()
 	date.setMilliseconds(0)
+	if(date_string) date=new Date(date_string)
 
 	let theSender: any = null
 	const member = chat_members[sender_pub_key]
@@ -285,7 +286,7 @@ async function receiveGroupJoin(payload) {
 
 async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
-	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -317,6 +318,7 @@ async function receiveGroupLeave(payload) {
 
 	var date = new Date();
 	date.setMilliseconds(0)
+	if(date_string) date=new Date(date_string)
 	const msg:{[k:string]:any} = {
 		chatId: chat.id,
 		type: constants.message_types.group_leave,

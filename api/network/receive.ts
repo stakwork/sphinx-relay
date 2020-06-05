@@ -63,25 +63,22 @@ async function onReceive(payload){
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase) {
 		const mt = payload.message.mediaToken
-		const myMediaMessage = await models.Message.findOne({ where:{
-			mediaToken: mt, sender: 1, type:msgtypes.attachment
-		} })
-		if(!myMediaMessage) { // someone else's attachment
+		const host = mt && mt.split('.').length && mt.split('.')[0]
+		const muid = mt && mt.split('.').length && mt.split('.')[1]
+		const myAttachmentMessage = await models.Message.findOne({where:{
+			mediaToken: {[Op.like]: `${host}.${muid}%`},
+			type:msgtypes.attachment, sender:1,
+		}})
+		if(!myAttachmentMessage) { // someone else's attachment
 			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			purchaseFromOriginalSender(payload, chat, senderContact)
-			// we do pass thru, to store... so that we know who the og purchaser was
+			doAction = false
 		}
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
-		const mt = payload.message.mediaToken
-		const host = mt && mt.split('.').length && mt.split('.')[0]
-		const muid = mt && mt.split('.').length && mt.split('.')[1]
-		const ogPurchaseMessage = await models.Message.findOne({where:{
-			mediaToken: {[Op.like]: `${host}.${muid}%`},
-			type: msgtypes.purchase,
-			sender: 1,
-		}})
-		if(!ogPurchaseMessage) { // for someone else
+		const purchaserID = payload.message&&payload.message.purchaser
+		const iAmPurchaser = purchaserID&&purchaserID===1
+		if(!iAmPurchaser) {
 			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
 			doAction = false // skip this! we dont need it

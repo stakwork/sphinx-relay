@@ -8,7 +8,7 @@ import * as FormData from 'form-data'
 import { models } from '../models'
 import * as RNCryptor from 'jscryptor'
 import {sendMessage} from './send'
-import { Op } from 'sequelize'
+// import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -55,17 +55,31 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       mediaType:mediaKey.mediaType
     }
     sendMessage({
-      chat: {...chat.dataValues, contactIds:[purchaser.id]},
+      chat: {...chat.dataValues, contactIds:[purchaser.id]}, // the merchant id
       sender: owner,
       type: constants.message_types.purchase_accept,
       message: msg,
       success: ()=>{},
       failure: ()=>{}
     })
+    // PAY THE OG POSTER HERE!!!
+    sendMessage({
+      chat: {...chat.dataValues, contactIds:[mediaKey.sender]},
+      sender: owner,
+      type: constants.message_types.purchase,
+      amount: amount,
+      message: {
+        mediaToken: mt,
+        skipPaymentProcessing: true,
+      },
+      success: ()=>{},
+      failure: ()=>{}
+    })
   } else {
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
+    if(!ogmsg) return
     // purchase it from creator (send "purchase")
-    const msg={amount, mediaToken:mt}
+    const msg={mediaToken:mt,purchaser:purchaser.id}
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
       sender: {
@@ -86,6 +100,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 
   const mt = payload.message && payload.message.mediaToken
   const typ = payload.message && payload.message.mediaType
+  const purchaserID = payload.message && payload.message.purchaser
   if(!mt) return
   const muid = mt && mt.split('.').length && mt.split('.')[1]
   if(!muid) return
@@ -93,13 +108,23 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   const existingMediaKey = await models.MediaKey.findOne({where:{muid}})
   if(existingMediaKey) return // no need, its already been sent
 
-  const host = mt.split('.')[0]
-  const ogPurchaseMessage = await models.Message.findOne({where:{
-    mediaToken: {[Op.like]: `${host}.${muid}%`},
-    type: msgtypes.purchase,
+  // const host = mt.split('.')[0]
+
+  const terms = parseLDAT(mt)
+  const ogPurchaser = await models.Contact.findOne({where:{
+    id: purchaserID
   }})
 
-  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender,ogPurchaseMessage.amount)
+  if(!ogPurchaser) return
+
+  const amt = (terms.meta&&terms.meta.amt)||0
+
+  // const ogPurchaseMessage = await models.Message.findOne({where:{
+  //   mediaToken: {[Op.like]: `${host}.${muid}%`},
+  //   type: msgtypes.purchase,
+  // }})
+
+  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender,amt)
 
   // send it to the purchaser
   const owner = await models.Contact.findOne({where: {isOwner:true}})
@@ -110,7 +135,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 		},
     chat:{
       ...chat.dataValues,
-      contactIds:[ogPurchaseMessage.sender],
+      contactIds:[ogPurchaser.id],
     },
     type:msgtypes.purchase_accept, 
     message:{
@@ -201,7 +226,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
       key:encKey,
       messageId: (payload.message&&payload.message.id)||0,
       receiver: 0,
-      sender: sender.id, // the og sender
+      sender: sender.id, // the og sender (merchant) who is sending the completed media token
       createdAt: date,
       originalMuid: ogmuid,
       mediaType:typ,

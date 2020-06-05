@@ -108,6 +108,7 @@ const sendMessage = async (req, res) => {
 		chat_id,
 		remote_text_map,
 		amount,
+		reply_uuid,
 	} = req.body
 
 	var date = new Date();
@@ -121,7 +122,7 @@ const sendMessage = async (req, res) => {
 	})
 
 	const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
-	const msg={
+	const msg:{[k:string]:any}={
 		chatId: chat.id,
 		uuid: short.generate(),
 		type: constants.message_types.message,
@@ -134,21 +135,24 @@ const sendMessage = async (req, res) => {
 		createdAt: date,
 		updatedAt: date,
 	}
+	if(reply_uuid) msg.replyUuid=reply_uuid
 	// console.log(msg)
 	const message = await models.Message.create(msg)
 
 	success(res, jsonUtils.messageToJson(message, chat))
 
+	const msgToSend:{[k:string]:any} = {
+		id: message.id,
+		uuid: message.uuid,
+		content: remote_text_map || remote_text || text
+	}
+	if(reply_uuid) msgToSend.replyUuid=reply_uuid
 	network.sendMessage({
 		chat: chat,
 		sender: owner,
 		amount: amount||0,
 		type: constants.message_types.message,
-		message: {
-			id: message.id,
-			uuid: message.uuid,
-			content: remote_text_map || remote_text || text
-		}
+		message: msgToSend,
 	})
 }
 
@@ -159,11 +163,13 @@ const receiveMessage = async (payload) => {
 	date.setMilliseconds(0)
 
 	const total_spent = 1
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
 	const text = content
+
+	if(date_string) date=new Date(date_string)
 
 	const msg:{[k:string]:any} = {
 		chatId: chat.id,
@@ -181,6 +187,7 @@ const receiveMessage = async (payload) => {
 		msg.senderAlias = sender_alias
 		if(remote_content) msg.remoteMessageContent=remote_content
 	}
+	if(reply_uuid) msg.replyUuid = reply_uuid
 	const message = await models.Message.create(msg)
 
 	// console.log('saved message', message.dataValues)

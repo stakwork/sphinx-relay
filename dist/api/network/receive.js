@@ -79,25 +79,22 @@ function onReceive(payload) {
         }
         if (isTribeOwner && payload.type === msgtypes.purchase) {
             const mt = payload.message.mediaToken;
-            const myMediaMessage = yield models_1.models.Message.findOne({ where: {
-                    mediaToken: mt, sender: 1, type: msgtypes.attachment
+            const host = mt && mt.split('.').length && mt.split('.')[0];
+            const muid = mt && mt.split('.').length && mt.split('.')[1];
+            const myAttachmentMessage = yield models_1.models.Message.findOne({ where: {
+                    mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
+                    type: msgtypes.attachment, sender: 1,
                 } });
-            if (!myMediaMessage) { // someone else's attachment
+            if (!myAttachmentMessage) { // someone else's attachment
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
-                // we do pass thru, to store... so that we know who the og purchaser was
+                doAction = false;
             }
         }
         if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
-            const mt = payload.message.mediaToken;
-            const host = mt && mt.split('.').length && mt.split('.')[0];
-            const muid = mt && mt.split('.').length && mt.split('.')[1];
-            const ogPurchaseMessage = yield models_1.models.Message.findOne({ where: {
-                    mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
-                    type: msgtypes.purchase,
-                    sender: 1,
-                } });
-            if (!ogPurchaseMessage) { // for someone else
+            const purchaserID = payload.message && payload.message.purchaser;
+            const iAmPurchaser = purchaserID && purchaserID === 1;
+            if (!iAmPurchaser) {
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
                 doAction = false; // skip this! we dont need it

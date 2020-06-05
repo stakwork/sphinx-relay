@@ -150,6 +150,10 @@ async function parseReceiveParams(payload) {
 	const msg_uuid = dat.message.uuid||''
 	const mediaKey = dat.message.mediaKey
 	const mediaType = dat.message.mediaType
+	const date_string = dat.message.date
+	const skip_payment_processing = dat.message.skipPaymentProcessing
+	const reply_uuid = dat.message.replyUuid
+	const purchaser_id = dat.message.purchaser
 	const isTribeOwner = dat.isTribeOwner?true:false
 
 	const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
@@ -172,7 +176,7 @@ async function parseReceiveParams(payload) {
 		}
 		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	}
-	return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid }
+	return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id }
 }
 
 export {
