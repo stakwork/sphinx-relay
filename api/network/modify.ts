@@ -34,7 +34,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   if(!muid) return
 
   const mediaKey = await models.MediaKey.findOne({where:{originalMuid:muid}})
-  console.log("MEDIA KEY FOUND",mediaKey.dataValues)
+  console.log("MEDIA KEY FOUND",mediaKey&&mediaKey.dataValues)
 
   const terms = parseLDAT(mt)
   let price = terms.meta && terms.meta.amt
