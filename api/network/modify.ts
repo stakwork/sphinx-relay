@@ -34,6 +34,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   if(!muid) return
 
   const mediaKey = await models.MediaKey.findOne({where:{originalMuid:muid}})
+  console.log("MEDIA KEY FOUND",mediaKey.dataValues)
 
   const terms = parseLDAT(mt)
   let price = terms.meta && terms.meta.amt
@@ -54,6 +55,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       originalMuid:mediaKey.originalMuid,
       mediaType:mediaKey.mediaType
     }
+    console.log('send the thingy')
     sendMessage({
       chat: {...chat.dataValues, contactIds:[mediaKey.sender]}, // the merchant id
       sender: owner,
@@ -63,6 +65,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       failure: ()=>{}
     })
     // PAY THE OG POSTER HERE!!!
+    console.log('pay the dude')
     sendMessage({
       chat: {...chat.dataValues, contactIds:[purchaser.id]},
       sender: owner,
