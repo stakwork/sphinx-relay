@@ -194,7 +194,8 @@ const purchase = async (req, res) => {
   })
 
   const msg={
-    amount, mediaToken:media_token, id:message.id, uuid:message.uuid,
+    mediaToken:media_token, id:message.id, uuid:message.uuid,
+    purchaser: owner.id, // for tribe, knows who sent
   }
   network.sendMessage({
     chat: {...chat.dataValues, contactIds:[contact_id]},

@@ -172,7 +172,8 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         updatedAt: date
     });
     const msg = {
-        amount, mediaToken: media_token, id: message.id, uuid: message.uuid,
+        mediaToken: media_token, id: message.id, uuid: message.uuid,
+        purchaser: owner.id,
     };
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),

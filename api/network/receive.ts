@@ -9,7 +9,6 @@ import {sendMessage} from './send'
 import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
 // import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
-import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -75,15 +74,9 @@ async function onReceive(payload){
 		}
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase_accept) {
-		const mt = payload.message.mediaToken
-		const host = mt && mt.split('.').length && mt.split('.')[0]
-		const muid = mt && mt.split('.').length && mt.split('.')[1]
-		const ogPurchaseMessage = await models.Message.findOne({where:{
-			mediaToken: {[Op.like]: `${host}.${muid}%`},
-			type: msgtypes.purchase,
-			sender: 1,
-		}})
-		if(!ogPurchaseMessage) { // for someone else
+		const purchaserID = payload.message&&payload.message.purchaser
+		const iAmPurchaser = purchaserID&&purchaserID===1
+		if(!iAmPurchaser) {
 			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			sendFinalMemeIfFirstPurchaser(payload, chat, senderContact)
 			doAction = false // skip this! we dont need it
