@@ -19,7 +19,7 @@ const FormData = require("form-data");
 const models_1 = require("../models");
 const RNCryptor = require("jscryptor");
 const send_1 = require("./send");
-const sequelize_1 = require("sequelize");
+// import { Op } from 'sequelize'
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
@@ -119,17 +119,25 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const existingMediaKey = yield models_1.models.MediaKey.findOne({ where: { muid } });
         if (existingMediaKey)
             return; // no need, its already been sent
-        const host = mt.split('.')[0];
-        const ogPurchaseMessage = yield models_1.models.Message.findOne({ where: {
-                mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
-                type: msgtypes.purchase,
+        // const host = mt.split('.')[0]
+        const terms = ldat_1.parseLDAT(mt);
+        const ogPurchaser = yield models_1.models.Concat.findOne({ where: {
+                publicKey: terms.pubkey
             } });
-        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, ogPurchaseMessage.amount);
+        console.log("OG PURCHASER", ogPurchaser.dataValues);
+        if (!ogPurchaser)
+            return;
+        const amt = (terms.meta && terms.meta.amt) || 0;
+        // const ogPurchaseMessage = await models.Message.findOne({where:{
+        //   mediaToken: {[Op.like]: `${host}.${muid}%`},
+        //   type: msgtypes.purchase,
+        // }})
+        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, amt);
         // send it to the purchaser
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         send_1.sendMessage({
             sender: Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }),
-            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaseMessage.sender] }),
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaser.id] }),
             type: msgtypes.purchase_accept,
             message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ, originalMuid: muid }),
             success: () => { },

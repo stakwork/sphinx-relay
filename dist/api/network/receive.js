@@ -38,6 +38,7 @@ exports.typesToReplay = [
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         // if tribe, owner must forward to MQTT
+        console.log('======> ON RECEIVE', payload.chat && payload.chat.type);
         let doAction = true;
         const toAddIn = {};
         const isTribe = payload.chat && payload.chat.type === constants.chat_types.tribe;
@@ -86,6 +87,7 @@ function onReceive(payload) {
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
                 // we do pass thru, to store... so that we know who the og purchaser was
+                doAction = false;
             }
         }
         if (isTribeOwner && payload.type === msgtypes.purchase_accept) {

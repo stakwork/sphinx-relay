@@ -8,7 +8,7 @@ import * as FormData from 'form-data'
 import { models } from '../models'
 import * as RNCryptor from 'jscryptor'
 import {sendMessage} from './send'
-import { Op } from 'sequelize'
+// import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -106,13 +106,24 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   const existingMediaKey = await models.MediaKey.findOne({where:{muid}})
   if(existingMediaKey) return // no need, its already been sent
 
-  const host = mt.split('.')[0]
-  const ogPurchaseMessage = await models.Message.findOne({where:{
-    mediaToken: {[Op.like]: `${host}.${muid}%`},
-    type: msgtypes.purchase,
-  }})
+  // const host = mt.split('.')[0]
 
-  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender,ogPurchaseMessage.amount)
+  const terms = parseLDAT(mt)
+  const ogPurchaser = await models.Concat.findOne({where:{
+    publicKey: terms.pubkey
+  }})
+  console.log("OG PURCHASER", ogPurchaser.dataValues)
+
+  if(!ogPurchaser) return
+
+  const amt = (terms.meta&&terms.meta.amt)||0
+
+  // const ogPurchaseMessage = await models.Message.findOne({where:{
+  //   mediaToken: {[Op.like]: `${host}.${muid}%`},
+  //   type: msgtypes.purchase,
+  // }})
+
+  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload,chat,sender,amt)
 
   // send it to the purchaser
   const owner = await models.Contact.findOne({where: {isOwner:true}})
@@ -123,7 +134,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 		},
     chat:{
       ...chat.dataValues,
-      contactIds:[ogPurchaseMessage.sender],
+      contactIds:[ogPurchaser.id],
     },
     type:msgtypes.purchase_accept, 
     message:{
