@@ -91,7 +91,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
         else {
             const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } });
             // purchase it from creator (send "purchase")
-            const msg = { mediaToken: mt };
+            const msg = { mediaToken: mt, purchaser: purchaser.id };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
                 sender: Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }),
@@ -111,6 +111,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
             return;
         const mt = payload.message && payload.message.mediaToken;
         const typ = payload.message && payload.message.mediaType;
+        const purchaserID = payload.message && payload.message.purchaser;
         if (!mt)
             return;
         const muid = mt && mt.split('.').length && mt.split('.')[1];
@@ -122,7 +123,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         // const host = mt.split('.')[0]
         const terms = ldat_1.parseLDAT(mt);
         const ogPurchaser = yield models_1.models.Contact.findOne({ where: {
-                publicKey: terms.pubkey
+                id: purchaserID
             } });
         console.log("OG PURCHASER", ogPurchaser.dataValues);
         if (!ogPurchaser)

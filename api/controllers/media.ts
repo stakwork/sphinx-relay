@@ -218,7 +218,7 @@ const receivePurchase = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
@@ -311,15 +311,17 @@ const receivePurchase = async (payload) => {
     meta: {amt:amount},
     pubkey: sender.publicKey,
   })
+  const msgToSend:{[k:string]:any}={
+    mediaToken: theMediaToken,
+    mediaKey: mediaKey.key,
+    mediaType: ogMessage.mediaType,
+  }
+  if(purchaser_id) msgToSend.purchaser=purchaser_id
   network.sendMessage({
     chat: {...chat.dataValues, contactIds:[sender.id]}, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
-    message: {
-      mediaToken: theMediaToken,
-      mediaKey: mediaKey.key,
-      mediaType: ogMessage.mediaType,
-    },
+    message: msgToSend,
     success: async (data) => {
       console.log('purchase_accept sent!')
       const acceptMsg = await models.Message.create({

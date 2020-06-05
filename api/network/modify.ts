@@ -78,7 +78,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   } else {
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
     // purchase it from creator (send "purchase")
-    const msg={mediaToken:mt}
+    const msg={mediaToken:mt,purchaser:purchaser.id}
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
       sender: {
@@ -99,6 +99,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 
   const mt = payload.message && payload.message.mediaToken
   const typ = payload.message && payload.message.mediaType
+  const purchaserID = payload.message && payload.message.purchaser
   if(!mt) return
   const muid = mt && mt.split('.').length && mt.split('.')[1]
   if(!muid) return
@@ -110,7 +111,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
 
   const terms = parseLDAT(mt)
   const ogPurchaser = await models.Contact.findOne({where:{
-    publicKey: terms.pubkey
+    id: purchaserID
   }})
   console.log("OG PURCHASER", ogPurchaser.dataValues)
 
