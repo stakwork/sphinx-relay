@@ -34,7 +34,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   if(!muid) return
 
   const mediaKey = await models.MediaKey.findOne({where:{originalMuid:muid}})
-  console.log("MEDIA KEY FOUND",mediaKey&&mediaKey.dataValues)
 
   const terms = parseLDAT(mt)
   let price = terms.meta && terms.meta.amt
@@ -55,7 +54,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       originalMuid:mediaKey.originalMuid,
       mediaType:mediaKey.mediaType
     }
-    console.log('send the thingy')
     sendMessage({
       chat: {...chat.dataValues, contactIds:[purchaser.id]}, // the merchant id
       sender: owner,
@@ -65,7 +63,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       failure: ()=>{}
     })
     // PAY THE OG POSTER HERE!!!
-    console.log('pay the dude')
     sendMessage({
       chat: {...chat.dataValues, contactIds:[mediaKey.sender]},
       sender: owner,
@@ -80,6 +77,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
     })
   } else {
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
+    if(!ogmsg) return
     // purchase it from creator (send "purchase")
     const msg={mediaToken:mt,purchaser:purchaser.id}
     sendMessage({
@@ -116,7 +114,6 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   const ogPurchaser = await models.Contact.findOne({where:{
     id: purchaserID
   }})
-  console.log("OG PURCHASER", ogPurchaser.dataValues)
 
   if(!ogPurchaser) return
 

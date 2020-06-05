@@ -48,7 +48,6 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
         if (!muid)
             return;
         const mediaKey = yield models_1.models.MediaKey.findOne({ where: { originalMuid: muid } });
-        console.log("MEDIA KEY FOUND", mediaKey && mediaKey.dataValues);
         const terms = ldat_1.parseLDAT(mt);
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
@@ -67,7 +66,6 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 originalMuid: mediaKey.originalMuid,
                 mediaType: mediaKey.mediaType
             };
-            console.log('send the thingy');
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
                 sender: owner,
@@ -77,7 +75,6 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 failure: () => { }
             });
             // PAY THE OG POSTER HERE!!!
-            console.log('pay the dude');
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
                 sender: owner,
@@ -93,6 +90,8 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
         }
         else {
             const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } });
+            if (!ogmsg)
+                return;
             // purchase it from creator (send "purchase")
             const msg = { mediaToken: mt, purchaser: purchaser.id };
             send_1.sendMessage({
@@ -128,7 +127,6 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const ogPurchaser = yield models_1.models.Contact.findOne({ where: {
                 id: purchaserID
             } });
-        console.log("OG PURCHASER", ogPurchaser.dataValues);
         if (!ogPurchaser)
             return;
         const amt = (terms.meta && terms.meta.amt) || 0;
