@@ -69,7 +69,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             };
             console.log('send the thingy');
             send_1.sendMessage({
-                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
+                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
                 sender: owner,
                 type: constants.message_types.purchase_accept,
                 message: msg,
@@ -79,9 +79,9 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             // PAY THE OG POSTER HERE!!!
             console.log('pay the dude');
             send_1.sendMessage({
-                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
+                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
                 sender: owner,
-                type: constants.message_types.purchase_accept,
+                type: constants.message_types.purchase,
                 amount: amount,
                 message: {
                     mediaToken: mt,

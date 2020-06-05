@@ -57,7 +57,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
     }
     console.log('send the thingy')
     sendMessage({
-      chat: {...chat.dataValues, contactIds:[mediaKey.sender]}, // the merchant id
+      chat: {...chat.dataValues, contactIds:[purchaser.id]}, // the merchant id
       sender: owner,
       type: constants.message_types.purchase_accept,
       message: msg,
@@ -67,9 +67,9 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
     // PAY THE OG POSTER HERE!!!
     console.log('pay the dude')
     sendMessage({
-      chat: {...chat.dataValues, contactIds:[purchaser.id]},
+      chat: {...chat.dataValues, contactIds:[mediaKey.sender]},
       sender: owner,
-      type: constants.message_types.purchase_accept,
+      type: constants.message_types.purchase,
       amount: amount,
       message: {
         mediaToken: mt,
