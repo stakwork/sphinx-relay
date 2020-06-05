@@ -109,7 +109,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   // const host = mt.split('.')[0]
 
   const terms = parseLDAT(mt)
-  const ogPurchaser = await models.Concat.findOne({where:{
+  const ogPurchaser = await models.Contact.findOne({where:{
     publicKey: terms.pubkey
   }})
   console.log("OG PURCHASER", ogPurchaser.dataValues)

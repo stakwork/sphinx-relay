@@ -121,7 +121,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
             return; // no need, its already been sent
         // const host = mt.split('.')[0]
         const terms = ldat_1.parseLDAT(mt);
-        const ogPurchaser = yield models_1.models.Concat.findOne({ where: {
+        const ogPurchaser = yield models_1.models.Contact.findOne({ where: {
                 publicKey: terms.pubkey
             } });
         console.log("OG PURCHASER", ogPurchaser.dataValues);
