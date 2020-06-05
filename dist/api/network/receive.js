@@ -20,6 +20,7 @@ const send_1 = require("./send");
 const modify_1 = require("./modify");
 // import {modifyPayloadAndSaveMediaKey} from './modify'
 const msg_1 = require("../utils/msg");
+const sequelize_1 = require("sequelize");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 exports.typesToForward = [
@@ -80,10 +81,13 @@ function onReceive(payload) {
         }
         if (isTribeOwner && payload.type === msgtypes.purchase) {
             const mt = payload.message.mediaToken;
-            const myMediaMessage = yield models_1.models.Message.findOne({ where: {
-                    mediaToken: mt, sender: 1, type: msgtypes.attachment
+            const host = mt && mt.split('.').length && mt.split('.')[0];
+            const muid = mt && mt.split('.').length && mt.split('.')[1];
+            const myAttachmentMessage = yield models_1.models.Message.findOne({ where: {
+                    mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
+                    type: msgtypes.attachment, sender: 1,
                 } });
-            if (!myMediaMessage) { // someone else's attachment
+            if (!myAttachmentMessage) { // someone else's attachment
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
                 doAction = false;

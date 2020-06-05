@@ -9,6 +9,7 @@ import {sendMessage} from './send'
 import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
 // import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
+import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -64,10 +65,13 @@ async function onReceive(payload){
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase) {
 		const mt = payload.message.mediaToken
-		const myMediaMessage = await models.Message.findOne({ where:{
-			mediaToken: mt, sender: 1, type:msgtypes.attachment
-		} })
-		if(!myMediaMessage) { // someone else's attachment
+		const host = mt && mt.split('.').length && mt.split('.')[0]
+		const muid = mt && mt.split('.').length && mt.split('.')[1]
+		const myAttachmentMessage = await models.Message.findOne({where:{
+			mediaToken: {[Op.like]: `${host}.${muid}%`},
+			type:msgtypes.attachment, sender:1,
+		}})
+		if(!myAttachmentMessage) { // someone else's attachment
 			const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 			purchaseFromOriginalSender(payload, chat, senderContact)
 			doAction = false

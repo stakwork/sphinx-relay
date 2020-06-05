@@ -108,6 +108,8 @@ const sendAttachmentMessage = async (req, res) => {
     updatedAt: date
   })
 
+  console.log('saved attachment msg from me',message.id)
+
   saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType)
 
   const mediaTerms: {[k:string]:any} = {

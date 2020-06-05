@@ -96,6 +96,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         createdAt: date,
         updatedAt: date
     });
+    console.log('saved attachment msg from me', message.id);
     saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType);
     const mediaTerms = {
         muid, ttl: TTL,
