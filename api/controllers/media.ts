@@ -245,7 +245,11 @@ const receivePurchase = async (payload) => {
   // if sats forwarded from tribe owner, for the >1 time
   // dont need to send back token, because admin already has it
   if(isTribe && skip_payment_processing) {
+    console.log('=========================')
     return console.log('=> skip payment processing')
+  } else {
+    console.log('=========================')
+    console.log("RETURN THE FULL MEDIA KEY")
   }
 
   const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1]
