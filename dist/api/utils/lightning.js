@@ -133,6 +133,7 @@ const keysend = (opts) => {
             const call = lightning.sendPayment();
             call.on('data', function (payment) {
                 if (payment.payment_error) {
+                    console.log('=> payment.error', payment);
                     reject(payment.payment_error);
                 }
                 else {
