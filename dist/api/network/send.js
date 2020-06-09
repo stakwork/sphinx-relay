@@ -127,11 +127,12 @@ exports.signAndSend = signAndSend;
 function newmsg(type, chat, sender, message) {
     const includeGroupKey = type === constants.message_types.group_create || type === constants.message_types.group_invite;
     const includeAlias = sender && sender.alias && chat.type === constants.chat_types.tribe;
+    const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),
         message: message,
-        sender: Object.assign(Object.assign({}, includeAlias && { alias: sender.alias }), { pub_key: sender.publicKey })
+        sender: Object.assign(Object.assign({ pub_key: sender.publicKey }, includeAlias && { alias: sender.alias }), includePhotoUrl && { photoUrl: sender.photoUrl })
     };
 }
 exports.newmsg = newmsg;

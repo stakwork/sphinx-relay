@@ -40,6 +40,10 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Boolean)
+], Contact.prototype, "privatePhoto", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Boolean)
 ], Contact.prototype, "isOwner", void 0);
 __decorate([
     sequelize_typescript_1.Column({

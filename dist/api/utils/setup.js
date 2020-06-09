@@ -16,7 +16,7 @@ const QRCode = require("qrcode");
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
 const gitinfo_1 = require("../utils/gitinfo");
-const USER_VERSION = 2;
+const USER_VERSION = 3;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
@@ -44,6 +44,7 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN');
         addTableColumn('sphinx_media_keys', 'media_type');
         addTableColumn('sphinx_media_keys', 'original_muid');
         addTableColumn('sphinx_messages', 'original_muid');

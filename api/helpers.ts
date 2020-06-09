@@ -196,13 +196,14 @@ async function asyncForEach(array, callback) {
 }
 
 function newkeyexchangemsg(type, sender){
+	const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
 	return {
 		type: type,
 		sender: {
 			// pub_key: sender.publicKey,
 			contact_key: sender.contactKey,
 			...sender.alias && {alias: sender.alias},
-			// ...sender.photoUrl && {photoUrl: sender.photoUrl}
+			...includePhotoUrl && {photoUrl: sender.photoUrl}
 		}
 	}
 }

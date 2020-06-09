@@ -202,11 +202,12 @@ function asyncForEach(array, callback) {
     });
 }
 function newkeyexchangemsg(type, sender) {
+    const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {
         type: type,
-        sender: Object.assign({ 
+        sender: Object.assign(Object.assign({ 
             // pub_key: sender.publicKey,
-            contact_key: sender.contactKey }, sender.alias && { alias: sender.alias })
+            contact_key: sender.contactKey }, sender.alias && { alias: sender.alias }), includePhotoUrl && { photoUrl: sender.photoUrl })
     };
 }
 //# sourceMappingURL=helpers.js.map

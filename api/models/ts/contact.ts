@@ -24,6 +24,9 @@ export default class Contact extends Model<Contact> {
   photoUrl: string
 
   @Column
+  privatePhoto: boolean
+
+  @Column
   isOwner: boolean
 
   @Column({

@@ -6,7 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
-const USER_VERSION = 2
+const USER_VERSION = 3
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -31,6 +31,8 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
+
   addTableColumn('sphinx_media_keys', 'media_type')
   addTableColumn('sphinx_media_keys', 'original_muid')
   addTableColumn('sphinx_messages', 'original_muid')
