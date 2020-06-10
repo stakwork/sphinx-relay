@@ -1,0 +1,19 @@
+version: '3'
+volumes:
+  lnddata:
+
+services:
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile.arm
+    volumes:
+      - lnddata:/relay/.lnd
+    ports:
+      - "9735:9735"
+      - "80:80"
+    environment:
+      - PORT=80
+      - NODE_DOMAIN=78.152.250.3:8888
+      - NODE_LND_PORT=9735
+      - NODE_ENV=production
