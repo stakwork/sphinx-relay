@@ -184,12 +184,12 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     }
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
     if (sender_contact_key && sender) {
-        if (!sender.alias || sender.alias === 'Unknown') {
-            sender.update({ contactKey: sender_contact_key, alias: sender_alias });
-        }
-        else {
-            sender.update({ contactKey: sender_contact_key });
-        }
+        const objToUpdate = { contactKey: sender_contact_key };
+        if (sender_alias)
+            objToUpdate.alias = sender_alias;
+        if (sender_photo_url)
+            objToUpdate.photo_url = sender_photo_url;
+        yield sender.update(objToUpdate);
         socket.sendJson({
             type: 'contact',
             response: jsonUtils.contactToJson(sender)
