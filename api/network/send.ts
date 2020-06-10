@@ -117,6 +117,7 @@ export function signAndSend(opts, pubkey, mqttTopic?:string){
 export function newmsg(type, chat, sender, message){
 	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
 	const includeAlias = sender && sender.alias && chat.type===constants.chat_types.tribe
+	const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
 	return {
 		type: type,
 		chat: {
@@ -129,8 +130,9 @@ export function newmsg(type, chat, sender, message){
 		},
 		message: message,
 		sender: {
-			...includeAlias && {alias: sender.alias},
 			pub_key: sender.publicKey,
+			...includeAlias && {alias: sender.alias},
+			...includePhotoUrl && {photo_url: sender.photoUrl},
 			// ...sender.contactKey && {contact_key: sender.contactKey}
 		}
 	}
