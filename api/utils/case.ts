@@ -1,7 +1,7 @@
 import * as changeCase from "change-case";
 
 const dateKeys = ['date','createdAt','updatedAt','created_at','updated_at']
-const boolKeys = ['from_group','is_owner','deleted']
+const boolKeys = ['fromGroup','isOwner','deleted']
 
 function toSnake(obj) {
     const ret: {[k: string]: any} = {}

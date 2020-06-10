@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const changeCase = require("change-case");
 const dateKeys = ['date', 'createdAt', 'updatedAt', 'created_at', 'updated_at'];
-const boolKeys = ['from_group', 'is_owner', 'deleted'];
+const boolKeys = ['fromGroup', 'isOwner', 'deleted'];
 function toSnake(obj) {
     const ret = {};
     for (let [key, value] of Object.entries(obj)) {
