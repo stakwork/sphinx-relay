@@ -151,6 +151,7 @@ function parseReceiveParams(payload) {
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_alias = dat.sender.alias;
+        const sender_photo_url = dat.sender.photo_url;
         const chat_uuid = dat.chat.uuid;
         const chat_type = dat.chat.type;
         const chat_members = dat.chat.members || {};
@@ -190,7 +191,7 @@ function parseReceiveParams(payload) {
             }
             chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         }
-        return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id };
+        return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url };
     });
 }
 exports.parseReceiveParams = parseReceiveParams;
@@ -207,7 +208,7 @@ function newkeyexchangemsg(type, sender) {
         type: type,
         sender: Object.assign(Object.assign({ 
             // pub_key: sender.publicKey,
-            contact_key: sender.contactKey }, sender.alias && { alias: sender.alias }), includePhotoUrl && { photoUrl: sender.photoUrl })
+            contact_key: sender.contactKey }, sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
     };
 }
 //# sourceMappingURL=helpers.js.map

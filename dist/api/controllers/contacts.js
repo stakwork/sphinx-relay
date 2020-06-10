@@ -178,17 +178,14 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     const sender_pub_key = dat.sender.pub_key;
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';
-    const sender_photo_url = dat.sender.photoUrl;
-    if (sender_photo_url) {
-        // download and store photo locally
-    }
+    const sender_photo_url = dat.sender.photo_url;
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
     if (sender_contact_key && sender) {
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
             objToUpdate.alias = sender_alias;
         if (sender_photo_url)
-            objToUpdate.photo_url = sender_photo_url;
+            objToUpdate.photoUrl = sender_photo_url;
         yield sender.update(objToUpdate);
         socket.sendJson({
             type: 'contact',

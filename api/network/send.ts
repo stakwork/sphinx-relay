@@ -132,7 +132,7 @@ export function newmsg(type, chat, sender, message){
 		sender: {
 			pub_key: sender.publicKey,
 			...includeAlias && {alias: sender.alias},
-			...includePhotoUrl && {photoUrl: sender.photoUrl},
+			...includePhotoUrl && {photo_url: sender.photoUrl},
 			// ...sender.contactKey && {contact_key: sender.contactKey}
 		}
 	}

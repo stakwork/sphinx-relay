@@ -132,7 +132,7 @@ function newmsg(type, chat, sender, message) {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),
         message: message,
-        sender: Object.assign(Object.assign({ pub_key: sender.publicKey }, includeAlias && { alias: sender.alias }), includePhotoUrl && { photoUrl: sender.photoUrl })
+        sender: Object.assign(Object.assign({ pub_key: sender.publicKey }, includeAlias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
     };
 }
 exports.newmsg = newmsg;
