@@ -4,6 +4,7 @@ volumes:
 
 services:
   relay:
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile.arm
@@ -14,6 +15,6 @@ services:
       - "80:80"
     environment:
       - PORT=80
-      - NODE_DOMAIN=78.152.250.3:8888
+      - NODE_DOMAIN=IP-OR-DNS:8888
       - NODE_LND_PORT=9735
       - NODE_ENV=production
