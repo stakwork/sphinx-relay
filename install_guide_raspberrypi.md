@@ -2,7 +2,7 @@
 ```
 sudo apt install ufw
 sudo ufw allow 22
-sudo ufw allow 8888
+sudo ufw allow 80
 sudo ufw allow 9735
 sudo ufw enable
 ```
