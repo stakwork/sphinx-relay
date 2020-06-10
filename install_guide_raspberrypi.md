@@ -41,7 +41,7 @@ docker run -p 80:80 -p 9735:9735 \
       relay:0.1
 ```
 
-### Optional: Install docker-compose
+### Optional: Install docker-compose
 ```
 sudo apt-get install libffi-dev libssl-dev
 sudo apt install python3-dev
@@ -49,7 +49,7 @@ sudo apt-get install -y python3 python3-pip
 sudo pip3 install docker-compose
 ```
 
-###  Optional: Build docker image and run (with docker-compose)
+### Optional: Build docker image and run (with docker-compose)
 ```
 cd sphinx-relay
 
@@ -59,7 +59,12 @@ docker-compose -f docker-compose.arm.yml build
 Edit docker-compose.arm.yml file with the exposed ports and NODE_DOMAIN (IP + PORT)
 
 ```
-docker-compose -f docker-compose.arm.yml -d up
+docker-compose -f docker-compose.arm.yml up -d
+```
+
+Check QR Code:
+```
+docker-compose exec relay head -n 500 /var/log/supervisor/relay.log
 ```
 
 # Unlock wallet (inside container)
