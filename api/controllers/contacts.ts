@@ -217,21 +217,16 @@ const receiveContactKey = async (payload) => {
 	const sender_pub_key = dat.sender.pub_key
 	const sender_contact_key = dat.sender.contact_key
 	const sender_alias = dat.sender.alias || 'Unknown'
-	const sender_photo_url = dat.sender.photoUrl
-
-	if(sender_photo_url){
-		// download and store photo locally
-	}
+	const sender_photo_url = dat.sender.photo_url
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
 
 	if (sender_contact_key && sender) {
-		if(!sender.alias || sender.alias==='Unknown') {
-			sender.update({ contactKey: sender_contact_key, alias: sender_alias })
-		} else {
-			sender.update({ contactKey: sender_contact_key })
-		}
+		const objToUpdate:{[k:string]:any} = {contactKey: sender_contact_key}
+		if(sender_alias) objToUpdate.alias = sender_alias
+		if(sender_photo_url) objToUpdate.photoUrl = sender_photo_url
+		await sender.update(objToUpdate)
 
 		socket.sendJson({
 			type: 'contact',

@@ -1,6 +1,7 @@
 import * as changeCase from "change-case";
 
 const dateKeys = ['date','createdAt','updatedAt','created_at','updated_at']
+const boolKeys = ['from_group','is_owner','deleted']
 
 function toSnake(obj) {
     const ret: {[k: string]: any} = {}
@@ -9,6 +10,8 @@ function toSnake(obj) {
             const v: any = value
             const d = new Date(v)
             ret[changeCase.snakeCase(key)] = d.toISOString()
+        } else if(boolKeys.includes(key)) {
+            ret[changeCase.snakeCase(key)] = (!value||value==='0')?0:1
         } else {
             ret[changeCase.snakeCase(key)] = value
         }   
