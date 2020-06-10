@@ -26,7 +26,7 @@ sudo usermod -aG docker $(whoami)
 
 Next logout and login again
 
-### Build docker image and run
+### Build docker image and run
 ```
 cd sphinx-relay
 
