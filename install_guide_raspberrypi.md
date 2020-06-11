@@ -76,7 +76,7 @@ docker run -p 80:80 -p 9735:9735 \
 
 ## Commands
 
-### Login to container
+### Login to container
 
 ```
 docker-compose exec relay sh
