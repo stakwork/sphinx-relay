@@ -4,11 +4,11 @@ import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-export async function addTimer({amount, millis, receiver, ref, chatId}){
+export async function addTimer({amount, millis, receiver, msgId, chatId}){
     const now = new Date().valueOf()
     const when = now + millis
     const t = await models.Timer.create({
-        amount, millis:when, receiver, ref, chatId,
+        amount, millis:when, receiver, msgId, chatId,
     })
     setTimer(when, async ()=>{
         payBack(t)
@@ -37,7 +37,7 @@ export async function payBack(t){
     network.sendMessage({
         chat: theChat,
         sender: owner,
-        message: {id:t.ref},
+        message: {id:t.msgId},
         amount: t.amount,
         type: constants.message_types.confirmation,
     })

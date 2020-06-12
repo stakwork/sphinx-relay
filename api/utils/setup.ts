@@ -38,7 +38,7 @@ CREATE TABLE sphinx_timers (
   chat_id BIGINT,
   receiver BIGINT,
   millis BIGINT,
-  ref_id BIGINT,
+  msg_id BIGINT,
   amount DECIMAL
 )`)
   } catch(e){console.log(e)}
