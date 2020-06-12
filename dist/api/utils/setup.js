@@ -52,7 +52,7 @@ CREATE TABLE sphinx_timers (
   receiver BIGINT,
   millis BIGINT,
   amount DECIMAL,
-  ref BIGINT
+  ref_id BIGINT
 )`);
         }
         catch (e) {

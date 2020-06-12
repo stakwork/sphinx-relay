@@ -39,7 +39,7 @@ CREATE TABLE sphinx_timers (
   receiver BIGINT,
   millis BIGINT,
   amount DECIMAL,
-  ref BIGINT
+  ref_id BIGINT
 )`)
   } catch(e){console.log(e)}
   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
