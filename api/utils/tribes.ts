@@ -107,15 +107,6 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
       }),
       headers: { 'Content-Type': 'application/json' }
     })
-    console.log(JSON.stringify({
-      uuid,
-      name, description, tags, img: img || '',
-      price_per_message: price_per_message || 0,
-      price_to_join: price_to_join || 0,
-      escrow_amount: escrow_amount || 0,
-      escrow_millis: escrow_millis || 0,
-      owner_alias,
-    }))
     // const j = await r.json()
   } catch(e) {
     console.log('[tribes] unauthorized to edit')

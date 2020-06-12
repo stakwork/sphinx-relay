@@ -119,7 +119,6 @@ async function editTribe(req, res) {
 	let okToUpdate = true
 	if(is_listed) {
 		try{
-			console.log("LLLLL",escrow_amount,escrow_millis)
 			await tribes.edit({
 				uuid: chat.uuid,
 				name: name,
