@@ -41,7 +41,7 @@ CREATE TABLE sphinx_timers (
 )`)
   } catch(e){console.log(e)}
   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
-  addTableColumn('sphinx_messages', 'escrow_millis', 'BIGINT')
+  addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
   
   addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
 

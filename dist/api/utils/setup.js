@@ -57,7 +57,7 @@ CREATE TABLE sphinx_timers (
             console.log(e);
         }
         addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT');
-        addTableColumn('sphinx_messages', 'escrow_millis', 'BIGINT');
+        addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT');
         addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN');
         addTableColumn('sphinx_media_keys', 'media_type');
         addTableColumn('sphinx_media_keys', 'original_muid');
