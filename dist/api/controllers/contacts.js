@@ -69,12 +69,10 @@ exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
-    console.log("TO UPDATE", attrs);
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
     let shouldSendUpdatedSelf = (contact.isOwner && ((contact.contactKey == null && attrs["contact_key"] != null) || // CREATE CONTACT KEY!
         attrs["contact_key"] == null // OR NO NEW CONTACT KEY
     ));
-    console.log('shouldSendUPdatedSelf', shouldSendUpdatedSelf);
     // update self
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
@@ -82,8 +80,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     // send updated owner info to others
     const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
-        .filter(c => !c.fromGroup).map(c => c.id);
-    console.log('contactIds', contactIds);
+        .filter(c => !c.fromGroup && c.id !== 1 && c.publicKey).map(c => c.id);
     if (contactIds.length == 0)
         return;
     helpers.sendContactKeys({
