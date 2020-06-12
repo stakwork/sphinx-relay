@@ -24,6 +24,10 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
+], Timer.prototype, "chatId", void 0);
+__decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
 ], Timer.prototype, "millis", void 0);
 __decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),

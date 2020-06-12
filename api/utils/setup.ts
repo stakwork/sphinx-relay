@@ -35,9 +35,11 @@ async function migrate(){
     await sequelize.query(`
 CREATE TABLE sphinx_timers (
   id BIGINT,
+  chat_id BIGINT,
   receiver BIGINT,
   millis BIGINT,
-  amount DECIMAL
+  amount DECIMAL,
+  ref BIGINT
 )`)
   } catch(e){console.log(e)}
   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')

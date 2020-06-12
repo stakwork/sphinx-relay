@@ -1,5 +1,8 @@
 import { models } from '../models'
 import * as network from '../network'
+import * as path from 'path'
+
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export async function addTimer({amount, millis, receiver}){
     const now = new Date().valueOf()
@@ -27,13 +30,16 @@ export async function reloadTimers(){
 }
 export async function payBack(t){
     console.log("PAY BACK")
-    const contact = await models.Contact.findOne({where:{id:t.receiver}})
-    if(contact){
-        console.log("SEND ",t.amount,"TO",contact.publicKey)
-        network.signAndSend({
-            amt: t.amount,
-            dest: contact.publicKey,
-        })
-    }
+    const chat = await models.Chat.findOne({ where: {id:t.chatId} })
+    const owner = await models.Contact.findOne({ where: {isOwner:true} })
+    if(!chat) return
+    const theChat = {...chat.dataValues, contactIds:[t.receiver]}
+    network.sendMessage({
+        chat: theChat,
+        sender: owner,
+        message: {id:t.ref},
+        amount: t.amount,
+        type: constants.message_types.confirmation,
+    })
     models.Timer.destroy({where:{id:t.id}})
 }

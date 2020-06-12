@@ -18,8 +18,7 @@ const constants = require(path.join(__dirname, '../../config/constants.json'));
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure, skipPubKey } = params;
-        const m = newmsg(type, chat, sender, message);
-        let msg = m;
+        let msg = newmsg(type, chat, sender, message);
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
             console.log("NO SENDER?????");
@@ -38,9 +37,9 @@ function sendMessage(params) {
         let isTribeOwner = false;
         const chatUUID = chat.uuid;
         if (isTribe) {
-            if (type === constants.message_types.confirmation) {
-                return; // dont send confs for tribe
-            }
+            // if(type===constants.message_types.confirmation) {
+            // 	return // dont send confs for tribe
+            // }
             console.log("is tribe!");
             const tribeOwnerPubKey = chat.ownerPubkey;
             if (sender.publicKey === tribeOwnerPubKey) {

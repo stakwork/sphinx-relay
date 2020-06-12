@@ -12,6 +12,9 @@ export default class Timer extends Model<Timer> {
   id: number
 
   @Column(DataType.BIGINT)
+  chatId: number
+
+  @Column(DataType.BIGINT)
   millis: number
 
   @Column(DataType.BIGINT)

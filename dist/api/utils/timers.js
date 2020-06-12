@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const network = require("../network");
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 function addTimer({ amount, millis, receiver }) {
     return __awaiter(this, void 0, void 0, function* () {
         const now = new Date().valueOf();
@@ -47,14 +49,18 @@ exports.reloadTimers = reloadTimers;
 function payBack(t) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("PAY BACK");
-        const contact = yield models_1.models.Contact.findOne({ where: { id: t.receiver } });
-        if (contact) {
-            console.log("SEND ", t.amount, "TO", contact.publicKey);
-            network.signAndSend({
-                amt: t.amount,
-                dest: contact.publicKey,
-            });
-        }
+        const chat = yield models_1.models.Chat.findOne({ where: { id: t.chatId } });
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        if (!chat)
+            return;
+        const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [t.receiver] });
+        network.sendMessage({
+            chat: theChat,
+            sender: owner,
+            message: { id: t.ref },
+            amount: t.amount,
+            type: constants.message_types.confirmation,
+        });
         models_1.models.Timer.destroy({ where: { id: t.id } });
     });
 }
