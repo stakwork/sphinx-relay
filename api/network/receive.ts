@@ -55,6 +55,7 @@ async function onReceive(payload){
 		if(needsPricePerJoin) {
 			if(payload.message.amount<chat.pricePerMessage) doAction=false
 			if(chat.escrowAmount) {
+				console.log("ADD TIMEr",payload.message)
 				timers.addTimer({ // pay them back
 					amount: chat.escrowAmount, 
 					millis:chat.escrowMillis,

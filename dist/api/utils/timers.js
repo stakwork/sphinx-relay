@@ -48,7 +48,7 @@ function reloadTimers() {
 exports.reloadTimers = reloadTimers;
 function payBack(t) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("PAY BACK");
+        console.log("PAY BACK", t.dataValues);
         const chat = yield models_1.models.Chat.findOne({ where: { id: t.chatId } });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         if (!chat)

@@ -68,6 +68,7 @@ function onReceive(payload) {
                 if (payload.message.amount < chat.pricePerMessage)
                     doAction = false;
                 if (chat.escrowAmount) {
+                    console.log("ADD TIMEr", payload.message);
                     timers.addTimer({
                         amount: chat.escrowAmount,
                         millis: chat.escrowMillis,
