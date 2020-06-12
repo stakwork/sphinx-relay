@@ -90,8 +90,8 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure,
         amt: Math.max(amount, 3)
     };
     try {
-        const r = yield network.signAndSend(opts, sender.publicKey);
-        console.log("=> external keysend");
+        const r = yield network.signAndSend(opts);
+        // console.log("=> keysend to new contact")
         if (success)
             success(r);
     }

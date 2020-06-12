@@ -6,7 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
-const USER_VERSION = 3
+const USER_VERSION = 4
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -31,6 +31,18 @@ async function setVersion(){
 }
 
 async function migrate(){
+  try{
+    await sequelize.query(`
+CREATE TABLE sphinx_timers (
+  id BIGINT,
+  receiver BIGINT,
+  millis BIGINT,
+  amount DECIMAL
+)`)
+  } catch(e){console.log(e)}
+  addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
+  addTableColumn('sphinx_messages', 'escrow_millis', 'BIGINT')
+  
   addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
 
   addTableColumn('sphinx_media_keys', 'media_type')
@@ -41,28 +53,6 @@ async function migrate(){
   addTableColumn('sphinx_messages', 'reply_uuid')
 
   addTableColumn('sphinx_media_keys', 'sender', 'BIGINT')
-
-  addTableColumn('sphinx_chats', 'group_key')
-  addTableColumn('sphinx_chats', 'group_private_key')
-  addTableColumn('sphinx_chats', 'host')
-  addTableColumn('sphinx_chats', 'price_to_join', 'BIGINT')
-  addTableColumn('sphinx_chats', 'price_per_message', 'BIGINT')
-  addTableColumn('sphinx_chats', 'owner_pubkey')
-  addTableColumn('sphinx_messages', 'sender_alias')
-  addTableColumn('sphinx_chat_members', 'alias')
-  addTableColumn('sphinx_contacts', 'from_group')
-  try{
-    await sequelize.query(`
-CREATE TABLE sphinx_chat_members (
-  chat_id INT,
-  contact_id INT,
-  alias TEXT,
-  role INT,
-  total_spent INT,
-  total_messages INT,
-  last_active DATETIME
-)`)
-  } catch(e){}
 }
 
 async function addTableColumn(table:string, column:string, type='TEXT') {

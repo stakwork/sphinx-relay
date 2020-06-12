@@ -77,7 +77,7 @@ function sendMessage(params) {
             };
             try {
                 const mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
-                const r = yield signAndSend(opts, sender.publicKey, mqttTopic);
+                const r = yield signAndSend(opts, mqttTopic);
                 yes = r;
             }
             catch (e) {
@@ -97,14 +97,18 @@ function sendMessage(params) {
     });
 }
 exports.sendMessage = sendMessage;
-function signAndSend(opts, pubkey, mqttTopic) {
+function signAndSend(opts, mqttTopic) {
     // console.log('sign and send!!!!',opts.data)
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!opts.data || typeof opts.data !== 'object') {
+            if (!opts || typeof opts !== 'object') {
                 return reject('object plz');
             }
-            let data = JSON.stringify(opts.data);
+            if (!opts.dest) {
+                return reject('no dest pubkey');
+            }
+            let data = JSON.stringify(opts.data || {});
+            opts.amt = opts.amt || 0;
             const sig = yield LND.signAscii(data);
             data = data + sig;
             // console.log("ACTUALLY SEND", mqttTopic)

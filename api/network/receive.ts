@@ -10,6 +10,7 @@ import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfF
 // import {modifyPayloadAndSaveMediaKey} from './modify'
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 import { Op } from 'sequelize'
+import * as timers from '../utils/timers'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
@@ -53,6 +54,13 @@ async function onReceive(payload){
 		// CHECK PRICES
 		if(needsPricePerJoin) {
 			if(payload.message.amount<chat.pricePerMessage) doAction=false
+			if(chat.escrowAmount) {
+				timers.addTimer({ // pay them back
+					amount: chat.escrowAmount, 
+					millis:chat.escrowMillis,
+					receiver: senderContact.id,
+				})
+			}
 		}
 		// check price to join
 		if(payload.type===msgtypes.group_join) {

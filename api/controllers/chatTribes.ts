@@ -99,6 +99,8 @@ async function editTribe(req, res) {
 		is_listed,
 		price_per_message,
 		price_to_join,
+		escrow_amount,
+		escrow_millis,
 		img,
 		description,
 		tags,
@@ -123,6 +125,8 @@ async function editTribe(req, res) {
 				host: chat.host,
 				price_per_message: price_per_message||0,
 				price_to_join: price_to_join||0,
+				escrow_amount: escrow_amount||0,
+				escrow_millis: escrow_millis||0,
 				description, 
 				tags, 
 				img,
@@ -138,7 +142,9 @@ async function editTribe(req, res) {
 			photoUrl: img||'',
 			name: name,
 			pricePerMessage: price_per_message||0,
-			priceToJoin: price_to_join||0
+			priceToJoin: price_to_join||0,
+			escrowAmount: escrow_amount||0,
+			escrowMillis: escrow_millis||0,
 		})
 		success(res, jsonUtils.chatToJson(chat))
 	} else {
@@ -190,12 +196,12 @@ async function replayChatHistory(chat, contact) {
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
-		await network.signAndSend({data}, owner.publicKey, mqttTopic)
+		await network.signAndSend({data}, mqttTopic)
 	})
 }
 
 
-async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join): Promise<{[k:string]:any}> {
+async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis): Promise<{[k:string]:any}> {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -220,6 +226,8 @@ async function createTribeChatParams(owner, contactIds, name, img, price_per_mes
 		host: tribes.getHost(),
 		pricePerMessage: price_per_message||0,
 		priceToJoin: price_to_join||0,
+		escrowMillis: escrow_millis||0,
+		escrowAmount: escrow_amount||0,
 	}
 }
 
@@ -234,3 +242,4 @@ async function asyncForEach(array, callback) {
 	  	await callback(array[index], index, array);
 	}
 }
+

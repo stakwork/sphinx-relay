@@ -86,6 +86,14 @@ __decorate([
     __metadata("design:type", Number)
 ], Chat.prototype, "pricePerMessage", void 0);
 __decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Chat.prototype, "escrowAmount", void 0);
+__decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Chat.prototype, "escrowMillis", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Chat.prototype, "ownerPubkey", void 0);

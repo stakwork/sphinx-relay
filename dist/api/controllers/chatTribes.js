@@ -100,7 +100,7 @@ function joinTribe(req, res) {
 exports.joinTribe = joinTribe;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, is_listed, price_per_message, price_to_join, img, description, tags, } = req.body;
+        const { name, is_listed, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, } = req.body;
         const { id } = req.params;
         if (!id)
             return res_1.failure(res, 'group id is required');
@@ -118,6 +118,8 @@ function editTribe(req, res) {
                     host: chat.host,
                     price_per_message: price_per_message || 0,
                     price_to_join: price_to_join || 0,
+                    escrow_amount: escrow_amount || 0,
+                    escrow_millis: escrow_millis || 0,
                     description,
                     tags,
                     img,
@@ -133,7 +135,9 @@ function editTribe(req, res) {
                 photoUrl: img || '',
                 name: name,
                 pricePerMessage: price_per_message || 0,
-                priceToJoin: price_to_join || 0
+                priceToJoin: price_to_join || 0,
+                escrowAmount: escrow_amount || 0,
+                escrowMillis: escrow_millis || 0,
             });
             res_1.success(res, jsonUtils.chatToJson(chat));
         }
@@ -182,12 +186,12 @@ function replayChatHistory(chat, contact) {
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
-            yield network.signAndSend({ data }, owner.publicKey, mqttTopic);
+            yield network.signAndSend({ data }, mqttTopic);
         }));
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis) {
     return __awaiter(this, void 0, void 0, function* () {
         let date = new Date();
         date.setMilliseconds(0);
@@ -212,6 +216,8 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             host: tribes.getHost(),
             pricePerMessage: price_per_message || 0,
             priceToJoin: price_to_join || 0,
+            escrowMillis: escrow_millis || 0,
+            escrowAmount: escrow_amount || 0,
         };
     });
 }

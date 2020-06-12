@@ -69,7 +69,7 @@ export function publish(topic, msg) {
   if (client) client.publish(topic, msg)
 }
 
-export async function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
+export async function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis }) {
   try {
     await fetch('https://' + host + '/tribes', {
       method: 'POST',
@@ -79,6 +79,8 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
         price_per_message: price_per_message || 0,
         price_to_join: price_to_join || 0,
         owner_alias, owner_pubkey,
+        escrow_amount: escrow_amount || 0,
+        escrow_millis: escrow_millis || 0,
       }),
       headers: { 'Content-Type': 'application/json' }
     })
@@ -89,7 +91,7 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
   }
 }
 
-export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
+export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis }) {
   try {
     const token = await genSignedTimestamp()
     await fetch('https://' + host + '/tribe?token=' + token, {
@@ -99,6 +101,8 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
         name, description, tags, img: img || '',
         price_per_message: price_per_message || 0,
         price_to_join: price_to_join || 0,
+        escrow_amount: escrow_amount || 0,
+        escrow_millis: escrow_millis || 0,
         owner_alias,
       }),
       headers: { 'Content-Type': 'application/json' }

@@ -74,7 +74,7 @@ export async function sendMessage(params) {
 
 		try {
 			const mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
-			const r = await signAndSend(opts, sender.publicKey, mqttTopic)
+			const r = await signAndSend(opts, mqttTopic)
 			yes = r
 		} catch (e) {
 			console.log("KEYSEND ERROR", e)
@@ -89,13 +89,17 @@ export async function sendMessage(params) {
 	}
 }
 
-export function signAndSend(opts, pubkey, mqttTopic?:string){
+export function signAndSend(opts, mqttTopic?:string){
 	// console.log('sign and send!!!!',opts.data)
 	return new Promise(async function(resolve, reject) {
-		if(!opts.data || typeof opts.data!=='object') {
+		if(!opts || typeof opts!=='object') {
 			return reject('object plz')
 		}
-		let data = JSON.stringify(opts.data)
+		if(!opts.dest) {
+			return reject('no dest pubkey')
+		}
+		let data = JSON.stringify(opts.data||{})
+		opts.amt = opts.amt || 0
 
 		const sig = await LND.signAscii(data)
 		data = data + sig

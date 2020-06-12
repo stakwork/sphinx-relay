@@ -146,6 +146,7 @@ const keysend = (opts) => {
         });
     });
 };
+exports.keysend = keysend;
 const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts) {
     return __awaiter(this, void 0, void 0, function* () {

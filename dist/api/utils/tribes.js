@@ -84,7 +84,7 @@ function publish(topic, msg) {
         client.publish(topic, msg);
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield fetch('https://' + host + '/tribes', {
@@ -95,6 +95,8 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     price_per_message: price_per_message || 0,
                     price_to_join: price_to_join || 0,
                     owner_alias, owner_pubkey,
+                    escrow_amount: escrow_amount || 0,
+                    escrow_millis: escrow_millis || 0,
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -107,7 +109,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
@@ -118,6 +120,8 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     name, description, tags, img: img || '',
                     price_per_message: price_per_message || 0,
                     price_to_join: price_to_join || 0,
+                    escrow_amount: escrow_amount || 0,
+                    escrow_millis: escrow_millis || 0,
                     owner_alias,
                 }),
                 headers: { 'Content-Type': 'application/json' }
