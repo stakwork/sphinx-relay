@@ -81,9 +81,8 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!shouldSendUpdatedSelf)
         return;
     // send updated owner info to others
-    const contactIds = yield models_1.models.Contact.findAll({
-        where: { deleted: false, fromGroup: false }
-    }).map(c => c.id);
+    const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
+        .filter(c => !c.fromGroup).map(c => c.id);
     console.log('contactIds', contactIds);
     if (contactIds.length == 0)
         return;

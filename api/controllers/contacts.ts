@@ -88,9 +88,8 @@ const updateContact = async (req, res) => {
 	if (!shouldSendUpdatedSelf) return 
 
 	// send updated owner info to others
-	const contactIds = await models.Contact.findAll({
-		where:{deleted:false,fromGroup:false}
-	}).map(c => c.id)
+	const contactIds = await models.Contact.findAll({where:{deleted:false}})
+		.filter(c=> !c.fromGroup).map(c=> c.id)
 	console.log('contactIds',contactIds)
 	if (contactIds.length == 0) return
 
