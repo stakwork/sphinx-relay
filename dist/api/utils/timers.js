@@ -13,12 +13,12 @@ const models_1 = require("../models");
 const network = require("../network");
 const path = require("path");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function addTimer({ amount, millis, receiver }) {
+function addTimer({ amount, millis, receiver, ref, chatId }) {
     return __awaiter(this, void 0, void 0, function* () {
         const now = new Date().valueOf();
         const when = now + millis;
         const t = yield models_1.models.Timer.create({
-            amount, millis: when, receiver,
+            amount, millis: when, receiver, ref, chatId,
         });
         setTimer(when, () => __awaiter(this, void 0, void 0, function* () {
             payBack(t);

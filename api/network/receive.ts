@@ -59,6 +59,8 @@ async function onReceive(payload){
 					amount: chat.escrowAmount, 
 					millis:chat.escrowMillis,
 					receiver: senderContact.id,
+					ref: payload.message.id,
+					chatId: chat.id,
 				})
 			}
 		}

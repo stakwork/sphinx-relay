@@ -4,11 +4,11 @@ import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-export async function addTimer({amount, millis, receiver}){
+export async function addTimer({amount, millis, receiver, ref, chatId}){
     const now = new Date().valueOf()
     const when = now + millis
     const t = await models.Timer.create({
-        amount, millis:when, receiver,
+        amount, millis:when, receiver, ref, chatId,
     })
     setTimer(when, async ()=>{
         payBack(t)
