@@ -13,6 +13,8 @@ import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import {checkTag} from '../utils/gitinfo'
 import * as path from 'path'
+import * as timers from '../utils/timers'
+
 
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
@@ -28,6 +30,8 @@ async function set(app) {
 	} catch(e) {
 		console.log('=> could not auth with media server', e.message)
 	}
+
+	timers.reloadTimers()
 
 	app.get('/chats', chats.getChats)
 	app.post('/group', chats.createGroupChat)

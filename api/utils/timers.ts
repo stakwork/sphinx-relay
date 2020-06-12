@@ -29,7 +29,6 @@ export async function reloadTimers(){
 	})
 }
 export async function payBack(t){
-    console.log("PAY BACK",t.dataValues)
     const chat = await models.Chat.findOne({ where: {id:t.chatId} })
     const owner = await models.Contact.findOne({ where: {isOwner:true} })
     if(!chat) return
