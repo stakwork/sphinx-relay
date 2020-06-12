@@ -27,7 +27,7 @@ function sendConfirmation({ chat, sender, msg_id }) {
 exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> received confirmation', JSON.stringify(payload));
+        console.log('=> received confirmation', (payload.message && payload.message.id));
         const dat = payload.content || payload;
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;
