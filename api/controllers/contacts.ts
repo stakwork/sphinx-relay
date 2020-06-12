@@ -70,6 +70,7 @@ const updateContact = async (req, res) => {
 	console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query })
 
 	let attrs = extractAttrs(req.body)
+	console.log("TO UPDATE",attrs)
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
 	let shouldSendUpdatedSelf = (
@@ -78,6 +79,7 @@ const updateContact = async (req, res) => {
 			attrs["contact_key"]==null // OR NO NEW CONTACT KEY
 		)
 	)
+	console.log('shouldSendUPdatedSelf',shouldSendUpdatedSelf)
 
 	// update self
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
@@ -89,6 +91,7 @@ const updateContact = async (req, res) => {
 	const contactIds = await models.Contact.findAll({
 		where:{deleted:false,fromGroup:false}
 	}).map(c => c.id)
+	console.log('contactIds',contactIds)
 	if (contactIds.length == 0) return
 
 	helpers.sendContactKeys({
