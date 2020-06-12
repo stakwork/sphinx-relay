@@ -46,8 +46,10 @@ function reloadTimers() {
 exports.reloadTimers = reloadTimers;
 function payBack(t) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("PAY BACK");
         const contact = yield models_1.models.Contact.findOne({ where: { id: t.receiver } });
         if (contact) {
+            console.log("SEND ", t.amount, "TO", contact.publicKey);
             network.signAndSend({
                 amt: t.amount,
                 dest: contact.publicKey,

@@ -26,8 +26,10 @@ export async function reloadTimers(){
 	})
 }
 export async function payBack(t){
+    console.log("PAY BACK")
     const contact = await models.Contact.findOne({where:{id:t.receiver}})
     if(contact){
+        console.log("SEND ",t.amount,"TO",contact.publicKey)
         network.signAndSend({
             amt: t.amount,
             dest: contact.publicKey,
