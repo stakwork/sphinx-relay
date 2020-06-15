@@ -196,7 +196,10 @@ async function replayChatHistory(chat, contact) {
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
-		await network.signAndSend({data}, mqttTopic)
+		await network.signAndSend({
+			data,
+			dest: contact.publicKey,
+		}, mqttTopic)
 	})
 }
 

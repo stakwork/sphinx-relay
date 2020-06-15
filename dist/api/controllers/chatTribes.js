@@ -186,7 +186,10 @@ function replayChatHistory(chat, contact) {
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
-            yield network.signAndSend({ data }, mqttTopic);
+            yield network.signAndSend({
+                data,
+                dest: contact.publicKey,
+            }, mqttTopic);
         }));
     });
 }
