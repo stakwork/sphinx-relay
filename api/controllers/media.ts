@@ -59,6 +59,7 @@ const sendAttachmentMessage = async (req, res) => {
     file_name,
     ttl,
     price, // IF AMOUNT>0 THEN do NOT sign or send receipt
+    reply_uuid,
   } = req.body
 
   console.log('[send attachment]', req.body)
@@ -91,7 +92,7 @@ const sendAttachmentMessage = async (req, res) => {
   const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
   
   const uuid = short.generate()
-  const message = await models.Message.create({
+  const mm:{[k:string]:any} = {
     chatId: chat.id,
     uuid: uuid,
     sender: owner.id,
@@ -106,7 +107,9 @@ const sendAttachmentMessage = async (req, res) => {
     date,
     createdAt: date,
     updatedAt: date
-  })
+  }
+  if(reply_uuid) mm.replyUuid=reply_uuid
+  const message = await models.Message.create(mm)
 
   console.log('saved attachment msg from me',message.id)
 
@@ -125,6 +128,7 @@ const sendAttachmentMessage = async (req, res) => {
     mediaKey: media_key_map,
     mediaType: mediaType,
   }
+  if(reply_uuid) msg.replyUuid=reply_uuid
   network.sendMessage({
     chat: chat,
     sender: owner,
@@ -389,7 +393,7 @@ const receivePurchaseAccept = async (payload) => {
 
 const receivePurchaseDeny = async (payload) => {
   console.log('=> receivePurchaseDeny')
-  var date = new Date();
+  var date = new Date()
   date.setMilliseconds(0)
   const {owner, sender, chat, amount, mediaToken} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
@@ -420,7 +424,7 @@ const receiveAttachment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -438,6 +442,7 @@ const receiveAttachment = async (payload) => {
   if(mediaToken) msg.mediaToken = mediaToken
   if(mediaKey) msg.mediaKey = mediaKey
   if(mediaType) msg.mediaType = mediaType
+  if(reply_uuid) msg.replyUuid = reply_uuid
   const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
 		msg.senderAlias = sender_alias

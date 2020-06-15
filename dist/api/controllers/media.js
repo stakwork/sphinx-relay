@@ -53,7 +53,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     // } catch(e) {
     //   return resUtils.failure(res, e.message)
     // }
-    const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, } = req.body;
+    const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, // IF AMOUNT>0 THEN do NOT sign or send receipt
+    reply_uuid, } = req.body;
     console.log('[send attachment]', req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield helpers.findOrCreateChat({
@@ -80,7 +81,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     const mediaType = media_type || '';
     const remoteMessageContent = remote_text_map ? JSON.stringify(remote_text_map) : remote_text;
     const uuid = short.generate();
-    const message = yield models_1.models.Message.create({
+    const mm = {
         chatId: chat.id,
         uuid: uuid,
         sender: owner.id,
@@ -95,7 +96,10 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         date,
         createdAt: date,
         updatedAt: date
-    });
+    };
+    if (reply_uuid)
+        mm.replyUuid = reply_uuid;
+    const message = yield models_1.models.Message.create(mm);
     console.log('saved attachment msg from me', message.id);
     saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType);
     const mediaTerms = {
@@ -111,6 +115,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         mediaKey: media_key_map,
         mediaType: mediaType,
     };
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
     network.sendMessage({
         chat: chat,
         sender: owner,
@@ -384,7 +390,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     // console.log('received attachment', { payload })
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -405,6 +411,8 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         msg.mediaKey = mediaKey;
     if (mediaType)
         msg.mediaType = mediaType;
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
     const isTribe = chat_type === constants.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;

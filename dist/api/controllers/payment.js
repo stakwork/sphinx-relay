@@ -21,7 +21,7 @@ const constants = require("../../config/constants.json");
 const network = require("../network");
 const short = require("short-uuid");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, } = req.body;
+    const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (destination_key && !contact_id && !chat_id) {
@@ -63,6 +63,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.messageContent = text;
     if (remote_text)
         msg.remoteMessageContent = remote_text;
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
     if (muid) {
         const myMediaToken = yield ldat_1.tokenFromTerms({
             meta: { dim: dimensions }, host: '',
@@ -84,6 +86,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     if (remote_text)
         msgToSend.content = remote_text;
+    if (reply_uuid)
+        msgToSend.replyUuid = reply_uuid;
     // if contact_ids, replace that in "chat" below
     // if remote text map, put that in
     let theChat = chat;
@@ -118,7 +122,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -142,6 +146,8 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (chat_type === constants.chat_types.tribe) {
         msg.senderAlias = sender_alias;
     }
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved message', message.dataValues)
     socket.sendJson({
