@@ -72,14 +72,22 @@ const updateContact = async (req, res) => {
 	let attrs = extractAttrs(req.body)
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
-	let shouldUpdateContactKey = (contact.isOwner && contact.contactKey == null && attrs["contact_key"] != null)
+	let shouldSendUpdatedSelf = (
+		contact.isOwner && ( 
+			(contact.contactKey == null && attrs["contact_key"] != null) || // CREATE CONTACT KEY!
+			attrs["contact_key"]==null // OR NO NEW CONTACT KEY
+		)
+	)
 
+	// update self
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
 	success(res, jsonUtils.contactToJson(owner))
 
-	if (!shouldUpdateContactKey) return
+	if (!shouldSendUpdatedSelf) return 
 
-	const contactIds = await models.Contact.findAll({where:{deleted:false}}).map(c => c.id)
+	// send updated owner info to others
+	const contactIds = await models.Contact.findAll({where:{deleted:false}})
+		.filter(c=> !c.fromGroup && c.id!==1 && c.publicKey).map(c=> c.id)
 	if (contactIds.length == 0) return
 
 	helpers.sendContactKeys({
@@ -187,29 +195,6 @@ const deleteContact = async (req, res) => {
 	success(res, {})
 }
 
-const receiveConfirmContactKey = async (payload) => {
-	console.log(`=> confirm contact key for ${payload.sender&&payload.sender.pub_key}`, JSON.stringify(payload))
-
-	const dat = payload.content || payload
-	const sender_pub_key = dat.sender.pub_key
-	const sender_contact_key = dat.sender.contact_key
-	const sender_alias = dat.sender.alias || 'Unknown'
-	const sender_photo_url = dat.sender.photo_url
-
-	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
-	if (sender_contact_key && sender) {
-		const objToUpdate:{[k:string]:any} = {contactKey: sender_contact_key}
-		if(sender_alias) objToUpdate.alias = sender_alias
-		if(sender_photo_url) objToUpdate.photoUrl = sender_photo_url
-		await sender.update(objToUpdate)
-
-		socket.sendJson({
-			type: 'contact',
-			response: jsonUtils.contactToJson(sender)
-		})
-	}
-}
-
 const receiveContactKey = async (payload) => {
 	console.log('=> received contact key', JSON.stringify(payload))
 
@@ -239,6 +224,29 @@ const receiveContactKey = async (payload) => {
 		sender: owner,
 		type: constants.message_types.contact_key_confirmation,
 	})
+}
+
+const receiveConfirmContactKey = async (payload) => {
+	console.log(`=> confirm contact key for ${payload.sender&&payload.sender.pub_key}`, JSON.stringify(payload))
+
+	const dat = payload.content || payload
+	const sender_pub_key = dat.sender.pub_key
+	const sender_contact_key = dat.sender.contact_key
+	const sender_alias = dat.sender.alias || 'Unknown'
+	const sender_photo_url = dat.sender.photo_url
+
+	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
+	if (sender_contact_key && sender) {
+		const objToUpdate:{[k:string]:any} = {contactKey: sender_contact_key}
+		if(sender_alias) objToUpdate.alias = sender_alias
+		if(sender_photo_url) objToUpdate.photoUrl = sender_photo_url
+		await sender.update(objToUpdate)
+
+		socket.sendJson({
+			type: 'contact',
+			response: jsonUtils.contactToJson(sender)
+		})
+	}
 }
 
 const extractAttrs = body => {

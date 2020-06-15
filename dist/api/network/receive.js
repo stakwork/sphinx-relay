@@ -21,6 +21,7 @@ const modify_1 = require("./modify");
 // import {modifyPayloadAndSaveMediaKey} from './modify'
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
+const timers = require("../utils/timers");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 exports.typesToForward = [
@@ -66,6 +67,15 @@ function onReceive(payload) {
             if (needsPricePerJoin) {
                 if (payload.message.amount < chat.pricePerMessage)
                     doAction = false;
+                if (chat.escrowAmount) {
+                    timers.addTimer({
+                        amount: chat.escrowAmount,
+                        millis: chat.escrowMillis,
+                        receiver: senderContact.id,
+                        msgId: payload.message.id,
+                        chatId: chat.id,
+                    });
+                }
             }
             // check price to join
             if (payload.type === msgtypes.group_join) {

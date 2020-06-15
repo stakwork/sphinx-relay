@@ -70,12 +70,17 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
-    let shouldUpdateContactKey = (contact.isOwner && contact.contactKey == null && attrs["contact_key"] != null);
+    let shouldSendUpdatedSelf = (contact.isOwner && ((contact.contactKey == null && attrs["contact_key"] != null) || // CREATE CONTACT KEY!
+        attrs["contact_key"] == null // OR NO NEW CONTACT KEY
+    ));
+    // update self
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
-    if (!shouldUpdateContactKey)
+    if (!shouldSendUpdatedSelf)
         return;
-    const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } }).map(c => c.id);
+    // send updated owner info to others
+    const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
+        .filter(c => !c.fromGroup && c.id !== 1 && c.publicKey).map(c => c.id);
     if (contactIds.length == 0)
         return;
     helpers.sendContactKeys({
@@ -172,28 +177,6 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     res_1.success(res, {});
 });
 exports.deleteContact = deleteContact;
-const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`, JSON.stringify(payload));
-    const dat = payload.content || payload;
-    const sender_pub_key = dat.sender.pub_key;
-    const sender_contact_key = dat.sender.contact_key;
-    const sender_alias = dat.sender.alias || 'Unknown';
-    const sender_photo_url = dat.sender.photo_url;
-    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
-    if (sender_contact_key && sender) {
-        const objToUpdate = { contactKey: sender_contact_key };
-        if (sender_alias)
-            objToUpdate.alias = sender_alias;
-        if (sender_photo_url)
-            objToUpdate.photoUrl = sender_photo_url;
-        yield sender.update(objToUpdate);
-        socket.sendJson({
-            type: 'contact',
-            response: jsonUtils.contactToJson(sender)
-        });
-    }
-});
-exports.receiveConfirmContactKey = receiveConfirmContactKey;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received contact key', JSON.stringify(payload));
     const dat = payload.content || payload;
@@ -222,6 +205,28 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     });
 });
 exports.receiveContactKey = receiveContactKey;
+const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`, JSON.stringify(payload));
+    const dat = payload.content || payload;
+    const sender_pub_key = dat.sender.pub_key;
+    const sender_contact_key = dat.sender.contact_key;
+    const sender_alias = dat.sender.alias || 'Unknown';
+    const sender_photo_url = dat.sender.photo_url;
+    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
+    if (sender_contact_key && sender) {
+        const objToUpdate = { contactKey: sender_contact_key };
+        if (sender_alias)
+            objToUpdate.alias = sender_alias;
+        if (sender_photo_url)
+            objToUpdate.photoUrl = sender_photo_url;
+        yield sender.update(objToUpdate);
+        socket.sendJson({
+            type: 'contact',
+            response: jsonUtils.contactToJson(sender)
+        });
+    }
+});
+exports.receiveConfirmContactKey = receiveConfirmContactKey;
 const extractAttrs = body => {
     let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo"];
     let attrs = {};

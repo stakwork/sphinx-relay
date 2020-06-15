@@ -46,6 +46,8 @@ async function createGroupChat(req, res) {
 		is_listed,
 		price_per_message,
 		price_to_join,
+		escrow_amount,
+		escrow_millis,
 		img,
 		description,
 		tags,
@@ -69,7 +71,7 @@ async function createGroupChat(req, res) {
 	let chatParams:any = null
 	let okToCreate = true
 	if(is_tribe){
-		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join)
+		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis)
 		if(is_listed && chatParams.uuid){
 			// publish to tribe server
 			try {
@@ -80,6 +82,8 @@ async function createGroupChat(req, res) {
 					group_key: chatParams.groupKey,
 					price_per_message: price_per_message||0,
 					price_to_join: price_to_join||0,
+					escrow_amount: escrow_amount||0,
+					escrow_millis: escrow_millis||0,
 					description, tags, img,
 					owner_pubkey: owner.publicKey,
 					owner_alias: owner.alias,

@@ -49,7 +49,7 @@ exports.mute = mute;
 // or can u add contacts as members?
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, is_tribe, is_listed, price_per_message, price_to_join, img, description, tags, } = req.body;
+        const { name, is_tribe, is_listed, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, } = req.body;
         const contact_ids = req.body.contact_ids || [];
         const members = {}; //{pubkey:{key,alias}, ...}
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -66,7 +66,7 @@ function createGroupChat(req, res) {
         let chatParams = null;
         let okToCreate = true;
         if (is_tribe) {
-            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join);
+            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis);
             if (is_listed && chatParams.uuid) {
                 // publish to tribe server
                 try {
@@ -77,6 +77,8 @@ function createGroupChat(req, res) {
                         group_key: chatParams.groupKey,
                         price_per_message: price_per_message || 0,
                         price_to_join: price_to_join || 0,
+                        escrow_amount: escrow_amount || 0,
+                        escrow_millis: escrow_millis || 0,
                         description, tags, img,
                         owner_pubkey: owner.publicKey,
                         owner_alias: owner.alias,

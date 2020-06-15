@@ -391,6 +391,7 @@ export {
   getLock,
   setLock,
   getRoute,
+  keysend,
   keysendMessage,
   signMessage,
   verifyMessage,

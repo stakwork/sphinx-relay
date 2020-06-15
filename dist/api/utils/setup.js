@@ -16,7 +16,7 @@ const QRCode = require("qrcode");
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
 const gitinfo_1 = require("../utils/gitinfo");
-const USER_VERSION = 3;
+const USER_VERSION = 4;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
@@ -44,6 +44,22 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield models_1.sequelize.query(`
+CREATE TABLE sphinx_timers (
+  id BIGINT,
+  chat_id BIGINT,
+  receiver BIGINT,
+  millis BIGINT,
+  msg_id BIGINT,
+  amount DECIMAL
+)`);
+        }
+        catch (e) {
+            console.log(e);
+        }
+        addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT');
+        addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT');
         addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN');
         addTableColumn('sphinx_media_keys', 'media_type');
         addTableColumn('sphinx_media_keys', 'original_muid');
@@ -51,28 +67,6 @@ function migrate() {
         addTableColumn('sphinx_messages', 'uuid');
         addTableColumn('sphinx_messages', 'reply_uuid');
         addTableColumn('sphinx_media_keys', 'sender', 'BIGINT');
-        addTableColumn('sphinx_chats', 'group_key');
-        addTableColumn('sphinx_chats', 'group_private_key');
-        addTableColumn('sphinx_chats', 'host');
-        addTableColumn('sphinx_chats', 'price_to_join', 'BIGINT');
-        addTableColumn('sphinx_chats', 'price_per_message', 'BIGINT');
-        addTableColumn('sphinx_chats', 'owner_pubkey');
-        addTableColumn('sphinx_messages', 'sender_alias');
-        addTableColumn('sphinx_chat_members', 'alias');
-        addTableColumn('sphinx_contacts', 'from_group');
-        try {
-            yield models_1.sequelize.query(`
-CREATE TABLE sphinx_chat_members (
-  chat_id INT,
-  contact_id INT,
-  alias TEXT,
-  role INT,
-  total_spent INT,
-  total_messages INT,
-  last_active DATETIME
-)`);
-        }
-        catch (e) { }
     });
 }
 function addTableColumn(table, column, type = 'TEXT') {

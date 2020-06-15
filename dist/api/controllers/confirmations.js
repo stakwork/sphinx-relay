@@ -17,6 +17,8 @@ const network = require("../network");
 const path = require("path");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function sendConfirmation({ chat, sender, msg_id }) {
+    if (!msg_id)
+        return;
     network.sendMessage({
         chat,
         sender,
@@ -27,7 +29,7 @@ function sendConfirmation({ chat, sender, msg_id }) {
 exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> received confirmation');
+        console.log('=> received confirmation', (payload.message && payload.message.id));
         const dat = payload.content || payload;
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;

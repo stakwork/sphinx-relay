@@ -83,8 +83,8 @@ const performKeysendMessage = async ({ destination_key, amount, msg, success, fa
 		amt: Math.max(amount, 3)
 	}
 	try {
-		const r = await network.signAndSend(opts, sender.publicKey)
-		console.log("=> external keysend")
+		const r = await network.signAndSend(opts)
+		// console.log("=> keysend to new contact")
 		if (success) success(r)
 	} catch (e) {
 		console.log("MESSAGE ERROR", e)

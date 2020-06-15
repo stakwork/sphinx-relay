@@ -24,6 +24,7 @@ const uploads = require("./uploads");
 const confirmations = require("./confirmations");
 const gitinfo_1 = require("../utils/gitinfo");
 const path = require("path");
+const timers = require("../utils/timers");
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:", env);
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -38,6 +39,7 @@ function set(app) {
         catch (e) {
             console.log('=> could not auth with media server', e.message);
         }
+        timers.reloadTimers();
         app.get('/chats', chats.getChats);
         app.post('/group', chats.createGroupChat);
         app.post('/chats/:chat_id/:mute_unmute', chats.mute);

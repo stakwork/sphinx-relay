@@ -1,14 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto = require("crypto");
+const BLOCK_SIZE = 256;
+const MAX_CHUNK_SIZE = BLOCK_SIZE - 11; // 11 is the PCKS1 padding
 function encrypt(key, txt) {
     try {
+        const buf = Buffer.from(txt);
+        let finalBuf = Buffer.from([]);
+        const n = Math.ceil(buf.length / MAX_CHUNK_SIZE);
+        const arr = Array(n).fill(0);
         const pubc = cert.pub(key);
-        const buf = crypto.publicEncrypt({
-            key: pubc,
-            padding: crypto.constants.RSA_PKCS1_PADDING,
-        }, Buffer.from(txt, 'utf-8'));
-        return buf.toString('base64');
+        arr.forEach((_, i) => {
+            const f = crypto.publicEncrypt({
+                key: pubc,
+                padding: crypto.constants.RSA_PKCS1_PADDING,
+            }, buf.subarray(i * MAX_CHUNK_SIZE, i * MAX_CHUNK_SIZE + MAX_CHUNK_SIZE));
+            finalBuf = Buffer.concat([finalBuf, f]);
+        });
+        return finalBuf.toString('base64');
     }
     catch (e) {
         return '';
@@ -17,12 +26,19 @@ function encrypt(key, txt) {
 exports.encrypt = encrypt;
 function decrypt(privateKey, enc) {
     try {
+        const buf = Buffer.from(enc, 'base64');
+        let finalDec = '';
+        const n = Math.ceil(buf.length / BLOCK_SIZE);
+        const arr = Array(n).fill(0);
         const privc = cert.priv(privateKey);
-        const buf = crypto.privateDecrypt({
-            key: privc,
-            padding: crypto.constants.RSA_PKCS1_PADDING,
-        }, Buffer.from(enc, 'base64'));
-        return buf.toString('utf-8');
+        arr.forEach((_, i) => {
+            const b = crypto.privateDecrypt({
+                key: privc,
+                padding: crypto.constants.RSA_PKCS1_PADDING,
+            }, buf.subarray(i * BLOCK_SIZE, i * BLOCK_SIZE + BLOCK_SIZE));
+            finalDec += b.toString('utf-8');
+        });
+        return finalDec;
     }
     catch (e) {
         return '';
@@ -53,15 +69,19 @@ exports.genKeys = genKeys;
 function testRSA() {
     crypto.generateKeyPair('rsa', {
         modulusLength: 2048
-    }, (err, publicKey, priv) => {
+    }, (err, publicKey, privateKey) => {
         const pubPEM = publicKey.export({
             type: 'pkcs1', format: 'pem'
         });
         const pub = cert.unpub(pubPEM);
         const msg = 'hi';
         const enc = encrypt(pub, msg);
+        const privPEM = privateKey.export({
+            type: 'pkcs1', format: 'pem'
+        });
+        const priv = cert.unpriv(privPEM);
         const dec = decrypt(priv, enc);
-        console.log("FINAL:", dec);
+        console.log("SUCESS:", msg === dec);
     });
 }
 exports.testRSA = testRSA;

@@ -166,7 +166,8 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         updatedAt: date,
         status: constants.statuses.received
     };
-    if (chat_type === constants.chat_types.tribe) {
+    const isTribe = chat_type === constants.chat_types.tribe;
+    if (isTribe) {
         msg.senderAlias = sender_alias;
         if (remote_content)
             msg.remoteMessageContent = remote_content;

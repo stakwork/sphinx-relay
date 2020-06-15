@@ -8,6 +8,7 @@ import * as path from 'path'
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export function sendConfirmation({ chat, sender, msg_id }) {
+	if(!msg_id) return
 	network.sendMessage({
 		chat,
 		sender,
@@ -17,7 +18,7 @@ export function sendConfirmation({ chat, sender, msg_id }) {
 }
 
 export async function receiveConfirmation(payload) {
-	console.log('=> received confirmation')
+	console.log('=> received confirmation', (payload.message&&payload.message.id))
 
 	const dat = payload.content || payload
 	const chat_uuid = dat.chat.uuid
