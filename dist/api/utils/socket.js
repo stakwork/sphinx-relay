@@ -22,9 +22,9 @@ const send = (body) => {
     // })
     // if(lastConn) lastConn.send(body)
     srvr.clients.forEach(c => {
-        if (c && c.connected) {
+        console.log(c);
+        if (c)
             c.send(body);
-        }
     });
 };
 exports.send = send;

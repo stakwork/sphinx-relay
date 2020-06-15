@@ -25,9 +25,8 @@ const send = (body) => {
   // })
   // if(lastConn) lastConn.send(body)
   srvr.clients.forEach(c=>{
-    if(c && c.connected) {
-      c.send(body)
-    }
+    console.log(c)
+    if(c) c.send(body)
   })
 }
 
