@@ -15,13 +15,11 @@ const connect = (server) => {
     // var id = connectionCounter++;
     // connections.set(id, socket)
     // lastConn = socket
-    console.log(srvr)
   })
 
 }
 
 const send = (body) => {
-  console.log(srvr)
   // connections.forEach((socket, index) => {
   //   socket.send(body)
   // })
