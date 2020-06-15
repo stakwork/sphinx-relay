@@ -1,9 +1,5 @@
 import * as WebSocket from 'ws'
 
-// let connections = new Map()
-// let connectionCounter = 0
-
-// let lastConn: any
 let srvr: any
 
 const connect = (server) => {
@@ -12,20 +8,11 @@ const connect = (server) => {
 
   srvr.on('connection', socket => {
     console.log('=> [socket] connection received')
-    // var id = connectionCounter++;
-    // connections.set(id, socket)
-    // lastConn = socket
   })
-
 }
 
 const send = (body) => {
-  // connections.forEach((socket, index) => {
-  //   socket.send(body)
-  // })
-  // if(lastConn) lastConn.send(body)
   srvr.clients.forEach(c=>{
-    console.log(c)
     if(c) c.send(body)
   })
 }
