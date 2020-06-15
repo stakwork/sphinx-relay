@@ -23,6 +23,7 @@ const sendPayment = async (req, res) => {
     dimensions,
     remote_text_map,
     contact_ids,
+    reply_uuid,
   } = req.body
 
   console.log('[send payment]', req.body)
@@ -69,6 +70,7 @@ const sendPayment = async (req, res) => {
   }
   if(text) msg.messageContent = text
   if(remote_text) msg.remoteMessageContent = remote_text
+  if(reply_uuid) msg.replyUuid=reply_uuid
 
   if(muid){
     const myMediaToken = await tokenFromTerms({
@@ -92,6 +94,7 @@ const sendPayment = async (req, res) => {
     msgToSend.mediaTerms = {muid,meta:{dim:dimensions}}
   }
   if(remote_text) msgToSend.content = remote_text
+  if(reply_uuid) msgToSend.replyUuid=reply_uuid
 
   // if contact_ids, replace that in "chat" below
   // if remote text map, put that in
@@ -128,7 +131,7 @@ const receivePayment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -149,7 +152,8 @@ const receivePayment = async (payload) => {
   if(mediaToken) msg.mediaToken = mediaToken
   if(chat_type===constants.chat_types.tribe) {
 		msg.senderAlias = sender_alias
-	}
+  }
+  if(reply_uuid) msg.replyUuid = reply_uuid
   
   const message = await models.Message.create(msg)
 
