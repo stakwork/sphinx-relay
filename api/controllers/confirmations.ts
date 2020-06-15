@@ -8,6 +8,7 @@ import * as path from 'path'
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export function sendConfirmation({ chat, sender, msg_id }) {
+	if(!msg_id) return
 	network.sendMessage({
 		chat,
 		sender,
