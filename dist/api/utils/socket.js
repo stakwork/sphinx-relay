@@ -4,24 +4,26 @@ const WebSocket = require("ws");
 // let connections = new Map()
 // let connectionCounter = 0
 // let lastConn: any
-let server;
+let srvr;
 const connect = (server) => {
-    server = new WebSocket.Server({ server, clientTracking: true });
+    srvr = new WebSocket.Server({ server, clientTracking: true });
     console.log('=> [socket] connected to server');
-    server.on('connection', socket => {
+    srvr.on('connection', socket => {
         console.log('=> [socket] connection received');
         // var id = connectionCounter++;
         // connections.set(id, socket)
         // lastConn = socket
+        console.log(srvr);
     });
 };
 exports.connect = connect;
 const send = (body) => {
+    console.log(srvr);
     // connections.forEach((socket, index) => {
     //   socket.send(body)
     // })
     // if(lastConn) lastConn.send(body)
-    server.clients.forEach(c => {
+    srvr.clients.forEach(c => {
         if (c && c.connected) {
             c.send(body);
         }

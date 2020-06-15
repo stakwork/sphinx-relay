@@ -4,28 +4,29 @@ import * as WebSocket from 'ws'
 // let connectionCounter = 0
 
 // let lastConn: any
-let server: any
+let srvr: any
 
 const connect = (server) => {
-  server = new WebSocket.Server({ server, clientTracking:true })
-
+  srvr = new WebSocket.Server({ server, clientTracking:true })
   console.log('=> [socket] connected to server')
 
-  server.on('connection', socket => {
+  srvr.on('connection', socket => {
     console.log('=> [socket] connection received')
     // var id = connectionCounter++;
     // connections.set(id, socket)
     // lastConn = socket
+    console.log(srvr)
   })
 
 }
 
 const send = (body) => {
+  console.log(srvr)
   // connections.forEach((socket, index) => {
   //   socket.send(body)
   // })
   // if(lastConn) lastConn.send(body)
-  server.clients.forEach(c=>{
+  srvr.clients.forEach(c=>{
     if(c && c.connected) {
       c.send(body)
     }
