@@ -79,7 +79,6 @@ export async function receiveConfirmation(payload) {
 }
 
 export async function tribeOwnerAutoConfirmation(msg_id,chat_uuid){
-	console.log('tribeOwnerAutoConfirmation',msg_id)
 	const message = await models.Message.findOne({ where:{id:msg_id} })
 	const chat = await models.Chat.findOne({where:{uuid:chat_uuid}})
 	if(message){
