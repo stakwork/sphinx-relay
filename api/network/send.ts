@@ -4,6 +4,7 @@ import {personalizeMessage, decryptMessage} from '../utils/msg'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import {tribeOwnerAutoConfirmation} from '../controllers/confirmations'
+import {typesToForward} from './receive'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -107,7 +108,7 @@ export function signAndSend(opts, mqttTopic?:string){
 		try {
 			if(mqttTopic) {
 				await tribes.publish(mqttTopic, data, function(){
-					if(mqttTopic) checkIfConfirmation(opts.data)
+					if(mqttTopic) checkIfAutoConfirm(opts.data)
 				})
 			} else {
 				await LND.keysendMessage({...opts,data})
@@ -119,9 +120,8 @@ export function signAndSend(opts, mqttTopic?:string){
 	})
 }
 
-function checkIfConfirmation(data){
-	console.log("checkIfConfirmation",data)
-	if(data.type===constants.message_types.confirmation) {
+function checkIfAutoConfirm(data){
+	if(typesToForward.includes(data.type)){
 		tribeOwnerAutoConfirmation(data.message.id)
 	}
 }

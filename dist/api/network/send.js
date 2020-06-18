@@ -15,6 +15,7 @@ const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
+const receive_1 = require("./receive");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -116,7 +117,7 @@ function signAndSend(opts, mqttTopic) {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, function () {
                         if (mqttTopic)
-                            checkIfConfirmation(opts.data);
+                            checkIfAutoConfirm(opts.data);
                     });
                 }
                 else {
@@ -131,9 +132,8 @@ function signAndSend(opts, mqttTopic) {
     });
 }
 exports.signAndSend = signAndSend;
-function checkIfConfirmation(data) {
-    console.log("checkIfConfirmation", data);
-    if (data.type === constants.message_types.confirmation) {
+function checkIfAutoConfirm(data) {
+    if (receive_1.typesToForward.includes(data.type)) {
         confirmations_1.tribeOwnerAutoConfirmation(data.message.id);
     }
 }
