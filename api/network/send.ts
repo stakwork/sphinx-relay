@@ -31,14 +31,13 @@ export async function sendMessage(params) {
 	let isTribeOwner = false
 	const chatUUID = chat.uuid
 	if(isTribe) {
-		// if(type===constants.message_types.confirmation) {
-		// 	return // dont send confs for tribe
-		// }
-		console.log("is tribe!")
 		const tribeOwnerPubKey = chat.ownerPubkey
-		if(sender.publicKey===tribeOwnerPubKey){
-			console.log('im owner! mqtt!')
-			isTribeOwner = true
+		isTribeOwner = sender.publicKey===tribeOwnerPubKey
+		if(type===constants.message_types.confirmation) {
+			// if u are owner, go ahead!
+			if(!isTribeOwner) return // dont send confs for tribe if not owner
+		}
+		if(isTribeOwner){
 			networkType = 'mqtt' // broadcast to all
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
