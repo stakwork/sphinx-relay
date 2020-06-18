@@ -122,7 +122,7 @@ export function signAndSend(opts, mqttTopic?:string){
 
 function checkIfAutoConfirm(data){
 	if(typesToForward.includes(data.type)){
-		tribeOwnerAutoConfirmation(data.message.id)
+		tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid)
 	}
 }
 

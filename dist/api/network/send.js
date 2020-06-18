@@ -134,7 +134,7 @@ function signAndSend(opts, mqttTopic) {
 exports.signAndSend = signAndSend;
 function checkIfAutoConfirm(data) {
     if (receive_1.typesToForward.includes(data.type)) {
-        confirmations_1.tribeOwnerAutoConfirmation(data.message.id);
+        confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
     }
 }
 function newmsg(type, chat, sender, message) {
