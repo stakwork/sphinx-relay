@@ -115,6 +115,7 @@ function signAndSend(opts, mqttTopic) {
             try {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, function () {
+                        console.log("PUB HERE");
                         if (mqttTopic)
                             checkIfConfirmation(data);
                     });
@@ -132,6 +133,7 @@ function signAndSend(opts, mqttTopic) {
 }
 exports.signAndSend = signAndSend;
 function checkIfConfirmation(data) {
+    console.log("checkIfConfirmation", data);
     if (data.type === constants.message_types.confirmation) {
         confirmations_1.tribeOwnerAutoConfirmation(data.message.id);
     }
