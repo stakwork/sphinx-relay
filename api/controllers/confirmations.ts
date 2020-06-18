@@ -77,3 +77,24 @@ export async function receiveConfirmation(payload) {
 		})
 	}
 }
+
+export async function tribeOwnerAutoConfirmation(msg_id,chat_uuid){
+	const message = await models.Message.findOne({ where:{id:msg_id} })
+	const chat = await models.Chat.findOne({where:{uuid:chat_uuid}})
+	if(message){
+		let statusMap = {}
+		try{
+			statusMap = JSON.parse(message.statusMap||'{}')
+		} catch(e){}
+		statusMap['chat'] = constants.statuses.received
+
+		await message.update({ 
+			status: constants.statuses.received,
+			statusMap: JSON.stringify(statusMap)
+		})
+		socket.sendJson({
+			type: 'confirmation',
+			response: jsonUtils.messageToJson(message, chat, null)
+		})
+	}
+}

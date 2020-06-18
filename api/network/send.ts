@@ -3,6 +3,8 @@ import * as LND from '../utils/lightning'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
+import {tribeOwnerAutoConfirmation} from '../controllers/confirmations'
+import {typesToForward} from './receive'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -31,14 +33,13 @@ export async function sendMessage(params) {
 	let isTribeOwner = false
 	const chatUUID = chat.uuid
 	if(isTribe) {
-		// if(type===constants.message_types.confirmation) {
-		// 	return // dont send confs for tribe
-		// }
-		console.log("is tribe!")
 		const tribeOwnerPubKey = chat.ownerPubkey
-		if(sender.publicKey===tribeOwnerPubKey){
-			console.log('im owner! mqtt!')
-			isTribeOwner = true
+		isTribeOwner = sender.publicKey===tribeOwnerPubKey
+		if(type===constants.message_types.confirmation) {
+			// if u are owner, go ahead!
+			if(!isTribeOwner) return // dont send confs for tribe if not owner
+		}
+		if(isTribeOwner){
 			networkType = 'mqtt' // broadcast to all
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
@@ -106,7 +107,9 @@ export function signAndSend(opts, mqttTopic?:string){
 		// console.log("ACTUALLY SEND", mqttTopic)
 		try {
 			if(mqttTopic) {
-				await tribes.publish(mqttTopic, data)
+				await tribes.publish(mqttTopic, data, function(){
+					if(mqttTopic) checkIfAutoConfirm(opts.data)
+				})
 			} else {
 				await LND.keysendMessage({...opts,data})
 			}
@@ -115,6 +118,12 @@ export function signAndSend(opts, mqttTopic?:string){
 			reject(e)
 		}
 	})
+}
+
+function checkIfAutoConfirm(data){
+	if(typesToForward.includes(data.type)){
+		tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid)
+	}
 }
 
 export function newmsg(type, chat, sender, message){

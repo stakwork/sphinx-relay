@@ -14,6 +14,8 @@ const LND = require("../utils/lightning");
 const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
+const confirmations_1 = require("../controllers/confirmations");
+const receive_1 = require("./receive");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -37,14 +39,14 @@ function sendMessage(params) {
         let isTribeOwner = false;
         const chatUUID = chat.uuid;
         if (isTribe) {
-            // if(type===constants.message_types.confirmation) {
-            // 	return // dont send confs for tribe
-            // }
-            console.log("is tribe!");
             const tribeOwnerPubKey = chat.ownerPubkey;
-            if (sender.publicKey === tribeOwnerPubKey) {
-                console.log('im owner! mqtt!');
-                isTribeOwner = true;
+            isTribeOwner = sender.publicKey === tribeOwnerPubKey;
+            if (type === constants.message_types.confirmation) {
+                // if u are owner, go ahead!
+                if (!isTribeOwner)
+                    return; // dont send confs for tribe if not owner
+            }
+            if (isTribeOwner) {
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
@@ -113,7 +115,10 @@ function signAndSend(opts, mqttTopic) {
             // console.log("ACTUALLY SEND", mqttTopic)
             try {
                 if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data);
+                    yield tribes.publish(mqttTopic, data, function () {
+                        if (mqttTopic)
+                            checkIfAutoConfirm(opts.data);
+                    });
                 }
                 else {
                     yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
@@ -127,6 +132,11 @@ function signAndSend(opts, mqttTopic) {
     });
 }
 exports.signAndSend = signAndSend;
+function checkIfAutoConfirm(data) {
+    if (receive_1.typesToForward.includes(data.type)) {
+        confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
+    }
+}
 function newmsg(type, chat, sender, message) {
     const includeGroupKey = type === constants.message_types.group_create || type === constants.message_types.group_invite;
     const includeAlias = sender && sender.alias && chat.type === constants.chat_types.tribe;

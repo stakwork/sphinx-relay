@@ -65,8 +65,11 @@ export function subscribe(topic) {
   if (client) client.subscribe(topic)
 }
 
-export function publish(topic, msg) {
-  if (client) client.publish(topic, msg)
+export function publish(topic, msg, cb) {
+  if (client) client.publish(topic, msg, null, function(err){
+    if(err) console.log(err)
+    else if(cb) cb()
+  })
 }
 
 export async function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis }) {
