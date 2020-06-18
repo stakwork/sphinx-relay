@@ -3,6 +3,7 @@ import * as LND from '../utils/lightning'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
+import {tribeOwnerAutoConfirmation} from '../controllers/confirmations'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -105,7 +106,9 @@ export function signAndSend(opts, mqttTopic?:string){
 		// console.log("ACTUALLY SEND", mqttTopic)
 		try {
 			if(mqttTopic) {
-				await tribes.publish(mqttTopic, data)
+				await tribes.publish(mqttTopic, data, function(){
+					checkIfConfirmation(data)
+				})
 			} else {
 				await LND.keysendMessage({...opts,data})
 			}
@@ -114,6 +117,12 @@ export function signAndSend(opts, mqttTopic?:string){
 			reject(e)
 		}
 	})
+}
+
+function checkIfConfirmation(data){
+	if(data.type===constants.message_types.confirmation) {
+		tribeOwnerAutoConfirmation(data.message.id)
+	}
 }
 
 export function newmsg(type, chat, sender, message){

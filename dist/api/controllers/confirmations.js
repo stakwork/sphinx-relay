@@ -88,4 +88,26 @@ function receiveConfirmation(payload) {
     });
 }
 exports.receiveConfirmation = receiveConfirmation;
+function tribeOwnerAutoConfirmation(msg_id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
+        if (message) {
+            let statusMap = {};
+            try {
+                statusMap = JSON.parse(message.statusMap || '{}');
+            }
+            catch (e) { }
+            statusMap['chat'] = constants.statuses.received;
+            yield message.update({
+                status: constants.statuses.received,
+                statusMap: JSON.stringify(statusMap)
+            });
+            socket.sendJson({
+                type: 'confirmation',
+                response: jsonUtils.messageToJson(message, null, null)
+            });
+        }
+    });
+}
+exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
 //# sourceMappingURL=confirmations.js.map

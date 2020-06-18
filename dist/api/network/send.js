@@ -14,6 +14,7 @@ const LND = require("../utils/lightning");
 const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
+const confirmations_1 = require("../controllers/confirmations");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -113,7 +114,9 @@ function signAndSend(opts, mqttTopic) {
             // console.log("ACTUALLY SEND", mqttTopic)
             try {
                 if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data);
+                    yield tribes.publish(mqttTopic, data, function () {
+                        checkIfConfirmation(data);
+                    });
                 }
                 else {
                     yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
@@ -127,6 +130,11 @@ function signAndSend(opts, mqttTopic) {
     });
 }
 exports.signAndSend = signAndSend;
+function checkIfConfirmation(data) {
+    if (data.type === constants.message_types.confirmation) {
+        confirmations_1.tribeOwnerAutoConfirmation(data.message.id);
+    }
+}
 function newmsg(type, chat, sender, message) {
     const includeGroupKey = type === constants.message_types.group_create || type === constants.message_types.group_invite;
     const includeAlias = sender && sender.alias && chat.type === constants.chat_types.tribe;
