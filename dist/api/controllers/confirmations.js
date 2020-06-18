@@ -90,6 +90,7 @@ function receiveConfirmation(payload) {
 exports.receiveConfirmation = receiveConfirmation;
 function tribeOwnerAutoConfirmation(msg_id) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('tribeOwnerAutoConfirmation', msg_id);
         const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
         if (message) {
             let statusMap = {};

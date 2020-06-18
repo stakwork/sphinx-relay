@@ -79,6 +79,7 @@ export async function receiveConfirmation(payload) {
 }
 
 export async function tribeOwnerAutoConfirmation(msg_id){
+	console.log('tribeOwnerAutoConfirmation',msg_id)
 	const message = await models.Message.findOne({ where:{id:msg_id} })
 	if(message){
 		let statusMap = {}
