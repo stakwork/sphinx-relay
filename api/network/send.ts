@@ -107,8 +107,7 @@ export function signAndSend(opts, mqttTopic?:string){
 		try {
 			if(mqttTopic) {
 				await tribes.publish(mqttTopic, data, function(){
-					console.log("PUB HERE")
-					if(mqttTopic) checkIfConfirmation(data)
+					if(mqttTopic) checkIfConfirmation(opts.data)
 				})
 			} else {
 				await LND.keysendMessage({...opts,data})

@@ -115,9 +115,8 @@ function signAndSend(opts, mqttTopic) {
             try {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, function () {
-                        console.log("PUB HERE");
                         if (mqttTopic)
-                            checkIfConfirmation(data);
+                            checkIfConfirmation(opts.data);
                     });
                 }
                 else {

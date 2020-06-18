@@ -67,7 +67,6 @@ export function subscribe(topic) {
 
 export function publish(topic, msg, cb) {
   if (client) client.publish(topic, msg, null, function(err){
-    console.log("CALLBACK")
     if(err) console.log(err)
     else if(cb) cb()
   })
