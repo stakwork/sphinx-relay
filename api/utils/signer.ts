@@ -29,13 +29,11 @@ export const loadSigner = () => {
 export const signMessage = (msg) => {
   return new Promise(async(resolve, reject)=> {
     let signer = await loadSigner()
-    console.log("SIGNER",signer)
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),
         key_loc:{key_family:6, key_index:0},
       }
-      console.log('signer.signMessage',signer.signMessage)
       signer.signMessage(options, function(err,sig){
         if(err || !sig.signature) {
           reject(err)
@@ -72,14 +70,12 @@ export const signBuffer = (msg) => {
 function verifyMessage(msg,sig,pubkey): Promise<{[k:string]:any}> {
   return new Promise(async(resolve, reject)=> {
     let signer = await loadSigner()
-    console.log('verifyMessage signer,',signer)
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),
         signature:ByteBuffer.fromBase64(sig),
         pubkey:ByteBuffer.fromHex(pubkey),
       }
-      console.log("OPSP",options,signer.verifyMessage)
       signer.verifyMessage(options, function(err,res){
         if(err) {
           reject(err)
