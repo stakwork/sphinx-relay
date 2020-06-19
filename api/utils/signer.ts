@@ -70,12 +70,14 @@ export const signBuffer = (msg) => {
 function verifyMessage(msg,sig,pubkey): Promise<{[k:string]:any}> {
   return new Promise(async(resolve, reject)=> {
     let signer = await loadSigner()
+    console.log('verifyMessage signer,',signer)
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),
         signature:sig,
         pubkey:ByteBuffer.fromHex(pubkey),
       }
+      console.log("OPSP",options,signer.verifyMessage)
       signer.verifyMessage(options, function(err,res){
         if(err) {
           reject(err)

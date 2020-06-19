@@ -80,12 +80,14 @@ exports.signBuffer = (msg) => {
 function verifyMessage(msg, sig, pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();
+        console.log('verifyMessage signer,', signer);
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
                 signature: sig,
                 pubkey: ByteBuffer.fromHex(pubkey),
             };
+            console.log("OPSP", options, signer.verifyMessage);
             signer.verifyMessage(options, function (err, res) {
                 if (err) {
                     reject(err);
