@@ -70,6 +70,10 @@ export const signBuffer = (msg) => {
 function verifyMessage(msg,sig,pubkey): Promise<{[k:string]:any}> {
   return new Promise(async(resolve, reject)=> {
     let signer = await loadSigner()
+    if(sig.length!==96) {
+      return reject('invalid sig')
+    }
+    console.log(sig.length,pubkey.length)
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),

@@ -80,6 +80,10 @@ exports.signBuffer = (msg) => {
 function verifyMessage(msg, sig, pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();
+        if (sig.length !== 96) {
+            return reject('invalid sig');
+        }
+        console.log(sig.length, pubkey.length);
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),

@@ -178,15 +178,11 @@ async function parseAndVerifyPayload(data){
 	try {
 		payload = JSON.parse(msg)
 		if(payload && payload.sender && payload.sender.pub_key) {
-			console.log('=======> payload.sender.pub_key',payload.sender.pub_key)
-			console.log('=======> sig',sig)
-			console.log('=======> sig.length',sig.length)
 			let v
-			if(sig.length===96) {
+			if(sig.length===96) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
 			}
 			if(v && v.valid) {
-				console.log("IS VALID => ",v.valid)
 				return payload
 			} else {
 				return payload // => RM THIS
