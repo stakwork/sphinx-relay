@@ -11,17 +11,14 @@ const config = require(path.join(__dirname,'../../config/app.json'))[env]
 var signerClient = <any> null;
 
 export const loadSigner = () => {
-  console.log("LOAD SIGNER RRRRRR",signerClient?true:false)
   if (signerClient) {
     return signerClient
   } else {
-    console.log("LOAD SIGNER AGAIN!!!!")
     try{
       var credentials = loadCredentials()
       var lnrpcDescriptor = grpc.load("signer.proto");
       var signer: any = lnrpcDescriptor.signrpc
       signerClient = new signer.Signer(config.node_ip + ':' + config.lnd_port, credentials);
-      console.log("SIGNER CLIENT",signerClient)
       return signerClient
     } catch(e) {
       throw e
