@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const LND = require("../utils/lightning");
+const signer = require("../utils/signer");
 const msg_1 = require("../utils/msg");
 const path = require("path");
 const tribes = require("../utils/tribes");
@@ -110,7 +111,7 @@ function signAndSend(opts, mqttTopic) {
             }
             let data = JSON.stringify(opts.data || {});
             opts.amt = opts.amt || 0;
-            const sig = yield LND.signAscii(data);
+            const sig = yield signer.signAscii(data);
             data = data + sig;
             // console.log("ACTUALLY SEND", mqttTopic)
             try {

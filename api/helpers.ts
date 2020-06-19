@@ -201,7 +201,7 @@ function newkeyexchangemsg(type, sender){
 	return {
 		type: type,
 		sender: {
-			// pub_key: sender.publicKey,
+			pub_key: sender.publicKey,
 			contact_key: sender.contactKey,
 			...sender.alias && {alias: sender.alias},
 			...includePhotoUrl && {photo_url: sender.photoUrl}
