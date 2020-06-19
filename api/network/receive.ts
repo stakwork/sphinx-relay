@@ -32,10 +32,11 @@ async function onReceive(payload){
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}
-	const isTribe = payload.chat && payload.chat.type===constants.chat_types.tribe
+	let isTribe = false
 	let isTribeOwner = false
 	let chat
 	if(payload.chat) {
+		isTribe = payload.chat.type===constants.chat_types.tribe
 		chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 	}
 	if(isTribe) {
