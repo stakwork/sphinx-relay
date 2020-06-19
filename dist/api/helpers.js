@@ -206,9 +206,7 @@ function newkeyexchangemsg(type, sender) {
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {
         type: type,
-        sender: Object.assign(Object.assign({ 
-            // pub_key: sender.publicKey,
-            contact_key: sender.contactKey }, sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
+        sender: Object.assign(Object.assign({ pub_key: sender.publicKey, contact_key: sender.contactKey }, sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
     };
 }
 //# sourceMappingURL=helpers.js.map

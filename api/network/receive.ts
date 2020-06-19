@@ -3,7 +3,8 @@ import * as lndService from '../grpc'
 import {getInfo} from '../utils/lightning'
 import {ACTIONS} from '../controllers'
 import * as tribes from '../utils/tribes'
-import {SPHINX_CUSTOM_RECORD_KEY, verifyAscii} from '../utils/lightning'
+import {SPHINX_CUSTOM_RECORD_KEY} from '../utils/lightning'
+import * as signer from '../utils/signer'
 import { models } from '../models'
 import {sendMessage} from './send'
 import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfFirstPurchaser} from './modify'
@@ -176,15 +177,18 @@ async function parseAndVerifyPayload(data){
 	const sig = data.substring(li+1)
 	try {
 		payload = JSON.parse(msg)
-		if(payload) {
-			const v = await verifyAscii(msg, sig)
-			if(v && v.valid && v.pubkey) {
-				payload.sender = payload.sender||{}
-				payload.sender.pub_key=v.pubkey
+		if(payload && payload.sender && payload.sender.pub_key) {
+			let v
+			if(sig.length===96) { // => RM THIS 
+				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
+			}
+			if(v && v.valid) {
 				return payload
 			} else {
 				return payload // => RM THIS
 			}
+		} else {
+			return payload // => RM THIS
 		}
 	} catch(e) {
 		if(payload) return payload // => RM THIS

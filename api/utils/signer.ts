@@ -38,7 +38,8 @@ export const signMessage = (msg) => {
         if(err || !sig.signature) {
           reject(err)
         } else {
-          resolve(sig.signature)
+          const buf = ByteBuffer.wrap(sig.signature);
+          resolve(buf.toBase64())
         }
       })
     } catch(e) {
@@ -56,7 +57,8 @@ export const signBuffer = (msg) => {
         if(err || !sig.signature) {
           reject(err)
         } else {
-          resolve(sig.signature)
+          const buf = ByteBuffer.wrap(sig.signature);
+          resolve(buf.toBase64())
         }
       })
     } catch(e) {
@@ -68,10 +70,16 @@ export const signBuffer = (msg) => {
 function verifyMessage(msg,sig,pubkey): Promise<{[k:string]:any}> {
   return new Promise(async(resolve, reject)=> {
     let signer = await loadSigner()
+    if(sig.length!==96) {
+      return reject('invalid sig')
+    }
+    if(pubkey.length!==66) {
+      return reject('invalid pubkey')
+    }
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),
-        signature:sig,
+        signature:ByteBuffer.fromBase64(sig),
         pubkey:ByteBuffer.fromHex(pubkey),
       }
       signer.verifyMessage(options, function(err,res){

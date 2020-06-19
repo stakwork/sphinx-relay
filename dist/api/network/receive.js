@@ -15,6 +15,7 @@ const lightning_1 = require("../utils/lightning");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
 const lightning_2 = require("../utils/lightning");
+const signer = require("../utils/signer");
 const models_1 = require("../models");
 const send_1 = require("./send");
 const modify_1 = require("./modify");
@@ -200,16 +201,20 @@ function parseAndVerifyPayload(data) {
         const sig = data.substring(li + 1);
         try {
             payload = JSON.parse(msg);
-            if (payload) {
-                const v = yield lightning_2.verifyAscii(msg, sig);
-                if (v && v.valid && v.pubkey) {
-                    payload.sender = payload.sender || {};
-                    payload.sender.pub_key = v.pubkey;
+            if (payload && payload.sender && payload.sender.pub_key) {
+                let v;
+                if (sig.length === 96) { // => RM THIS 
+                    v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
+                }
+                if (v && v.valid) {
                     return payload;
                 }
                 else {
                     return payload; // => RM THIS
                 }
+            }
+            else {
+                return payload; // => RM THIS
             }
         }
         catch (e) {

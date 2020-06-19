@@ -1,5 +1,6 @@
 import { models } from '../models'
 import * as LND from '../utils/lightning'
+import * as signer from '../utils/signer'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
@@ -101,7 +102,7 @@ export function signAndSend(opts, mqttTopic?:string){
 		let data = JSON.stringify(opts.data||{})
 		opts.amt = opts.amt || 0
 
-		const sig = await LND.signAscii(data)
+		const sig = await signer.signAscii(data)
 		data = data + sig
 
 		// console.log("ACTUALLY SEND", mqttTopic)

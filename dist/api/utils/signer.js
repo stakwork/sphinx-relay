@@ -47,7 +47,8 @@ exports.signMessage = (msg) => {
                     reject(err);
                 }
                 else {
-                    resolve(sig.signature);
+                    const buf = ByteBuffer.wrap(sig.signature);
+                    resolve(buf.toBase64());
                 }
             });
         }
@@ -66,7 +67,8 @@ exports.signBuffer = (msg) => {
                     reject(err);
                 }
                 else {
-                    resolve(sig.signature);
+                    const buf = ByteBuffer.wrap(sig.signature);
+                    resolve(buf.toBase64());
                 }
             });
         }
@@ -78,10 +80,16 @@ exports.signBuffer = (msg) => {
 function verifyMessage(msg, sig, pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();
+        if (sig.length !== 96) {
+            return reject('invalid sig');
+        }
+        if (pubkey.length !== 66) {
+            return reject('invalid pubkey');
+        }
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
-                signature: sig,
+                signature: ByteBuffer.fromBase64(sig),
                 pubkey: ByteBuffer.fromHex(pubkey),
             };
             signer.verifyMessage(options, function (err, res) {
