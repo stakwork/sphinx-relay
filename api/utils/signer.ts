@@ -40,7 +40,8 @@ export const signMessage = (msg) => {
         if(err || !sig.signature) {
           reject(err)
         } else {
-          resolve(sig.signature)
+          const buf = ByteBuffer.wrap(sig.signature);
+          resolve(buf.toBase64())
         }
       })
     } catch(e) {
@@ -58,7 +59,8 @@ export const signBuffer = (msg) => {
         if(err || !sig.signature) {
           reject(err)
         } else {
-          resolve(sig.signature)
+          const buf = ByteBuffer.wrap(sig.signature);
+          resolve(buf.toBase64())
         }
       })
     } catch(e) {
@@ -74,7 +76,7 @@ function verifyMessage(msg,sig,pubkey): Promise<{[k:string]:any}> {
     try {
       const options = {
         msg:ByteBuffer.fromHex(msg),
-        signature:sig,
+        signature:ByteBuffer.fromBase64(sig),
         pubkey:ByteBuffer.fromHex(pubkey),
       }
       console.log("OPSP",options,signer.verifyMessage)

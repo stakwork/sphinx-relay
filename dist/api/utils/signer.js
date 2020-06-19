@@ -49,7 +49,8 @@ exports.signMessage = (msg) => {
                     reject(err);
                 }
                 else {
-                    resolve(sig.signature);
+                    const buf = ByteBuffer.wrap(sig.signature);
+                    resolve(buf.toBase64());
                 }
             });
         }
@@ -68,7 +69,8 @@ exports.signBuffer = (msg) => {
                     reject(err);
                 }
                 else {
-                    resolve(sig.signature);
+                    const buf = ByteBuffer.wrap(sig.signature);
+                    resolve(buf.toBase64());
                 }
             });
         }
@@ -84,7 +86,7 @@ function verifyMessage(msg, sig, pubkey) {
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
-                signature: sig,
+                signature: ByteBuffer.fromBase64(sig),
                 pubkey: ByteBuffer.fromHex(pubkey),
             };
             console.log("OPSP", options, signer.verifyMessage);
