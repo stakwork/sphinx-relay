@@ -83,7 +83,9 @@ function verifyMessage(msg, sig, pubkey) {
         if (sig.length !== 96) {
             return reject('invalid sig');
         }
-        console.log(sig.length, pubkey.length);
+        if (pubkey.length !== 66) {
+            return reject('invalid pubkey');
+        }
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
