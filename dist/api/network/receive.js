@@ -205,8 +205,12 @@ function parseAndVerifyPayload(data) {
                 console.log('=======> payload.sender.pub_key', payload.sender.pub_key);
                 console.log('=======> sig', sig);
                 console.log('=======> sig.length', sig.length);
-                const v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
+                let v;
+                if (sig.length === 96) {
+                    v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
+                }
                 if (v && v.valid) {
+                    console.log("IS VALID => ", v.valid);
                     return payload;
                 }
                 else {
