@@ -204,6 +204,10 @@ const receiveContactKey = async (payload) => {
 	const sender_alias = dat.sender.alias || 'Unknown'
 	const sender_photo_url = dat.sender.photo_url
 
+	if(!sender_pub_key) {
+		return console.log("no pubkey!")
+	}
+
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
 
@@ -234,6 +238,10 @@ const receiveConfirmContactKey = async (payload) => {
 	const sender_contact_key = dat.sender.contact_key
 	const sender_alias = dat.sender.alias || 'Unknown'
 	const sender_photo_url = dat.sender.photo_url
+
+	if(!sender_pub_key) {
+		return console.log("no pubkey!")
+	}
 
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
 	if (sender_contact_key && sender) {

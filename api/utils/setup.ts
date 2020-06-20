@@ -41,7 +41,7 @@ CREATE TABLE sphinx_timers (
   msg_id BIGINT,
   amount DECIMAL
 )`)
-  } catch(e){console.log(e)}
+  } catch(e){}
   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
   

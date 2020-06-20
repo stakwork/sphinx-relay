@@ -184,6 +184,9 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';
     const sender_photo_url = dat.sender.photo_url;
+    if (!sender_pub_key) {
+        return console.log("no pubkey!");
+    }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
     if (sender_contact_key && sender) {
@@ -212,6 +215,9 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';
     const sender_photo_url = dat.sender.photo_url;
+    if (!sender_pub_key) {
+        return console.log("no pubkey!");
+    }
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
     if (sender_contact_key && sender) {
         const objToUpdate = { contactKey: sender_contact_key };

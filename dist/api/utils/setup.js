@@ -55,9 +55,7 @@ CREATE TABLE sphinx_timers (
   amount DECIMAL
 )`);
         }
-        catch (e) {
-            console.log(e);
-        }
+        catch (e) { }
         addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT');
         addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT');
         addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN');

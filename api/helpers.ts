@@ -38,7 +38,6 @@ const findOrCreateChat = async (params) => {
 const sendContactKeys = async (args) => {
 	const { type, contactIds, contactPubKey, sender, success, failure } = args
 	const msg = newkeyexchangemsg(type, sender)
-	console.log("MSG",msg)
 
 	let yes:any = null
 	let no:any = null
@@ -199,7 +198,6 @@ async function asyncForEach(array, callback) {
 
 function newkeyexchangemsg(type, sender){
 	const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
-	console.log('includePhotoUrl',includePhotoUrl)
 	return {
 		type: type,
 		sender: {
