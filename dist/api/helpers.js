@@ -45,6 +45,7 @@ exports.findOrCreateChat = findOrCreateChat;
 const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* () {
     const { type, contactIds, contactPubKey, sender, success, failure } = args;
     const msg = newkeyexchangemsg(type, sender);
+    console.log("MSG", msg);
     let yes = null;
     let no = null;
     let cids = contactIds;
@@ -204,6 +205,7 @@ function asyncForEach(array, callback) {
 }
 function newkeyexchangemsg(type, sender) {
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
+    console.log('includePhotoUrl', includePhotoUrl);
     return {
         type: type,
         sender: Object.assign(Object.assign({ pub_key: sender.publicKey, contact_key: sender.contactKey }, sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
