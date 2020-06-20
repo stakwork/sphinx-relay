@@ -199,7 +199,6 @@ function parseAndVerifyPayload(data) {
         const li = data.lastIndexOf('}');
         const msg = data.substring(0, li + 1);
         const sig = data.substring(li + 1);
-        console.log("RAW PAYLAOD", msg);
         try {
             payload = JSON.parse(msg);
             if (payload && payload.sender && payload.sender.pub_key) {

@@ -284,3 +284,7 @@ Turn the service on and check the status.
 $ sudo systemctl enable sphinx-relay.service
 $ sudo systemctl start sphinx-relay.service
 ```
+
+### tail logs 
+
+`journalctl -u sphinx-relay -f`
