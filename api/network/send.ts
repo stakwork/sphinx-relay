@@ -130,7 +130,7 @@ function checkIfAutoConfirm(data){
 export function newmsg(type, chat, sender, message){
 	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
 	const includeAlias = sender && sender.alias && chat.type===constants.chat_types.tribe
-	const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
+	// const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
 	return {
 		type: type,
 		chat: {
@@ -145,7 +145,7 @@ export function newmsg(type, chat, sender, message){
 		sender: {
 			pub_key: sender.publicKey,
 			...includeAlias && {alias: sender.alias},
-			...includePhotoUrl && {photo_url: sender.photoUrl},
+			// ...includePhotoUrl && {photo_url: sender.photoUrl},
 			// ...sender.contactKey && {contact_key: sender.contactKey}
 		}
 	}
