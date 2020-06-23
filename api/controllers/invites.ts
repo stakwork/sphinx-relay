@@ -73,6 +73,7 @@ const createInvite = async (req, res) => {
 			pin: crypto.randomBytes(20).toString('hex')
 		}
 	}
+	console.log(params)
 
 	const onSuccess = async (response) => {
 		console.log("response", response)
