@@ -70,7 +70,6 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             pin: crypto.randomBytes(20).toString('hex')
         }
     };
-    console.log(params);
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("response", response);
         const inviteCreated = response.object;
