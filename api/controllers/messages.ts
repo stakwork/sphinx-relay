@@ -92,30 +92,33 @@ const getAllMessages = async (req, res) => {
 
 async function deleteMessage(req, res){
 	const id = parseInt(req.params.id)
-	const {chat_id} = req.body
 
 	const message = await models.Message.findOne({where:{id}})
 	const uuid = message.uuid
 	await message.update({status: constants.statuses.deleted})
-	success(res, {id})
 
+	const chat_id = message.chatId
+	let chat
 	if(chat_id) {
-		const chat = await models.Chat.findOne({where:{id:chat_id}})
-		const isTribe = chat.type===constants.chat_types.tribe
-		if(isTribe){
-			const owner = await models.Contact.findOne({ where: { isOwner: true }})
-			const isTribeOwner = owner.publicKey===chat.ownerPubkey
-			if(isTribeOwner) {
-				timers.removeTimerByMsgId(id)
-				network.sendMessage({
-					chat: chat,
-					sender: owner,
-					type: constants.message_types.delete,
-					message: {id,uuid},
-				})
-			}
-		}
+		chat = await models.Chat.findOne({where:{id:chat_id}})
 	}
+	success(res, jsonUtils.messageToJson(message, chat))
+
+	if(!chat) return
+	const isTribe = chat.type===constants.chat_types.tribe
+	if(!isTribe) return
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true }})
+	const isTribeOwner = owner.publicKey===chat.ownerPubkey
+	if(!isTribeOwner) return
+
+	timers.removeTimerByMsgId(id)
+	network.sendMessage({
+		chat: chat,
+		sender: owner,
+		type: constants.message_types.delete,
+		message: {id,uuid},
+	})
 }
 
 const sendMessage = async (req, res) => {

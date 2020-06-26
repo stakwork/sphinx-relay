@@ -88,28 +88,31 @@ exports.getAllMessages = getAllMessages;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const id = parseInt(req.params.id);
-        const { chat_id } = req.body;
         const message = yield models_1.models.Message.findOne({ where: { id } });
         const uuid = message.uuid;
         yield message.update({ status: constants.statuses.deleted });
-        res_1.success(res, { id });
+        const chat_id = message.chatId;
+        let chat;
         if (chat_id) {
-            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
-            const isTribe = chat.type === constants.chat_types.tribe;
-            if (isTribe) {
-                const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-                const isTribeOwner = owner.publicKey === chat.ownerPubkey;
-                if (isTribeOwner) {
-                    timers.removeTimerByMsgId(id);
-                    network.sendMessage({
-                        chat: chat,
-                        sender: owner,
-                        type: constants.message_types.delete,
-                        message: { id, uuid },
-                    });
-                }
-            }
+            chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
         }
+        res_1.success(res, jsonUtils.messageToJson(message, chat));
+        if (!chat)
+            return;
+        const isTribe = chat.type === constants.chat_types.tribe;
+        if (!isTribe)
+            return;
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const isTribeOwner = owner.publicKey === chat.ownerPubkey;
+        if (!isTribeOwner)
+            return;
+        timers.removeTimerByMsgId(id);
+        network.sendMessage({
+            chat: chat,
+            sender: owner,
+            type: constants.message_types.delete,
+            message: { id, uuid },
+        });
     });
 }
 exports.deleteMessage = deleteMessage;
