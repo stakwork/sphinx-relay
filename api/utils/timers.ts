@@ -7,7 +7,7 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 const timerz={}
 function clearTimer(t){
     const name = makeName(t)
-    clearTimeout(timerz[name])
+    if(name) clearTimeout(timerz[name])
 }
 export async function removeTimerByMsgId(msgId){
     const t = await models.Timer.findOne({where:{msgId}})

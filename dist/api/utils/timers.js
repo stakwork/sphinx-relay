@@ -16,7 +16,8 @@ const constants = require(path.join(__dirname, '../../config/constants.json'));
 const timerz = {};
 function clearTimer(t) {
     const name = makeName(t);
-    clearTimeout(timerz[name]);
+    if (name)
+        clearTimeout(timerz[name]);
 }
 function removeTimerByMsgId(msgId) {
     return __awaiter(this, void 0, void 0, function* () {
