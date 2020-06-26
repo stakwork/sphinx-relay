@@ -60,6 +60,8 @@ function setTimer(name, when, cb) {
 }
 exports.setTimer = setTimer;
 function makeName(t) {
+    if (!t)
+        return '';
     return `${t.chatId}_${t.receiver}_${t.msgId}`;
 }
 function reloadTimers() {

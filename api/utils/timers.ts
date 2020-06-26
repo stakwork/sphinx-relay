@@ -40,6 +40,7 @@ export function setTimer(name:string, when:number, cb){
     }
 }
 function makeName(t){
+    if(!t) return ''
     return `${t.chatId}_${t.receiver}_${t.msgId}`
 }
 
