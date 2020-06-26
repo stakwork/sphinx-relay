@@ -34,7 +34,10 @@ const getMessages = async (req, res) => {
 	
 	let confirmedMessagesWhere = {
 		updated_at: { [Op.gte]: dateToReturn },
-		status: constants.statuses.received,
+		status: {[Op.or]: [
+			constants.statuses.received,
+			constants.statuses.deleted
+		]},
 		sender: owner.id
 	}
 

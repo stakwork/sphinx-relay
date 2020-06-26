@@ -40,7 +40,10 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     };
     let confirmedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
-        status: constants.statuses.received,
+        status: { [sequelize_1.Op.or]: [
+                constants.statuses.received,
+                constants.statuses.deleted
+            ] },
         sender: owner.id
     };
     // if (chatId) {
