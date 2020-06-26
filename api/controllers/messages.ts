@@ -91,8 +91,23 @@ const getAllMessages = async (req, res) => {
 
 async function deleteMessage(req, res){
 	const id = req.params.id
+	const {chat_id} = req.body
+
+	const message = await models.Message.findOne({where:{id}})
+	const uuid = message.uuid
 	await models.Message.destroy({ where: {id} })
 	success(res, {id})
+
+	if(chat_id) {
+		const chat = await models.Chat.findOne({where:{id:chat_id}})
+		const owner = await models.Contact.findOne({ where: { isOwner: true }})
+		network.sendMessage({
+			chat: chat,
+			sender: owner,
+			type: constants.message_types.delete,
+			message: {id,uuid},
+		})
+	}
 }
 
 const sendMessage = async (req, res) => {
@@ -204,6 +219,25 @@ const receiveMessage = async (payload) => {
 	sendConfirmation({ chat:theChat, sender: owner, msg_id })
 }
 
+const receiveDeleteMessage = async (payload) => {
+	// console.log('received message', { payload })
+	const {owner, sender, chat, chat_type, msg_uuid} = await helpers.parseReceiveParams(payload)
+	if(!owner || !sender || !chat) {
+		return console.log('=> no group chat!')
+	}
+	// check the sender is the creator of the msg
+
+	const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe) {
+		// ?
+	}
+	await models.Message.destroy({where:{uuid:msg_uuid}})
+	socket.sendJson({
+		type: 'delete',
+		response: jsonUtils.messageToJson({uuid:msg_uuid}, chat, sender)
+	})
+}
+
 const readMessages = async (req, res) => {
 	const chat_id = req.params.chat_id;
 	
@@ -235,4 +269,5 @@ export {
   readMessages,
   deleteMessage,
   getAllMessages,
+  receiveDeleteMessage,
 }

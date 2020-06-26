@@ -38,6 +38,7 @@ async function set(app) {
 	app.post('/chats/:chat_id/:mute_unmute', chats.mute)
 	app.delete('/chat/:id', chats.deleteChat)
 	app.put('/chat/:id', chats.addGroupMembers)
+	app.put('/kick/:id', chats.kickChatMember)
 	app.post('/tribe', chatTribes.joinTribe)
 	app.put('/group/:id', chatTribes.editTribe)
 
@@ -130,7 +131,8 @@ const ACTIONS = {
     [msgtypes.group_create]: chats.receiveGroupCreateOrInvite,
     [msgtypes.group_invite]: chats.receiveGroupCreateOrInvite,
     [msgtypes.group_join]: chats.receiveGroupJoin,
-    [msgtypes.group_leave]: chats.receiveGroupLeave,
+	[msgtypes.group_leave]: chats.receiveGroupLeave,
+	[msgtypes.delete]: messages.receiveDeleteMessage,
 }
 
 export {set, ACTIONS} 

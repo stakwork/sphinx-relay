@@ -21,6 +21,13 @@ const path = require("path");
 const tribes = require("../utils/tribes");
 const chatTribes_1 = require("./chatTribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+function kickChatMember() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // kick - remove from ChatMembers
+        // send group_leave to all ?? need to do this?
+    });
+}
+exports.kickChatMember = kickChatMember;
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });

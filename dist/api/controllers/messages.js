@@ -87,8 +87,21 @@ exports.getAllMessages = getAllMessages;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const id = req.params.id;
+        const { chat_id } = req.body;
+        const message = yield models_1.models.Message.findOne({ where: { id } });
+        const uuid = message.uuid;
         yield models_1.models.Message.destroy({ where: { id } });
         res_1.success(res, { id });
+        if (chat_id) {
+            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            network.sendMessage({
+                chat: chat,
+                sender: owner,
+                type: constants.message_types.delete,
+                message: { id, uuid },
+            });
+        }
     });
 }
 exports.deleteMessage = deleteMessage;
@@ -185,6 +198,24 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveMessage = receiveMessage;
+const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    // console.log('received message', { payload })
+    const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
+    if (!owner || !sender || !chat) {
+        return console.log('=> no group chat!');
+    }
+    // check the sender is the creator of the msg
+    const isTribe = chat_type === constants.chat_types.tribe;
+    if (isTribe) {
+        // ?
+    }
+    yield models_1.models.Message.destroy({ where: { uuid: msg_uuid } });
+    socket.sendJson({
+        type: 'delete',
+        response: jsonUtils.messageToJson({ uuid: msg_uuid }, chat, sender)
+    });
+});
+exports.receiveDeleteMessage = receiveDeleteMessage;
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = req.params.chat_id;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });

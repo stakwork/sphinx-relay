@@ -12,6 +12,12 @@ import {replayChatHistory,createTribeChatParams} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
+async function kickChatMember(){
+	// kick - remove from ChatMembers
+	// send group_leave to all ?? need to do this?
+
+}
+
 async function getChats(req, res) {
 	const chats = await models.Chat.findAll({ where:{deleted:false}, raw: true })
 	const c = chats.map(chat => jsonUtils.chatToJson(chat));
@@ -474,7 +480,7 @@ function createGroupChatParams(owner, contactIds, members, name) {
 }
 
 export {
-	getChats, mute, addGroupMembers,
+	getChats, mute, addGroupMembers, kickChatMember,
 	receiveGroupCreateOrInvite, createGroupChat,
 	deleteChat, receiveGroupLeave, receiveGroupJoin,
 }
