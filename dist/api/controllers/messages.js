@@ -17,6 +17,7 @@ const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
+const timers = require("../utils/timers");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
 const network = require("../network");
@@ -86,21 +87,28 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getAllMessages = getAllMessages;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const id = req.params.id;
+        const id = parseInt(req.params.id);
         const { chat_id } = req.body;
         const message = yield models_1.models.Message.findOne({ where: { id } });
         const uuid = message.uuid;
-        yield models_1.models.Message.destroy({ where: { id } });
+        yield message.update({ status: constants.statuses.deleted });
         res_1.success(res, { id });
         if (chat_id) {
             const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            network.sendMessage({
-                chat: chat,
-                sender: owner,
-                type: constants.message_types.delete,
-                message: { id, uuid },
-            });
+            const isTribe = chat.type === constants.chat_types.tribe;
+            if (isTribe) {
+                const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+                const isTribeOwner = owner.publicKey === chat.ownerPubkey;
+                if (isTribeOwner) {
+                    timers.removeTimerByMsgId(id);
+                    network.sendMessage({
+                        chat: chat,
+                        sender: owner,
+                        type: constants.message_types.delete,
+                        message: { id, uuid },
+                    });
+                }
+            }
         }
     });
 }
@@ -199,20 +207,22 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = receiveMessage;
 const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log('received message', { payload })
+    console.log('=> received delete message');
     const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
-    // check the sender is the creator of the msg
+    // check the sender is the creator of the msg?
     const isTribe = chat_type === constants.chat_types.tribe;
     if (isTribe) {
         // ?
+        // if owner, delete timer? (if its not your own)
     }
-    yield models_1.models.Message.destroy({ where: { uuid: msg_uuid } });
+    const message = yield models_1.models.Message.findOne({ where: { uuid: msg_uuid } });
+    yield message.update({ status: constants.statuses.deleted });
     socket.sendJson({
         type: 'delete',
-        response: jsonUtils.messageToJson({ uuid: msg_uuid }, chat, sender)
+        response: jsonUtils.messageToJson(message, chat, sender)
     });
 });
 exports.receiveDeleteMessage = receiveDeleteMessage;

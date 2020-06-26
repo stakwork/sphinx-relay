@@ -4,26 +4,50 @@ import * as path from 'path'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
+const timerz={}
+function clearTimer(t){
+    const name = makeName(t)
+    clearTimeout(timerz[name])
+}
+export async function removeTimerByMsgId(msgId){
+    const t = await models.Timer.findOne({where:{msgId}})
+    clearTimer(t)
+    models.Timer.destroy({where:{msgId}})
+}
+export async function removeTimersByContactId(contactId){
+    const ts = await models.Timer.findAll({where:{receiver:contactId}})
+    ts.forEach(t=> clearTimer(t))
+    models.Timer.destroy({where:{receiver:contactId}})
+}
+
 export async function addTimer({amount, millis, receiver, msgId, chatId}){
     const now = new Date().valueOf()
     const when = now + millis
     const t = await models.Timer.create({
         amount, millis:when, receiver, msgId, chatId,
     })
-    setTimer(when, async ()=>{
+    setTimer(makeName(t), when, async ()=>{
         payBack(t)
     })
 }
-export function setTimer(when:number, cb){
+export function setTimer(name:string, when:number, cb){
 	const now = new Date().valueOf()
 	const ms = when-now
-	if(ms<0) cb() // fire right away if its already passed
-	else setTimeout(cb, ms)
+	if(ms<0) {
+        cb() // fire right away if its already passed
+    } else {
+        timerz[name] = setTimeout(cb, ms)
+    }
 }
+function makeName(t){
+    return `${t.chatId}_${t.receiver}_${t.msgId}`
+}
+
 export async function reloadTimers(){
 	const timers = await models.Timer.findAll()
 	timers && timers.forEach(t=>{
-		setTimer(t.millis, async ()=>{
+        const name = makeName(t)
+		setTimer(name, t.millis, async ()=>{
 			payBack(t)
 		})
 	})

@@ -17,8 +17,6 @@ import * as timers from '../utils/timers'
 delete type:
 owner needs to check that the delete is the one who made the msg
 in receiveDeleteMessage check the deleter is og sender?
-
-
 */
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))

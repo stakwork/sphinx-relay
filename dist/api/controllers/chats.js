@@ -19,12 +19,38 @@ const hub_1 = require("../hub");
 const md5 = require("md5");
 const path = require("path");
 const tribes = require("../utils/tribes");
+const timers = require("../utils/timers");
 const chatTribes_1 = require("./chatTribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function kickChatMember() {
+function kickChatMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        // kick - remove from ChatMembers
-        // send group_leave to all ?? need to do this?
+        const chatId = parseInt(req.params['chat_id']);
+        const contactId = parseInt(req.params['contact_id']);
+        if (!chatId || !contactId) {
+            return res_1.failure(res, "missing param");
+        }
+        // remove chat.contactIds
+        let chat = yield models_1.models.Chat.findOne({ where: { chatId } });
+        const contactIds = JSON.parse(chat.contactIds || '[]');
+        const newContactIds = contactIds.filter(cid => cid !== contactId);
+        yield chat.update({ contactIds: JSON.stringify(newContactIds) });
+        // remove from ChatMembers
+        yield models_1.models.ChatMember.destroy({ where: {
+                chatId, contactId,
+            } });
+        const contact = yield models_1.models.Concat.findOne({ where: { id: contactId } });
+        const members = {
+            [contact.publicKey]: { key: contact.contactKey, alias: contact.alias }
+        };
+        network.sendMessage({
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId], members }),
+            sender: contact,
+            message: {},
+            type: constants.message_types.group_leave,
+        });
+        // delete all timers for this member
+        timers.removeTimersByContactId(contactId);
+        res_1.success(res, true);
     });
 }
 exports.kickChatMember = kickChatMember;
@@ -313,6 +339,10 @@ function receiveGroupLeave(payload) {
                     });
                 }
             }
+        }
+        else {
+            // check if im the only one in "members"
+            // and delete chat??
         }
         var date = new Date();
         date.setMilliseconds(0);

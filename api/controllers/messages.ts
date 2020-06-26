@@ -6,6 +6,7 @@ import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
 import { success } from '../utils/res'
+import * as timers from '../utils/timers'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
 import * as network from '../network'
@@ -90,23 +91,30 @@ const getAllMessages = async (req, res) => {
 };
 
 async function deleteMessage(req, res){
-	const id = req.params.id
+	const id = parseInt(req.params.id)
 	const {chat_id} = req.body
 
 	const message = await models.Message.findOne({where:{id}})
 	const uuid = message.uuid
-	await models.Message.destroy({ where: {id} })
+	await message.update({status: constants.statuses.deleted})
 	success(res, {id})
 
 	if(chat_id) {
 		const chat = await models.Chat.findOne({where:{id:chat_id}})
-		const owner = await models.Contact.findOne({ where: { isOwner: true }})
-		network.sendMessage({
-			chat: chat,
-			sender: owner,
-			type: constants.message_types.delete,
-			message: {id,uuid},
-		})
+		const isTribe = chat.type===constants.chat_types.tribe
+		if(isTribe){
+			const owner = await models.Contact.findOne({ where: { isOwner: true }})
+			const isTribeOwner = owner.publicKey===chat.ownerPubkey
+			if(isTribeOwner) {
+				timers.removeTimerByMsgId(id)
+				network.sendMessage({
+					chat: chat,
+					sender: owner,
+					type: constants.message_types.delete,
+					message: {id,uuid},
+				})
+			}
+		}
 	}
 }
 
@@ -220,21 +228,23 @@ const receiveMessage = async (payload) => {
 }
 
 const receiveDeleteMessage = async (payload) => {
-	// console.log('received message', { payload })
+	console.log('=> received delete message')
 	const {owner, sender, chat, chat_type, msg_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
-	// check the sender is the creator of the msg
+	// check the sender is the creator of the msg?
 
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
 		// ?
+		// if owner, delete timer? (if its not your own)
 	}
-	await models.Message.destroy({where:{uuid:msg_uuid}})
+	const message = await models.Message.findOne({where:{uuid:msg_uuid}})
+	await message.update({status: constants.statuses.deleted})
 	socket.sendJson({
 		type: 'delete',
-		response: jsonUtils.messageToJson({uuid:msg_uuid}, chat, sender)
+		response: jsonUtils.messageToJson(message, chat, sender)
 	})
 }
 

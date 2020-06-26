@@ -8,14 +8,42 @@ import { sendNotification } from '../hub'
 import * as md5 from 'md5'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
+import * as timers from '../utils/timers'
 import {replayChatHistory,createTribeChatParams} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-async function kickChatMember(){
-	// kick - remove from ChatMembers
-	// send group_leave to all ?? need to do this?
+async function kickChatMember(req, res){
+	const chatId = parseInt(req.params['chat_id'])
+	const contactId = parseInt(req.params['contact_id'])
+	if(!chatId || !contactId) {
+		return failure(res, "missing param")
+	}
+	// remove chat.contactIds
+	let chat = await models.Chat.findOne({ where: { chatId } })
+	const contactIds = JSON.parse(chat.contactIds || '[]')
+	const newContactIds = contactIds.filter(cid=>cid!==contactId)
+	await chat.update({ contactIds: JSON.stringify(newContactIds) })
+	
+	// remove from ChatMembers
+	await models.ChatMember.destroy({where:{
+		chatId, contactId,
+	}})
+	
+	const contact = await models.Concat.findOne({where:{id:contactId}})
+	const members = {
+		[contact.publicKey]: {key:contact.contactKey, alias:contact.alias}
+	}
+	network.sendMessage({
+		chat: { ...chat.dataValues, contactIds:[contactId], members }, // send only to the guy u kicked
+		sender: contact,
+		message: {},
+		type: constants.message_types.group_leave,
+	})
 
+	// delete all timers for this member
+	timers.removeTimersByContactId(contactId)
+	success(res, true)
 }
 
 async function getChats(req, res) {
@@ -324,6 +352,9 @@ async function receiveGroupLeave(payload) {
 				})
 			}
 		}
+	} else {
+		// check if im the only one in "members"
+		// and delete chat??
 	}
 
 	var date = new Date();
