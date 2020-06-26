@@ -93,7 +93,8 @@ function subscribeInvoices(parseKeysendInvoice) {
 			}
 		})
 		call.on('error', function(err){
-			console.error(err)
+			const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+			console.error('[LND] Error',now,err.code)
 			if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
 				i = 0
 				reconnectToLND(Math.random());
