@@ -178,12 +178,14 @@ async function replayChatHistory(chat, contact) {
 		if(m.type===constants.message_types.attachment) {
 			if(m.mediaKey&&m.mediaToken) {
 				const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1]
-				const mediaKey = await models.MediaKey.findOne({where:{
-					muid, chatId: chat.id,
-				}})
-				// console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
-				mediaKeyMap = {chat: mediaKey.key}
-				newMediaTerms = {muid: mediaKey.muid}
+				if(muid) {
+					const mediaKey = await models.MediaKey.findOne({where:{
+						muid, chatId: chat.id,
+					}})
+					// console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+					mediaKeyMap = {chat: mediaKey.key}
+					newMediaTerms = {muid: mediaKey.muid}
+				}
 			}
 		}
 		let msg = network.newmsg(m.type, chat, sender, {
@@ -196,10 +198,11 @@ async function replayChatHistory(chat, contact) {
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
+		const replayingHistory = true
 		await network.signAndSend({
 			data,
 			dest: contact.publicKey,
-		}, mqttTopic)
+		}, mqttTopic, replayingHistory)
 	})
 }
 

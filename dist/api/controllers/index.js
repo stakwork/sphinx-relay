@@ -45,6 +45,7 @@ function set(app) {
         app.post('/chats/:chat_id/:mute_unmute', chats.mute);
         app.delete('/chat/:id', chats.deleteChat);
         app.put('/chat/:id', chats.addGroupMembers);
+        app.put('/kick/:chat_id/:contact_id', chats.kickChatMember);
         app.post('/tribe', chatTribes.joinTribe);
         app.put('/group/:id', chatTribes.editTribe);
         app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile);
@@ -129,6 +130,8 @@ const ACTIONS = {
     [msgtypes.group_invite]: chats.receiveGroupCreateOrInvite,
     [msgtypes.group_join]: chats.receiveGroupJoin,
     [msgtypes.group_leave]: chats.receiveGroupLeave,
+    [msgtypes.delete]: messages.receiveDeleteMessage,
+    [msgtypes.repayment]: () => { },
 };
 exports.ACTIONS = ACTIONS;
 //# sourceMappingURL=index.js.map

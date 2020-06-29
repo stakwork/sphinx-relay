@@ -13,11 +13,17 @@ import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 import { Op } from 'sequelize'
 import * as timers from '../utils/timers'
 
+/*
+delete type:
+owner needs to check that the delete is the one who made the msg
+in receiveDeleteMessage check the deleter is og sender?
+*/
+
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
 export const typesToForward=[
-	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
+	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment, msgtypes.delete
 ]
 const typesToModify=[
 	msgtypes.attachment
@@ -70,6 +76,17 @@ async function onReceive(payload){
 		if(payload.type===msgtypes.group_join) {
 			if(payload.message.amount<chat.priceToJoin) doAction=false
 		}
+		// check that the sender is the og poster
+		if(payload.type===msgtypes.delete) {
+			doAction = false
+			if(payload.message.uuid) {
+				const ogMsg = await models.Message.findOne({where:{
+					uuid: payload.message.uuid,
+					sender: senderContact.id,
+				}})
+				if(ogMsg) doAction = true
+			}
+		}
 		if(doAction) forwardMessageToTribe(payload, senderContact)
 		else console.log('=> insufficient payment for this action')
 	}
@@ -120,7 +137,14 @@ async function doTheAction(data){
 }
 
 async function forwardMessageToTribe(ogpayload, sender){
+	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
+
+	let contactIds = JSON.parse(chat.contactIds||'[]')
+	contactIds = contactIds.filter(cid=>cid!==sender.id)
+	if(contactIds.length===0) {
+		return // totally skip if only send is in tribe
+	}
 
 	let payload
 	if(typesToModify.includes(ogpayload.type)){
@@ -128,7 +152,6 @@ async function forwardMessageToTribe(ogpayload, sender){
 	} else {
 		payload = ogpayload
 	}
-	//console.log("FORWARD TO TRIBE",payload) // filter out the sender?
 	
 	//const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
@@ -137,11 +160,12 @@ async function forwardMessageToTribe(ogpayload, sender){
 	// HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
 	// ASK xref TABLE and put alias there too?
 	sendMessage({
+		type, message,
 		sender: {
 			...owner.dataValues,
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias}
 		},
-		chat, type, message,
+		chat: {...chat.dataValues, contactIds}, 
 		skipPubKey: payload.sender.pub_key, 
 		success: ()=>{},
 		receive: ()=>{}
@@ -179,7 +203,7 @@ async function parseAndVerifyPayload(data){
 		payload = JSON.parse(msg)
 		if(payload && payload.sender && payload.sender.pub_key) {
 			let v
-			if(sig.length===96) { // => RM THIS 
+			if(sig.length===96 && payload.sender.pub_key) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
 			}
 			if(v && v.valid) {

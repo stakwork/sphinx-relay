@@ -17,6 +17,7 @@ const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
+const timers = require("../utils/timers");
 const confirmations_1 = require("./confirmations");
 const path = require("path");
 const network = require("../network");
@@ -39,8 +40,16 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     };
     let confirmedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
-        status: constants.statuses.received,
+        status: { [sequelize_1.Op.or]: [
+                constants.statuses.received,
+            ] },
         sender: owner.id
+    };
+    let deletedMessagesWhere = {
+        updated_at: { [sequelize_1.Op.gte]: dateToReturn },
+        status: { [sequelize_1.Op.or]: [
+                constants.statuses.deleted
+            ] },
     };
     // if (chatId) {
     // 	newMessagesWhere.chat_id = chatId
@@ -48,6 +57,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // }
     const newMessages = yield models_1.models.Message.findAll({ where: newMessagesWhere });
     const confirmedMessages = yield models_1.models.Message.findAll({ where: confirmedMessagesWhere });
+    const deletedMessages = yield models_1.models.Message.findAll({ where: deletedMessagesWhere });
     const chatIds = [];
     newMessages.forEach(m => {
         if (!chatIds.includes(m.chatId))
@@ -57,13 +67,18 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!chatIds.includes(m.chatId))
             chatIds.push(m.chatId);
     });
+    deletedMessages.forEach(m => {
+        if (!chatIds.includes(m.chatId))
+            chatIds.push(m.chatId);
+    });
     let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
     const chatsById = underscore_1.indexBy(chats, 'id');
     res.json({
         success: true,
         response: {
             new_messages: newMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
-            confirmed_messages: confirmedMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)]))
+            confirmed_messages: confirmedMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+            deleted_messages: deletedMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)]))
         }
     });
     res.status(200);
@@ -86,9 +101,30 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getAllMessages = getAllMessages;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const id = req.params.id;
-        yield models_1.models.Message.destroy({ where: { id } });
-        res_1.success(res, { id });
+        const id = parseInt(req.params.id);
+        const message = yield models_1.models.Message.findOne({ where: { id } });
+        const uuid = message.uuid;
+        yield message.update({ status: constants.statuses.deleted });
+        const chat_id = message.chatId;
+        let chat;
+        if (chat_id) {
+            chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+        }
+        res_1.success(res, jsonUtils.messageToJson(message, chat));
+        if (!chat)
+            return;
+        const isTribe = chat.type === constants.chat_types.tribe;
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
+        if (isTribeOwner) {
+            timers.removeTimerByMsgId(id);
+        }
+        network.sendMessage({
+            chat: chat,
+            sender: owner,
+            type: constants.message_types.delete,
+            message: { id, uuid },
+        });
     });
 }
 exports.deleteMessage = deleteMessage;
@@ -185,6 +221,28 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveMessage = receiveMessage;
+const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('=> received delete message');
+    const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
+    if (!owner || !sender || !chat) {
+        return console.log('=> no group chat!');
+    }
+    const isTribe = chat_type === constants.chat_types.tribe;
+    // in tribe this is already validated on admin's node
+    let where = { uuid: msg_uuid };
+    if (!isTribe) {
+        where.sender = sender.id; // validate sender
+    }
+    const message = yield models_1.models.Message.findOne({ where });
+    if (!message)
+        return;
+    yield message.update({ status: constants.statuses.deleted });
+    socket.sendJson({
+        type: 'delete',
+        response: jsonUtils.messageToJson(message, chat, sender)
+    });
+});
+exports.receiveDeleteMessage = receiveDeleteMessage;
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = req.params.chat_id;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });

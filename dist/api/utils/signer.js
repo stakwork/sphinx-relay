@@ -80,6 +80,9 @@ exports.signBuffer = (msg) => {
 function verifyMessage(msg, sig, pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();
+        if (msg.length === 0) {
+            return reject('invalid msg');
+        }
         if (sig.length !== 96) {
             return reject('invalid sig');
         }

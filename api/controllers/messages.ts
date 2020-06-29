@@ -6,6 +6,7 @@ import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
 import { success } from '../utils/res'
+import * as timers from '../utils/timers'
 import {sendConfirmation} from './confirmations'
 import * as path from 'path'
 import * as network from '../network'
@@ -33,8 +34,17 @@ const getMessages = async (req, res) => {
 	
 	let confirmedMessagesWhere = {
 		updated_at: { [Op.gte]: dateToReturn },
-		status: constants.statuses.received,
+		status: {[Op.or]: [
+			constants.statuses.received,
+		]},
 		sender: owner.id
+	}
+
+	let deletedMessagesWhere = {
+		updated_at: { [Op.gte]: dateToReturn },
+		status: {[Op.or]: [
+			constants.statuses.deleted
+		]},
 	}
 
 	// if (chatId) {
@@ -44,12 +54,16 @@ const getMessages = async (req, res) => {
 
 	const newMessages = await models.Message.findAll({ where: newMessagesWhere })
 	const confirmedMessages = await models.Message.findAll({ where: confirmedMessagesWhere })
+	const deletedMessages = await models.Message.findAll({ where: deletedMessagesWhere })
 
 	const chatIds: number[] = []
 	newMessages.forEach(m => {
 		if(!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
 	})
 	confirmedMessages.forEach(m => {
+		if(!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
+	})
+	deletedMessages.forEach(m => {
 		if(!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
 	})
 
@@ -63,6 +77,9 @@ const getMessages = async (req, res) => {
 				jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
 			),
 			confirmed_messages: confirmedMessages.map(message => 
+				jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+			),
+			deleted_messages: deletedMessages.map(message => 
 				jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
 			)
 		}
@@ -90,9 +107,34 @@ const getAllMessages = async (req, res) => {
 };
 
 async function deleteMessage(req, res){
-	const id = req.params.id
-	await models.Message.destroy({ where: {id} })
-	success(res, {id})
+	const id = parseInt(req.params.id)
+
+	const message = await models.Message.findOne({where:{id}})
+	const uuid = message.uuid
+	await message.update({status: constants.statuses.deleted})
+
+	const chat_id = message.chatId
+	let chat
+	if(chat_id) {
+		chat = await models.Chat.findOne({where:{id:chat_id}})
+	}
+	success(res, jsonUtils.messageToJson(message, chat))
+
+	if(!chat) return
+	const isTribe = chat.type===constants.chat_types.tribe
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true }})
+	const isTribeOwner = isTribe && owner.publicKey===chat.ownerPubkey
+
+	if(isTribeOwner) {
+		timers.removeTimerByMsgId(id)
+	}
+	network.sendMessage({
+		chat: chat,
+		sender: owner,
+		type: constants.message_types.delete,
+		message: {id,uuid},
+	})
 }
 
 const sendMessage = async (req, res) => {
@@ -204,6 +246,29 @@ const receiveMessage = async (payload) => {
 	sendConfirmation({ chat:theChat, sender: owner, msg_id })
 }
 
+const receiveDeleteMessage = async (payload) => {
+	console.log('=> received delete message')
+	const {owner, sender, chat, chat_type, msg_uuid} = await helpers.parseReceiveParams(payload)
+	if(!owner || !sender || !chat) {
+		return console.log('=> no group chat!')
+	}
+
+	const isTribe = chat_type===constants.chat_types.tribe
+	// in tribe this is already validated on admin's node
+	let where:{[k:string]:any} = {uuid: msg_uuid}
+	if(!isTribe) {
+		where.sender = sender.id // validate sender
+	}
+	const message = await models.Message.findOne({where})
+	if(!message) return
+
+	await message.update({status: constants.statuses.deleted})
+	socket.sendJson({
+		type: 'delete',
+		response: jsonUtils.messageToJson(message, chat, sender)
+	})
+}
+
 const readMessages = async (req, res) => {
 	const chat_id = req.params.chat_id;
 	
@@ -235,4 +300,5 @@ export {
   readMessages,
   deleteMessage,
   getAllMessages,
+  receiveDeleteMessage,
 }

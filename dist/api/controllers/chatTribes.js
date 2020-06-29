@@ -174,22 +174,25 @@ function replayChatHistory(chat, contact) {
             if (m.type === constants.message_types.attachment) {
                 if (m.mediaKey && m.mediaToken) {
                     const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
-                    const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
-                            muid, chatId: chat.id,
-                        } });
-                    // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
-                    mediaKeyMap = { chat: mediaKey.key };
-                    newMediaTerms = { muid: mediaKey.muid };
+                    if (muid) {
+                        const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
+                                muid, chatId: chat.id,
+                            } });
+                        // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+                        mediaKeyMap = { chat: mediaKey.key };
+                        newMediaTerms = { muid: mediaKey.muid };
+                    }
                 }
             }
             let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }));
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
+            const replayingHistory = true;
             yield network.signAndSend({
                 data,
                 dest: contact.publicKey,
-            }, mqttTopic);
+            }, mqttTopic, replayingHistory);
         }));
     });
 }

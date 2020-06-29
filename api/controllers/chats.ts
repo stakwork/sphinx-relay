@@ -8,9 +8,43 @@ import { sendNotification } from '../hub'
 import * as md5 from 'md5'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
+import * as timers from '../utils/timers'
 import {replayChatHistory,createTribeChatParams} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
+
+async function kickChatMember(req, res){
+	const chatId = parseInt(req.params['chat_id'])
+	const contactId = parseInt(req.params['contact_id'])
+	if(!chatId || !contactId) {
+		return failure(res, "missing param")
+	}
+	// remove chat.contactIds
+	let chat = await models.Chat.findOne({ where: { chatId } })
+	const contactIds = JSON.parse(chat.contactIds || '[]')
+	const newContactIds = contactIds.filter(cid=>cid!==contactId)
+	await chat.update({ contactIds: JSON.stringify(newContactIds) })
+	
+	// remove from ChatMembers
+	await models.ChatMember.destroy({where:{
+		chatId, contactId,
+	}})
+	
+	const contact = await models.Concat.findOne({where:{id:contactId}})
+	const members = {
+		[contact.publicKey]: {key:contact.contactKey, alias:contact.alias}
+	}
+	network.sendMessage({
+		chat: { ...chat.dataValues, contactIds:[contactId], members }, // send only to the guy u kicked
+		sender: contact,
+		message: {},
+		type: constants.message_types.group_leave,
+	})
+
+	// delete all timers for this member
+	timers.removeTimersByContactId(contactId)
+	success(res, true)
+}
 
 async function getChats(req, res) {
 	const chats = await models.Chat.findAll({ where:{deleted:false}, raw: true })
@@ -219,6 +253,7 @@ async function receiveGroupJoin(payload) {
 
 	if(!isTribe || isTribeOwner) { // dont need to create contacts for these
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		console.log("sender",sender.dataValues)
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if (sender) {
 			theSender = sender // might already include??
@@ -318,6 +353,9 @@ async function receiveGroupLeave(payload) {
 				})
 			}
 		}
+	} else {
+		// check if im the only one in "members"
+		// and delete chat??
 	}
 
 	var date = new Date();
@@ -474,7 +512,7 @@ function createGroupChatParams(owner, contactIds, members, name) {
 }
 
 export {
-	getChats, mute, addGroupMembers,
+	getChats, mute, addGroupMembers, kickChatMember,
 	receiveGroupCreateOrInvite, createGroupChat,
 	deleteChat, receiveGroupLeave, receiveGroupJoin,
 }

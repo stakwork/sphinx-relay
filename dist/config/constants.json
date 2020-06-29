@@ -17,7 +17,8 @@
         "confirmed": 1,
         "cancelled": 2,
         "received": 3,
-        "failed": 4
+        "failed": 4,
+        "deleted": 5
     },
     "message_types": {
         "message": 0,
@@ -36,7 +37,9 @@
         "group_invite": 13,
         "group_join": 14,
         "group_leave": 15,
-        "group_query": 16
+        "group_query": 16,
+        "delete": 17,
+        "repayment": 18
     },
     "payment_errors": {
         "timeout": "Timed Out",
