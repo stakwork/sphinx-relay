@@ -91,7 +91,7 @@ export async function sendMessage(params) {
 }
 
 export function signAndSend(opts, mqttTopic?:string){
-	// console.log('sign and send!!!!',opts.data)
+	console.log('sign and send!')
 	return new Promise(async function(resolve, reject) {
 		if(!opts || typeof opts!=='object') {
 			return reject('object plz')
