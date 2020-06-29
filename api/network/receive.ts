@@ -126,6 +126,7 @@ async function doTheAction(data){
 }
 
 async function forwardMessageToTribe(ogpayload, sender){
+	console.log('forwardMessageToTribe',ogpayload)
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
 	let contactIds = JSON.parse(chat.contactIds||'[]')
@@ -191,7 +192,7 @@ async function parseAndVerifyPayload(data){
 		payload = JSON.parse(msg)
 		if(payload && payload.sender && payload.sender.pub_key) {
 			let v
-			if(sig.length===96) { // => RM THIS 
+			if(sig.length===96 && payload.sender.pub_key) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
 			}
 			if(v && v.valid) {

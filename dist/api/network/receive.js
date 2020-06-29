@@ -146,6 +146,7 @@ function doTheAction(data) {
 }
 function forwardMessageToTribe(ogpayload, sender) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('forwardMessageToTribe', ogpayload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
         let contactIds = JSON.parse(chat.contactIds || '[]');
         contactIds = contactIds.filter(cid => cid !== sender.id);
@@ -213,7 +214,7 @@ function parseAndVerifyPayload(data) {
             payload = JSON.parse(msg);
             if (payload && payload.sender && payload.sender.pub_key) {
                 let v;
-                if (sig.length === 96) { // => RM THIS 
+                if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
                 }
                 if (v && v.valid) {
