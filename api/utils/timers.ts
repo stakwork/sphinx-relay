@@ -53,7 +53,7 @@ export async function reloadTimers(){
 		setTimer(name, t.millis, async ()=>{
             setTimeout(()=>{
                 payBack(t)
-            },i*250) // dont do all at once
+            },i*420) // dont do all at once
 		})
 	})
 }
@@ -62,13 +62,16 @@ export async function payBack(t){
     const chat = await models.Chat.findOne({ where: {id:t.chatId} })
     const owner = await models.Contact.findOne({ where: {isOwner:true} })
     console.log('is a chat?',chat.id)
-    if(!chat) return
+    if(!chat) {
+        models.Timer.destroy({where:{id:t.id}})
+        return
+    }
     const theChat = {...chat.dataValues, contactIds:[t.receiver]}
     console.log('send msg',{id:t.msgId})
     network.sendMessage({
         chat: theChat,
         sender: owner,
-        message: {id:t.msgId,amount:t.amount,},
+        message: {id:t.msgId,amount:t.amount},
         amount: t.amount,
         type: constants.message_types.repayment,
     })
