@@ -133,6 +133,7 @@ const ACTIONS = {
     [msgtypes.group_join]: chats.receiveGroupJoin,
 	[msgtypes.group_leave]: chats.receiveGroupLeave,
 	[msgtypes.delete]: messages.receiveDeleteMessage,
+	[msgtypes.repayment]: ()=>{},
 }
 
 export {set, ACTIONS} 
