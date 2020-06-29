@@ -36,6 +36,13 @@ const getMessages = async (req, res) => {
 		updated_at: { [Op.gte]: dateToReturn },
 		status: {[Op.or]: [
 			constants.statuses.received,
+		]},
+		sender: owner.id
+	}
+
+	let deletedMessagesWhere = {
+		updated_at: { [Op.gte]: dateToReturn },
+		status: {[Op.or]: [
 			constants.statuses.deleted
 		]},
 		sender: owner.id
@@ -48,12 +55,16 @@ const getMessages = async (req, res) => {
 
 	const newMessages = await models.Message.findAll({ where: newMessagesWhere })
 	const confirmedMessages = await models.Message.findAll({ where: confirmedMessagesWhere })
+	const deletedMessages = await models.Message.findAll({ where: deletedMessagesWhere })
 
 	const chatIds: number[] = []
 	newMessages.forEach(m => {
 		if(!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
 	})
 	confirmedMessages.forEach(m => {
+		if(!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
+	})
+	deletedMessages.forEach(m => {
 		if(!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
 	})
 
@@ -67,6 +78,9 @@ const getMessages = async (req, res) => {
 				jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
 			),
 			confirmed_messages: confirmedMessages.map(message => 
+				jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+			),
+			deleted_messages: deletedMessages.map(message => 
 				jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
 			)
 		}

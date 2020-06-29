@@ -42,6 +42,12 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
         status: { [sequelize_1.Op.or]: [
                 constants.statuses.received,
+            ] },
+        sender: owner.id
+    };
+    let deletedMessagesWhere = {
+        updated_at: { [sequelize_1.Op.gte]: dateToReturn },
+        status: { [sequelize_1.Op.or]: [
                 constants.statuses.deleted
             ] },
         sender: owner.id
@@ -52,6 +58,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // }
     const newMessages = yield models_1.models.Message.findAll({ where: newMessagesWhere });
     const confirmedMessages = yield models_1.models.Message.findAll({ where: confirmedMessagesWhere });
+    const deletedMessages = yield models_1.models.Message.findAll({ where: deletedMessagesWhere });
     const chatIds = [];
     newMessages.forEach(m => {
         if (!chatIds.includes(m.chatId))
@@ -61,13 +68,18 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!chatIds.includes(m.chatId))
             chatIds.push(m.chatId);
     });
+    deletedMessages.forEach(m => {
+        if (!chatIds.includes(m.chatId))
+            chatIds.push(m.chatId);
+    });
     let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
     const chatsById = underscore_1.indexBy(chats, 'id');
     res.json({
         success: true,
         response: {
             new_messages: newMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
-            confirmed_messages: confirmedMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)]))
+            confirmed_messages: confirmedMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+            deleted_messages: deletedMessages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)]))
         }
     });
     res.status(200);
