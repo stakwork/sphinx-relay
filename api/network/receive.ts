@@ -128,13 +128,18 @@ async function doTheAction(data){
 async function forwardMessageToTribe(ogpayload, sender){
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
+	let contactIds = JSON.parse(chat.contactIds||'[]')
+	contactIds = contactIds.filter(cid=>cid!==sender.id)
+	if(contactIds.length===0) {
+		return // totally skip if only send is in tribe
+	}
+
 	let payload
 	if(typesToModify.includes(ogpayload.type)){
 		payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat, sender)
 	} else {
 		payload = ogpayload
 	}
-	//console.log("FORWARD TO TRIBE",payload) // filter out the sender?
 	
 	//const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
@@ -143,11 +148,12 @@ async function forwardMessageToTribe(ogpayload, sender){
 	// HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
 	// ASK xref TABLE and put alias there too?
 	sendMessage({
+		type, message,
 		sender: {
 			...owner.dataValues,
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias}
 		},
-		chat, type, message,
+		chat: {...chat.dataValues, contactIds:[sender.id]}, 
 		skipPubKey: payload.sender.pub_key, 
 		success: ()=>{},
 		receive: ()=>{}

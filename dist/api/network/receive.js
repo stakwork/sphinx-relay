@@ -147,6 +147,11 @@ function doTheAction(data) {
 function forwardMessageToTribe(ogpayload, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
+        let contactIds = JSON.parse(chat.contactIds || '[]');
+        contactIds = contactIds.filter(cid => cid !== sender.id);
+        if (contactIds.length === 0) {
+            return; // totally skip if only send is in tribe
+        }
         let payload;
         if (typesToModify.includes(ogpayload.type)) {
             payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender);
@@ -154,7 +159,6 @@ function forwardMessageToTribe(ogpayload, sender) {
         else {
             payload = ogpayload;
         }
-        //console.log("FORWARD TO TRIBE",payload) // filter out the sender?
         //const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const type = payload.type;
@@ -162,8 +166,9 @@ function forwardMessageToTribe(ogpayload, sender) {
         // HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
         // ASK xref TABLE and put alias there too?
         send_1.sendMessage({
+            type, message,
             sender: Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }),
-            chat, type, message,
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
             skipPubKey: payload.sender.pub_key,
             success: () => { },
             receive: () => { }
