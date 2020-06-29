@@ -31,7 +31,7 @@ in receiveDeleteMessage check the deleter is og sender?
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const msgtypes = constants.message_types;
 exports.typesToForward = [
-    msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
+    msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment, msgtypes.delete
 ];
 const typesToModify = [
     msgtypes.attachment
@@ -88,6 +88,18 @@ function onReceive(payload) {
             if (payload.type === msgtypes.group_join) {
                 if (payload.message.amount < chat.priceToJoin)
                     doAction = false;
+            }
+            // check that the sender is the og poster
+            if (payload.type === msgtypes.delete) {
+                doAction = false;
+                if (payload.message.uuid) {
+                    const ogMsg = yield models_1.models.Message.findOne({ where: {
+                            uuid: payload.message.uuid,
+                            sender: senderContact.id,
+                        } });
+                    if (ogMsg)
+                        doAction = true;
+                }
             }
             if (doAction)
                 forwardMessageToTribe(payload, senderContact);
@@ -146,12 +158,10 @@ function doTheAction(data) {
 }
 function forwardMessageToTribe(ogpayload, sender) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('forwardMessageToTribe', ogpayload);
+        // console.log('forwardMessageToTribe')
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
-        console.log('chat.contactIds', chat.contactIds);
         let contactIds = JSON.parse(chat.contactIds || '[]');
         contactIds = contactIds.filter(cid => cid !== sender.id);
-        console.log('contactIds', contactIds);
         if (contactIds.length === 0) {
             return; // totally skip if only send is in tribe
         }

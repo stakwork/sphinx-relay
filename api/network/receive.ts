@@ -23,7 +23,7 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
 export const typesToForward=[
-	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment
+	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment, msgtypes.delete
 ]
 const typesToModify=[
 	msgtypes.attachment
@@ -76,6 +76,17 @@ async function onReceive(payload){
 		if(payload.type===msgtypes.group_join) {
 			if(payload.message.amount<chat.priceToJoin) doAction=false
 		}
+		// check that the sender is the og poster
+		if(payload.type===msgtypes.delete) {
+			doAction = false
+			if(payload.message.uuid) {
+				const ogMsg = await models.Message.findOne({where:{
+					uuid: payload.message.uuid,
+					sender: senderContact.id,
+				}})
+				if(ogMsg) doAction = true
+			}
+		}
 		if(doAction) forwardMessageToTribe(payload, senderContact)
 		else console.log('=> insufficient payment for this action')
 	}
@@ -126,13 +137,11 @@ async function doTheAction(data){
 }
 
 async function forwardMessageToTribe(ogpayload, sender){
-	console.log('forwardMessageToTribe',ogpayload)
+	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
-	console.log('chat.contactIds',chat.contactIds)
 	let contactIds = JSON.parse(chat.contactIds||'[]')
 	contactIds = contactIds.filter(cid=>cid!==sender.id)
-	console.log('contactIds',contactIds)
 	if(contactIds.length===0) {
 		return // totally skip if only send is in tribe
 	}
