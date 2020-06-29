@@ -129,8 +129,10 @@ async function forwardMessageToTribe(ogpayload, sender){
 	console.log('forwardMessageToTribe',ogpayload)
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
+	console.log('chat.contactIds',chat.contactIds)
 	let contactIds = JSON.parse(chat.contactIds||'[]')
 	contactIds = contactIds.filter(cid=>cid!==sender.id)
+	console.log('contactIds',contactIds)
 	if(contactIds.length===0) {
 		return // totally skip if only send is in tribe
 	}
@@ -154,7 +156,7 @@ async function forwardMessageToTribe(ogpayload, sender){
 			...owner.dataValues,
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias}
 		},
-		chat: {...chat.dataValues, contactIds:[sender.id]}, 
+		chat: {...chat.dataValues, contactIds}, 
 		skipPubKey: payload.sender.pub_key, 
 		success: ()=>{},
 		receive: ()=>{}

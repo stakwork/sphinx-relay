@@ -90,7 +90,7 @@ export async function sendMessage(params) {
 	}
 }
 
-export function signAndSend(opts, mqttTopic?:string){
+export function signAndSend(opts, mqttTopic?:string, replayingHistory?:boolean){
 	// console.log('sign and send!',opts)
 	return new Promise(async function(resolve, reject) {
 		if(!opts || typeof opts!=='object') {
@@ -109,7 +109,9 @@ export function signAndSend(opts, mqttTopic?:string){
 		try {
 			if(mqttTopic) {
 				await tribes.publish(mqttTopic, data, function(){
-					if(mqttTopic) checkIfAutoConfirm(opts.data)
+					if(!replayingHistory){
+						if(mqttTopic) checkIfAutoConfirm(opts.data)
+					}
 				})
 			} else {
 				await LND.keysendMessage({...opts,data})

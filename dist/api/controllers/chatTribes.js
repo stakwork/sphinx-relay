@@ -188,10 +188,11 @@ function replayChatHistory(chat, contact) {
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
+            const replayingHistory = true;
             yield network.signAndSend({
                 data,
                 dest: contact.publicKey,
-            }, mqttTopic);
+            }, mqttTopic, replayingHistory);
         }));
     });
 }

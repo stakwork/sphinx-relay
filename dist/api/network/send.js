@@ -99,7 +99,7 @@ function sendMessage(params) {
     });
 }
 exports.sendMessage = sendMessage;
-function signAndSend(opts, mqttTopic) {
+function signAndSend(opts, mqttTopic, replayingHistory) {
     // console.log('sign and send!',opts)
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -117,8 +117,10 @@ function signAndSend(opts, mqttTopic) {
             try {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, function () {
-                        if (mqttTopic)
-                            checkIfAutoConfirm(opts.data);
+                        if (!replayingHistory) {
+                            if (mqttTopic)
+                                checkIfAutoConfirm(opts.data);
+                        }
                     });
                 }
                 else {
