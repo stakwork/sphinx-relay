@@ -235,12 +235,11 @@ const deleteChat = async (req, res) => {
 }
 
 async function receiveGroupJoin(payload) {
-	console.log('=> receiveGroupJoin',payload)
+	console.log('=> receiveGroupJoin')
 	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
-	console.log('got chat')
 
 	const isTribe = chat_type===constants.chat_types.tribe
 

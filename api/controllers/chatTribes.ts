@@ -153,18 +153,15 @@ async function editTribe(req, res) {
 }
 
 async function replayChatHistory(chat, contact) {
-	console.log('replayChatHistory')
 	if(!(chat&&chat.id&&contact&&contact.id)){
 		return console.log('[tribes] cant replay history')
 	}
-	console.log('network.typesToReplay',network.typesToReplay)
 	const msgs = await models.Message.findAll({ 
 		where:{chatId:chat.id, type:{[Op.in]:network.typesToReplay}}, 
 		order: [['id', 'desc']], 
 		limit: 40
 	})
 	msgs.reverse()
-	console.log('msgs.length',msgs.length)
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	asyncForEach(msgs, async m=>{
 		if(!network.typesToReplay.includes(m.type)) return // only for message for now
@@ -181,7 +178,6 @@ async function replayChatHistory(chat, contact) {
 		if(m.type===constants.message_types.attachment) {
 			if(m.mediaKey&&m.mediaToken) {
 				const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1]
-				console.log('muid',muid)
 				if(muid) {
 					const mediaKey = await models.MediaKey.findOne({where:{
 						muid, chatId: chat.id,

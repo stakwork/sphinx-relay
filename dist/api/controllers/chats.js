@@ -226,12 +226,11 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> receiveGroupJoin', payload);
+        console.log('=> receiveGroupJoin');
         const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
-        console.log('got chat');
         const isTribe = chat_type === constants.chat_types.tribe;
         var date = new Date();
         date.setMilliseconds(0);

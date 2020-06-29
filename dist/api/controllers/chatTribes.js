@@ -149,18 +149,15 @@ function editTribe(req, res) {
 exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('replayChatHistory');
         if (!(chat && chat.id && contact && contact.id)) {
             return console.log('[tribes] cant replay history');
         }
-        console.log('network.typesToReplay', network.typesToReplay);
         const msgs = yield models_1.models.Message.findAll({
             where: { chatId: chat.id, type: { [sequelize_1.Op.in]: network.typesToReplay } },
             order: [['id', 'desc']],
             limit: 40
         });
         msgs.reverse();
-        console.log('msgs.length', msgs.length);
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
             if (!network.typesToReplay.includes(m.type))
@@ -177,7 +174,6 @@ function replayChatHistory(chat, contact) {
             if (m.type === constants.message_types.attachment) {
                 if (m.mediaKey && m.mediaToken) {
                     const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
-                    console.log('muid', muid);
                     if (muid) {
                         const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
                                 muid, chatId: chat.id,

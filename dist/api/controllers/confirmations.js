@@ -90,6 +90,8 @@ function receiveConfirmation(payload) {
 exports.receiveConfirmation = receiveConfirmation;
 function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!msg_id || !chat_uuid)
+            return;
         const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (message) {
