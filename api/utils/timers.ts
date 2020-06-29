@@ -61,7 +61,7 @@ export async function payBack(t){
     console.log('pay back')
     const chat = await models.Chat.findOne({ where: {id:t.chatId} })
     const owner = await models.Contact.findOne({ where: {isOwner:true} })
-    console.log('is a chat?',chat.id)
+    console.log('is a chat?',chat&&chat.id)
     if(!chat) {
         models.Timer.destroy({where:{id:t.id}})
         return

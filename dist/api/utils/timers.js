@@ -85,7 +85,7 @@ function payBack(t) {
         console.log('pay back');
         const chat = yield models_1.models.Chat.findOne({ where: { id: t.chatId } });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        console.log('is a chat?', chat.id);
+        console.log('is a chat?', chat && chat.id);
         if (!chat) {
             models_1.models.Timer.destroy({ where: { id: t.id } });
             return;
