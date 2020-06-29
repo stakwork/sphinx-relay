@@ -115,13 +115,11 @@ function deleteMessage(req, res) {
         if (!chat)
             return;
         const isTribe = chat.type === constants.chat_types.tribe;
-        if (!isTribe)
-            return;
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const isTribeOwner = owner.publicKey === chat.ownerPubkey;
-        if (!isTribeOwner)
-            return;
-        timers.removeTimerByMsgId(id);
+        const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
+        if (isTribeOwner) {
+            timers.removeTimerByMsgId(id);
+        }
         network.sendMessage({
             chat: chat,
             sender: owner,
@@ -230,13 +228,16 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
-    // check the sender is the creator of the msg?
     const isTribe = chat_type === constants.chat_types.tribe;
     if (isTribe) {
         // ?
-        // if owner, delete timer? (if its not your own)
     }
-    const message = yield models_1.models.Message.findOne({ where: { uuid: msg_uuid } });
+    const message = yield models_1.models.Message.findOne({ where: {
+            uuid: msg_uuid,
+            sender: sender.id
+        } });
+    if (!message)
+        return;
     yield message.update({ status: constants.statuses.deleted });
     socket.sendJson({
         type: 'delete',

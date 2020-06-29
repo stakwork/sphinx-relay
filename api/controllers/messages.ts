@@ -123,13 +123,13 @@ async function deleteMessage(req, res){
 
 	if(!chat) return
 	const isTribe = chat.type===constants.chat_types.tribe
-	if(!isTribe) return
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
-	const isTribeOwner = owner.publicKey===chat.ownerPubkey
-	if(!isTribeOwner) return
+	const isTribeOwner = isTribe && owner.publicKey===chat.ownerPubkey
 
-	timers.removeTimerByMsgId(id)
+	if(isTribeOwner) {
+		timers.removeTimerByMsgId(id)
+	}
 	network.sendMessage({
 		chat: chat,
 		sender: owner,
@@ -253,14 +253,17 @@ const receiveDeleteMessage = async (payload) => {
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
-	// check the sender is the creator of the msg?
 
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
 		// ?
-		// if owner, delete timer? (if its not your own)
 	}
-	const message = await models.Message.findOne({where:{uuid:msg_uuid}})
+	const message = await models.Message.findOne({where:{
+		uuid: msg_uuid,
+		sender: sender.id
+	}})
+	if(!message) return
+
 	await message.update({status: constants.statuses.deleted})
 	socket.sendJson({
 		type: 'delete',
