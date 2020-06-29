@@ -45,9 +45,7 @@ function makeName(t){
 }
 
 export async function reloadTimers(){
-    console.log("reload timers")
     const timers = await models.Timer.findAll()
-    console.log('timers.length',timers.length)
 	timers && timers.forEach((t,i)=>{
         const name = makeName(t)
 		setTimer(name, t.millis, async ()=>{
@@ -58,16 +56,13 @@ export async function reloadTimers(){
 	})
 }
 export async function payBack(t){
-    console.log('pay back')
     const chat = await models.Chat.findOne({ where: {id:t.chatId} })
     const owner = await models.Contact.findOne({ where: {isOwner:true} })
-    console.log('is a chat?',chat&&chat.id)
     if(!chat) {
         models.Timer.destroy({where:{id:t.id}})
         return
     }
     const theChat = {...chat.dataValues, contactIds:[t.receiver]}
-    console.log('send msg',{id:t.msgId})
     network.sendMessage({
         chat: theChat,
         sender: owner,
