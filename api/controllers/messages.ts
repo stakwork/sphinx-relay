@@ -45,7 +45,6 @@ const getMessages = async (req, res) => {
 		status: {[Op.or]: [
 			constants.statuses.deleted
 		]},
-		sender: owner.id
 	}
 
 	// if (chatId) {

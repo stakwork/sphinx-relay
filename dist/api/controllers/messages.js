@@ -50,7 +50,6 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         status: { [sequelize_1.Op.or]: [
                 constants.statuses.deleted
             ] },
-        sender: owner.id
     };
     // if (chatId) {
     // 	newMessagesWhere.chat_id = chatId
