@@ -231,6 +231,7 @@ function receiveGroupJoin(payload) {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
+        console.log('got chat');
         const isTribe = chat_type === constants.chat_types.tribe;
         var date = new Date();
         date.setMilliseconds(0);
@@ -241,6 +242,7 @@ function receiveGroupJoin(payload) {
         const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
         if (!isTribe || isTribeOwner) { // dont need to create contacts for these
             const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
+            console.log("sender", sender.dataValues);
             const contactIds = JSON.parse(chat.contactIds || '[]');
             if (sender) {
                 theSender = sender; // might already include??

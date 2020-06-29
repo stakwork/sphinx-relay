@@ -153,6 +153,7 @@ async function editTribe(req, res) {
 }
 
 async function replayChatHistory(chat, contact) {
+	console.log('replayChatHistory')
 	if(!(chat&&chat.id&&contact&&contact.id)){
 		return console.log('[tribes] cant replay history')
 	}

@@ -240,6 +240,7 @@ async function receiveGroupJoin(payload) {
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
+	console.log('got chat')
 
 	const isTribe = chat_type===constants.chat_types.tribe
 
@@ -253,6 +254,7 @@ async function receiveGroupJoin(payload) {
 
 	if(!isTribe || isTribeOwner) { // dont need to create contacts for these
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		console.log("sender",sender.dataValues)
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if (sender) {
 			theSender = sender // might already include??

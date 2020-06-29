@@ -149,6 +149,7 @@ function editTribe(req, res) {
 exports.editTribe = editTribe;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('replayChatHistory');
         if (!(chat && chat.id && contact && contact.id)) {
             return console.log('[tribes] cant replay history');
         }
