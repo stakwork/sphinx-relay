@@ -224,19 +224,17 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 exports.receiveMessage = receiveMessage;
 const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received delete message');
-    const { owner, sender, chat, chat_type, msg_uuid, isTribeOwner } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
-    console.log('isTribeOwner', isTribeOwner);
     const isTribe = chat_type === constants.chat_types.tribe;
-    if (isTribe) {
-        // ?
+    // in tribe this is already validated on admin's node
+    let where = { uuid: msg_uuid };
+    if (!isTribe) {
+        where.sender = sender.id; // validate sender
     }
-    const message = yield models_1.models.Message.findOne({ where: {
-            uuid: msg_uuid,
-            sender: sender.id
-        } });
+    const message = yield models_1.models.Message.findOne({ where });
     if (!message)
         return;
     yield message.update({ status: constants.statuses.deleted });

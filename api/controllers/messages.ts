@@ -249,20 +249,18 @@ const receiveMessage = async (payload) => {
 
 const receiveDeleteMessage = async (payload) => {
 	console.log('=> received delete message')
-	const {owner, sender, chat, chat_type, msg_uuid, isTribeOwner} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, chat_type, msg_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
 
-	console.log('isTribeOwner',isTribeOwner)
 	const isTribe = chat_type===constants.chat_types.tribe
-	if(isTribe) {
-		// ?
+	// in tribe this is already validated on admin's node
+	let where:{[k:string]:any} = {uuid: msg_uuid}
+	if(!isTribe) {
+		where.sender = sender.id // validate sender
 	}
-	const message = await models.Message.findOne({where:{
-		uuid: msg_uuid,
-		sender: sender.id
-	}})
+	const message = await models.Message.findOne({where})
 	if(!message) return
 
 	await message.update({status: constants.statuses.deleted})
