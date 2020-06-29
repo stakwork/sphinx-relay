@@ -45,25 +45,32 @@ function makeName(t){
 }
 
 export async function reloadTimers(){
-	const timers = await models.Timer.findAll()
-	timers && timers.forEach(t=>{
+    console.log("reload timers")
+    const timers = await models.Timer.findAll()
+    console.log('timers.length',timers.length)
+	timers && timers.forEach((t,i)=>{
         const name = makeName(t)
 		setTimer(name, t.millis, async ()=>{
-			payBack(t)
+            setTimeout(()=>{
+                payBack(t)
+            },i*250) // dont do all at once
 		})
 	})
 }
 export async function payBack(t){
+    console.log('pay back')
     const chat = await models.Chat.findOne({ where: {id:t.chatId} })
     const owner = await models.Contact.findOne({ where: {isOwner:true} })
+    console.log('is a chat?',chat.id)
     if(!chat) return
     const theChat = {...chat.dataValues, contactIds:[t.receiver]}
+    console.log('send msg',{id:t.msgId})
     network.sendMessage({
         chat: theChat,
         sender: owner,
         message: {id:t.msgId},
         amount: t.amount,
-        type: constants.message_types.confirmation,
+        type: constants.message_types.direct_payment,
     })
     models.Timer.destroy({where:{id:t.id}})
 }
