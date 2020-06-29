@@ -93,9 +93,9 @@ function payBack(t) {
         network.sendMessage({
             chat: theChat,
             sender: owner,
-            message: { id: t.msgId },
+            message: { id: t.msgId, amount: t.amount, },
             amount: t.amount,
-            type: constants.message_types.direct_payment,
+            type: constants.message_types.repayment,
         });
         models_1.models.Timer.destroy({ where: { id: t.id } });
     });

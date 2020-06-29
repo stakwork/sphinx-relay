@@ -38,7 +38,8 @@
     "group_join": 14,
     "group_leave": 15,
     "group_query": 16,
-    "delete": 17
+    "delete": 17,
+    "repayment": 18
   },
   "payment_errors": {
     "timeout": "Timed Out",
