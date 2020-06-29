@@ -249,11 +249,12 @@ const receiveMessage = async (payload) => {
 
 const receiveDeleteMessage = async (payload) => {
 	console.log('=> received delete message')
-	const {owner, sender, chat, chat_type, msg_uuid} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, chat_type, msg_uuid, isTribeOwner} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
 
+	console.log('isTribeOwner',isTribeOwner)
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
 		// ?
