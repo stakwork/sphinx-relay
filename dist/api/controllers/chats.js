@@ -30,7 +30,7 @@ function kickChatMember(req, res) {
             return res_1.failure(res, "missing param");
         }
         // remove chat.contactIds
-        let chat = yield models_1.models.Chat.findOne({ where: { chatId } });
+        let chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
         const contactIds = JSON.parse(chat.contactIds || '[]');
         const newContactIds = contactIds.filter(cid => cid !== contactId);
         yield chat.update({ contactIds: JSON.stringify(newContactIds) });
@@ -343,12 +343,10 @@ function receiveGroupLeave(payload) {
         }
         else {
             console.log('==> received leave as subsribers');
-            // check if im the only one in "members"
-            // if im the one in members
-            // i've been kicked out!
+            // check if im in "members", if so i've been kicked out!
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             let imKickedOut = false;
-            for (let [pubkey, _] of Object.entries(chat_members)) {
+            for (let pubkey of Object.keys(chat_members)) {
                 console.log('==> member pubkey', pubkey, owner.publicKey);
                 if (pubkey === owner.publicKey) {
                     imKickedOut = true;
