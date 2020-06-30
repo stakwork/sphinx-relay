@@ -45,6 +45,7 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // if (dbInvite.status != invite.invite_status) {
         // 	dbInvite.update({ status: invite.invite_status })
         // }
+        console.log(response);
         res.status(200);
         res.json({ success: true, response: { invite: jsonUtils.inviteToJson(dbInvite) } });
         res.end();
