@@ -30,7 +30,7 @@ export async function kickChatMember(req, res){
 		chatId, contactId,
 	}})
 	
-	const contact = await models.Concat.findOne({where:{id:contactId}})
+	const contact = await models.Contact.findOne({where:{id:contactId}})
 	const members = {
 		[contact.publicKey]: {key:contact.contactKey, alias:contact.alias}
 	}

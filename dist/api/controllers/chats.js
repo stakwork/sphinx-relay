@@ -38,7 +38,7 @@ function kickChatMember(req, res) {
         yield models_1.models.ChatMember.destroy({ where: {
                 chatId, contactId,
             } });
-        const contact = yield models_1.models.Concat.findOne({ where: { id: contactId } });
+        const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
         const members = {
             [contact.publicKey]: { key: contact.contactKey, alias: contact.alias }
         };
