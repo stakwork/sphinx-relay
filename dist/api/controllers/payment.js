@@ -20,7 +20,7 @@ const ldat_1 = require("../utils/ldat");
 const constants = require("../../config/constants.json");
 const network = require("../network");
 const short = require("short-uuid");
-const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -117,8 +117,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         })
     });
 });
-exports.sendPayment = sendPayment;
-const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
@@ -156,8 +155,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
 });
-exports.receivePayment = receivePayment;
-const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const payments = [];
@@ -200,5 +198,4 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     payments.sort((a, b) => b.date - a.date);
     res_1.success(res, payments.splice(offset, limit));
 });
-exports.listPayments = listPayments;
 //# sourceMappingURL=payment.js.map

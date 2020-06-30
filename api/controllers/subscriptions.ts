@@ -17,7 +17,7 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 let jobs = {}
 
 // init jobs from DB
-const initializeCronJobs = async () => {
+export const initializeCronJobs = async () => {
   await helpers.sleep(1000)
   const subs = await getRawSubs({ where: { ended: false } })
   subs.length && subs.forEach(sub => {
@@ -189,7 +189,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage) {
 }
 
 // pause sub
-async function pauseSubscription(req, res) {
+export async function pauseSubscription(req, res) {
   const id = parseInt(req.params.id)
   try {
     const sub = await models.Subscription.findOne({ where: { id } })
@@ -207,7 +207,7 @@ async function pauseSubscription(req, res) {
 };
 
 // restart sub
-async function restartSubscription(req, res) {
+export async function restartSubscription(req, res) {
   const id = parseInt(req.params.id)
   try {
     const sub = await models.Subscription.findOne({ where: { id } })
@@ -235,7 +235,7 @@ async function getRawSubs(opts = {}) {
 }
 
 // all subs
-const getAllSubscriptions = async (req, res) => {
+export const getAllSubscriptions = async (req, res) => {
   try {
     const subs = await getRawSubs()
     success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub,null)))
@@ -246,7 +246,7 @@ const getAllSubscriptions = async (req, res) => {
 };
 
 // one sub by id
-async function getSubscription(req, res) {
+export async function getSubscription(req, res) {
   try {
     const sub = await models.Subscription.findOne({ where: { id: req.params.id } })
     success(res, jsonUtils.subscriptionToJson(sub,null))
@@ -257,7 +257,7 @@ async function getSubscription(req, res) {
 };
 
 // delete sub by id
-async function deleteSubscription(req, res) {
+export async function deleteSubscription(req, res) {
   const id = req.params.id
   if (!id) return
   try {
@@ -274,7 +274,7 @@ async function deleteSubscription(req, res) {
 };
 
 // all subs for contact id
-const getSubscriptionsForContact = async (req, res) => {
+export const getSubscriptionsForContact = async (req, res) => {
   try {
     const subs = await getRawSubs({ where: { contactId: req.params.contactId } })
     success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub,null)))
@@ -285,7 +285,7 @@ const getSubscriptionsForContact = async (req, res) => {
 };
 
 // create new sub
-async function createSubscription(req, res) {
+export async function createSubscription(req, res) {
   const date = new Date()
   date.setMilliseconds(0)
   const s = jsonToSubscription({
@@ -321,7 +321,7 @@ async function createSubscription(req, res) {
   }
 };
 
-async function editSubscription(req, res) {
+export async function editSubscription(req, res) {
   console.log('======> editSubscription')
   const date = new Date()
   date.setMilliseconds(0)
@@ -376,14 +376,3 @@ function jsonToSubscription(j) {
   })
 }
 
-export {
-  initializeCronJobs,
-  getAllSubscriptions,
-  getSubscription,
-  createSubscription,
-  getSubscriptionsForContact,
-  pauseSubscription,
-  restartSubscription,
-  deleteSubscription,
-  editSubscription,
-}

@@ -4,7 +4,7 @@ import * as network from './network'
 
 const constants = require('../config/constants.json');
 
-const findOrCreateChat = async (params) => {
+export const findOrCreateChat = async (params) => {
 	const { chat_id, owner_id, recipient_id } = params
 	let chat
 	let date = new Date();
@@ -35,7 +35,7 @@ const findOrCreateChat = async (params) => {
 	return chat
 }
 
-const sendContactKeys = async (args) => {
+export const sendContactKeys = async (args) => {
 	const { type, contactIds, contactPubKey, sender, success, failure } = args
 	const msg = newkeyexchangemsg(type, sender)
 
@@ -76,7 +76,7 @@ const sendContactKeys = async (args) => {
 	}
 }
 
-const performKeysendMessage = async ({ destination_key, amount, msg, success, failure, sender }) => {
+export const performKeysendMessage = async ({ destination_key, amount, msg, success, failure, sender }) => {
 	const opts = {
 		dest: destination_key,
 		data: msg || {},
@@ -92,7 +92,7 @@ const performKeysendMessage = async ({ destination_key, amount, msg, success, fa
 	}
 }
 
-async function findOrCreateContactByPubkey(senderPubKey) {
+export async function findOrCreateContactByPubkey(senderPubKey) {
 	let sender = await models.Contact.findOne({ where: { publicKey: senderPubKey } })
 	if (!sender) {
 		sender = await models.Contact.create({
@@ -111,7 +111,7 @@ async function findOrCreateContactByPubkey(senderPubKey) {
 	return sender
 }
 
-async function findOrCreateChatByUUID(chat_uuid, contactIds) {
+export async function findOrCreateChatByUUID(chat_uuid, contactIds) {
 	let chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) {
 		var date = new Date();
@@ -127,11 +127,11 @@ async function findOrCreateChatByUUID(chat_uuid, contactIds) {
 	return chat
 }
 
-async function sleep(ms) {
+export async function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function parseReceiveParams(payload) {
+export async function parseReceiveParams(payload) {
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
 	const sender_alias = dat.sender.alias
@@ -178,16 +178,6 @@ async function parseReceiveParams(payload) {
 		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	}
 	return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url }
-}
-
-export {
-	findOrCreateChat,
-	sendContactKeys,
-	findOrCreateContactByPubkey,
-	findOrCreateChatByUUID,
-	sleep,
-	parseReceiveParams,
-	performKeysendMessage
 }
 
 async function asyncForEach(array, callback) {

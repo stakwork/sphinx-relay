@@ -48,7 +48,7 @@ function getLogsSince(req, res) {
     });
 }
 exports.getLogsSince = getLogsSince;
-const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = lightning_1.loadLightning();
     var request = {};
     lightning.getInfo(request, function (err, response) {
@@ -62,8 +62,7 @@ const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.end();
     });
 });
-exports.getInfo = getInfo;
-const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = lightning_1.loadLightning();
     var request = {};
     lightning.listChannels(request, function (err, response) {
@@ -77,8 +76,7 @@ const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.end();
     });
 });
-exports.getChannels = getChannels;
-const getBalance = (req, res) => {
+exports.getBalance = (req, res) => {
     const lightning = lightning_1.loadLightning();
     var request = {};
     lightning.channelBalance(request, function (err, response) {
@@ -92,8 +90,7 @@ const getBalance = (req, res) => {
         res.end();
     });
 };
-exports.getBalance = getBalance;
-const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = lightning_1.loadLightning();
     lightning.listChannels({}, (err, channelList) => {
         const { channels } = channelList;
@@ -111,8 +108,7 @@ const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, fu
         res.end();
     });
 });
-exports.getLocalRemoteBalance = getLocalRemoteBalance;
-const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var ipOfSource = req.connection.remoteAddress;
     if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
         res.status(401);
@@ -124,7 +120,6 @@ const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     res.json(node);
     res.end();
 });
-exports.getNodeInfo = getNodeInfo;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

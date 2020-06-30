@@ -39,7 +39,7 @@ purchase_accept should update the original attachment message with the terms and
 purchase_deny returns the sats
 */
 
-const sendAttachmentMessage = async (req, res) => {
+export const sendAttachmentMessage = async (req, res) => {
   // try {
   //   schemas.attachment.validateSync(req.body)
   // } catch(e) {
@@ -143,7 +143,7 @@ const sendAttachmentMessage = async (req, res) => {
   })
 }
 
-function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType){
+export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType){
   if (typeof mediaKeyMap!=='object'){
     console.log('wrong type for mediaKeyMap')
     return
@@ -163,7 +163,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType){
   }
 }
 
-const purchase = async (req, res) => {
+export const purchase = async (req, res) => {
   const {
     chat_id,
     contact_id,
@@ -218,7 +218,7 @@ const purchase = async (req, res) => {
 
 /* RECEIVERS */
 
-const receivePurchase = async (payload) => {
+export const receivePurchase = async (payload) => {
   console.log('=> received purchase', { payload })
 
   var date = new Date();
@@ -346,7 +346,7 @@ const receivePurchase = async (payload) => {
   })
 }
 
-const receivePurchaseAccept = async (payload) => {
+export const receivePurchaseAccept = async (payload) => {
   console.log('=> receivePurchaseAccept')
   var date = new Date();
   date.setMilliseconds(0)
@@ -391,7 +391,7 @@ const receivePurchaseAccept = async (payload) => {
   })
 }
 
-const receivePurchaseDeny = async (payload) => {
+export const receivePurchaseDeny = async (payload) => {
   console.log('=> receivePurchaseDeny')
   var date = new Date()
   date.setMilliseconds(0)
@@ -418,7 +418,7 @@ const receivePurchaseDeny = async (payload) => {
   })
 }
 
-const receiveAttachment = async (payload) => {
+export const receiveAttachment = async (payload) => {
   // console.log('received attachment', { payload })
 
   var date = new Date();
@@ -463,7 +463,7 @@ const receiveAttachment = async (payload) => {
   sendConfirmation({ chat:theChat, sender: owner, msg_id })
 }
 
-async function signer(req, res) {
+export async function signer(req, res) {
   if(!req.params.challenge) return resUtils.failure(res, "no challenge")
   try {
     const sig = await signBuffer(
@@ -479,7 +479,7 @@ async function signer(req, res) {
   }
 }
 
-async function verifier(msg, sig) {
+export async function verifier(msg, sig) {
   try {
     const res = await verifyMessage(msg, sig)
     return res
@@ -488,7 +488,7 @@ async function verifier(msg, sig) {
   }
 }
 
-async function getMyPubKey(){
+export async function getMyPubKey(){
   return new Promise((resolve,reject)=>{
     const lightning = loadLightning()
     var request = {}
@@ -500,7 +500,7 @@ async function getMyPubKey(){
   })
 }
 
-async function cycleMediaToken() {
+export async function cycleMediaToken() {
   try{
     if (process.env.TEST_LDAT) testLDAT()
 
@@ -520,7 +520,7 @@ async function cycleMediaToken() {
 
 const mediaURL = 'http://' + config.media_host + '/'
 
-async function getMediaToken(force) {
+export async function getMediaToken(force) {
   if(!force && meme.mediaToken) return meme.mediaToken
   await helpers.sleep(3000)
   try {
@@ -556,7 +556,7 @@ async function getMediaToken(force) {
   }
 }
 
-async function getMediaInfo(muid) {
+export async function getMediaInfo(muid) {
   try {
     const token = await getMediaToken(null)
     const res = await rp.get(mediaURL+'mymedia/'+muid,{
@@ -572,15 +572,3 @@ async function getMediaInfo(muid) {
   }
 }
 
-export {
-  sendAttachmentMessage,
-  receiveAttachment,
-  receivePurchase,
-  receivePurchaseAccept,
-  receivePurchaseDeny,
-  purchase,
-  signer,
-  verifier,
-  getMediaToken,
-  cycleMediaToken
-}

@@ -12,7 +12,7 @@ const defaultLogFiles = [
 	'/home/lnd/.pm2/logs/app-error.log',
 	'/var/log/syslog',
 ]
-async function getLogsSince(req, res) {
+export async function getLogsSince(req, res) {
 	const logFiles = config.log_file ? [config.log_file] : defaultLogFiles
 	let txt
 	let err
@@ -34,7 +34,7 @@ async function getLogsSince(req, res) {
 	else failure(res, err)
 }
 
-const getInfo = async (req, res) => {
+export const getInfo = async (req, res) => {
 	const lightning = loadLightning()
 	var request = {}
 	lightning.getInfo(request, function(err, response) {
@@ -48,7 +48,7 @@ const getInfo = async (req, res) => {
 	});
 };
 
-const getChannels = async (req, res) => {
+export const getChannels = async (req, res) => {
   const lightning = loadLightning()
 	var request = {}
 	lightning.listChannels(request, function(err, response) {
@@ -62,7 +62,7 @@ const getChannels = async (req, res) => {
 	});
 };
 
-const getBalance = (req, res) => {
+export const getBalance = (req, res) => {
   const lightning = loadLightning()
 	var request = {}
 	lightning.channelBalance(request, function(err, response) {
@@ -76,7 +76,7 @@ const getBalance = (req, res) => {
 	});
 };
 
-const getLocalRemoteBalance = async (req, res) => {
+export const getLocalRemoteBalance = async (req, res) => {
 	const lightning = loadLightning()
 	lightning.listChannels({}, (err, channelList) => {
 		const { channels } = channelList
@@ -96,7 +96,7 @@ const getLocalRemoteBalance = async (req, res) => {
 	  })
 };
 
-const getNodeInfo = async (req, res) => {
+export const getNodeInfo = async (req, res) => {
 	var ipOfSource = req.connection.remoteAddress;
 	if(!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))){
 		res.status(401)
@@ -107,15 +107,6 @@ const getNodeInfo = async (req, res) => {
 	res.status(200)
 	res.json(node)
 	res.end()
-}
-
-export { 
-	getInfo, 
-	getBalance, 
-	getChannels, 
-	getLocalRemoteBalance,
-	getLogsSince,
-	getNodeInfo,
 }
 
 async function asyncForEach(array, callback) {

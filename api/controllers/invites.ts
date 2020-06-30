@@ -3,7 +3,7 @@ import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import {finishInviteInHub, createInviteInHub, payInviteInvoice} from '../hub'
 
-const finishInvite = async (req, res) => {
+export const finishInvite = async (req, res) => {
 	const {
 		invite_string
   	} = req.body
@@ -27,7 +27,7 @@ const finishInvite = async (req, res) => {
     finishInviteInHub(params, onSuccess, onFailure)
 }
 
-const payInvite = async (req, res) => {
+export const payInvite = async (req, res) => {
 	// const params = {
 	// 	node_ip: process.env.NODE_IP
 	// }
@@ -62,7 +62,7 @@ const payInvite = async (req, res) => {
 	payInviteInvoice(dbInvite.invoice, onSuccess, onFailure)
 }
 
-const createInvite = async (req, res) => {
+export const createInvite = async (req, res) => {
 	const {
 		nickname,
 		welcome_message
@@ -115,8 +115,3 @@ const createInvite = async (req, res) => {
     createInviteInHub(params, onSuccess, onFailure)
 }
 
-export {
-	createInvite,
-	finishInvite,
-	payInvite
-}

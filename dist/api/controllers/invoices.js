@@ -27,7 +27,7 @@ function stripLightningPrefix(s) {
         return s.substring(10);
     return s;
 }
-const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
     const payment_request = stripLightningPrefix(req.body.payment_request);
     if (!payment_request) {
@@ -74,14 +74,12 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }));
     call.write({ payment_request });
 });
-exports.payInvoice = payInvoice;
-const cancelInvoice = (req, res) => {
+exports.cancelInvoice = (req, res) => {
     res.status(200);
     res.json({ success: false });
     res.end();
 };
-exports.cancelInvoice = cancelInvoice;
-const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
     const { amount, memo, remote_memo, chat_id, contact_id, expiry, } = req.body;
     var request = {
@@ -166,8 +164,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
 });
-exports.createInvoice = createInvoice;
-const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = yield lightning_1.loadLightning();
     lightning.listInvoices({}, (err, response) => {
         console.log({ err, response });
@@ -181,8 +178,7 @@ const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
     });
 });
-exports.listInvoices = listInvoices;
-const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received invoice', payload);
     const total_spent = 1;
     const dat = payload.content || payload;
@@ -225,7 +221,6 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
-exports.receiveInvoice = receiveInvoice;
 // lnd invoice stuff
 function decodePaymentRequest(paymentRequest) {
     var decodedPaymentRequest = decodeUtils.decode(paymentRequest);

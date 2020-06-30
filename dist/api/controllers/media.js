@@ -47,7 +47,7 @@ purchase_accept should update the original attachment message with the terms and
 
 purchase_deny returns the sats
 */
-const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // try {
     //   schemas.attachment.validateSync(req.body)
     // } catch(e) {
@@ -130,7 +130,6 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         failure: error => resUtils.failure(res, error.message),
     });
 });
-exports.sendAttachmentMessage = sendAttachmentMessage;
 function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
     if (typeof mediaKeyMap !== 'object') {
         console.log('wrong type for mediaKeyMap');
@@ -150,7 +149,8 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
         }
     }
 }
-const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.saveMediaKeys = saveMediaKeys;
+exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, contact_id, amount, media_token, } = req.body;
     var date = new Date();
     date.setMilliseconds(0);
@@ -194,9 +194,8 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         failure: error => resUtils.failure(res, error.message),
     });
 });
-exports.purchase = purchase;
 /* RECEIVERS */
-const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
@@ -316,8 +315,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         failure: error => console.log('=> couldnt send purchase accept', error),
     });
 });
-exports.receivePurchase = receivePurchase;
-const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> receivePurchaseAccept');
     var date = new Date();
     date.setMilliseconds(0);
@@ -358,8 +356,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
         response: jsonUtils.messageToJson(msg, chat, sender)
     });
 });
-exports.receivePurchaseAccept = receivePurchaseAccept;
-const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> receivePurchaseDeny');
     var date = new Date();
     date.setMilliseconds(0);
@@ -385,8 +382,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
         response: jsonUtils.messageToJson(msg, chat, sender)
     });
 });
-exports.receivePurchaseDeny = receivePurchaseDeny;
-const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received attachment', { payload })
     var date = new Date();
     date.setMilliseconds(0);
@@ -427,7 +423,6 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
-exports.receiveAttachment = receiveAttachment;
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.params.challenge)
@@ -474,6 +469,7 @@ function getMyPubKey() {
         });
     });
 }
+exports.getMyPubKey = getMyPubKey;
 function cycleMediaToken() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -549,4 +545,5 @@ function getMediaInfo(muid) {
         }
     });
 }
+exports.getMediaInfo = getMediaInfo;
 //# sourceMappingURL=media.js.map

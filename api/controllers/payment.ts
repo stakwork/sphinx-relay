@@ -10,7 +10,7 @@ import * as constants from '../../config/constants.json'
 import * as network from '../network'
 import * as short from 'short-uuid'
 
-const sendPayment = async (req, res) => {
+export const sendPayment = async (req, res) => {
   const {
     amount,
     chat_id,
@@ -125,7 +125,7 @@ const sendPayment = async (req, res) => {
   })
 };
 
-const receivePayment = async (payload) => {
+export const receivePayment = async (payload) => {
   console.log('received payment', { payload })
 
   var date = new Date();
@@ -167,7 +167,7 @@ const receivePayment = async (payload) => {
   sendNotification(chat, msg.senderAlias||sender.alias, 'message')
 }
 
-const listPayments = async (req, res) => {
+export const listPayments = async (req, res) => {
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
   
@@ -217,8 +217,3 @@ const listPayments = async (req, res) => {
   success(res, payments.splice(offset, limit))
 };
 
-export {
-  sendPayment,
-  receivePayment,
-  listPayments,
-}

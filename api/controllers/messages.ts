@@ -14,7 +14,7 @@ import * as short from 'short-uuid'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-const getMessages = async (req, res) => {
+export const getMessages = async (req, res) => {
 	const dateToReturn = req.query.date;
 
 	if (!dateToReturn) {
@@ -88,7 +88,7 @@ const getMessages = async (req, res) => {
 	res.end()
 }
 
-const getAllMessages = async (req, res) => {
+export const getAllMessages = async (req, res) => {
 	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
 	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 
@@ -106,7 +106,7 @@ const getAllMessages = async (req, res) => {
 	})
 };
 
-async function deleteMessage(req, res){
+export async function deleteMessage(req, res){
 	const id = parseInt(req.params.id)
 
 	const message = await models.Message.findOne({where:{id}})
@@ -137,7 +137,7 @@ async function deleteMessage(req, res){
 	})
 }
 
-const sendMessage = async (req, res) => {
+export const sendMessage = async (req, res) => {
 	// try {
 	// 	schemas.message.validateSync(req.body)
 	// } catch(e) {
@@ -198,7 +198,7 @@ const sendMessage = async (req, res) => {
 	})
 }
 
-const receiveMessage = async (payload) => {
+export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
 	var date = new Date();
@@ -246,7 +246,7 @@ const receiveMessage = async (payload) => {
 	sendConfirmation({ chat:theChat, sender: owner, msg_id })
 }
 
-const receiveDeleteMessage = async (payload) => {
+export const receiveDeleteMessage = async (payload) => {
 	console.log('=> received delete message')
 	const {owner, sender, chat, chat_type, msg_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
@@ -269,7 +269,7 @@ const receiveDeleteMessage = async (payload) => {
 	})
 }
 
-const readMessages = async (req, res) => {
+export const readMessages = async (req, res) => {
 	const chat_id = req.params.chat_id;
 	
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
@@ -286,19 +286,8 @@ const readMessages = async (req, res) => {
 	success(res, {})
 }
 
-const clearMessages = (req, res) => {
+export const clearMessages = (req, res) => {
 	models.Message.destroy({ where: {}, truncate: true })
 
 	success(res, {})
-}
-
-export {
-  getMessages,
-  sendMessage,
-  receiveMessage,
-  clearMessages,
-  readMessages,
-  deleteMessage,
-  getAllMessages,
-  receiveDeleteMessage,
 }

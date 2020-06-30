@@ -23,10 +23,10 @@ const path = require("path");
 const network = require("../network");
 const short = require("short-uuid");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
-        return getAllMessages(req, res);
+        return exports.getAllMessages(req, res);
     }
     console.log(dateToReturn);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -84,8 +84,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     res.status(200);
     res.end();
 });
-exports.getMessages = getMessages;
-const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit, offset });
@@ -98,7 +97,6 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         confirmed_messages: []
     });
 });
-exports.getAllMessages = getAllMessages;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const id = parseInt(req.params.id);
@@ -128,7 +126,7 @@ function deleteMessage(req, res) {
     });
 }
 exports.deleteMessage = deleteMessage;
-const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // try {
     // 	schemas.message.validateSync(req.body)
     // } catch(e) {
@@ -177,8 +175,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         message: msgToSend,
     });
 });
-exports.sendMessage = sendMessage;
-const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
     var date = new Date();
     date.setMilliseconds(0);
@@ -220,8 +217,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
-exports.receiveMessage = receiveMessage;
-const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received delete message');
     const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
@@ -242,8 +238,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
         response: jsonUtils.messageToJson(message, chat, sender)
     });
 });
-exports.receiveDeleteMessage = receiveDeleteMessage;
-const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = req.params.chat_id;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     models_1.models.Message.update({ seen: true }, {
@@ -256,10 +251,8 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     });
     res_1.success(res, {});
 });
-exports.readMessages = readMessages;
-const clearMessages = (req, res) => {
+exports.clearMessages = (req, res) => {
     models_1.models.Message.destroy({ where: {}, truncate: true });
     res_1.success(res, {});
 };
-exports.clearMessages = clearMessages;
 //# sourceMappingURL=messages.js.map

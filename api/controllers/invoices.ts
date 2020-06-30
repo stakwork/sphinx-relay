@@ -18,7 +18,7 @@ function stripLightningPrefix(s){
   return s
 }
 
-const payInvoice = async (req, res) => {
+export const payInvoice = async (req, res) => {
   const lightning = await loadLightning()
   const payment_request = stripLightningPrefix(req.body.payment_request)
 
@@ -75,13 +75,13 @@ const payInvoice = async (req, res) => {
   call.write({ payment_request })
 };
 
-const cancelInvoice = (req, res) => {
+export const cancelInvoice = (req, res) => {
   res.status(200);
   res.json({ success: false });
   res.end();
 };
 
-const createInvoice = async (req, res) => {
+export const createInvoice = async (req, res) => {
   const lightning = await loadLightning()
 
   const {
@@ -180,7 +180,7 @@ const createInvoice = async (req, res) => {
   }
 };
 
-const listInvoices = async (req, res) => {
+export const listInvoices = async (req, res) => {
   const lightning = await loadLightning()
 
   lightning.listInvoices({}, (err, response) => {
@@ -195,7 +195,7 @@ const listInvoices = async (req, res) => {
   });
 };
 
-const receiveInvoice = async (payload) => {
+export const receiveInvoice = async (payload) => {
   console.log('received invoice', payload)
 
   const total_spent = 1
@@ -244,14 +244,6 @@ const receiveInvoice = async (payload) => {
 
   const theChat = {...chat.dataValues, contactIds:[sender.id]}
   sendConfirmation({ chat:theChat, sender: owner, msg_id })
-}
-
-export {
-  listInvoices,
-  payInvoice,
-  cancelInvoice,
-  createInvoice,
-  receiveInvoice
 }
 
 // lnd invoice stuff

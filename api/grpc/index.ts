@@ -12,7 +12,7 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
 
-function subscribeInvoices(parseKeysendInvoice) {	
+export function subscribeInvoices(parseKeysendInvoice) {	
 	return new Promise(async(resolve,reject)=>{
 		const lightning = await loadLightning()
 
@@ -134,6 +134,3 @@ async function reconnectToLND(innerCtx:number){
 	}
 }
 
-export {
-	subscribeInvoices,
-}

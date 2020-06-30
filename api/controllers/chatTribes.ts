@@ -10,7 +10,7 @@ import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-async function joinTribe(req, res){
+export async function joinTribe(req, res){
 	console.log('=> joinTribe')
 	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias } = req.body
 
@@ -93,7 +93,7 @@ async function joinTribe(req, res){
 	})
 }
 
-async function editTribe(req, res) {
+export async function editTribe(req, res) {
 	const {
 		name,
 		is_listed,
@@ -152,7 +152,7 @@ async function editTribe(req, res) {
 	}
 }
 
-async function replayChatHistory(chat, contact) {
+export async function replayChatHistory(chat, contact) {
 	if(!(chat&&chat.id&&contact&&contact.id)){
 		return console.log('[tribes] cant replay history')
 	}
@@ -206,8 +206,7 @@ async function replayChatHistory(chat, contact) {
 	})
 }
 
-
-async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis): Promise<{[k:string]:any}> {
+export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis): Promise<{[k:string]:any}> {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -235,12 +234,6 @@ async function createTribeChatParams(owner, contactIds, name, img, price_per_mes
 		escrowMillis: escrow_millis||0,
 		escrowAmount: escrow_amount||0,
 	}
-}
-
-export {
-    joinTribe, editTribe,
-    replayChatHistory,
-    createTribeChatParams
 }
 
 async function asyncForEach(array, callback) {

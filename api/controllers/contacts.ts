@@ -10,7 +10,7 @@ import { Op } from 'sequelize'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-const getContacts = async (req, res) => {
+export const getContacts = async (req, res) => {
 	const contacts = await models.Contact.findAll({ where:{deleted:false}, raw: true })
 	const invites = await models.Invite.findAll({ raw: true })
 	const chats = await models.Chat.findAll({ where:{deleted:false}, raw: true })
@@ -37,7 +37,7 @@ const getContacts = async (req, res) => {
 	})
 }
 
-const generateToken = async (req, res) => {
+export const generateToken = async (req, res) => {
 	console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query })
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true, authToken: null }})
@@ -66,7 +66,7 @@ const generateToken = async (req, res) => {
 	}
 }
 
-const updateContact = async (req, res) => {
+export const updateContact = async (req, res) => {
 	console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query })
 
 	let attrs = extractAttrs(req.body)
@@ -97,7 +97,7 @@ const updateContact = async (req, res) => {
 	})
 }
 
-const exchangeKeys = async (req, res) => {
+export const exchangeKeys = async (req, res) => {
 	console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query })
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
@@ -112,7 +112,7 @@ const exchangeKeys = async (req, res) => {
 	})
 }
 
-const createContact = async (req, res) => {
+export const createContact = async (req, res) => {
 	console.log('=> createContact called', { body: req.body, params: req.params, query: req.query })
 
 	let attrs = extractAttrs(req.body)
@@ -140,7 +140,7 @@ const createContact = async (req, res) => {
 	})
 }
 
-const deleteContact = async (req, res) => {
+export const deleteContact = async (req, res) => {
 	const id = parseInt(req.params.id||'0')
 	if(!id || id===1) {
 		failure(res, 'Cannot delete self')
@@ -195,7 +195,7 @@ const deleteContact = async (req, res) => {
 	success(res, {})
 }
 
-const receiveContactKey = async (payload) => {
+export const receiveContactKey = async (payload) => {
 	console.log('=> received contact key', JSON.stringify(payload))
 
 	const dat = payload.content || payload
@@ -230,7 +230,7 @@ const receiveContactKey = async (payload) => {
 	})
 }
 
-const receiveConfirmContactKey = async (payload) => {
+export const receiveConfirmContactKey = async (payload) => {
 	console.log(`=> confirm contact key for ${payload.sender&&payload.sender.pub_key}`, JSON.stringify(payload))
 
 	const dat = payload.content || payload
@@ -268,13 +268,3 @@ const extractAttrs = body => {
 	return attrs
 }
 
-export {
-	generateToken,
-	exchangeKeys,
-	getContacts,
-	updateContact,
-	createContact,
-	deleteContact,
-	receiveContactKey,
-	receiveConfirmContactKey
-}

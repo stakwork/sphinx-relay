@@ -22,7 +22,7 @@ var avatarStorage = multer.diskStorage({
     }
   }
 })
-var avatarUpload = multer({ storage: avatarStorage })
+export var avatarUpload = multer({ storage: avatarStorage })
 
 function hasProtocol(ip){
   if(ip.startsWith('https://')) return true
@@ -30,7 +30,7 @@ function hasProtocol(ip){
   return false
 }
 
-const uploadFile = async (req, res) => {
+export const uploadFile = async (req, res) => {
   const { contact_id, chat_id } = req.body
   const { file } = req
 
@@ -61,9 +61,4 @@ const uploadFile = async (req, res) => {
     photo_url
   });
   res.end();
-}
-
-export {
-  avatarUpload,
-	uploadFile
 }

@@ -20,7 +20,7 @@ const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-async function set(app) {
+export async function set(app) {
 	
 	if(models && models.Subscription){
 		subcriptions.initializeCronJobs()
@@ -117,7 +117,7 @@ const login = (req, res) => {
 }
 
 const msgtypes = constants.message_types
-const ACTIONS = {
+export const ACTIONS = {
     [msgtypes.contact_key]: contacts.receiveContactKey,
     [msgtypes.contact_key_confirmation]: contacts.receiveConfirmContactKey,
     [msgtypes.message]: messages.receiveMessage,
@@ -135,5 +135,3 @@ const ACTIONS = {
 	[msgtypes.delete]: messages.receiveDeleteMessage,
 	[msgtypes.repayment]: ()=>{},
 }
-
-export {set, ACTIONS} 

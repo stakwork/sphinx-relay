@@ -13,7 +13,7 @@ import {replayChatHistory,createTribeChatParams} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-async function kickChatMember(req, res){
+export async function kickChatMember(req, res){
 	const chatId = parseInt(req.params['chat_id'])
 	const contactId = parseInt(req.params['contact_id'])
 	if(!chatId || !contactId) {
@@ -46,13 +46,13 @@ async function kickChatMember(req, res){
 	success(res, true)
 }
 
-async function getChats(req, res) {
+export async function getChats(req, res) {
 	const chats = await models.Chat.findAll({ where:{deleted:false}, raw: true })
 	const c = chats.map(chat => jsonUtils.chatToJson(chat));
 	success(res, c)
 }
 
-async function mute(req, res) {
+export async function mute(req, res) {
 	const chatId = req.params['chat_id']
 	const mute = req.params['mute_unmute']
 
@@ -73,7 +73,7 @@ async function mute(req, res) {
 
 // just add self here if tribes
 // or can u add contacts as members?
-async function createGroupChat(req, res) {
+export async function createGroupChat(req, res) {
 	const {
 		name,
 		is_tribe,
@@ -159,7 +159,7 @@ async function createGroupChat(req, res) {
 }
 
 // only owner can do for tribe?
-async function addGroupMembers(req, res) {
+export async function addGroupMembers(req, res) {
 	const {
 		contact_ids,
 	} = req.body
@@ -199,7 +199,7 @@ async function addGroupMembers(req, res) {
 	})
 }
 
-const deleteChat = async (req, res) => {
+export const deleteChat = async (req, res) => {
 	const { id } = req.params
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
@@ -234,7 +234,7 @@ const deleteChat = async (req, res) => {
 	success(res, { chat_id: id })
 }
 
-async function receiveGroupJoin(payload) {
+export async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
 	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
 
@@ -323,9 +323,9 @@ async function receiveGroupJoin(payload) {
 	})
 }
 
-async function receiveGroupLeave(payload) {
+export async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
-	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, chat_members } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -333,6 +333,7 @@ async function receiveGroupLeave(payload) {
 	const isTribe = chat_type===constants.chat_types.tribe
 
 	let sender
+	// EITHER private chat OR tribeOwner
 	if(!isTribe || isTribeOwner) {
 		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
 		if (!sender) return
@@ -354,8 +355,39 @@ async function receiveGroupLeave(payload) {
 			}
 		}
 	} else {
+		console.log('==> received leave as subsribers')
 		// check if im the only one in "members"
-		// and delete chat??
+		// if im the one in members
+		// i've been kicked out!
+		const owner = await models.Contact.findOne({where:{isOwner:true}})
+		let imKickedOut = false
+		for (let [pubkey, _] of Object.entries(chat_members)) {
+			console.log('==> member pubkey', pubkey, owner.publicKey)
+			if(pubkey===owner.publicKey) {
+				imKickedOut = true
+			}
+		}
+		if(imKickedOut) {
+			console.log('==> IM kicked out!')
+			await chat.update({
+				deleted: true, 
+				uuid:'', 
+				groupKey:'',
+				host:'',
+				photoUrl:'',
+				contactIds:'[]',
+				name:''
+			})
+			await models.Message.destroy({ where: { chatId: chat.id } })
+			socket.sendJson({
+				type: 'group_leave',
+				response: {
+					contact: jsonUtils.contactToJson(owner),
+					chat: jsonUtils.chatToJson(chat),
+				}
+			})
+			return // done - I've been kicked out
+		}
 	}
 
 	var date = new Date();
@@ -394,7 +426,7 @@ async function validateTribeOwner(chat_uuid: string, pubkey: string){
 	}
 	return false
 }
-async function receiveGroupCreateOrInvite(payload) {
+export async function receiveGroupCreateOrInvite(payload) {
 	const { sender_pub_key, chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = await helpers.parseReceiveParams(payload)
 
 	// maybe this just needs to move to adding tribe owner ChatMember?
@@ -509,12 +541,6 @@ function createGroupChatParams(owner, contactIds, members, name) {
 		name: name,
 		type: constants.chat_types.group
 	}
-}
-
-export {
-	getChats, mute, addGroupMembers, kickChatMember,
-	receiveGroupCreateOrInvite, createGroupChat,
-	deleteChat, receiveGroupLeave, receiveGroupJoin,
 }
 
 async function asyncForEach(array, callback) {

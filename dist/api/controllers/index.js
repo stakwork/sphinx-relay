@@ -115,7 +115,7 @@ const login = (req, res) => {
     }
 };
 const msgtypes = constants.message_types;
-const ACTIONS = {
+exports.ACTIONS = {
     [msgtypes.contact_key]: contacts.receiveContactKey,
     [msgtypes.contact_key_confirmation]: contacts.receiveConfirmContactKey,
     [msgtypes.message]: messages.receiveMessage,
@@ -133,5 +133,4 @@ const ACTIONS = {
     [msgtypes.delete]: messages.receiveDeleteMessage,
     [msgtypes.repayment]: () => { },
 };
-exports.ACTIONS = ACTIONS;
 //# sourceMappingURL=index.js.map

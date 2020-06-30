@@ -32,8 +32,7 @@ var avatarStorage = multer.diskStorage({
         }
     }
 });
-var avatarUpload = multer({ storage: avatarStorage });
-exports.avatarUpload = avatarUpload;
+exports.avatarUpload = multer({ storage: avatarStorage });
 function hasProtocol(ip) {
     if (ip.startsWith('https://'))
         return true;
@@ -41,7 +40,7 @@ function hasProtocol(ip) {
         return true;
     return false;
 }
-const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { contact_id, chat_id } = req.body;
     const { file } = req;
     const ip = String(process.env.NODE_IP);
@@ -71,5 +70,4 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
     res.end();
 });
-exports.uploadFile = uploadFile;
 //# sourceMappingURL=uploads.js.map

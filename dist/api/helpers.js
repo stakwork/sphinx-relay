@@ -13,7 +13,7 @@ const models_1 = require("./models");
 const md5 = require("md5");
 const network = require("./network");
 const constants = require('../config/constants.json');
-const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
+exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     let chat;
     let date = new Date();
@@ -41,8 +41,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     }
     return chat;
 });
-exports.findOrCreateChat = findOrCreateChat;
-const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* () {
     const { type, contactIds, contactPubKey, sender, success, failure } = args;
     const msg = newkeyexchangemsg(type, sender);
     let yes = null;
@@ -62,7 +61,7 @@ const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* ()
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
             destination_key = contact.publicKey;
         }
-        performKeysendMessage({
+        exports.performKeysendMessage({
             sender,
             destination_key,
             amount: 3,
@@ -82,8 +81,7 @@ const sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* ()
         success(yes);
     }
 });
-exports.sendContactKeys = sendContactKeys;
-const performKeysendMessage = ({ destination_key, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+exports.performKeysendMessage = ({ destination_key, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
         data: msg || {},
@@ -101,7 +99,6 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure,
             failure(e);
     }
 });
-exports.performKeysendMessage = performKeysendMessage;
 function findOrCreateContactByPubkey(senderPubKey) {
     return __awaiter(this, void 0, void 0, function* () {
         let sender = yield models_1.models.Contact.findOne({ where: { publicKey: senderPubKey } });
@@ -112,7 +109,7 @@ function findOrCreateContactByPubkey(senderPubKey) {
                 status: 1
             });
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            sendContactKeys({
+            exports.sendContactKeys({
                 contactIds: [sender.id],
                 sender: owner,
                 type: constants.message_types.contact_key,

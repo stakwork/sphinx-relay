@@ -194,7 +194,7 @@ function addGroupMembers(req, res) {
     });
 }
 exports.addGroupMembers = addGroupMembers;
-const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield models_1.models.Chat.findOne({ where: { id } });
@@ -223,7 +223,6 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     yield models_1.models.Message.destroy({ where: { chatId: id } });
     res_1.success(res, { chat_id: id });
 });
-exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');
@@ -314,12 +313,13 @@ exports.receiveGroupJoin = receiveGroupJoin;
 function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupLeave');
-        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, chat_members } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
         const isTribe = chat_type === constants.chat_types.tribe;
         let sender;
+        // EITHER private chat OR tribeOwner
         if (!isTribe || isTribeOwner) {
             sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             if (!sender)
@@ -342,8 +342,39 @@ function receiveGroupLeave(payload) {
             }
         }
         else {
+            console.log('==> received leave as subsribers');
             // check if im the only one in "members"
-            // and delete chat??
+            // if im the one in members
+            // i've been kicked out!
+            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            let imKickedOut = false;
+            for (let [pubkey, _] of Object.entries(chat_members)) {
+                console.log('==> member pubkey', pubkey, owner.publicKey);
+                if (pubkey === owner.publicKey) {
+                    imKickedOut = true;
+                }
+            }
+            if (imKickedOut) {
+                console.log('==> IM kicked out!');
+                yield chat.update({
+                    deleted: true,
+                    uuid: '',
+                    groupKey: '',
+                    host: '',
+                    photoUrl: '',
+                    contactIds: '[]',
+                    name: ''
+                });
+                yield models_1.models.Message.destroy({ where: { chatId: chat.id } });
+                socket.sendJson({
+                    type: 'group_leave',
+                    response: {
+                        contact: jsonUtils.contactToJson(owner),
+                        chat: jsonUtils.chatToJson(chat),
+                    }
+                });
+                return; // done - I've been kicked out
+            }
         }
         var date = new Date();
         date.setMilliseconds(0);
