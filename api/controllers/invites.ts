@@ -41,11 +41,15 @@ const payInvite = async (req, res) => {
 		// if (dbInvite.status != invite.invite_status) {
 		// 	dbInvite.update({ status: invite.invite_status })
 		// }
-		console.log(response)
-
-		res.status(200)
-		res.json({ success: true, response: { invite: jsonUtils.inviteToJson(dbInvite) } })
-		res.end()
+		if(response.payment_error) {
+			res.status(200)
+			res.json({success:false, error:response.payment_error})
+			res.end()
+		} else {
+			res.status(200)
+			res.json({ success: true, response: { invite: jsonUtils.inviteToJson(dbInvite) } })
+			res.end()
+		}
 	}
 
 	const onFailure = (response) => {
