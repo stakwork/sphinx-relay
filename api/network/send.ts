@@ -109,7 +109,6 @@ export function signAndSend(opts, mqttTopic?:string, replayingHistory?:boolean){
 		data = data + sig
 
 		// console.log("ACTUALLY SEND", mqttTopic)
-		console.log("SEND ====>", opts.data)
 		try {
 			if(mqttTopic) {
 				await tribes.publish(mqttTopic, data, function(){
@@ -129,6 +128,9 @@ export function signAndSend(opts, mqttTopic?:string, replayingHistory?:boolean){
 
 function checkIfAutoConfirm(data){
 	if(typesToForward.includes(data.type)){
+		if(data.type===constants.message_types.delete){
+			return // dont auto confirm delete msg
+		}
 		tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid)
 	}
 }

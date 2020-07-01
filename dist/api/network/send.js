@@ -117,7 +117,6 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
             const sig = yield signer.signAscii(data);
             data = data + sig;
             // console.log("ACTUALLY SEND", mqttTopic)
-            console.log("SEND ====>", opts.data);
             try {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, function () {
@@ -141,6 +140,9 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
 exports.signAndSend = signAndSend;
 function checkIfAutoConfirm(data) {
     if (receive_1.typesToForward.includes(data.type)) {
+        if (data.type === constants.message_types.delete) {
+            return; // dont auto confirm delete msg
+        }
         confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
     }
 }

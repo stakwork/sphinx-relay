@@ -95,10 +95,6 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
         const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (message) {
-            console.log('===>', message.type, constants.message_types.delete);
-            if (message.type === constants.message_types.delete) {
-                return; // dont auto confirm delete msg
-            }
             let statusMap = {};
             try {
                 statusMap = JSON.parse(message.statusMap || '{}');
