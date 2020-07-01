@@ -167,6 +167,7 @@ function forwardMessageToTribe(ogpayload, sender) {
         else {
             payload = ogpayload;
         }
+        // dont need sender beyond here
         //const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const type = payload.type;
