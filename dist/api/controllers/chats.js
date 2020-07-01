@@ -240,7 +240,6 @@ function receiveGroupJoin(payload) {
         const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
         if (!isTribe || isTribeOwner) { // dont need to create contacts for these
             const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
-            console.log("sender", sender.dataValues);
             const contactIds = JSON.parse(chat.contactIds || '[]');
             if (sender) {
                 theSender = sender; // might already include??

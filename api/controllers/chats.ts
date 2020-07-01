@@ -253,7 +253,6 @@ export async function receiveGroupJoin(payload) {
 
 	if(!isTribe || isTribeOwner) { // dont need to create contacts for these
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-		console.log("sender",sender.dataValues)
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if (sender) {
 			theSender = sender // might already include??
