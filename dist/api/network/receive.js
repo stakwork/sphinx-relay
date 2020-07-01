@@ -62,16 +62,16 @@ function onReceive(payload) {
         if (isTribeOwner)
             toAddIn.isTribeOwner = true;
         if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
-            const needsPricePerJoin = typesThatNeedPricePerMessage.includes(payload.type);
+            const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
             // CHECK THEY ARE IN THE GROUP if message
             const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-            if (needsPricePerJoin) {
+            if (needsPricePerMessage) {
                 const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
                 if (!senderMember)
                     doAction = false;
             }
             // CHECK PRICES
-            if (needsPricePerJoin) {
+            if (needsPricePerMessage) {
                 if (payload.message.amount < chat.pricePerMessage)
                     doAction = false;
                 if (chat.escrowAmount) {
@@ -160,13 +160,8 @@ function forwardMessageToTribe(ogpayload, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('forwardMessageToTribe')
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
-        let contactIds = JSON.parse(chat.contactIds || '[]');
-        contactIds = contactIds.filter(cid => cid !== sender.id);
-        if (contactIds.length === 0) {
-            return; // totally skip if only send is in tribe
-        }
         let payload;
-        if (typesToModify.includes(ogpayload.type)) {
+        if (sender && typesToModify.includes(ogpayload.type)) {
             payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender);
         }
         else {
@@ -181,7 +176,7 @@ function forwardMessageToTribe(ogpayload, sender) {
         send_1.sendMessage({
             type, message,
             sender: Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }),
-            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds }),
+            chat: chat,
             skipPubKey: payload.sender.pub_key,
             success: () => { },
             receive: () => { }
