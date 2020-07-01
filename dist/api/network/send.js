@@ -117,6 +117,7 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
             const sig = yield signer.signAscii(data);
             data = data + sig;
             // console.log("ACTUALLY SEND", mqttTopic)
+            console.log("SEND ====>", opts.data);
             try {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, function () {
