@@ -84,10 +84,11 @@ export async function tribeOwnerAutoConfirmation(msg_id,chat_uuid){
 	const chat = await models.Chat.findOne({where:{uuid:chat_uuid}})
 	
 	if(message){
+		console.log('===>',message.type,constants.message_types.delete)
 		if(message.type===constants.message_types.delete){
 			return // dont auto confirm delete msg
 		}
-		
+
 		let statusMap = {}
 		try{
 			statusMap = JSON.parse(message.statusMap||'{}')
