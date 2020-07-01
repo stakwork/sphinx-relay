@@ -230,6 +230,7 @@ function receiveGroupJoin(payload) {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
+        console.log("THE CHAT", chat.dataValues);
         const isTribe = chat_type === constants.chat_types.tribe;
         var date = new Date();
         date.setMilliseconds(0);

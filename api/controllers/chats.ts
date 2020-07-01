@@ -240,6 +240,7 @@ export async function receiveGroupJoin(payload) {
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
+	console.log("THE CHAT",chat.dataValues)
 
 	const isTribe = chat_type===constants.chat_types.tribe
 
