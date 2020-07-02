@@ -51,7 +51,7 @@ export async function reloadTimers(){
 		setTimer(name, t.millis, async ()=>{
             setTimeout(()=>{
                 payBack(t)
-            },i*420) // dont do all at once
+            },i*999) // dont do all at once
 		})
 	})
 }

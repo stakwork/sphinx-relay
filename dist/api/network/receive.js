@@ -19,7 +19,6 @@ const signer = require("../utils/signer");
 const models_1 = require("../models");
 const send_1 = require("./send");
 const modify_1 = require("./modify");
-// import {modifyPayloadAndSaveMediaKey} from './modify'
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
 const timers = require("../utils/timers");
