@@ -68,16 +68,16 @@ function receiveGroupKick(payload) {
         if (!chat)
             return;
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        yield chat.update({
-            deleted: true,
-            uuid: '',
-            groupKey: '',
-            host: '',
-            photoUrl: '',
-            contactIds: '[]',
-            name: ''
-        });
-        yield models_1.models.Message.destroy({ where: { chatId: chat.id } });
+        // await chat.update({
+        // 	deleted: true,
+        // 	uuid:'',
+        // 	groupKey:'',
+        // 	host:'',
+        // 	photoUrl:'',
+        // 	contactIds:'[]',
+        // 	name:''
+        // })
+        // await models.Message.destroy({ where: { chatId: chat.id } })
         socket.sendJson({
             type: 'group_kick',
             response: {
