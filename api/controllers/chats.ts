@@ -30,20 +30,90 @@ export async function kickChatMember(req, res){
 		chatId, contactId,
 	}})
 	
-	const contact = await models.Contact.findOne({where:{id:contactId}})
-	const members = {
-		[contact.publicKey]: {key:contact.contactKey, alias:contact.alias}
-	}
+	const kickedContact = await models.Contact.findOne({where:{id:contactId}})
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	network.sendMessage({
-		chat: { ...chat.dataValues, contactIds:[contactId], members }, // send only to the guy u kicked
-		sender: contact,
+		chat: { ...chat.dataValues, contactIds:[contactId] }, // send only to the guy u kicked
+		sender: owner,
 		message: {},
-		type: constants.message_types.group_leave,
+		type: constants.message_types.group_kick,
 	})
 
 	// delete all timers for this member
-	timers.removeTimersByContactId(contactId)
-	success(res, true)
+	timers.removeTimersByContactIdChatId(contactId,chatId)
+
+	if(kickedContact){
+		// send group_leave to others
+		network.sendMessage({
+			chat: {...chat.dataValues, contactIds:newContactIds},
+			sender: {...owner.dataValues, alias:kickedContact.alias},
+			message: {},
+			type: constants.message_types.group_leave,
+		})
+		var date = new Date()
+		date.setMilliseconds(0)
+		const msg:{[k:string]:any} = {
+			chatId: chat.id,
+			type: constants.message_types.group_leave,
+			sender: (kickedContact.id) || 0,
+			messageContent:'', remoteMessageContent:'',
+			status: constants.statuses.confirmed,
+			date:date, createdAt:date, updatedAt:date,
+			senderAlias: kickedContact.alias
+		}
+		const message = await models.Message.create(msg)
+		socket.sendJson({
+			type: 'group_leave',
+			response: {
+				contact: jsonUtils.contactToJson(kickedContact),
+				chat: jsonUtils.chatToJson(chat),
+				message: jsonUtils.messageToJson(message, null)
+			}
+		})
+	}
+
+	success(res, jsonUtils.chatToJson(chat))
+}
+
+export async function receiveGroupKick(payload) {
+	console.log('=> receiveGroupKick')
+	const { chat, sender, date_string } = await helpers.parseReceiveParams(payload)
+	if (!chat) return
+
+	// const owner = await models.Contact.findOne({where:{isOwner:true}})
+	// await chat.update({
+	// 	deleted: true,
+	// 	uuid:'',
+	// 	groupKey:'',
+	// 	host:'',
+	// 	photoUrl:'',
+	// 	contactIds:'[]',
+	// 	name:''
+	// })
+	// await models.Message.destroy({ where: { chatId: chat.id } })
+
+	var date = new Date();
+	date.setMilliseconds(0)
+	if(date_string) date=new Date(date_string)
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		type: constants.message_types.group_kick,
+		sender: (sender && sender.id) || 0,
+		messageContent:'', remoteMessageContent:'',
+		status: constants.statuses.confirmed,
+		date: date, createdAt: date, updatedAt: date,
+	}
+	const message = await models.Message.create(msg)
+
+	socket.sendJson({
+		type: 'group_kick',
+		response: {
+			contact: jsonUtils.contactToJson(sender),
+			chat: jsonUtils.chatToJson(chat),
+			message: jsonUtils.messageToJson(message, null)
+		}
+	})
 }
 
 export async function getChats(req, res) {
@@ -300,12 +370,9 @@ export async function receiveGroupJoin(payload) {
 		chatId: chat.id,
 		type: constants.message_types.group_join,
 		sender: (theSender && theSender.id) || 0,
-		date: date,
-		messageContent:'',//`${senderAlias} has joined the group`,
-		remoteMessageContent:'',
+		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		createdAt: date,
-		updatedAt: date
+		date: date, createdAt: date, updatedAt: date
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias
@@ -324,7 +391,7 @@ export async function receiveGroupJoin(payload) {
 
 export async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
-	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, chat_members } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -353,38 +420,6 @@ export async function receiveGroupLeave(payload) {
 				})
 			}
 		}
-	} else {
-		console.log('==> received leave as subsribers')
-		// check if im in "members", if so i've been kicked out!
-		const owner = await models.Contact.findOne({where:{isOwner:true}})
-		let imKickedOut = false
-		for (let pubkey of Object.keys(chat_members)) {
-			console.log('==> member pubkey', pubkey, owner.publicKey)
-			if(pubkey===owner.publicKey) {
-				imKickedOut = true
-			}
-		}
-		if(imKickedOut) {
-			console.log('==> IM kicked out!')
-			await chat.update({
-				deleted: true, 
-				uuid:'', 
-				groupKey:'',
-				host:'',
-				photoUrl:'',
-				contactIds:'[]',
-				name:''
-			})
-			await models.Message.destroy({ where: { chatId: chat.id } })
-			socket.sendJson({
-				type: 'group_leave',
-				response: {
-					contact: jsonUtils.contactToJson(owner),
-					chat: jsonUtils.chatToJson(chat),
-				}
-			})
-			return // done - I've been kicked out
-		}
 	}
 
 	var date = new Date();
@@ -394,12 +429,9 @@ export async function receiveGroupLeave(payload) {
 		chatId: chat.id,
 		type: constants.message_types.group_leave,
 		sender: (sender && sender.id) || 0,
-		date: date,
-		messageContent:'', //`${sender_alias} has left the group`,
-		remoteMessageContent:'',
+		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		createdAt: date,
-		updatedAt: date
+		date: date, createdAt: date, updatedAt: date
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias

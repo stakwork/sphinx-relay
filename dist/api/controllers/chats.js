@@ -38,22 +38,90 @@ function kickChatMember(req, res) {
         yield models_1.models.ChatMember.destroy({ where: {
                 chatId, contactId,
             } });
-        const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
-        const members = {
-            [contact.publicKey]: { key: contact.contactKey, alias: contact.alias }
-        };
+        const kickedContact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         network.sendMessage({
-            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId], members }),
-            sender: contact,
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),
+            sender: owner,
             message: {},
-            type: constants.message_types.group_leave,
+            type: constants.message_types.group_kick,
         });
         // delete all timers for this member
-        timers.removeTimersByContactId(contactId);
-        res_1.success(res, true);
+        timers.removeTimersByContactIdChatId(contactId, chatId);
+        if (kickedContact) {
+            // send group_leave to others
+            network.sendMessage({
+                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: newContactIds }),
+                sender: Object.assign(Object.assign({}, owner.dataValues), { alias: kickedContact.alias }),
+                message: {},
+                type: constants.message_types.group_leave,
+            });
+            var date = new Date();
+            date.setMilliseconds(0);
+            const msg = {
+                chatId: chat.id,
+                type: constants.message_types.group_leave,
+                sender: (kickedContact.id) || 0,
+                messageContent: '', remoteMessageContent: '',
+                status: constants.statuses.confirmed,
+                date: date, createdAt: date, updatedAt: date,
+                senderAlias: kickedContact.alias
+            };
+            const message = yield models_1.models.Message.create(msg);
+            socket.sendJson({
+                type: 'group_leave',
+                response: {
+                    contact: jsonUtils.contactToJson(kickedContact),
+                    chat: jsonUtils.chatToJson(chat),
+                    message: jsonUtils.messageToJson(message, null)
+                }
+            });
+        }
+        res_1.success(res, jsonUtils.chatToJson(chat));
     });
 }
 exports.kickChatMember = kickChatMember;
+function receiveGroupKick(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> receiveGroupKick');
+        const { chat, sender, date_string } = yield helpers.parseReceiveParams(payload);
+        if (!chat)
+            return;
+        // const owner = await models.Contact.findOne({where:{isOwner:true}})
+        // await chat.update({
+        // 	deleted: true,
+        // 	uuid:'',
+        // 	groupKey:'',
+        // 	host:'',
+        // 	photoUrl:'',
+        // 	contactIds:'[]',
+        // 	name:''
+        // })
+        // await models.Message.destroy({ where: { chatId: chat.id } })
+        var date = new Date();
+        date.setMilliseconds(0);
+        if (date_string)
+            date = new Date(date_string);
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types.group_kick,
+            sender: (sender && sender.id) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date,
+        };
+        const message = yield models_1.models.Message.create(msg);
+        socket.sendJson({
+            type: 'group_kick',
+            response: {
+                contact: jsonUtils.contactToJson(sender),
+                chat: jsonUtils.chatToJson(chat),
+                message: jsonUtils.messageToJson(message, null)
+            }
+        });
+    });
+}
+exports.receiveGroupKick = receiveGroupKick;
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
@@ -287,12 +355,9 @@ function receiveGroupJoin(payload) {
             chatId: chat.id,
             type: constants.message_types.group_join,
             sender: (theSender && theSender.id) || 0,
-            date: date,
-            messageContent: '',
-            remoteMessageContent: '',
+            messageContent: '', remoteMessageContent: '',
             status: constants.statuses.confirmed,
-            createdAt: date,
-            updatedAt: date
+            date: date, createdAt: date, updatedAt: date
         };
         if (isTribe) {
             msg.senderAlias = sender_alias;
@@ -312,7 +377,7 @@ exports.receiveGroupJoin = receiveGroupJoin;
 function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupLeave');
-        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, chat_members } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
@@ -340,39 +405,6 @@ function receiveGroupLeave(payload) {
                 }
             }
         }
-        else {
-            console.log('==> received leave as subsribers');
-            // check if im in "members", if so i've been kicked out!
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            let imKickedOut = false;
-            for (let pubkey of Object.keys(chat_members)) {
-                console.log('==> member pubkey', pubkey, owner.publicKey);
-                if (pubkey === owner.publicKey) {
-                    imKickedOut = true;
-                }
-            }
-            if (imKickedOut) {
-                console.log('==> IM kicked out!');
-                yield chat.update({
-                    deleted: true,
-                    uuid: '',
-                    groupKey: '',
-                    host: '',
-                    photoUrl: '',
-                    contactIds: '[]',
-                    name: ''
-                });
-                yield models_1.models.Message.destroy({ where: { chatId: chat.id } });
-                socket.sendJson({
-                    type: 'group_leave',
-                    response: {
-                        contact: jsonUtils.contactToJson(owner),
-                        chat: jsonUtils.chatToJson(chat),
-                    }
-                });
-                return; // done - I've been kicked out
-            }
-        }
         var date = new Date();
         date.setMilliseconds(0);
         if (date_string)
@@ -381,12 +413,9 @@ function receiveGroupLeave(payload) {
             chatId: chat.id,
             type: constants.message_types.group_leave,
             sender: (sender && sender.id) || 0,
-            date: date,
-            messageContent: '',
-            remoteMessageContent: '',
+            messageContent: '', remoteMessageContent: '',
             status: constants.statuses.confirmed,
-            createdAt: date,
-            updatedAt: date
+            date: date, createdAt: date, updatedAt: date
         };
         if (isTribe) {
             msg.senderAlias = sender_alias;

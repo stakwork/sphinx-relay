@@ -35,6 +35,14 @@ function removeTimersByContactId(contactId) {
     });
 }
 exports.removeTimersByContactId = removeTimersByContactId;
+function removeTimersByContactIdChatId(contactId, chatId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ts = yield models_1.models.Timer.findAll({ where: { receiver: contactId, chatId } });
+        ts.forEach(t => clearTimer(t));
+        models_1.models.Timer.destroy({ where: { receiver: contactId, chatId } });
+    });
+}
+exports.removeTimersByContactIdChatId = removeTimersByContactIdChatId;
 function addTimer({ amount, millis, receiver, msgId, chatId }) {
     return __awaiter(this, void 0, void 0, function* () {
         const now = new Date().valueOf();
