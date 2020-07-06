@@ -132,6 +132,7 @@ export const ACTIONS = {
     [msgtypes.group_invite]: chats.receiveGroupCreateOrInvite,
     [msgtypes.group_join]: chats.receiveGroupJoin,
 	[msgtypes.group_leave]: chats.receiveGroupLeave,
+	[msgtypes.group_kick]: chats.receiveGroupKick,
 	[msgtypes.delete]: messages.receiveDeleteMessage,
 	[msgtypes.repayment]: ()=>{},
 }
