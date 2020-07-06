@@ -78,10 +78,10 @@ export async function kickChatMember(req, res){
 
 export async function receiveGroupKick(payload) {
 	console.log('=> receiveGroupKick')
-	const { chat } = await helpers.parseReceiveParams(payload)
+	const { chat, sender, date_string } = await helpers.parseReceiveParams(payload)
 	if (!chat) return
 
-	const owner = await models.Contact.findOne({where:{isOwner:true}})
+	// const owner = await models.Contact.findOne({where:{isOwner:true}})
 	// await chat.update({
 	// 	deleted: true,
 	// 	uuid:'',
@@ -92,10 +92,26 @@ export async function receiveGroupKick(payload) {
 	// 	name:''
 	// })
 	// await models.Message.destroy({ where: { chatId: chat.id } })
+
+	var date = new Date();
+	date.setMilliseconds(0)
+	if(date_string) date=new Date(date_string)
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		type: constants.message_types.group_kick,
+		sender: (sender && sender.id) || 0,
+		messageContent:'', remoteMessageContent:'',
+		status: constants.statuses.confirmed,
+		date: date, createdAt: date, updatedAt: date,
+	}
+	const message = await models.Message.create(msg)
+
 	socket.sendJson({
 		type: 'group_kick',
 		response: {
-			contact: jsonUtils.contactToJson(owner),
+			contact: jsonUtils.contactToJson(sender),
+			chat: jsonUtils.chatToJson(chat),
+			message: jsonUtils.messageToJson(message, null)
 		}
 	})
 }

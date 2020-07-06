@@ -84,10 +84,10 @@ exports.kickChatMember = kickChatMember;
 function receiveGroupKick(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupKick');
-        const { chat } = yield helpers.parseReceiveParams(payload);
+        const { chat, sender, date_string } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        // const owner = await models.Contact.findOne({where:{isOwner:true}})
         // await chat.update({
         // 	deleted: true,
         // 	uuid:'',
@@ -98,10 +98,25 @@ function receiveGroupKick(payload) {
         // 	name:''
         // })
         // await models.Message.destroy({ where: { chatId: chat.id } })
+        var date = new Date();
+        date.setMilliseconds(0);
+        if (date_string)
+            date = new Date(date_string);
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types.group_kick,
+            sender: (sender && sender.id) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date,
+        };
+        const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
             type: 'group_kick',
             response: {
-                contact: jsonUtils.contactToJson(owner),
+                contact: jsonUtils.contactToJson(sender),
+                chat: jsonUtils.chatToJson(chat),
+                message: jsonUtils.messageToJson(message, null)
             }
         });
     });
