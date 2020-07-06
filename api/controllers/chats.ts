@@ -41,7 +41,7 @@ export async function kickChatMember(req, res){
 	})
 
 	// delete all timers for this member
-	timers.removeTimersByContactId(contactId)
+	timers.removeTimersByContactIdChatId(contactId,chatId)
 
 	if(kickedContact){
 		// send group_leave to others
@@ -51,8 +51,28 @@ export async function kickChatMember(req, res){
 			message: {},
 			type: constants.message_types.group_leave,
 		})
+		var date = new Date()
+		date.setMilliseconds(0)
+		const msg:{[k:string]:any} = {
+			chatId: chat.id,
+			type: constants.message_types.group_leave,
+			sender: (kickedContact.id) || 0,
+			messageContent:'', remoteMessageContent:'',
+			status: constants.statuses.confirmed,
+			date:date, createdAt:date, updatedAt:date,
+			senderAlias: kickedContact.alias
+		}
+		const message = await models.Message.create(msg)
+		socket.sendJson({
+			type: 'group_leave',
+			response: {
+				contact: jsonUtils.contactToJson(kickedContact),
+				chat: jsonUtils.chatToJson(chat),
+				message: jsonUtils.messageToJson(message, null)
+			}
+		})
 	}
-	
+
 	success(res, jsonUtils.chatToJson(chat))
 }
 
@@ -334,12 +354,9 @@ export async function receiveGroupJoin(payload) {
 		chatId: chat.id,
 		type: constants.message_types.group_join,
 		sender: (theSender && theSender.id) || 0,
-		date: date,
-		messageContent:'',//`${senderAlias} has joined the group`,
-		remoteMessageContent:'',
+		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		createdAt: date,
-		updatedAt: date
+		date: date, createdAt: date, updatedAt: date
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias
@@ -396,12 +413,9 @@ export async function receiveGroupLeave(payload) {
 		chatId: chat.id,
 		type: constants.message_types.group_leave,
 		sender: (sender && sender.id) || 0,
-		date: date,
-		messageContent:'', //`${sender_alias} has left the group`,
-		remoteMessageContent:'',
+		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		createdAt: date,
-		updatedAt: date
+		date: date, createdAt: date, updatedAt: date
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias

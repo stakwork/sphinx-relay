@@ -19,6 +19,11 @@ export async function removeTimersByContactId(contactId){
     ts.forEach(t=> clearTimer(t))
     models.Timer.destroy({where:{receiver:contactId}})
 }
+export async function removeTimersByContactIdChatId(contactId,chatId){
+    const ts = await models.Timer.findAll({where:{receiver:contactId, chatId}})
+    ts.forEach(t=> clearTimer(t))
+    models.Timer.destroy({where:{receiver:contactId, chatId}})
+}
 
 export async function addTimer({amount, millis, receiver, msgId, chatId}){
     const now = new Date().valueOf()
