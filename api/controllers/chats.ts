@@ -30,8 +30,6 @@ export async function kickChatMember(req, res){
 		chatId, contactId,
 	}})
 	
-	const kickedContact = await models.Contact.findOne({where:{id:contactId}})
-
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	network.sendMessage({
 		chat: { ...chat.dataValues, contactIds:[contactId] }, // send only to the guy u kicked
@@ -42,36 +40,6 @@ export async function kickChatMember(req, res){
 
 	// delete all timers for this member
 	timers.removeTimersByContactIdChatId(contactId,chatId)
-
-	if(kickedContact){
-		// send group_leave to others
-		network.sendMessage({
-			chat: {...chat.dataValues, contactIds:newContactIds},
-			sender: {...owner.dataValues, alias:kickedContact.alias},
-			message: {},
-			type: constants.message_types.group_leave,
-		})
-		var date = new Date()
-		date.setMilliseconds(0)
-		const msg:{[k:string]:any} = {
-			chatId: chat.id,
-			type: constants.message_types.group_leave,
-			sender: (kickedContact.id) || 0,
-			messageContent:'', remoteMessageContent:'',
-			status: constants.statuses.confirmed,
-			date:date, createdAt:date, updatedAt:date,
-			senderAlias: kickedContact.alias
-		}
-		const message = await models.Message.create(msg)
-		socket.sendJson({
-			type: 'group_leave',
-			response: {
-				contact: jsonUtils.contactToJson(kickedContact),
-				chat: jsonUtils.chatToJson(chat),
-				message: jsonUtils.messageToJson(message, null)
-			}
-		})
-	}
 
 	success(res, jsonUtils.chatToJson(chat))
 }

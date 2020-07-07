@@ -38,7 +38,6 @@ function kickChatMember(req, res) {
         yield models_1.models.ChatMember.destroy({ where: {
                 chatId, contactId,
             } });
-        const kickedContact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),
@@ -48,35 +47,6 @@ function kickChatMember(req, res) {
         });
         // delete all timers for this member
         timers.removeTimersByContactIdChatId(contactId, chatId);
-        if (kickedContact) {
-            // send group_leave to others
-            network.sendMessage({
-                chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: newContactIds }),
-                sender: Object.assign(Object.assign({}, owner.dataValues), { alias: kickedContact.alias }),
-                message: {},
-                type: constants.message_types.group_leave,
-            });
-            var date = new Date();
-            date.setMilliseconds(0);
-            const msg = {
-                chatId: chat.id,
-                type: constants.message_types.group_leave,
-                sender: (kickedContact.id) || 0,
-                messageContent: '', remoteMessageContent: '',
-                status: constants.statuses.confirmed,
-                date: date, createdAt: date, updatedAt: date,
-                senderAlias: kickedContact.alias
-            };
-            const message = yield models_1.models.Message.create(msg);
-            socket.sendJson({
-                type: 'group_leave',
-                response: {
-                    contact: jsonUtils.contactToJson(kickedContact),
-                    chat: jsonUtils.chatToJson(chat),
-                    message: jsonUtils.messageToJson(message, null)
-                }
-            });
-        }
         res_1.success(res, jsonUtils.chatToJson(chat));
     });
 }
