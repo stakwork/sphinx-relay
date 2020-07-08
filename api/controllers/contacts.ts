@@ -72,20 +72,14 @@ export const updateContact = async (req, res) => {
 	let attrs = extractAttrs(req.body)
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
-	let shouldSendUpdatedSelf = (
-		contact.isOwner && ( 
-			(contact.contactKey == null && attrs["contact_key"] != null) || // CREATE CONTACT KEY!
-			attrs["contact_key"]==null // OR NO NEW CONTACT KEY
-		)
-	)
-
+	
 	// update self
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
 	success(res, jsonUtils.contactToJson(owner))
 
-	if (!shouldSendUpdatedSelf) return 
-
-	// send updated owner info to others
+	if (!contact.isOwner) return 
+	// else:
+	// send updated owner info to others!
 	const contactIds = await models.Contact.findAll({where:{deleted:false}})
 		.filter(c=> !c.fromGroup && c.id!==1 && c.publicKey).map(c=> c.id)
 	if (contactIds.length == 0) return
