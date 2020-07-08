@@ -76,7 +76,10 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     // else:
     // send updated owner info to others!
     const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
-        .filter(c => !c.fromGroup && c.id !== 1 && c.publicKey).map(c => c.id);
+        .filter(c => {
+        console.log(c.alias, c.fromGroup, typeof c.fromGroup);
+        return !c.fromGroup && c.id !== 1 && c.publicKey;
+    }).map(c => c.id);
     if (contactIds.length == 0)
         return;
     console.log("=> send contact_key to", contactIds);
