@@ -84,6 +84,7 @@ export const updateContact = async (req, res) => {
 		.filter(c=> !c.fromGroup && c.id!==1 && c.publicKey).map(c=> c.id)
 	if (contactIds.length == 0) return
 
+	console.log("=> send contact_key to", contactIds)
 	helpers.sendContactKeys({
 		contactIds: contactIds,
 		sender: owner,
