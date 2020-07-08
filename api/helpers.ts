@@ -87,7 +87,7 @@ export const performKeysendMessage = async ({ destination_key, amount, msg, succ
 		// console.log("=> keysend to new contact")
 		if (success) success(r)
 	} catch (e) {
-		console.log("MESSAGE ERROR", e)
+		console.log("MESSAGE ERROR to", destination_key, e)
 		if (failure) failure(e)
 	}
 }

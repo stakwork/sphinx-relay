@@ -94,7 +94,7 @@ exports.performKeysendMessage = ({ destination_key, amount, msg, success, failur
             success(r);
     }
     catch (e) {
-        console.log("MESSAGE ERROR", e);
+        console.log("MESSAGE ERROR to", destination_key, e);
         if (failure)
             failure(e);
     }
