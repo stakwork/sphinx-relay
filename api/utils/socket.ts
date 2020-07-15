@@ -18,6 +18,7 @@ function connect(server) {
     client.on('disconnect', () => { /* … */ });
 
     io.sockets.send('{"try":"try"}')
+    client.send('{"try":"try"}')
   });
 }
 
