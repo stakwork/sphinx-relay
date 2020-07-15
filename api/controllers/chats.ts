@@ -13,6 +13,28 @@ import {replayChatHistory,createTribeChatParams} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
+export async function updateChat(req, res){
+	console.log('=> updateChat')
+	const id = parseInt(req.params.id)
+	if(!id) {
+		return failure(res,'missing id')
+	}
+	const chat = await models.Chat.findOne({ where: { id }})
+	if(!chat) {
+		return failure(res,'chat not found')
+	}
+	const {name,photo_url} = req.body
+
+	const obj:{[k:string]:any} = {}
+	if(name) obj.name=name
+	if(photo_url) obj.photoUrl=photo_url
+
+	if(Object.keys(obj).length>0) {
+		await chat.update(obj)
+	}
+	success(res, jsonUtils.chatToJson(chat))
+}
+
 export async function kickChatMember(req, res){
 	const chatId = parseInt(req.params['chat_id'])
 	const contactId = parseInt(req.params['contact_id'])

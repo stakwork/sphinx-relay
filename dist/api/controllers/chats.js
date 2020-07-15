@@ -22,6 +22,30 @@ const tribes = require("../utils/tribes");
 const timers = require("../utils/timers");
 const chatTribes_1 = require("./chatTribes");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+function updateChat(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> updateChat');
+        const id = parseInt(req.params.id);
+        if (!id) {
+            return res_1.failure(res, 'missing id');
+        }
+        const chat = yield models_1.models.Chat.findOne({ where: { id } });
+        if (!chat) {
+            return res_1.failure(res, 'chat not found');
+        }
+        const { name, photo_url } = req.body;
+        const obj = {};
+        if (name)
+            obj.name = name;
+        if (photo_url)
+            obj.photoUrl = photo_url;
+        if (Object.keys(obj).length > 0) {
+            yield chat.update(obj);
+        }
+        res_1.success(res, jsonUtils.chatToJson(chat));
+    });
+}
+exports.updateChat = updateChat;
 function kickChatMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const chatId = parseInt(req.params['chat_id']);

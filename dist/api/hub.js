@@ -214,24 +214,22 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         return;
     }
     const unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
-    const params = {
-        device_id: owner.deviceId,
-        notification: {
-            chat_id: chat.id,
-            message,
-            badge: unseenMessages
-        }
+    const device_id = owner.deviceId;
+    const params = { device_id };
+    const notification = {
+        chat_id: chat.id,
+        message,
+        badge: unseenMessages
     };
+    if (owner.notificationSound) {
+        notification.sound = owner.notificationSound;
+    }
+    params.notification = notification;
     if (type === 'message' && chat.type == constants.chat_types.tribe) {
         debounce(() => {
             const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : '';
-            triggerNotification({
-                device_id: owner.deviceId,
-                notification: {
-                    chat_id: chat.id, badge: unseenMessages,
-                    message: `You have ${count}new messages in ${chat.name}`
-                }
-            });
+            params.notification.message = `You have ${count}new messages in ${chat.name}`;
+            triggerNotification(params);
         }, chat.id, 30000);
     }
     else {

@@ -42,6 +42,7 @@ function set(app) {
         timers.reloadTimers();
         app.get('/chats', chats.getChats);
         app.post('/group', chats.createGroupChat);
+        app.put('/chats/:id', chats.updateChat);
         app.post('/chats/:chat_id/:mute_unmute', chats.mute);
         app.delete('/chat/:id', chats.deleteChat);
         app.put('/chat/:id', chats.addGroupMembers);

@@ -1,28 +1,28 @@
-import * as WebSocket from 'ws'
+// import * as WebSocket from 'ws'
+const socketio = require("socket.io");
 
-let srvr: any
+let io: any
+// let srvr: any
 
-const connect = (server) => {
-  srvr = new WebSocket.Server({ server, clientTracking:true })
-  console.log('=> [socket] connected to server')
+export function connect(server) {
+  // srvr = new WebSocket.Server({ server, clientTracking:true })
 
-  srvr.on('connection', socket => {
-    console.log('=> [socket] connection received')
-  })
+  io = socketio(server);
+  io.on('connection', client => {
+    console.log("=> [socket.io] connected!")
+  });
 }
 
-const send = (body) => {
-  srvr.clients.forEach(c=>{
-    if(c) c.send(body)
-  })
+export const send = (body) => {
+  if(io) io.sockets.emit('message',body)
+
+  // if(srvr){
+  //   srvr.clients.forEach(c=>{
+  //     if(c) c.send(body)
+  //   })
+  // }
 }
 
-const sendJson = (object) => {
+export const sendJson = (object) => {
   send(JSON.stringify(object))
-}
-
-export {
-  connect,
-  send,
-  sendJson
 }
