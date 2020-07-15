@@ -4,17 +4,9 @@ let io: any
 
 export function connect(server) {
   io = socketio(server);
-
   io.on('connection', client => {
     console.log("=> [socket.io] connected!")
-    setTimeout(()=>{
-      send('testing....')
-    },3000)
   });
-
-  io.on('error', error => {
-    console.log(error)
-  })
 }
 
 export const send = (body) => {
