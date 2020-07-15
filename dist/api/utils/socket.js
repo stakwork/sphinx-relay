@@ -5,11 +5,11 @@ const socketio = require("socket.io");
 let io;
 let srvr;
 function connect(server) {
+    srvr = new WebSocket.Server({ server, clientTracking: true });
     io = socketio(server);
     io.on('connection', client => {
         console.log("=> [socket.io] connected!");
     });
-    srvr = new WebSocket.Server({ server, clientTracking: true });
 }
 exports.connect = connect;
 exports.send = (body) => {

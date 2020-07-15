@@ -5,12 +5,12 @@ let io: any
 let srvr: any
 
 export function connect(server) {
+  srvr = new WebSocket.Server({ server, clientTracking:true })
+
   io = socketio(server);
   io.on('connection', client => {
     console.log("=> [socket.io] connected!")
   });
-
-  srvr = new WebSocket.Server({ server, clientTracking:true })
 }
 
 export const send = (body) => {
