@@ -1,11 +1,11 @@
-import * as WebSocket from 'ws'
+// import * as WebSocket from 'ws'
 const socketio = require("socket.io");
 
 let io: any
-let srvr: any
+// let srvr: any
 
 export function connect(server) {
-  srvr = new WebSocket.Server({ server, clientTracking:true })
+  // srvr = new WebSocket.Server({ server, clientTracking:true })
 
   io = socketio(server);
   io.on('connection', client => {
@@ -16,11 +16,11 @@ export function connect(server) {
 export const send = (body) => {
   if(io) io.sockets.emit('message',body)
 
-  if(srvr){
-    srvr.clients.forEach(c=>{
-      if(c) c.send(body)
-    })
-  }
+  // if(srvr){
+  //   srvr.clients.forEach(c=>{
+  //     if(c) c.send(body)
+  //   })
+  // }
 }
 
 export const sendJson = (object) => {
