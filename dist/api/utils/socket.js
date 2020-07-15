@@ -6,28 +6,19 @@ function connect(server) {
     io = socketio(server);
     io.on('connection', client => {
         console.log("=> [socket.io] connected!");
-        client.on('event', data => { });
-        client.on('disconnect', () => { });
         setTimeout(() => {
-            client.emit('message', 'wazzup');
+            exports.send('testing....');
         }, 3000);
-        // io.sockets.send('{"try":"try"}')
-        // client.send('{"try":"try"}')
     });
     io.on('error', error => {
         console.log(error);
     });
 }
 exports.connect = connect;
-const send = (body) => {
-    // srvr.clients.forEach(c=>{
-    //   if(c) c.send(body)
-    // })
-    io.sockets.send(body);
+exports.send = (body) => {
+    io.sockets.emit('message', body);
 };
-exports.send = send;
-const sendJson = (object) => {
-    send(JSON.stringify(object));
+exports.sendJson = (object) => {
+    exports.send(JSON.stringify(object));
 };
-exports.sendJson = sendJson;
 //# sourceMappingURL=socket.js.map
