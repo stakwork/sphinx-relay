@@ -1,7 +1,9 @@
+const socketio = require("socket.io");
+
 let io: any
 
-const connect = (server) => {
-  const io = require('socket.io')(server, {
+function connect(server) {
+  io = socketio(server, {
     path: '/socket',
     serveClient: false,
     // below are engine.IO options

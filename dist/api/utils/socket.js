@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const socketio = require("socket.io");
 let io;
-const connect = (server) => {
-    const io = require('socket.io')(server, {
+function connect(server) {
+    io = socketio(server, {
         path: '/socket',
         serveClient: false,
         // below are engine.IO options
@@ -15,7 +16,7 @@ const connect = (server) => {
         client.on('event', data => { });
         client.on('disconnect', () => { });
     });
-};
+}
 exports.connect = connect;
 const send = (body) => {
     // srvr.clients.forEach(c=>{
