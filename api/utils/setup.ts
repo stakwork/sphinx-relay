@@ -31,6 +31,8 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_contacts', 'notification_sound')
+
   try{
     await sequelize.query(`
 CREATE TABLE sphinx_timers (

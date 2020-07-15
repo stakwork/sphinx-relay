@@ -44,6 +44,7 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_contacts', 'notification_sound');
         try {
             yield models_1.sequelize.query(`
 CREATE TABLE sphinx_timers (

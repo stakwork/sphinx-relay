@@ -85,6 +85,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Boolean)
 ], Contact.prototype, "fromGroup", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Contact.prototype, "notificationSound", void 0);
 Contact = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_contacts', underscored: true })
 ], Contact);
