@@ -60,4 +60,7 @@ export default class Contact extends Model<Contact> {
   @Column
   fromGroup: boolean
 
+  @Column
+  notificationSound: string
+
 }

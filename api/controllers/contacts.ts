@@ -78,7 +78,10 @@ export const updateContact = async (req, res) => {
 	success(res, jsonUtils.contactToJson(owner))
 
 	if (!contact.isOwner) return 
-	// else:
+	if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
+		return // skip if not at least one of these
+	}
+
 	// send updated owner info to others!
 	const contactIds = await models.Contact.findAll({where:{deleted:false}})
 		.filter(c=> c.id!==1 && c.publicKey).map(c=> c.id)
@@ -253,7 +256,7 @@ export const receiveConfirmContactKey = async (payload) => {
 }
 
 const extractAttrs = body => {
-	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo"]
+	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound"]
 	let attrs = {}
 	Object.keys(body).forEach(key => {
 		if (fields_to_update.includes(key)) {
