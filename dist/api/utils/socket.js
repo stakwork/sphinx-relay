@@ -4,7 +4,7 @@ const socketio = require("socket.io");
 let io;
 function connect(server) {
     io = socketio(server, {
-        path: '/socket',
+        // path: '/socket',
         serveClient: false,
         // below are engine.IO options
         pingInterval: 10000,
