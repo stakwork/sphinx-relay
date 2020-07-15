@@ -14,6 +14,9 @@ function connect(server) {
         // io.sockets.send('{"try":"try"}')
         // client.send('{"try":"try"}')
     });
+    io.on('error', error => {
+        console.log(error);
+    });
 }
 exports.connect = connect;
 const send = (body) => {
