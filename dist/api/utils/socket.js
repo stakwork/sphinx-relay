@@ -1,20 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const WebSocket = require("ws");
-let srvr;
+let io;
 const connect = (server) => {
-    srvr = new WebSocket.Server({ server, clientTracking: true });
-    console.log('=> [socket] connected to server');
-    srvr.on('connection', socket => {
-        console.log('=> [socket] connection received');
+    const io = require('socket.io')(server, {
+        path: '/socket',
+        serveClient: false,
+        // below are engine.IO options
+        pingInterval: 10000,
+        pingTimeout: 5000,
+        cookie: false
+    });
+    io.on('connection', client => {
+        console.log("=> [socket.io] connected!");
+        client.on('event', data => { });
+        client.on('disconnect', () => { });
     });
 };
 exports.connect = connect;
 const send = (body) => {
-    srvr.clients.forEach(c => {
-        if (c)
-            c.send(body);
-    });
+    // srvr.clients.forEach(c=>{
+    //   if(c) c.send(body)
+    // })
+    io.sockets.send(body);
 };
 exports.send = send;
 const sendJson = (object) => {
