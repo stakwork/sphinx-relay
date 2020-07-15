@@ -92,8 +92,8 @@ async function authModule(req, res, next) {
 		req.path == '/app' ||
 		req.path == '/' ||
 		req.path == '/info' ||
-		req.path == '/socket' ||
-		req.path == '/socket.io' ||
+		req.path.startsWith('/socket') ||
+		req.path.startsWith('/socket.io') ||
 		req.path == '/contacts/tokens' ||
 		req.path == '/login' ||
 		req.path.startsWith('/static') ||
