@@ -1,3 +1,6 @@
+import {models} from '../models'
+import * as crypto from 'crypto'
+
 // import * as WebSocket from 'ws'
 const socketio = require("socket.io");
 
@@ -8,9 +11,26 @@ export function connect(server) {
   // srvr = new WebSocket.Server({ server, clientTracking:true })
 
   io = socketio(server);
+  io.use(async (socket, next) => {
+    let userToken = socket.handshake.headers['x-user-token'];
+    const isValid = isValidToken(userToken) 
+    if (isValid) {
+      return next();
+    }
+    return next(new Error('authentication error'));
+  });
   io.on('connection', client => {
     console.log("=> [socket.io] connected!")
   });
+}
+
+async function isValidToken(token:string):Promise<Boolean> {
+  const user = await models.Contact.findOne({ where: { isOwner: true }})
+  const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
+  if (user.authToken == null || user.authToken != hashedToken) {
+    return false // failed
+  }
+  return true
 }
 
 export const send = (body) => {
