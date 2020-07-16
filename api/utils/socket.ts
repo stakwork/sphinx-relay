@@ -13,7 +13,7 @@ export function connect(server) {
   io = socketio(server);
   io.use(async (socket, next) => {
     let userToken = socket.handshake.headers['x-user-token'];
-    const isValid = isValidToken(userToken) 
+    const isValid = await isValidToken(userToken) 
     if (isValid) {
       return next();
     }

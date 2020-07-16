@@ -20,7 +20,7 @@ function connect(server) {
     io = socketio(server);
     io.use((socket, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = socket.handshake.headers['x-user-token'];
-        const isValid = isValidToken(userToken);
+        const isValid = yield isValidToken(userToken);
         if (isValid) {
             return next();
         }
