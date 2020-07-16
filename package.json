@@ -26,6 +26,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
     "@grpc/proto-loader": "^0.5.3",
+    "@scout_apm/scout-apm": "^0.1.10",
     "@types/node": "^13.5.1",
     "async": "^2.6.2",
     "async-lock": "^1.2.2",

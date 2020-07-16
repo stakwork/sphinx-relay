@@ -50,7 +50,7 @@ async function mainSetup(){
 	await setupApp()
 	setupDone()
 }
- 
+
 async function setupApp(){
 	const app = express();
 	const server = require("http").Server(app);
@@ -92,8 +92,6 @@ async function authModule(req, res, next) {
 		req.path == '/app' ||
 		req.path == '/' ||
 		req.path == '/info' ||
-		req.path.startsWith('/socket') ||
-		req.path.startsWith('/socket.io') ||
 		req.path == '/contacts/tokens' ||
 		req.path == '/login' ||
 		req.path.startsWith('/static') ||
