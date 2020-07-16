@@ -1,4 +1,5 @@
 import * as express from 'express'
+import * as scout from "@scout_apm/scout-apm"
 import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
@@ -50,10 +51,23 @@ async function mainSetup(){
 	await setupApp()
 	setupDone()
 }
- 
+
 async function setupApp(){
 	const app = express();
 	const server = require("http").Server(app);
+
+	// Enable the app-wide scout middleware
+	app.use(scout.expressMiddleware());
+
+	async function start() {
+		// Trigger the download and installation of the core-agent
+		await scout.install();
+
+		// Start express
+		app.start();
+	}
+
+	if (require.main === module) { start(); }
 
 	app.use(helmet());
 	app.use(bodyParser.json());

@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
+const scout = require("@scout_apm/scout-apm");
 const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
@@ -64,6 +65,19 @@ function setupApp() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = express();
         const server = require("http").Server(app);
+        // Enable the app-wide scout middleware
+        app.use(scout.expressMiddleware());
+        function start() {
+            return __awaiter(this, void 0, void 0, function* () {
+                // Trigger the download and installation of the core-agent
+                yield scout.install();
+                // Start express
+                app.start();
+            });
+        }
+        if (require.main === module) {
+            start();
+        }
         app.use(helmet());
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: true }));
