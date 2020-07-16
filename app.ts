@@ -59,15 +59,7 @@ async function setupApp(){
 	// Enable the app-wide scout middleware
 	app.use(scout.expressMiddleware());
 
-	async function start() {
-		// Trigger the download and installation of the core-agent
-		await scout.install();
-
-		// Start express
-		app.start();
-	}
-
-	if (require.main === module) { start(); }
+	scout.install();
 
 	app.use(helmet());
 	app.use(bodyParser.json());
