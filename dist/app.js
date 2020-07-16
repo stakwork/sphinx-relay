@@ -109,8 +109,6 @@ function authModule(req, res, next) {
         if (req.path == '/app' ||
             req.path == '/' ||
             req.path == '/info' ||
-            req.path.startsWith('/socket') ||
-            req.path.startsWith('/socket.io') ||
             req.path == '/contacts/tokens' ||
             req.path == '/login' ||
             req.path.startsWith('/static') ||
