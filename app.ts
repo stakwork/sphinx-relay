@@ -48,8 +48,14 @@ async function mainSetup(){
 		pingHubInterval(5000)
 		checkInvitesHubInterval(5000)
 	}
+	await downloadScout()
 	await setupApp()
 	setupDone()
+}
+
+async function downloadScout() {
+	// Trigger the download and installation of the core-agent
+	scout.install();
 }
 
 async function setupApp(){
@@ -58,13 +64,6 @@ async function setupApp(){
 
 	// Enable the app-wide scout middleware
 	app.use(scout.expressMiddleware());
-
-	async function start() {
-		// Trigger the download and installation of the core-agent
-		await scout.install();
-	}
-
-	if (require.main === module) { start(); }
 
 	app.use(helmet());
 	app.use(bodyParser.json());
