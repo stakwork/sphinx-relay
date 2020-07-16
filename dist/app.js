@@ -67,7 +67,15 @@ function setupApp() {
         const server = require("http").Server(app);
         // Enable the app-wide scout middleware
         app.use(scout.expressMiddleware());
-        scout.install();
+        function start() {
+            return __awaiter(this, void 0, void 0, function* () {
+                // Trigger the download and installation of the core-agent
+                yield scout.install();
+            });
+        }
+        if (require.main === module) {
+            start();
+        }
         app.use(helmet());
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: true }));
