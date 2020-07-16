@@ -33,6 +33,8 @@ function connect(server) {
 exports.connect = connect;
 function isValidToken(token) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!token)
+            return false;
         const user = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
         if (user.authToken == null || user.authToken != hashedToken) {

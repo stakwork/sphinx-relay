@@ -25,6 +25,7 @@ export function connect(server) {
 }
 
 async function isValidToken(token:string):Promise<Boolean> {
+  if(!token) return false
   const user = await models.Contact.findOne({ where: { isOwner: true }})
   const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
   if (user.authToken == null || user.authToken != hashedToken) {
