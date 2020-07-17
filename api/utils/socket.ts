@@ -10,7 +10,7 @@ let io: any
 export function connect(server) {
   // srvr = new WebSocket.Server({ server, clientTracking:true })
 
-  io = socketio(server);
+  io = socketio(server, {origins: '*:*'});
   io.use(async (socket, next) => {
     let userToken = socket.handshake.headers['x-user-token'];
     const isValid = await isValidToken(userToken) 

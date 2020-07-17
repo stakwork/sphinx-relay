@@ -17,7 +17,7 @@ let io;
 // let srvr: any
 function connect(server) {
     // srvr = new WebSocket.Server({ server, clientTracking:true })
-    io = socketio(server);
+    io = socketio(server, { origins: '*:*' });
     io.use((socket, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = socket.handshake.headers['x-user-token'];
         const isValid = yield isValidToken(userToken);
