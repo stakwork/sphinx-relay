@@ -60,7 +60,9 @@ async function setupApp(){
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({ extended: true }));
 	app.use(logger)
-	app.use(cors())
+	app.use(cors({
+		allowedHeaders:['X-Requested-With','Content-Type','Accept','x-user-token']
+	}))
 	app.use(cookieParser())
 	if (env != 'development') {
 		app.use(authModule);
