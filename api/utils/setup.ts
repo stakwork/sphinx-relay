@@ -6,7 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
-const USER_VERSION = 4
+const USER_VERSION = 5
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -31,6 +31,12 @@ async function setVersion(){
 }
 
 async function migrate(){
+  try{
+    await sequelize.query(`CREATE INDEX idx_messages_sender ON sphinx_messages (sender);`)
+  }catch(e){
+    console.log(e)
+  }
+
   addTableColumn('sphinx_contacts', 'notification_sound')
 
   try{

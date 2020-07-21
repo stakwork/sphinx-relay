@@ -21,6 +21,9 @@ const checkInviteHub = async (params = {}) => {
   //console.log('[hub] checking invites ping')
 
   const inviteStrings = await models.Invite.findAll({ where: { status: { [Op.notIn]: [constants.invite_statuses.complete, constants.invite_statuses.expired] } } }).map(invite => invite.inviteString)
+  if(inviteStrings.length===0) {
+    return // skip if no invites
+  }
 
   fetch(config.hub_api_url + '/invites/check', {
     method: 'POST' ,
@@ -279,6 +282,7 @@ function debounce(func, id, delay) {
   tribeCounts[id]+=1
   bounceTimeouts[id] = setTimeout(() => {
     func.apply(context, args)
-    setTimeout(()=> tribeCounts[id]=0, 15)
+    // setTimeout(()=> tribeCounts[id]=0, 15)
+    tribeCounts[id]=0
   }, delay)
 }

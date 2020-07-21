@@ -28,6 +28,9 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     //console.log('[hub] checking invites ping')
     const inviteStrings = yield models_1.models.Invite.findAll({ where: { status: { [sequelize_1.Op.notIn]: [constants.invite_statuses.complete, constants.invite_statuses.expired] } } }).map(invite => invite.inviteString);
+    if (inviteStrings.length === 0) {
+        return; // skip if no invites
+    }
     fetch(config.hub_api_url + '/invites/check', {
         method: 'POST',
         body: JSON.stringify({ invite_strings: inviteStrings }),
@@ -259,7 +262,8 @@ function debounce(func, id, delay) {
     tribeCounts[id] += 1;
     bounceTimeouts[id] = setTimeout(() => {
         func.apply(context, args);
-        setTimeout(() => tribeCounts[id] = 0, 15);
+        // setTimeout(()=> tribeCounts[id]=0, 15)
+        tribeCounts[id] = 0;
     }, delay);
 }
 //# sourceMappingURL=hub.js.map
