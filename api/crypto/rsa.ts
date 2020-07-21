@@ -13,7 +13,7 @@ export function encrypt(key, txt){
     arr.forEach((_,i)=>{
       const f = crypto.publicEncrypt({
         key:pubc,
-        padding:crypto.constants.RSA_PKCS1_PADDING,
+        padding:crypto.constants.RSA_PKCS1_PADDING, // RSA_PKCS1_OAEP_PADDING
       }, buf.subarray(i*MAX_CHUNK_SIZE,i*MAX_CHUNK_SIZE+MAX_CHUNK_SIZE))
       finalBuf = Buffer.concat([finalBuf,f])
     })

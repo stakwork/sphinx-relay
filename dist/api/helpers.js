@@ -175,6 +175,7 @@ function parseReceiveParams(payload) {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         if (isConversation) {
             sender = yield findOrCreateContactByPubkey(sender_pub_key);
+            console.log("CREATED CONTACT AUTOMATICALLY", sender && sender.id);
             chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)]);
             if (sender.fromGroup) { // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });

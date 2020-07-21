@@ -184,6 +184,7 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
+    console.log("FOUND SENDER", sender && sender.dataValue);
     if (sender_contact_key && sender) {
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
@@ -195,6 +196,9 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
             type: 'contact',
             response: jsonUtils.contactToJson(sender)
         });
+    }
+    else {
+        console.log("DID NOT FIND SENDER");
     }
     helpers.sendContactKeys({
         contactPubKey: sender_pub_key,
