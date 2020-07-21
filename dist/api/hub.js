@@ -90,10 +90,6 @@ const sendHubCall = (params) => {
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }
     })
-        .then(res => res.json())
-        .then(json => {
-        // ?
-    })
         .catch(error => {
         console.log('[hub error]', error);
     });
@@ -113,10 +109,6 @@ function sendInvoice(payReq, amount) {
         method: 'POST',
         body: JSON.stringify({ invoice: payReq, amount }),
         headers: { 'Content-Type': 'application/json' }
-    })
-        .then(res => res.json())
-        .then(json => {
-        // ?
     })
         .catch(error => {
         console.log('[hub error]', error);

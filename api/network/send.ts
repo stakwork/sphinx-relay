@@ -84,7 +84,7 @@ export async function sendMessage(params) {
 			console.log("KEYSEND ERROR", e)
 			no = e
 		}
-		await sleep(2)
+		// await sleep(2)
 	})
 	if(yes){
 		if(success) success(yes)
@@ -164,9 +164,9 @@ async function asyncForEach(array, callback) {
 	  	await callback(array[index], index, array);
 	}
 }
-async function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms))
-}
+// async function sleep(ms) {
+// 	return new Promise(resolve => setTimeout(resolve, ms))
+// }
 
 // function urlBase64FromHex(ascii){
 //     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
