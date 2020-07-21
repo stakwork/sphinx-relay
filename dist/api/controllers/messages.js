@@ -249,7 +249,12 @@ exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             chatId: chat_id
         }
     });
+    models_1.models.Chat.update({ seen: true }, {
+        where: { id: chat_id }
+    });
     res_1.success(res, {});
+    const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+    hub_1.sendNotification(chat, '', 'badge');
 });
 exports.clearMessages = (req, res) => {
     models_1.models.Message.destroy({ where: {}, truncate: true });

@@ -52,6 +52,8 @@ function onReceive(payload) {
         if (payload.chat) {
             isTribe = payload.chat.type === constants.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+            if (chat)
+                chat.update({ seen: false });
         }
         if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;

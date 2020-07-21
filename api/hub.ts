@@ -119,7 +119,7 @@ export function sendInvoice(payReq, amount) {
     headers: { 'Content-Type': 'application/json' }
   })
   .catch(error => {
-    console.log('[hub error]', error)
+    console.log('[hub error]: sendInvoice', error)
   })
 }
 
@@ -188,7 +188,9 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
   })
 }
 
-const sendNotification = async (chat, name, type) => {
+type NotificationType = 'group' | 'badge' | 'invite' | 'message'
+
+const sendNotification = async (chat, name, type:NotificationType) => {
   
   let message = `You have a new message from ${name}`
   if(type==='invite'){
@@ -204,7 +206,7 @@ const sendNotification = async (chat, name, type) => {
 
   console.log('[send notification]', { chat_id:chat.id, message })
 
-  if (chat.isMuted) {
+  if (chat.isMuted && type!=='badge') {
     console.log('[send notification] skipping. chat is muted.')
     return
   }
@@ -215,18 +217,23 @@ const sendNotification = async (chat, name, type) => {
     console.log('[send notification] skipping. owner.deviceId not set.')
     return
   }
-
-  const unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
   const device_id = owner.deviceId
 
+  let unseenMessages=0
+  if(type!=='badge' && type!=='invite') {
+    unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
+  }
+  
   const params:{[k:string]:any} = {device_id}
   const notification:{[k:string]:any} = {
     chat_id: chat.id,
-    message,
     badge: unseenMessages
   }
-  if(owner.notificationSound) {
-    notification.sound = owner.notificationSound
+  if(type!=='badge') {
+    notification.message = message
+    if(owner.notificationSound) {
+      notification.sound = owner.notificationSound
+    }
   }
   params.notification = notification
 
@@ -247,10 +254,9 @@ function triggerNotification(params){
     body:    JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' }
   })
-  .then(res => res.json())
-  .then(json => {
-    // console.log('[hub notification]', json)
-  })  
+  .catch(error => {
+    console.log('[hub error]: triggerNotification', error)
+  })
 }
 
 export {

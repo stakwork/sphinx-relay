@@ -114,7 +114,7 @@ function sendInvoice(payReq, amount) {
         headers: { 'Content-Type': 'application/json' }
     })
         .catch(error => {
-        console.log('[hub error]', error);
+        console.log('[hub error]: sendInvoice', error);
     });
 }
 exports.sendInvoice = sendInvoice;
@@ -199,7 +199,7 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         message += ` on ${chat.name}`;
     }
     console.log('[send notification]', { chat_id: chat.id, message });
-    if (chat.isMuted) {
+    if (chat.isMuted && type !== 'badge') {
         console.log('[send notification] skipping. chat is muted.');
         return;
     }
@@ -208,16 +208,21 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         console.log('[send notification] skipping. owner.deviceId not set.');
         return;
     }
-    const unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
     const device_id = owner.deviceId;
+    let unseenMessages = 0;
+    if (type !== 'badge' && type !== 'invite') {
+        unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
+    }
     const params = { device_id };
     const notification = {
         chat_id: chat.id,
-        message,
         badge: unseenMessages
     };
-    if (owner.notificationSound) {
-        notification.sound = owner.notificationSound;
+    if (type !== 'badge') {
+        notification.message = message;
+        if (owner.notificationSound) {
+            notification.sound = owner.notificationSound;
+        }
     }
     params.notification = notification;
     if (type === 'message' && chat.type == constants.chat_types.tribe) {
@@ -238,9 +243,8 @@ function triggerNotification(params) {
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }
     })
-        .then(res => res.json())
-        .then(json => {
-        // console.log('[hub notification]', json)
+        .catch(error => {
+        console.log('[hub error]: triggerNotification', error);
     });
 }
 // let inDebounce

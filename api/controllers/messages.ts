@@ -282,8 +282,14 @@ export const readMessages = async (req, res) => {
 		  chatId: chat_id
 		}
 	});
+	models.Chat.update({ seen: true }, {
+		where: {id:chat_id}
+	});
 
 	success(res, {})
+
+	const chat = await models.Chat.findOne({ where: { id: chat_id } })
+	sendNotification(chat, '', 'badge')
 }
 
 export const clearMessages = (req, res) => {
