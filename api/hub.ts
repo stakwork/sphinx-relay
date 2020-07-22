@@ -213,19 +213,22 @@ const sendNotification = async (chat, name, type:NotificationType) => {
     return
   }
   const device_id = owner.deviceId
+  const isIOS = device_id.length===64
+  const isAndroid = !isIOS
 
   let unseenMessages=await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
   
   const params:{[k:string]:any} = {device_id}
   const notification:{[k:string]:any} = {
     chat_id: chat.id,
-    badge: unseenMessages
+    badge: unseenMessages,
+    sound: ''
   }
   if(type!=='badge' && !chat.isMuted) {
     notification.message = message
-    if(owner.notificationSound) {
-      notification.sound = owner.notificationSound
-    }
+    notification.sound = owner.notificationSound || 'default'
+  } else {
+    if(isAndroid) return // skip on Android if no actual message
   }
   params.notification = notification
 
