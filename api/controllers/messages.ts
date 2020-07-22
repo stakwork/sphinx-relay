@@ -283,7 +283,7 @@ export const readMessages = async (req, res) => {
 		}
 	});
 	const chat = await models.Chat.findOne({ where: { id: chat_id } })
-	chat.update({ seen: true });
+	await chat.update({ seen: true });
 
 	success(res, {})
 
