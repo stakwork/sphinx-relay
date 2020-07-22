@@ -205,16 +205,13 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         return;
     }
     const device_id = owner.deviceId;
-    let unseenMessages = 0;
-    if (!chat.isMuted || type !== 'invite') {
-        unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
-    }
+    let unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
     const params = { device_id };
     const notification = {
         chat_id: chat.id,
         badge: unseenMessages
     };
-    if (type !== 'badge') {
+    if (type !== 'badge' && !chat.isMuted) {
         notification.message = message;
         if (owner.notificationSound) {
             notification.sound = owner.notificationSound;

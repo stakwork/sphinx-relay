@@ -214,17 +214,14 @@ const sendNotification = async (chat, name, type:NotificationType) => {
   }
   const device_id = owner.deviceId
 
-  let unseenMessages=0
-  if(!chat.isMuted || type!=='invite') {
-    unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
-  }
+  let unseenMessages=await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
   
   const params:{[k:string]:any} = {device_id}
   const notification:{[k:string]:any} = {
     chat_id: chat.id,
     badge: unseenMessages
   }
-  if(type!=='badge') {
+  if(type!=='badge' && !chat.isMuted) {
     notification.message = message
     if(owner.notificationSound) {
       notification.sound = owner.notificationSound
