@@ -199,10 +199,6 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         message += ` on ${chat.name}`;
     }
     console.log('[send notification]', { chat_id: chat.id, message });
-    if (chat.isMuted && type !== 'badge') {
-        console.log('[send notification] skipping. chat is muted.');
-        return;
-    }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (!owner.deviceId) {
         console.log('[send notification] skipping. owner.deviceId not set.');
@@ -210,7 +206,7 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
     }
     const device_id = owner.deviceId;
     let unseenMessages = 0;
-    if (type !== 'badge' && type !== 'invite') {
+    if (!chat.isMuted || type !== 'invite') {
         unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
     }
     const params = { device_id };
