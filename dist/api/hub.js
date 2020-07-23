@@ -198,7 +198,6 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
     if (type === 'message' && chat.type == constants.chat_types.group && chat.name && chat.name.length) {
         message += ` on ${chat.name}`;
     }
-    console.log('[send notification]', { chat_id: chat.id, message });
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (!owner.deviceId) {
         console.log('[send notification] skipping. owner.deviceId not set.');
@@ -207,11 +206,9 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
     const device_id = owner.deviceId;
     const isIOS = device_id.length === 64;
     const isAndroid = !isIOS;
-    let unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: owner.id }, seen: false } });
     const params = { device_id };
     const notification = {
         chat_id: chat.id,
-        badge: unseenMessages,
         sound: ''
     };
     if (type !== 'badge' && !chat.isMuted) {
@@ -227,14 +224,24 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         debounce(() => {
             const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : '';
             params.notification.message = `You have ${count}new messages in ${chat.name}`;
-            triggerNotification(params);
+            finalNotification(owner.id, params);
         }, chat.id, 30000);
     }
     else {
-        triggerNotification(params);
+        finalNotification(owner.id, params);
     }
 });
 exports.sendNotification = sendNotification;
+function finalNotification(ownerID, params) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (params.notification.message) {
+            console.log('[send notification]', params.notification);
+        }
+        let unseenMessages = yield models_1.models.Message.count({ where: { sender: { [sequelize_1.Op.ne]: ownerID }, seen: false } });
+        params.notification.badge = unseenMessages;
+        triggerNotification(params);
+    });
+}
 function triggerNotification(params) {
     fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {
         method: 'POST',

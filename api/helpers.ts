@@ -163,7 +163,6 @@ export async function parseReceiveParams(payload) {
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	if (isConversation) {
 		sender = await findOrCreateContactByPubkey(sender_pub_key)
-		console.log("CREATED CONTACT AUTOMATICALLY",sender&&sender.id)
 		chat = await findOrCreateChatByUUID(
 			chat_uuid, [parseInt(owner.id), parseInt(sender.id)]
 		)

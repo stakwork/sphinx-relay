@@ -204,8 +204,6 @@ const sendNotification = async (chat, name, type:NotificationType) => {
     message += ` on ${chat.name}`
   }
 
-  console.log('[send notification]', { chat_id:chat.id, message })
-
   const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
   if (!owner.deviceId) {
@@ -215,13 +213,10 @@ const sendNotification = async (chat, name, type:NotificationType) => {
   const device_id = owner.deviceId
   const isIOS = device_id.length===64
   const isAndroid = !isIOS
-
-  let unseenMessages=await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
   
   const params:{[k:string]:any} = {device_id}
   const notification:{[k:string]:any} = {
     chat_id: chat.id,
-    badge: unseenMessages,
     sound: ''
   }
   if(type!=='badge' && !chat.isMuted) {
@@ -236,14 +231,23 @@ const sendNotification = async (chat, name, type:NotificationType) => {
     debounce(()=>{
       const count = tribeCounts[chat.id]?tribeCounts[chat.id]+' ':''
       params.notification.message = `You have ${count}new messages in ${chat.name}`
-      triggerNotification(params)
+      finalNotification(owner.id, params)
     }, chat.id, 30000)
   } else {
-    triggerNotification(params)
+    finalNotification(owner.id, params)
   }
 }
 
-function triggerNotification(params){
+async function finalNotification(ownerID: number, params:{[k:string]:any}){
+  if(params.notification.message) {
+    console.log('[send notification]', params.notification)
+  }
+  let unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: ownerID }, seen: false } })
+  params.notification.badge = unseenMessages
+  triggerNotification(params)
+}
+
+function triggerNotification(params:{[k:string]:any}){
   fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {
     method: 'POST' ,
     body:    JSON.stringify(params),
