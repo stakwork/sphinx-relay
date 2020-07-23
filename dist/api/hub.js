@@ -223,7 +223,7 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
     if (type === 'message' && chat.type == constants.chat_types.tribe) {
         debounce(() => {
             const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : '';
-            params.notification.message = `You have ${count}new messages in ${chat.name}`;
+            params.notification.message = chat.isMuted ? '' : `You have ${count}new messages in ${chat.name}`;
             finalNotification(owner.id, params);
         }, chat.id, 30000);
     }

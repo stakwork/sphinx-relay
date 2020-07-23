@@ -230,7 +230,7 @@ const sendNotification = async (chat, name, type:NotificationType) => {
   if(type==='message' && chat.type==constants.chat_types.tribe){
     debounce(()=>{
       const count = tribeCounts[chat.id]?tribeCounts[chat.id]+' ':''
-      params.notification.message = `You have ${count}new messages in ${chat.name}`
+      params.notification.message = chat.isMuted ? '' : `You have ${count}new messages in ${chat.name}`
       finalNotification(owner.id, params)
     }, chat.id, 30000)
   } else {
