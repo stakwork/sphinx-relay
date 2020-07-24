@@ -34,6 +34,7 @@
     "bytebuffer": "^5.0.1",
     "change-case": "^4.1.1",
     "cookie-parser": "^1.4.4",
+    "cors": "^2.8.5",
     "cron": "^1.7.2",
     "cron-parser": "^2.13.0",
     "crypto-browserify": "^3.12.0",

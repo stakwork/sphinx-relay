@@ -97,6 +97,14 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Chat.prototype, "ownerPubkey", void 0);
+__decorate([
+    sequelize_typescript_1.Column({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+    }),
+    __metadata("design:type", Boolean)
+], Chat.prototype, "seen", void 0);
 Chat = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);

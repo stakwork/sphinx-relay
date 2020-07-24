@@ -10,7 +10,17 @@ let io: any
 export function connect(server) {
   // srvr = new WebSocket.Server({ server, clientTracking:true })
 
-  io = socketio(server);
+  io = socketio(server, {
+    handlePreflightRequest: (req, res) => {
+      const headers = {
+        "Access-Control-Allow-Headers": "Content-Type, Accept, x-user-token, X-Requested-With",
+        "Access-Control-Allow-Origin": req.headers.origin, //or the specific origin you want to give access to,
+        "Access-Control-Allow-Credentials": true
+      };
+      res.writeHead(200, headers);
+      res.end();
+    }
+  });
   io.use(async (socket, next) => {
     let userToken = socket.handshake.headers['x-user-token'];
     const isValid = await isValidToken(userToken) 

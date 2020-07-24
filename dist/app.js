@@ -13,6 +13,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 const crypto = require("crypto");
 const path = require("path");
 const models_1 = require("./api/models");
@@ -68,16 +69,9 @@ function setupApp() {
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: true }));
         app.use(logger_1.default);
-        app.options('*', (req, res) => res.send(200));
-        app.use((req, res, next) => {
-            res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080');
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-            res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept');
-            res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-            res.setHeader('Expires', '-1');
-            res.setHeader('Pragma', 'no-cache');
-            next();
-        });
+        app.use(cors({
+            allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token']
+        }));
         app.use(cookieParser());
         if (env != 'development') {
             app.use(authModule);

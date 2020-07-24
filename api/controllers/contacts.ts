@@ -208,7 +208,7 @@ export const receiveContactKey = async (payload) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
-
+	console.log("FOUND SENDER",sender&&sender.dataValue)
 	if (sender_contact_key && sender) {
 		const objToUpdate:{[k:string]:any} = {contactKey: sender_contact_key}
 		if(sender_alias) objToUpdate.alias = sender_alias
@@ -219,6 +219,8 @@ export const receiveContactKey = async (payload) => {
 			type: 'contact',
 			response: jsonUtils.contactToJson(sender)
 		})
+	} else {
+		console.log("DID NOT FIND SENDER")
 	}
 
 	helpers.sendContactKeys({

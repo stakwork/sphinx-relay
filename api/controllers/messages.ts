@@ -274,7 +274,7 @@ export const readMessages = async (req, res) => {
 	
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
-	models.Message.update({ seen: true }, {
+	await models.Message.update({ seen: true }, {
 		where: {
 		  sender: {
 			[Op.ne]: owner.id
@@ -282,8 +282,16 @@ export const readMessages = async (req, res) => {
 		  chatId: chat_id
 		}
 	});
+	const chat = await models.Chat.findOne({ where: { id: chat_id } })
+	await chat.update({ seen: true });
 
 	success(res, {})
+
+	sendNotification(chat, '', 'badge')
+	socket.sendJson({
+		type: 'chat_seen',
+		response: jsonUtils.chatToJson(chat)
+	})
 }
 
 export const clearMessages = (req, res) => {

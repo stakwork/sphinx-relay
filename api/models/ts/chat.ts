@@ -69,4 +69,11 @@ export default class Chat extends Model<Chat> {
   @Column 
   ownerPubkey: string
 
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  })
+  seen: boolean
+
 }

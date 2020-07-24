@@ -89,7 +89,7 @@ function sendMessage(params) {
                 console.log("KEYSEND ERROR", e);
                 no = e;
             }
-            yield sleep(2);
+            // await sleep(2)
         }));
         if (yes) {
             if (success)
@@ -165,11 +165,9 @@ function asyncForEach(array, callback) {
         }
     });
 }
-function sleep(ms) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    });
-}
+// async function sleep(ms) {
+// 	return new Promise(resolve => setTimeout(resolve, ms))
+// }
 // function urlBase64FromHex(ascii){
 //     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }

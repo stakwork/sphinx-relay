@@ -17,7 +17,17 @@ let io;
 // let srvr: any
 function connect(server) {
     // srvr = new WebSocket.Server({ server, clientTracking:true })
-    io = socketio(server);
+    io = socketio(server, {
+        handlePreflightRequest: (req, res) => {
+            const headers = {
+                "Access-Control-Allow-Headers": "Content-Type, Accept, x-user-token, X-Requested-With",
+                "Access-Control-Allow-Origin": req.headers.origin,
+                "Access-Control-Allow-Credentials": true
+            };
+            res.writeHead(200, headers);
+            res.end();
+        }
+    });
     io.use((socket, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = socket.handshake.headers['x-user-token'];
         const isValid = yield isValidToken(userToken);

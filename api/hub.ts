@@ -21,6 +21,9 @@ const checkInviteHub = async (params = {}) => {
   //console.log('[hub] checking invites ping')
 
   const inviteStrings = await models.Invite.findAll({ where: { status: { [Op.notIn]: [constants.invite_statuses.complete, constants.invite_statuses.expired] } } }).map(invite => invite.inviteString)
+  if(inviteStrings.length===0) {
+    return // skip if no invites
+  }
 
   fetch(config.hub_api_url + '/invites/check', {
     method: 'POST' ,
@@ -95,10 +98,6 @@ const sendHubCall = (params) => {
     body:    JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' }
   })
-  .then(res => res.json())
-  .then(json => {
-    // ?
-  })
   .catch(error => {
     console.log('[hub error]', error)
   })
@@ -119,12 +118,8 @@ export function sendInvoice(payReq, amount) {
     body:    JSON.stringify({invoice:payReq, amount}),
     headers: { 'Content-Type': 'application/json' }
   })
-  .then(res => res.json())
-  .then(json => {
-    // ?
-  })
   .catch(error => {
-    console.log('[hub error]', error)
+    console.log('[hub error]: sendInvoice', error)
   })
 }
 
@@ -193,7 +188,9 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
   })
 }
 
-const sendNotification = async (chat, name, type) => {
+type NotificationType = 'group' | 'badge' | 'invite' | 'message'
+
+const sendNotification = async (chat, name, type:NotificationType) => {
   
   let message = `You have a new message from ${name}`
   if(type==='invite'){
@@ -207,55 +204,58 @@ const sendNotification = async (chat, name, type) => {
     message += ` on ${chat.name}`
   }
 
-  console.log('[send notification]', { chat_id:chat.id, message })
-
-  if (chat.isMuted) {
-    console.log('[send notification] skipping. chat is muted.')
-    return
-  }
-
   const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
   if (!owner.deviceId) {
     console.log('[send notification] skipping. owner.deviceId not set.')
     return
   }
-
-  const unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: owner.id }, seen: false } })
   const device_id = owner.deviceId
-
+  const isIOS = device_id.length===64
+  const isAndroid = !isIOS
+  
   const params:{[k:string]:any} = {device_id}
   const notification:{[k:string]:any} = {
     chat_id: chat.id,
-    message,
-    badge: unseenMessages
+    sound: ''
   }
-  if(owner.notificationSound) {
-    notification.sound = owner.notificationSound
+  if(type!=='badge' && !chat.isMuted) {
+    notification.message = message
+    notification.sound = owner.notificationSound || 'default'
+  } else {
+    if(isAndroid) return // skip on Android if no actual message
   }
   params.notification = notification
 
   if(type==='message' && chat.type==constants.chat_types.tribe){
     debounce(()=>{
       const count = tribeCounts[chat.id]?tribeCounts[chat.id]+' ':''
-      params.notification.message = `You have ${count}new messages in ${chat.name}`
-      triggerNotification(params)
+      params.notification.message = chat.isMuted ? '' : `You have ${count}new messages in ${chat.name}`
+      finalNotification(owner.id, params)
     }, chat.id, 30000)
   } else {
-    triggerNotification(params)
+    finalNotification(owner.id, params)
   }
 }
 
-function triggerNotification(params){
+async function finalNotification(ownerID: number, params:{[k:string]:any}){
+  if(params.notification.message) {
+    console.log('[send notification]', params.notification)
+  }
+  let unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: ownerID }, seen: false } })
+  params.notification.badge = unseenMessages
+  triggerNotification(params)
+}
+
+function triggerNotification(params:{[k:string]:any}){
   fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {
     method: 'POST' ,
     body:    JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' }
   })
-  .then(res => res.json())
-  .then(json => {
-    // console.log('[hub notification]', json)
-  })  
+  .catch(error => {
+    console.log('[hub error]: triggerNotification', error)
+  })
 }
 
 export {
@@ -287,6 +287,7 @@ function debounce(func, id, delay) {
   tribeCounts[id]+=1
   bounceTimeouts[id] = setTimeout(() => {
     func.apply(context, args)
-    setTimeout(()=> tribeCounts[id]=0, 15)
+    // setTimeout(()=> tribeCounts[id]=0, 15)
+    tribeCounts[id]=0
   }, delay)
 }

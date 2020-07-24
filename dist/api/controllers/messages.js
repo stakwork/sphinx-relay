@@ -241,7 +241,7 @@ exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, fu
 exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = req.params.chat_id;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    models_1.models.Message.update({ seen: true }, {
+    yield models_1.models.Message.update({ seen: true }, {
         where: {
             sender: {
                 [sequelize_1.Op.ne]: owner.id
@@ -249,7 +249,14 @@ exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             chatId: chat_id
         }
     });
+    const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+    yield chat.update({ seen: true });
     res_1.success(res, {});
+    hub_1.sendNotification(chat, '', 'badge');
+    socket.sendJson({
+        type: 'chat_seen',
+        response: jsonUtils.chatToJson(chat)
+    });
 });
 exports.clearMessages = (req, res) => {
     models_1.models.Message.destroy({ where: {}, truncate: true });
