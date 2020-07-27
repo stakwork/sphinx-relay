@@ -114,7 +114,7 @@ $ export USE_PASSWORD=true
 We need LND to run with keysend activated. First we check if it is already activated on your node. 
 
 #### myNode:
-Go to http://mynode.local/lnd/config and check if the line `accept-keysend=1` is included somewhere in the text.
+Go to http://mynode.local/lnd/config and check if the line `accept-keysend=1` (or `accept-keysend=True`) is included somewhere in the text.
 
 If `accept-keysend=1` is already included you can continue without changing anything. If `accept-keysend=1` is not included, add it to a new line and click the `Save` button. This will restart your device. (Restarting could take up to several minutes but also hours, so be patient.)
 
