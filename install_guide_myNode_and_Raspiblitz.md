@@ -5,11 +5,11 @@ This guide is focused on installing Sphinx-relay on top of myNode. Information a
 ### Preparations
 
 * Be able to connect with your node through SSH.
-* Make sure you are running LND version `0.9.0` or higher. This can be seen at http://mynode.local/lnd at the right top. Or by inserting the following console command:
+* Make sure you are running LND version `0.10.0` or higher. This can be seen at http://mynode.local/lnd at the right top. Or by inserting the following console command:
 
 ```sh
 $ lncli getinfo
-> "version": "0.9.0-beta commit=v0.9.0-beta"
+> "version": "0.10.0-beta commit=v0.10.0-beta"
 ```
 * Open port `3001/TCP` on your router. How to do this is not included in this guide. https://www.yougetsignal.com/tools/open-ports/ is one of the many websites that can be used to check if a port is opened on your network.
 ---
@@ -47,8 +47,10 @@ $ cd sphinx-relay
 $ npm install
 ```
 ### Dependencies
-sqlite3: `$ apt-get install sqlite3`
-python2: `$ apt-get install python2`
+
+sqlite3: `$ sudo apt-get install sqlite3`
+
+python2: `$ sudo apt-get install python2`
 
 ### Configure
 Edit the "production" section of config/app.json.
@@ -59,20 +61,18 @@ $ nano app.json
 ```
 Change the following 4 lines:
 
-## myNode
+#### myNode
 ``` 
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/mynode/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
-"lncli_location": "/home/bitcoin/go/bin",
 ```
 
-## Raspiblitz
+#### Raspiblitz
 ``` 
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
-"lncli_location": "/home/bitcoin/go/bin",
 ```
 
 Save and exit:
@@ -113,12 +113,12 @@ $ export USE_PASSWORD=true
 
 We need LND to run with keysend activated. First we check if it is already activated on your node. 
 
-## myNode:
+#### myNode:
 Go to http://mynode.local/lnd/config and check if the line `accept-keysend=1` is included somewhere in the text.
 
 If `accept-keysend=1` is already included you can continue without changing anything. If `accept-keysend=1` is not included, add it to a new line and click the `Save` button. This will restart your device. (Restarting could take up to several minutes but also hours, so be patient.)
 
-## Raspiblitz:
+#### Raspiblitz:
 Go to raspiblitz menu, or:
 
 ```sh
@@ -221,7 +221,7 @@ $ nano app.json
 ```
 Change the following 4 lines:
 
-## myNode
+#### myNode
 ``` 
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/mynode/lnd/tls.cert",
@@ -229,7 +229,7 @@ Change the following 4 lines:
 "lncli_location": "/home/bitcoin/go/bin",
 ```
 
-## Raspiblitz
+#### Raspiblitz
 ``` 
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/lnd/tls.cert",
