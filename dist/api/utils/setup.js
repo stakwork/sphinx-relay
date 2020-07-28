@@ -16,7 +16,7 @@ const QRCode = require("qrcode");
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
 const gitinfo_1 = require("../utils/gitinfo");
-const USER_VERSION = 5;
+const USER_VERSION = 6;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
@@ -44,6 +44,9 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_chats', 'private', 'BOOLEAN');
+        addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN');
+        addTableColumn('sphinx_chat_members', 'approved', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'seen', 'BOOLEAN');
         try {
             yield models_1.sequelize.query(`CREATE INDEX idx_messages_sender ON sphinx_messages (sender);`);
@@ -52,27 +55,20 @@ function migrate() {
             console.log(e);
         }
         addTableColumn('sphinx_contacts', 'notification_sound');
-        try {
-            yield models_1.sequelize.query(`
-CREATE TABLE sphinx_timers (
-  id BIGINT,
-  chat_id BIGINT,
-  receiver BIGINT,
-  millis BIGINT,
-  msg_id BIGINT,
-  amount DECIMAL
-)`);
-        }
-        catch (e) { }
-        addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT');
-        addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT');
-        addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN');
-        // addTableColumn('sphinx_media_keys', 'media_type')
-        // addTableColumn('sphinx_media_keys', 'original_muid')
-        // addTableColumn('sphinx_messages', 'original_muid')
-        // addTableColumn('sphinx_messages', 'uuid')
-        // addTableColumn('sphinx_messages', 'reply_uuid')
-        // addTableColumn('sphinx_media_keys', 'sender', 'BIGINT')
+        //   try{
+        //     await sequelize.query(`
+        // CREATE TABLE sphinx_timers (
+        //   id BIGINT,
+        //   chat_id BIGINT,
+        //   receiver BIGINT,
+        //   millis BIGINT,
+        //   msg_id BIGINT,
+        //   amount DECIMAL
+        // )`)
+        //   } catch(e){}
+        //   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
+        //   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
+        //   addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
     });
 }
 function addTableColumn(table, column, type = 'TEXT') {

@@ -39,7 +39,9 @@
     "group_leave": 15,
     "group_kick": 16,
     "delete": 17,
-    "repayment": 18
+    "repayment": 18,
+    "member_approve": 19,
+    "member_reject": 20
   },
   "payment_errors": {
     "timeout": "Timed Out",

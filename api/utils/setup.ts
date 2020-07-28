@@ -6,7 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
-const USER_VERSION = 5
+const USER_VERSION = 6
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -31,6 +31,10 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_chats', 'private', 'BOOLEAN')
+  addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN')
+  addTableColumn('sphinx_chat_members', 'approved', 'BOOLEAN')
+
   addTableColumn('sphinx_chats', 'seen', 'BOOLEAN')
 
   try{
@@ -41,30 +45,21 @@ async function migrate(){
 
   addTableColumn('sphinx_contacts', 'notification_sound')
 
-  try{
-    await sequelize.query(`
-CREATE TABLE sphinx_timers (
-  id BIGINT,
-  chat_id BIGINT,
-  receiver BIGINT,
-  millis BIGINT,
-  msg_id BIGINT,
-  amount DECIMAL
-)`)
-  } catch(e){}
-  addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
-  addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
+//   try{
+//     await sequelize.query(`
+// CREATE TABLE sphinx_timers (
+//   id BIGINT,
+//   chat_id BIGINT,
+//   receiver BIGINT,
+//   millis BIGINT,
+//   msg_id BIGINT,
+//   amount DECIMAL
+// )`)
+//   } catch(e){}
+//   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
+//   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
   
-  addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
-
-  // addTableColumn('sphinx_media_keys', 'media_type')
-  // addTableColumn('sphinx_media_keys', 'original_muid')
-  // addTableColumn('sphinx_messages', 'original_muid')
-
-  // addTableColumn('sphinx_messages', 'uuid')
-  // addTableColumn('sphinx_messages', 'reply_uuid')
-
-  // addTableColumn('sphinx_media_keys', 'sender', 'BIGINT')
+//   addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
 }
 
 async function addTableColumn(table:string, column:string, type='TEXT') {

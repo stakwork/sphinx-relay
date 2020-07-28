@@ -95,6 +95,14 @@ __decorate([
 ], Chat.prototype, "escrowMillis", void 0);
 __decorate([
     sequelize_typescript_1.Column,
+    __metadata("design:type", Boolean)
+], Chat.prototype, "unlisted", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Boolean)
+], Chat.prototype, "private", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Chat.prototype, "ownerPubkey", void 0);
 __decorate([

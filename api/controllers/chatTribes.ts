@@ -104,6 +104,7 @@ export async function editTribe(req, res) {
 		img,
 		description,
 		tags,
+		unlisted,
 	} = req.body
 	const { id } = req.params
 
@@ -131,6 +132,7 @@ export async function editTribe(req, res) {
 				tags, 
 				img,
 				owner_alias: owner.alias,
+				unlisted,
 			})
 		} catch(e) {
 			okToUpdate = false
@@ -145,6 +147,7 @@ export async function editTribe(req, res) {
 			priceToJoin: price_to_join||0,
 			escrowAmount: escrow_amount||0,
 			escrowMillis: escrow_millis||0,
+			unlisted: unlisted||false,
 		})
 		success(res, jsonUtils.chatToJson(chat))
 	} else {
@@ -206,7 +209,7 @@ export async function replayChatHistory(chat, contact) {
 	})
 }
 
-export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis): Promise<{[k:string]:any}> {
+export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted): Promise<{[k:string]:any}> {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -233,6 +236,7 @@ export async function createTribeChatParams(owner, contactIds, name, img, price_
 		priceToJoin: price_to_join||0,
 		escrowMillis: escrow_millis||0,
 		escrowAmount: escrow_amount||0,
+		unlisted: unlisted||false,
 	}
 }
 
