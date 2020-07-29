@@ -66,6 +66,16 @@ export default class Chat extends Model<Chat> {
   @Column(DataType.BIGINT)
   escrowMillis: number
 
+  @Column({ // dont show on tribes list
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    // allowNull: false
+  })
+  unlisted: boolean
+
+  @Column
+  private: boolean // joining requires approval of admin
+
   @Column 
   ownerPubkey: string
 

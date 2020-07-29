@@ -94,7 +94,7 @@ const sendHubCall = (params) => {
         headers: { 'Content-Type': 'application/json' }
     })
         .catch(error => {
-        console.log('[hub error]', error);
+        console.log('[hub warning]: cannot reach hub');
     });
 };
 exports.sendHubCall = sendHubCall;
