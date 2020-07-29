@@ -51,9 +51,7 @@ function migrate() {
         try {
             yield models_1.sequelize.query(`CREATE INDEX idx_messages_sender ON sphinx_messages (sender);`);
         }
-        catch (e) {
-            console.log(e);
-        }
+        catch (e) { }
         addTableColumn('sphinx_contacts', 'notification_sound');
         //   try{
         //     await sequelize.query(`
