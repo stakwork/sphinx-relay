@@ -96,7 +96,6 @@ export async function joinTribe(req, res){
 export async function editTribe(req, res) {
 	const {
 		name,
-		is_listed,
 		price_per_message,
 		price_to_join,
 		escrow_amount,
@@ -118,25 +117,23 @@ export async function editTribe(req, res) {
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
 	let okToUpdate = true
-	if(is_listed) {
-		try{
-			await tribes.edit({
-				uuid: chat.uuid,
-				name: name,
-				host: chat.host,
-				price_per_message: price_per_message||0,
-				price_to_join: price_to_join||0,
-				escrow_amount: escrow_amount||0,
-				escrow_millis: escrow_millis||0,
-				description, 
-				tags, 
-				img,
-				owner_alias: owner.alias,
-				unlisted,
-			})
-		} catch(e) {
-			okToUpdate = false
-		}
+	try{
+		await tribes.edit({
+			uuid: chat.uuid,
+			name: name,
+			host: chat.host,
+			price_per_message: price_per_message||0,
+			price_to_join: price_to_join||0,
+			escrow_amount: escrow_amount||0,
+			escrow_millis: escrow_millis||0,
+			description, 
+			tags, 
+			img,
+			owner_alias: owner.alias,
+			unlisted,
+		})
+	} catch(e) {
+		okToUpdate = false
 	}
 
 	if(okToUpdate) {

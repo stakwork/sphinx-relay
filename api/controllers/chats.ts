@@ -137,7 +137,6 @@ export async function createGroupChat(req, res) {
 	const {
 		name,
 		is_tribe,
-		is_listed,
 		price_per_message,
 		price_to_join,
 		escrow_amount,
@@ -167,7 +166,7 @@ export async function createGroupChat(req, res) {
 	let okToCreate = true
 	if(is_tribe){
 		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted)
-		if(is_listed && chatParams.uuid){
+		if(chatParams.uuid){
 			// publish to tribe server
 			try {
 				await tribes.declare({
