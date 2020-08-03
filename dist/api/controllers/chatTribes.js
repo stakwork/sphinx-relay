@@ -18,6 +18,7 @@ const helpers = require("../helpers");
 const socket = require("../utils/socket");
 const tribes = require("../utils/tribes");
 const path = require("path");
+const hub_1 = require("../hub");
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -164,7 +165,7 @@ function receiveMemberRequest(payload) {
             msg.senderAlias = sender_alias;
         }
         const message = yield models_1.models.Message.create(msg);
-        const theChat = addPendingContactIdsToChat(chat);
+        const theChat = yield addPendingContactIdsToChat(chat);
         socket.sendJson({
             type: 'member_request',
             response: {
@@ -176,13 +177,119 @@ function receiveMemberRequest(payload) {
     });
 }
 exports.receiveMemberRequest = receiveMemberRequest;
+function approveOrRejectMember(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const chatId = parseInt(req.params['chatId']);
+        const contactId = parseInt(req.params['contactId']);
+        const status = req.params['status'];
+        if (!chatId || !contactId || !(status === 'approved' || status === 'rejected')) {
+            return res_1.failure(res, 'incorrect status');
+        }
+        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
+        if (!chat)
+            return;
+        let memberStatus = constants.chat_statuses.rejected;
+        let msgType = 'member_reject';
+        if (status === 'approved') {
+            memberStatus = constants.chat_statuses.approved;
+            msgType = 'member_approve';
+            // ADD ID TO CONTACT IDS
+            const contactIds = JSON.parse(chat.contactIds || '[]');
+            if (!contactIds.includes(contactId))
+                contactIds.push(contactId);
+            yield chat.update({ contactIds: JSON.stringify(contactIds) });
+        }
+        const member = yield models_1.models.ChatMember.findOne({ where: { contactId, chatId } });
+        if (!member) {
+            return res_1.failure(res, 'cant find chat member');
+        }
+        yield member.update({ status: memberStatus });
+        let date = new Date();
+        date.setMilliseconds(0);
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types[msgType],
+            sender: (member && member.contactId) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date
+        };
+        const message = yield models_1.models.Message.create(msg);
+        const theChat = yield addPendingContactIdsToChat(chat);
+        const cont = yield models_1.models.Contact.findOne({ where: { id: contactId } });
+        socket.sendJson({
+            type: msgType,
+            response: {
+                contact: jsonUtils.contactToJson(cont || {}),
+                chat: jsonUtils.chatToJson(theChat),
+                message: jsonUtils.messageToJson(message, null)
+            }
+        });
+    });
+}
+exports.approveOrRejectMember = approveOrRejectMember;
 function receiveMemberApprove(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        const { owner, chat, chat_name, sender } = yield helpers.parseReceiveParams(payload);
+        if (!chat)
+            return;
+        yield chat.update({ status: constants.chat_statuses.approved });
+        let date = new Date();
+        date.setMilliseconds(0);
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types.member_approve,
+            sender: (sender && sender.id) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date
+        };
+        const message = yield models_1.models.Message.create(msg);
+        socket.sendJson({
+            type: 'member_approve',
+            response: {
+                message: jsonUtils.messageToJson(message, null)
+            }
+        });
+        // send my info to all 
+        network.sendMessage({
+            chat: Object.assign(Object.assign({}, chat), { members: {
+                    [owner.publicKey]: {
+                        key: owner.contactKey,
+                        alias: owner.alias || ''
+                    }
+                } }),
+            amount: 0,
+            sender: owner,
+            message: {},
+            type: constants.message_types.group_join,
+        });
+        hub_1.sendNotification(chat, chat_name, 'group');
     });
 }
 exports.receiveMemberApprove = receiveMemberApprove;
 function receiveMemberReject(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        const { chat, sender, chat_name } = yield helpers.parseReceiveParams(payload);
+        // dang.. nothing really to do here?
+        let date = new Date();
+        date.setMilliseconds(0);
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types.member_reject,
+            sender: (sender && sender.id) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date
+        };
+        const message = yield models_1.models.Message.create(msg);
+        socket.sendJson({
+            type: 'member_reject',
+            response: {
+                message: jsonUtils.messageToJson(message, null)
+            }
+        });
+        hub_1.sendNotification(chat, chat_name, 'reject');
     });
 }
 exports.receiveMemberReject = receiveMemberReject;

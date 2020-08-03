@@ -7,6 +7,7 @@ import * as helpers from '../helpers'
 import * as socket from '../utils/socket'
 import * as tribes from '../utils/tribes'
 import * as path from 'path'
+import { sendNotification } from '../hub'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
 import { Op } from 'sequelize'
 
@@ -164,7 +165,7 @@ export async function receiveMemberRequest(payload) {
 	}
 	const message = await models.Message.create(msg)
 
-	const theChat = addPendingContactIdsToChat(chat)
+	const theChat = await addPendingContactIdsToChat(chat)
 	socket.sendJson({
 		type: 'member_request',
 		response: {
@@ -175,12 +176,122 @@ export async function receiveMemberRequest(payload) {
 	})
 }
 
-export async function receiveMemberApprove(payload) {
+export async function approveOrRejectMember(req,res) {
+	const chatId = parseInt(req.params['chatId'])
+	const contactId = parseInt(req.params['contactId'])
+	const status = req.params['status']
 
+	if(!chatId || !contactId || !(status==='approved'||status==='rejected')) {
+		return failure(res, 'incorrect status')
+	}
+	const chat = await models.Chat.findOne({ where: { id:chatId } })
+	if (!chat) return
+
+	let memberStatus = constants.chat_statuses.rejected
+	let msgType = 'member_reject'
+	if(status==='approved') {
+		memberStatus = constants.chat_statuses.approved
+		msgType = 'member_approve'
+		// ADD ID TO CONTACT IDS
+		const contactIds = JSON.parse(chat.contactIds || '[]')
+		if(!contactIds.includes(contactId)) contactIds.push(contactId)
+		await chat.update({ contactIds: JSON.stringify(contactIds) })
+	}
+
+	const member = await models.ChatMember.findOne({where:{contactId, chatId}})
+	if(!member) {
+		return failure(res, 'cant find chat member')
+	}
+	await member.update({status:memberStatus})
+
+	let date = new Date()
+	date.setMilliseconds(0)
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		type: constants.message_types[msgType],
+		sender: (member && member.contactId) || 0,
+		messageContent:'', remoteMessageContent:'',
+		status: constants.statuses.confirmed,
+		date: date, createdAt: date, updatedAt: date
+	}
+	const message = await models.Message.create(msg)
+
+	const theChat = await addPendingContactIdsToChat(chat)
+	const cont = await models.Contact.findOne({where:{id:contactId}})
+	socket.sendJson({
+		type: msgType,
+		response: {
+			contact: jsonUtils.contactToJson(cont||{}),
+			chat: jsonUtils.chatToJson(theChat),
+			message: jsonUtils.messageToJson(message, null)
+		}
+	})
+}
+
+export async function receiveMemberApprove(payload) {
+	const { owner, chat, chat_name, sender } = await helpers.parseReceiveParams(payload)
+	if(!chat) return
+	await chat.update({status: constants.chat_statuses.approved})
+
+	let date = new Date()
+	date.setMilliseconds(0)
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		type: constants.message_types.member_approve,
+		sender: (sender && sender.id) || 0,
+		messageContent:'', remoteMessageContent:'',
+		status: constants.statuses.confirmed,
+		date: date, createdAt: date, updatedAt: date
+	}
+	const message = await models.Message.create(msg)
+	socket.sendJson({
+		type: 'member_approve',
+		response: {
+			message: jsonUtils.messageToJson(message, null)
+		}
+	})
+
+	// send my info to all 
+	network.sendMessage({
+		chat: { ...chat, 
+			members: {
+				[owner.publicKey]: {
+					key: owner.contactKey,
+					alias: owner.alias||''
+				}
+			}
+		},
+		amount:0,
+		sender: owner,
+		message: {},
+		type: constants.message_types.group_join,
+	})
+
+	sendNotification(chat, chat_name, 'group')
 }
 
 export async function receiveMemberReject(payload) {
+	const { chat, sender, chat_name } = await helpers.parseReceiveParams(payload)
+	// dang.. nothing really to do here?
+	let date = new Date()
+	date.setMilliseconds(0)
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		type: constants.message_types.member_reject,
+		sender: (sender && sender.id) || 0,
+		messageContent:'', remoteMessageContent:'',
+		status: constants.statuses.confirmed,
+		date: date, createdAt: date, updatedAt: date
+	}
+	const message = await models.Message.create(msg)
+	socket.sendJson({
+		type: 'member_reject',
+		response: {
+			message: jsonUtils.messageToJson(message, null)
+		}
+	})
 
+	sendNotification(chat, chat_name, 'reject')
 }
 
 export async function replayChatHistory(chat, contact) {
