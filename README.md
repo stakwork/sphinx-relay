@@ -11,7 +11,116 @@ Relay stores:
 - Invites (so you can add your friends)
 - Media Keys: keys for decrypting media files, asymetrically encrypted for each contact in a chat
 
-# run your own sphinx node
+# Run your own sphinx node
+
+## Preparations
+
+* Be able to connect with your node through SSH.
+* Make sure you are running LND version `0.10.0` or higher. This can be seen at http://mynode.local/lnd at the right top. Or by inserting the following console command:
+
+```sh
+$ lncli getinfo
+> "version": "0.10.0-beta commit=v0.10.0-beta"
+```
+
+### If you are already operating your LND
+
+If you have some open/funded channels of 100 000 sat+ capacity, you don't need to do anything else regarding Sphinx-Relay operation; if you don't have enough capacity in your channel(s) - add funds or rebalance your channels.
+
+### If you just installed your LND
+
+If you do not have any open/funded channels you might want to open a channel to the sphinx.chat LND. With a direct channel set up to sphinx.chat sending messages to sphinx.chat-hosted recepients is slightly cheaper. Please, make your own judgement regarding your privacy/cost efficiency balance.
+
+- Fund your LND wallet
+
+```bash
+$ lncli newaddress p2wkh
+{
+    "address": "<bech32 bitcoin address>"
+}
+```
+
+Send 100000 satoshi to the provided bitcoin address.
+
+Check your LND wallet balance with
+```bash
+$ lncli walletbalance
+{
+    "total_balance": "100000",
+    "confirmed_balance": "0",
+    "unconfirmed_balance": "100000"
+}
+```
+until it shows:
+```bash
+{
+    "total_balance": "100000",
+    "confirmed_balance": "100000",
+    "unconfirmed_balance": "0"
+}
+```
+- Open a channel to sphinx.chat:
+
+```bash
+$ lncli connect 023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f@54.159.193.149:9735
+{
+
+}
+$ lncli openchannel 023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --local_amt=90000 --push_amt=5000 --sat_per_byte=35
+{
+    "funding_txid": "76bc738472545c343ab4eecc733bd26f1493fb512d1921f3f7d863d0f0f0fbca"
+}
+```
+> **_NB_** Set the right amount of bitcoin transaction fee in `sat_per_byte`
+> We recommend using [mempool.space](https://mempool.space) to determine the necessary fee.
+
+You can monitor the progress of the channel creation operation with `lncli pendingchannels`/`lncli listchannels` commands; the former whill show your channel while the operation is still in progress, the latter will show your channel once it's successfully completed.
+
+Check the payment delivery by making a small payment to the sphinx.chat LND:
+
+```bash
+$ lncli sendpayment --dest=023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --final_cltv_delta=10 --amt=5 --keysend
++------------+--------------+--------------+--------------+-----+----------+----------+-------+
+| HTLC_STATE | ATTEMPT_TIME | RESOLVE_TIME | RECEIVER_AMT | FEE | TIMELOCK | CHAN_OUT | ROUTE |
++------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
+| HTLC_STATE | ATTEMPT_TIME | RESOLVE_TIME | RECEIVER_AMT | FEE | TIMELOCK | CHAN_OUT           | ROUTE   |
++------------+--------------+--------------+--------------+-----+----------+----+------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
+| HTLC_STATE | ATTEMPT_TIME | RESOLVE_TIME | RECEIVER_AMT | FEE | TIMELOCK | CHAN_OUT           | ROUTE   |
++------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
+| SUCCEEDED  |        1.544 |        5.188 | 5            | 0   |   642053 | 705537919981322241 | gameb_1 |
++------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
+Amount + fee:   5 + 0 sat
+Payment hash:   <......>
+Payment status: SUCCEEDED, preimage: <.....>
+```
+
+## Network connectivity
+
+If you have a permanent public IP on your internet connection and you want your mobile or desktop Sphinx client to connect to it over internet, open port `3001/TCP` on your router and create a port forwarding rule for TCP to port 3001 of your machine running Sphinx-Relay. How to do this is not included in this guide. https://www.yougetsignal.com/tools/open-ports/ is one of the many websites that can be used to check if a port is opened on your network.
+
+If you plan to use your Sphinx clients within the local network, then you do not have to do anything special.
+
+Since none of Sphinx clients support connecting to Sphinx-Relay over Tor as of this moment, you could set up a [Tor2IP tunnel](https://github.com/openoms/bitcoin-tutorials/blob/eaac48a5decb6aef8540de249816d255b310dc3a/tor2ip_tunnel.md) as well (for axtra privacy/security or because of unavailability of a permanent public IP address on your local internet connection).
+
+## Deployment
+
+[Docker deployment](docs/docker_deployment.md)
+[Raspberry Pi/myNode deployment](docs/mynode_deployment.md)
+[Raspberry Pi/Raspiblitz deployment](docs/raspiblitz_deployment.md)
+
+## Connecting a mobile client
+
+## Connecting a Desktop client
+
+## Troubleshooting
+
+## Known issues
+
+There are several known issues at the time of writing of this document:
+
+
+you can check their actual status on GitHub
+
 
 ## Using Docker on Raspberry Pi
 
