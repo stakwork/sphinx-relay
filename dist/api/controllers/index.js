@@ -48,7 +48,7 @@ function set(app) {
         app.put('/chat/:id', chats.addGroupMembers);
         app.put('/kick/:chat_id/:contact_id', chats.kickChatMember);
         app.post('/tribe', chatTribes.joinTribe);
-        app.put('/group/:id', chatTribes.editTribe);
+        // app.put('/group/:id', chatTribes.editTribe)
         app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile);
         app.post('/invites', invites.createInvite);
         app.post('/invites/:invite_string/pay', invites.payInvite);
@@ -134,5 +134,8 @@ exports.ACTIONS = {
     [msgtypes.group_kick]: chats.receiveGroupKick,
     [msgtypes.delete]: messages.receiveDeleteMessage,
     [msgtypes.repayment]: () => { },
+    [msgtypes.member_request]: chatTribes.receiveMemberRequest,
+    [msgtypes.member_approve]: chatTribes.receiveMemberApprove,
+    [msgtypes.member_reject]: chatTribes.receiveMemberReject,
 };
 //# sourceMappingURL=index.js.map

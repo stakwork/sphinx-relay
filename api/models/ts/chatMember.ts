@@ -22,6 +22,6 @@ export default class ChatMember extends Model<ChatMember> {
   lastActive: Date
 
   @Column
-  approved: boolean
+  status: number
 
 }

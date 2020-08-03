@@ -33,7 +33,7 @@ async function setVersion(){
 async function migrate(){
   addTableColumn('sphinx_chats', 'private', 'BOOLEAN')
   addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN')
-  addTableColumn('sphinx_chat_members', 'approved', 'BOOLEAN')
+  addTableColumn('sphinx_chat_members', 'status', 'BIGINT')
 
   addTableColumn('sphinx_chats', 'seen', 'BOOLEAN')
 

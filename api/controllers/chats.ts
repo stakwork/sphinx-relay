@@ -9,7 +9,7 @@ import * as md5 from 'md5'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import * as timers from '../utils/timers'
-import {replayChatHistory,createTribeChatParams} from './chatTribes'
+import {replayChatHistory,createTribeChatParams,addPendingContactIdsToChat} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -165,7 +165,7 @@ export async function createGroupChat(req, res) {
 	let chatParams:any = null
 	let okToCreate = true
 	if(is_tribe){
-		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted)
+		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private)
 		if(chatParams.uuid){
 			// publish to tribe server
 			try {
@@ -182,6 +182,7 @@ export async function createGroupChat(req, res) {
 					owner_pubkey: owner.publicKey,
 					owner_alias: owner.alias,
 					unlisted: unlisted||false,
+					is_private: req.body.private||false,
 				})
 			} catch(e) {
 				okToCreate = false
@@ -212,6 +213,7 @@ export async function createGroupChat(req, res) {
 					contactId: owner.id,
 					chatId: chat.id,
 					role: constants.chat_roles.owner,
+					status: constants.chat_statuses.approved
 				})
 			}
 			success(res, jsonUtils.chatToJson(chat))
@@ -312,7 +314,7 @@ export async function receiveGroupJoin(payload) {
 	const member = chat_members[sender_pub_key]
 	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
 
-	if(!isTribe || isTribeOwner) { // dont need to create contacts for these
+	if(!isTribe || isTribeOwner) { 
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if (sender) {
@@ -341,12 +343,13 @@ export async function receiveGroupJoin(payload) {
 
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
 
-		if(isTribeOwner){ // IF TRIBE, ADD TO XREF
+		if(isTribeOwner){ // IF TRIBE, ADD new member TO XREF
 			models.ChatMember.create({
 				contactId: theSender.id,
 				chatId: chat.id,
 				role: constants.chat_roles.reader,
 				lastActive: date,
+				status: constants.chat_statuses.approved
 			})
 			replayChatHistory(chat, theSender)
 			tribes.putstats({
@@ -370,11 +373,12 @@ export async function receiveGroupJoin(payload) {
 	}
 	const message = await models.Message.create(msg)
 
+	const theChat = addPendingContactIdsToChat(chat)
 	socket.sendJson({
 		type: 'group_join',
 		response: {
 			contact: jsonUtils.contactToJson(theSender||{}),
-			chat: jsonUtils.chatToJson(chat),
+			chat: jsonUtils.chatToJson(theChat),
 			message: jsonUtils.messageToJson(message, null)
 		}
 	})
@@ -508,6 +512,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 				chatId: chat.id,
 				role: c.role||constants.chat_roles.reader,
 				lastActive: date,
+				status: constants.chat_statuses.approved
 			})
 		})
 	}

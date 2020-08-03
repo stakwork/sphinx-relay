@@ -46,7 +46,7 @@ function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
         addTableColumn('sphinx_chats', 'private', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN');
-        addTableColumn('sphinx_chat_members', 'approved', 'BOOLEAN');
+        addTableColumn('sphinx_chat_members', 'status', 'BIGINT');
         addTableColumn('sphinx_chats', 'seen', 'BOOLEAN');
         try {
             yield models_1.sequelize.query(`CREATE INDEX idx_messages_sender ON sphinx_messages (sender);`);

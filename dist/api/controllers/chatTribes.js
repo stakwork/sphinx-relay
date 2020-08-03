@@ -14,6 +14,8 @@ const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const network = require("../network");
 const rsa = require("../crypto/rsa");
+const helpers = require("../helpers");
+const socket = require("../utils/socket");
 const tribes = require("../utils/tribes");
 const path = require("path");
 const msg_1 = require("../utils/msg");
@@ -23,6 +25,7 @@ function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias } = req.body;
+        const is_private = req.body.private;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
         if (existing) {
             console.log('[tribes] u are already in this tribe');
@@ -56,6 +59,9 @@ function joinTribe(req, res) {
         }
         let date = new Date();
         date.setMilliseconds(0);
+        const chatStatus = is_private ?
+            constants.chat_statuses.pending :
+            constants.chat_statuses.approved;
         const chatParams = {
             uuid: uuid,
             contactIds: JSON.stringify(contactIds),
@@ -67,9 +73,17 @@ function joinTribe(req, res) {
             host: host || tribes.getHost(),
             groupKey: group_key,
             ownerPubkey: owner_pubkey,
+            private: is_private || false,
+            status: chatStatus
         };
+        const typeToSend = is_private ?
+            constants.message_types.member_request :
+            constants.message_types.group_join;
+        const contactIdsToSend = is_private ?
+            [theTribeOwner.id] : // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
+            chatParams.contactIds;
         network.sendMessage({
-            chat: Object.assign(Object.assign({}, chatParams), { members: {
+            chat: Object.assign(Object.assign({}, chatParams), { contactIds: contactIdsToSend, members: {
                     [owner.publicKey]: {
                         key: owner.contactKey,
                         alias: owner.alias || ''
@@ -78,7 +92,7 @@ function joinTribe(req, res) {
             amount: amount || 0,
             sender: owner,
             message: {},
-            type: constants.message_types.group_join,
+            type: typeToSend,
             failure: function (e) {
                 res_1.failure(res, e);
             },
@@ -90,6 +104,7 @@ function joinTribe(req, res) {
                         chatId: chat.id,
                         role: constants.chat_roles.owner,
                         lastActive: date,
+                        status: constants.chat_statuses.approved
                     });
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
@@ -98,55 +113,79 @@ function joinTribe(req, res) {
     });
 }
 exports.joinTribe = joinTribe;
-function editTribe(req, res) {
+function receiveMemberRequest(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, } = req.body;
-        const { id } = req.params;
-        if (!id)
-            return res_1.failure(res, 'group id is required');
-        const chat = yield models_1.models.Chat.findOne({ where: { id } });
-        if (!chat) {
-            return res_1.failure(res, 'cant find chat');
-        }
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        let okToUpdate = true;
-        try {
-            yield tribes.edit({
-                uuid: chat.uuid,
-                name: name,
-                host: chat.host,
-                price_per_message: price_per_message || 0,
-                price_to_join: price_to_join || 0,
-                escrow_amount: escrow_amount || 0,
-                escrow_millis: escrow_millis || 0,
-                description,
-                tags,
-                img,
-                owner_alias: owner.alias,
-                unlisted,
-            });
-        }
-        catch (e) {
-            okToUpdate = false;
-        }
-        if (okToUpdate) {
-            yield chat.update({
-                photoUrl: img || '',
-                name: name,
-                pricePerMessage: price_per_message || 0,
-                priceToJoin: price_to_join || 0,
-                escrowAmount: escrow_amount || 0,
-                escrowMillis: escrow_millis || 0,
-                unlisted: unlisted || false,
-            });
-            res_1.success(res, jsonUtils.chatToJson(chat));
+        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = yield helpers.parseReceiveParams(payload);
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        if (!chat)
+            return;
+        const isTribe = chat_type === constants.chat_types.tribe;
+        if (!isTribe || !isTribeOwner)
+            return;
+        var date = new Date();
+        date.setMilliseconds(0);
+        let theSender = null;
+        const member = chat_members[sender_pub_key];
+        const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
+        const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
+        if (sender) {
+            theSender = sender; // might already include??
         }
         else {
-            res_1.failure(res, 'failed to update tribe');
+            if (member && member.key) {
+                const createdContact = yield models_1.models.Contact.create({
+                    publicKey: sender_pub_key,
+                    contactKey: member.key,
+                    alias: senderAlias,
+                    status: 1,
+                    fromGroup: true,
+                });
+                theSender = createdContact;
+            }
         }
+        if (!theSender)
+            return console.log('no sender'); // fail (no contact key?)
+        models_1.models.ChatMember.create({
+            contactId: theSender.id,
+            chatId: chat.id,
+            role: constants.chat_roles.reader,
+            status: constants.chat_statuses.pending,
+            lastActive: date,
+        });
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types.member_request,
+            sender: (theSender && theSender.id) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date
+        };
+        if (isTribe) {
+            msg.senderAlias = sender_alias;
+        }
+        const message = yield models_1.models.Message.create(msg);
+        const theChat = addPendingContactIdsToChat(chat);
+        socket.sendJson({
+            type: 'member_request',
+            response: {
+                contact: jsonUtils.contactToJson(theSender || {}),
+                chat: jsonUtils.chatToJson(theChat),
+                message: jsonUtils.messageToJson(message, null)
+            }
+        });
     });
 }
-exports.editTribe = editTribe;
+exports.receiveMemberRequest = receiveMemberRequest;
+function receiveMemberApprove(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+    });
+}
+exports.receiveMemberApprove = receiveMemberApprove;
+function receiveMemberReject(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+    });
+}
+exports.receiveMemberReject = receiveMemberReject;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!(chat && chat.id && contact && contact.id)) {
@@ -197,7 +236,7 @@ function replayChatHistory(chat, contact) {
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private) {
     return __awaiter(this, void 0, void 0, function* () {
         let date = new Date();
         date.setMilliseconds(0);
@@ -225,10 +264,25 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             escrowMillis: escrow_millis || 0,
             escrowAmount: escrow_amount || 0,
             unlisted: unlisted || false,
+            private: is_private || false,
         };
     });
 }
 exports.createTribeChatParams = createTribeChatParams;
+function addPendingContactIdsToChat(achat) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const members = yield models_1.models.ChatMember.findAll({ where: {
+                chatId: achat.id,
+                status: constants.chat_statuses.pending // only pending
+            } });
+        if (!members)
+            return achat;
+        const pendingContactIds = members.map(m => m.contactId);
+        const chat = achat.dataValues || achat;
+        return Object.assign(Object.assign({}, chat), { pendingContactIds });
+    });
+}
+exports.addPendingContactIdsToChat = addPendingContactIdsToChat;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

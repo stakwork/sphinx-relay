@@ -3,6 +3,8 @@ import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
 import * as rsa from '../crypto/rsa'
+import * as helpers from '../helpers'
+import * as socket from '../utils/socket'
 import * as tribes from '../utils/tribes'
 import * as path from 'path'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
@@ -13,6 +15,7 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 export async function joinTribe(req, res){
 	console.log('=> joinTribe')
 	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias } = req.body
+	const is_private = req.body.private
 
 	const existing = await models.Chat.findOne({where:{uuid}})
 	if(existing) {
@@ -51,6 +54,9 @@ export async function joinTribe(req, res){
 	let date = new Date()
 	date.setMilliseconds(0)
 
+	const chatStatus = is_private ?
+		constants.chat_statuses.pending :
+		constants.chat_statuses.approved
 	const chatParams = {
 		uuid: uuid,
 		contactIds: JSON.stringify(contactIds),
@@ -62,11 +68,21 @@ export async function joinTribe(req, res){
 		host: host || tribes.getHost(),
 		groupKey: group_key,
 		ownerPubkey: owner_pubkey,
+		private: is_private||false,
+		status: chatStatus
 	}
 	
+	const typeToSend = is_private ?
+		constants.message_types.member_request :
+		constants.message_types.group_join
+	const contactIdsToSend = is_private ?
+		[theTribeOwner.id] : // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
+		chatParams.contactIds
 	network.sendMessage({ // send my data to tribe owner
 		chat: {
-			...chatParams, members: {
+			...chatParams, 
+			contactIds: contactIdsToSend, 
+			members: {
 				[owner.publicKey]: {
 					key: owner.contactKey,
 					alias: owner.alias||''
@@ -76,7 +92,7 @@ export async function joinTribe(req, res){
 		amount:amount||0,
 		sender: owner,
 		message: {},
-		type: constants.message_types.group_join,
+		type: typeToSend,
 		failure: function (e) {
 			failure(res, e)
 		},
@@ -87,69 +103,84 @@ export async function joinTribe(req, res){
 				chatId: chat.id,
 				role: constants.chat_roles.owner,
 				lastActive: date,
+				status: constants.chat_statuses.approved
 			})
 			success(res, jsonUtils.chatToJson(chat))
 		}
 	})
 }
 
-export async function editTribe(req, res) {
-	const {
-		name,
-		price_per_message,
-		price_to_join,
-		escrow_amount,
-		escrow_millis,
-		img,
-		description,
-		tags,
-		unlisted,
-	} = req.body
-	const { id } = req.params
+export async function receiveMemberRequest(payload) {
+	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)
 
-	if(!id) return failure(res, 'group id is required')
+	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+	if (!chat) return
 
-	const chat = await models.Chat.findOne({where:{id}})
-	if(!chat) {
-		return failure(res, 'cant find chat')
-	}
+	const isTribe = chat_type===constants.chat_types.tribe
+	if(!isTribe || !isTribeOwner) return
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
-
-	let okToUpdate = true
-	try{
-		await tribes.edit({
-			uuid: chat.uuid,
-			name: name,
-			host: chat.host,
-			price_per_message: price_per_message||0,
-			price_to_join: price_to_join||0,
-			escrow_amount: escrow_amount||0,
-			escrow_millis: escrow_millis||0,
-			description, 
-			tags, 
-			img,
-			owner_alias: owner.alias,
-			unlisted,
-		})
-	} catch(e) {
-		okToUpdate = false
-	}
-
-	if(okToUpdate) {
-		await chat.update({
-			photoUrl: img||'',
-			name: name,
-			pricePerMessage: price_per_message||0,
-			priceToJoin: price_to_join||0,
-			escrowAmount: escrow_amount||0,
-			escrowMillis: escrow_millis||0,
-			unlisted: unlisted||false,
-		})
-		success(res, jsonUtils.chatToJson(chat))
+	var date = new Date()
+	date.setMilliseconds(0)
+	
+	let theSender: any = null
+	const member = chat_members[sender_pub_key]
+	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
+	
+	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+	if (sender) {
+		theSender = sender // might already include??
 	} else {
-		failure(res, 'failed to update tribe')
+		if(member && member.key) {
+			const createdContact = await models.Contact.create({
+				publicKey: sender_pub_key,
+				contactKey: member.key,
+				alias: senderAlias,
+				status: 1,
+				fromGroup: true,
+			})
+			theSender = createdContact
+		}
 	}
+	if(!theSender) return console.log('no sender') // fail (no contact key?)
+
+	models.ChatMember.create({
+		contactId: theSender.id,
+		chatId: chat.id,
+		role: constants.chat_roles.reader,
+		status: constants.chat_statuses.pending,
+		lastActive: date,
+	})
+
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		type: constants.message_types.member_request,
+		sender: (theSender && theSender.id) || 0,
+		messageContent:'', remoteMessageContent:'',
+		status: constants.statuses.confirmed,
+		date: date, createdAt: date, updatedAt: date
+	}
+	if(isTribe) {
+		msg.senderAlias = sender_alias
+	}
+	const message = await models.Message.create(msg)
+
+	const theChat = addPendingContactIdsToChat(chat)
+	socket.sendJson({
+		type: 'member_request',
+		response: {
+			contact: jsonUtils.contactToJson(theSender||{}),
+			chat: jsonUtils.chatToJson(theChat),
+			message: jsonUtils.messageToJson(message, null)
+		}
+	})
+}
+
+export async function receiveMemberApprove(payload) {
+
+}
+
+export async function receiveMemberReject(payload) {
+
 }
 
 export async function replayChatHistory(chat, contact) {
@@ -206,7 +237,7 @@ export async function replayChatHistory(chat, contact) {
 	})
 }
 
-export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted): Promise<{[k:string]:any}> {
+export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private): Promise<{[k:string]:any}> {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -234,6 +265,21 @@ export async function createTribeChatParams(owner, contactIds, name, img, price_
 		escrowMillis: escrow_millis||0,
 		escrowAmount: escrow_amount||0,
 		unlisted: unlisted||false,
+		private: is_private||false,
+	}
+}
+
+export async function addPendingContactIdsToChat(achat){
+	const members = await models.ChatMember.findAll({where:{
+		chatId: achat.id,
+		status: constants.chat_statuses.pending // only pending
+	}})
+	if (!members) return achat
+	const pendingContactIds:number[] = members.map(m=>m.contactId)
+	const chat = achat.dataValues||achat
+	return {
+		...chat,
+		pendingContactIds,
 	}
 }
 
@@ -242,4 +288,5 @@ async function asyncForEach(array, callback) {
 	  	await callback(array[index], index, array);
 	}
 }
+
 
