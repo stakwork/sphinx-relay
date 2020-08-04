@@ -282,9 +282,10 @@ export async function approveOrRejectMember(req,res) {
 	await models.Message.create(msg)
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
-	console.log("SEND THIS MSG", { ...chat, contactIds: [member.contactId] })
+	const chatToSend = chat.dataValues||chat
+	console.log("SEND THIS MSG", { ...chatToSend, contactIds: [member.contactId] })
 	network.sendMessage({ // send to the requester
-		chat: { ...chat, contactIds: [member.contactId], },
+		chat: { ...chatToSend, contactIds: [member.contactId], },
 		amount: 0,
 		sender: owner,
 		message: {},

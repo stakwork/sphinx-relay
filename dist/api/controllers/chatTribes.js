@@ -271,9 +271,10 @@ function approveOrRejectMember(req, res) {
         };
         yield models_1.models.Message.create(msg);
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        console.log("SEND THIS MSG", Object.assign(Object.assign({}, chat), { contactIds: [member.contactId] }));
+        const chatToSend = chat.dataValues || chat;
+        console.log("SEND THIS MSG", Object.assign(Object.assign({}, chatToSend), { contactIds: [member.contactId] }));
         network.sendMessage({
-            chat: Object.assign(Object.assign({}, chat), { contactIds: [member.contactId] }),
+            chat: Object.assign(Object.assign({}, chatToSend), { contactIds: [member.contactId] }),
             amount: 0,
             sender: owner,
             message: {},
