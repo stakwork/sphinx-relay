@@ -282,6 +282,7 @@ export async function approveOrRejectMember(req,res) {
 	await models.Message.create(msg)
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	console.log("SEND THIS MSG", { ...chat, contactIds: [member.contactId] })
 	network.sendMessage({ // send to the requester
 		chat: { ...chat, contactIds: [member.contactId], },
 		amount: 0,
@@ -339,7 +340,7 @@ export async function receiveMemberApprove(payload) {
 }
 
 export async function receiveMemberReject(payload) {
-	console.log('=> receiveMemberApprove')
+	console.log('=> receiveMemberReject')
 	const { chat, sender, chat_name } = await helpers.parseReceiveParams(payload)
 	// dang.. nothing really to do here?
 	let date = new Date()

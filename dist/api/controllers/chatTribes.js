@@ -271,6 +271,7 @@ function approveOrRejectMember(req, res) {
         };
         yield models_1.models.Message.create(msg);
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        console.log("SEND THIS MSG", Object.assign(Object.assign({}, chat), { contactIds: [member.contactId] }));
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chat), { contactIds: [member.contactId] }),
             amount: 0,
@@ -327,7 +328,7 @@ function receiveMemberApprove(payload) {
 exports.receiveMemberApprove = receiveMemberApprove;
 function receiveMemberReject(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> receiveMemberApprove');
+        console.log('=> receiveMemberReject');
         const { chat, sender, chat_name } = yield helpers.parseReceiveParams(payload);
         // dang.. nothing really to do here?
         let date = new Date();
