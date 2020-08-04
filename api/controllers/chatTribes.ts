@@ -257,7 +257,6 @@ export async function approveOrRejectMember(req,res) {
 	if(status==='approved') {
 		memberStatus = constants.chat_statuses.approved
 		msgType = 'member_approve'
-		// ADD ID TO CONTACT IDS
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if(!contactIds.includes(contactId)) contactIds.push(contactId)
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
@@ -267,23 +266,12 @@ export async function approveOrRejectMember(req,res) {
 	if(!member) {
 		return failure(res, 'cant find chat member')
 	}
+	// update ChatMember status
 	await member.update({status:memberStatus})
-
-	let date = new Date()
-	date.setMilliseconds(0)
-	const msg:{[k:string]:any} = {
-		chatId: chat.id,
-		type: constants.message_types[msgType],
-		sender: member.contactId,
-		messageContent:'', remoteMessageContent:'',
-		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
-	}
-	await models.Message.create(msg)
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	const chatToSend = chat.dataValues||chat
-	console.log("SEND THIS MSG", { ...chatToSend, contactIds: [member.contactId] })
+
 	network.sendMessage({ // send to the requester
 		chat: { ...chatToSend, contactIds: [member.contactId], },
 		amount: 0,
