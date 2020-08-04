@@ -318,9 +318,10 @@ export async function receiveMemberApprove(payload) {
 		}
 	})
 
+	const theChat = chat.dataValues||chat
 	// send my info to all 
 	network.sendMessage({
-		chat: { ...chat, 
+		chat: { ...theChat, 
 			members: {
 				[owner.publicKey]: {
 					key: owner.contactKey,

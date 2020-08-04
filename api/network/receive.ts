@@ -41,7 +41,7 @@ async function onReceive(payload){
 	let isTribe = false
 	let isTribeOwner = false
 	let chat
-	if(payload.chat) {
+	if(payload.chat&&payload.chat.uuid) {
 		isTribe = payload.chat.type===constants.chat_types.tribe
 		chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		if(chat) chat.update({seen:false})

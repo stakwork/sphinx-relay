@@ -307,9 +307,10 @@ function receiveMemberApprove(payload) {
                 message: jsonUtils.messageToJson(message, null)
             }
         });
+        const theChat = chat.dataValues || chat;
         // send my info to all 
         network.sendMessage({
-            chat: Object.assign(Object.assign({}, chat), { members: {
+            chat: Object.assign(Object.assign({}, theChat), { members: {
                     [owner.publicKey]: {
                         key: owner.contactKey,
                         alias: owner.alias || ''
