@@ -49,7 +49,7 @@ function set(app) {
         app.put('/kick/:chat_id/:contact_id', chats.kickChatMember);
         app.post('/tribe', chatTribes.joinTribe);
         app.put('/member/:chatId/:contactId/:status', chatTribes.approveOrRejectMember);
-        // app.put('/group/:id', chatTribes.editTribe)
+        app.put('/group/:id', chatTribes.editTribe);
         app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile);
         app.post('/invites', invites.createInvite);
         app.post('/invites/:invite_string/pay', invites.payInvite);

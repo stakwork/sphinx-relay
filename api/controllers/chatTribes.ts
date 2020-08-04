@@ -178,6 +178,67 @@ export async function receiveMemberRequest(payload) {
 	})
 }
 
+export async function editTribe(req, res) {
+	const {
+		name,
+		price_per_message,
+		price_to_join,
+		escrow_amount,
+		escrow_millis,
+		img,
+		description,
+		tags,
+		unlisted,
+	} = req.body
+	const { id } = req.params
+
+	if(!id) return failure(res, 'group id is required')
+
+	const chat = await models.Chat.findOne({where:{id}})
+	if(!chat) {
+		return failure(res, 'cant find chat')
+	}
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
+	let okToUpdate = true
+	try{
+		await tribes.edit({
+			uuid: chat.uuid,
+			name: name,
+			host: chat.host,
+			price_per_message: price_per_message||0,
+			price_to_join: price_to_join||0,
+			escrow_amount: escrow_amount||0,
+			escrow_millis: escrow_millis||0,
+			description, 
+			tags, 
+			img,
+			owner_alias: owner.alias,
+			unlisted,
+			is_private: req.body.private
+		})
+	} catch(e) {
+		okToUpdate = false
+	}
+
+	if(okToUpdate) {
+		await chat.update({
+			photoUrl: img||'',
+			name: name,
+			pricePerMessage: price_per_message||0,
+			priceToJoin: price_to_join||0,
+			escrowAmount: escrow_amount||0,
+			escrowMillis: escrow_millis||0,
+			unlisted: unlisted||false,
+			private: req.body.private||false,
+		})
+		success(res, jsonUtils.chatToJson(chat))
+	} else {
+		failure(res, 'failed to update tribe')
+	}
+}
+
 export async function approveOrRejectMember(req,res) {
 	console.log('=> approve or reject tribe member')
 	const chatId = parseInt(req.params['chatId'])
