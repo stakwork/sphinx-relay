@@ -83,6 +83,8 @@ function joinTribe(req, res) {
         const contactIdsToSend = is_private ?
             [theTribeOwner.id] : // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
             chatParams.contactIds;
+        console.log('=> joinTribe: typeToSend', typeToSend);
+        console.log('=> joinTribe: contactIdsToSend', contactIdsToSend);
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { contactIds: contactIdsToSend, members: {
                     [owner.publicKey]: {
@@ -179,6 +181,7 @@ function receiveMemberRequest(payload) {
 exports.receiveMemberRequest = receiveMemberRequest;
 function approveOrRejectMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> approve or reject tribe member');
         const chatId = parseInt(req.params['chatId']);
         const contactId = parseInt(req.params['contactId']);
         const status = req.params['status'];
@@ -230,6 +233,7 @@ function approveOrRejectMember(req, res) {
 exports.approveOrRejectMember = approveOrRejectMember;
 function receiveMemberApprove(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> receiveMemberApprove');
         const { owner, chat, chat_name, sender } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return;
@@ -270,6 +274,7 @@ function receiveMemberApprove(payload) {
 exports.receiveMemberApprove = receiveMemberApprove;
 function receiveMemberReject(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> receiveMemberApprove');
         const { chat, sender, chat_name } = yield helpers.parseReceiveParams(payload);
         // dang.. nothing really to do here?
         let date = new Date();

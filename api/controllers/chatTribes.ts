@@ -79,6 +79,8 @@ export async function joinTribe(req, res){
 	const contactIdsToSend = is_private ?
 		[theTribeOwner.id] : // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
 		chatParams.contactIds
+	console.log('=> joinTribe: typeToSend', typeToSend)
+	console.log('=> joinTribe: contactIdsToSend', contactIdsToSend)
 	network.sendMessage({ // send my data to tribe owner
 		chat: {
 			...chatParams, 
@@ -177,6 +179,7 @@ export async function receiveMemberRequest(payload) {
 }
 
 export async function approveOrRejectMember(req,res) {
+	console.log('=> approve or reject tribe member')
 	const chatId = parseInt(req.params['chatId'])
 	const contactId = parseInt(req.params['contactId'])
 	const status = req.params['status']
@@ -229,6 +232,7 @@ export async function approveOrRejectMember(req,res) {
 }
 
 export async function receiveMemberApprove(payload) {
+	console.log('=> receiveMemberApprove')
 	const { owner, chat, chat_name, sender } = await helpers.parseReceiveParams(payload)
 	if(!chat) return
 	await chat.update({status: constants.chat_statuses.approved})
@@ -271,6 +275,7 @@ export async function receiveMemberApprove(payload) {
 }
 
 export async function receiveMemberReject(payload) {
+	console.log('=> receiveMemberApprove')
 	const { chat, sender, chat_name } = await helpers.parseReceiveParams(payload)
 	// dang.. nothing really to do here?
 	let date = new Date()
