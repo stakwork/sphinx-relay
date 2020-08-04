@@ -114,13 +114,14 @@ export async function joinTribe(req, res){
 }
 
 export async function receiveMemberRequest(payload) {
+	console.log('=> receiveMemberRequest')
 	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
-	if (!chat) return
+	if (!chat) return console.log('no chat')
 
 	const isTribe = chat_type===constants.chat_types.tribe
-	if(!isTribe || !isTribeOwner) return
+	if(!isTribe || !isTribeOwner) return console.log('not a tribe')
 
 	var date = new Date()
 	date.setMilliseconds(0)
@@ -273,29 +274,30 @@ export async function approveOrRejectMember(req,res) {
 	const msg:{[k:string]:any} = {
 		chatId: chat.id,
 		type: constants.message_types[msgType],
-		sender: (member && member.contactId) || 0,
+		sender: member.contactId,
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date
 	}
-	const message = await models.Message.create(msg)
+	await models.Message.create(msg)
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	network.sendMessage({ // send to the requester
+		chat: { ...chat, contactIds: [member.contactId], },
+		amount: 0,
+		sender: owner,
+		message: {},
+		type: constants.message_types[msgType],
+	})
 
 	const theChat = await addPendingContactIdsToChat(chat)
-	const cont = await models.Contact.findOne({where:{id:contactId}})
-	socket.sendJson({
-		type: msgType,
-		response: {
-			contact: jsonUtils.contactToJson(cont||{}),
-			chat: jsonUtils.chatToJson(theChat),
-			message: jsonUtils.messageToJson(message, null)
-		}
-	})
+	success(res, jsonUtils.chatToJson(theChat))
 }
 
 export async function receiveMemberApprove(payload) {
 	console.log('=> receiveMemberApprove')
 	const { owner, chat, chat_name, sender } = await helpers.parseReceiveParams(payload)
-	if(!chat) return
+	if(!chat) return console.log('no chat')
 	await chat.update({status: constants.chat_statuses.approved})
 
 	let date = new Date()

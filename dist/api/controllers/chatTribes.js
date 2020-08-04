@@ -118,13 +118,14 @@ function joinTribe(req, res) {
 exports.joinTribe = joinTribe;
 function receiveMemberRequest(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> receiveMemberRequest');
         const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
-            return;
+            return console.log('no chat');
         const isTribe = chat_type === constants.chat_types.tribe;
         if (!isTribe || !isTribeOwner)
-            return;
+            return console.log('not a tribe');
         var date = new Date();
         date.setMilliseconds(0);
         let theSender = null;
@@ -263,22 +264,22 @@ function approveOrRejectMember(req, res) {
         const msg = {
             chatId: chat.id,
             type: constants.message_types[msgType],
-            sender: (member && member.contactId) || 0,
+            sender: member.contactId,
             messageContent: '', remoteMessageContent: '',
             status: constants.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date
         };
-        const message = yield models_1.models.Message.create(msg);
-        const theChat = yield addPendingContactIdsToChat(chat);
-        const cont = yield models_1.models.Contact.findOne({ where: { id: contactId } });
-        socket.sendJson({
-            type: msgType,
-            response: {
-                contact: jsonUtils.contactToJson(cont || {}),
-                chat: jsonUtils.chatToJson(theChat),
-                message: jsonUtils.messageToJson(message, null)
-            }
+        yield models_1.models.Message.create(msg);
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        network.sendMessage({
+            chat: Object.assign(Object.assign({}, chat), { contactIds: [member.contactId] }),
+            amount: 0,
+            sender: owner,
+            message: {},
+            type: constants.message_types[msgType],
         });
+        const theChat = yield addPendingContactIdsToChat(chat);
+        res_1.success(res, jsonUtils.chatToJson(theChat));
     });
 }
 exports.approveOrRejectMember = approveOrRejectMember;
@@ -287,7 +288,7 @@ function receiveMemberApprove(payload) {
         console.log('=> receiveMemberApprove');
         const { owner, chat, chat_name, sender } = yield helpers.parseReceiveParams(payload);
         if (!chat)
-            return;
+            return console.log('no chat');
         yield chat.update({ status: constants.chat_statuses.approved });
         let date = new Date();
         date.setMilliseconds(0);
