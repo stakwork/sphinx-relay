@@ -15,6 +15,8 @@ export async function sendMessage(params) {
 	const { type, chat, message, sender, amount, success, failure, skipPubKey } = params
 	let msg = newmsg(type, chat, sender, message)
 
+	console.log("=> MSG TO SEND",msg)
+
 	// console.log(type,message)
 	if(!(sender&&sender.publicKey)) {
 		console.log("NO SENDER?????")

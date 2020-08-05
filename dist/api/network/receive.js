@@ -86,10 +86,16 @@ function onReceive(payload) {
                     });
                 }
             }
-            // check price to join
+            // check price to join AND private chat
             if (payload.type === msgtypes.group_join) {
                 if (payload.message.amount < chat.priceToJoin)
                     doAction = false;
+                if (chat.private) { // check if has been approved
+                    const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                    if (!(senderMember && senderMember.status === constants.chat_statuses.approved)) {
+                        doAction = false; // dont let if private and not approved
+                    }
+                }
             }
             // check that the sender is the og poster
             if (payload.type === msgtypes.delete) {

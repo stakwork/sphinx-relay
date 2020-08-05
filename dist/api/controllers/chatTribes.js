@@ -298,7 +298,7 @@ function receiveMemberApprove(payload) {
             }
         });
         const theChat = chat.dataValues || chat;
-        // send my info to all 
+        // send JOIN and my info to all 
         network.sendMessage({
             chat: Object.assign(Object.assign({}, theChat), { members: {
                     [owner.publicKey]: {
