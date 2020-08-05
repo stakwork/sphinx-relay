@@ -43,7 +43,7 @@ exports.typesToReplay = [
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> ON RECEIVE", payload);
+        // console.log("=> ON RECEIVE",payload)
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};
