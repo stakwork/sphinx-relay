@@ -175,7 +175,7 @@ function receiveMemberRequest(payload) {
             response: {
                 contact: jsonUtils.contactToJson(theSender || {}),
                 chat: jsonUtils.chatToJson(theChat),
-                message: jsonUtils.messageToJson(message, null)
+                message: jsonUtils.messageToJson(message, theChat)
             }
         });
     });
@@ -295,7 +295,7 @@ function receiveMemberApprove(payload) {
         socket.sendJson({
             type: 'member_approve',
             response: {
-                message: jsonUtils.messageToJson(message, null),
+                message: jsonUtils.messageToJson(message, chat),
                 chat: jsonUtils.chatToJson(chat),
             }
         });
@@ -340,7 +340,7 @@ function receiveMemberReject(payload) {
         socket.sendJson({
             type: 'member_reject',
             response: {
-                message: jsonUtils.messageToJson(message, null),
+                message: jsonUtils.messageToJson(message, chat),
                 chat: jsonUtils.chatToJson(chat),
             }
         });

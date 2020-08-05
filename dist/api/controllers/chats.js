@@ -270,12 +270,15 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (owner.publicKey === tribeOwnerPubKey) {
         return res_1.failure(res, "cannot leave your own tribe");
     }
-    network.sendMessage({
-        chat,
-        sender: owner,
-        message: {},
-        type: constants.message_types.group_leave,
-    });
+    const isPending = chat.status === constants.chat_types.pending;
+    if (!isPending) { // dont send if pending
+        network.sendMessage({
+            chat,
+            sender: owner,
+            message: {},
+            type: constants.message_types.group_leave,
+        });
+    }
     yield chat.update({
         deleted: true,
         uuid: '',

@@ -276,12 +276,15 @@ export const deleteChat = async (req, res) => {
 		return failure(res, "cannot leave your own tribe")
 	}
 
-	network.sendMessage({
-		chat,
-		sender: owner,
-		message: {},
-		type: constants.message_types.group_leave,
-	})
+	const isPending = chat.status===constants.chat_types.pending
+	if(!isPending) { // dont send if pending
+		network.sendMessage({
+			chat,
+			sender: owner,
+			message: {},
+			type: constants.message_types.group_leave,
+		})
+	}
 
 	await chat.update({
 		deleted: true, 
