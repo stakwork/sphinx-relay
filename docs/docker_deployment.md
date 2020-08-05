@@ -76,3 +76,5 @@ To connect to your app
 `npm run prod`
 
 When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android & iOS) to connect!
+
+[Back to README](https://github.com/dimaatmelodromru/sphinx-relay/tree/docs-edit#connecting-a-mobile-client)

@@ -293,3 +293,6 @@ $ sudo systemctl start sphinx-relay.service
 ### tail logs 
 
 `journalctl -u sphinx-relay -f`
+
+
+[Back to README](https://github.com/dimaatmelodromru/sphinx-relay/tree/docs-edit#connecting-a-mobile-client)
