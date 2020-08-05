@@ -1,6 +1,6 @@
 # Relay
 
-**Relay** is a Node.js wrapper around [LND](https://github.com/lightningnetwork/lnd), handling connectivity and storage for [**Sphinx**](https://sphinx.chat). Communication between Relay nodes takes place entirely on the Lightning Network, so is decentralized, untraceable, and encrypted. Message content is also end-to-end encrypted using client public keys, on the **Sphinx** app itself.
+**Relay** is a Node.js wrapper around [LND](https://github.com/lightningnetwork/lnd), handling connectivity and storage for [**Sphinx**](https://sphinx.chat). Communication between Relay nodes takes place entirely on the Lightning Network, so it is decentralized, untraceable, and encrypted. Message content is also end-to-end encrypted using client public keys, on the ** Sphinx** app itself.
 
 ![Relay](https://github.com/stakwork/sphinx-relay/raw/master/public/relay.jpg)
 
@@ -9,7 +9,7 @@ Relay stores:
 - Messages
 - Recurring payment configurations
 - Invites (so you can add your friends)
-- Media Keys: keys for decrypting media files, asymetrically encrypted for each contact in a chat
+- Media Keys: keys for decrypting media files, asymmetrically encrypted for each contact in a chat
 
 # Run your own Sphinx node
 
@@ -25,11 +25,11 @@ $ lncli getinfo
 
 ### If you are already operating your LND
 
-If you have some open/funded channels of 100 000 sat+ capacity, you don't need to do anything else regarding Sphinx-Relay operation; if you don't have enough capacity in your channel(s) - add funds or rebalance your channels.
+If you have some open/funded channels of 100 000 sat+ capacity, you don't need to do anything else regarding Sphinx-Relay operation; if you don't have enough capacity in your channel(s) - add funds or rebalance your channel(s).
 
 ### If you just installed your LND
 
-If you do not have any open/funded channels you might want to open a channel to the sphinx.chat LND. With a direct channel set up to sphinx.chat sending messages to sphinx.chat-hosted recepients is slightly cheaper. Please, make your own judgement regarding your privacy/cost efficiency balance.
+If you do not have any open/funded channels, you might want to open a channel to the Sphinx.chat LND. With a direct channel set up to sphinx.chat, sending messages to sphinx.chat-hosted recipients is slightly cheaper. Please, make your own judgment regarding your privacy/cost efficiency balance.
 
 - Fund your LND wallet
 
@@ -40,7 +40,7 @@ $ lncli newaddress p2wkh
 }
 ```
 
-Send 100000 satoshi to the provided bitcoin address.
+Send 100000 sats to the provided bitcoin address.
 
 Check your LND wallet balance with
 ```bash
@@ -74,9 +74,9 @@ $ lncli openchannel 023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b28
 > **_NB_** Set the right amount of bitcoin transaction fee in `sat_per_byte`
 > We recommend using [mempool.space](https://mempool.space) to determine the necessary fee.
 
-You can monitor the progress of the channel creation operation with `lncli pendingchannels`/`lncli listchannels` commands; the former whill show your channel while the operation is still in progress, the latter will show your channel once it's successfully completed.
+You can monitor the progress of the channel creation operation with `lncli pendingchannels`/`lncli listchannels` commands; the former will show your channel while the operation is still in progress, the latter will show your channel once it's successfully completed.
 
-Check the payment delivery by making a small payment to the sphinx.chat LND:
+Check the payment delivery by making a small payment to the Sphinx.chat LND:
 
 ```bash
 $ lncli sendpayment --dest=023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --final_cltv_delta=10 --amt=5 --keysend
@@ -100,7 +100,7 @@ If you have a permanent public IP on your internet connection and you want your 
 
 If you plan to use your Sphinx clients within the local network, then you do not have to do anything special.
 
-Since none of Sphinx clients support connecting to Sphinx-Relay over Tor as of this moment, you could set up a [Tor2IP tunnel](https://github.com/openoms/bitcoin-tutorials/blob/eaac48a5decb6aef8540de249816d255b310dc3a/tor2ip_tunnel.md) as well (for axtra privacy/security or because of unavailability of a permanent public IP address on your local internet connection).
+Since none of Sphinx clients support connecting to Sphinx-Relay over Tor as of this moment, you could set up a [Tor2IP tunnel](https://github.com/openoms/bitcoin-tutorials/blob/eaac48a5decb6aef8540de249816d255b310dc3a/tor2ip_tunnel.md) as well (for extra privacy/security or because of unavailability of a permanent public IP address on your local internet connection).
 
 ## Deployment
 
@@ -114,16 +114,16 @@ Scan the generated QR code with your iOS or Android Sphinx client.
 
 > You should see `[socket.io] connected!` in your Relay console output.
 
-Add some friends' adresses and start chatting!
+Add some friends' addresses and start chatting!
 
 ## Connecting a Desktop client
 
-As of the time of this writing, neither of the Desktop Sphinx clients can scan Relay QR codes, nor directly import the connection string (printed by Relay just above the QR code).
+As of this writing, neither of the Desktop Sphinx clients can scan Relay QR codes, nor directly import the connection string (printed by Relay just above the QR code).
 
 To connect your Desktop Sphinx to your Relay:
 -  connect a mobile Sphinx client;
 -  open Profile in your mobile client;
--  Export Private Key (key will be stored in your device's clipboard);
+-  Export Private Key (key is stored in your device clipboard);
 -  send the private key to your Desktop and paste it to the connection input field.
 
 > You should see `[socket.io] connected!` in your Relay console output.
@@ -150,7 +150,8 @@ Make sure all payments complete successfully.
 
 ## Known issues
 
-There are several known issues at the time of the writing of this document, you can [check their actual status on GitHub](https://github.com/stakwork/sphinx-relay/issues)
+There are several known issues at the time of the writing of this document.
+You can [check their actual status on GitHub](https://github.com/stakwork/sphinx-relay/issues)
 
 # Roadmap
 

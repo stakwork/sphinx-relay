@@ -1,11 +1,11 @@
 # Deployment to Raspiblitz
 
-This guide is focused on installing Sphinx-relay on top of myNode. Information about myNode can be found at: https://mynodebtc.com/.
+This guide is focused on installing Sphinx-relay on top of ***raspiblitz***. Information about myNode can be found at: https://raspiblitz.com/.
 
 ### Preparations
 
 * Be able to connect with your node through SSH.
-* Connect to myNode as `admin`:
+* Connect to **raspiblitz** as `admin`:
 ```sh
 $ ssh admin@mynode.local
 ```
@@ -75,7 +75,7 @@ Edit the "production" section of config/config.json
 ```sh 
 $ nano config.json
 ```
-Change to following line to:
+Change the following line to:
 ``` 
 "storage": "/home/bitcoin/sphinx.db"
 ```
@@ -93,7 +93,7 @@ $ cd
 $ cd sphinx-relay/config/
 $ export NODE_IP=x.x.x.x:3001
 ```
-where `x.x.x.x` is the local IP addres of the machine running your Sphinx-Relay on your local network.
+where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay on your local network.
 
 #### If you want to connect to your Sphinx-Relay from outside of your local network
 
@@ -113,7 +113,7 @@ $ export USE_PASSWORD=true
 
 ### Activate keysend
 
-We need LND to run with keysend activated. First we check if it is already activated on your node. 
+We need LND to run with keysend activated. First, we check if it is already enabled on your node. 
 
 Go to raspiblitz menu, or:
 
@@ -121,7 +121,7 @@ Go to raspiblitz menu, or:
 $ raspiblitz
 ```
 
-Find item menu "Services" and activate Keysend
+Find menu "Services" item and activate Keysend.
 
 ### Run
 
@@ -135,7 +135,7 @@ $ npm run prod
 When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android or iOS) to connect!
 
 ### To make relay run continuously (also after a restart).
-Before you start this part. Make sure your app is connected and you are able to send & receive messages.
+Before you start this part, make sure your app is connected and that you are able to send & receive messages.
 
 Login as admin.
 ```sh 
@@ -177,7 +177,7 @@ Let's run!
 $ sudo systemctl enable sphinx-relay.service
 $ sudo systemctl start sphinx-relay.service
 ```
-Check if relay succesfully started.
+Check if Relay successfully started.
 ```sh 
 $ sudo systemctl status sphinx-relay.service
 ```
@@ -188,7 +188,7 @@ $ sudo systemctl stop sphinx-relay.service
 
 # To update Sphinx-Relay
 
-> This probably is not the most efficient way to update. But it works so we got that going which is nice. Feel free to optimize the process and contribute. :) 
+> This probably is not the most efficient way to update. But it works, so we got that going, which is nice. Feel free to optimize the process and contribute. :) 
 
 Login as `admin` and stop the program.
 ```sh 

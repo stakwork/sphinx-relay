@@ -56,9 +56,9 @@ docker-compose exec lnd lncli unlock
 NOTE: All lncli commands need to be prepended with `docker-compose exec lnd`, this tells docker to execute **something** on the lnd container.
 
 
-### configure
+### Configure
 
-Make sure your LND is running with the `--accept-keysend` flag! If you are using lnd.conf file, add `accept-keysend=1`
+Make sure your LND is running with the `--accept-keysend` flag! If you are using lnd.conf file, add `accept-keysend=1`, if necessary
 
 Edit the "production" section of config/app.json:
  - Change `macaroon_location` to the location of your LND admin macaroon
