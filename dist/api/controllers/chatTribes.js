@@ -75,7 +75,8 @@ function joinTribe(req, res) {
             groupKey: group_key,
             ownerPubkey: owner_pubkey,
             private: is_private || false,
-            status: chatStatus
+            status: chatStatus,
+            priceToJoin: amount || 0,
         };
         const typeToSend = is_private ?
             constants.message_types.member_request :
@@ -297,6 +298,7 @@ function receiveMemberApprove(payload) {
                 message: jsonUtils.messageToJson(message, null)
             }
         });
+        const amount = chat.priceToJoin || 0;
         const theChat = chat.dataValues || chat;
         // send JOIN and my info to all 
         network.sendMessage({
@@ -306,7 +308,7 @@ function receiveMemberApprove(payload) {
                         alias: owner.alias || ''
                     }
                 } }),
-            amount: 0,
+            amount,
             sender: owner,
             message: {},
             type: constants.message_types.group_join,
