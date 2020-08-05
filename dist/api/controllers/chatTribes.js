@@ -295,7 +295,8 @@ function receiveMemberApprove(payload) {
         socket.sendJson({
             type: 'member_approve',
             response: {
-                message: jsonUtils.messageToJson(message, null)
+                message: jsonUtils.messageToJson(message, null),
+                chat: jsonUtils.chatToJson(chat),
             }
         });
         const amount = chat.priceToJoin || 0;
@@ -321,6 +322,9 @@ function receiveMemberReject(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveMemberReject');
         const { chat, sender, chat_name } = yield helpers.parseReceiveParams(payload);
+        if (!chat)
+            return console.log('no chat');
+        yield chat.update({ status: constants.chat_statuses.rejected });
         // dang.. nothing really to do here?
         let date = new Date();
         date.setMilliseconds(0);
@@ -336,7 +340,8 @@ function receiveMemberReject(payload) {
         socket.sendJson({
             type: 'member_reject',
             response: {
-                message: jsonUtils.messageToJson(message, null)
+                message: jsonUtils.messageToJson(message, null),
+                chat: jsonUtils.chatToJson(chat),
             }
         });
         hub_1.sendNotification(chat, chat_name, 'reject');

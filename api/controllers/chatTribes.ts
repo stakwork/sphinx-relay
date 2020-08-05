@@ -305,7 +305,8 @@ export async function receiveMemberApprove(payload) {
 	socket.sendJson({
 		type: 'member_approve',
 		response: {
-			message: jsonUtils.messageToJson(message, null)
+			message: jsonUtils.messageToJson(message, null),
+			chat: jsonUtils.chatToJson(chat),
 		}
 	})
 
@@ -333,6 +334,8 @@ export async function receiveMemberApprove(payload) {
 export async function receiveMemberReject(payload) {
 	console.log('=> receiveMemberReject')
 	const { chat, sender, chat_name } = await helpers.parseReceiveParams(payload)
+	if(!chat) return console.log('no chat')
+	await chat.update({status: constants.chat_statuses.rejected})
 	// dang.. nothing really to do here?
 	let date = new Date()
 	date.setMilliseconds(0)
@@ -348,7 +351,8 @@ export async function receiveMemberReject(payload) {
 	socket.sendJson({
 		type: 'member_reject',
 		response: {
-			message: jsonUtils.messageToJson(message, null)
+			message: jsonUtils.messageToJson(message, null),
+			chat: jsonUtils.chatToJson(chat),
 		}
 	})
 
