@@ -137,16 +137,19 @@ To connect your Desktop Sphinx to your Relay:
 - switch to user `bitcoin` with `sudo su bitcoin`;
 - make sure `NODE_IP` environment variable contains correct `<IP>:<port>` values, `export` again if necessary;
 - `cd ~/sphinx-relay; npm run prod`
+Then try again.
 
 ### Messages sent with your Relay are delivered empty or not delivered at all
 
-Make small manual lightning payments to the Sphinx.chat LND
+Make small manual lightning payments to the Sphinx.chat LND (or the node you are connected to)
 ```bash
 $ lncli sendpayment --dest=023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --final_cltv_delta=10 --amt=5 --keysend
 ```
 Then make manual payments to your destination address.
 
 Make sure all payments complete successfully.
+
+Try messaging again in both directions. Usually, as the first messages is successfully delivered, there are no futher issues.
 
 ## Known issues
 
