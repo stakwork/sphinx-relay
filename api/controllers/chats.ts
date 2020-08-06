@@ -276,8 +276,10 @@ export const deleteChat = async (req, res) => {
 		return failure(res, "cannot leave your own tribe")
 	}
 
+	console.log("DELETE CHAT STAUS",chat.status)
 	const isPending = chat.status===constants.chat_types.pending
 	const isRejected = chat.status===constants.chat_types.rejected
+	console.log("is pending",isPending,"is rejected",isRejected)
 	if(!isPending && !isRejected) { // dont send if pending
 		network.sendMessage({
 			chat,
