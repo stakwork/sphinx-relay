@@ -41,6 +41,7 @@ export async function set(app) {
 	app.put('/chat/:id', chats.addGroupMembers)
 	app.put('/kick/:chat_id/:contact_id', chats.kickChatMember)
 	app.post('/tribe', chatTribes.joinTribe)
+	app.put('/member/:contactId/:status/:messageId', chatTribes.approveOrRejectMember)
 	app.put('/group/:id', chatTribes.editTribe)
 
 	app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile)
@@ -136,4 +137,7 @@ export const ACTIONS = {
 	[msgtypes.group_kick]: chats.receiveGroupKick,
 	[msgtypes.delete]: messages.receiveDeleteMessage,
 	[msgtypes.repayment]: ()=>{},
+	[msgtypes.member_request]: chatTribes.receiveMemberRequest,
+	[msgtypes.member_approve]: chatTribes.receiveMemberApprove,
+	[msgtypes.member_reject]: chatTribes.receiveMemberReject,
 }

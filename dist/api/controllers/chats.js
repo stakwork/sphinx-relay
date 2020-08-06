@@ -161,7 +161,7 @@ function createGroupChat(req, res) {
         let chatParams = null;
         let okToCreate = true;
         if (is_tribe) {
-            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted);
+            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private);
             if (chatParams.uuid) {
                 // publish to tribe server
                 try {
@@ -178,6 +178,7 @@ function createGroupChat(req, res) {
                         owner_pubkey: owner.publicKey,
                         owner_alias: owner.alias,
                         unlisted: unlisted || false,
+                        is_private: req.body.private || false,
                     });
                 }
                 catch (e) {
@@ -209,6 +210,7 @@ function createGroupChat(req, res) {
                             contactId: owner.id,
                             chatId: chat.id,
                             role: constants.chat_roles.owner,
+                            status: constants.chat_statuses.approved
                         });
                     }
                     res_1.success(res, jsonUtils.chatToJson(chat));
@@ -268,12 +270,16 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (owner.publicKey === tribeOwnerPubKey) {
         return res_1.failure(res, "cannot leave your own tribe");
     }
-    network.sendMessage({
-        chat,
-        sender: owner,
-        message: {},
-        type: constants.message_types.group_leave,
-    });
+    const isPending = chat.status === constants.chat_statuses.pending;
+    const isRejected = chat.status === constants.chat_statuses.rejected;
+    if (!isPending && !isRejected) { // dont send if pending
+        network.sendMessage({
+            chat,
+            sender: owner,
+            message: {},
+            type: constants.message_types.group_leave,
+        });
+    }
     yield chat.update({
         deleted: true,
         uuid: '',
@@ -301,7 +307,7 @@ function receiveGroupJoin(payload) {
         let theSender = null;
         const member = chat_members[sender_pub_key];
         const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
-        if (!isTribe || isTribeOwner) { // dont need to create contacts for these
+        if (!isTribe || isTribeOwner) {
             const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             const contactIds = JSON.parse(chat.contactIds || '[]');
             if (sender) {
@@ -331,12 +337,13 @@ function receiveGroupJoin(payload) {
             if (!theSender)
                 return console.log('no sender'); // fail (no contact key?)
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
-            if (isTribeOwner) { // IF TRIBE, ADD TO XREF
-                models_1.models.ChatMember.create({
+            if (isTribeOwner) { // IF TRIBE, ADD new member TO XREF
+                models_1.models.ChatMember.upsert({
                     contactId: theSender.id,
                     chatId: chat.id,
                     role: constants.chat_roles.reader,
                     lastActive: date,
+                    status: constants.chat_statuses.approved
                 });
                 chatTribes_1.replayChatHistory(chat, theSender);
                 tribes.putstats({
@@ -358,11 +365,12 @@ function receiveGroupJoin(payload) {
             msg.senderAlias = sender_alias;
         }
         const message = yield models_1.models.Message.create(msg);
+        const theChat = chatTribes_1.addPendingContactIdsToChat(chat);
         socket.sendJson({
             type: 'group_join',
             response: {
                 contact: jsonUtils.contactToJson(theSender || {}),
-                chat: jsonUtils.chatToJson(chat),
+                chat: jsonUtils.chatToJson(theChat),
                 message: jsonUtils.messageToJson(message, null)
             }
         });
@@ -491,6 +499,7 @@ function receiveGroupCreateOrInvite(payload) {
                     chatId: chat.id,
                     role: c.role || constants.chat_roles.reader,
                     lastActive: date,
+                    status: constants.chat_statuses.approved
                 });
             });
         }

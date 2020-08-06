@@ -43,13 +43,14 @@ exports.typesToReplay = [
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        // console.log("=> ON RECEIVE",payload)
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};
         let isTribe = false;
         let isTribeOwner = false;
         let chat;
-        if (payload.chat) {
+        if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             if (chat)
@@ -85,10 +86,16 @@ function onReceive(payload) {
                     });
                 }
             }
-            // check price to join
+            // check price to join AND private chat
             if (payload.type === msgtypes.group_join) {
                 if (payload.message.amount < chat.priceToJoin)
                     doAction = false;
+                if (chat.private) { // check if has been approved
+                    const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                    if (!(senderMember && senderMember.status === constants.chat_statuses.approved)) {
+                        doAction = false; // dont let if private and not approved
+                    }
+                }
             }
             // check that the sender is the og poster
             if (payload.type === msgtypes.delete) {
