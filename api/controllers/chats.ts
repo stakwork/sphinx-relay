@@ -277,7 +277,8 @@ export const deleteChat = async (req, res) => {
 	}
 
 	const isPending = chat.status===constants.chat_types.pending
-	if(!isPending) { // dont send if pending
+	const isRejected = chat.status===constants.chat_types.rejected
+	if(!isPending && !isRejected) { // dont send if pending
 		network.sendMessage({
 			chat,
 			sender: owner,
