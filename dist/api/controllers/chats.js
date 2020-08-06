@@ -271,8 +271,10 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         return res_1.failure(res, "cannot leave your own tribe");
     }
     console.log("DELETE CHAT STAUS", chat.status, typeof chat.status);
-    const isPending = parseInt(chat.status) === constants.chat_types.pending;
-    const isRejected = parseInt(chat.status) === constants.chat_types.rejected;
+    console.log("rej", constants.chat_statuses.rejected, typeof constants.chat_statuses.rejected);
+    console.log("equals", constants.chat_statuses.rejected === chat.status);
+    const isPending = chat.status === constants.chat_types.pending;
+    const isRejected = chat.status === constants.chat_types.rejected;
     console.log("is pending", isPending, "is rejected", isRejected);
     if (!isPending && !isRejected) { // dont send if pending
         network.sendMessage({
