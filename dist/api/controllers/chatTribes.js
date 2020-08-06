@@ -235,25 +235,30 @@ exports.editTribe = editTribe;
 function approveOrRejectMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> approve or reject tribe member');
-        const chatId = parseInt(req.params['chatId']);
+        const msgId = parseInt(req.params['messageId']);
         const contactId = parseInt(req.params['contactId']);
         const status = req.params['status'];
-        if (!chatId || !contactId || !(status === 'approved' || status === 'rejected')) {
-            return res_1.failure(res, 'incorrect status');
-        }
+        const msg = yield models_1.models.Message.findOne({ where: { id: msgId } });
+        if (!msg)
+            return res_1.failure(res, 'no message');
+        const chatId = msg.chatId;
         const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
         if (!chat)
-            return;
+            return res_1.failure(res, 'no chat');
+        if (!msgId || !contactId || !(status === 'approved' || status === 'rejected')) {
+            return res_1.failure(res, 'incorrect status');
+        }
         let memberStatus = constants.chat_statuses.rejected;
-        let msgType = 'member_reject';
+        let msgType = constants.message_types.member_reject;
         if (status === 'approved') {
             memberStatus = constants.chat_statuses.approved;
-            msgType = 'member_approve';
+            msgType = constants.message_types.member_approve;
             const contactIds = JSON.parse(chat.contactIds || '[]');
             if (!contactIds.includes(contactId))
                 contactIds.push(contactId);
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
         }
+        yield msg.update({ type: msgType });
         const member = yield models_1.models.ChatMember.findOne({ where: { contactId, chatId } });
         if (!member) {
             return res_1.failure(res, 'cant find chat member');
@@ -267,10 +272,13 @@ function approveOrRejectMember(req, res) {
             amount: 0,
             sender: owner,
             message: {},
-            type: constants.message_types[msgType],
+            type: msgType,
         });
         const theChat = yield addPendingContactIdsToChat(chat);
-        res_1.success(res, jsonUtils.chatToJson(theChat));
+        res_1.success(res, {
+            chat: jsonUtils.chatToJson(theChat),
+            message: jsonUtils.messageToJson(msg, theChat)
+        });
     });
 }
 exports.approveOrRejectMember = approveOrRejectMember;

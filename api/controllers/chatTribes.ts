@@ -243,25 +243,32 @@ export async function editTribe(req, res) {
 
 export async function approveOrRejectMember(req,res) {
 	console.log('=> approve or reject tribe member')
-	const chatId = parseInt(req.params['chatId'])
+	const msgId = parseInt(req.params['messageId'])
 	const contactId = parseInt(req.params['contactId'])
 	const status = req.params['status']
 
-	if(!chatId || !contactId || !(status==='approved'||status==='rejected')) {
+	const msg = await models.Message.findOne({ where: { id:msgId } })
+	if (!msg) return failure(res, 'no message')
+	const chatId = msg.chatId
+
+	const chat = await models.Chat.findOne({ where: { id:chatId } })
+	if (!chat) return failure(res, 'no chat')
+
+	if(!msgId || !contactId || !(status==='approved'||status==='rejected')) {
 		return failure(res, 'incorrect status')
 	}
-	const chat = await models.Chat.findOne({ where: { id:chatId } })
-	if (!chat) return
 
 	let memberStatus = constants.chat_statuses.rejected
-	let msgType = 'member_reject'
+	let msgType = constants.message_types.member_reject
 	if(status==='approved') {
 		memberStatus = constants.chat_statuses.approved
-		msgType = 'member_approve'
+		msgType = constants.message_types.member_approve
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if(!contactIds.includes(contactId)) contactIds.push(contactId)
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
 	}
+
+	await msg.update({type:msgType})
 
 	const member = await models.ChatMember.findOne({where:{contactId, chatId}})
 	if(!member) {
@@ -278,11 +285,14 @@ export async function approveOrRejectMember(req,res) {
 		amount: 0,
 		sender: owner,
 		message: {},
-		type: constants.message_types[msgType],
+		type: msgType,
 	})
 
 	const theChat = await addPendingContactIdsToChat(chat)
-	success(res, jsonUtils.chatToJson(theChat))
+	success(res, {
+		chat: jsonUtils.chatToJson(theChat),
+		message: jsonUtils.messageToJson(msg, theChat)
+	})
 }
 
 export async function receiveMemberApprove(payload) {
