@@ -348,7 +348,7 @@ export async function receiveGroupJoin(payload) {
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
 
 		if(isTribeOwner){ // IF TRIBE, ADD new member TO XREF
-			models.ChatMember.create({
+			models.ChatMember.upsert({
 				contactId: theSender.id,
 				chatId: chat.id,
 				role: constants.chat_roles.reader,

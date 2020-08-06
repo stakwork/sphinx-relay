@@ -338,7 +338,7 @@ function receiveGroupJoin(payload) {
                 return console.log('no sender'); // fail (no contact key?)
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) { // IF TRIBE, ADD new member TO XREF
-                models_1.models.ChatMember.create({
+                models_1.models.ChatMember.upsert({
                     contactId: theSender.id,
                     chatId: chat.id,
                     role: constants.chat_roles.reader,
