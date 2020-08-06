@@ -150,7 +150,7 @@ function receiveMemberRequest(payload) {
         }
         if (!theSender)
             return console.log('no sender'); // fail (no contact key?)
-        models_1.models.ChatMember.create({
+        models_1.models.ChatMember.upsert({
             contactId: theSender.id,
             chatId: chat.id,
             role: constants.chat_roles.reader,
