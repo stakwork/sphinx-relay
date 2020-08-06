@@ -148,7 +148,7 @@ export async function receiveMemberRequest(payload) {
 	}
 	if(!theSender) return console.log('no sender') // fail (no contact key?)
 
-	models.ChatMember.upsert({
+	await models.ChatMember.upsert({
 		contactId: theSender.id,
 		chatId: chat.id,
 		role: constants.chat_roles.reader,
