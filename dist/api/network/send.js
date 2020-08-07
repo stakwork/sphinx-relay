@@ -115,6 +115,7 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
             }
             let data = JSON.stringify(opts.data || {});
             opts.amt = opts.amt || 0;
+            console.log("==> AMOuNTS TO SEND!", opts.amt);
             const sig = yield signer.signAscii(data);
             data = data + sig;
             // console.log("ACTUALLY SEND", mqttTopic)

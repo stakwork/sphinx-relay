@@ -65,7 +65,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       failure: ()=>{}
     })
     // PAY THE OG POSTER HERE!!!
-    console.log('==> pay to og poster here!')
+    console.log('==> pay to og poster here! amount:', amount)
     sendMessage({
       chat: {...chat.dataValues, contactIds:[mediaKey.sender]},
       sender: owner,
@@ -82,7 +82,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
     if(!ogmsg) return
     // purchase it from creator (send "purchase")
-    console.log('==> purchase from creator')
+    console.log('==> purchase from creator! amount:',amount)
     const msg={mediaToken:mt,purchaser:purchaser.id}
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},

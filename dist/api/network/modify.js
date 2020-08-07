@@ -77,7 +77,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 failure: () => { }
             });
             // PAY THE OG POSTER HERE!!!
-            console.log('==> pay to og poster here!');
+            console.log('==> pay to og poster here! amount:', amount);
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
                 sender: owner,
@@ -96,7 +96,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             if (!ogmsg)
                 return;
             // purchase it from creator (send "purchase")
-            console.log('==> purchase from creator');
+            console.log('==> purchase from creator! amount:', amount);
             const msg = { mediaToken: mt, purchaser: purchaser.id };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
