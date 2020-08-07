@@ -113,8 +113,6 @@ export function signAndSend(opts, mqttTopic?:string, replayingHistory?:boolean){
 		}
 		let data = JSON.stringify(opts.data||{})
 		opts.amt = opts.amt || 0
-		console.log("==> AMOuNTS TO SEND!",opts.amt)
-		console.log("==> NETWOrK TYPE:", mqttTopic?'mqtt':'lightning')
 
 		const sig = await signer.signAscii(data)
 		data = data + sig

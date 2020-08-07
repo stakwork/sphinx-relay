@@ -26,7 +26,6 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
 
 // "purchase" type
 export async function purchaseFromOriginalSender(payload, chat, purchaser){
-  console.log('==> purchaseFromOriginalSender',payload)
   if(payload.type!==msgtypes.purchase) return
 
   const mt = payload.message && payload.message.mediaToken
@@ -35,7 +34,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
   if(!muid) return
 
   const mediaKey = await models.MediaKey.findOne({where:{originalMuid:muid}})
-  console.log("==> mediakey vals:",mediaKey&&mediaKey.dataValues)
 
   const terms = parseLDAT(mt)
   let price = terms.meta && terms.meta.amt
@@ -65,7 +63,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       failure: ()=>{}
     })
     // PAY THE OG POSTER HERE!!!
-    console.log('==> pay to og poster here! amount:', amount)
     sendMessage({
       chat: {...chat.dataValues, contactIds:[mediaKey.sender]},
       sender: owner,
@@ -82,7 +79,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
     const ogmsg = await models.Message.findOne({where:{chatId:chat.id,mediaToken:mt}})
     if(!ogmsg) return
     // purchase it from creator (send "purchase")
-    console.log('==> purchase from creator! amount:',amount)
     const msg={mediaToken:mt,purchaser:purchaser.id}
     sendMessage({
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},

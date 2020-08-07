@@ -43,7 +43,6 @@ exports.typesToReplay = [
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("==> ON RECEIVE", payload);
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};
@@ -115,7 +114,6 @@ function onReceive(payload) {
                 console.log('=> insufficient payment for this action');
         }
         if (isTribeOwner && payload.type === msgtypes.purchase) {
-            console.log('==> is purchase, i am trbie owner');
             const mt = payload.message.mediaToken;
             const host = mt && mt.split('.').length && mt.split('.')[0];
             const muid = mt && mt.split('.').length && mt.split('.')[1];
@@ -124,7 +122,6 @@ function onReceive(payload) {
                     type: msgtypes.attachment, sender: 1,
                 } });
             if (!myAttachmentMessage) { // someone else's attachment
-                console.log("==> someone else's attachment, purchase it");
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
                 doAction = false;
@@ -258,7 +255,6 @@ function parseKeysendInvoice(i) {
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
-        console.log("==> RECEIVED BALUE", value);
         if (!data)
             return;
         let payload;

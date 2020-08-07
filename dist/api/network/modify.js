@@ -40,7 +40,6 @@ exports.modifyPayloadAndSaveMediaKey = modifyPayloadAndSaveMediaKey;
 // "purchase" type
 function purchaseFromOriginalSender(payload, chat, purchaser) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('==> purchaseFromOriginalSender', payload);
         if (payload.type !== msgtypes.purchase)
             return;
         const mt = payload.message && payload.message.mediaToken;
@@ -49,7 +48,6 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
         if (!muid)
             return;
         const mediaKey = yield models_1.models.MediaKey.findOne({ where: { originalMuid: muid } });
-        console.log("==> mediakey vals:", mediaKey && mediaKey.dataValues);
         const terms = ldat_1.parseLDAT(mt);
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
@@ -77,7 +75,6 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 failure: () => { }
             });
             // PAY THE OG POSTER HERE!!!
-            console.log('==> pay to og poster here! amount:', amount);
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
                 sender: owner,
@@ -96,7 +93,6 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             if (!ogmsg)
                 return;
             // purchase it from creator (send "purchase")
-            console.log('==> purchase from creator! amount:', amount);
             const msg = { mediaToken: mt, purchaser: purchaser.id };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
