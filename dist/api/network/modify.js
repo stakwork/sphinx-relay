@@ -49,7 +49,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
         if (!muid)
             return;
         const mediaKey = yield models_1.models.MediaKey.findOne({ where: { originalMuid: muid } });
-        console.log("==> mediakey found", mediaKey.dataValues);
+        console.log("==> mediakey vals:", mediaKey && mediaKey.dataValues);
         const terms = ldat_1.parseLDAT(mt);
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
