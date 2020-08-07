@@ -258,6 +258,7 @@ function parseKeysendInvoice(i) {
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
+        console.log("==> RECEIVED BALUE", value);
         if (!data)
             return;
         let payload;
