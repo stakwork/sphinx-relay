@@ -43,7 +43,6 @@ exports.typesToReplay = [
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log("=> ON RECEIVE",payload)
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};
@@ -209,7 +208,6 @@ function initTribesSubscriptions() {
         tribes.connect((topic, message) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const msg = message.toString();
-                // console.log("=====> msg received! TOPIC", topic, "MESSAGE", msg)
                 // check topic is signed by sender?
                 const payload = yield parseAndVerifyPayload(msg);
                 onReceive(payload);

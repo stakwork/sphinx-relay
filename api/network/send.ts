@@ -11,6 +11,8 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
+const MIN_SATS = 3;
+
 export async function sendMessage(params) {
 	const { type, chat, message, sender, amount, success, failure, skipPubKey } = params
 	let msg = newmsg(type, chat, sender, message)
@@ -71,15 +73,20 @@ export async function sendMessage(params) {
 		}
 		console.log('-> sending to ', contact.id, destkey)
 
+		let mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
+		// sending a payment to one subscriber (like buying a pic)
+		if(isTribeOwner && contactIds.length===1 && amount && amount>MIN_SATS) {
+			mqttTopic = '' // FORCE KEYSEND!!!
+		}
+
 		const m = await personalizeMessage(msg, contact, isTribeOwner)
 		const opts = {
 			dest: destkey,
 			data: m,
-			amt: Math.max((amount||0), 3)
+			amt: Math.max((amount||0), MIN_SATS)
 		}
 
 		try {
-			const mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
 			const r = await signAndSend(opts, mqttTopic)
 			yes = r
 		} catch (e) {
@@ -109,7 +116,7 @@ export function signAndSend(opts, mqttTopic?:string, replayingHistory?:boolean){
 
 		const sig = await signer.signAscii(data)
 		data = data + sig
-
+		
 		// console.log("ACTUALLY SEND", mqttTopic)
 		try {
 			if(mqttTopic) {

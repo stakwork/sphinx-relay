@@ -34,7 +34,6 @@ export const typesToReplay=[ // should match typesToForward
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave
 ]
 async function onReceive(payload){
-	// console.log("=> ON RECEIVE",payload)
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}
@@ -187,7 +186,6 @@ export async function initTribesSubscriptions(){
 	tribes.connect(async(topic, message)=>{ // onMessage callback
 		try{
 			const msg = message.toString()
-			// console.log("=====> msg received! TOPIC", topic, "MESSAGE", msg)
 			// check topic is signed by sender?
 			const payload = await parseAndVerifyPayload(msg)
 			onReceive(payload)

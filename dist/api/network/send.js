@@ -18,6 +18,7 @@ const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
 const receive_1 = require("./receive");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+const MIN_SATS = 3;
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure, skipPubKey } = params;
@@ -75,14 +76,18 @@ function sendMessage(params) {
                 return; // skip (for tribe owner broadcasting, not back to the sender)
             }
             console.log('-> sending to ', contact.id, destkey);
+            let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
+            // sending a payment to one subscriber (like buying a pic)
+            if (isTribeOwner && contactIds.length === 1 && amount && amount > MIN_SATS) {
+                mqttTopic = ''; // FORCE KEYSEND!!!
+            }
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
             const opts = {
                 dest: destkey,
                 data: m,
-                amt: Math.max((amount || 0), 3)
+                amt: Math.max((amount || 0), MIN_SATS)
             };
             try {
-                const mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
                 const r = yield signAndSend(opts, mqttTopic);
                 yes = r;
             }
