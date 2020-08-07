@@ -347,7 +347,7 @@ exports.createSubscription = createSubscription;
 ;
 function editSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('======> editSubscription');
+        console.log('=> editSubscription');
         const date = new Date();
         date.setMilliseconds(0);
         const id = parseInt(req.params.id);
