@@ -230,12 +230,12 @@ export async function editTribe(req, res) {
 		const obj:{[k:string]:any} = {}
 		if(img) obj.photoUrl=img
 		if(name) obj.name=name
-		if(price_per_message) obj.pricePerMessage=price_per_message
-		if(price_to_join) obj.priceToJoin = price_to_join
-		if(escrow_amount) obj.escrowAmount = escrow_amount
-		if(escrow_millis) obj.escrowMillis = escrow_millis
-		if(unlisted) obj.unlisted = unlisted
-		if(req.body.private) obj.private = req.body.private
+		if(price_per_message||price_per_message===0) obj.pricePerMessage=price_per_message
+		if(price_to_join||price_to_join===0) obj.priceToJoin = price_to_join
+		if(escrow_amount||escrow_amount===0) obj.escrowAmount = escrow_amount
+		if(escrow_millis||escrow_millis===0) obj.escrowMillis = escrow_millis
+		if(unlisted||unlisted===false) obj.unlisted = unlisted
+		if(req.body.private||req.body.private===false) obj.private = req.body.private
 		if(Object.keys(obj).length>0) {
 			await chat.update(obj)
 		}
