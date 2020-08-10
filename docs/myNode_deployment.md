@@ -141,7 +141,7 @@ $ sudo su admin
 ```
 Create a file named sphinx-relay.service
 ```sh 
-$ sudo nano /etc/systemd/system/sphinx/sphinx-relay.service
+$ sudo nano /etc/systemd/system/sphinx-relay.service
 ```
 Copy and paste the following text to add it to the file:
 ```sh 
@@ -172,17 +172,17 @@ Save and exit:
 
 Let's run!
 ```sh 
-$ sudo systemctl enable sphinx-relay.service
-$ sudo systemctl start sphinx-relay.service
+$ sudo systemctl enable sphinx-relay
+$ sudo systemctl start sphinx-relay
 ```
 Check if Relay successfully started.
 ```sh 
-$ sudo systemctl status sphinx-relay.service
+$ sudo systemctl status sphinx-relay
 ```
 ### To stop the program
 
 ```sh 
-$ sudo systemctl stop sphinx-relay.service
+$ sudo systemctl stop sphinx-relay
 ```
 
 # To update Sphinx-Relay
@@ -191,7 +191,7 @@ $ sudo systemctl stop sphinx-relay.service
 
 Login as `admin` and stop the program.
 ```sh 
-$ sudo systemctl stop sphinx-relay.service
+$ sudo systemctl stop sphinx-relay
 ```
 login as user `bitcoin`.
 
@@ -286,8 +286,8 @@ $ exit
 ```
 Turn the service on and check the status.
 ```sh 
-$ sudo systemctl enable sphinx-relay.service
-$ sudo systemctl start sphinx-relay.service
+$ sudo systemctl enable sphinx-relay
+$ sudo systemctl start sphinx-relay
 ```
 
 ### tail logs 
