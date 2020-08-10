@@ -218,7 +218,7 @@ function editTribe(req, res) {
         if (okToUpdate) {
             const obj = {};
             if (img)
-                obj.img = img;
+                obj.photoUrl = img;
             if (name)
                 obj.name = name;
             if (price_per_message)

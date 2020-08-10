@@ -228,7 +228,7 @@ export async function editTribe(req, res) {
 
 	if(okToUpdate) {
 		const obj:{[k:string]:any} = {}
-		if(img) obj.img=img
+		if(img) obj.photoUrl=img
 		if(name) obj.name=name
 		if(price_per_message) obj.pricePerMessage=price_per_message
 		if(price_to_join) obj.priceToJoin = price_to_join
