@@ -93,6 +93,7 @@ function authModule(req, res, next) {
         if (req.path == '/app' ||
             req.path == '/' ||
             req.path == '/info' ||
+            req.path == '/action' ||
             req.path == '/contacts/tokens' ||
             req.path == '/login' ||
             req.path.startsWith('/static') ||
