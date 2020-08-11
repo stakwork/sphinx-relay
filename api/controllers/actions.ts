@@ -3,19 +3,24 @@ import * as path from 'path'
 import * as fs from 'fs'
 import * as network from '../network'
 
+const actionFile = '../../../actions.json'
+
 export async function doAction(req, res) {
-    const thePath = path.join(__dirname,'../../actions.json')
+    const thePath = path.join(__dirname,actionFile)
     try {
         if (fs.existsSync(thePath)) {
             processExtra(req, res)
+        } else {
+            failure(res, 'no file')
         }
     } catch(err) {
         console.error(err)
+        failure(res, 'fail')
     }
 }
 
 async function processExtra(req, res) {
-    const actions = require(path.join(__dirname,'../../actions.json'))
+    const actions = require(path.join(__dirname,actionFile))
     if(!(actions&&actions.length)) {
         return failure(res, 'no actions defined')
     }

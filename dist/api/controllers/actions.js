@@ -13,23 +13,28 @@ const res_1 = require("../utils/res");
 const path = require("path");
 const fs = require("fs");
 const network = require("../network");
+const actionFile = '../../../actions.json';
 function doAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const thePath = path.join(__dirname, '../../actions.json');
+        const thePath = path.join(__dirname, actionFile);
         try {
             if (fs.existsSync(thePath)) {
                 processExtra(req, res);
             }
+            else {
+                res_1.failure(res, 'no file');
+            }
         }
         catch (err) {
             console.error(err);
+            res_1.failure(res, 'fail');
         }
     });
 }
 exports.doAction = doAction;
 function processExtra(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const actions = require(path.join(__dirname, '../../actions.json'));
+        const actions = require(path.join(__dirname, actionFile));
         if (!(actions && actions.length)) {
             return res_1.failure(res, 'no actions defined');
         }
