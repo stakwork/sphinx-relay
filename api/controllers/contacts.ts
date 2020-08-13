@@ -81,6 +81,9 @@ export const updateContact = async (req, res) => {
 	let attrs = extractAttrs(req.body)
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
+	if(!contact) {
+		return failure(res, 'no contact found')
+	}
 	
 	// update self
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))

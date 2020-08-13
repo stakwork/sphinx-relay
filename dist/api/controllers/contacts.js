@@ -78,6 +78,9 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
+    if (!contact) {
+        return res_1.failure(res, 'no contact found');
+    }
     // update self
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
