@@ -145,6 +145,7 @@ export async function createGroupChat(req, res) {
 		description,
 		tags,
 		unlisted,
+		app_url,
 	} = req.body
 	const contact_ids = req.body.contact_ids||[]
 
@@ -165,7 +166,7 @@ export async function createGroupChat(req, res) {
 	let chatParams:any = null
 	let okToCreate = true
 	if(is_tribe){
-		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private)
+		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url)
 		if(chatParams.uuid){
 			// publish to tribe server
 			try {
@@ -183,6 +184,7 @@ export async function createGroupChat(req, res) {
 					owner_alias: owner.alias,
 					unlisted: unlisted||false,
 					is_private: req.body.private||false,
+					app_url,
 				})
 			} catch(e) {
 				okToCreate = false
