@@ -87,8 +87,13 @@ exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
-    const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit, offset });
-    const chatIds = messages.map(m => m.chatId);
+    const messages = yield models_1.models.Message.findAll({ order: [['chat_id', 'asc']], limit, offset });
+    const chatIds = [];
+    messages.forEach((m) => {
+        if (!chatIds.includes(m.chatId)) {
+            chatIds.push(m.chatId);
+        }
+    });
     console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
     let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
     const chatsById = underscore_1.indexBy(chats, 'id');

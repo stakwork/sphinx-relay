@@ -92,8 +92,13 @@ export const getAllMessages = async (req, res) => {
 	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
 	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 
-	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset })
-	const chatIds = messages.map(m => m.chatId)
+	const messages = await models.Message.findAll({ order: [['chat_id', 'asc']], limit, offset })
+	const chatIds:number[] = []
+	messages.forEach((m) => {
+		if(!chatIds.includes(m.chatId)) {
+			chatIds.push(m.chatId)
+		}
+	})
 	console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
 	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: {deleted:false, id: chatIds} }) : []
 	const chatsById = indexBy(chats, 'id')
