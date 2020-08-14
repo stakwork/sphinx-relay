@@ -183,7 +183,7 @@ function receiveMemberRequest(payload) {
 exports.receiveMemberRequest = receiveMemberRequest;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, } = req.body;
+        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, } = req.body;
         const { id } = req.params;
         if (!id)
             return res_1.failure(res, 'group id is required');
@@ -193,37 +193,52 @@ function editTribe(req, res) {
         }
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         let okToUpdate = true;
-        try {
-            yield tribes.edit({
-                uuid: chat.uuid,
-                name: name,
-                host: chat.host,
-                price_per_message: price_per_message || 0,
-                price_to_join: price_to_join || 0,
-                escrow_amount: escrow_amount || 0,
-                escrow_millis: escrow_millis || 0,
-                description,
-                tags,
-                img,
-                owner_alias: owner.alias,
-                unlisted,
-                is_private: req.body.private
-            });
-        }
-        catch (e) {
-            okToUpdate = false;
+        if (owner.publicKey === chat.ownerPubkey) {
+            try {
+                yield tribes.edit({
+                    uuid: chat.uuid,
+                    name: name,
+                    host: chat.host,
+                    price_per_message: price_per_message || 0,
+                    price_to_join: price_to_join || 0,
+                    escrow_amount: escrow_amount || 0,
+                    escrow_millis: escrow_millis || 0,
+                    description,
+                    tags,
+                    img,
+                    owner_alias: owner.alias,
+                    unlisted,
+                    is_private: req.body.private,
+                    app_url,
+                });
+            }
+            catch (e) {
+                okToUpdate = false;
+            }
         }
         if (okToUpdate) {
-            yield chat.update({
-                photoUrl: img || '',
-                name: name,
-                pricePerMessage: price_per_message || 0,
-                priceToJoin: price_to_join || 0,
-                escrowAmount: escrow_amount || 0,
-                escrowMillis: escrow_millis || 0,
-                unlisted: unlisted || false,
-                private: req.body.private || false,
-            });
+            const obj = {};
+            if (img)
+                obj.photoUrl = img;
+            if (name)
+                obj.name = name;
+            if (price_per_message || price_per_message === 0)
+                obj.pricePerMessage = price_per_message;
+            if (price_to_join || price_to_join === 0)
+                obj.priceToJoin = price_to_join;
+            if (escrow_amount || escrow_amount === 0)
+                obj.escrowAmount = escrow_amount;
+            if (escrow_millis || escrow_millis === 0)
+                obj.escrowMillis = escrow_millis;
+            if (unlisted || unlisted === false)
+                obj.unlisted = unlisted;
+            if (app_url)
+                obj.appUrl = app_url;
+            if (req.body.private || req.body.private === false)
+                obj.private = req.body.private;
+            if (Object.keys(obj).length > 0) {
+                yield chat.update(obj);
+            }
             res_1.success(res, jsonUtils.chatToJson(chat));
         }
         else {
@@ -406,7 +421,7 @@ function replayChatHistory(chat, contact) {
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url) {
     return __awaiter(this, void 0, void 0, function* () {
         let date = new Date();
         date.setMilliseconds(0);
@@ -435,6 +450,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             escrowAmount: escrow_amount || 0,
             unlisted: unlisted || false,
             private: is_private || false,
+            appUrl: app_url || '',
         };
     });
 }

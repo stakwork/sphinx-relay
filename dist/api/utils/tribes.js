@@ -89,7 +89,7 @@ function publish(topic, msg, cb) {
         });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield fetch('https://' + host + '/tribes', {
@@ -104,6 +104,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     escrow_millis: escrow_millis || 0,
                     unlisted: unlisted || false,
                     private: is_private || false,
+                    app_url: app_url || '',
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -116,7 +117,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
@@ -132,6 +133,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     owner_alias,
                     unlisted: unlisted || false,
                     private: is_private || false,
+                    app_url: app_url || '',
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });

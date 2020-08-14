@@ -11,6 +11,7 @@ import * as payments from './payment'
 import * as subcriptions from './subscriptions'
 import * as uploads from './uploads'
 import * as confirmations from './confirmations'
+import * as actions from './actions'
 import {checkTag} from '../utils/gitinfo'
 import * as path from 'path'
 import * as timers from '../utils/timers'
@@ -91,6 +92,8 @@ export async function set(app) {
 	app.get('/getinfo', details.getInfo)
 	app.get('/logs', details.getLogsSince)
 	app.get('/info', details.getNodeInfo)
+
+	app.post('/action', actions.doAction)
 
 	app.get('/version', async function(req,res) {
 		const version = await checkTag()

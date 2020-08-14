@@ -22,6 +22,7 @@ const payments = require("./payment");
 const subcriptions = require("./subscriptions");
 const uploads = require("./uploads");
 const confirmations = require("./confirmations");
+const actions = require("./actions");
 const gitinfo_1 = require("../utils/gitinfo");
 const path = require("path");
 const timers = require("../utils/timers");
@@ -89,6 +90,7 @@ function set(app) {
         app.get('/getinfo', details.getInfo);
         app.get('/logs', details.getLogsSince);
         app.get('/info', details.getNodeInfo);
+        app.post('/action', actions.doAction);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 const version = yield gitinfo_1.checkTag();

@@ -86,4 +86,7 @@ export default class Chat extends Model<Chat> {
   })
   seen: boolean
 
+  @Column
+  appUrl: string
+
 }

@@ -87,11 +87,19 @@ exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
-    const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit, offset });
-    const chatIds = messages.map(m => m.chatId);
     console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
+    const messages = yield models_1.models.Message.findAll({ order: [['chat_id', 'asc']], limit, offset });
+    console.log('=> got msgs', (messages && messages.length));
+    const chatIds = [];
+    messages.forEach((m) => {
+        if (!chatIds.includes(m.chatId)) {
+            chatIds.push(m.chatId);
+        }
+    });
     let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
+    console.log('=> found all chats', (chats && chats.length));
     const chatsById = underscore_1.indexBy(chats, 'id');
+    console.log('=> indexed chats');
     res_1.success(res, {
         new_messages: messages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
         confirmed_messages: []

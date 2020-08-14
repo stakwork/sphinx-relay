@@ -31,6 +31,8 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_chats', 'app_url')
+
   try{
     await sequelize.query(`CREATE UNIQUE INDEX chat_member_index ON sphinx_chat_members(chat_id, contact_id);`)
   }catch(e){}
