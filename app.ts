@@ -16,7 +16,7 @@ import * as network from './api/network'
 let server: any = null
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
-const port = process.env.PORT || config.node_http_port || 3001
+const port = process.env.PORT || 3001 // config.node_http_port || 3001
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 

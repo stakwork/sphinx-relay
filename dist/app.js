@@ -24,9 +24,9 @@ const controllers = require("./api/controllers");
 const socket = require("./api/utils/socket");
 const network = require("./api/network");
 let server = null;
-const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
+const port = process.env.PORT || 3001; // config.node_http_port || 3001
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 var i = 0;
 // START SETUP!
