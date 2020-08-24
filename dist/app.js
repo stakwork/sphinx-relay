@@ -44,6 +44,9 @@ function connectToLND() {
             if (e.details) {
                 console.log(`=> [lnd] error details: ${e.details}`);
             }
+            else {
+                console.log(`=> [lnd] error: ${e.message}`);
+            }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 yield connectToLND();
             }), 2000);

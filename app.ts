@@ -35,6 +35,8 @@ async function connectToLND(){
 	} catch(e) {
 		if(e.details) {
 			console.log(`=> [lnd] error details: ${e.details}`)
+		} else {
+			console.log(`=> [lnd] error: ${e.message}`)
 		}
 		setTimeout(async()=>{ // retry each 2 secs
 			await connectToLND()
