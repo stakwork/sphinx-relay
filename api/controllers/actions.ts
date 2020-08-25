@@ -32,8 +32,16 @@ async function processExtra(req, res) {
     if(!(actions&&actions.length)) {
         return failure(res, 'no actions defined')
     }
-    const {action,app,secret,pubkey,amount,chat_uuid,text} = req.body
-    console.log('=> ACTION:',JSON.stringify(req.body,null,2))
+    let body = req.body
+    if(body.data && typeof body.data==='string') {
+        try { // parse out body from "data" for github webhook action
+            const dataBody = JSON.parse(body.data)
+            if(dataBody) body=dataBody
+        } catch(e) {}
+    }
+    const {action,app,secret,pubkey,amount,chat_uuid,text} = body
+    
+    console.log('=> ACTION:',JSON.stringify(body,null,2))
 
     const theApp = actions.find(a=>a.app===app)
     if(!theApp) {
