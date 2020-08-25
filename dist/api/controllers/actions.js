@@ -46,14 +46,16 @@ function processExtra(req, res) {
             return res_1.failure(res, 'no actions defined');
         }
         let body = req.body;
-        console.log("BODY.DATA", body.data, typeof body.data);
-        if (body.data && typeof body.data === 'string') {
+        console.log("BODY.DATA", body.data, typeof body.data, body.data[1]);
+        if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try { // parse out body from "data" for github webhook action
-                const dataBody = JSON.parse(body.data);
+                const dataBody = JSON.parse(body.data.replace(/'/g, '"'));
                 if (dataBody)
                     body = dataBody;
             }
-            catch (e) { }
+            catch (e) {
+                console.log(e);
+            }
         }
         const { action, app, secret, pubkey, amount, chat_uuid, text } = body;
         console.log('=> ACTION:', JSON.stringify(body, null, 2));
