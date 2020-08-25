@@ -1,0 +1,20 @@
+name: Push
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  release:
+    name: Release Job
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Check out from Git
+        uses: actions/checkout@v2
+      - name: Git tag
+        run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
+      - name: Webhook
+        uses: joelwmale/webhook-action@master
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          data: "{'text': '[GITHUB] New release in sphinx-relay! $HEAD_TAG', 'action': 'broadcast', 'app': 'github', 'secret': '${{ secrets.WEBHOOK_SECRET }}', 'chat_uuid': 'XzsnzB-numfWNUcTXGkEkoMKCt4k36C2t60a-zohJTWrL--vHjia2WQ11gwbwdAtnsYTT3fyzRhH2YF7KqiOxwnGVlkd'}"
