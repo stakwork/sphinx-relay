@@ -33,7 +33,6 @@ async function processExtra(req, res) {
         return failure(res, 'no actions defined')
     }
     let body = req.body
-    console.log("BODY.DATA", body.data, typeof body.data, body.data[1])
     if(body.data && typeof body.data==='string' && body.data[1]==="'") {
         try { // parse out body from "data" for github webhook action
             const dataBody = JSON.parse(body.data.replace(/'/g,'"'))
@@ -44,8 +43,6 @@ async function processExtra(req, res) {
     }
     const {action,app,secret,pubkey,amount,chat_uuid,text} = body
     
-    console.log('=> ACTION:',JSON.stringify(body,null,2))
-
     const theApp = actions.find(a=>a.app===app)
     if(!theApp) {
         return failure(res, 'app not found')
