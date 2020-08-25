@@ -33,7 +33,8 @@ async function processExtra(req, res) {
         return failure(res, 'no actions defined')
     }
     const {action,app,secret,pubkey,amount,chat_uuid,text} = req.body
-    
+    console.log('=> ACTION:',JSON.stringify(req.body,null,2))
+
     const theApp = actions.find(a=>a.app===app)
     if(!theApp) {
         return failure(res, 'app not found')

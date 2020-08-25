@@ -46,6 +46,7 @@ function processExtra(req, res) {
             return res_1.failure(res, 'no actions defined');
         }
         const { action, app, secret, pubkey, amount, chat_uuid, text } = req.body;
+        console.log('=> ACTION:', JSON.stringify(req.body, null, 2));
         const theApp = actions.find(a => a.app === app);
         if (!theApp) {
             return res_1.failure(res, 'app not found');
