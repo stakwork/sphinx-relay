@@ -46,6 +46,7 @@ function processExtra(req, res) {
             return res_1.failure(res, 'no actions defined');
         }
         let body = req.body;
+        console.log("BODY.DATA", body.data, typeof body.data);
         if (body.data && typeof body.data === 'string') {
             try { // parse out body from "data" for github webhook action
                 const dataBody = JSON.parse(body.data);
