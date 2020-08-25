@@ -116,11 +116,13 @@ function processExtra(req, res) {
                 updatedAt: date,
             };
             const message = yield models_1.models.Message.create(msg);
-            network.sendMessage({
+            yield network.sendMessage({
                 chat: theChat,
                 sender: owner,
                 message: { content: textMap, id: message.id, uuid: message.uuid },
                 type: constants.message_types.message,
+                success: () => res_1.success(res, { success: true }),
+                failure: () => res_1.failure(res, 'failed'),
             });
         }
         else {

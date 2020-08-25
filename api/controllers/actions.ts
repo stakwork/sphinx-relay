@@ -100,11 +100,13 @@ async function processExtra(req, res) {
             updatedAt: date,
         }
         const message = await models.Message.create(msg)
-        network.sendMessage({
+        await network.sendMessage({
             chat: theChat,
             sender: owner,
             message: { content:textMap, id:message.id, uuid: message.uuid },
             type: constants.message_types.message,
+            success: ()=> success(res, {success:true}),
+            failure: ()=> failure(res, 'failed'),
         })
     } else {
         return failure(res, 'no action')
