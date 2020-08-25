@@ -1,0 +1,16 @@
+name: Push
+on:
+  push:
+    branches:
+      - master
+jobs:
+  webhook:
+    name: Webhook Job
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Webhook
+        uses: joelwmale/webhook-action@master
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          data: "{'text': '[GITHUB] New push in sphinx-relay master', 'action': 'broadcast', 'app': 'github', 'secret': '${{ secrets.WEBHOOK_SECRET }}', 'chat_uuid': 'XzsnzB-numfWNUcTXGkEkoMKCt4k36C2t60a-zohJTWrL--vHjia2WQ11gwbwdAtnsYTT3fyzRhH2YF7KqiOxwnGVlkd'}"
