@@ -48,6 +48,8 @@ export async function sendMessage(params) {
 			networkType = 'mqtt' // broadcast to all
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
+			// post last_active to tribes server
+			tribes.putActivity(chat.uuid, chat.host)
 		} else {
 			// if tribe, send to owner only
 			const tribeOwner = await models.Contact.findOne({where: {publicKey:tribeOwnerPubKey}})

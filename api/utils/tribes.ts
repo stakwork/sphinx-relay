@@ -123,6 +123,19 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
   }
 }
 
+export async function putActivity( uuid:string, host:string ) {
+  try {
+    const token = await genSignedTimestamp()
+    await fetch(`https://${host}/tribeactivity/${uuid}?token=` + token, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    })
+  } catch(e) {
+    console.log('[tribes] unauthorized to putActivity')
+    throw e
+  }
+}
+
 export async function putstats({ uuid, host, member_count }) {
   try {
     const token = await genSignedTimestamp()

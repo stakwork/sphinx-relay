@@ -146,6 +146,22 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     });
 }
 exports.edit = edit;
+function putActivity(uuid, host) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield genSignedTimestamp();
+            yield fetch(`https://${host}/tribeactivity/${uuid}?token=` + token, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to putActivity');
+            throw e;
+        }
+    });
+}
+exports.putActivity = putActivity;
 function putstats({ uuid, host, member_count }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

@@ -13,7 +13,14 @@ const res_1 = require("../utils/res");
 const path = require("path");
 const fs = require("fs");
 const network = require("../network");
+const models_1 = require("../models");
+const short = require("short-uuid");
+const rsa = require("../crypto/rsa");
+/*
+hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
+*/
 const actionFile = '../../../actions.json';
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 function doAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const thePath = path.join(__dirname, actionFile);
@@ -38,7 +45,7 @@ function processExtra(req, res) {
         if (!(actions && actions.length)) {
             return res_1.failure(res, 'no actions defined');
         }
-        const { action, app, secret, pubkey, amount } = req.body;
+        const { action, app, secret, pubkey, amount, chat_uuid, text } = req.body;
         const theApp = actions.find(a => a.app === app);
         if (!theApp) {
             return res_1.failure(res, 'app not found');
@@ -46,10 +53,13 @@ function processExtra(req, res) {
         if (!(theApp.secret && theApp.secret === secret)) {
             return res_1.failure(res, 'wrong secret');
         }
-        if (!(pubkey && pubkey.length === 66 && amount && action)) {
-            return res_1.failure(res, 'wrong params');
+        if (!action) {
+            return res_1.failure(res, 'no action');
         }
         if (action === 'keysend') {
+            if (!(pubkey && pubkey.length === 66 && amount)) {
+                return res_1.failure(res, 'wrong params');
+            }
             const MIN_SATS = 3;
             const destkey = pubkey;
             const opts = {
@@ -64,6 +74,41 @@ function processExtra(req, res) {
             catch (e) {
                 return res_1.failure(res, e);
             }
+        }
+        else if (action === 'broadcast') {
+            if (!chat_uuid || !text)
+                return res_1.failure(res, 'no uuid or text');
+            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+            if (!theChat)
+                return res_1.failure(res, 'no chat');
+            if (!theChat.type === constants.chat_types.tribe)
+                return res_1.failure(res, 'not a tribe');
+            const encryptedForMeText = rsa.encrypt(owner.contactKey, text);
+            const encryptedText = rsa.encrypt(theChat.groupKey, text);
+            const textMap = { 'chat': encryptedText };
+            var date = new Date();
+            date.setMilliseconds(0);
+            const msg = {
+                chatId: theChat.id,
+                uuid: short.generate(),
+                type: constants.message_types.message,
+                sender: owner.id,
+                amount: amount || 0,
+                date: date,
+                messageContent: encryptedForMeText,
+                remoteMessageContent: JSON.stringify(textMap),
+                status: constants.statuses.confirmed,
+                createdAt: date,
+                updatedAt: date,
+            };
+            const message = yield models_1.models.Message.create(msg);
+            network.sendMessage({
+                chat: theChat,
+                sender: owner,
+                message: { content: textMap, id: message.id, uuid: message.uuid },
+                type: constants.message_types.message,
+            });
         }
         else {
             return res_1.failure(res, 'no action');
