@@ -54,6 +54,7 @@ function processExtra(req, res) {
             }
             catch (e) {
                 console.log(e);
+                return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
         const { action, app, secret, pubkey, amount, chat_uuid, text } = body;

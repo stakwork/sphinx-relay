@@ -14,7 +14,7 @@ jobs:
       - name: Git tag
         run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
       - name: Webhook
-        uses: joelwmale/webhook-action@master
+        uses: joelwmale/webhook-action@749e2dcbc6735ce0c36e1dbbb660618cd7b5f91c
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           data: "{'text': '[GITHUB] New release in sphinx-relay! ${{ env.HEAD_TAG }}', 'action': 'broadcast', 'app': 'github', 'secret': '${{ secrets.WEBHOOK_SECRET }}', 'chat_uuid': 'XzsnzB-numfWNUcTXGkEkoMKCt4k36C2t60a-zohJTWrL--vHjia2WQ11gwbwdAtnsYTT3fyzRhH2YF7KqiOxwnGVlkd'}"

@@ -39,6 +39,7 @@ async function processExtra(req, res) {
             if(dataBody) body=dataBody
         } catch(e) {
             console.log(e)
+            return failure(res, 'failed to parse webhook body json')
         }
     }
     const {action,app,secret,pubkey,amount,chat_uuid,text} = body
