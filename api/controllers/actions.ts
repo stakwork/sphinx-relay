@@ -57,9 +57,9 @@ export async function processAction(req, res) {
         }
     } else if (action==='broadcast') {
         console.log('=> BOT BROADCAST')
-        if(!bot.chat_id || !text) return failure(res,'no uuid or text')
+        if(!bot.chatId || !text) return failure(res,'no uuid or text')
         const owner = await models.Contact.findOne({ where: { isOwner: true } })
-        const theChat = await models.Chat.findOne({where:{id: bot.chat_id}})
+        const theChat = await models.Chat.findOne({where:{id: bot.chatId}})
         if(!theChat || !owner) return failure(res,'no chat')
         if(!theChat.type===constants.chat_types.tribe) return failure(res,'not a tribe')
         

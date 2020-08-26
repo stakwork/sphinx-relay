@@ -19,4 +19,10 @@ export default class Bot extends Model<Bot> {
   @Column
   secret: string
 
+  @Column
+  createdAt: Date
+
+  @Column
+  updatedAt: Date
+
 }

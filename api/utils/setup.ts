@@ -38,7 +38,9 @@ async function migrate(){
       id TEXT NOT NULL PRIMARY KEY,
       name TEXT,
       chat_id BIGINT,
-      secret TEXT
+      secret TEXT,
+      created_at DATETIME,
+      updated_at DATETIME
     )`)
   } catch(e){}
 

@@ -69,10 +69,10 @@ function processAction(req, res) {
         }
         else if (action === 'broadcast') {
             console.log('=> BOT BROADCAST');
-            if (!bot.chat_id || !text)
+            if (!bot.chatId || !text)
                 return res_1.failure(res, 'no uuid or text');
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const theChat = yield models_1.models.Chat.findOne({ where: { id: bot.chat_id } });
+            const theChat = yield models_1.models.Chat.findOne({ where: { id: bot.chatId } });
             if (!theChat || !owner)
                 return res_1.failure(res, 'no chat');
             if (!theChat.type === constants.chat_types.tribe)
