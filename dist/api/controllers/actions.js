@@ -15,14 +15,55 @@ const network = require("../network");
 const models_1 = require("../models");
 const short = require("short-uuid");
 const rsa = require("../crypto/rsa");
+const crypto = require("crypto");
+const jsonUtils = require("../utils/json");
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const bots = yield models_1.models.Bot.findAll();
+        res_1.success(res, {
+            bots: bots.map(b => jsonUtils.botToJson(b))
+        });
+    }
+    catch (e) {
+        res_1.failure(res, 'no bots');
+    }
+});
+exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { chat_id, name, } = req.body;
+    const newBot = {
+        id: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        chatId: chat_id,
+        name: name,
+        secret: crypto.randomBytes(16).toString('hex').toUpperCase()
+    };
+    try {
+        const theBot = yield models_1.models.Bot.create(newBot);
+        res_1.success(res, jsonUtils.botToJson(theBot));
+    }
+    catch (e) {
+        res_1.failure(res, 'bot creation failed');
+    }
+});
+exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    if (!id)
+        return;
+    try {
+        models_1.models.Bot.destroy({ where: { id } });
+        res_1.success(res, true);
+    }
+    catch (e) {
+        console.log('ERROR deleteBot', e);
+        res_1.failure(res, e);
+    }
+});
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> process action');
         let body = req.body;
         if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try { // parse out body from "data" for github webhook action
@@ -36,9 +77,7 @@ function processAction(req, res) {
             }
         }
         const { action, bot_id, bot_secret, pubkey, amount, text } = body;
-        console.log('=> process action', JSON.stringify(body, null, 2));
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
-        console.log('=> bot:', bot.dataValues);
         if (!bot)
             return res_1.failure(res, 'no bot');
         if (!(bot.secret && bot.secret === bot_secret)) {

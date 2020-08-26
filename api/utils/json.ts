@@ -38,6 +38,8 @@ function contactToJson(contact){
 
 const inviteToJson = (invite) => toSnake(invite.dataValues||invite)
 
+const botToJson = (bot) => toSnake(bot.dataValues||bot)
+
 const jsonToContact = (json) => toCamel(json)
 
 function subscriptionToJson(subscription, chat) {
@@ -58,4 +60,5 @@ export {
   jsonToContact,
   chatToJson,
   subscriptionToJson,
+  botToJson,
 }
