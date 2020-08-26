@@ -22,6 +22,7 @@ hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> process action');
         let body = req.body;
         if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try { // parse out body from "data" for github webhook action
@@ -35,7 +36,9 @@ function processAction(req, res) {
             }
         }
         const { action, bot_id, bot_secret, pubkey, amount, text } = body;
+        console.log('=> process action', JSON.stringify(body, null, 2));
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
+        console.log('=> bot:', bot.dataValues);
         if (!bot)
             return res_1.failure(res, 'no bot');
         if (!(bot.secret && bot.secret === bot_secret)) {
@@ -45,6 +48,7 @@ function processAction(req, res) {
             return res_1.failure(res, 'no action');
         }
         if (action === 'keysend') {
+            console.log('=> BOT KEYSEND');
             if (!(pubkey && pubkey.length === 66 && amount)) {
                 return res_1.failure(res, 'wrong params');
             }
@@ -64,6 +68,7 @@ function processAction(req, res) {
             }
         }
         else if (action === 'broadcast') {
+            console.log('=> BOT BROADCAST');
             if (!bot.chat_id || !text)
                 return res_1.failure(res, 'no uuid or text');
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });

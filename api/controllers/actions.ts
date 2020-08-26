@@ -13,6 +13,7 @@ hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export async function processAction(req, res) {
+    console.log('=> process action')
     let body = req.body
     if(body.data && typeof body.data==='string' && body.data[1]==="'") {
         try { // parse out body from "data" for github webhook action
@@ -24,8 +25,9 @@ export async function processAction(req, res) {
         }
     }
     const {action,bot_id,bot_secret,pubkey,amount,text} = body
-
+    console.log('=> process action',JSON.stringify(body,null,2))
     const bot = await models.Bot.findOne({where:{id:bot_id}})
+    console.log('=> bot:',bot.dataValues)
     if(!bot) return failure(res,'no bot')
 
     if(!(bot.secret&&bot.secret===bot_secret)) {
@@ -36,6 +38,7 @@ export async function processAction(req, res) {
     }
 
     if(action==='keysend') {
+        console.log('=> BOT KEYSEND')
         if(!(pubkey&&pubkey.length===66&&amount)) {
             return failure(res, 'wrong params')
         }
@@ -53,6 +56,7 @@ export async function processAction(req, res) {
             return failure(res, e)
         }
     } else if (action==='broadcast') {
+        console.log('=> BOT BROADCAST')
         if(!bot.chat_id || !text) return failure(res,'no uuid or text')
         const owner = await models.Contact.findOne({ where: { isOwner: true } })
         const theChat = await models.Chat.findOne({where:{id: bot.chat_id}})
