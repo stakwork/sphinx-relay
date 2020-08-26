@@ -19,4 +19,4 @@ jobs:
         uses: joelwmale/webhook-action@749e2dcbc6735ce0c36e1dbbb660618cd7b5f91c
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-          data: "{'text': 'New push in sphinx-relay by ${{ env.COMMIT_AUTHOR }}: ${{ env.COMMIT_MSG }}', 'action': 'broadcast', 'app': 'github', 'secret': '${{ secrets.WEBHOOK_SECRET }}', 'chat_uuid': 'XzsnzB-numfWNUcTXGkEkoMKCt4k36C2t60a-zohJTWrL--vHjia2WQ11gwbwdAtnsYTT3fyzRhH2YF7KqiOxwnGVlkd'}"
+          data: "{'text': 'New push in sphinx-relay by ${{ env.COMMIT_AUTHOR }}: ${{ env.COMMIT_MSG }}', 'action': 'broadcast', 'bot_id': '87B4FDD3DD71C2B0', 'bot_secret': '${{ secrets.WEBHOOK_SECRET }}'}"
