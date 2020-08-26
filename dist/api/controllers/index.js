@@ -90,7 +90,10 @@ function set(app) {
         app.get('/getinfo', details.getInfo);
         app.get('/logs', details.getLogsSince);
         app.get('/info', details.getNodeInfo);
-        app.post('/action', actions.doAction);
+        app.post('/action', actions.processAction);
+        app.get('/bots', actions.getBots);
+        app.post('/bot', actions.createBot);
+        app.delete('/bot/:id', actions.deleteBot);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 const version = yield gitinfo_1.checkTag();

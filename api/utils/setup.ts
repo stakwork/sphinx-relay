@@ -31,6 +31,19 @@ async function setVersion(){
 }
 
 async function migrate(){
+
+  try{
+    await sequelize.query(`
+    CREATE TABLE sphinx_bots (
+      id TEXT NOT NULL PRIMARY KEY,
+      name TEXT,
+      chat_id BIGINT,
+      secret TEXT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch(e){}
+
   addTableColumn('sphinx_chats', 'app_url')
 
   try{
