@@ -19,6 +19,8 @@ python2 (if not present): `$ sudo apt install python2`
 
 ### Open port 3001 on myNode
 
+**note**: This port can be whatever number you want. Just add PORT to your environment like `export PORT=5005`.
+
 Open up a console window with SSH. And login as root
 ```sh
 $ sudo su

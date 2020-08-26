@@ -75,14 +75,15 @@ async function processExtra(req, res) {
         if(!chat_uuid || !text) return failure(res,'no uuid or text')
         const owner = await models.Contact.findOne({ where: { isOwner: true } })
         const theChat = await models.Chat.findOne({where:{uuid: chat_uuid}})
-        if(!theChat) return failure(res,'no chat')
+        if(!theChat || !owner) return failure(res,'no chat')
         if(!theChat.type===constants.chat_types.tribe) return failure(res,'not a tribe')
         
         const encryptedForMeText = rsa.encrypt(owner.contactKey, text)
         const encryptedText = rsa.encrypt(theChat.groupKey, text)
         const textMap = {'chat': encryptedText}
         var date = new Date();
-	    date.setMilliseconds(0)
+        date.setMilliseconds(0)
+        const alias = app.charAt(0).toUpperCase() + app.slice(1);
         const msg:{[k:string]:any}={
             chatId: theChat.id,
             uuid: short.generate(),
@@ -95,11 +96,12 @@ async function processExtra(req, res) {
             status: constants.statuses.confirmed,
             createdAt: date,
             updatedAt: date,
+            senderAlias: alias,
         }
         const message = await models.Message.create(msg)
         await network.sendMessage({
             chat: theChat,
-            sender: owner,
+            sender: {...owner.dataValues, alias},
             message: { content:textMap, id:message.id, uuid: message.uuid },
             type: constants.message_types.message,
             success: ()=> success(res, {success:true}),

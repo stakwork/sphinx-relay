@@ -91,7 +91,7 @@ function processExtra(req, res) {
                 return res_1.failure(res, 'no uuid or text');
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
-            if (!theChat)
+            if (!theChat || !owner)
                 return res_1.failure(res, 'no chat');
             if (!theChat.type === constants.chat_types.tribe)
                 return res_1.failure(res, 'not a tribe');
@@ -100,6 +100,7 @@ function processExtra(req, res) {
             const textMap = { 'chat': encryptedText };
             var date = new Date();
             date.setMilliseconds(0);
+            const alias = app.charAt(0).toUpperCase() + app.slice(1);
             const msg = {
                 chatId: theChat.id,
                 uuid: short.generate(),
@@ -112,11 +113,12 @@ function processExtra(req, res) {
                 status: constants.statuses.confirmed,
                 createdAt: date,
                 updatedAt: date,
+                senderAlias: alias,
             };
             const message = yield models_1.models.Message.create(msg);
             yield network.sendMessage({
                 chat: theChat,
-                sender: owner,
+                sender: Object.assign(Object.assign({}, owner.dataValues), { alias }),
                 message: { content: textMap, id: message.id, uuid: message.uuid },
                 type: constants.message_types.message,
                 success: () => res_1.success(res, { success: true }),

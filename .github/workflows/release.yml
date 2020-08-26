@@ -17,4 +17,4 @@ jobs:
         uses: joelwmale/webhook-action@master
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-          data: "{'text': '[GITHUB] New release in sphinx-relay! $HEAD_TAG', 'action': 'broadcast', 'app': 'github', 'secret': '${{ secrets.WEBHOOK_SECRET }}', 'chat_uuid': 'XzsnzB-numfWNUcTXGkEkoMKCt4k36C2t60a-zohJTWrL--vHjia2WQ11gwbwdAtnsYTT3fyzRhH2YF7KqiOxwnGVlkd'}"
+          data: "{'text': '[GITHUB] New release in sphinx-relay! ${{ env.HEAD_TAG }}', 'action': 'broadcast', 'app': 'github', 'secret': '${{ secrets.WEBHOOK_SECRET }}', 'chat_uuid': 'XzsnzB-numfWNUcTXGkEkoMKCt4k36C2t60a-zohJTWrL--vHjia2WQ11gwbwdAtnsYTT3fyzRhH2YF7KqiOxwnGVlkd'}"
