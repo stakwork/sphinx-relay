@@ -1,37 +1,18 @@
 import { success, failure } from '../utils/res'
 import * as path from 'path'
-import * as fs from 'fs'
 import * as network from '../network'
 import { models } from '../models'
 import * as short from 'short-uuid'
 import * as rsa from '../crypto/rsa'
 
 /*
+hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 
-const actionFile = '../../../actions.json'
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
-export async function doAction(req, res) {
-    const thePath = path.join(__dirname,actionFile)
-    try {
-        if (fs.existsSync(thePath)) {
-            processExtra(req, res)
-        } else {
-            failure(res, 'no file')
-        }
-    } catch(err) {
-        console.error(err)
-        failure(res, 'fail')
-    }
-}
-
-async function processExtra(req, res) {
-    const actions = require(path.join(__dirname,actionFile))
-    if(!(actions&&actions.length)) {
-        return failure(res, 'no actions defined')
-    }
+export async function processAction(req, res) {
     let body = req.body
     if(body.data && typeof body.data==='string' && body.data[1]==="'") {
         try { // parse out body from "data" for github webhook action
@@ -42,13 +23,12 @@ async function processExtra(req, res) {
             return failure(res, 'failed to parse webhook body json')
         }
     }
-    const {action,app,secret,pubkey,amount,chat_uuid,text} = body
-    
-    const theApp = actions.find(a=>a.app===app)
-    if(!theApp) {
-        return failure(res, 'app not found')
-    }
-    if(!(theApp.secret&&theApp.secret===secret)) {
+    const {action,bot_id,bot_secret,pubkey,amount,text} = body
+
+    const bot = await models.Bot.findOne({where:{id:bot_id}})
+    if(!bot) return failure(res,'no bot')
+
+    if(!(bot.secret&&bot.secret===bot_secret)) {
         return failure(res, 'wrong secret')
     }
     if(!action){
@@ -73,9 +53,9 @@ async function processExtra(req, res) {
             return failure(res, e)
         }
     } else if (action==='broadcast') {
-        if(!chat_uuid || !text) return failure(res,'no uuid or text')
+        if(!bot.chat_id || !text) return failure(res,'no uuid or text')
         const owner = await models.Contact.findOne({ where: { isOwner: true } })
-        const theChat = await models.Chat.findOne({where:{uuid: chat_uuid}})
+        const theChat = await models.Chat.findOne({where:{id: bot.chat_id}})
         if(!theChat || !owner) return failure(res,'no chat')
         if(!theChat.type===constants.chat_types.tribe) return failure(res,'not a tribe')
         
@@ -84,7 +64,7 @@ async function processExtra(req, res) {
         const textMap = {'chat': encryptedText}
         var date = new Date();
         date.setMilliseconds(0)
-        const alias = app.charAt(0).toUpperCase() + app.slice(1);
+        const alias = bot.name || 'Bot'
         const msg:{[k:string]:any}={
             chatId: theChat.id,
             uuid: short.generate(),

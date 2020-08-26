@@ -11,40 +11,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const res_1 = require("../utils/res");
 const path = require("path");
-const fs = require("fs");
 const network = require("../network");
 const models_1 = require("../models");
 const short = require("short-uuid");
 const rsa = require("../crypto/rsa");
 /*
+hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
-const actionFile = '../../../actions.json';
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function doAction(req, res) {
+function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const thePath = path.join(__dirname, actionFile);
-        try {
-            if (fs.existsSync(thePath)) {
-                processExtra(req, res);
-            }
-            else {
-                res_1.failure(res, 'no file');
-            }
-        }
-        catch (err) {
-            console.error(err);
-            res_1.failure(res, 'fail');
-        }
-    });
-}
-exports.doAction = doAction;
-function processExtra(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const actions = require(path.join(__dirname, actionFile));
-        if (!(actions && actions.length)) {
-            return res_1.failure(res, 'no actions defined');
-        }
         let body = req.body;
         if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try { // parse out body from "data" for github webhook action
@@ -57,12 +34,11 @@ function processExtra(req, res) {
                 return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
-        const { action, app, secret, pubkey, amount, chat_uuid, text } = body;
-        const theApp = actions.find(a => a.app === app);
-        if (!theApp) {
-            return res_1.failure(res, 'app not found');
-        }
-        if (!(theApp.secret && theApp.secret === secret)) {
+        const { action, bot_id, bot_secret, pubkey, amount, text } = body;
+        const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
+        if (!bot)
+            return res_1.failure(res, 'no bot');
+        if (!(bot.secret && bot.secret === bot_secret)) {
             return res_1.failure(res, 'wrong secret');
         }
         if (!action) {
@@ -88,10 +64,10 @@ function processExtra(req, res) {
             }
         }
         else if (action === 'broadcast') {
-            if (!chat_uuid || !text)
+            if (!bot.chat_id || !text)
                 return res_1.failure(res, 'no uuid or text');
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+            const theChat = yield models_1.models.Chat.findOne({ where: { id: bot.chat_id } });
             if (!theChat || !owner)
                 return res_1.failure(res, 'no chat');
             if (!theChat.type === constants.chat_types.tribe)
@@ -101,7 +77,7 @@ function processExtra(req, res) {
             const textMap = { 'chat': encryptedText };
             var date = new Date();
             date.setMilliseconds(0);
-            const alias = app.charAt(0).toUpperCase() + app.slice(1);
+            const alias = bot.name || 'Bot';
             const msg = {
                 chatId: theChat.id,
                 uuid: short.generate(),
@@ -131,4 +107,5 @@ function processExtra(req, res) {
         }
     });
 }
+exports.processAction = processAction;
 //# sourceMappingURL=actions.js.map

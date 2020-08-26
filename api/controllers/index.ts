@@ -93,7 +93,7 @@ export async function set(app) {
 	app.get('/logs', details.getLogsSince)
 	app.get('/info', details.getNodeInfo)
 
-	app.post('/action', actions.doAction)
+	app.post('/action', actions.processAction)
 
 	app.get('/version', async function(req,res) {
 		const version = await checkTag()
