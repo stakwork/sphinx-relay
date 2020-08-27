@@ -51,7 +51,7 @@ exports.getBotsForTribe = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, name, } = req.body;
     const chatId = parseInt(chat_id);
-    const chat = yield models_1.models.Chat.findOne({ where: { chatId } });
+    const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
     if (!chat)
         return res_1.failure(res, 'no chat');
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
