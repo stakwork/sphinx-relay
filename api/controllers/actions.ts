@@ -25,8 +25,29 @@ export const getBots = async (req, res) => {
     }
 }
 
+export const getBotsForTribe = async (req, res) => {
+    const chat_id = req.params.chat_id
+    const chatId = parseInt(chat_id)
+    if(!chatId) return failure(res,'no chat id')
+    try {
+        const bots = await models.Bot.findAll({where:{chatId}})
+        success(res, {
+            bots: bots.map(b=> jsonUtils.botToJson(b))
+        })
+    } catch(e) {
+        failure(res,'no bots')
+    }
+}
+
 export const createBot = async (req, res) => {
     const { chat_id, name, } = req.body
+    const chatId = parseInt(chat_id)
+    const chat = await models.Chat.findOne({where:{id:chatId}})
+    if(!chat) return failure(res,'no chat')
+
+    const owner = await models.Contact.findOne({where: {isOwner:true}})
+    const isTribeOwner = owner.publicKey===chat.ownerPubkey
+    if(!isTribeOwner) return failure(res, 'not tribe owner')
 
     const newBot = {
         id: crypto.randomBytes(8).toString('hex').toUpperCase(),

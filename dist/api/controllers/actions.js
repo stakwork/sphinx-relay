@@ -33,8 +33,31 @@ exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res_1.failure(res, 'no bots');
     }
 });
+exports.getBotsForTribe = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const chat_id = req.params.chat_id;
+    const chatId = parseInt(chat_id);
+    if (!chatId)
+        return res_1.failure(res, 'no chat id');
+    try {
+        const bots = yield models_1.models.Bot.findAll({ where: { chatId } });
+        res_1.success(res, {
+            bots: bots.map(b => jsonUtils.botToJson(b))
+        });
+    }
+    catch (e) {
+        res_1.failure(res, 'no bots');
+    }
+});
 exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, name, } = req.body;
+    const chatId = parseInt(chat_id);
+    const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
+    if (!chat)
+        return res_1.failure(res, 'no chat');
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const isTribeOwner = owner.publicKey === chat.ownerPubkey;
+    if (!isTribeOwner)
+        return res_1.failure(res, 'not tribe owner');
     const newBot = {
         id: crypto.randomBytes(8).toString('hex').toUpperCase(),
         chatId: chat_id,
