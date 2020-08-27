@@ -92,6 +92,7 @@ function set(app) {
         app.get('/info', details.getNodeInfo);
         app.post('/action', actions.processAction);
         app.get('/bots', actions.getBots);
+        app.get('/bots/:chat_id', actions.getBotsForTribe);
         app.post('/bot', actions.createBot);
         app.delete('/bot/:id', actions.deleteBot);
         app.get('/version', function (req, res) {
