@@ -7,6 +7,7 @@ import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import * as tribes from '../utils/tribes'
+import * as socket from '../utils/socket'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -172,6 +173,10 @@ export async function finalActionProcess(a:Action){
             senderAlias: alias,
         }
         const message = await models.Message.create(msg)
+        socket.sendJson({
+            type: 'message',
+            response: jsonUtils.messageToJson(message, theChat, owner)
+        })
         await network.sendMessage({
             chat: theChat,
             sender: { ...owner.dataValues, alias },

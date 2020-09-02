@@ -13,6 +13,7 @@ async function broadcastAction(chat,text){
   const a:Action = {
     action:'broadcast',
     text, chatID: chat.id,
+    botName:'MotherBot'
   }
   finalActionProcess(a)
   // var date = new Date()

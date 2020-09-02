@@ -62,7 +62,7 @@ export async function sendMessage(params) {
 		}
 	}
 
-	let yes:any = null
+	let yes:any = true
 	let no:any = null
 	console.log('all contactIds',contactIds)
 	await asyncForEach(contactIds, async contactId => {
@@ -100,12 +100,12 @@ export async function sendMessage(params) {
 			console.log("KEYSEND ERROR", e)
 			no = e
 		}
-		// await sleep(2)
+		await sleep(2)
 	})
-	if(yes){
-		if(success) success(yes)
-	} else {
+	if(no){
 		if(failure) failure(no)
+	} else {
+		if(success) success(yes)
 	}
 }
 
@@ -180,9 +180,9 @@ async function asyncForEach(array, callback) {
 	  	await callback(array[index], index, array);
 	}
 }
-// async function sleep(ms) {
-// 	return new Promise(resolve => setTimeout(resolve, ms))
-// }
+async function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 // function urlBase64FromHex(ascii){
 //     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')

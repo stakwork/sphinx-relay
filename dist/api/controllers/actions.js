@@ -18,6 +18,7 @@ const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
 const tribes = require("../utils/tribes");
+const socket = require("../utils/socket");
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -180,6 +181,10 @@ function finalActionProcess(a) {
                 senderAlias: alias,
             };
             const message = yield models_1.models.Message.create(msg);
+            socket.sendJson({
+                type: 'message',
+                response: jsonUtils.messageToJson(message, theChat, owner)
+            });
             yield network.sendMessage({
                 chat: theChat,
                 sender: Object.assign(Object.assign({}, owner.dataValues), { alias }),

@@ -22,6 +22,7 @@ function broadcastAction(chat, text) {
         const a = {
             action: 'broadcast',
             text, chatID: chat.id,
+            botName: 'MotherBot'
         };
         actions_1.finalActionProcess(a);
         // var date = new Date()

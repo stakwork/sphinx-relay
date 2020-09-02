@@ -67,7 +67,7 @@ function sendMessage(params) {
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
             }
         }
-        let yes = null;
+        let yes = true;
         let no = null;
         console.log('all contactIds', contactIds);
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
@@ -102,15 +102,15 @@ function sendMessage(params) {
                 console.log("KEYSEND ERROR", e);
                 no = e;
             }
-            // await sleep(2)
+            yield sleep(2);
         }));
-        if (yes) {
-            if (success)
-                success(yes);
-        }
-        else {
+        if (no) {
             if (failure)
                 failure(no);
+        }
+        else {
+            if (success)
+                success(yes);
         }
     });
 }
@@ -181,9 +181,11 @@ function asyncForEach(array, callback) {
         }
     });
 }
-// async function sleep(ms) {
-// 	return new Promise(resolve => setTimeout(resolve, ms))
-// }
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    });
+}
 // function urlBase64FromHex(ascii){
 //     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }
