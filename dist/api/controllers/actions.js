@@ -17,6 +17,7 @@ const short = require("short-uuid");
 const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
+const tribes = require("../utils/tribes");
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -58,8 +59,10 @@ exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const isTribeOwner = owner.publicKey === chat.ownerPubkey;
     if (!isTribeOwner)
         return res_1.failure(res, 'not tribe owner');
+    const uuid = yield tribes.genSignedTimestamp();
     const newBot = {
-        id: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        uuid,
+        id: crypto.randomBytes(16).toString('hex').toUpperCase(),
         chatId: chat_id,
         name: name,
         secret: crypto.randomBytes(16).toString('hex').toUpperCase()

@@ -1,6 +1,7 @@
 import {models} from '../models'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
+import * as bots from './bots'
 import * as details from './details'
 import * as contacts from './contacts'
 import * as invites from './invites'
@@ -147,4 +148,8 @@ export const ACTIONS = {
 	[msgtypes.member_request]: chatTribes.receiveMemberRequest,
 	[msgtypes.member_approve]: chatTribes.receiveMemberApprove,
 	[msgtypes.member_reject]: chatTribes.receiveMemberReject,
+	[msgtypes.tribe_delete]: chatTribes.receiveTribeDelete,
+	[msgtypes.bot_install]: bots.receiveBotInstall,
+	[msgtypes.bot_cmd]: bots.receiveBotCmd,
+	[msgtypes.bot_res]: bots.receiveBotRes,
 }

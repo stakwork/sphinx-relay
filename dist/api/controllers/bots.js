@@ -10,15 +10,80 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
+const short = require("short-uuid");
+const rsa = require("../crypto/rsa");
+const models_1 = require("../models");
+const socket = require("../utils/socket");
+const jsonUtils = require("../utils/json");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+function genBotRes(chat, text) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var date = new Date();
+        date.setMilliseconds(0);
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const encryptedForMeText = rsa.encrypt(owner.contactKey, text);
+        const msg = {
+            chatId: chat.id,
+            uuid: short.generate(),
+            type: constants.message_types.bot_res,
+            sender: owner.id,
+            amount: 0,
+            date: date,
+            messageContent: encryptedForMeText,
+            remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            createdAt: date,
+            updatedAt: date,
+            senderAlias: 'Bot Mother'
+        };
+        const message = yield models_1.models.Message.create(msg);
+        socket.sendJson({
+            type: 'message',
+            response: jsonUtils.messageToJson(message, chat, owner)
+        });
+    });
+}
+// return whether this is legit to process
+function processBotMessage(msg, chat, botInTribe) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const txt = msg.message.content;
+        if (txt.startsWith('/bot ')) {
+            const arr = txt.split(' ');
+            if (arr.length < 2)
+                return false;
+            const cmd = arr[1];
+            switch (cmd) {
+                case 'install':
+                    if (arr.length < 3)
+                        return false;
+                    installBot(arr[2], botInTribe);
+                default:
+                    genBotRes(chat, botHelpHTML);
+            }
+        }
+        else {
+        }
+        return true;
+    });
+}
+exports.processBotMessage = processBotMessage;
+const botHelpHTML = `<p>
+  <b>Bot commands:</b>
+  <ul>
+    <li><b>/bot install {BOTNAME}:</b>&nbsp;Install a new bot
+    <li><b>/bot help:</b>&nbsp;Print out this help message
+  </ul>
+<p>        
+`;
 /* intercept */
-exports.installBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+function installBot(botname, botInTribe) {
+    console.log("INSTALL BOT NOW");
     // need bot uuid and maker pubkey
     // send bot_install to bot maker
-    // mqtt sub to the bot uuid (dont need this actually)
     // generate ChatMember with bot=true
     // bot_maker_pubkey, bot_uuid, bot_prefix
-});
+}
+exports.installBot = installBot;
 function receiveBotInstall(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveBotInstall');
@@ -30,7 +95,13 @@ function receiveBotInstall(payload) {
     });
 }
 exports.receiveBotInstall = receiveBotInstall;
-// type BotResType = 'install' | 'message' | 'broadcast' | 'keysend'
+// type BotCmdType = 'install' | 'message' | 'broadcast' | 'keysend'
+function receiveBotCmd(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log(constants.message_types.bot_cmd);
+    });
+}
+exports.receiveBotCmd = receiveBotCmd;
 function receiveBotRes(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log(constants.message_types.bot_res);

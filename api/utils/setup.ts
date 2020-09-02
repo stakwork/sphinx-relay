@@ -37,6 +37,7 @@ async function migrate(){
   addTableColumn('sphinx_chat_members', 'bot_uuid')
   
   addTableColumn('sphinx_bots', 'webhook')
+  addTableColumn('sphinx_bots', 'uuid')
 
   try{
     await sequelize.query(`

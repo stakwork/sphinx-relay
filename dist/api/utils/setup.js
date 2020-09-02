@@ -49,6 +49,7 @@ function migrate() {
         addTableColumn('sphinx_chat_members', 'bot_maker_pubkey');
         addTableColumn('sphinx_chat_members', 'bot_uuid');
         addTableColumn('sphinx_bots', 'webhook');
+        addTableColumn('sphinx_bots', 'uuid');
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_bot_members (

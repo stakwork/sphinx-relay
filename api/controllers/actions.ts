@@ -6,6 +6,7 @@ import * as short from 'short-uuid'
 import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
+import * as tribes from '../utils/tribes'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -49,8 +50,10 @@ export const createBot = async (req, res) => {
     const isTribeOwner = owner.publicKey===chat.ownerPubkey
     if(!isTribeOwner) return failure(res, 'not tribe owner')
 
+    const uuid = await tribes.genSignedTimestamp()
     const newBot = {
-        id: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        uuid,
+        id: crypto.randomBytes(16).toString('hex').toUpperCase(),
         chatId: chat_id,
         name: name,
         secret: crypto.randomBytes(16).toString('hex').toUpperCase()

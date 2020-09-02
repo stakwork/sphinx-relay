@@ -376,6 +376,33 @@ export async function receiveMemberReject(payload) {
 	sendNotification(chat, chat_name, 'reject')
 }
 
+
+export async function receiveTribeDelete(payload) {
+	console.log('=> receiveTribeDelete')
+	const { chat, sender } = await helpers.parseReceiveParams(payload)
+	if(!chat) return console.log('no chat')
+	// await chat.update({status: constants.chat_statuses.rejected})
+	// update on tribes server too
+	let date = new Date()
+	date.setMilliseconds(0)
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		type: constants.message_types.tribe_delete,
+		sender: (sender && sender.id) || 0,
+		messageContent:'', remoteMessageContent:'',
+		status: constants.statuses.confirmed,
+		date: date, createdAt: date, updatedAt: date
+	}
+	const message = await models.Message.create(msg)
+	socket.sendJson({
+		type: 'tribe_delete',
+		response: {
+			message: jsonUtils.messageToJson(message, chat),
+			chat: jsonUtils.chatToJson(chat),
+		}
+	})
+}
+
 export async function replayChatHistory(chat, contact) {
 	if(!(chat&&chat.id&&contact&&contact.id)){
 		return console.log('[tribes] cant replay history')

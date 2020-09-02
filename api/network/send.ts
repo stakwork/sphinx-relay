@@ -49,7 +49,7 @@ export async function sendMessage(params) {
 			networkType = 'mqtt' // broadcast to all
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
-			const isBotMsg = intercept.isBotMsg(msg, true)
+			const isBotMsg = await intercept.isBotMsg(msg, true)
 			if(isBotMsg===true) {
 				return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
 			}

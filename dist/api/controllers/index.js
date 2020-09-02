@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const chats = require("./chats");
 const chatTribes = require("./chatTribes");
+const bots = require("./bots");
 const details = require("./details");
 const contacts = require("./contacts");
 const invites = require("./invites");
@@ -144,5 +145,9 @@ exports.ACTIONS = {
     [msgtypes.member_request]: chatTribes.receiveMemberRequest,
     [msgtypes.member_approve]: chatTribes.receiveMemberApprove,
     [msgtypes.member_reject]: chatTribes.receiveMemberReject,
+    [msgtypes.tribe_delete]: chatTribes.receiveTribeDelete,
+    [msgtypes.bot_install]: bots.receiveBotInstall,
+    [msgtypes.bot_cmd]: bots.receiveBotCmd,
+    [msgtypes.bot_res]: bots.receiveBotRes,
 };
 //# sourceMappingURL=index.js.map

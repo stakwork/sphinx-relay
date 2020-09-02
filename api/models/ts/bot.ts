@@ -10,6 +10,9 @@ export default class Bot extends Model<Bot> {
   })
   id: string
 
+  @Column
+  uuid: string
+
   @Column(DataType.BIGINT)
   chatId: number
 
