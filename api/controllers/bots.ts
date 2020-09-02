@@ -1,10 +1,5 @@
 import * as path from 'path'
 import {Msg} from '../network/interfaces'
-// import * as short from 'short-uuid'
-// import * as rsa from '../crypto/rsa'
-// import { models } from '../models'
-// import * as socket from '../utils/socket'
-// import * as jsonUtils from '../utils/json'
 import {Action,finalActionProcess} from './actions'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
@@ -16,29 +11,6 @@ async function broadcastAction(chat,text){
     botName:'MotherBot'
   }
   finalActionProcess(a)
-  // var date = new Date()
-  // date.setMilliseconds(0)
-  // const owner = await models.Contact.findOne({ where: { isOwner: true } })
-  // const encryptedForMeText = rsa.encrypt(owner.contactKey, text)
-  // const msg:{[k:string]:any}={
-	// 	chatId: chat.id,
-	// 	uuid: short.generate(),
-	// 	type: constants.message_types.bot_res,
-	// 	sender: -99,
-	// 	amount: 0,
-	// 	date: date,
-	// 	messageContent: encryptedForMeText,
-	// 	remoteMessageContent: '',
-	// 	status: constants.statuses.confirmed,
-	// 	createdAt: date,
-  //   updatedAt: date,
-  //   senderAlias: 'MotherBot'
-  // }
-  // const message = await models.Message.create(msg)
-  // socket.sendJson({
-	// 	type: 'message',
-	// 	response: jsonUtils.messageToJson(message, chat, owner)
-	// })
 }
 
 // return whether this is legit to process
@@ -75,6 +47,8 @@ const botHelpHTML=`<div>
 
 export function installBot(botname,botInTribe) {
   console.log("INSTALL BOT NOW")
+  // search registry for bot (by name)
+
   // need bot uuid and maker pubkey
   // send bot_install to bot maker
 

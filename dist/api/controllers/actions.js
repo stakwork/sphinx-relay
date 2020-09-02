@@ -169,7 +169,7 @@ function finalActionProcess(a) {
             const msg = {
                 chatId: theChat.id,
                 uuid: short.generate(),
-                type: constants.message_types.message,
+                type: constants.message_types.bot_res,
                 sender: owner.id,
                 amount: amount || 0,
                 date: date,

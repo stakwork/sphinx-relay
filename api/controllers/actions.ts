@@ -126,6 +126,7 @@ export async function processAction(req, res) {
 
 export async function finalActionProcess(a:Action){
     const {action,pubkey,amount,text,botName,chatID} = a
+
     if (action === 'keysend') {
         console.log('=> BOT KEYSEND')
         if (!(pubkey && pubkey.length === 66 && amount)) {
@@ -144,6 +145,7 @@ export async function finalActionProcess(a:Action){
         } catch (e) {
             throw e
         }
+
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
         if (!chatID || !text) throw 'no chatID or text'
@@ -161,7 +163,7 @@ export async function finalActionProcess(a:Action){
         const msg: { [k: string]: any } = {
             chatId: theChat.id,
             uuid: short.generate(),
-            type: constants.message_types.message,
+            type: constants.message_types.bot_res,
             sender: owner.id,
             amount: amount || 0,
             date: date,
@@ -187,6 +189,7 @@ export async function finalActionProcess(a:Action){
                 throw e
             }
         })
+        
     } else {
         throw 'no action'
     }
