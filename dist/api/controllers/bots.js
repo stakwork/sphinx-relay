@@ -26,7 +26,7 @@ function genBotRes(chat, text) {
             chatId: chat.id,
             uuid: short.generate(),
             type: constants.message_types.bot_res,
-            sender: owner.id,
+            sender: -99,
             amount: 0,
             date: date,
             messageContent: encryptedForMeText,
@@ -34,7 +34,7 @@ function genBotRes(chat, text) {
             status: constants.statuses.confirmed,
             createdAt: date,
             updatedAt: date,
-            senderAlias: 'Bot Mother'
+            senderAlias: 'MotherBot'
         };
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
