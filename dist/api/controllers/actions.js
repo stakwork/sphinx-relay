@@ -186,8 +186,8 @@ function finalActionProcess(a) {
                 message: { content: textMap, id: message.id, uuid: message.uuid },
                 type: constants.message_types.message,
                 success: () => ({ success: true }),
-                failure: () => {
-                    throw 'publish failed';
+                failure: (e) => {
+                    throw e;
                 }
             });
         }
