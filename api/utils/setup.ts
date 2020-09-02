@@ -31,6 +31,23 @@ async function setVersion(){
 }
 
 async function migrate(){
+  addTableColumn('sphinx_chat_members', 'bot', 'BOOLEAN')
+  addTableColumn('sphinx_chat_members', 'bot_prefix')
+  addTableColumn('sphinx_chat_members', 'bot_maker_pubkey')
+  addTableColumn('sphinx_chat_members', 'bot_uuid')
+  
+  addTableColumn('sphinx_bots', 'webhook')
+
+  try{
+    await sequelize.query(`
+    CREATE TABLE sphinx_bot_members (
+      member_pubkey TEXT,
+      tribe_uuid TEXT,
+      msg_count BIGINT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch(e){}
 
   try{
     await sequelize.query(`

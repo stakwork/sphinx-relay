@@ -20,6 +20,9 @@ export default class Bot extends Model<Bot> {
   secret: string
 
   @Column
+  webhook: string
+
+  @Column
   createdAt: Date
 
   @Column

@@ -10,42 +10,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
-let Bot = class Bot extends sequelize_typescript_1.Model {
+let BotMember = class BotMember extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
-        type: sequelize_typescript_1.DataType.TEXT,
-        primaryKey: true,
-        unique: true,
-    }),
+    sequelize_typescript_1.Column,
     __metadata("design:type", String)
-], Bot.prototype, "id", void 0);
+], BotMember.prototype, "memberPubkey", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], BotMember.prototype, "tribeUuid", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
     __metadata("design:type", Number)
-], Bot.prototype, "chatId", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
-], Bot.prototype, "name", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
-], Bot.prototype, "secret", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
-], Bot.prototype, "webhook", void 0);
+], BotMember.prototype, "msgCount", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], Bot.prototype, "createdAt", void 0);
+], BotMember.prototype, "createdAt", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], Bot.prototype, "updatedAt", void 0);
-Bot = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_bots', underscored: true })
-], Bot);
-exports.default = Bot;
-//# sourceMappingURL=bot.js.map
+], BotMember.prototype, "updatedAt", void 0);
+BotMember = __decorate([
+    sequelize_typescript_1.Table({ tableName: 'sphinx_bot_members', underscored: true })
+], BotMember);
+exports.default = BotMember;
+//# sourceMappingURL=botMember.js.map

@@ -11,6 +11,7 @@ import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfF
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 import { Op } from 'sequelize'
 import * as timers from '../utils/timers'
+import * as intercept from './intercept'
 
 /*
 delete type:
@@ -130,6 +131,10 @@ async function doTheAction(data){
 		/* decrypt and re-encrypt with phone's pubkey for storage */
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		const pld = await decryptMessage(data, chat)
+		const isBotMsg = intercept.isBotMsg(pld, false)
+		if(isBotMsg===true) {
+			return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+		}
 		const me = await models.Contact.findOne({where:{isOwner:true}})
 		payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
 		if(ogContent) payload.message.remoteContent = JSON.stringify({'chat':ogContent}) // this is the key

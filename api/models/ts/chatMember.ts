@@ -26,4 +26,16 @@ export default class ChatMember extends Model<ChatMember> {
   @Column
   status: number
 
+  @Column
+  bot: boolean
+
+  @Column
+  botPrefix: string
+
+  @Column
+  botMakerPubkey: string
+
+  @Column
+  botUuid: string
+
 }

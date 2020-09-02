@@ -17,6 +17,7 @@ const path = require("path");
 const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
 const receive_1 = require("./receive");
+const intercept = require("./intercept");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const MIN_SATS = 3;
 function sendMessage(params) {
@@ -53,6 +54,10 @@ function sendMessage(params) {
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
+                const isBotMsg = intercept.isBotMsg(msg, true);
+                if (isBotMsg === true) {
+                    return; // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+                }
                 // post last_active to tribes server
                 tribes.putActivity(chat.uuid, chat.host);
             }
@@ -162,7 +167,10 @@ function newmsg(type, chat, sender, message) {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),
         message: message,
-        sender: Object.assign({ pub_key: sender.publicKey }, includeAlias && { alias: sender.alias })
+        sender: {
+            pub_key: sender.publicKey,
+            alias: includeAlias ? sender.alias : '',
+        }
     };
 }
 exports.newmsg = newmsg;
