@@ -51,7 +51,7 @@ export async function sendMessage(params) {
 			msg = await decryptMessage(msg, chat)
 			const isBotMsg = await intercept.isBotMsg(msg, true)
 			if(isBotMsg===true) {
-				return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+				// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
 			}
 			// post last_active to tribes server
 			tribes.putActivity(chat.uuid, chat.host)

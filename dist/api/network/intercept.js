@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const bots_1 = require("../controllers/bots");
 const models_1 = require("../models");
+// return bool whether to skip forwarding to tribe
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message.content;

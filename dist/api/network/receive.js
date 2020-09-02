@@ -152,7 +152,7 @@ function doTheAction(data) {
             const pld = yield msg_1.decryptMessage(data, chat);
             const isBotMsg = yield intercept.isBotMsg(pld, false);
             if (isBotMsg === true) {
-                return; // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+                // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
             }
             const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner

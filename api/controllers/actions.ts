@@ -78,6 +78,15 @@ export const deleteBot = async (req, res) => {
     }
 }
 
+export interface Action {
+    action: string
+    chatID: number,
+    botName?: string
+    amount?: number
+    pubkey?: string
+    text?: string
+}
+
 export async function processAction(req, res) {
     let body = req.body
     if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
@@ -100,10 +109,26 @@ export async function processAction(req, res) {
         return failure(res, 'no action')
     }
 
+    const a:Action = {
+        action, pubkey, text, amount,
+        botName:bot.name, chatID: bot.chatId
+    }
+
+    try {
+        const r = await finalActionProcess(a)
+        success(res, r)
+    } catch(e) {
+        failure(res, e)
+    }
+    
+}
+
+export async function finalActionProcess(a:Action){
+    const {action,pubkey,amount,text,botName,chatID} = a
     if (action === 'keysend') {
         console.log('=> BOT KEYSEND')
         if (!(pubkey && pubkey.length === 66 && amount)) {
-            return failure(res, 'wrong params')
+            throw 'wrong params'
         }
         const MIN_SATS = 3
         const destkey = pubkey
@@ -114,24 +139,24 @@ export async function processAction(req, res) {
         }
         try {
             await network.signAndSend(opts)
-            return success(res, { success: true })
+            return ({ success: true })
         } catch (e) {
-            return failure(res, e)
+            throw e
         }
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
-        if (!bot.chatId || !text) return failure(res, 'no uuid or text')
+        if (!chatID || !text) throw 'no chatID or text'
         const owner = await models.Contact.findOne({ where: { isOwner: true } })
-        const theChat = await models.Chat.findOne({ where: { id: bot.chatId } })
-        if (!theChat || !owner) return failure(res, 'no chat')
-        if (!theChat.type === constants.chat_types.tribe) return failure(res, 'not a tribe')
+        const theChat = await models.Chat.findOne({ where: { id: chatID } })
+        if (!theChat || !owner) throw 'no chat'
+        if (!theChat.type === constants.chat_types.tribe) throw 'not a tribe'
 
         const encryptedForMeText = rsa.encrypt(owner.contactKey, text)
         const encryptedText = rsa.encrypt(theChat.groupKey, text)
         const textMap = { 'chat': encryptedText }
         var date = new Date();
         date.setMilliseconds(0)
-        const alias = bot.name || 'Bot'
+        const alias = botName || 'Bot'
         const msg: { [k: string]: any } = {
             chatId: theChat.id,
             uuid: short.generate(),
@@ -152,10 +177,12 @@ export async function processAction(req, res) {
             sender: { ...owner.dataValues, alias },
             message: { content: textMap, id: message.id, uuid: message.uuid },
             type: constants.message_types.message,
-            success: () => success(res, { success: true }),
-            failure: () => failure(res, 'failed'),
+            success: () => ({ success: true }),
+            failure: () => {
+                throw 'publish failed'
+            }
         })
     } else {
-        return failure(res, 'no action')
+        throw 'no action'
     }
 }

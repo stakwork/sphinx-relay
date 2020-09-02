@@ -56,7 +56,7 @@ function sendMessage(params) {
                 msg = yield msg_1.decryptMessage(msg, chat);
                 const isBotMsg = yield intercept.isBotMsg(msg, true);
                 if (isBotMsg === true) {
-                    return; // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+                    // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
                 }
                 // post last_active to tribes server
                 tribes.putActivity(chat.uuid, chat.host);

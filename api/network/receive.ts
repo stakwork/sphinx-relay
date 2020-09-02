@@ -133,7 +133,7 @@ async function doTheAction(data){
 		const pld = await decryptMessage(data, chat)
 		const isBotMsg = await intercept.isBotMsg(pld, false)
 		if(isBotMsg===true) {
-			return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+			// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
 		}
 		const me = await models.Contact.findOne({where:{isOwner:true}})
 		payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner

@@ -112,10 +112,27 @@ function processAction(req, res) {
         if (!action) {
             return res_1.failure(res, 'no action');
         }
+        const a = {
+            action, pubkey, text, amount,
+            botName: bot.name, chatID: bot.chatId
+        };
+        try {
+            const r = yield finalActionProcess(a);
+            res_1.success(res, r);
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.processAction = processAction;
+function finalActionProcess(a) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { action, pubkey, amount, text, botName, chatID } = a;
         if (action === 'keysend') {
             console.log('=> BOT KEYSEND');
             if (!(pubkey && pubkey.length === 66 && amount)) {
-                return res_1.failure(res, 'wrong params');
+                throw 'wrong params';
             }
             const MIN_SATS = 3;
             const destkey = pubkey;
@@ -126,28 +143,28 @@ function processAction(req, res) {
             };
             try {
                 yield network.signAndSend(opts);
-                return res_1.success(res, { success: true });
+                return ({ success: true });
             }
             catch (e) {
-                return res_1.failure(res, e);
+                throw e;
             }
         }
         else if (action === 'broadcast') {
             console.log('=> BOT BROADCAST');
-            if (!bot.chatId || !text)
-                return res_1.failure(res, 'no uuid or text');
+            if (!chatID || !text)
+                throw 'no chatID or text';
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const theChat = yield models_1.models.Chat.findOne({ where: { id: bot.chatId } });
+            const theChat = yield models_1.models.Chat.findOne({ where: { id: chatID } });
             if (!theChat || !owner)
-                return res_1.failure(res, 'no chat');
+                throw 'no chat';
             if (!theChat.type === constants.chat_types.tribe)
-                return res_1.failure(res, 'not a tribe');
+                throw 'not a tribe';
             const encryptedForMeText = rsa.encrypt(owner.contactKey, text);
             const encryptedText = rsa.encrypt(theChat.groupKey, text);
             const textMap = { 'chat': encryptedText };
             var date = new Date();
             date.setMilliseconds(0);
-            const alias = bot.name || 'Bot';
+            const alias = botName || 'Bot';
             const msg = {
                 chatId: theChat.id,
                 uuid: short.generate(),
@@ -168,14 +185,16 @@ function processAction(req, res) {
                 sender: Object.assign(Object.assign({}, owner.dataValues), { alias }),
                 message: { content: textMap, id: message.id, uuid: message.uuid },
                 type: constants.message_types.message,
-                success: () => res_1.success(res, { success: true }),
-                failure: () => res_1.failure(res, 'failed'),
+                success: () => ({ success: true }),
+                failure: () => {
+                    throw 'publish failed';
+                }
             });
         }
         else {
-            return res_1.failure(res, 'no action');
+            throw 'no action';
         }
     });
 }
-exports.processAction = processAction;
+exports.finalActionProcess = finalActionProcess;
 //# sourceMappingURL=actions.js.map

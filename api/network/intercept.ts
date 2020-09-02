@@ -2,6 +2,7 @@ import {processBotMessage} from '../controllers/bots'
 import {Msg} from './interfaces'
 import { models } from '../models'
 
+// return bool whether to skip forwarding to tribe
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message.content
   const chat = await models.Chat.findOne({where:{
@@ -9,7 +10,6 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   }})
   if(!chat) return false
 
-  
   if(txt.startsWith('/bot ')) {
     const ok = processBotMessage(msg, chat, null)
     return ok?true:false

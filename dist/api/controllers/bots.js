@@ -10,37 +10,43 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const short = require("short-uuid");
-const rsa = require("../crypto/rsa");
-const models_1 = require("../models");
-const socket = require("../utils/socket");
-const jsonUtils = require("../utils/json");
+// import * as short from 'short-uuid'
+// import * as rsa from '../crypto/rsa'
+// import { models } from '../models'
+// import * as socket from '../utils/socket'
+// import * as jsonUtils from '../utils/json'
+const actions_1 = require("./actions");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function genBotRes(chat, text) {
+function broadcastAction(chat, text) {
     return __awaiter(this, void 0, void 0, function* () {
-        var date = new Date();
-        date.setMilliseconds(0);
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const encryptedForMeText = rsa.encrypt(owner.contactKey, text);
-        const msg = {
-            chatId: chat.id,
-            uuid: short.generate(),
-            type: constants.message_types.bot_res,
-            sender: -99,
-            amount: 0,
-            date: date,
-            messageContent: encryptedForMeText,
-            remoteMessageContent: '',
-            status: constants.statuses.confirmed,
-            createdAt: date,
-            updatedAt: date,
-            senderAlias: 'MotherBot'
+        const a = {
+            action: 'broadcast',
+            text, chatID: chat.id,
         };
-        const message = yield models_1.models.Message.create(msg);
-        socket.sendJson({
-            type: 'message',
-            response: jsonUtils.messageToJson(message, chat, owner)
-        });
+        actions_1.finalActionProcess(a);
+        // var date = new Date()
+        // date.setMilliseconds(0)
+        // const owner = await models.Contact.findOne({ where: { isOwner: true } })
+        // const encryptedForMeText = rsa.encrypt(owner.contactKey, text)
+        // const msg:{[k:string]:any}={
+        // 	chatId: chat.id,
+        // 	uuid: short.generate(),
+        // 	type: constants.message_types.bot_res,
+        // 	sender: -99,
+        // 	amount: 0,
+        // 	date: date,
+        // 	messageContent: encryptedForMeText,
+        // 	remoteMessageContent: '',
+        // 	status: constants.statuses.confirmed,
+        // 	createdAt: date,
+        //   updatedAt: date,
+        //   senderAlias: 'MotherBot'
+        // }
+        // const message = await models.Message.create(msg)
+        // socket.sendJson({
+        // 	type: 'message',
+        // 	response: jsonUtils.messageToJson(message, chat, owner)
+        // })
     });
 }
 // return whether this is legit to process
@@ -59,7 +65,7 @@ function processBotMessage(msg, chat, botInTribe) {
                     installBot(arr[2], botInTribe);
                     return true;
                 default:
-                    genBotRes(chat, botHelpHTML);
+                    broadcastAction(chat, botHelpHTML);
             }
         }
         else {
