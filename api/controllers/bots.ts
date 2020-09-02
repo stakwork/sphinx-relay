@@ -45,6 +45,7 @@ export async function processBotMessage(msg:Msg, chat, botInTribe): Promise<bool
       case 'install':
         if(arr.length<3) return false
         installBot(arr[2], botInTribe)
+        return true
       default:
         genBotRes(chat,botHelpHTML)
     }
@@ -54,13 +55,13 @@ export async function processBotMessage(msg:Msg, chat, botInTribe): Promise<bool
   return true
 }
 
-const botHelpHTML=`<p>
+const botHelpHTML=`<div>
   <b>Bot commands:</b>
   <ul>
     <li><b>/bot install {BOTNAME}:</b>&nbsp;Install a new bot
     <li><b>/bot help:</b>&nbsp;Print out this help message
   </ul>
-<p>        
+<div>        
 `
 
 /* intercept */
