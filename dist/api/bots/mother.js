@@ -14,7 +14,7 @@ const actions_1 = require("../controllers/actions");
 const msg_types = Sphinx.MSG_TYPE;
 function init() {
     const client = new Sphinx.Client();
-    client.login('_', embedToAction);
+    client.login('_', actions_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         console.log("INCOMING MSG", message);
         const embed = new Sphinx.MessageEmbed()
@@ -28,27 +28,4 @@ function init() {
     }));
 }
 exports.init = init;
-function embedToAction(a) {
-    let text = '';
-    let botName = 'Bot';
-    if (a.embed && a.embed.html) {
-        text = a.embed.html;
-        botName = a.embed.author;
-    }
-    else if (typeof a === 'string') {
-        text = a;
-    }
-    actions_1.finalAction({
-        botName,
-        text, action: 'broadcast',
-    });
-}
-// const helpHTML=`<div>
-//   <b>Bot commands:</b>
-//   <ul>
-//     <li><b>/bot install {BOTNAME}:</b>&nbsp;Install a new bot
-//     <li><b>/bot help:</b>&nbsp;Print out this help message
-//   </ul>
-// <div>        
-// `
 //# sourceMappingURL=mother.js.map
