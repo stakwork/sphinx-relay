@@ -96,11 +96,12 @@ export async function finalAction(a:Action){
         var date = new Date();
         date.setMilliseconds(0)
         const alias = botName || 'Bot'
+        const botContactId = -1
         const msg: { [k: string]: any } = {
             chatId: theChat.id,
             uuid: short.generate(),
             type: constants.message_types.bot_res,
-            sender: -1,
+            sender: botContactId,
             amount: amount || 0,
             date: date,
             messageContent: encryptedForMeText,
@@ -117,7 +118,7 @@ export async function finalAction(a:Action){
         })
         await network.sendMessage({
             chat: theChat,
-            sender: { ...owner.dataValues, alias },
+            sender: { ...owner.dataValues, alias, id:botContactId },
             message: { content: textMap, id: message.id, uuid: message.uuid },
             type: constants.message_types.message,
             success: () => ({ success: true }),

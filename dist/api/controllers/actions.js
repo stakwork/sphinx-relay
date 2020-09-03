@@ -100,11 +100,12 @@ function finalAction(a) {
             var date = new Date();
             date.setMilliseconds(0);
             const alias = botName || 'Bot';
+            const botContactId = -1;
             const msg = {
                 chatId: theChat.id,
                 uuid: short.generate(),
                 type: constants.message_types.bot_res,
-                sender: owner.id,
+                sender: botContactId,
                 amount: amount || 0,
                 date: date,
                 messageContent: encryptedForMeText,
@@ -121,7 +122,7 @@ function finalAction(a) {
             });
             yield network.sendMessage({
                 chat: theChat,
-                sender: Object.assign(Object.assign({}, owner.dataValues), { alias }),
+                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId }),
                 message: { content: textMap, id: message.id, uuid: message.uuid },
                 type: constants.message_types.message,
                 success: () => ({ success: true }),
