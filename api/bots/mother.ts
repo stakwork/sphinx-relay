@@ -1,4 +1,4 @@
-import * as Sphinx from '../../../sphinx-bot'
+import * as Sphinx from 'sphinx-bot'
 import {Action, finalAction} from '../controllers/actions'
 const msg_types = Sphinx.MSG_TYPE
 

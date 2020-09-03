@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Sphinx = require("../../../sphinx-bot");
+const Sphinx = require("sphinx-bot");
 const MotherBot = require("./mother");
 exports.MotherBot = MotherBot;
 function init() {

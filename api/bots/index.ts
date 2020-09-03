@@ -1,4 +1,4 @@
-import * as Sphinx from '../../../sphinx-bot'
+import * as Sphinx from 'sphinx-bot'
 import * as MotherBot from './mother'
 
 function init(){

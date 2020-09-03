@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Sphinx = require("../../../sphinx-bot");
+const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
 const msg_types = Sphinx.MSG_TYPE;
 function init() {
