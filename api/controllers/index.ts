@@ -95,10 +95,9 @@ export async function set(app) {
 	app.get('/info', details.getNodeInfo)
 
 	app.post('/action', actions.processAction)
-	app.get('/bots', actions.getBots)
-	app.get('/bots/:chat_id',actions.getBotsForTribe)
-	app.post('/bot', actions.createBot)
-	app.delete('/bot/:id', actions.deleteBot)
+	app.get('/bots', bots.getBots)
+	app.post('/bot', bots.createBot)
+	app.delete('/bot/:id', bots.deleteBot)
 
 	app.get('/version', async function(req,res) {
 		const version = await checkTag()

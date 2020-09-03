@@ -11,6 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const bots_1 = require("../controllers/bots");
 const models_1 = require("../models");
+// const defaultPrefixes = [
+//   '/bot', '/welcome'
+// ]
 // return bool whether to skip forwarding to tribe
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -24,22 +27,26 @@ function isBotMsg(msg, sentByMe) {
             const ok = bots_1.processBotMessage(msg, chat, null);
             return ok ? true : false;
         }
-        const botInTribe = yield models_1.models.ChatMember.findOne({ where: {
+        const botsInTribe = yield models_1.models.ChatMember.findAll({ where: {
                 bot: true, chatId: chat.id
             } });
-        if (!botInTribe)
+        if (!(botsInTribe && botsInTribe.length))
             return false;
-        if (!(botInTribe.botMakerPubkey && botInTribe.botUuid))
-            return false;
-        if (txt.startsWith(`${botInTribe.botPrefix} `)) {
-            const ok = yield bots_1.processBotMessage(msg, chat, botInTribe);
-            return ok ? true : false;
-        }
-        return false;
-        // check if bot msg
-        // check my ChatMembers to see if its here
-        // process it "bot_cmd"
+        let ok = false;
+        yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
+            if (txt.startsWith(`${botInTribe.botPrefix} `)) {
+                ok = yield bots_1.processBotMessage(msg, chat, botInTribe);
+            }
+        }));
+        return ok;
     });
 }
 exports.isBotMsg = isBotMsg;
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
+}
 //# sourceMappingURL=intercept.js.map

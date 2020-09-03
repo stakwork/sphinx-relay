@@ -1,47 +1,73 @@
 import * as path from 'path'
 import {Msg} from '../network/interfaces'
-import {Action,finalActionProcess} from './actions'
+import * as tribes from '../utils/tribes'
+import * as crypto from 'crypto'
+import { models } from '../models'
+import * as jsonUtils from '../utils/json'
+import { success, failure } from '../utils/res'
+import {emit as emitBotMsg} from '../bots'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
-async function broadcastAction(chat,text){
-  const a:Action = {
-    action:'broadcast',
-    text, chatID: chat.id,
-    botName:'MotherBot'
+export const getBots = async (req, res) => {
+  try {
+      const bots = await models.Bot.findAll()
+      success(res, {
+          bots: bots.map(b=> jsonUtils.botToJson(b))
+      })
+  } catch(e) {
+      failure(res,'no bots')
   }
-  finalActionProcess(a)
 }
 
-// return whether this is legit to process
+export const createBot = async (req, res) => {
+  const { name, webhook } = req.body
+
+  const uuid = await tribes.genSignedTimestamp()
+  const newBot = {
+      name, uuid, webhook,
+      id: crypto.randomBytes(12).toString('hex').toUpperCase(),
+      secret: crypto.randomBytes(16).toString('hex').toUpperCase()
+  }
+  try {
+      const theBot = await models.Bot.create(newBot)
+      // post to bots.sphinx.chat
+      success(res, jsonUtils.botToJson(theBot))
+  } catch (e) {
+      failure(res, 'bot creation failed')
+  }
+}
+
+export const deleteBot = async (req, res) => {
+  const id = req.params.id
+  if (!id) return
+  try {
+      models.Bot.destroy({ where: { id } })
+      success(res, true)
+  } catch (e) {
+      console.log('ERROR deleteBot', e)
+      failure(res, e)
+  }
+}
+
+// async function broadcastAction(chat,text){
+//   finalAction(<Action>{
+//     action:'broadcast',
+//     text, chatUUID: chat.uuid,
+//     botName:'MotherBot'
+//   })
+// }
+
+// return bool whether this is legit to process
 export async function processBotMessage(msg:Msg, chat, botInTribe): Promise<boolean> {
   const txt = msg.message.content
   if(txt.startsWith('/bot ')){
-    const arr = txt.split(' ')
-    if(arr.length<2) return false
-    const cmd = arr[1]
-    switch(cmd) {
-      case 'install':
-        if(arr.length<3) return false
-        installBot(arr[2], botInTribe)
-        return true
-      default:
-        broadcastAction(chat,botHelpHTML)
-    }
+    emitBotMsg(txt, chat.uuid)
   } else {
 
   }
   return true
 }
-
-const botHelpHTML=`<div>
-  <b>Bot commands:</b>
-  <ul>
-    <li><b>/bot install {BOTNAME}:</b>&nbsp;Install a new bot
-    <li><b>/bot help:</b>&nbsp;Print out this help message
-  </ul>
-<div>        
-`
 
 /* intercept */
 

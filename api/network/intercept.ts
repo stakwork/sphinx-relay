@@ -2,6 +2,10 @@ import {processBotMessage} from '../controllers/bots'
 import {Msg} from './interfaces'
 import { models } from '../models'
 
+// const defaultPrefixes = [
+//   '/bot', '/welcome'
+// ]
+
 // return bool whether to skip forwarding to tribe
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message.content
@@ -15,21 +19,23 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
     return ok?true:false
   }
 
-  const botInTribe = await models.ChatMember.findOne({where:{
+  const botsInTribe = await models.ChatMember.findAll({where:{
     bot:true, chatId: chat.id
   }})
-  if(!botInTribe) return false
-  if(!(botInTribe.botMakerPubkey && botInTribe.botUuid)) return false
+  if(!(botsInTribe && botsInTribe.length)) return false
 
-  if(txt.startsWith(`${botInTribe.botPrefix} `)){
-    const ok = await processBotMessage(msg, chat, botInTribe)
-    return ok?true:false
-  }
+  let ok = false
+  await asyncForEach(botsInTribe, async botInTribe=>{
+    if(txt.startsWith(`${botInTribe.botPrefix} `)){
+      ok = await processBotMessage(msg, chat, botInTribe)
+    }
+  })
 
-  return false
+  return ok
+}
 
-  // check if bot msg
-  // check my ChatMembers to see if its here
-
-  // process it "bot_cmd"
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+	  await callback(array[index], index, array);
+	}
 }

@@ -9,86 +9,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const res_1 = require("../utils/res");
 const path = require("path");
 const network = require("../network");
 const models_1 = require("../models");
 const short = require("short-uuid");
 const rsa = require("../crypto/rsa");
-const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
-const tribes = require("../utils/tribes");
 const socket = require("../utils/socket");
+const res_1 = require("../utils/res");
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const bots = yield models_1.models.Bot.findAll();
-        res_1.success(res, {
-            bots: bots.map(b => jsonUtils.botToJson(b))
-        });
-    }
-    catch (e) {
-        res_1.failure(res, 'no bots');
-    }
-});
-exports.getBotsForTribe = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const chat_id = req.params.chat_id;
-    const chatId = parseInt(chat_id);
-    if (!chatId)
-        return res_1.failure(res, 'no chat id');
-    try {
-        const bots = yield models_1.models.Bot.findAll({ where: { chatId } });
-        res_1.success(res, {
-            bots: bots.map(b => jsonUtils.botToJson(b))
-        });
-    }
-    catch (e) {
-        res_1.failure(res, 'no bots');
-    }
-});
-exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { chat_id, name, } = req.body;
-    const chatId = parseInt(chat_id);
-    const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
-    if (!chat)
-        return res_1.failure(res, 'no chat');
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const isTribeOwner = owner.publicKey === chat.ownerPubkey;
-    if (!isTribeOwner)
-        return res_1.failure(res, 'not tribe owner');
-    const uuid = yield tribes.genSignedTimestamp();
-    const newBot = {
-        uuid,
-        id: crypto.randomBytes(16).toString('hex').toUpperCase(),
-        chatId: chat_id,
-        name: name,
-        secret: crypto.randomBytes(16).toString('hex').toUpperCase()
-    };
-    try {
-        const theBot = yield models_1.models.Bot.create(newBot);
-        res_1.success(res, jsonUtils.botToJson(theBot));
-    }
-    catch (e) {
-        res_1.failure(res, 'bot creation failed');
-    }
-});
-exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const id = req.params.id;
-    if (!id)
-        return;
-    try {
-        models_1.models.Bot.destroy({ where: { id } });
-        res_1.success(res, true);
-    }
-    catch (e) {
-        console.log('ERROR deleteBot', e);
-        res_1.failure(res, e);
-    }
-});
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let body = req.body;
@@ -107,6 +40,7 @@ function processAction(req, res) {
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
         if (!bot)
             return res_1.failure(res, 'no bot');
+        const chat = yield models_1.models.Chat.findOne({ where: { id: bot.chatId } });
         if (!(bot.secret && bot.secret === bot_secret)) {
             return res_1.failure(res, 'wrong secret');
         }
@@ -115,10 +49,10 @@ function processAction(req, res) {
         }
         const a = {
             action, pubkey, text, amount,
-            botName: bot.name, chatID: bot.chatId
+            botName: bot.name, chatUUID: chat.uuid
         };
         try {
-            const r = yield finalActionProcess(a);
+            const r = yield finalAction(a);
             res_1.success(res, r);
         }
         catch (e) {
@@ -127,9 +61,9 @@ function processAction(req, res) {
     });
 }
 exports.processAction = processAction;
-function finalActionProcess(a) {
+function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { action, pubkey, amount, text, botName, chatID } = a;
+        const { action, pubkey, amount, text, botName, chatUUID } = a;
         if (action === 'keysend') {
             console.log('=> BOT KEYSEND');
             if (!(pubkey && pubkey.length === 66 && amount)) {
@@ -152,10 +86,10 @@ function finalActionProcess(a) {
         }
         else if (action === 'broadcast') {
             console.log('=> BOT BROADCAST');
-            if (!chatID || !text)
+            if (!chatUUID || !text)
                 throw 'no chatID or text';
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const theChat = yield models_1.models.Chat.findOne({ where: { id: chatID } });
+            const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chatUUID } });
             if (!theChat || !owner)
                 throw 'no chat';
             if (!theChat.type === constants.chat_types.tribe)
@@ -201,5 +135,5 @@ function finalActionProcess(a) {
         }
     });
 }
-exports.finalActionProcess = finalActionProcess;
+exports.finalAction = finalAction;
 //# sourceMappingURL=actions.js.map

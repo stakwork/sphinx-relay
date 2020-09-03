@@ -13,9 +13,6 @@ export default class Bot extends Model<Bot> {
   @Column
   uuid: string
 
-  @Column(DataType.BIGINT)
-  chatId: number
-
   @Column
   name: string
 

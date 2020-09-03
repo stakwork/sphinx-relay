@@ -25,10 +25,6 @@ __decorate([
     __metadata("design:type", String)
 ], Bot.prototype, "uuid", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
-    __metadata("design:type", Number)
-], Bot.prototype, "chatId", void 0);
-__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Bot.prototype, "name", void 0);

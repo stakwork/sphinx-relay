@@ -10,36 +10,67 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const actions_1 = require("./actions");
+const tribes = require("../utils/tribes");
+const crypto = require("crypto");
+const models_1 = require("../models");
+const jsonUtils = require("../utils/json");
+const res_1 = require("../utils/res");
+const bots_1 = require("../bots");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-function broadcastAction(chat, text) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const a = {
-            action: 'broadcast',
-            text, chatID: chat.id,
-            botName: 'MotherBot'
-        };
-        actions_1.finalActionProcess(a);
-    });
-}
-// return whether this is legit to process
+exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const bots = yield models_1.models.Bot.findAll();
+        res_1.success(res, {
+            bots: bots.map(b => jsonUtils.botToJson(b))
+        });
+    }
+    catch (e) {
+        res_1.failure(res, 'no bots');
+    }
+});
+exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, webhook } = req.body;
+    const uuid = yield tribes.genSignedTimestamp();
+    const newBot = {
+        name, uuid, webhook,
+        id: crypto.randomBytes(12).toString('hex').toUpperCase(),
+        secret: crypto.randomBytes(16).toString('hex').toUpperCase()
+    };
+    try {
+        const theBot = yield models_1.models.Bot.create(newBot);
+        // post to bots.sphinx.chat
+        res_1.success(res, jsonUtils.botToJson(theBot));
+    }
+    catch (e) {
+        res_1.failure(res, 'bot creation failed');
+    }
+});
+exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    if (!id)
+        return;
+    try {
+        models_1.models.Bot.destroy({ where: { id } });
+        res_1.success(res, true);
+    }
+    catch (e) {
+        console.log('ERROR deleteBot', e);
+        res_1.failure(res, e);
+    }
+});
+// async function broadcastAction(chat,text){
+//   finalAction(<Action>{
+//     action:'broadcast',
+//     text, chatUUID: chat.uuid,
+//     botName:'MotherBot'
+//   })
+// }
+// return bool whether this is legit to process
 function processBotMessage(msg, chat, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message.content;
         if (txt.startsWith('/bot ')) {
-            const arr = txt.split(' ');
-            if (arr.length < 2)
-                return false;
-            const cmd = arr[1];
-            switch (cmd) {
-                case 'install':
-                    if (arr.length < 3)
-                        return false;
-                    installBot(arr[2], botInTribe);
-                    return true;
-                default:
-                    broadcastAction(chat, botHelpHTML);
-            }
+            bots_1.emit(txt, chat.uuid);
         }
         else {
         }
@@ -47,14 +78,6 @@ function processBotMessage(msg, chat, botInTribe) {
     });
 }
 exports.processBotMessage = processBotMessage;
-const botHelpHTML = `<div>
-  <b>Bot commands:</b>
-  <ul>
-    <li><b>/bot install {BOTNAME}:</b>&nbsp;Install a new bot
-    <li><b>/bot help:</b>&nbsp;Print out this help message
-  </ul>
-<div>        
-`;
 /* intercept */
 function installBot(botname, botInTribe) {
     console.log("INSTALL BOT NOW");

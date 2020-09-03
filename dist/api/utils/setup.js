@@ -66,7 +66,6 @@ function migrate() {
     CREATE TABLE sphinx_bots (
       id TEXT NOT NULL PRIMARY KEY,
       name TEXT,
-      chat_id BIGINT,
       secret TEXT,
       created_at DATETIME,
       updated_at DATETIME
