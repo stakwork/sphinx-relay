@@ -68,7 +68,9 @@ exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 // return bool whether this is legit to process
 function processBotMessage(msg, chat, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('===> PROCESS BOT MSG');
         const txt = msg.message.content;
+        console.log('===> txt', txt);
         if (txt.startsWith('/bot ')) {
             bots_1.emit(txt, chat.uuid);
         }

@@ -8,12 +8,14 @@ import { models } from '../models'
 
 // return bool whether to skip forwarding to tribe
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
+  console.log("==> is bot msg???")
   const txt = msg.message.content
   const chat = await models.Chat.findOne({where:{
     uuid: msg.chat.uuid
   }})
   if(!chat) return false
 
+  console.log("==> is bot msg txt",txt)
   if(txt.startsWith('/bot ')) {
     const ok = processBotMessage(msg, chat, null)
     return ok?true:false

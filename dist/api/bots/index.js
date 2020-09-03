@@ -12,6 +12,7 @@ function emit(txt, chatUUID) {
     if (arr.length < 2)
         return false;
     // const cmd = arr[1]
+    console.log('===> EMIT BOT MSG', { content: txt, chatUUID });
     Sphinx.EE.emit('message', { content: txt, chatUUID });
     // switch(cmd) {
     //   case 'install':
