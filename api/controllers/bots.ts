@@ -60,7 +60,9 @@ export const deleteBot = async (req, res) => {
 
 // return bool whether this is legit to process
 export async function processBotMessage(msg:Msg, chat, botInTribe): Promise<boolean> {
+  console.log('===> PROCESS BOT MSG')
   const txt = msg.message.content
+  console.log('===> txt',txt)
   if(txt.startsWith('/bot ')){
     emitBotMsg(txt, chat.uuid)
   } else {
