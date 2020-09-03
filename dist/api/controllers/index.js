@@ -27,11 +27,13 @@ const actions = require("./actions");
 const gitinfo_1 = require("../utils/gitinfo");
 const path = require("path");
 const timers = require("../utils/timers");
+const builtInBots = require("../bots");
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:", env);
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
+        builtInBots.init();
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
         }

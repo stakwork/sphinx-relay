@@ -16,7 +16,7 @@ import * as actions from './actions'
 import {checkTag} from '../utils/gitinfo'
 import * as path from 'path'
 import * as timers from '../utils/timers'
-
+import * as builtInBots from '../bots'
 
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
@@ -24,6 +24,8 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export async function set(app) {
 	
+	builtInBots.init()
+
 	if(models && models.Subscription){
 		subcriptions.initializeCronJobs()
 	}
