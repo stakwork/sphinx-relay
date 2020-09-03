@@ -100,7 +100,7 @@ export async function finalAction(a:Action){
             chatId: theChat.id,
             uuid: short.generate(),
             type: constants.message_types.bot_res,
-            sender: owner.id,
+            sender: -1,
             amount: amount || 0,
             date: date,
             messageContent: encryptedForMeText,
