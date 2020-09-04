@@ -35,6 +35,7 @@ async function migrate(){
   try{
     await sequelize.query(`
     CREATE TABLE sphinx_chat_bots (
+      id BIGINT NOT NULL PRIMARY KEY,
       chat_id BIGINT,
       bot_uuid TEXT,
       bot_type INT,
@@ -56,6 +57,7 @@ async function migrate(){
   try{
     await sequelize.query(`
     CREATE TABLE sphinx_bot_members (
+      id BIGINT NOT NULL PRIMARY KEY,
       member_pubkey TEXT,
       tribe_uuid TEXT,
       msg_count BIGINT,

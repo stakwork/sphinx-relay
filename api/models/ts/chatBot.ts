@@ -1,4 +1,4 @@
-import { Table, Column, Model } from 'sequelize-typescript';
+import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 /*
 TRIBE OWNER - bots installed as "contacts" in a tribe
@@ -8,6 +8,14 @@ TRIBE OWNER - bots installed as "contacts" in a tribe
   {unique:true, fields:['chat_id','bot_uuid']}
 ]})
 export default class ChatBot extends Model<ChatBot> {
+
+  @Column({
+    type: DataType.BIGINT,
+    primaryKey: true,
+    unique: true,
+    autoIncrement: true
+  })
+  id: number
 
   @Column
   chatId: number

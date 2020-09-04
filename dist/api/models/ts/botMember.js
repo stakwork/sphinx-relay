@@ -16,6 +16,15 @@ BOT CREATOR - store the installers of your bot
 let BotMember = class BotMember extends sequelize_typescript_1.Model {
 };
 __decorate([
+    sequelize_typescript_1.Column({
+        type: sequelize_typescript_1.DataType.BIGINT,
+        primaryKey: true,
+        unique: true,
+        autoIncrement: true
+    }),
+    __metadata("design:type", Number)
+], BotMember.prototype, "id", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], BotMember.prototype, "memberPubkey", void 0);

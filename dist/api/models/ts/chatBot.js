@@ -16,6 +16,15 @@ TRIBE OWNER - bots installed as "contacts" in a tribe
 let ChatBot = class ChatBot extends sequelize_typescript_1.Model {
 };
 __decorate([
+    sequelize_typescript_1.Column({
+        type: sequelize_typescript_1.DataType.BIGINT,
+        primaryKey: true,
+        unique: true,
+        autoIncrement: true
+    }),
+    __metadata("design:type", Number)
+], ChatBot.prototype, "id", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
 ], ChatBot.prototype, "chatId", void 0);
