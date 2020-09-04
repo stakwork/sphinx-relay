@@ -9,7 +9,6 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    console.log("INCOMING MSG", message.content)
     const arr = message.content.split(' ')
     if (arr.length < 2) return
     const cmd = arr[1]

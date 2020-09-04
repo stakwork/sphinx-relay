@@ -9,6 +9,17 @@ import {emit as emitBotMsg} from '../bots'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
+// return bool whether this is legit to process
+export async function processBotMessage(msg:Msg, chat, botInTribe): Promise<boolean> {
+  const txt = msg.message.content
+  if(txt.startsWith('/bot ')){
+    emitBotMsg(txt, chat.uuid)
+  } else {
+
+  }
+  return true
+}
+
 export const getBots = async (req, res) => {
   try {
       const bots = await models.Bot.findAll()
@@ -57,21 +68,6 @@ export const deleteBot = async (req, res) => {
 //     botName:'MotherBot'
 //   })
 // }
-
-// return bool whether this is legit to process
-export async function processBotMessage(msg:Msg, chat, botInTribe): Promise<boolean> {
-  console.log('===> PROCESS BOT MSG')
-  const txt = msg.message.content
-  console.log('===> txt',txt)
-  if(txt.startsWith('/bot ')){
-    emitBotMsg(txt, chat.uuid)
-  } else {
-
-  }
-  return true
-}
-
-/* intercept */
 
 export function installBot(botname,botInTribe) {
   console.log("INSTALL BOT NOW")

@@ -17,14 +17,12 @@ const models_1 = require("../models");
 // return bool whether to skip forwarding to tribe
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("==> is bot msg???");
         const txt = msg.message.content;
         const chat = yield models_1.models.Chat.findOne({ where: {
                 uuid: msg.chat.uuid
             } });
         if (!chat)
             return false;
-        console.log("==> is bot msg txt", txt);
         if (txt.startsWith('/bot ')) {
             const ok = bots_1.processBotMessage(msg, chat, null);
             return ok ? true : false;
