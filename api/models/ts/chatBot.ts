@@ -4,7 +4,7 @@ import { Table, Column, Model } from 'sequelize-typescript';
 TRIBE OWNER - bots installed as "contacts" in a tribe
 */
 
-@Table({tableName: 'sphinx_chat_members', underscored: true, indexes:[
+@Table({tableName: 'sphinx_chat_bots', underscored: true, indexes:[
   {unique:true, fields:['chat_id','bot_uuid']}
 ]})
 export default class ChatBot extends Model<ChatBot> {
