@@ -11,8 +11,10 @@ function builtinBotEmit(msg) {
     SphinxBot._emit('message', {
         channel: {
             id: msg.chat.uuid,
+            send: function () { },
         },
-        content: msg.message.content
+        content: msg.message.content,
+        type: msg.type,
     });
 }
 exports.builtinBotEmit = builtinBotEmit;
