@@ -48,7 +48,7 @@ function processAction(req, res) {
             return res_1.failure(res, 'no action');
         }
         const a = {
-            action, pubkey, text, amount,
+            action, pubkey, content: text, amount,
             botName: bot.name, chatUUID: chat.uuid
         };
         try {
@@ -63,7 +63,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { action, pubkey, amount, text, botName, chatUUID } = a;
+        const { action, pubkey, amount, content, botName, chatUUID } = a;
         if (action === 'keysend') {
             console.log('=> BOT KEYSEND');
             if (!(pubkey && pubkey.length === 66 && amount)) {
@@ -86,16 +86,16 @@ function finalAction(a) {
         }
         else if (action === 'broadcast') {
             console.log('=> BOT BROADCAST');
-            if (!chatUUID || !text)
-                throw 'no chatID or text';
+            if (!chatUUID || !content)
+                throw 'no chatID or content';
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chatUUID } });
             if (!theChat || !owner)
                 throw 'no chat';
             if (!theChat.type === constants.chat_types.tribe)
                 throw 'not a tribe';
-            const encryptedForMeText = rsa.encrypt(owner.contactKey, text);
-            const encryptedText = rsa.encrypt(theChat.groupKey, text);
+            const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
+            const encryptedText = rsa.encrypt(theChat.groupKey, content);
             const textMap = { 'chat': encryptedText };
             var date = new Date();
             date.setMilliseconds(0);

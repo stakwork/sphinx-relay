@@ -20,7 +20,7 @@ export interface Action {
     botName?: string
     amount?: number
     pubkey?: string
-    text?: string
+    content?: string
 }
 
 export async function processAction(req, res) {
@@ -48,7 +48,7 @@ export async function processAction(req, res) {
     }
 
     const a:Action = {
-        action, pubkey, text, amount,
+        action, pubkey, content:text, amount,
         botName:bot.name, chatUUID: chat.uuid
     }
 
@@ -61,7 +61,7 @@ export async function processAction(req, res) {
 }
 
 export async function finalAction(a:Action){
-    const {action,pubkey,amount,text,botName,chatUUID} = a
+    const {action,pubkey,amount,content,botName,chatUUID} = a
 
     if (action === 'keysend') {
         console.log('=> BOT KEYSEND')
@@ -84,14 +84,14 @@ export async function finalAction(a:Action){
 
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
-        if (!chatUUID || !text) throw 'no chatID or text'
+        if (!chatUUID || !content) throw 'no chatID or content'
         const owner = await models.Contact.findOne({ where: { isOwner: true } })
         const theChat = await models.Chat.findOne({ where: { uuid: chatUUID } })
         if (!theChat || !owner) throw 'no chat'
         if (!theChat.type === constants.chat_types.tribe) throw 'not a tribe'
 
-        const encryptedForMeText = rsa.encrypt(owner.contactKey, text)
-        const encryptedText = rsa.encrypt(theChat.groupKey, text)
+        const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
+        const encryptedText = rsa.encrypt(theChat.groupKey, content)
         const textMap = { 'chat': encryptedText }
         var date = new Date();
         date.setMilliseconds(0)
