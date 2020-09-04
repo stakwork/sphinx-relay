@@ -15,21 +15,7 @@ const crypto = require("crypto");
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
-const bots_1 = require("../bots");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-// return bool whether this is legit to process
-function processBotMessage(msg, chat, botInTribe) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const txt = msg.message.content;
-        if (txt.startsWith('/bot ')) {
-            bots_1.emit(txt, chat.uuid);
-        }
-        else {
-        }
-        return true;
-    });
-}
-exports.processBotMessage = processBotMessage;
 exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bots = yield models_1.models.Bot.findAll();

@@ -1,24 +1,11 @@
 import * as path from 'path'
-import {Msg} from '../network/interfaces'
 import * as tribes from '../utils/tribes'
 import * as crypto from 'crypto'
 import { models } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
-import {emit as emitBotMsg} from '../bots'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
-
-// return bool whether this is legit to process
-export async function processBotMessage(msg:Msg, chat, botInTribe): Promise<boolean> {
-  const txt = msg.message.content
-  if(txt.startsWith('/bot ')){
-    emitBotMsg(txt, chat.uuid)
-  } else {
-
-  }
-  return true
-}
 
 export const getBots = async (req, res) => {
   try {

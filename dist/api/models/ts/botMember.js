@@ -10,6 +10,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
+/*
+BOT CREATOR - store the installers of your bot
+*/
 let BotMember = class BotMember extends sequelize_typescript_1.Model {
 };
 __decorate([

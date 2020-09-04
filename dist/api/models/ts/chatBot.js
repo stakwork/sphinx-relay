@@ -10,40 +10,47 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
-let ChatMember = class ChatMember extends sequelize_typescript_1.Model {
+/*
+TRIBE OWNER - bots installed as "contacts" in a tribe
+*/
+let ChatBot = class ChatBot extends sequelize_typescript_1.Model {
 };
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
-], ChatMember.prototype, "chatId", void 0);
+], ChatBot.prototype, "chatId", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], ChatBot.prototype, "botUuid", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
-], ChatMember.prototype, "contactId", void 0);
+], ChatBot.prototype, "botType", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "role", void 0);
+    __metadata("design:type", String)
+], ChatBot.prototype, "botPrefix", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "totalSpent", void 0);
+    __metadata("design:type", String)
+], ChatBot.prototype, "botMakerPubkey", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "totalMessages", void 0);
+    __metadata("design:type", String)
+], ChatBot.prototype, "meta", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], ChatMember.prototype, "lastActive", void 0);
+], ChatBot.prototype, "createdAt", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "status", void 0);
-ChatMember = __decorate([
+    __metadata("design:type", Date)
+], ChatBot.prototype, "updatedAt", void 0);
+ChatBot = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_chat_members', underscored: true, indexes: [
-            { unique: true, fields: ['chat_id', 'contact_id'] }
+            { unique: true, fields: ['chat_id', 'bot_uuid'] }
         ] })
-], ChatMember);
-exports.default = ChatMember;
-//# sourceMappingURL=chatMember.js.map
+], ChatBot);
+exports.default = ChatBot;
+//# sourceMappingURL=chatBot.js.map

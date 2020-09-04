@@ -9,8 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const bots_1 = require("../controllers/bots");
 const models_1 = require("../models");
+const bots_1 = require("../bots");
 // const defaultPrefixes = [
 //   '/bot', '/welcome'
 // ]
@@ -23,22 +23,23 @@ function isBotMsg(msg, sentByMe) {
             } });
         if (!chat)
             return false;
+        let didEmit = false;
         if (txt.startsWith('/bot ')) {
-            const ok = bots_1.processBotMessage(msg, chat, null);
-            return ok ? true : false;
+            bots_1.builtinBotEmit(msg);
+            didEmit = true;
         }
-        const botsInTribe = yield models_1.models.ChatMember.findAll({ where: {
-                bot: true, chatId: chat.id
+        const botsInTribe = yield models_1.models.ChatBot.findAll({ where: {
+                chatId: chat.id
             } });
         if (!(botsInTribe && botsInTribe.length))
             return false;
-        let ok = false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
             if (txt.startsWith(`${botInTribe.botPrefix} `)) {
-                ok = yield bots_1.processBotMessage(msg, chat, botInTribe);
+                bots_1.builtinBotEmit(msg);
+                didEmit = true;
             }
         }));
-        return ok;
+        return didEmit;
     });
 }
 exports.isBotMsg = isBotMsg;

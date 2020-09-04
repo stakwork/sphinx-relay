@@ -65,6 +65,11 @@
         "group": 1,
         "tribe": 2
     },
+    "bot_types": {
+        "builtin": 0,
+        "local": 1,
+        "remote": 2
+    },
     "chat_roles": {
         "-": 0,
         "owner": 1,

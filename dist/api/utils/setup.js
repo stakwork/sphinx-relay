@@ -44,10 +44,24 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
-        addTableColumn('sphinx_chat_members', 'bot', 'BOOLEAN');
-        addTableColumn('sphinx_chat_members', 'bot_prefix');
-        addTableColumn('sphinx_chat_members', 'bot_maker_pubkey');
-        addTableColumn('sphinx_chat_members', 'bot_uuid');
+        try {
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_chat_bots (
+      chat_id BIGINT,
+      bot_uuid TEXT,
+      bot_type INT,
+      bot_prefix TEXT,
+      bot_maker_pubkey TEXT,
+      meta TEXT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`);
+        }
+        catch (e) { }
+        try {
+            yield models_1.sequelize.query(`CREATE UNIQUE INDEX chat_bot_index ON sphinx_chat_bots(chat_id, bot_uuid);`);
+        }
+        catch (e) { }
         addTableColumn('sphinx_bots', 'webhook');
         addTableColumn('sphinx_bots', 'uuid');
         try {

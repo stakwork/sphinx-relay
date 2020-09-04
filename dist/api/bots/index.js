@@ -1,15 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// import * as Sphinx from '../../../sphinx-bot'
-const Sphinx = require("sphinx-bot");
+// import * as SphinxBot from '../../../sphinx-bot'
+const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
-exports.MotherBot = MotherBot;
 function init() {
     MotherBot.init();
 }
 exports.init = init;
-function emit(content, chatUUID) {
-    Sphinx._emit('message', { content, chatUUID });
+function builtinBotEmit(msg) {
+    SphinxBot._emit('message', {
+        channel: {
+            id: msg.chat.uuid,
+        },
+        content: msg.message.content
+    });
 }
-exports.emit = emit;
+exports.builtinBotEmit = builtinBotEmit;
 //# sourceMappingURL=index.js.map

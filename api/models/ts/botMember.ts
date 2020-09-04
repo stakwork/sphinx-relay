@@ -1,5 +1,9 @@
 import { Table, Column, Model } from 'sequelize-typescript';
 
+/*
+BOT CREATOR - store the installers of your bot
+*/
+
 @Table({tableName: 'sphinx_bot_members', underscored: true})
 export default class BotMember extends Model<BotMember> {
 

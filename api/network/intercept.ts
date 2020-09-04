@@ -1,6 +1,6 @@
-import {processBotMessage} from '../controllers/bots'
 import {Msg} from './interfaces'
 import { models } from '../models'
+import {builtinBotEmit} from '../bots'
 
 // const defaultPrefixes = [
 //   '/bot', '/welcome'
@@ -14,24 +14,26 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   }})
   if(!chat) return false
 
+  let didEmit = false
+
   if(txt.startsWith('/bot ')) {
-    const ok = processBotMessage(msg, chat, null)
-    return ok?true:false
+    builtinBotEmit(msg)
+    didEmit = true
   }
 
-  const botsInTribe = await models.ChatMember.findAll({where:{
-    bot:true, chatId: chat.id
+  const botsInTribe = await models.ChatBot.findAll({where:{
+    chatId: chat.id
   }})
   if(!(botsInTribe && botsInTribe.length)) return false
 
-  let ok = false
   await asyncForEach(botsInTribe, async botInTribe=>{
     if(txt.startsWith(`${botInTribe.botPrefix} `)){
-      ok = await processBotMessage(msg, chat, botInTribe)
+      builtinBotEmit(msg)
+      didEmit = true
     }
   })
 
-  return ok
+  return didEmit
 }
 
 async function asyncForEach(array, callback) {
