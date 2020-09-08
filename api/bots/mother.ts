@@ -33,7 +33,7 @@ export function init() {
           }})
           if(!chat) return
           const chatBot = {
-            chatID: chat.id, 
+            chatId: chat.id, 
             botPrefix: '/'+botName, 
             botType:constants.bot_types.builtin
           }
