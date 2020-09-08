@@ -27,17 +27,18 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
       didEmit = true
     }
   })
+  console.log("DID EMIT",didEmit)
   if(didEmit) return didEmit
 
   const botsInTribe = await models.ChatBot.findAll({where:{
     chatId: chat.id
   }})
   console.log("BOTS IN TRIBE",botsInTribe)
-  console.log(botsInTribe.length)
+  console.log("BOTS IN TRIBE LENGTH",botsInTribe.length)
   if(!(botsInTribe && botsInTribe.length)) return false
 
   await asyncForEach(botsInTribe, async botInTribe=>{
-    console.log(botInTribe.botPrefix)
+    console.log('botInTribe.botPrefix',botInTribe.botPrefix)
     if(txt.startsWith(`${botInTribe.botPrefix} `)){
       builtinBotEmit(msg)
       didEmit = true

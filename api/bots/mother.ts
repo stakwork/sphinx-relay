@@ -28,8 +28,12 @@ export function init() {
         const botName = arr[2]
         if(builtinBots.includes(botName)) {
           console.log("INSTALL", botName)
+          const chat = await models.Chat.findOne({where:{
+            uuid: message.channel.id
+          }})
+          if(!chat) return
           const chatBot = {
-            chatID: message.channel.id, 
+            chatID: chat.id, 
             botPrefix: '/'+botName, 
             botType:constants.bot_types.builtin
           }
