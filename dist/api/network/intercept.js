@@ -22,6 +22,7 @@ restrictions (be able to toggle, or dont show chat)
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message.content;
+        const msgType = msg.type;
         const chat = yield models_1.models.Chat.findOne({ where: {
                 uuid: msg.chat.uuid
             } });
@@ -46,6 +47,16 @@ function isBotMsg(msg, sentByMe) {
             if (txt.startsWith(`${botInTribe.botPrefix} `)) {
                 bots_1.builtinBotEmit(msg);
                 didEmit = true;
+            }
+            if (botInTribe.msgTypes) {
+                try {
+                    const msgTypes = JSON.parse(botInTribe.msgTypes);
+                    if (msgTypes.includes(msgType)) {
+                        bots_1.builtinBotEmit(msg);
+                        didEmit = true;
+                    }
+                }
+                catch (e) { }
             }
         }));
         return didEmit;

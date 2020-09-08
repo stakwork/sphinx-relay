@@ -41,6 +41,7 @@ async function migrate(){
       bot_type INT,
       bot_prefix TEXT,
       bot_maker_pubkey TEXT,
+      msg_types TEXT,
       meta TEXT,
       created_at DATETIME,
       updated_at DATETIME

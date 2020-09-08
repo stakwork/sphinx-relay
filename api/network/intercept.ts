@@ -14,6 +14,7 @@ restrictions (be able to toggle, or dont show chat)
 // return bool whether to skip forwarding to tribe
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message.content
+  const msgType = msg.type
   const chat = await models.Chat.findOne({where:{
     uuid: msg.chat.uuid
   }})
@@ -41,6 +42,15 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
     if(txt.startsWith(`${botInTribe.botPrefix} `)){
       builtinBotEmit(msg)
       didEmit = true
+    }
+    if(botInTribe.msgTypes){
+      try {
+        const msgTypes = JSON.parse(botInTribe.msgTypes)
+        if(msgTypes.includes(msgType)){
+          builtinBotEmit(msg)
+          didEmit = true
+        }
+      } catch(e){}
     }
   })
 

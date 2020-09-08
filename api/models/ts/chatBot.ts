@@ -33,6 +33,9 @@ export default class ChatBot extends Model<ChatBot> {
   botMakerPubkey: string
 
   @Column
+  msgTypes: string
+
+  @Column
   meta: string // for saved preferences for local bots
 
   @Column

@@ -36,7 +36,11 @@ export function init() {
           const chatBot = {
             chatId: chat.id, 
             botPrefix: '/'+botName, 
-            botType:constants.bot_types.builtin
+            botType:constants.bot_types.builtin,
+            msgTypes:JSON.stringify([
+              constants.message_types.message,
+              constants.message_types.group_join
+            ])
           }
           await models.ChatBot.create(chatBot)
           if(botName==='wecome') {

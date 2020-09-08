@@ -11,16 +11,31 @@ let initted = false
 export function init() {
   if(initted) return
   initted = true
-  console.log('INIT WELCOME BOT')
 
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
     const arr = message.content.split(' ')
-    if (arr.length < 2) return
-    if (arr[0]!=='/welcome') return
+    console.log('message.type',message.type)
+    const isGroupJoin = message.type===constants.message_types.group_join
+    if (arr.length < 2 && !isGroupJoin) return
+    if (arr[0]!=='/welcome' && !isGroupJoin) return
     const cmd = arr[1]
+
+    if(isGroupJoin) {
+      const chat = await models.Chat.findOne({where:{uuid:message.channel.id}})
+      if(!chat) return
+      const chatBot = await models.ChatBot.findOne({where:{
+        chatId: chat.id, botPrefix:'/welcome', botType:constants.bot_types.builtin
+      }})
+      if(!(chatBot && chatBot.meta)) return
+      const resEmbed = new Sphinx.MessageEmbed()
+        .setAuthor('WelcomeBot')
+        .setDescription(chatBot.meta)
+      message.channel.send({ embed:resEmbed })
+      return
+    }
 
     switch (cmd) {
 
@@ -33,7 +48,7 @@ export function init() {
           chatId: chat.id, botPrefix:'/welcome', botType:constants.bot_types.builtin
         }})
         if(!chatBot) return
-        const meta = arr.slice(2, arr.length);
+        const meta = arr.slice(2, arr.length).join(' ');
         await chatBot.update({meta})
         const resEmbed = new Sphinx.MessageEmbed()
           .setAuthor('WelcomeBot')
