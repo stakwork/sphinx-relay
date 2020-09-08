@@ -44,10 +44,6 @@ function isBotMsg(msg, sentByMe) {
             return false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
             console.log('botInTribe.botPrefix', botInTribe.botPrefix);
-            if (txt.startsWith(`${botInTribe.botPrefix} `)) {
-                bots_1.builtinBotEmit(msg);
-                didEmit = true;
-            }
             if (botInTribe.msgTypes) {
                 try {
                     const msgTypes = JSON.parse(botInTribe.msgTypes);
@@ -57,6 +53,10 @@ function isBotMsg(msg, sentByMe) {
                     }
                 }
                 catch (e) { }
+            }
+            else if (txt.startsWith(`${botInTribe.botPrefix} `)) {
+                bots_1.builtinBotEmit(msg);
+                didEmit = true;
             }
         }));
         return didEmit;

@@ -39,10 +39,6 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
 
   await asyncForEach(botsInTribe, async botInTribe=>{
     console.log('botInTribe.botPrefix',botInTribe.botPrefix)
-    if(txt.startsWith(`${botInTribe.botPrefix} `)){
-      builtinBotEmit(msg)
-      didEmit = true
-    }
     if(botInTribe.msgTypes){
       try {
         const msgTypes = JSON.parse(botInTribe.msgTypes)
@@ -51,6 +47,9 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
           didEmit = true
         }
       } catch(e){}
+    } else if(txt.startsWith(`${botInTribe.botPrefix} `)){
+      builtinBotEmit(msg)
+      didEmit = true
     }
   })
 
