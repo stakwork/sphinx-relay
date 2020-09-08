@@ -2,6 +2,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
 import * as path from 'path'
+import * as WelcomeBot from './welcome'
 import { models } from '../models'
 const msg_types = Sphinx.MSG_TYPE
 
@@ -38,6 +39,9 @@ export function init() {
             botType:constants.bot_types.builtin
           }
           await models.ChatBot.create(chatBot)
+          if(botName==='wecome') {
+            WelcomeBot.init()
+          }
         } else {
           // message.reply('No built-in bot by that name')
           const embed = new Sphinx.MessageEmbed()

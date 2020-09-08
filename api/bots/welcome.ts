@@ -6,7 +6,12 @@ const msg_types = Sphinx.MSG_TYPE
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
+let initted = false
+
 export function init() {
+  if(initted) return
+  initted = true
+  console.log('INIT WELCOME BOT')
 
   const client = new Sphinx.Client()
   client.login('_', finalAction)

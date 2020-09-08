@@ -13,6 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
 const path = require("path");
+const WelcomeBot = require("./welcome");
 const models_1 = require("../models");
 const msg_types = Sphinx.MSG_TYPE;
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -47,6 +48,9 @@ function init() {
                         botType: constants.bot_types.builtin
                     };
                     yield models_1.models.ChatBot.create(chatBot);
+                    if (botName === 'wecome') {
+                        WelcomeBot.init();
+                    }
                 }
                 else {
                     // message.reply('No built-in bot by that name')

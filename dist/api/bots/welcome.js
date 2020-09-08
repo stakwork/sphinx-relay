@@ -15,7 +15,12 @@ const models_1 = require("../models");
 const path = require("path");
 const msg_types = Sphinx.MSG_TYPE;
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+let initted = false;
 function init() {
+    if (initted)
+        return;
+    initted = true;
+    console.log('INIT WELCOME BOT');
     const client = new Sphinx.Client();
     client.login('_', actions_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
