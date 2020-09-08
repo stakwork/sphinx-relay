@@ -131,6 +131,7 @@ async function doTheAction(data){
 		/* decrypt and re-encrypt with phone's pubkey for storage */
 		const chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		const pld = await decryptMessage(data, chat)
+		console.log("RECEIVE.JS isBotMsg")
 		const isBotMsg = await intercept.isBotMsg(pld, false)
 		if(isBotMsg===true) {
 			// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
