@@ -46,7 +46,7 @@ function builtinBotEmit(msg) {
             roles: []
         }
     };
-    if (msg.sender.role === constants.chat_role.owner) {
+    if (msg.sender.role === constants.chat_roles.owner) {
         if (m.member)
             m.member.roles = [{
                     name: 'Admin'
