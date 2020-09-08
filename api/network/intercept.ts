@@ -1,6 +1,9 @@
 import {Msg} from './interfaces'
 import { models } from '../models'
 import {builtinBotEmit} from '../bots'
+import * as path from 'path'
+
+const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 /*
 default show or not
@@ -11,6 +14,9 @@ restrictions (be able to toggle, or dont show chat)
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message.content
   const msgType = msg.type
+  if(msgType===constants.message_types.bot_res) {
+    return false // bot res msg type not for processing
+  }
   const chat = await models.Chat.findOne({where:{
     uuid: msg.chat.uuid
   }})

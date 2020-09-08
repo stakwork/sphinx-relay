@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const bots_1 = require("../bots");
+const path = require("path");
+const constants = require(path.join(__dirname, '../../config/constants.json'));
 /*
 default show or not
 restrictions (be able to toggle, or dont show chat)
@@ -20,6 +22,9 @@ function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message.content;
         const msgType = msg.type;
+        if (msgType === constants.message_types.bot_res) {
+            return false; // bot res msg type not for processing
+        }
         const chat = yield models_1.models.Chat.findOne({ where: {
                 uuid: msg.chat.uuid
             } });
