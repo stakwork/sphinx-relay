@@ -35,6 +35,7 @@ export const typesToReplay=[ // should match typesToForward
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave
 ]
 async function onReceive(payload){
+	console.log('===> onReceive',JSON.stringify(payload,null,2))
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}
