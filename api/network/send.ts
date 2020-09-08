@@ -6,7 +6,7 @@ import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import {tribeOwnerAutoConfirmation} from '../controllers/confirmations'
 import {typesToForward} from './receive'
-// import * as intercept from './intercept'
+import * as intercept from './intercept'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -49,11 +49,11 @@ export async function sendMessage(params) {
 			networkType = 'mqtt' // broadcast to all
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
-			// console.log("SEND.TS	 isBotMsg")
-			// const isBotMsg = await intercept.isBotMsg(msg, true)
-			// if(isBotMsg===true) {
-			// 	// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
-			// }
+			console.log("SEND.TS isBotMsg")
+			const isBotMsg = await intercept.isBotMsg(msg, true)
+			if(isBotMsg===true) {
+				// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+			}
 			// post last_active to tribes server
 			tribes.putActivity(chat.uuid, chat.host)
 		} else {
@@ -170,6 +170,7 @@ export function newmsg(type, chat, sender, message){
 		sender: {
 			pub_key: sender.publicKey,
 			alias: includeAlias ? sender.alias : '',
+			role: sender.role || constants.chat_roles.reader,
 			// ...includePhotoUrl && {photo_url: sender.photoUrl},
 			// ...sender.contactKey && {contact_key: sender.contactKey}
 		}

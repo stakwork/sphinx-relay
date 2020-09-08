@@ -17,7 +17,7 @@ const path = require("path");
 const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
 const receive_1 = require("./receive");
-// import * as intercept from './intercept'
+const intercept = require("./intercept");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const MIN_SATS = 3;
 function sendMessage(params) {
@@ -54,11 +54,11 @@ function sendMessage(params) {
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
-                // console.log("SEND.TS	 isBotMsg")
-                // const isBotMsg = await intercept.isBotMsg(msg, true)
-                // if(isBotMsg===true) {
-                // 	// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
-                // }
+                console.log("SEND.TS isBotMsg");
+                const isBotMsg = yield intercept.isBotMsg(msg, true);
+                if (isBotMsg === true) {
+                    // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+                }
                 // post last_active to tribes server
                 tribes.putActivity(chat.uuid, chat.host);
             }
@@ -171,6 +171,7 @@ function newmsg(type, chat, sender, message) {
         sender: {
             pub_key: sender.publicKey,
             alias: includeAlias ? sender.alias : '',
+            role: sender.role || constants.chat_roles.reader,
         }
     };
 }

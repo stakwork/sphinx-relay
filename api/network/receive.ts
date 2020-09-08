@@ -170,7 +170,8 @@ async function forwardMessageToTribe(ogpayload, sender){
 		type, message,
 		sender: {
 			...owner.dataValues,
-			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias}
+			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias},
+			role: constants.chat_roles.reader,
 		},
 		chat: chat,
 		skipPubKey: payload.sender.pub_key, 

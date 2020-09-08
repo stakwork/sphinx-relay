@@ -32,7 +32,7 @@ function init() {
 }
 exports.init = init;
 function builtinBotEmit(msg) {
-    SphinxBot._emit('message', {
+    const m = {
         channel: {
             id: msg.chat.uuid,
             send: function () { },
@@ -40,7 +40,19 @@ function builtinBotEmit(msg) {
         reply: function () { },
         content: msg.message.content,
         type: msg.type,
-    });
+        member: {
+            id: '_',
+            nickname: msg.sender.alias,
+            roles: []
+        }
+    };
+    if (msg.sender.role === constants.chat_role.owner) {
+        if (m.member)
+            m.member.roles = [{
+                    name: 'Admin'
+                }];
+    }
+    SphinxBot._emit('message', m);
 }
 exports.builtinBotEmit = builtinBotEmit;
 //# sourceMappingURL=index.js.map

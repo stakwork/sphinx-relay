@@ -22,7 +22,7 @@ async function init(){
 }
 
 function builtinBotEmit(msg:Msg){
-    SphinxBot._emit('message', <SphinxBot.Message>{
+    const m = <SphinxBot.Message>{
         channel:{
             id: msg.chat.uuid,
             send:function(){},
@@ -30,7 +30,18 @@ function builtinBotEmit(msg:Msg){
         reply:function(){},
         content: msg.message.content,
         type: msg.type,
-    })
+        member: {
+            id:'_',
+            nickname: msg.sender.alias,
+            roles:[]
+        }
+    }
+    if(msg.sender.role===constants.chat_role.owner) {
+        if(m.member) m.member.roles=[{
+            name:'Admin'
+        }]
+    }
+    SphinxBot._emit('message', m)
 }
 
 export {init,builtinBotEmit}

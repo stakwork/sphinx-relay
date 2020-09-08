@@ -2,7 +2,7 @@
 export interface Msg {
   type: number,
   message: {
-    content: string
+    content: string,
   },
   chat: {
     uuid: string
@@ -10,5 +10,6 @@ export interface Msg {
   sender: {
     pub_key: string,
     alias: string,
+    role: number
   }
 }
