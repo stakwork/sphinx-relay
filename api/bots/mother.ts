@@ -1,7 +1,15 @@
 // import * as SphinxBot from '../../../sphinx-bot' 
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
+import * as path from 'path'
+import { models } from '../models'
 const msg_types = Sphinx.MSG_TYPE
+
+const constants = require(path.join(__dirname, '../../config/constants.json'))
+
+const builtinBots = [
+  'welcome',
+]
 
 export function init() {
 
@@ -17,8 +25,18 @@ export function init() {
 
       case 'install':
         if (arr.length < 3) return
-        console.log("INSTALL", arr[2])
-        // installBot(arr[2], botInTribe)
+        const botName = arr[2]
+        if(builtinBots.includes(botName)) {
+          console.log("INSTALL", botName)
+          const chatBot = {
+            chatID: message.channel.id, 
+            botPrefix: '/'+botName, 
+            botType:constants.bot_types.builtin
+          }
+          await models.ChatBot.create(chatBot)
+        } else {
+          message.reply('No built-in bot by that name')
+        }
         return true
         
       default:

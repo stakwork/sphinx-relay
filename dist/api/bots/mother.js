@@ -12,7 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // import * as SphinxBot from '../../../sphinx-bot' 
 const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
+const path = require("path");
+const models_1 = require("../models");
 const msg_types = Sphinx.MSG_TYPE;
+const constants = require(path.join(__dirname, '../../config/constants.json'));
+const builtinBots = [
+    'welcome',
+];
 function init() {
     const client = new Sphinx.Client();
     client.login('_', actions_1.finalAction);
@@ -27,8 +33,19 @@ function init() {
             case 'install':
                 if (arr.length < 3)
                     return;
-                console.log("INSTALL", arr[2]);
-                // installBot(arr[2], botInTribe)
+                const botName = arr[2];
+                if (builtinBots.includes(botName)) {
+                    console.log("INSTALL", botName);
+                    const chatBot = {
+                        chatID: message.channel.id,
+                        botPrefix: '/' + botName,
+                        botType: constants.bot_types.builtin
+                    };
+                    yield models_1.models.ChatBot.create(chatBot);
+                }
+                else {
+                    message.reply('No built-in bot by that name');
+                }
                 return true;
             default:
                 const embed = new Sphinx.MessageEmbed()

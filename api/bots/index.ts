@@ -13,6 +13,7 @@ function builtinBotEmit(msg:Msg){
             id: msg.chat.uuid,
             send:function(){},
         },
+        reply:function(){},
         content: msg.message.content,
         type: msg.type,
     })
