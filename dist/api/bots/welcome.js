@@ -39,11 +39,12 @@ function init() {
                 if (!chat)
                     return;
                 const chatBot = yield models_1.models.ChatBot.findOne({ where: {
-                        chatID: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+                        chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
                     } });
                 if (!chatBot)
                     return;
-                yield chatBot.update({ meta: arr[2] });
+                const meta = arr.slice(2, arr.length);
+                yield chatBot.update({ meta });
                 const resEmbed = new Sphinx.MessageEmbed()
                     .setAuthor('WelcomeBot')
                     .setDescription('Your welcome message has been updated');

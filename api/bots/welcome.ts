@@ -30,10 +30,11 @@ export function init() {
         const chat = await models.Chat.findOne({where:{uuid:message.channel.id}})
         if(!chat) return
         const chatBot = await models.ChatBot.findOne({where:{
-          chatID: chat.id, botPrefix:'/welcome', botType:constants.bot_types.builtin
+          chatId: chat.id, botPrefix:'/welcome', botType:constants.bot_types.builtin
         }})
         if(!chatBot) return
-        await chatBot.update({meta:arr[2]})
+        const meta = arr.slice(2, arr.length);
+        await chatBot.update({meta})
         const resEmbed = new Sphinx.MessageEmbed()
           .setAuthor('WelcomeBot')
           .setDescription('Your welcome message has been updated')
