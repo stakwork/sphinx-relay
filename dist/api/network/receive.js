@@ -22,7 +22,7 @@ const modify_1 = require("./modify");
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
 const timers = require("../utils/timers");
-const intercept = require("./intercept");
+// import * as intercept from './intercept'
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -150,11 +150,11 @@ function doTheAction(data) {
             /* decrypt and re-encrypt with phone's pubkey for storage */
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             const pld = yield msg_1.decryptMessage(data, chat);
-            console.log("RECEIVE.JS isBotMsg");
-            const isBotMsg = yield intercept.isBotMsg(pld, false);
-            if (isBotMsg === true) {
-                // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
-            }
+            // console.log("RECEIVE.JS isBotMsg")
+            // const isBotMsg = await intercept.isBotMsg(pld, false)
+            // if(isBotMsg===true) {
+            // 	// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+            // }
             const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
             if (ogContent)
