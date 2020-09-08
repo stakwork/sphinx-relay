@@ -2,10 +2,6 @@ import {Msg} from './interfaces'
 import { models } from '../models'
 import {builtinBotEmit} from '../bots'
 
-const defaultPrefixes = [
-  '/bot' //, '/welcome'
-]
-
 /*
 default show or not
 restrictions (be able to toggle, or dont show chat)
@@ -22,13 +18,12 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
 
   let didEmit = false
 
-  defaultPrefixes.forEach(p=>{
-    if(txt.startsWith(`${p} `)) {
-      builtinBotEmit(msg)
-      didEmit = true
-    }
-  })
+  if(txt.startsWith('/bot ')) {
+    builtinBotEmit(msg)
+    didEmit = true
+  }
 
+  console.log("DID EMIT",didEmit)
   if(didEmit) return didEmit
 
   const botsInTribe = await models.ChatBot.findAll({where:{

@@ -11,9 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const bots_1 = require("../bots");
-const defaultPrefixes = [
-    '/bot' //, '/welcome'
-];
 /*
 default show or not
 restrictions (be able to toggle, or dont show chat)
@@ -29,12 +26,11 @@ function isBotMsg(msg, sentByMe) {
         if (!chat)
             return false;
         let didEmit = false;
-        defaultPrefixes.forEach(p => {
-            if (txt.startsWith(`${p} `)) {
-                bots_1.builtinBotEmit(msg);
-                didEmit = true;
-            }
-        });
+        if (txt.startsWith('/bot ')) {
+            bots_1.builtinBotEmit(msg);
+            didEmit = true;
+        }
+        console.log("DID EMIT", didEmit);
         if (didEmit)
             return didEmit;
         const botsInTribe = yield models_1.models.ChatBot.findAll({ where: {
