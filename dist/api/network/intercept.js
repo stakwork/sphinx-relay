@@ -39,9 +39,12 @@ function isBotMsg(msg, sentByMe) {
         const botsInTribe = yield models_1.models.ChatBot.findAll({ where: {
                 chatId: chat.id
             } });
+        console.log("BOTS IN TRIBE", botsInTribe);
+        console.log(botsInTribe.length);
         if (!(botsInTribe && botsInTribe.length))
             return false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
+            console.log(botInTribe.botPrefix);
             if (txt.startsWith(`${botInTribe.botPrefix} `)) {
                 bots_1.builtinBotEmit(msg);
                 didEmit = true;

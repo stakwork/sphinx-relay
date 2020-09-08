@@ -35,7 +35,11 @@ export function init() {
           }
           await models.ChatBot.create(chatBot)
         } else {
-          message.reply('No built-in bot by that name')
+          // message.reply('No built-in bot by that name')
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('MotherBot')
+            .setDescription('No bot with that name')
+          message.channel.send({ embed })
         }
         return true
         
