@@ -21,7 +21,6 @@ export function init() {
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
     const arr = message.content.split(' ')
-    console.log("BTC MSG ARR",arr)
     if (arr.length < 2) return
     if (arr[0]!=='/btc') return
     const cmd = arr[1]

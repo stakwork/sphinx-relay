@@ -27,7 +27,6 @@ function init() {
     client.login('_', actions_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         const arr = message.content.split(' ');
-        console.log("BTC MSG ARR", arr);
         if (arr.length < 2)
             return;
         if (arr[0] !== '/btc')

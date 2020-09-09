@@ -120,7 +120,7 @@ export async function finalAction(a:Action){
             chat: theChat,
             sender: { ...owner.dataValues, alias, id:botContactId },
             message: { content: textMap, id: message.id, uuid: message.uuid },
-            type: constants.message_types.message,
+            type: constants.message_types.bot_res,
             success: () => ({ success: true }),
             failure: (e) => {
                 throw e
