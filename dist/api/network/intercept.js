@@ -22,10 +22,11 @@ function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message.content;
         const msgType = msg.type;
-        console.log("isBotMsg MSG PAYLOAD", JSON.stringify(msg, null, 2));
+        console.log("isBotMsg MSG TYPE", msgType);
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
         }
+        console.log("SEND IT AWAYYYYY!");
         const chat = yield models_1.models.Chat.findOne({ where: {
                 uuid: msg.chat.uuid
             } });

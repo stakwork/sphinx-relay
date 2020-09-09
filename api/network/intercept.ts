@@ -14,10 +14,11 @@ restrictions (be able to toggle, or dont show chat)
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message.content
   const msgType = msg.type
-  console.log("isBotMsg MSG PAYLOAD", JSON.stringify(msg,null,2))
+  console.log("isBotMsg MSG TYPE", msgType)
   if(msgType===constants.message_types.bot_res) {
     return false // bot res msg type not for processing
   }
+  console.log("SEND IT AWAYYYYY!")
   const chat = await models.Chat.findOne({where:{
     uuid: msg.chat.uuid
   }})
