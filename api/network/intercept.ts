@@ -14,11 +14,9 @@ restrictions (be able to toggle, or dont show chat)
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message.content
   const msgType = msg.type
-  console.log("isBotMsg MSG TYPE", msgType)
   if(msgType===constants.message_types.bot_res) {
     return false // bot res msg type not for processing
   }
-  console.log("SEND IT AWAYYYYY!")
   const chat = await models.Chat.findOne({where:{
     uuid: msg.chat.uuid
   }})
@@ -41,15 +39,19 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   if(!(botsInTribe && botsInTribe.length)) return false
 
   await asyncForEach(botsInTribe, async botInTribe=>{
-    console.log('botInTribe.botPrefix',botInTribe.botPrefix)
-    if(botInTribe.msgTypes){
-      try {
-        const msgTypes = JSON.parse(botInTribe.msgTypes)
-        if(msgTypes.includes(msgType)){
-          builtinBotEmit(msg)
-          didEmit = true
-        }
-      } catch(e){}
+    if(txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
+      if(botInTribe.msgTypes){
+        try {
+          const msgTypes = JSON.parse(botInTribe.msgTypes)
+          if(msgTypes.includes(msgType)){
+            builtinBotEmit(msg)
+            didEmit = true
+          }
+        } catch(e){}
+      } else { // no message types defined, do all?
+        builtinBotEmit(msg)
+        didEmit = true
+      }
     }
   })
 

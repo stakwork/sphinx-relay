@@ -22,11 +22,9 @@ function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message.content;
         const msgType = msg.type;
-        console.log("isBotMsg MSG TYPE", msgType);
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
         }
-        console.log("SEND IT AWAYYYYY!");
         const chat = yield models_1.models.Chat.findOne({ where: {
                 uuid: msg.chat.uuid
             } });
@@ -46,16 +44,21 @@ function isBotMsg(msg, sentByMe) {
         if (!(botsInTribe && botsInTribe.length))
             return false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
-            console.log('botInTribe.botPrefix', botInTribe.botPrefix);
-            if (botInTribe.msgTypes) {
-                try {
-                    const msgTypes = JSON.parse(botInTribe.msgTypes);
-                    if (msgTypes.includes(msgType)) {
-                        bots_1.builtinBotEmit(msg);
-                        didEmit = true;
+            if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
+                if (botInTribe.msgTypes) {
+                    try {
+                        const msgTypes = JSON.parse(botInTribe.msgTypes);
+                        if (msgTypes.includes(msgType)) {
+                            bots_1.builtinBotEmit(msg);
+                            didEmit = true;
+                        }
                     }
+                    catch (e) { }
                 }
-                catch (e) { }
+                else { // no message types defined, do all?
+                    bots_1.builtinBotEmit(msg);
+                    didEmit = true;
+                }
             }
         }));
         return didEmit;
