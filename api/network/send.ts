@@ -6,7 +6,7 @@ import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import {tribeOwnerAutoConfirmation} from '../controllers/confirmations'
 import {typesToForward} from './receive'
-// import * as intercept from './intercept'
+import * as intercept from './intercept'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -50,10 +50,10 @@ export async function sendMessage(params) {
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
 			// console.log("SEND.TS isBotMsg")
-			// const isBotMsg = await intercept.isBotMsg(msg, true)
-			// if(isBotMsg===true) {
-			// 	// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
-			// }
+			const isBotMsg = await intercept.isBotMsg(msg, true)
+			if(isBotMsg===true) {
+				// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead
+			}
 			// post last_active to tribes server
 			tribes.putActivity(chat.uuid, chat.host)
 		} else {
