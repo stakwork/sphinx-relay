@@ -43,9 +43,13 @@ export function init() {
             ])
           }
           await models.ChatBot.create(chatBot)
-          if(botName==='wecome') {
+          if(botName==='welcome') {
             WelcomeBot.init()
           }
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('MotherBot')
+            .setDescription('WelcomeBot has been installed!')
+          message.channel.send({ embed })
         } else {
           // message.reply('No built-in bot by that name')
           const embed = new Sphinx.MessageEmbed()
