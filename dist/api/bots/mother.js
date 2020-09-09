@@ -14,12 +14,26 @@ const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
 const path = require("path");
 const WelcomeBot = require("./welcome");
+const BitcoinBot = require("./btc");
 const models_1 = require("../models");
 const msg_types = Sphinx.MSG_TYPE;
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const builtinBots = [
-    'welcome',
+    'welcome', 'btc'
 ];
+const builtInBotMsgTypes = {
+    'welcome': [
+        constants.message_types.message,
+        constants.message_types.group_join
+    ],
+    'btc': [
+        constants.message_types.message,
+    ]
+};
+const builtInBotNames = {
+    welcome: 'WelcomeBot',
+    btc: 'BitcoinBot'
+};
 function init() {
     const client = new Sphinx.Client();
     client.login('_', actions_1.finalAction);
@@ -46,18 +60,19 @@ function init() {
                         chatId: chat.id,
                         botPrefix: '/' + botName,
                         botType: constants.bot_types.builtin,
-                        msgTypes: JSON.stringify([
-                            constants.message_types.message,
-                            constants.message_types.group_join
-                        ])
+                        msgTypes: JSON.stringify(builtInBotMsgTypes[botName])
                     };
                     yield models_1.models.ChatBot.create(chatBot);
                     if (botName === 'welcome') {
                         WelcomeBot.init();
                     }
+                    if (botName === 'btc') {
+                        BitcoinBot.init();
+                    }
+                    const theName = builtInBotNames[botName] || 'Bot';
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('MotherBot')
-                        .setDescription('WelcomeBot has been installed!');
+                        .setDescription(theName + ' has been installed!');
                     message.channel.send({ embed });
                 }
                 else {

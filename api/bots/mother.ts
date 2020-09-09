@@ -3,14 +3,30 @@ import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
 import * as path from 'path'
 import * as WelcomeBot from './welcome'
+import * as BitcoinBot from './btc'
 import { models } from '../models'
 const msg_types = Sphinx.MSG_TYPE
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
 const builtinBots = [
-  'welcome',
+  'welcome', 'btc'
 ]
+
+const builtInBotMsgTypes = {
+  'welcome':[
+    constants.message_types.message,
+    constants.message_types.group_join
+  ],
+  'btc':[
+    constants.message_types.message,
+  ]
+}
+
+const builtInBotNames = {
+  welcome:'WelcomeBot',
+  btc:'BitcoinBot'
+}
 
 export function init() {
 
@@ -37,18 +53,19 @@ export function init() {
             chatId: chat.id, 
             botPrefix: '/'+botName, 
             botType:constants.bot_types.builtin,
-            msgTypes:JSON.stringify([
-              constants.message_types.message,
-              constants.message_types.group_join
-            ])
+            msgTypes:JSON.stringify(builtInBotMsgTypes[botName])
           }
           await models.ChatBot.create(chatBot)
           if(botName==='welcome') {
             WelcomeBot.init()
           }
+          if(botName==='btc') {
+            BitcoinBot.init()
+          }
+          const theName = builtInBotNames[botName] || 'Bot'
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('MotherBot')
-            .setDescription('WelcomeBot has been installed!')
+            .setDescription(theName+' has been installed!')
           message.channel.send({ embed })
         } else {
           // message.reply('No built-in bot by that name')

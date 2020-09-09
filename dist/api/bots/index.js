@@ -13,6 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
 const WelcomeBot = require("./welcome");
+const BitcoinBot = require("./btc");
 const path = require("path");
 const models_1 = require("../models");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -27,6 +28,8 @@ function init() {
         builtInBots.forEach(b => {
             if (b.botPrefix === '/welcome')
                 WelcomeBot.init();
+            if (b.botPrefix === '/btc')
+                BitcoinBot.init();
         });
     });
 }

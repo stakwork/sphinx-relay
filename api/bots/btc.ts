@@ -39,13 +39,13 @@ export function init() {
             const price = j.data.BTC.quote.USD.price.toFixed(2)
             const percentChange24 = j.data.BTC.quote.USD.percent_change_24h.toFixed(2)
             const embed = new Sphinx.MessageEmbed()
-                .setAuthor('BitcoinBot')
-                .setTitle('Bitcoin Price:')
-                .addFields([
+              .setAuthor('BitcoinBot')
+              .setTitle('Bitcoin Price:')
+              .addFields([
                 { name: 'Price:', value: price },
                 { name: '24 Hour Change', value: percentChange24+'%' }
-                ])
-                .setThumbnail(botSVG)
+              ])
+              .setThumbnail(botSVG)
             message.channel.send({ embed })
         } catch(e){
             console.log('BTC bot error',e)
