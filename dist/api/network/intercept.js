@@ -22,6 +22,7 @@ function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message.content;
         const msgType = msg.type;
+        console.log("isBotMsg MSG PAYLOAD", JSON.stringify(msg, null, 2));
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
         }

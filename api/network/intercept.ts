@@ -14,6 +14,7 @@ restrictions (be able to toggle, or dont show chat)
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message.content
   const msgType = msg.type
+  console.log("isBotMsg MSG PAYLOAD", JSON.stringify(msg,null,2))
   if(msgType===constants.message_types.bot_res) {
     return false // bot res msg type not for processing
   }
