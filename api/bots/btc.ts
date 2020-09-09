@@ -21,6 +21,7 @@ export function init() {
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
     const arr = message.content.split(' ')
+    console.log("BTC MSG ARR",arr)
     if (arr.length < 2) return
     if (arr[0]!=='/btc') return
     const cmd = arr[1]
@@ -28,7 +29,6 @@ export function init() {
     switch (cmd) {
 
       case 'price':
-        if (arr.length < 3) return
         console.log("price", arr[2])
         try {
             const r = await fetch(url+'?symbol=BTC&convert=USD',{

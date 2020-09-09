@@ -55,7 +55,7 @@ function isBotMsg(msg, sentByMe) {
                 }
                 catch (e) { }
             }
-            else if (txt.startsWith(`${botInTribe.botPrefix} `)) {
+            else if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
                 bots_1.builtinBotEmit(msg);
                 didEmit = true;
             }

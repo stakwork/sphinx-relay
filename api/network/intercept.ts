@@ -48,7 +48,7 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
           didEmit = true
         }
       } catch(e){}
-    } else if(txt.startsWith(`${botInTribe.botPrefix} `)){
+    } else if(txt && txt.startsWith(`${botInTribe.botPrefix} `)){
       builtinBotEmit(msg)
       didEmit = true
     }
