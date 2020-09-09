@@ -43,13 +43,15 @@ function init() {
                         return;
                     const j = yield r.json();
                     const price = j.data.BTC.quote.USD.price.toFixed(2);
-                    const percentChange24 = j.data.BTC.quote.USD.percent_change_24h.toFixed(2);
+                    const percentChange24 = j.data.BTC.quote.USD.percent_change_24h;
+                    const percentChange24String = percentChange24.toFixed(2) + '%';
+                    const changeColor = percentChange24 > 0 ? '#078864' : '#7a2d2f';
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('BitcoinBot')
                         .setTitle('Bitcoin Price:')
                         .addFields([
-                        { name: 'Price:', value: price },
-                        { name: '24 Hour Change', value: percentChange24 + '%' }
+                        { name: 'Price:', value: price, inline: true },
+                        { name: '24 Hour Change', value: percentChange24String, inline: true, color: changeColor }
                     ])
                         .setThumbnail(botSVG);
                     message.channel.send({ embed });
