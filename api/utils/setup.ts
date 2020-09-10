@@ -43,6 +43,7 @@ async function migrate(){
       bot_maker_pubkey TEXT,
       msg_types TEXT,
       meta TEXT,
+      price_per_use INT,
       created_at DATETIME,
       updated_at DATETIME
     )`)
@@ -54,6 +55,7 @@ async function migrate(){
   
   addTableColumn('sphinx_bots', 'webhook')
   addTableColumn('sphinx_bots', 'uuid')
+  addTableColumn('sphinx_bots', 'price_per_use', 'INT')
 
   try{
     await sequelize.query(`

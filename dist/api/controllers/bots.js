@@ -33,7 +33,8 @@ exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const newBot = {
         name, uuid, webhook,
         id: crypto.randomBytes(12).toString('hex').toUpperCase(),
-        secret: crypto.randomBytes(16).toString('hex').toUpperCase()
+        secret: crypto.randomBytes(16).toString('hex').toUpperCase(),
+        pricePerUse: 0
     };
     try {
         const theBot = yield models_1.models.Bot.create(newBot);

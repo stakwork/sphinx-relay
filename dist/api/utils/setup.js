@@ -55,6 +55,7 @@ function migrate() {
       bot_maker_pubkey TEXT,
       msg_types TEXT,
       meta TEXT,
+      price_per_use INT,
       created_at DATETIME,
       updated_at DATETIME
     )`);
@@ -66,6 +67,7 @@ function migrate() {
         catch (e) { }
         addTableColumn('sphinx_bots', 'webhook');
         addTableColumn('sphinx_bots', 'uuid');
+        addTableColumn('sphinx_bots', 'price_per_use', 'INT');
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_bot_members (

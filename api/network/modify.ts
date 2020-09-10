@@ -1,5 +1,5 @@
 import * as path from 'path'
-import * as fetch from 'node-fetch'
+import fetch from 'node-fetch'
 import {parseLDAT} from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'

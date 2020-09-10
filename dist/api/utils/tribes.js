@@ -14,7 +14,7 @@ const zbase32 = require("./zbase32");
 const LND = require("./lightning");
 const path = require("path");
 const mqtt = require("mqtt");
-const fetch = require("node-fetch");
+const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
@@ -92,7 +92,7 @@ exports.publish = publish;
 function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield fetch('https://' + host + '/tribes', {
+            yield node_fetch_1.default('https://' + host + '/tribes', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid, group_key,
@@ -121,7 +121,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
-            yield fetch('https://' + host + '/tribe?token=' + token, {
+            yield node_fetch_1.default('https://' + host + '/tribe?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid,
@@ -150,7 +150,7 @@ function putActivity(uuid, host) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
-            yield fetch(`https://${host}/tribeactivity/${uuid}?token=` + token, {
+            yield node_fetch_1.default(`https://${host}/tribeactivity/${uuid}?token=` + token, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -166,7 +166,7 @@ function putstats({ uuid, host, member_count }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
-            yield fetch('https://' + host + '/tribestats?token=' + token, {
+            yield node_fetch_1.default('https://' + host + '/tribestats?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({ uuid, member_count }),
                 headers: { 'Content-Type': 'application/json' }

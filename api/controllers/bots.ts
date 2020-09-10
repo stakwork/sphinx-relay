@@ -9,12 +9,12 @@ const constants = require(path.join(__dirname, '../../config/constants.json'))
 
 export const getBots = async (req, res) => {
   try {
-      const bots = await models.Bot.findAll()
-      success(res, {
-          bots: bots.map(b=> jsonUtils.botToJson(b))
-      })
-  } catch(e) {
-      failure(res,'no bots')
+    const bots = await models.Bot.findAll()
+    success(res, {
+      bots: bots.map(b => jsonUtils.botToJson(b))
+    })
+  } catch (e) {
+    failure(res, 'no bots')
   }
 }
 
@@ -23,16 +23,17 @@ export const createBot = async (req, res) => {
 
   const uuid = await tribes.genSignedTimestamp()
   const newBot = {
-      name, uuid, webhook,
-      id: crypto.randomBytes(12).toString('hex').toUpperCase(),
-      secret: crypto.randomBytes(16).toString('hex').toUpperCase()
+    name, uuid, webhook,
+    id: crypto.randomBytes(12).toString('hex').toUpperCase(),
+    secret: crypto.randomBytes(16).toString('hex').toUpperCase(),
+    pricePerUse: 0
   }
   try {
-      const theBot = await models.Bot.create(newBot)
-      // post to bots.sphinx.chat
-      success(res, jsonUtils.botToJson(theBot))
+    const theBot = await models.Bot.create(newBot)
+    // post to bots.sphinx.chat
+    success(res, jsonUtils.botToJson(theBot))
   } catch (e) {
-      failure(res, 'bot creation failed')
+    failure(res, 'bot creation failed')
   }
 }
 
@@ -40,11 +41,11 @@ export const deleteBot = async (req, res) => {
   const id = req.params.id
   if (!id) return
   try {
-      models.Bot.destroy({ where: { id } })
-      success(res, true)
+    models.Bot.destroy({ where: { id } })
+    success(res, true)
   } catch (e) {
-      console.log('ERROR deleteBot', e)
-      failure(res, e)
+    console.log('ERROR deleteBot', e)
+    failure(res, e)
   }
 }
 
@@ -56,7 +57,7 @@ export const deleteBot = async (req, res) => {
 //   })
 // }
 
-export function installBot(botname,botInTribe) {
+export function installBot(botname, botInTribe) {
   console.log("INSTALL BOT NOW")
   // search registry for bot (by name)
 
@@ -72,7 +73,7 @@ export async function receiveBotInstall(payload) {
   // const dat = payload.content || payload
   // const sender_pub_key = dat.sender.pub_key
   // const tribe_uuid = dat.chat.uuid
-  
+
   // verify tribe ownership (verify signed timestamp)
 
   // create BotMember for publishing to mqtt

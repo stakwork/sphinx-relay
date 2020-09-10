@@ -1,5 +1,5 @@
 import {models} from './models'
-import * as fetch from 'node-fetch'
+import fetch from 'node-fetch'
 import { Op } from 'sequelize'
 import * as socket from './utils/socket'
 import * as jsonUtils from './utils/json'

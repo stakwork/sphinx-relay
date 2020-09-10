@@ -4,7 +4,7 @@ import * as zbase32 from './zbase32'
 import * as LND from './lightning'
 import * as path from 'path'
 import * as mqtt from 'mqtt'
-import * as fetch from 'node-fetch'
+import fetch from 'node-fetch'
 import { models } from '../models'
 
 const env = process.env.NODE_ENV || 'development'

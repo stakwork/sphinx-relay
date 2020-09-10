@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("./models");
-const fetch = require("node-fetch");
+const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const socket = require("./utils/socket");
 const jsonUtils = require("./utils/json");
@@ -31,7 +31,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
     if (inviteStrings.length === 0) {
         return; // skip if no invites
     }
-    fetch(config.hub_api_url + '/invites/check', {
+    node_fetch_1.default(config.hub_api_url + '/invites/check', {
         method: 'POST',
         body: JSON.stringify({ invite_strings: inviteStrings }),
         headers: { 'Content-Type': 'application/json' }
@@ -88,7 +88,7 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
 });
 const sendHubCall = (params) => {
     // console.log('[hub] sending ping')
-    fetch(config.hub_api_url + '/ping', {
+    node_fetch_1.default(config.hub_api_url + '/ping', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }
@@ -108,7 +108,7 @@ const checkInvitesHubInterval = (ms) => {
 exports.checkInvitesHubInterval = checkInvitesHubInterval;
 function sendInvoice(payReq, amount) {
     console.log('[hub] sending invoice');
-    fetch(config.hub_api_url + '/invoices', {
+    node_fetch_1.default(config.hub_api_url + '/invoices', {
         method: 'POST',
         body: JSON.stringify({ invoice: payReq, amount }),
         headers: { 'Content-Type': 'application/json' }
@@ -119,7 +119,7 @@ function sendInvoice(payReq, amount) {
 }
 exports.sendInvoice = sendInvoice;
 const finishInviteInHub = (params, onSuccess, onFailure) => {
-    fetch(config.hub_api_url + '/invites/finish', {
+    node_fetch_1.default(config.hub_api_url + '/invites/finish', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }
@@ -136,7 +136,7 @@ const finishInviteInHub = (params, onSuccess, onFailure) => {
 };
 exports.finishInviteInHub = finishInviteInHub;
 const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
-    fetch(config.hub_api_url + '/invites/' + invite_string + '/pay', {
+    node_fetch_1.default(config.hub_api_url + '/invites/' + invite_string + '/pay', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }
@@ -169,7 +169,7 @@ function payInviteInvoice(invoice, onSuccess, onFailure) {
 }
 exports.payInviteInvoice = payInviteInvoice;
 const createInviteInHub = (params, onSuccess, onFailure) => {
-    fetch(config.hub_api_url + '/invites_new', {
+    node_fetch_1.default(config.hub_api_url + '/invites_new', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }
@@ -246,7 +246,7 @@ function finalNotification(ownerID, params) {
     });
 }
 function triggerNotification(params) {
-    fetch("https://hub.sphinx.chat/api/v1/nodes/notify", {
+    node_fetch_1.default("https://hub.sphinx.chat/api/v1/nodes/notify", {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' }

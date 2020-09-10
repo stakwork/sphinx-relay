@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
-const fetch = require("node-fetch");
+const node_fetch_1 = require("node-fetch");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 /*
@@ -36,7 +36,7 @@ function init() {
             case 'price':
                 console.log("price", arr[2]);
                 try {
-                    const r = yield fetch(url + '?symbol=BTC&convert=USD', {
+                    const r = yield node_fetch_1.default(url + '?symbol=BTC&convert=USD', {
                         headers: { 'X-CMC_PRO_API_KEY': token, 'Accept': 'application/json' }
                     });
                     if (!r.ok)

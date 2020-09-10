@@ -54,6 +54,10 @@ __decorate([
 ], ChatBot.prototype, "meta", void 0);
 __decorate([
     sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], ChatBot.prototype, "pricePerUse", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], ChatBot.prototype, "createdAt", void 0);
 __decorate([

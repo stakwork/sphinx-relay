@@ -39,6 +39,9 @@ export default class ChatBot extends Model<ChatBot> {
   meta: string // for saved preferences for local bots
 
   @Column
+  pricePerUse: number
+
+  @Column
   createdAt: Date
 
   @Column

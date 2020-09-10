@@ -53,7 +53,8 @@ export function init() {
             chatId: chat.id, 
             botPrefix: '/'+botName, 
             botType:constants.bot_types.builtin,
-            msgTypes:JSON.stringify(builtInBotMsgTypes[botName])
+            msgTypes:JSON.stringify(builtInBotMsgTypes[botName]),
+            pricePerUse:0,
           }
           await models.ChatBot.create(chatBot)
           if(botName==='welcome') {

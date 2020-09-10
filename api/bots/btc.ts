@@ -1,6 +1,6 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
-import * as fetch from 'node-fetch'
+import fetch from 'node-fetch'
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false

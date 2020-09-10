@@ -41,6 +41,10 @@ __decorate([
 ], Bot.prototype, "webhook", void 0);
 __decorate([
     sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Bot.prototype, "pricePerUse", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], Bot.prototype, "createdAt", void 0);
 __decorate([

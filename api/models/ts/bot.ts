@@ -27,6 +27,9 @@ export default class Bot extends Model<Bot> {
   webhook: string
 
   @Column
+  pricePerUse: number
+
+  @Column
   createdAt: Date
 
   @Column
