@@ -14,7 +14,7 @@ const constants = require(path.join(__dirname, '../../config/constants.json'))
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
 const builtinBots = [
-  'welcome', 'btc', 'loopout'
+  'welcome', 'loopout'
 ]
 
 const builtInBotMsgTypes = {
@@ -26,7 +26,7 @@ const builtInBotMsgTypes = {
 
 const builtInBotNames = {
   welcome:'WelcomeBot',
-  btc:'BitcoinBot',
+  // btc:'BitcoinBot',
   loopout:'LoopBot',
 }
 
@@ -111,6 +111,7 @@ export function init() {
             .setDescription('No bots found')
           return message.channel.send({ embed })
         }
+        console.log("==? SEARHED BOTS", bots)
         const embed3 = new Sphinx.MessageEmbed()
           .setAuthor('MotherBot')
           .setTitle('Bots:')
