@@ -3,6 +3,7 @@ export interface Msg {
   type: number,
   message: {
     content: string,
+    amount: number,
   },
   chat: {
     uuid: string

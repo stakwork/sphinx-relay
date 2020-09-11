@@ -15,24 +15,23 @@ const actions_1 = require("../controllers/actions");
 const path = require("path");
 const WelcomeBot = require("./welcome");
 const BitcoinBot = require("./btc");
+const LoopBot = require("./loop");
 const models_1 = require("../models");
 const msg_types = Sphinx.MSG_TYPE;
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 const builtinBots = [
-    'welcome', 'btc'
+    'welcome', 'btc', 'loopout'
 ];
 const builtInBotMsgTypes = {
     'welcome': [
         constants.message_types.message,
         constants.message_types.group_join
     ],
-    'btc': [
-        constants.message_types.message,
-    ]
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
-    btc: 'BitcoinBot'
+    btc: 'BitcoinBot',
+    loopout: 'LoopBot',
 };
 function init() {
     const client = new Sphinx.Client();
@@ -56,11 +55,14 @@ function init() {
                         } });
                     if (!chat)
                         return;
+                    const msgTypes = builtInBotMsgTypes[botName] || [
+                        constants.message_types.message
+                    ];
                     const chatBot = {
                         chatId: chat.id,
                         botPrefix: '/' + botName,
                         botType: constants.bot_types.builtin,
-                        msgTypes: JSON.stringify(builtInBotMsgTypes[botName]),
+                        msgTypes: JSON.stringify(msgTypes),
                         pricePerUse: 0,
                     };
                     yield models_1.models.ChatBot.create(chatBot);
@@ -69,6 +71,9 @@ function init() {
                     }
                     if (botName === 'btc') {
                         BitcoinBot.init();
+                    }
+                    if (botName === 'loopout') {
+                        LoopBot.init();
                     }
                     const theName = builtInBotNames[botName] || 'Bot';
                     const embed = new Sphinx.MessageEmbed()

@@ -14,6 +14,7 @@ const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
 const WelcomeBot = require("./welcome");
 const BitcoinBot = require("./btc");
+const LoopBot = require("./loop");
 const path = require("path");
 const models_1 = require("../models");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -30,6 +31,8 @@ function init() {
                 WelcomeBot.init();
             if (b.botPrefix === '/btc')
                 BitcoinBot.init();
+            if (b.botPrefix === '/loopout')
+                LoopBot.init();
         });
     });
 }
@@ -42,9 +45,10 @@ function builtinBotEmit(msg) {
         },
         reply: function () { },
         content: msg.message.content,
+        amount: msg.message.amount,
         type: msg.type,
         member: {
-            id: '_',
+            id: msg.sender.pub_key,
             nickname: msg.sender.alias,
             roles: []
         }
