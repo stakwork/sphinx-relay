@@ -119,13 +119,6 @@ function init() {
                         .setDescription('No bots found');
                     return message.channel.send({ embed });
                 }
-                console.log("==? SEARHED BOTS", bots, bots.map(b => {
-                    const maxLength = 35;
-                    const value = b.description.length > maxLength ?
-                        b.description.substr(0, maxLength) + '...' :
-                        b.description;
-                    return { name: b.unique_name, value };
-                }));
                 const embed3 = new Sphinx.MessageEmbed()
                     .setAuthor('MotherBot')
                     .setTitle('Bots:')
@@ -173,7 +166,7 @@ function getBotByName(name) {
         try {
             const r = yield node_fetch_1.default(`https://${config.tribes_host}/bot/${name}`);
             const j = yield r.json();
-            if (j && j.uuid && j.owner_pub_key) {
+            if (j && j.uuid && j.owner_pubkey) {
                 return j;
             }
             return null;

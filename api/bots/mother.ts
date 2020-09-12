@@ -111,13 +111,6 @@ export function init() {
             .setDescription('No bots found')
           return message.channel.send({ embed })
         }
-        console.log("==? SEARHED BOTS", bots, bots.map(b=> {
-          const maxLength = 35
-          const value = b.description.length>maxLength ? 
-            b.description.substr(0,maxLength)+'...' :
-            b.description
-          return {name:b.unique_name, value}
-        }))
         const embed3 = new Sphinx.MessageEmbed()
           .setAuthor('MotherBot')
           .setTitle('Bots:')
@@ -163,7 +156,7 @@ async function getBotByName(name:string) {
   try {
     const r = await fetch(`https://${config.tribes_host}/bot/${name}`)
     const j = await r.json()
-    if(j&&j.uuid&&j.owner_pub_key) {
+    if(j&&j.uuid&&j.owner_pubkey) {
       return j
     }
     return null
