@@ -111,7 +111,13 @@ export function init() {
             .setDescription('No bots found')
           return message.channel.send({ embed })
         }
-        console.log("==? SEARHED BOTS", bots)
+        console.log("==? SEARHED BOTS", bots, bots.map(b=> {
+          const maxLength = 35
+          const value = b.description.length>maxLength ? 
+            b.description.substr(0,maxLength)+'...' :
+            b.description
+          return {name:b.unique_name, value}
+        }))
         const embed3 = new Sphinx.MessageEmbed()
           .setAuthor('MotherBot')
           .setTitle('Bots:')
@@ -120,7 +126,7 @@ export function init() {
             const value = b.description.length>maxLength ? 
               b.description.substr(0,maxLength)+'...' :
               b.description
-            return {name:b.unique_name, value}
+            return ({name:b.unique_name, value})
           }))
           .setThumbnail(botSVG)
         message.channel.send({ embed:embed3 })
