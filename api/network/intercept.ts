@@ -2,6 +2,7 @@ import {Msg} from './interfaces'
 import { models } from '../models'
 import {builtinBotEmit} from '../bots'
 import * as path from 'path'
+import fetch from 'node-fetch'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -44,18 +45,42 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
         try {
           const msgTypes = JSON.parse(botInTribe.msgTypes)
           if(msgTypes.includes(msgType)){
-            builtinBotEmit(msg)
-            didEmit = true
+            didEmit = await emitMessageToBot(msg, botInTribe)
           }
         } catch(e){}
       } else { // no message types defined, do all?
-        builtinBotEmit(msg)
-        didEmit = true
+        didEmit = await emitMessageToBot(msg, botInTribe)
       }
     }
   })
 
   return didEmit
+}
+
+async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
+  console.log("EMIT MSG TO BOT",msg,botInTribe)
+  switch (botInTribe.type) {
+    case constants.bot_types.builtin:
+      builtinBotEmit(msg)
+      return true
+    case constants.bot_types.local:
+      return postToBotServer(msg, botInTribe)
+    default:
+      return false
+  }
+  
+}
+
+async function postToBotServer(msg, botInTribe): Promise<boolean> {
+  if(!botInTribe.webhook || !botInTribe.secret) return false
+  const r = await fetch(botInTribe.webhook, {
+    method:'POST',
+    body:JSON.stringify(msg),
+    headers:{
+      'x-secret': botInTribe.secret
+    }
+  })
+  return r.ok
 }
 
 async function asyncForEach(array, callback) {

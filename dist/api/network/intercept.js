@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const bots_1 = require("../bots");
 const path = require("path");
+const node_fetch_1 = require("node-fetch");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 /*
 default show or not
@@ -49,15 +50,13 @@ function isBotMsg(msg, sentByMe) {
                     try {
                         const msgTypes = JSON.parse(botInTribe.msgTypes);
                         if (msgTypes.includes(msgType)) {
-                            bots_1.builtinBotEmit(msg);
-                            didEmit = true;
+                            didEmit = yield emitMessageToBot(msg, botInTribe);
                         }
                     }
                     catch (e) { }
                 }
                 else { // no message types defined, do all?
-                    bots_1.builtinBotEmit(msg);
-                    didEmit = true;
+                    didEmit = yield emitMessageToBot(msg, botInTribe);
                 }
             }
         }));
@@ -65,6 +64,34 @@ function isBotMsg(msg, sentByMe) {
     });
 }
 exports.isBotMsg = isBotMsg;
+function emitMessageToBot(msg, botInTribe) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log("EMIT MSG TO BOT", msg, botInTribe);
+        switch (botInTribe.type) {
+            case constants.bot_types.builtin:
+                bots_1.builtinBotEmit(msg);
+                return true;
+            case constants.bot_types.local:
+                return postToBotServer(msg, botInTribe);
+            default:
+                return false;
+        }
+    });
+}
+function postToBotServer(msg, botInTribe) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!botInTribe.webhook || !botInTribe.secret)
+            return false;
+        const r = yield node_fetch_1.default(botInTribe.webhook, {
+            method: 'POST',
+            body: JSON.stringify(msg),
+            headers: {
+                'x-secret': botInTribe.secret
+            }
+        });
+        return r.ok;
+    });
+}
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

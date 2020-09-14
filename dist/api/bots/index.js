@@ -13,7 +13,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
 const WelcomeBot = require("./welcome");
-const BitcoinBot = require("./btc");
 const LoopBot = require("./loop");
 const path = require("path");
 const models_1 = require("../models");
@@ -29,8 +28,6 @@ function init() {
         builtInBots.forEach(b => {
             if (b.botPrefix === '/welcome')
                 WelcomeBot.init();
-            if (b.botPrefix === '/btc')
-                BitcoinBot.init();
             if (b.botPrefix === '/loopout')
                 LoopBot.init();
         });

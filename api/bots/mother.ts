@@ -3,7 +3,6 @@ import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
 import * as path from 'path'
 import * as WelcomeBot from './welcome'
-import * as BitcoinBot from './btc'
 import * as LoopBot from './loop'
 import { models } from '../models'
 import fetch from 'node-fetch'
@@ -74,9 +73,6 @@ export function init() {
           await models.ChatBot.create(chatBot)
           if(botName==='welcome') {
             WelcomeBot.init()
-          }
-          if(botName==='btc') {
-            BitcoinBot.init()
           }
           if(botName==='loopout') {
             LoopBot.init()

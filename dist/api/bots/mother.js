@@ -14,7 +14,6 @@ const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
 const path = require("path");
 const WelcomeBot = require("./welcome");
-const BitcoinBot = require("./btc");
 const LoopBot = require("./loop");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
@@ -80,9 +79,6 @@ function init() {
                     yield models_1.models.ChatBot.create(chatBot);
                     if (botName === 'welcome') {
                         WelcomeBot.init();
-                    }
-                    if (botName === 'btc') {
-                        BitcoinBot.init();
                     }
                     if (botName === 'loopout') {
                         LoopBot.init();

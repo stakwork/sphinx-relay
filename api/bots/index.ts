@@ -2,7 +2,6 @@
 import * as SphinxBot from 'sphinx-bot'
 import * as MotherBot from './mother'
 import * as WelcomeBot from './welcome'
-import * as BitcoinBot from './btc'
 import * as LoopBot from './loop'
 import {Msg} from '../network/interfaces'
 import * as path from 'path'
@@ -20,7 +19,6 @@ async function init(){
 
     builtInBots.forEach(b=>{
         if(b.botPrefix==='/welcome') WelcomeBot.init()
-        if(b.botPrefix==='/btc') BitcoinBot.init()
         if(b.botPrefix==='/loopout') LoopBot.init()
     })
 }
