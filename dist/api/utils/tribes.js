@@ -34,9 +34,13 @@ function connect(onMessage) {
                         reconnectPeriod: 0,
                     });
                     client.on('connect', function () {
-                        console.log("[tribes] connected!");
-                        client.subscribe(`${info.identity_pubkey}/#`);
-                        updateTribeStats(info.identity_pubkey);
+                        return __awaiter(this, void 0, void 0, function* () {
+                            console.log("[tribes] connected!");
+                            client.subscribe(`${info.identity_pubkey}/#`);
+                            updateTribeStats(info.identity_pubkey);
+                            const rndToken = yield genSignedTimestamp();
+                            console.log('=> random sig', rndToken);
+                        });
                     });
                     client.on('close', function (e) {
                         setTimeout(() => reconnect(), 2000);

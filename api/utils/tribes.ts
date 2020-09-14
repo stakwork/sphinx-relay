@@ -25,10 +25,12 @@ export async function connect(onMessage) {
         password: pwd,
         reconnectPeriod: 0, // dont auto reconnect
       })
-      client.on('connect', function () {
+      client.on('connect', async function () {
         console.log("[tribes] connected!")
         client.subscribe(`${info.identity_pubkey}/#`)
         updateTribeStats(info.identity_pubkey)
+        const rndToken = await genSignedTimestamp()
+        console.log('=> random sig', rndToken)
       })
       client.on('close', function (e) {
         setTimeout(() => reconnect(), 2000)

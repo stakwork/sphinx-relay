@@ -15,7 +15,7 @@ const node_fetch_1 = require("node-fetch");
 const bitcoin_address_validation_1 = require("bitcoin-address-validation");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
-const url = 'http://localhost:8081';
+const baseurl = 'https://localhost:8080';
 function init() {
     if (initted)
         return;
@@ -46,24 +46,30 @@ function init() {
                 return;
             }
             try {
-                const r = yield node_fetch_1.default(url + '/v1/loop/out', {
+                const j = yield doRequest(baseurl + '/v1/loop/out/quote/' + amt);
+                console.log("=> LOOP QUOTE RES", j);
+                if (!(j && (j.swap_fee || j.swap_fee_sat))) {
+                    return;
+                }
+                const j2 = yield doRequest(baseurl + '/v1/loop/out', {
                     method: 'POST',
                     body: JSON.stringify({
                         amt: amt,
                         dest: addy,
                     }),
-                    headers: { 'Content-Type': 'application/json' },
                 });
-                if (!r.ok)
+                console.log("=> LOOP RESPONSE", j2);
+                if (!(j2 && j2.server_message)) {
                     return;
-                // const j = await r.json()
+                }
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('LoopBot')
-                    .setTitle('Loop Initialized!');
+                    .setTitle('Loop Initialized!')
+                    .setDescription(j2.server_message);
                 message.channel.send({ embed });
             }
             catch (e) {
-                console.log('Loop bot error', e);
+                console.log('LoopBot error', e);
             }
         }
         const cmd = arr[1];
@@ -96,5 +102,30 @@ function validateAmount(amtString) {
     const amt = parseInt(amtString);
     const ok = amt > 0;
     return ok;
+}
+const fs = require('fs');
+const https = require("https");
+const homedir = require('os').homedir();
+const agent = new https.Agent({
+    rejectUnauthorized: false
+});
+var filepath = homedir + '/.lnd/data/chain/bitcoin/mainnet/admin.macaroon';
+function doRequest(theurl, params) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ps = params || {};
+        try {
+            var macaroonString = fs.readFileSync(filepath);
+            var mac = Buffer.from(macaroonString, 'utf8').toString('hex');
+            const theParams = Object.assign({ agent, headers: {
+                    'Grpc-Metadata-macaroon': mac
+                } }, ps);
+            const r = yield node_fetch_1.default(theurl, theParams);
+            const j = yield r.json();
+            return j;
+        }
+        catch (e) {
+            throw e;
+        }
+    });
 }
 //# sourceMappingURL=loop.js.map
