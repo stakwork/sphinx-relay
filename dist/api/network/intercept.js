@@ -88,7 +88,7 @@ function postToBotServer(msg, botInTribe) {
         console.log("THE BOT", bot.dataValues);
         const r = yield node_fetch_1.default(bot.webhook, {
             method: 'POST',
-            body: JSON.stringify(msg),
+            body: JSON.stringify(bots_1.buildBotPayload(msg)),
             headers: {
                 'x-secret': bot.secret
             }

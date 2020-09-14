@@ -34,7 +34,7 @@ function init() {
     });
 }
 exports.init = init;
-function builtinBotEmit(msg) {
+function buildBotPayload(msg) {
     const m = {
         channel: {
             id: msg.chat.uuid,
@@ -56,7 +56,11 @@ function builtinBotEmit(msg) {
                     name: 'Admin'
                 }];
     }
-    SphinxBot._emit('message', m);
+    return m;
+}
+exports.buildBotPayload = buildBotPayload;
+function builtinBotEmit(msg) {
+    SphinxBot._emit('message', buildBotPayload(msg));
 }
 exports.builtinBotEmit = builtinBotEmit;
 //# sourceMappingURL=index.js.map

@@ -1,6 +1,6 @@
 import {Msg} from './interfaces'
 import { models } from '../models'
-import {builtinBotEmit} from '../bots'
+import {builtinBotEmit,buildBotPayload} from '../bots'
 import * as path from 'path'
 import fetch from 'node-fetch'
 
@@ -79,7 +79,9 @@ async function postToBotServer(msg, botInTribe): Promise<boolean> {
   console.log("THE BOT",bot.dataValues)
   const r = await fetch(bot.webhook, {
     method:'POST',
-    body:JSON.stringify(msg),
+    body:JSON.stringify(
+      buildBotPayload(msg)
+    ),
     headers:{
       'x-secret': bot.secret
     }

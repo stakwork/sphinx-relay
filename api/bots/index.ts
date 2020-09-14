@@ -23,7 +23,7 @@ async function init(){
     })
 }
 
-function builtinBotEmit(msg:Msg){
+function buildBotPayload(msg:Msg): SphinxBot.Message {
     const m = <SphinxBot.Message>{
         channel:{
             id: msg.chat.uuid,
@@ -44,7 +44,11 @@ function builtinBotEmit(msg:Msg){
             name:'Admin'
         }]
     }
-    SphinxBot._emit('message', m)
+    return m
 }
 
-export {init,builtinBotEmit}
+function builtinBotEmit(msg:Msg){
+    SphinxBot._emit('message', buildBotPayload(msg))
+}
+
+export {init,builtinBotEmit,buildBotPayload}
