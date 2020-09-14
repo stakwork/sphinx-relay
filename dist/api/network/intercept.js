@@ -50,13 +50,13 @@ function isBotMsg(msg, sentByMe) {
                     try {
                         const msgTypes = JSON.parse(botInTribe.msgTypes);
                         if (msgTypes.includes(msgType)) {
-                            didEmit = yield emitMessageToBot(msg, botInTribe);
+                            didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
                         }
                     }
                     catch (e) { }
                 }
                 else { // no message types defined, do all?
-                    didEmit = yield emitMessageToBot(msg, botInTribe);
+                    didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
                 }
             }
         }));
@@ -67,7 +67,7 @@ exports.isBotMsg = isBotMsg;
 function emitMessageToBot(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("EMIT MSG TO BOT", msg, botInTribe);
-        switch (botInTribe.type) {
+        switch (botInTribe.botType) {
             case constants.bot_types.builtin:
                 bots_1.builtinBotEmit(msg);
                 return true;

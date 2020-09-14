@@ -45,11 +45,11 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
         try {
           const msgTypes = JSON.parse(botInTribe.msgTypes)
           if(msgTypes.includes(msgType)){
-            didEmit = await emitMessageToBot(msg, botInTribe)
+            didEmit = await emitMessageToBot(msg, botInTribe.dataValues)
           }
         } catch(e){}
       } else { // no message types defined, do all?
-        didEmit = await emitMessageToBot(msg, botInTribe)
+        didEmit = await emitMessageToBot(msg, botInTribe.dataValues)
       }
     }
   })
@@ -59,7 +59,7 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
 
 async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
   console.log("EMIT MSG TO BOT",msg,botInTribe)
-  switch (botInTribe.type) {
+  switch (botInTribe.botType) {
     case constants.bot_types.builtin:
       builtinBotEmit(msg)
       return true
