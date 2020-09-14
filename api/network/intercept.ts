@@ -72,12 +72,16 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
 }
 
 async function postToBotServer(msg, botInTribe): Promise<boolean> {
-  if(!botInTribe.webhook || !botInTribe.secret) return false
-  const r = await fetch(botInTribe.webhook, {
+  const bot = await models.Bot.findOne({where:{
+    uuid: botInTribe.botUuid
+  }})
+  if(!bot.webhook || !bot.secret) return false
+  console.log("THE BOT",bot.dataValues)
+  const r = await fetch(bot.webhook, {
     method:'POST',
     body:JSON.stringify(msg),
     headers:{
-      'x-secret': botInTribe.secret
+      'x-secret': bot.secret
     }
   })
   return r.ok

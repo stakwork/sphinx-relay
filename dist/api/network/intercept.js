@@ -80,13 +80,17 @@ function emitMessageToBot(msg, botInTribe) {
 }
 function postToBotServer(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!botInTribe.webhook || !botInTribe.secret)
+        const bot = yield models_1.models.Bot.findOne({ where: {
+                uuid: botInTribe.botUuid
+            } });
+        if (!bot.webhook || !bot.secret)
             return false;
-        const r = yield node_fetch_1.default(botInTribe.webhook, {
+        console.log("THE BOT", bot.dataValues);
+        const r = yield node_fetch_1.default(bot.webhook, {
             method: 'POST',
             body: JSON.stringify(msg),
             headers: {
-                'x-secret': botInTribe.secret
+                'x-secret': bot.secret
             }
         });
         return r.ok;
