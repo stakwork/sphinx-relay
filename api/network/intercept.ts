@@ -25,7 +25,6 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
 
   let didEmit = false
 
-  console.log("RECEIVED MSG",txt)
   if(txt.startsWith('/bot ')) {
     builtinBotEmit(msg)
     didEmit = true
