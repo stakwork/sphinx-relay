@@ -85,12 +85,13 @@ function postToBotServer(msg, botInTribe) {
             } });
         if (!bot.webhook || !bot.secret)
             return false;
-        console.log("THE BOT", bot.dataValues);
+        console.log("THE BOT", bot.dataValues, JSON.stringify(bots_1.buildBotPayload(msg)));
         const r = yield node_fetch_1.default(bot.webhook, {
             method: 'POST',
             body: JSON.stringify(bots_1.buildBotPayload(msg)),
             headers: {
-                'x-secret': bot.secret
+                'x-secret': bot.secret,
+                'Content-Type': 'application/json'
             }
         });
         return r.ok;

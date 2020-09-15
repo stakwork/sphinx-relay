@@ -76,14 +76,17 @@ async function postToBotServer(msg, botInTribe): Promise<boolean> {
     uuid: botInTribe.botUuid
   }})
   if(!bot.webhook || !bot.secret) return false
-  console.log("THE BOT",bot.dataValues)
+  console.log("THE BOT",bot.dataValues,JSON.stringify(
+    buildBotPayload(msg)
+  ))
   const r = await fetch(bot.webhook, {
     method:'POST',
     body:JSON.stringify(
       buildBotPayload(msg)
     ),
     headers:{
-      'x-secret': bot.secret
+      'x-secret': bot.secret,
+      'Content-Type': 'application/json'
     }
   })
   return r.ok
