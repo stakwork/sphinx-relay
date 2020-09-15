@@ -66,7 +66,6 @@ function isBotMsg(msg, sentByMe) {
 exports.isBotMsg = isBotMsg;
 function emitMessageToBot(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("EMIT MSG TO BOT", msg, botInTribe);
         switch (botInTribe.botType) {
             case constants.bot_types.builtin:
                 bots_1.builtinBotEmit(msg);
@@ -85,7 +84,6 @@ function postToBotServer(msg, botInTribe) {
             } });
         if (!bot.webhook || !bot.secret)
             return false;
-        console.log("THE BOT", bot.dataValues, JSON.stringify(bots_1.buildBotPayload(msg)));
         const r = yield node_fetch_1.default(bot.webhook, {
             method: 'POST',
             body: JSON.stringify(bots_1.buildBotPayload(msg)),

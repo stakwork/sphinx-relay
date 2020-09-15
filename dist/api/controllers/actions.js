@@ -36,11 +36,12 @@ function processAction(req, res) {
                 return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, text } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chatUUID } = body;
+        if (!bot_id)
+            return res_1.failure(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
         if (!bot)
             return res_1.failure(res, 'no bot');
-        const chat = yield models_1.models.Chat.findOne({ where: { id: bot.chatId } });
         if (!(bot.secret && bot.secret === bot_secret)) {
             return res_1.failure(res, 'wrong secret');
         }
@@ -48,8 +49,8 @@ function processAction(req, res) {
             return res_1.failure(res, 'no action');
         }
         const a = {
-            action, pubkey, content: text, amount,
-            botName: bot.name, chatUUID: chat.uuid
+            action, pubkey, content, amount,
+            botName: bot.name, chatUUID
         };
         try {
             const r = yield finalAction(a);

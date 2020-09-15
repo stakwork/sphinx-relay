@@ -58,7 +58,6 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
 }
 
 async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
-  console.log("EMIT MSG TO BOT",msg,botInTribe)
   switch (botInTribe.botType) {
     case constants.bot_types.builtin:
       builtinBotEmit(msg)
@@ -76,9 +75,6 @@ async function postToBotServer(msg, botInTribe): Promise<boolean> {
     uuid: botInTribe.botUuid
   }})
   if(!bot.webhook || !bot.secret) return false
-  console.log("THE BOT",bot.dataValues,JSON.stringify(
-    buildBotPayload(msg)
-  ))
   const r = await fetch(bot.webhook, {
     method:'POST',
     body:JSON.stringify(

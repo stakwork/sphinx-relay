@@ -34,11 +34,10 @@ export async function processAction(req, res) {
             return failure(res, 'failed to parse webhook body json')
         }
     }
-    const { action, bot_id, bot_secret, pubkey, amount, text } = body
+    const { action, bot_id, bot_secret, pubkey, amount, content, chatUUID } = body
+    if (!bot_id) return failure(res, 'no bot_id')
     const bot = await models.Bot.findOne({ where: { id: bot_id } })
     if (!bot) return failure(res, 'no bot')
-
-    const chat = await models.Chat.findOne({ where:{id:bot.chatId} })
 
     if (!(bot.secret && bot.secret === bot_secret)) {
         return failure(res, 'wrong secret')
@@ -48,8 +47,8 @@ export async function processAction(req, res) {
     }
 
     const a:Action = {
-        action, pubkey, content:text, amount,
-        botName:bot.name, chatUUID: chat.uuid
+        action, pubkey, content, amount,
+        botName:bot.name, chatUUID
     }
 
     try {
