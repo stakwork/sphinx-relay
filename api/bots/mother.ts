@@ -126,6 +126,7 @@ export function init() {
           .setTitle('Bot Commands:')
           .addFields([
             { name: 'Install a new bot', value: '/bot install {BOTNAME}' },
+            { name: 'Search for bots', value: '/bot search {SEARCH_TERM}' },
             { name: 'Help', value: '/bot help' }
           ])
           .setThumbnail(botSVG)
