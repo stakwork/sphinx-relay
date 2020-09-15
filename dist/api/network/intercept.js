@@ -32,6 +32,7 @@ function isBotMsg(msg, sentByMe) {
         if (!chat)
             return false;
         let didEmit = false;
+        console.log("RECEIVED MSG", txt);
         if (txt.startsWith('/bot ')) {
             bots_1.builtinBotEmit(msg);
             didEmit = true;

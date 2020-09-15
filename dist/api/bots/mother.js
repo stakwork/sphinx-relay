@@ -32,7 +32,6 @@ const builtInBotMsgTypes = {
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
-    // btc:'BitcoinBot',
     loopout: 'LoopBot',
 };
 function init() {
