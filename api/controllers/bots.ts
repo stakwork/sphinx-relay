@@ -4,6 +4,7 @@ import * as crypto from 'crypto'
 import { models } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
+import * as network from '../network'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
@@ -68,23 +69,76 @@ export function installBot(botname, botInTribe) {
   // bot_maker_pubkey, bot_uuid, bot_prefix
 }
 
+export async function sendBotInstall(_, b): Promise<boolean> {
+  return await botKeysend(
+    constants.message_types.bot_install,
+    b.botUuid, b.botMakerPubkey, b.pricePerUse,
+  )
+}
+
+export async function sendBotCmd(msg, b): Promise<boolean> {
+  return await botKeysend(
+    constants.message_types.bot_cmd,
+    b.botUuid, b.botMakerPubkey, b.pricePerUse,
+    msg.message.content
+  )
+}
+
 export async function receiveBotInstall(payload) {
   console.log('=> receiveBotInstall')
+
   // const dat = payload.content || payload
   // const sender_pub_key = dat.sender.pub_key
-  // const tribe_uuid = dat.chat.uuid
+  // const bot_uuid = dat.bot_uuid
 
   // verify tribe ownership (verify signed timestamp)
 
-  // create BotMember for publishing to mqtt
+  // CHECK PUBKEY - is it me? install it! (create botmember)
+  // if the pubkey=the botOwnerPubkey, (create chatbot)
+}
+
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content?:string): Promise<boolean> {
+  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const MIN_SATS = 3
+  const destkey = botmaker_pubkey
+  const opts = {
+    dest: destkey,
+    data: {
+      type: msg_type,
+      bot_uuid,
+      message: {content: content||''},
+      sender: {
+        pub_key: owner.publicKey,
+      }
+    },
+    amt: Math.max(price_per_use || MIN_SATS)
+  }
+  try {
+    await network.signAndSend(opts)
+    return true
+  } catch (e) {
+    return false
+  }
 }
 
 // type BotCmdType = 'install' | 'message' | 'broadcast' | 'keysend'
 
 export async function receiveBotCmd(payload) {
+  console.log("=> receiveBotCmd")
   console.log(constants.message_types.bot_cmd)
+  // forward to the entire Action back
+
+  // const dat = payload.content || payload
+  // const sender_pub_key = dat.sender.pub_key
+  // const bot_uuid = dat.bot_uuid
+  // const content = dat.message.content - check prefix
+  // const amount = dat.message.amount
 }
 
 export async function receiveBotRes(payload) {
+  console.log("=> receiveBotRes")
   console.log(constants.message_types.bot_res)
+  // forward to the tribe
+  // received the entire action?
+
 }

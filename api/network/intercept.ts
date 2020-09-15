@@ -1,6 +1,7 @@
 import {Msg} from './interfaces'
 import { models } from '../models'
 import {builtinBotEmit,buildBotPayload} from '../bots'
+import {sendBotCmd} from '../controllers/bots'
 import * as path from 'path'
 import fetch from 'node-fetch'
 
@@ -29,8 +30,6 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
     builtinBotEmit(msg)
     didEmit = true
   }
-
-  console.log("DID EMIT",didEmit)
   if(didEmit) return didEmit
 
   const botsInTribe = await models.ChatBot.findAll({where:{
@@ -65,7 +64,7 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
     case constants.bot_types.local:
       return postToBotServer(msg, botInTribe)
     case constants.bot_types.remote:
-      return sendBotInstallMsg(msg, botInTribe)
+      return sendBotCmd(msg, botInTribe)
     default:
       return false
   }
@@ -88,12 +87,6 @@ async function postToBotServer(msg, botInTribe): Promise<boolean> {
     }
   })
   return r.ok
-}
-
-async function sendBotInstallMsg(msg, botInTribe): Promise<boolean> {
-  // botMakerPubkey
-  // botUuid
-  return false
 }
 
 async function asyncForEach(array, callback) {

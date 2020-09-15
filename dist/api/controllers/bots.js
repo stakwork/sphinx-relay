@@ -15,6 +15,7 @@ const crypto = require("crypto");
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
+const network = require("../network");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -74,27 +75,77 @@ function installBot(botname, botInTribe) {
     // bot_maker_pubkey, bot_uuid, bot_prefix
 }
 exports.installBot = installBot;
+function sendBotInstall(_, b) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield botKeysend(constants.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse);
+    });
+}
+exports.sendBotInstall = sendBotInstall;
+function sendBotCmd(msg, b) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, b.pricePerUse, msg.message.content);
+    });
+}
+exports.sendBotCmd = sendBotCmd;
 function receiveBotInstall(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveBotInstall');
         // const dat = payload.content || payload
         // const sender_pub_key = dat.sender.pub_key
-        // const tribe_uuid = dat.chat.uuid
+        // const bot_uuid = dat.bot_uuid
         // verify tribe ownership (verify signed timestamp)
-        // create BotMember for publishing to mqtt
+        // CHECK PUBKEY - is it me? install it! (create botmember)
+        // if the pubkey=the botOwnerPubkey, (create chatbot)
     });
 }
 exports.receiveBotInstall = receiveBotInstall;
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const MIN_SATS = 3;
+        const destkey = botmaker_pubkey;
+        const opts = {
+            dest: destkey,
+            data: {
+                type: msg_type,
+                bot_uuid,
+                message: { content: content || '' },
+                sender: {
+                    pub_key: owner.publicKey,
+                }
+            },
+            amt: Math.max(price_per_use || MIN_SATS)
+        };
+        try {
+            yield network.signAndSend(opts);
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
+    });
+}
+exports.botKeysend = botKeysend;
 // type BotCmdType = 'install' | 'message' | 'broadcast' | 'keysend'
 function receiveBotCmd(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("=> receiveBotCmd");
         console.log(constants.message_types.bot_cmd);
+        // forward to the entire Action back
+        // const dat = payload.content || payload
+        // const sender_pub_key = dat.sender.pub_key
+        // const bot_uuid = dat.bot_uuid
+        // const content = dat.message.content - check prefix
+        // const amount = dat.message.amount
     });
 }
 exports.receiveBotCmd = receiveBotCmd;
 function receiveBotRes(payload) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("=> receiveBotRes");
         console.log(constants.message_types.bot_res);
+        // forward to the tribe
+        // received the entire action?
     });
 }
 exports.receiveBotRes = receiveBotRes;

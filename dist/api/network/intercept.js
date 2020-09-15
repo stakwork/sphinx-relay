@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const bots_1 = require("../bots");
+const bots_2 = require("../controllers/bots");
 const path = require("path");
 const node_fetch_1 = require("node-fetch");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
@@ -36,7 +37,6 @@ function isBotMsg(msg, sentByMe) {
             bots_1.builtinBotEmit(msg);
             didEmit = true;
         }
-        console.log("DID EMIT", didEmit);
         if (didEmit)
             return didEmit;
         const botsInTribe = yield models_1.models.ChatBot.findAll({ where: {
@@ -73,7 +73,7 @@ function emitMessageToBot(msg, botInTribe) {
             case constants.bot_types.local:
                 return postToBotServer(msg, botInTribe);
             case constants.bot_types.remote:
-                return sendBotInstallMsg(msg, botInTribe);
+                return bots_2.sendBotCmd(msg, botInTribe);
             default:
                 return false;
         }
@@ -95,13 +95,6 @@ function postToBotServer(msg, botInTribe) {
             }
         });
         return r.ok;
-    });
-}
-function sendBotInstallMsg(msg, botInTribe) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // botMakerPubkey
-        // botUuid
-        return false;
     });
 }
 function asyncForEach(array, callback) {
