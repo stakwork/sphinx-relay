@@ -16,8 +16,8 @@ const constants = require(path.join(__dirname, '../../config/constants.json'))
 
 export interface Action {
     action: string
-    chatUUID: string
-    botName?: string
+    chat_uuid: string
+    bot_name?: string
     amount?: number
     pubkey?: string
     content?: string
@@ -34,7 +34,7 @@ export async function processAction(req, res) {
             return failure(res, 'failed to parse webhook body json')
         }
     }
-    const { action, bot_id, bot_secret, pubkey, amount, content, chatUUID } = body
+    const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid } = body
     if (!bot_id) return failure(res, 'no bot_id')
     const bot = await models.Bot.findOne({ where: { id: bot_id } })
     if (!bot) return failure(res, 'no bot')
@@ -48,7 +48,7 @@ export async function processAction(req, res) {
 
     const a:Action = {
         action, pubkey, content, amount,
-        botName:bot.name, chatUUID
+        bot_name:bot.name, chat_uuid
     }
 
     try {
@@ -60,7 +60,7 @@ export async function processAction(req, res) {
 }
 
 export async function finalAction(a:Action){
-    const {action,pubkey,amount,content,botName,chatUUID} = a
+    const {action,pubkey,amount,content,bot_name,chat_uuid} = a
 
     if (action === 'keysend') {
         console.log('=> BOT KEYSEND')
@@ -83,9 +83,9 @@ export async function finalAction(a:Action){
 
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
-        if (!chatUUID || !content) throw 'no chatID or content'
+        if (!chat_uuid || !content) throw 'no chatID or content'
         const owner = await models.Contact.findOne({ where: { isOwner: true } })
-        const theChat = await models.Chat.findOne({ where: { uuid: chatUUID } })
+        const theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
         if (!theChat || !owner) throw 'no chat'
         if (!theChat.type === constants.chat_types.tribe) throw 'not a tribe'
 
@@ -94,7 +94,7 @@ export async function finalAction(a:Action){
         const textMap = { 'chat': encryptedText }
         var date = new Date();
         date.setMilliseconds(0)
-        const alias = botName || 'Bot'
+        const alias = bot_name || 'Bot'
         const botContactId = -1
         const msg: { [k: string]: any } = {
             chatId: theChat.id,

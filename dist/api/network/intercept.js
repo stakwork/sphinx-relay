@@ -72,6 +72,8 @@ function emitMessageToBot(msg, botInTribe) {
                 return true;
             case constants.bot_types.local:
                 return postToBotServer(msg, botInTribe);
+            case constants.bot_types.remote:
+                return sendBotInstallMsg(msg, botInTribe);
             default:
                 return false;
         }
@@ -93,6 +95,13 @@ function postToBotServer(msg, botInTribe) {
             }
         });
         return r.ok;
+    });
+}
+function sendBotInstallMsg(msg, botInTribe) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // botMakerPubkey
+        // botUuid
+        return false;
     });
 }
 function asyncForEach(array, callback) {

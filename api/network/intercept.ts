@@ -64,6 +64,8 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
       return true
     case constants.bot_types.local:
       return postToBotServer(msg, botInTribe)
+    case constants.bot_types.remote:
+      return sendBotInstallMsg(msg, botInTribe)
     default:
       return false
   }
@@ -86,6 +88,12 @@ async function postToBotServer(msg, botInTribe): Promise<boolean> {
     }
   })
   return r.ok
+}
+
+async function sendBotInstallMsg(msg, botInTribe): Promise<boolean> {
+  // botMakerPubkey
+  // botUuid
+  return false
 }
 
 async function asyncForEach(array, callback) {

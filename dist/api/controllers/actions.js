@@ -36,7 +36,7 @@ function processAction(req, res) {
                 return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, content, chatUUID } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid } = body;
         if (!bot_id)
             return res_1.failure(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
@@ -50,7 +50,7 @@ function processAction(req, res) {
         }
         const a = {
             action, pubkey, content, amount,
-            botName: bot.name, chatUUID
+            bot_name: bot.name, chat_uuid
         };
         try {
             const r = yield finalAction(a);
@@ -64,7 +64,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { action, pubkey, amount, content, botName, chatUUID } = a;
+        const { action, pubkey, amount, content, bot_name, chat_uuid } = a;
         if (action === 'keysend') {
             console.log('=> BOT KEYSEND');
             if (!(pubkey && pubkey.length === 66 && amount)) {
@@ -87,10 +87,10 @@ function finalAction(a) {
         }
         else if (action === 'broadcast') {
             console.log('=> BOT BROADCAST');
-            if (!chatUUID || !content)
+            if (!chat_uuid || !content)
                 throw 'no chatID or content';
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chatUUID } });
+            const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
             if (!theChat || !owner)
                 throw 'no chat';
             if (!theChat.type === constants.chat_types.tribe)
@@ -100,7 +100,7 @@ function finalAction(a) {
             const textMap = { 'chat': encryptedText };
             var date = new Date();
             date.setMilliseconds(0);
-            const alias = botName || 'Bot';
+            const alias = bot_name || 'Bot';
             const botContactId = -1;
             const msg = {
                 chatId: theChat.id,
