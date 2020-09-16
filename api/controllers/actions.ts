@@ -19,6 +19,7 @@ const constants = require(path.join(__dirname, '../../config/constants.json'))
 export interface Action {
     action: string
     chat_uuid: string
+    bot_id: string,
     bot_name?: string
     amount?: number
     pubkey?: string
@@ -50,7 +51,8 @@ export async function processAction(req, res) {
 
     const a:Action = {
         action, pubkey, content, amount,
-        bot_name:bot.name, chat_uuid
+        bot_name:bot.name, chat_uuid,
+        bot_id
     }
 
     try {
@@ -68,15 +70,11 @@ export async function finalAction(a:Action, bot_id:string){
     const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
     console.log("=> ACTION HIT", a)
-    let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
-    console.log("THE CHAT",theChat&&theChat.dataValues)
-    if(!theChat) {
-        // fORWARD BACK TO THE TRIBE ADMIN
-        const bot = await models.Bot.findOne({where:{
-            id: bot_id,
-        }})
-        if(!bot) return console.log('bot not found')
-        // is this a bot member cmd res
+    const myBot = await models.Bot.findOne({where:{
+        id: bot_id
+    }})
+    if(myBot) {
+        // THIS is a bot member cmd res (i am bot maker)
         const botMember = await models.BotMember.findOne({where:{
             tribeUuid: chat_uuid, botId: bot_id
         }})
@@ -84,7 +82,7 @@ export async function finalAction(a:Action, bot_id:string){
 
         const dest = botMember.memberPubkey
         if(!dest) return console.log('no dest to send to')
-        const topic = `${dest}/${bot.uuid}`
+        const topic = `${dest}/${myBot.uuid}`
         const data = {
             message:a,
             bot_id,
@@ -118,6 +116,7 @@ export async function finalAction(a:Action, bot_id:string){
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
         if (!content) throw 'no content'
+        let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
         if (!theChat) throw 'no chat'
         if (!theChat.type === constants.chat_types.tribe) throw 'not a tribe'
 

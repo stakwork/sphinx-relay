@@ -51,7 +51,8 @@ function processAction(req, res) {
         }
         const a = {
             action, pubkey, content, amount,
-            bot_name: bot.name, chat_uuid
+            bot_name: bot.name, chat_uuid,
+            bot_id
         };
         try {
             const r = yield finalAction(a, bot_id);
@@ -70,16 +71,11 @@ function finalAction(a, bot_id) {
             throw 'no chat_uuid';
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         console.log("=> ACTION HIT", a);
-        let theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
-        console.log("THE CHAT", theChat && theChat.dataValues);
-        if (!theChat) {
-            // fORWARD BACK TO THE TRIBE ADMIN
-            const bot = yield models_1.models.Bot.findOne({ where: {
-                    id: bot_id,
-                } });
-            if (!bot)
-                return console.log('bot not found');
-            // is this a bot member cmd res
+        const myBot = yield models_1.models.Bot.findOne({ where: {
+                id: bot_id
+            } });
+        if (myBot) {
+            // THIS is a bot member cmd res (i am bot maker)
             const botMember = yield models_1.models.BotMember.findOne({ where: {
                     tribeUuid: chat_uuid, botId: bot_id
                 } });
@@ -88,7 +84,7 @@ function finalAction(a, bot_id) {
             const dest = botMember.memberPubkey;
             if (!dest)
                 return console.log('no dest to send to');
-            const topic = `${dest}/${bot.uuid}`;
+            const topic = `${dest}/${myBot.uuid}`;
             const data = {
                 message: a,
                 bot_id,
@@ -123,6 +119,7 @@ function finalAction(a, bot_id) {
             console.log('=> BOT BROADCAST');
             if (!content)
                 throw 'no content';
+            let theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
             if (!theChat)
                 throw 'no chat';
             if (!theChat.type === constants.chat_types.tribe)
