@@ -34,19 +34,25 @@ const typesThatNeedPricePerMessage = [
 export const typesToReplay=[ // should match typesToForward
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave
 ]
-const botMakerTypes=[
+const botTypes=[
 	constants.message_types.bot_install,
 	constants.message_types.bot_cmd,
 	constants.message_types.bot_res,
+]
+const botMakerTypes=[
+	constants.message_types.bot_install,
+	constants.message_types.bot_cmd,
 ]
 async function onReceive(payload){
 	console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if(!(payload.type||payload.type===0)) return console.log('no payload.type')
 
-	if(botMakerTypes.includes(payload.type)) {
+	if(botTypes.includes(payload.type)) {
 		// if is admin on tribe? or is bot maker?
 		console.log("=> got bot msg type!!!!")
-		if(!payload.bot_uuid) return console.log('no bot uuid')
+		if(botMakerTypes.includes(payload.type)) {
+			if(!payload.bot_uuid) return console.log('bot maker type: no bot uuid')
+		}
 		return ACTIONS[payload.type](payload)
 	}
 	

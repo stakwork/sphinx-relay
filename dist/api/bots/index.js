@@ -60,7 +60,9 @@ function buildBotPayload(msg) {
 }
 exports.buildBotPayload = buildBotPayload;
 function builtinBotEmit(msg) {
-    SphinxBot._emit('message', buildBotPayload(msg));
+    setTimeout(() => {
+        SphinxBot._emit('message', buildBotPayload(msg));
+    }, 1200);
 }
 exports.builtinBotEmit = builtinBotEmit;
 //# sourceMappingURL=index.js.map

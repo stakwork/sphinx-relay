@@ -48,7 +48,9 @@ function buildBotPayload(msg:Msg): SphinxBot.Message {
 }
 
 function builtinBotEmit(msg:Msg){
-    SphinxBot._emit('message', buildBotPayload(msg))
+    setTimeout(()=>{
+        SphinxBot._emit('message', buildBotPayload(msg))
+    },1200)
 }
 
 export {init,builtinBotEmit,buildBotPayload}
