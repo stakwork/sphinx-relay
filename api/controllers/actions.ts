@@ -67,7 +67,9 @@ export async function finalAction(a:Action, bot_id:string){
 
     const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
+    console.log("=> ACTION HIT", a)
     let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+    console.log("THE CHAT",theChat&&theChat.dataValues)
     if(!theChat) {
         // fORWARD BACK TO THE TRIBE ADMIN
         const bot = await models.Bot.findOne({where:{

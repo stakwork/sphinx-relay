@@ -69,7 +69,9 @@ function finalAction(a, bot_id) {
         if (!chat_uuid)
             throw 'no chat_uuid';
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        console.log("=> ACTION HIT", a);
         let theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        console.log("THE CHAT", theChat && theChat.dataValues);
         if (!theChat) {
             // fORWARD BACK TO THE TRIBE ADMIN
             const bot = yield models_1.models.Bot.findOne({ where: {
