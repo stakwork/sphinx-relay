@@ -89,9 +89,14 @@ function finalAction(a, bot_id) {
                 return console.log('no dest to send to');
             const topic = `${dest}/${myBot.uuid}`;
             const data = {
-                message: a,
-                bot_id,
-                sender: { pub_key: owner.publicKey },
+                action, bot_id, bot_name,
+                type: constants.message_types.bot_res,
+                message: { content: a.content, amount: amount || 0 },
+                chat: { uuid: chat_uuid },
+                sender: {
+                    pub_key: String(owner.publicKey),
+                    alias: bot_name, role: 0
+                },
             };
             try {
                 yield network.signAndSend({ dest, data }, topic);

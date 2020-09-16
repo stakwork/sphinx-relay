@@ -228,10 +228,12 @@ function receiveBotRes(payload) {
         }
         const chat_uuid = dat.chat && dat.chat.uuid;
         const sender_pub_key = dat.sender.pub_key;
-        const amount = dat.message.amount;
+        const amount = dat.message.amount || 0;
         const msg_uuid = dat.message.uuid || '';
         const content = dat.message.content;
-        const botName = dat.message.bot_name;
+        const botName = dat.bot_name;
+        const action = dat.action;
+        const bot_name = dat.bot_name;
         if (!chat_uuid)
             return console.log('=> receiveBotRes Error no chat_uuid');
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
@@ -241,10 +243,13 @@ function receiveBotRes(payload) {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         if (isTribeOwner) {
+            console.log("=> is tribeOwner, do finalAction!");
             // IF IS TRIBE ADMIN forward to the tribe
             // received the entire action?
             const bot_id = payload.bot_id;
-            actions_1.finalAction(payload.message, bot_id);
+            actions_1.finalAction({
+                action, bot_name, chat_uuid, content, amount,
+            }, bot_id);
         }
         else {
             const theChat = yield models_1.models.Chat.findOne({ where: {

@@ -3,6 +3,7 @@ import {
     initGrpcSubscriptions,initTribesSubscriptions,parseKeysendInvoice,
     typesToReplay,typesToForward,
 } from './receive'
+import {Msg} from './interfaces'
 
 /*
 Abstracts between lightning network and MQTT depending on Chat type and sender
@@ -14,5 +15,6 @@ export {
     initTribesSubscriptions,
     parseKeysendInvoice,
     typesToReplay,typesToForward,
+    Msg,
 }
 
