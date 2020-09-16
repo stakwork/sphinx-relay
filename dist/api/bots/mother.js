@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // import * as SphinxBot from '../../../sphinx-bot' 
 const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
+const bots_1 = require("../controllers/bots");
 const path = require("path");
 const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
@@ -92,8 +93,12 @@ function init() {
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
                         console.log('=> FOUDN BOT', bot);
-                        // send msg to bot owner
-                        // await models.ChatBot.create(chatBot)
+                        const chat = yield models_1.models.Chat.findOne({ where: {
+                                uuid: message.channel.id
+                            } });
+                        if (!chat)
+                            return;
+                        bots_1.installBot(chat.id, bot);
                     }
                     else {
                         const embed = new Sphinx.MessageEmbed()

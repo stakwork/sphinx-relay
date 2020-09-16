@@ -20,18 +20,30 @@ export const getBots = async (req, res) => {
 }
 
 export const createBot = async (req, res) => {
-  const { name, webhook } = req.body
+  const { name, webhook, price_per_use, img, description, tags,  } = req.body
 
   const uuid = await tribes.genSignedTimestamp()
   const newBot = {
     name, uuid, webhook,
     id: crypto.randomBytes(12).toString('hex').toUpperCase(),
     secret: crypto.randomBytes(16).toString('hex').toUpperCase(),
-    pricePerUse: 0
+    pricePerUse: price_per_use||0
   }
   try {
+    const owner = await models.Contact.findOne({ where: { isOwner: true } })
     const theBot = await models.Bot.create(newBot)
     // post to bots.sphinx.chat
+    tribes.declare_bot({
+      uuid,
+      owner_pubkey: owner.publicKey,
+      price_per_use,
+      name: name,
+      description: description||'',
+      tags: tags||[],
+      img: img||'',
+      unlisted:false,
+      deleted:false,
+    })
     success(res, jsonUtils.botToJson(theBot))
   } catch (e) {
     failure(res, 'bot creation failed')
@@ -50,33 +62,29 @@ export const deleteBot = async (req, res) => {
   }
 }
 
-// async function broadcastAction(chat,text){
-//   finalAction(<Action>{
-//     action:'broadcast',
-//     text, chatUUID: chat.uuid,
-//     botName:'MotherBot'
-//   })
-// }
-
-export function installBot(botname, botInTribe) {
-  console.log("INSTALL BOT NOW")
-  // search registry for bot (by name)
-
-  // need bot uuid and maker pubkey
-  // send bot_install to bot maker
-
-  // generate ChatMember with bot=true
-  // bot_maker_pubkey, bot_uuid, bot_prefix
+export async function installBot(chatId:number, bot_json) {
+  const {uuid,owner_pubkey,unique_name,price_per_use} = bot_json
+  const chatBot = {
+    chatId,
+    botPrefix: '/' +unique_name,
+    botType: constants.bot_types.remote,
+    botUuid: uuid,
+    botMakerPubkey: owner_pubkey,
+    pricePerUse: price_per_use
+  }
+  console.log("installBot INSTALL BOT NOW",chatBot)
+  keysendBotInstall(chatBot)
+  await models.ChatBot.create(chatBot)
 }
 
-export async function sendBotInstall(_, b): Promise<boolean> {
+export async function keysendBotInstall(b): Promise<boolean> {
   return await botKeysend(
     constants.message_types.bot_install,
     b.botUuid, b.botMakerPubkey, b.pricePerUse,
   )
 }
 
-export async function sendBotCmd(msg, b): Promise<boolean> {
+export async function keysendBotCmd(msg, b): Promise<boolean> {
   return await botKeysend(
     constants.message_types.bot_cmd,
     b.botUuid, b.botMakerPubkey, b.pricePerUse,

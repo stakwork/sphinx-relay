@@ -1,7 +1,7 @@
 import {Msg} from './interfaces'
 import { models } from '../models'
 import {builtinBotEmit,buildBotPayload} from '../bots'
-import {sendBotCmd} from '../controllers/bots'
+import {keysendBotCmd} from '../controllers/bots'
 import * as path from 'path'
 import fetch from 'node-fetch'
 
@@ -64,11 +64,10 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
     case constants.bot_types.local:
       return postToBotServer(msg, botInTribe)
     case constants.bot_types.remote:
-      return sendBotCmd(msg, botInTribe)
+      return keysendBotCmd(msg, botInTribe)
     default:
       return false
   }
-  
 }
 
 async function postToBotServer(msg, botInTribe): Promise<boolean> {

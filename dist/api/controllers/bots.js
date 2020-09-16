@@ -29,17 +29,29 @@ exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, webhook } = req.body;
+    const { name, webhook, price_per_use, img, description, tags, } = req.body;
     const uuid = yield tribes.genSignedTimestamp();
     const newBot = {
         name, uuid, webhook,
         id: crypto.randomBytes(12).toString('hex').toUpperCase(),
         secret: crypto.randomBytes(16).toString('hex').toUpperCase(),
-        pricePerUse: 0
+        pricePerUse: price_per_use || 0
     };
     try {
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const theBot = yield models_1.models.Bot.create(newBot);
         // post to bots.sphinx.chat
+        tribes.declare_bot({
+            uuid,
+            owner_pubkey: owner.publicKey,
+            price_per_use,
+            name: name,
+            description: description || '',
+            tags: tags || [],
+            img: img || '',
+            unlisted: false,
+            deleted: false,
+        });
         res_1.success(res, jsonUtils.botToJson(theBot));
     }
     catch (e) {
@@ -59,34 +71,35 @@ exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res_1.failure(res, e);
     }
 });
-// async function broadcastAction(chat,text){
-//   finalAction(<Action>{
-//     action:'broadcast',
-//     text, chatUUID: chat.uuid,
-//     botName:'MotherBot'
-//   })
-// }
-function installBot(botname, botInTribe) {
-    console.log("INSTALL BOT NOW");
-    // search registry for bot (by name)
-    // need bot uuid and maker pubkey
-    // send bot_install to bot maker
-    // generate ChatMember with bot=true
-    // bot_maker_pubkey, bot_uuid, bot_prefix
+function installBot(chatId, bot_json) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { uuid, owner_pubkey, unique_name, price_per_use } = bot_json;
+        const chatBot = {
+            chatId,
+            botPrefix: '/' + unique_name,
+            botType: constants.bot_types.remote,
+            botUuid: uuid,
+            botMakerPubkey: owner_pubkey,
+            pricePerUse: price_per_use
+        };
+        console.log("installBot INSTALL BOT NOW", chatBot);
+        keysendBotInstall(chatBot);
+        yield models_1.models.ChatBot.create(chatBot);
+    });
 }
 exports.installBot = installBot;
-function sendBotInstall(_, b) {
+function keysendBotInstall(b) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield botKeysend(constants.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse);
     });
 }
-exports.sendBotInstall = sendBotInstall;
-function sendBotCmd(msg, b) {
+exports.keysendBotInstall = keysendBotInstall;
+function keysendBotCmd(msg, b) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, b.pricePerUse, msg.message.content);
     });
 }
-exports.sendBotCmd = sendBotCmd;
+exports.keysendBotCmd = keysendBotCmd;
 function receiveBotInstall(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveBotInstall');

@@ -1,6 +1,7 @@
 // import * as SphinxBot from '../../../sphinx-bot' 
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
+import { installBot } from '../controllers/bots'
 import * as path from 'path'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
@@ -85,8 +86,11 @@ export function init() {
           const bot = await getBotByName(botName)
           if(bot && bot.uuid) {
             console.log('=> FOUDN BOT', bot)
-            // send msg to bot owner
-            // await models.ChatBot.create(chatBot)
+            const chat = await models.Chat.findOne({where:{
+              uuid: message.channel.id
+            }})
+            if(!chat) return
+            installBot(chat.id, bot)
           } else {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')

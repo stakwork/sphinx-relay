@@ -99,7 +99,28 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
   }
 }
 
-export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
+export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
+  const host = getHost()
+  try {
+    await fetch('https://' + host + '/bots', {
+      method: 'POST',
+      body: JSON.stringify({
+        uuid, owner_pubkey,
+        name, description, tags, img: img || '',
+        price_per_use: price_per_use || 0,
+        unlisted: unlisted||false,
+        deleted: deleted||false,
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    // const j = await r.json()
+  } catch (e) {
+    console.log('[tribes] unauthorized to declare')
+    throw e
+  }
+}
+
+export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, deleted }) {
   try {
     const token = await genSignedTimestamp()
     await fetch('https://' + host + '/tribe?token=' + token, {
@@ -114,6 +135,7 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
         owner_alias,
         unlisted: unlisted||false,
         private: is_private||false,
+        deleted: deleted||false,
         app_url: app_url||'',
       }),
       headers: { 'Content-Type': 'application/json' }

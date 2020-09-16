@@ -222,6 +222,7 @@ export async function editTribe(req, res) {
 				unlisted,
 				is_private: req.body.private,
 				app_url,
+				deleted: false,
 			})
 		} catch(e) {
 			okToUpdate = false

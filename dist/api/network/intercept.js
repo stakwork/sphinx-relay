@@ -73,7 +73,7 @@ function emitMessageToBot(msg, botInTribe) {
             case constants.bot_types.local:
                 return postToBotServer(msg, botInTribe);
             case constants.bot_types.remote:
-                return bots_2.sendBotCmd(msg, botInTribe);
+                return bots_2.keysendBotCmd(msg, botInTribe);
             default:
                 return false;
         }
