@@ -98,7 +98,7 @@ function init() {
                             } });
                         if (!chat)
                             return;
-                        bots_1.installBot(chat, bot);
+                        bots_1.installBot(chat.dataValues, bot);
                     }
                     else {
                         const embed = new Sphinx.MessageEmbed()
