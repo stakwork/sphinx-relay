@@ -96,8 +96,12 @@ function installBot(chat, bot_json) {
         };
         console.log("installBot INSTALL BOT NOW", chatBot);
         const succeeded = yield keysendBotInstall(chatBot, chat_uuid);
-        if (succeeded)
-            models_1.models.ChatBot.create(chatBot);
+        if (succeeded) {
+            try { // could fail
+                yield models_1.models.ChatBot.create(chatBot);
+            }
+            catch (e) { }
+        }
     });
 }
 exports.installBot = installBot;

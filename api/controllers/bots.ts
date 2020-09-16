@@ -86,7 +86,11 @@ export async function installBot(chat, bot_json) {
   }
   console.log("installBot INSTALL BOT NOW",chatBot)
   const succeeded = await keysendBotInstall(chatBot, chat_uuid)
-  if(succeeded) models.ChatBot.create(chatBot)
+  if(succeeded) {
+    try { // could fail
+      await models.ChatBot.create(chatBot)
+    } catch(e){}
+  }
 }
 
 export async function keysendBotInstall(b, chat_uuid:string): Promise<boolean> {
