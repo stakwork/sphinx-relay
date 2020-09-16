@@ -6,7 +6,6 @@ import * as rsa from '../crypto/rsa'
 import * as jsonUtils from '../utils/json'
 import * as socket from '../utils/socket'
 import { success, failure } from '../utils/res'
-import * as tribes from '../utils/tribes'
 
 
 /*
@@ -92,9 +91,11 @@ export async function finalAction(a:Action, bot_id:string){
             bot_id,
             sender:{pub_key: owner.publicKey}, // for verify sig
         }
-        await tribes.publish(topic, data, function(){
-            console.log('=> bbot res forwarded back to tribe admin')
-        })
+        try {
+            await network.signAndSend({dest,data}, topic)
+        } catch(e) {
+            console.log('=> couldnt mqtt publish')
+        }
         return
     }
 

@@ -17,7 +17,6 @@ const rsa = require("../crypto/rsa");
 const jsonUtils = require("../utils/json");
 const socket = require("../utils/socket");
 const res_1 = require("../utils/res");
-const tribes = require("../utils/tribes");
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -94,9 +93,12 @@ function finalAction(a, bot_id) {
                 bot_id,
                 sender: { pub_key: owner.publicKey },
             };
-            yield tribes.publish(topic, data, function () {
-                console.log('=> bbot res forwarded back to tribe admin');
-            });
+            try {
+                yield network.signAndSend({ dest, data }, topic);
+            }
+            catch (e) {
+                console.log('=> couldnt mqtt publish');
+            }
             return;
         }
         if (action === 'keysend') {
