@@ -223,9 +223,9 @@ export async function receiveBotRes(payload) {
   const amount = dat.message.amount||0
   const msg_uuid = dat.message.uuid||''
   const content = dat.message.content
-  const botName = dat.bot_name
   const action = dat.action
   const bot_name = dat.bot_name
+  const sender_alias = dat.sender.alias
   if(!chat_uuid) return console.log('=> receiveBotRes Error no chat_uuid')
 
   const chat = await models.Chat.findOne({where:{uuid:chat_uuid}})
@@ -263,7 +263,7 @@ export async function receiveBotRes(payload) {
       status: constants.statuses.confirmed,
       createdAt: date,
       updatedAt: date,
-      senderAlias: botName || 'Bot',
+      senderAlias: sender_alias || 'Bot',
     }
     const message = await models.Message.create(msg)
     socket.sendJson({
