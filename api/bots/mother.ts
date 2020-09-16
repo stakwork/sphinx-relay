@@ -90,7 +90,7 @@ export function init() {
               uuid: message.channel.id
             }})
             if(!chat) return
-            installBot(chat.id, bot)
+            installBot(chat, bot)
           } else {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')

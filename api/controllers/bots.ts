@@ -65,7 +65,15 @@ export const deleteBot = async (req, res) => {
   }
 }
 
-export async function installBot(chatId:number, bot_json) {
+export async function installBot(chat, bot_json) {
+  const chatId = chat && chat.id
+  const chat_uuid = chat && chat.uuid
+  if(!chatId || !chat_uuid) return console.log('no chat id in installBot')
+
+  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const isTribeOwner = owner && owner.publicKey && owner.publicKey === chat && chat.ownerPubkey
+  if(!isTribeOwner) return console.log('only tribe owner can install bots')
+
   const {uuid,owner_pubkey,unique_name,price_per_use} = bot_json
   const chatBot = {
     chatId,
@@ -76,14 +84,15 @@ export async function installBot(chatId:number, bot_json) {
     pricePerUse: price_per_use
   }
   console.log("installBot INSTALL BOT NOW",chatBot)
-  const succeeded = await keysendBotInstall(chatBot)
+  const succeeded = await keysendBotInstall(chatBot, chat_uuid)
   if(succeeded) models.ChatBot.create(chatBot)
 }
 
-export async function keysendBotInstall(b): Promise<boolean> {
+export async function keysendBotInstall(b, chat_uuid:string): Promise<boolean> {
   return await botKeysend(
     constants.message_types.bot_install,
     b.botUuid, b.botMakerPubkey, b.pricePerUse,
+    chat_uuid
   )
 }
 
@@ -91,12 +100,12 @@ export async function keysendBotCmd(msg, b): Promise<boolean> {
   return await botKeysend(
     constants.message_types.bot_cmd,
     b.botUuid, b.botMakerPubkey, b.pricePerUse,
-    msg.message.content,
     msg.chat.uuid,
+    msg.message.content,
   )
 }
 
-export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content?:string, chat_uuid?:string): Promise<boolean> {
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, chat_uuid:string, content?:string): Promise<boolean> {
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
   const MIN_SATS = 3
   const destkey = botmaker_pubkey
@@ -109,12 +118,11 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_
       sender: {
         pub_key: owner.publicKey,
       },
-      chat: {}
+      chat: {
+        uuid:chat_uuid
+      }
     },
     amt: Math.max(price_per_use || MIN_SATS)
-  }
-  if(chat_uuid) {
-    opts.data.chat = {uuid:chat_uuid}
   }
   try {
     await network.signAndSend(opts)
@@ -124,6 +132,18 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_
   }
 }
 
+/*
+=> receiveBotInstall {
+  type: 23,
+  bot_uuid: 'X1_sGR-WM_e29YL5100WA_P_VeYwvEsXfgc2NUhMzLNrNbWy2BVot9bVHnsXyPVmzoHleCYUn8oyUiDzE89Do1acLu6G',
+  message: { content: '', amount: 3 },
+  sender: {
+    pub_key: '037bac010f84ef785ddc3ade66d008d76d90d80eab6e148c00ea4ba102c07f2e53'
+  },
+  chat: {}
+}
+no chat uuid or sender pub key
+*/
 export async function receiveBotInstall(payload) {
   console.log('=> receiveBotInstall',payload)
 

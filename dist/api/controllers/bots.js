@@ -74,8 +74,16 @@ exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res_1.failure(res, e);
     }
 });
-function installBot(chatId, bot_json) {
+function installBot(chat, bot_json) {
     return __awaiter(this, void 0, void 0, function* () {
+        const chatId = chat && chat.id;
+        const chat_uuid = chat && chat.uuid;
+        if (!chatId || !chat_uuid)
+            return console.log('no chat id in installBot');
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const isTribeOwner = owner && owner.publicKey && owner.publicKey === chat && chat.ownerPubkey;
+        if (!isTribeOwner)
+            return console.log('only tribe owner can install bots');
         const { uuid, owner_pubkey, unique_name, price_per_use } = bot_json;
         const chatBot = {
             chatId,
@@ -86,25 +94,25 @@ function installBot(chatId, bot_json) {
             pricePerUse: price_per_use
         };
         console.log("installBot INSTALL BOT NOW", chatBot);
-        const succeeded = yield keysendBotInstall(chatBot);
+        const succeeded = yield keysendBotInstall(chatBot, chat_uuid);
         if (succeeded)
             models_1.models.ChatBot.create(chatBot);
     });
 }
 exports.installBot = installBot;
-function keysendBotInstall(b) {
+function keysendBotInstall(b, chat_uuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse);
+        return yield botKeysend(constants.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid);
     });
 }
 exports.keysendBotInstall = keysendBotInstall;
 function keysendBotCmd(msg, b) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, b.pricePerUse, msg.message.content, msg.chat.uuid);
+        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, b.pricePerUse, msg.chat.uuid, msg.message.content);
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
-function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content, chat_uuid) {
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, chat_uuid, content) {
     return __awaiter(this, void 0, void 0, function* () {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const MIN_SATS = 3;
@@ -118,13 +126,12 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content,
                 sender: {
                     pub_key: owner.publicKey,
                 },
-                chat: {}
+                chat: {
+                    uuid: chat_uuid
+                }
             },
             amt: Math.max(price_per_use || MIN_SATS)
         };
-        if (chat_uuid) {
-            opts.data.chat = { uuid: chat_uuid };
-        }
         try {
             yield network.signAndSend(opts);
             return true;
@@ -135,6 +142,18 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content,
     });
 }
 exports.botKeysend = botKeysend;
+/*
+=> receiveBotInstall {
+  type: 23,
+  bot_uuid: 'X1_sGR-WM_e29YL5100WA_P_VeYwvEsXfgc2NUhMzLNrNbWy2BVot9bVHnsXyPVmzoHleCYUn8oyUiDzE89Do1acLu6G',
+  message: { content: '', amount: 3 },
+  sender: {
+    pub_key: '037bac010f84ef785ddc3ade66d008d76d90d80eab6e148c00ea4ba102c07f2e53'
+  },
+  chat: {}
+}
+no chat uuid or sender pub key
+*/
 function receiveBotInstall(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveBotInstall', payload);
