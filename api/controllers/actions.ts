@@ -7,7 +7,6 @@ import * as jsonUtils from '../utils/json'
 import * as socket from '../utils/socket'
 import { success, failure } from '../utils/res'
 
-
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random

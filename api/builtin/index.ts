@@ -6,6 +6,7 @@ import * as LoopBot from './loop'
 import {Msg} from '../network/interfaces'
 import * as path from 'path'
 import { models } from '../models'
+import {buildBotPayload} from '../controllers/bots'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
@@ -21,30 +22,6 @@ async function init(){
         if(b.botPrefix==='/welcome') WelcomeBot.init()
         if(b.botPrefix==='/loopout') LoopBot.init()
     })
-}
-
-function buildBotPayload(msg:Msg): SphinxBot.Message {
-    const m = <SphinxBot.Message>{
-        channel:{
-            id: msg.chat.uuid,
-            send:function(){},
-        },
-        reply:function(){},
-        content: msg.message.content,
-        amount: msg.message.amount,
-        type: msg.type,
-        member: {
-            id: msg.sender.pub_key,
-            nickname: msg.sender.alias,
-            roles:[]
-        }
-    }
-    if(msg.sender.role===constants.chat_roles.owner) {
-        if(m.member) m.member.roles=[{
-            name:'Admin'
-        }]
-    }
-    return m
 }
 
 function builtinBotEmit(msg:Msg){

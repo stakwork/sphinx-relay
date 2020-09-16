@@ -16,6 +16,8 @@ const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
 const path = require("path");
 const models_1 = require("../models");
+const bots_1 = require("../controllers/bots");
+exports.buildBotPayload = bots_1.buildBotPayload;
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -34,34 +36,9 @@ function init() {
     });
 }
 exports.init = init;
-function buildBotPayload(msg) {
-    const m = {
-        channel: {
-            id: msg.chat.uuid,
-            send: function () { },
-        },
-        reply: function () { },
-        content: msg.message.content,
-        amount: msg.message.amount,
-        type: msg.type,
-        member: {
-            id: msg.sender.pub_key,
-            nickname: msg.sender.alias,
-            roles: []
-        }
-    };
-    if (msg.sender.role === constants.chat_roles.owner) {
-        if (m.member)
-            m.member.roles = [{
-                    name: 'Admin'
-                }];
-    }
-    return m;
-}
-exports.buildBotPayload = buildBotPayload;
 function builtinBotEmit(msg) {
     setTimeout(() => {
-        SphinxBot._emit('message', buildBotPayload(msg));
+        SphinxBot._emit('message', bots_1.buildBotPayload(msg));
     }, 1200);
 }
 exports.builtinBotEmit = builtinBotEmit;

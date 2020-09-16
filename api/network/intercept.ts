@@ -1,9 +1,8 @@
 import {Msg} from './interfaces'
 import { models } from '../models'
-import {builtinBotEmit,buildBotPayload} from '../bots'
-import {keysendBotCmd} from '../controllers/bots'
+import {builtinBotEmit} from '../builtin'
+import {keysendBotCmd, postToBotServer} from '../controllers/bots'
 import * as path from 'path'
-import fetch from 'node-fetch'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -73,22 +72,6 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
     default:
       return false
   }
-}
-
-export async function postToBotServer(msg, bot): Promise<boolean> {
-  if(!bot) return false
-  if(!bot.webhook || !bot.secret) return false
-  const r = await fetch(bot.webhook, {
-    method:'POST',
-    body:JSON.stringify(
-      buildBotPayload(msg)
-    ),
-    headers:{
-      'x-secret': bot.secret,
-      'Content-Type': 'application/json'
-    }
-  })
-  return r.ok
 }
 
 async function asyncForEach(array, callback) {

@@ -16,9 +16,9 @@ const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const network = require("../network");
-const intercept = require("../network/intercept");
 const actions_1 = require("./actions");
 const socket = require("../utils/socket");
+const node_fetch_1 = require("node-fetch");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -147,18 +147,6 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, chat_uui
     });
 }
 exports.botKeysend = botKeysend;
-/*
-=> receiveBotInstall {
-  type: 23,
-  bot_uuid: 'X1_sGR-WM_e29YL5100WA_P_VeYwvEsXfgc2NUhMzLNrNbWy2BVot9bVHnsXyPVmzoHleCYUn8oyUiDzE89Do1acLu6G',
-  message: { content: '', amount: 3 },
-  sender: {
-    pub_key: '037bac010f84ef785ddc3ade66d008d76d90d80eab6e148c00ea4ba102c07f2e53'
-  },
-  chat: {}
-}
-no chat uuid or sender pub key
-*/
 function receiveBotInstall(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveBotInstall', payload);
@@ -214,11 +202,54 @@ function receiveBotCmd(payload) {
             return;
         botMember.update({ msgCount: (botMember || 0) + 1 });
         console.log('=> post to remote BOT!!!!! bot owner');
-        return intercept.postToBotServer(payload, bot);
+        return postToBotServer(payload, bot);
         // forward to the entire Action back over MQTT
     });
 }
 exports.receiveBotCmd = receiveBotCmd;
+function postToBotServer(msg, bot) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!bot)
+            return false;
+        if (!bot.webhook || !bot.secret)
+            return false;
+        const r = yield node_fetch_1.default(bot.webhook, {
+            method: 'POST',
+            body: JSON.stringify(buildBotPayload(msg)),
+            headers: {
+                'x-secret': bot.secret,
+                'Content-Type': 'application/json'
+            }
+        });
+        return r.ok;
+    });
+}
+exports.postToBotServer = postToBotServer;
+function buildBotPayload(msg) {
+    const m = {
+        channel: {
+            id: msg.chat.uuid,
+            send: function () { },
+        },
+        reply: function () { },
+        content: msg.message.content,
+        amount: msg.message.amount,
+        type: msg.type,
+        member: {
+            id: msg.sender.pub_key,
+            nickname: msg.sender.alias,
+            roles: []
+        }
+    };
+    if (msg.sender.role === constants.chat_roles.owner) {
+        if (m.member)
+            m.member.roles = [{
+                    name: 'Admin'
+                }];
+    }
+    return m;
+}
+exports.buildBotPayload = buildBotPayload;
 function receiveBotRes(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("=> receiveBotRes", payload);

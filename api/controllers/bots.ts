@@ -5,9 +5,11 @@ import { models } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
-import * as intercept from '../network/intercept'
 import {finalAction,Action} from './actions'
 import * as socket from '../utils/socket'
+import fetch from 'node-fetch'
+import * as SphinxBot from 'sphinx-bot'
+import {Msg} from '../network/interfaces'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
@@ -137,18 +139,6 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_
   }
 }
 
-/*
-=> receiveBotInstall {
-  type: 23,
-  bot_uuid: 'X1_sGR-WM_e29YL5100WA_P_VeYwvEsXfgc2NUhMzLNrNbWy2BVot9bVHnsXyPVmzoHleCYUn8oyUiDzE89Do1acLu6G',
-  message: { content: '', amount: 3 },
-  sender: {
-    pub_key: '037bac010f84ef785ddc3ade66d008d76d90d80eab6e148c00ea4ba102c07f2e53'
-  },
-  chat: {}
-}
-no chat uuid or sender pub key
-*/
 export async function receiveBotInstall(payload) {
   console.log('=> receiveBotInstall',payload)
 
@@ -206,10 +196,49 @@ export async function receiveBotCmd(payload) {
   botMember.update({ msgCount: (botMember||0)+1 })
 
   console.log('=> post to remote BOT!!!!! bot owner')
-	return intercept.postToBotServer(payload, bot)
+	return postToBotServer(payload, bot)
    // forward to the entire Action back over MQTT
 }
 
+export async function postToBotServer(msg, bot): Promise<boolean> {
+  if(!bot) return false
+  if(!bot.webhook || !bot.secret) return false
+  const r = await fetch(bot.webhook, {
+    method:'POST',
+    body:JSON.stringify(
+      buildBotPayload(msg)
+    ),
+    headers:{
+      'x-secret': bot.secret,
+      'Content-Type': 'application/json'
+    }
+  })
+  return r.ok
+}
+
+export function buildBotPayload(msg:Msg): SphinxBot.Message {
+  const m = <SphinxBot.Message>{
+      channel:{
+          id: msg.chat.uuid,
+          send:function(){},
+      },
+      reply:function(){},
+      content: msg.message.content,
+      amount: msg.message.amount,
+      type: msg.type,
+      member: {
+          id: msg.sender.pub_key,
+          nickname: msg.sender.alias,
+          roles:[]
+      }
+  }
+  if(msg.sender.role===constants.chat_roles.owner) {
+      if(m.member) m.member.roles=[{
+          name:'Admin'
+      }]
+  }
+  return m
+}
 
 export async function receiveBotRes(payload) {
   console.log("=> receiveBotRes", payload)

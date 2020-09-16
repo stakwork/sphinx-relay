@@ -10,10 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
-const bots_1 = require("../bots");
-const bots_2 = require("../controllers/bots");
+const builtin_1 = require("../builtin");
+const bots_1 = require("../controllers/bots");
 const path = require("path");
-const node_fetch_1 = require("node-fetch");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 /*
 default show or not
@@ -36,7 +35,7 @@ function isBotMsg(msg, sentByMe) {
             return false;
         let didEmit = false;
         if (txt.startsWith('/bot ')) {
-            bots_1.builtinBotEmit(msg);
+            builtin_1.builtinBotEmit(msg);
             didEmit = true;
         }
         if (didEmit)
@@ -70,38 +69,20 @@ function emitMessageToBot(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
         switch (botInTribe.botType) {
             case constants.bot_types.builtin:
-                bots_1.builtinBotEmit(msg);
+                builtin_1.builtinBotEmit(msg);
                 return true;
             case constants.bot_types.local:
                 const bot = yield models_1.models.Bot.findOne({ where: {
                         uuid: botInTribe.botUuid
                     } });
-                return postToBotServer(msg, bot);
+                return bots_1.postToBotServer(msg, bot);
             case constants.bot_types.remote:
-                return bots_2.keysendBotCmd(msg, botInTribe);
+                return bots_1.keysendBotCmd(msg, botInTribe);
             default:
                 return false;
         }
     });
 }
-function postToBotServer(msg, bot) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!bot)
-            return false;
-        if (!bot.webhook || !bot.secret)
-            return false;
-        const r = yield node_fetch_1.default(bot.webhook, {
-            method: 'POST',
-            body: JSON.stringify(bots_1.buildBotPayload(msg)),
-            headers: {
-                'x-secret': bot.secret,
-                'Content-Type': 'application/json'
-            }
-        });
-        return r.ok;
-    });
-}
-exports.postToBotServer = postToBotServer;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {
