@@ -72,7 +72,7 @@ export async function installBot(chat, bot_json) {
 
   console.log("=> chat to install bot into", chat)
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
-  const isTribeOwner = owner && owner.publicKey && owner.publicKey === chat && chat.ownerPubkey
+  const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey)
   if(!isTribeOwner) return console.log('=> only tribe owner can install bots')
 
   const {uuid,owner_pubkey,unique_name,price_per_use} = bot_json
