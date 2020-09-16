@@ -17,24 +17,24 @@ sqlite3: `$ sudo apt install sqlite3`
 
 python2 (if not present): `$ sudo apt install python2`
 
-### Open port 3001 on myNode
+### Open port 53001 on myNode
 
-**note**: This port can be whatever number you want. Just add PORT to your environment like `export PORT=5005`.
+**note**: Port 3001 is now taken by one of myNode apps. In this document we use port 53001, but this port can be whatever number you want. Just add PORT to your environment like `export PORT=55005`.
 
 Open up a console window with SSH. And login as root
 ```sh
 $ sudo su
 ```
-Open up port 3001 on your machine and make sure it has been added to the list.
+Open up port 53001 on your machine and make sure it has been added to the list.
 ```sh 
-# ufw allow 3001 comment 'allow Sphinx-Chat'
+# ufw allow 53001 comment 'allow Sphinx-Chat'
 # ufw status
 
 > Status: active
 >
 > To                         Action      From
 > --                         ------      ----
-> 3001 (v6)                  ALLOW       Anywhere (v6)              # Sphinx-Chat
+> 53001 (v6)                  ALLOW       Anywhere (v6)              # Sphinx-Chat
 ```
 
 ### Download
@@ -172,6 +172,24 @@ Save and exit:
 
 `Enter`
 
+Now we have to set the environment variables `PORT` and `NODE_IP` for the new `sphinx-relay.service`:
+
+`sudo systemctl edit sphinx-relay`
+
+This opens `nano` editor with an empty configuration file that you should type the following text into:
+
+```
+[Service]
+Environment="PORT=53001"
+Environment="NODE_IP=x.x.x.x:53001"
+```
+Save and exit:
+`Ctrl + X`
+
+`Y`
+
+`Enter`
+
 Let's run!
 ```sh 
 $ sudo systemctl enable sphinx-relay
@@ -268,7 +286,7 @@ Save and exit:
 ```sh 
 $ cd
 $ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:3001
+$ export NODE_IP=x.x.x.x:53001
 ```
 where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay on your local network.
 
@@ -277,11 +295,11 @@ where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay
 ```sh 
 $ cd
 $ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:3001
+$ export NODE_IP=x.x.x.x:53001
 ```
 where `x.x.x.x` is the permanent public IP address of your router.
 
-> Make sure that port 3001 forwarding is properly set up.
+> Make sure that port 53001 forwarding is properly set up.
 
 For extra security:
 ```sh
