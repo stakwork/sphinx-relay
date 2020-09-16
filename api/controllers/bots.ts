@@ -7,6 +7,7 @@ import { success, failure } from '../utils/res'
 import * as network from '../network'
 import * as intercept from '../network/intercept'
 import {finalAction} from './actions'
+import * as socket from '../utils/socket'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
@@ -155,6 +156,7 @@ export async function receiveBotInstall(payload) {
   //- and if the pubkey=the botOwnerPubkey, confirm chatbot?
 }
 
+// ONLY FOR BOT MAKER
 export async function receiveBotCmd(payload) {
   console.log("=> receiveBotCmd", payload)
 
@@ -183,10 +185,60 @@ export async function receiveBotCmd(payload) {
    // forward to the entire Action back over MQTT
 }
 
+
 export async function receiveBotRes(payload) {
   console.log("=> receiveBotRes", payload)
-  // forward to the tribe
-  // received the entire action?
-  const bot_id = payload.bot_id
-  finalAction(payload, bot_id)
+  const dat = payload.content || payload
+
+  if(!dat.chat || !dat.message || !dat.sender) {
+    return console.log('=> receiveBotRes error, no chat||msg||sender')
+  }
+  const chat_uuid = dat.chat && dat.chat.uuid
+  const sender_pub_key =dat.sender.pub_key
+  const amount = dat.message.amount
+  const msg_uuid = dat.message.uuid||''
+  const content = dat.message.content
+  const botName = dat.message.bot_name
+  if(!chat_uuid) return console.log('=> receiveBotRes Error no chat_uuid')
+
+  const chat = await models.Chat.findOne({where:{uuid:chat_uuid}})
+  if(!chat) return console.log('=> receiveBotRes Error no chat')
+
+  const tribeOwnerPubKey = chat && chat.ownerPubkey
+  const owner = await models.Contact.findOne({where: {isOwner:true}})
+  const isTribeOwner = owner.publicKey===tribeOwnerPubKey
+  
+  if(isTribeOwner){
+    // IF IS TRIBE ADMIN forward to the tribe
+    // received the entire action?
+    const bot_id = payload.bot_id
+    finalAction(payload.message, bot_id)
+
+  } else {
+    const theChat = await models.Chat.findOne({where:{
+      uuid: chat_uuid
+    }})
+    if(!chat) return console.log('=> receiveBotRes as sub error no chat')
+    var date = new Date();
+    date.setMilliseconds(0)
+    const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+    const msg: { [k: string]: any } = {
+      chatId: chat.id,
+      uuid: msg_uuid,
+      type: constants.message_types.bot_res,
+      sender: (sender&&sender.id) || 0,
+      amount: amount || 0,
+      date: date,
+      messageContent: content,
+      status: constants.statuses.confirmed,
+      createdAt: date,
+      updatedAt: date,
+      senderAlias: botName || 'Bot',
+    }
+    const message = await models.Message.create(msg)
+    socket.sendJson({
+      type: 'message',
+      response: jsonUtils.messageToJson(message, theChat, owner)
+    })
+  }
 }

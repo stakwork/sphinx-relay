@@ -71,6 +71,12 @@ function finalAction(a, bot_id) {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         let theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!theChat) {
+            // fORWARD BACK TO THE TRIBE ADMIN
+            const bot = yield models_1.models.Bot.findOne({ where: {
+                    id: bot_id,
+                } });
+            if (!bot)
+                return console.log('bot not found');
             // is this a bot member cmd res
             const botMember = yield models_1.models.BotMember.findOne({ where: {
                     tribeUuid: chat_uuid, botId: bot_id
@@ -80,10 +86,14 @@ function finalAction(a, bot_id) {
             const dest = botMember.memberPubkey;
             if (!dest)
                 return console.log('no dest to send to');
-            const topic = `${dest}/${chat_uuid}`;
-            const data = Object.assign(Object.assign({}, a), { bot_id, sender: { pub_key: owner.publicKey } // for verify sig
-             });
+            const topic = `${dest}/${bot.uuid}`;
+            const data = {
+                message: a,
+                bot_id,
+                sender: { pub_key: owner.publicKey },
+            };
             yield tribes.publish(topic, data, function () {
+                console.log('=> bbot res forwarded back to tribe admin');
             });
             return;
         }

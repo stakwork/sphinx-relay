@@ -18,6 +18,7 @@ const res_1 = require("../utils/res");
 const network = require("../network");
 const intercept = require("../network/intercept");
 const actions_1 = require("./actions");
+const socket = require("../utils/socket");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -165,6 +166,7 @@ function receiveBotInstall(payload) {
     });
 }
 exports.receiveBotInstall = receiveBotInstall;
+// ONLY FOR BOT MAKER
 function receiveBotCmd(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("=> receiveBotCmd", payload);
@@ -196,10 +198,58 @@ exports.receiveBotCmd = receiveBotCmd;
 function receiveBotRes(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("=> receiveBotRes", payload);
-        // forward to the tribe
-        // received the entire action?
-        const bot_id = payload.bot_id;
-        actions_1.finalAction(payload, bot_id);
+        const dat = payload.content || payload;
+        if (!dat.chat || !dat.message || !dat.sender) {
+            return console.log('=> receiveBotRes error, no chat||msg||sender');
+        }
+        const chat_uuid = dat.chat && dat.chat.uuid;
+        const sender_pub_key = dat.sender.pub_key;
+        const amount = dat.message.amount;
+        const msg_uuid = dat.message.uuid || '';
+        const content = dat.message.content;
+        const botName = dat.message.bot_name;
+        if (!chat_uuid)
+            return console.log('=> receiveBotRes Error no chat_uuid');
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        if (!chat)
+            return console.log('=> receiveBotRes Error no chat');
+        const tribeOwnerPubKey = chat && chat.ownerPubkey;
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const isTribeOwner = owner.publicKey === tribeOwnerPubKey;
+        if (isTribeOwner) {
+            // IF IS TRIBE ADMIN forward to the tribe
+            // received the entire action?
+            const bot_id = payload.bot_id;
+            actions_1.finalAction(payload.message, bot_id);
+        }
+        else {
+            const theChat = yield models_1.models.Chat.findOne({ where: {
+                    uuid: chat_uuid
+                } });
+            if (!chat)
+                return console.log('=> receiveBotRes as sub error no chat');
+            var date = new Date();
+            date.setMilliseconds(0);
+            const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
+            const msg = {
+                chatId: chat.id,
+                uuid: msg_uuid,
+                type: constants.message_types.bot_res,
+                sender: (sender && sender.id) || 0,
+                amount: amount || 0,
+                date: date,
+                messageContent: content,
+                status: constants.statuses.confirmed,
+                createdAt: date,
+                updatedAt: date,
+                senderAlias: botName || 'Bot',
+            };
+            const message = yield models_1.models.Message.create(msg);
+            socket.sendJson({
+                type: 'message',
+                response: jsonUtils.messageToJson(message, theChat, owner)
+            });
+        }
     });
 }
 exports.receiveBotRes = receiveBotRes;

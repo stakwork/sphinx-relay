@@ -69,6 +69,11 @@ export async function finalAction(a:Action, bot_id:string){
 
     let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
     if(!theChat) {
+        // fORWARD BACK TO THE TRIBE ADMIN
+        const bot = await models.Bot.findOne({where:{
+            id: bot_id,
+        }})
+        if(!bot) return console.log('bot not found')
         // is this a bot member cmd res
         const botMember = await models.BotMember.findOne({where:{
             tribeUuid: chat_uuid, botId: bot_id
@@ -77,14 +82,14 @@ export async function finalAction(a:Action, bot_id:string){
 
         const dest = botMember.memberPubkey
         if(!dest) return console.log('no dest to send to')
-        const topic = `${dest}/${chat_uuid}`
+        const topic = `${dest}/${bot.uuid}`
         const data = {
-            ...a,
+            message:a,
             bot_id,
-            sender:{pub_key: owner.publicKey} // for verify sig
+            sender:{pub_key: owner.publicKey}, // for verify sig
         }
         await tribes.publish(topic, data, function(){
-            
+            console.log('=> bbot res forwarded back to tribe admin')
         })
         return
     }
