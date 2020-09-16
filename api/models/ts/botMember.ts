@@ -16,6 +16,9 @@ export default class BotMember extends Model<BotMember> {
   id: number
 
   @Column
+  botId: string
+
+  @Column
   memberPubkey: string
 
   @Column

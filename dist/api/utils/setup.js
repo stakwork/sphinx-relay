@@ -80,6 +80,8 @@ function migrate() {
     )`);
         }
         catch (e) { }
+        addTableColumn('sphinx_bot_members', 'bot_id');
+        //////////
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_bots (

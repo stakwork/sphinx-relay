@@ -17,6 +17,7 @@ const rsa = require("../crypto/rsa");
 const jsonUtils = require("../utils/json");
 const socket = require("../utils/socket");
 const res_1 = require("../utils/res");
+const tribes = require("../utils/tribes");
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -53,7 +54,7 @@ function processAction(req, res) {
             bot_name: bot.name, chat_uuid
         };
         try {
-            const r = yield finalAction(a);
+            const r = yield finalAction(a, bot_id);
             res_1.success(res, r);
         }
         catch (e) {
@@ -62,9 +63,30 @@ function processAction(req, res) {
     });
 }
 exports.processAction = processAction;
-function finalAction(a) {
+function finalAction(a, bot_id) {
     return __awaiter(this, void 0, void 0, function* () {
         const { action, pubkey, amount, content, bot_name, chat_uuid } = a;
+        if (!chat_uuid)
+            throw 'no chat_uuid';
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        let theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        if (!theChat) {
+            // is this a bot member cmd res
+            const botMember = yield models_1.models.BotMember.findOne({ where: {
+                    tribeUuid: chat_uuid, botId: bot_id
+                } });
+            if (!botMember)
+                return console.log('no botMember');
+            const dest = botMember.memberPubkey;
+            if (!dest)
+                return console.log('no dest to send to');
+            const topic = `${dest}/${chat_uuid}`;
+            const data = Object.assign(Object.assign({}, a), { bot_id, sender: { pub_key: owner.publicKey } // for verify sig
+             });
+            yield tribes.publish(topic, data, function () {
+            });
+            return;
+        }
         if (action === 'keysend') {
             console.log('=> BOT KEYSEND');
             if (!(pubkey && pubkey.length === 66 && amount)) {
@@ -87,11 +109,9 @@ function finalAction(a) {
         }
         else if (action === 'broadcast') {
             console.log('=> BOT BROADCAST');
-            if (!chat_uuid || !content)
-                throw 'no chatID or content';
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
-            if (!theChat || !owner)
+            if (!content)
+                throw 'no content';
+            if (!theChat)
                 throw 'no chat';
             if (!theChat.type === constants.chat_types.tribe)
                 throw 'not a tribe';

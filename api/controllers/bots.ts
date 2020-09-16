@@ -5,6 +5,8 @@ import { models } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
+import * as intercept from '../network/intercept'
+import {finalAction} from './actions'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
@@ -32,7 +34,7 @@ export const createBot = async (req, res) => {
   try {
     const owner = await models.Contact.findOne({ where: { isOwner: true } })
     const theBot = await models.Bot.create(newBot)
-    // post to bots.sphinx.chat
+    // post to tribes.sphinx.chat
     tribes.declare_bot({
       uuid,
       owner_pubkey: owner.publicKey,
@@ -73,8 +75,8 @@ export async function installBot(chatId:number, bot_json) {
     pricePerUse: price_per_use
   }
   console.log("installBot INSTALL BOT NOW",chatBot)
-  keysendBotInstall(chatBot)
-  await models.ChatBot.create(chatBot)
+  const succeeded = await keysendBotInstall(chatBot)
+  if(succeeded) models.ChatBot.create(chatBot)
 }
 
 export async function keysendBotInstall(b): Promise<boolean> {
@@ -88,24 +90,12 @@ export async function keysendBotCmd(msg, b): Promise<boolean> {
   return await botKeysend(
     constants.message_types.bot_cmd,
     b.botUuid, b.botMakerPubkey, b.pricePerUse,
-    msg.message.content
+    msg.message.content,
+    msg.chat.uuid,
   )
 }
 
-export async function receiveBotInstall(payload) {
-  console.log('=> receiveBotInstall')
-
-  // const dat = payload.content || payload
-  // const sender_pub_key = dat.sender.pub_key
-  // const bot_uuid = dat.bot_uuid
-
-  // verify tribe ownership (verify signed timestamp)
-
-  // CHECK PUBKEY - is it me? install it! (create botmember)
-  // if the pubkey=the botOwnerPubkey, (create chatbot)
-}
-
-export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content?:string): Promise<boolean> {
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content?:string, chat_uuid?:string): Promise<boolean> {
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
   const MIN_SATS = 3
   const destkey = botmaker_pubkey
@@ -117,9 +107,13 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_
       message: {content: content||''},
       sender: {
         pub_key: owner.publicKey,
-      }
+      },
+      chat: {}
     },
     amt: Math.max(price_per_use || MIN_SATS)
+  }
+  if(chat_uuid) {
+    opts.data.chat = {uuid:chat_uuid}
   }
   try {
     await network.signAndSend(opts)
@@ -129,24 +123,70 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_
   }
 }
 
-// type BotCmdType = 'install' | 'message' | 'broadcast' | 'keysend'
+export async function receiveBotInstall(payload) {
+  console.log('=> receiveBotInstall',payload)
+
+  const dat = payload.content || payload
+  const sender_pub_key = dat.sender && dat.sender.pub_key
+  const bot_uuid = dat.bot_uuid
+  const chat_uuid = dat.chat && dat.chat.uuid
+  if(!chat_uuid || !sender_pub_key) return console.log('no chat uuid or sender pub key')
+
+  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
+  const bot = await models.Bot.findOne({where:{
+    uuid: bot_uuid
+  }})
+  if(!bot) return
+
+  const verifiedOwnerPubkey = await tribes.verifySignedTimestamp(bot_uuid)
+  if(verifiedOwnerPubkey===owner.publicKey){
+    const botMember = {
+      botId: bot.id,
+      memberPubkey:sender_pub_key,
+      tribeUuid:chat_uuid,
+      msgCount:0,
+    }
+    console.log("CREATE bot MEMBER", botMember)
+    await models.BotMember.create(botMember)
+  }
+  
+  //- need to pub back MQTT bot_install??
+  //- and if the pubkey=the botOwnerPubkey, confirm chatbot?
+}
 
 export async function receiveBotCmd(payload) {
-  console.log("=> receiveBotCmd")
-  console.log(constants.message_types.bot_cmd)
-  // forward to the entire Action back
+  console.log("=> receiveBotCmd", payload)
 
-  // const dat = payload.content || payload
+  const dat = payload.content || payload
   // const sender_pub_key = dat.sender.pub_key
-  // const bot_uuid = dat.bot_uuid
-  // const content = dat.message.content - check prefix
-  // const amount = dat.message.amount
+  const bot_uuid = dat.bot_uuid
+  const chat_uuid = dat.chat && dat.chat.uuid
+  if(!chat_uuid) return console.log('no chat uuid')
+  // const amount = dat.message.amount - check price_per_use
+
+  const bot = await models.Bot.findOne({where:{
+    uuid: bot_uuid
+  }})
+  if(!bot) return
+
+  const botMember = await models.BotMember.findOne({ where:{
+    botId: bot.id,
+    tribeUuid: chat_uuid,
+  }})
+  if(!botMember) return
+
+  botMember.update({ msgCount: (botMember||0)+1 })
+
+  console.log('=> post to remote BOT!!!!! bot owner')
+	return intercept.postToBotServer(payload, bot)
+   // forward to the entire Action back over MQTT
 }
 
 export async function receiveBotRes(payload) {
-  console.log("=> receiveBotRes")
-  console.log(constants.message_types.bot_res)
+  console.log("=> receiveBotRes", payload)
   // forward to the tribe
   // received the entire action?
-
+  const bot_id = payload.bot_id
+  finalAction(payload, bot_id)
 }

@@ -71,7 +71,10 @@ function emitMessageToBot(msg, botInTribe) {
                 bots_1.builtinBotEmit(msg);
                 return true;
             case constants.bot_types.local:
-                return postToBotServer(msg, botInTribe);
+                const bot = yield models_1.models.Bot.findOne({ where: {
+                        uuid: botInTribe.botUuid
+                    } });
+                return postToBotServer(msg, bot);
             case constants.bot_types.remote:
                 return bots_2.keysendBotCmd(msg, botInTribe);
             default:
@@ -79,11 +82,10 @@ function emitMessageToBot(msg, botInTribe) {
         }
     });
 }
-function postToBotServer(msg, botInTribe) {
+function postToBotServer(msg, bot) {
     return __awaiter(this, void 0, void 0, function* () {
-        const bot = yield models_1.models.Bot.findOne({ where: {
-                uuid: botInTribe.botUuid
-            } });
+        if (!bot)
+            return false;
         if (!bot.webhook || !bot.secret)
             return false;
         const r = yield node_fetch_1.default(bot.webhook, {
@@ -97,6 +99,7 @@ function postToBotServer(msg, botInTribe) {
         return r.ok;
     });
 }
+exports.postToBotServer = postToBotServer;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

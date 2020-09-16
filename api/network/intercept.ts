@@ -62,7 +62,10 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
       builtinBotEmit(msg)
       return true
     case constants.bot_types.local:
-      return postToBotServer(msg, botInTribe)
+      const bot = await models.Bot.findOne({where:{
+        uuid: botInTribe.botUuid
+      }})
+      return postToBotServer(msg, bot)
     case constants.bot_types.remote:
       return keysendBotCmd(msg, botInTribe)
     default:
@@ -70,10 +73,8 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
   }
 }
 
-async function postToBotServer(msg, botInTribe): Promise<boolean> {
-  const bot = await models.Bot.findOne({where:{
-    uuid: botInTribe.botUuid
-  }})
+export async function postToBotServer(msg, bot): Promise<boolean> {
+  if(!bot) return false
   if(!bot.webhook || !bot.secret) return false
   const r = await fetch(bot.webhook, {
     method:'POST',

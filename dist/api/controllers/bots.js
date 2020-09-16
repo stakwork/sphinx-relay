@@ -16,6 +16,8 @@ const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const network = require("../network");
+const intercept = require("../network/intercept");
+const actions_1 = require("./actions");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -40,7 +42,7 @@ exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const theBot = yield models_1.models.Bot.create(newBot);
-        // post to bots.sphinx.chat
+        // post to tribes.sphinx.chat
         tribes.declare_bot({
             uuid,
             owner_pubkey: owner.publicKey,
@@ -83,8 +85,9 @@ function installBot(chatId, bot_json) {
             pricePerUse: price_per_use
         };
         console.log("installBot INSTALL BOT NOW", chatBot);
-        keysendBotInstall(chatBot);
-        yield models_1.models.ChatBot.create(chatBot);
+        const succeeded = yield keysendBotInstall(chatBot);
+        if (succeeded)
+            models_1.models.ChatBot.create(chatBot);
     });
 }
 exports.installBot = installBot;
@@ -96,23 +99,11 @@ function keysendBotInstall(b) {
 exports.keysendBotInstall = keysendBotInstall;
 function keysendBotCmd(msg, b) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, b.pricePerUse, msg.message.content);
+        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, b.pricePerUse, msg.message.content, msg.chat.uuid);
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
-function receiveBotInstall(payload) {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> receiveBotInstall');
-        // const dat = payload.content || payload
-        // const sender_pub_key = dat.sender.pub_key
-        // const bot_uuid = dat.bot_uuid
-        // verify tribe ownership (verify signed timestamp)
-        // CHECK PUBKEY - is it me? install it! (create botmember)
-        // if the pubkey=the botOwnerPubkey, (create chatbot)
-    });
-}
-exports.receiveBotInstall = receiveBotInstall;
-function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content) {
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content, chat_uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const MIN_SATS = 3;
@@ -125,10 +116,14 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content)
                 message: { content: content || '' },
                 sender: {
                     pub_key: owner.publicKey,
-                }
+                },
+                chat: {}
             },
             amt: Math.max(price_per_use || MIN_SATS)
         };
+        if (chat_uuid) {
+            opts.data.chat = { uuid: chat_uuid };
+        }
         try {
             yield network.signAndSend(opts);
             return true;
@@ -139,26 +134,72 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, content)
     });
 }
 exports.botKeysend = botKeysend;
-// type BotCmdType = 'install' | 'message' | 'broadcast' | 'keysend'
+function receiveBotInstall(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> receiveBotInstall', payload);
+        const dat = payload.content || payload;
+        const sender_pub_key = dat.sender && dat.sender.pub_key;
+        const bot_uuid = dat.bot_uuid;
+        const chat_uuid = dat.chat && dat.chat.uuid;
+        if (!chat_uuid || !sender_pub_key)
+            return console.log('no chat uuid or sender pub key');
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const bot = yield models_1.models.Bot.findOne({ where: {
+                uuid: bot_uuid
+            } });
+        if (!bot)
+            return;
+        const verifiedOwnerPubkey = yield tribes.verifySignedTimestamp(bot_uuid);
+        if (verifiedOwnerPubkey === owner.publicKey) {
+            const botMember = {
+                botId: bot.id,
+                memberPubkey: sender_pub_key,
+                tribeUuid: chat_uuid,
+                msgCount: 0,
+            };
+            console.log("CREATE bot MEMBER", botMember);
+            yield models_1.models.BotMember.create(botMember);
+        }
+        //- need to pub back MQTT bot_install??
+        //- and if the pubkey=the botOwnerPubkey, confirm chatbot?
+    });
+}
+exports.receiveBotInstall = receiveBotInstall;
 function receiveBotCmd(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveBotCmd");
-        console.log(constants.message_types.bot_cmd);
-        // forward to the entire Action back
-        // const dat = payload.content || payload
+        console.log("=> receiveBotCmd", payload);
+        const dat = payload.content || payload;
         // const sender_pub_key = dat.sender.pub_key
-        // const bot_uuid = dat.bot_uuid
-        // const content = dat.message.content - check prefix
-        // const amount = dat.message.amount
+        const bot_uuid = dat.bot_uuid;
+        const chat_uuid = dat.chat && dat.chat.uuid;
+        if (!chat_uuid)
+            return console.log('no chat uuid');
+        // const amount = dat.message.amount - check price_per_use
+        const bot = yield models_1.models.Bot.findOne({ where: {
+                uuid: bot_uuid
+            } });
+        if (!bot)
+            return;
+        const botMember = yield models_1.models.BotMember.findOne({ where: {
+                botId: bot.id,
+                tribeUuid: chat_uuid,
+            } });
+        if (!botMember)
+            return;
+        botMember.update({ msgCount: (botMember || 0) + 1 });
+        console.log('=> post to remote BOT!!!!! bot owner');
+        return intercept.postToBotServer(payload, bot);
+        // forward to the entire Action back over MQTT
     });
 }
 exports.receiveBotCmd = receiveBotCmd;
 function receiveBotRes(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveBotRes");
-        console.log(constants.message_types.bot_res);
+        console.log("=> receiveBotRes", payload);
         // forward to the tribe
         // received the entire action?
+        const bot_id = payload.bot_id;
+        actions_1.finalAction(payload, bot_id);
     });
 }
 exports.receiveBotRes = receiveBotRes;

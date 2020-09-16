@@ -6,6 +6,8 @@ import * as rsa from '../crypto/rsa'
 import * as jsonUtils from '../utils/json'
 import * as socket from '../utils/socket'
 import { success, failure } from '../utils/res'
+import * as tribes from '../utils/tribes'
+
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -52,15 +54,40 @@ export async function processAction(req, res) {
     }
 
     try {
-        const r = await finalAction(a)
+        const r = await finalAction(a,bot_id)
         success(res, r)
     } catch(e) {
         failure(res, e)
     }
 }
 
-export async function finalAction(a:Action){
+export async function finalAction(a:Action, bot_id:string){
     const {action,pubkey,amount,content,bot_name,chat_uuid} = a
+    if (!chat_uuid) throw 'no chat_uuid' 
+
+    const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
+    let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+    if(!theChat) {
+        // is this a bot member cmd res
+        const botMember = await models.BotMember.findOne({where:{
+            tribeUuid: chat_uuid, botId: bot_id
+        }})
+        if(!botMember) return console.log('no botMember')
+
+        const dest = botMember.memberPubkey
+        if(!dest) return console.log('no dest to send to')
+        const topic = `${dest}/${chat_uuid}`
+        const data = {
+            ...a,
+            bot_id,
+            sender:{pub_key: owner.publicKey} // for verify sig
+        }
+        await tribes.publish(topic, data, function(){
+            
+        })
+        return
+    }
 
     if (action === 'keysend') {
         console.log('=> BOT KEYSEND')
@@ -83,10 +110,8 @@ export async function finalAction(a:Action){
 
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
-        if (!chat_uuid || !content) throw 'no chatID or content'
-        const owner = await models.Contact.findOne({ where: { isOwner: true } })
-        const theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
-        if (!theChat || !owner) throw 'no chat'
+        if (!content) throw 'no content'
+        if (!theChat) throw 'no chat'
         if (!theChat.type === constants.chat_types.tribe) throw 'not a tribe'
 
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content)

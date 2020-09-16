@@ -27,6 +27,10 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
+], BotMember.prototype, "botId", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
 ], BotMember.prototype, "memberPubkey", void 0);
 __decorate([
     sequelize_typescript_1.Column,

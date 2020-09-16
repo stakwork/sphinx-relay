@@ -69,6 +69,10 @@ async function migrate(){
     )`)
   } catch(e){}
 
+  addTableColumn('sphinx_bot_members', 'bot_id')
+
+  //////////
+
   try{
     await sequelize.query(`
     CREATE TABLE sphinx_bots (

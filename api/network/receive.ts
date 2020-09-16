@@ -11,7 +11,6 @@ import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfF
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 import { Op } from 'sequelize'
 import * as timers from '../utils/timers'
-// import * as intercept from './intercept'
 
 /*
 delete type:
@@ -34,14 +33,28 @@ const typesThatNeedPricePerMessage = [
 export const typesToReplay=[ // should match typesToForward
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave
 ]
+const botTypes=[
+	constants.message_types.bot_install,
+	constants.message_types.bot_cmd,
+	constants.message_types.bot_res
+]
 async function onReceive(payload){
 	console.log('===> onReceive',JSON.stringify(payload,null,2))
+	if(!payload.type) return console.log('no payload.type')
+
+	if(botTypes.includes(payload.type)) {
+		console.log("=> got bot msg type!!!!")
+		if(!payload.bot_uuid) return console.log('no bot uuid')
+		return ACTIONS[payload.type](payload)
+	}
+	
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}
 	let isTribe = false
 	let isTribeOwner = false
 	let chat
+
 	if(payload.chat&&payload.chat.uuid) {
 		isTribe = payload.chat.type===constants.chat_types.tribe
 		chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})

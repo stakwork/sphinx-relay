@@ -22,7 +22,6 @@ const modify_1 = require("./modify");
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
 const timers = require("../utils/timers");
-// import * as intercept from './intercept'
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -42,9 +41,22 @@ const typesThatNeedPricePerMessage = [
 exports.typesToReplay = [
     msgtypes.message, msgtypes.group_join, msgtypes.group_leave
 ];
+const botTypes = [
+    constants.message_types.bot_install,
+    constants.message_types.bot_cmd,
+    constants.message_types.bot_res
+];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('===> onReceive', JSON.stringify(payload, null, 2));
+        if (!payload.type)
+            return console.log('no payload.type');
+        if (botTypes.includes(payload.type)) {
+            console.log("=> got bot msg type!!!!");
+            if (!payload.bot_uuid)
+                return console.log('no bot uuid');
+            return controllers_1.ACTIONS[payload.type](payload);
+        }
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};
