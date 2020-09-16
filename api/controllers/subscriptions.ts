@@ -322,7 +322,7 @@ export async function createSubscription(req, res) {
 };
 
 export async function editSubscription(req, res) {
-  console.log('======> editSubscription')
+  console.log('=> editSubscription')
   const date = new Date()
   date.setMilliseconds(0)
   const id = parseInt(req.params.id)

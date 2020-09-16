@@ -11,6 +11,7 @@ import * as payments from './payment'
 import * as subcriptions from './subscriptions'
 import * as uploads from './uploads'
 import * as confirmations from './confirmations'
+import * as actions from './actions'
 import {checkTag} from '../utils/gitinfo'
 import * as path from 'path'
 import * as timers from '../utils/timers'
@@ -41,6 +42,7 @@ export async function set(app) {
 	app.put('/chat/:id', chats.addGroupMembers)
 	app.put('/kick/:chat_id/:contact_id', chats.kickChatMember)
 	app.post('/tribe', chatTribes.joinTribe)
+	app.put('/member/:contactId/:status/:messageId', chatTribes.approveOrRejectMember)
 	app.put('/group/:id', chatTribes.editTribe)
 
 	app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile)
@@ -91,6 +93,12 @@ export async function set(app) {
 	app.get('/logs', details.getLogsSince)
 	app.get('/info', details.getNodeInfo)
 
+	app.post('/action', actions.processAction)
+	app.get('/bots', actions.getBots)
+	app.get('/bots/:chat_id',actions.getBotsForTribe)
+	app.post('/bot', actions.createBot)
+	app.delete('/bot/:id', actions.deleteBot)
+
 	app.get('/version', async function(req,res) {
 		const version = await checkTag()
 		res.send({version})
@@ -136,4 +144,7 @@ export const ACTIONS = {
 	[msgtypes.group_kick]: chats.receiveGroupKick,
 	[msgtypes.delete]: messages.receiveDeleteMessage,
 	[msgtypes.repayment]: ()=>{},
+	[msgtypes.member_request]: chatTribes.receiveMemberRequest,
+	[msgtypes.member_approve]: chatTribes.receiveMemberApprove,
+	[msgtypes.member_reject]: chatTribes.receiveMemberReject,
 }

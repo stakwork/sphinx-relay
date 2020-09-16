@@ -99,7 +99,7 @@ const sendHubCall = (params) => {
     headers: { 'Content-Type': 'application/json' }
   })
   .catch(error => {
-    console.log('[hub error]', error)
+    console.log('[hub warning]: cannot reach hub',)
   })
 }
 
@@ -188,7 +188,7 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
   })
 }
 
-type NotificationType = 'group' | 'badge' | 'invite' | 'message'
+type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject'
 
 const sendNotification = async (chat, name, type:NotificationType) => {
   
@@ -198,6 +198,9 @@ const sendNotification = async (chat, name, type:NotificationType) => {
   }
   if(type==='group'){
     message = `You have been added to group ${name}`
+  }
+  if(type==='reject') {
+    message = `The admin has declined your request to join "${name}"`
   }
 
   if(type==='message' && chat.type==constants.chat_types.group && chat.name && chat.name.length){

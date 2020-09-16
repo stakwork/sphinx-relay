@@ -24,6 +24,9 @@ exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const invites = yield models_1.models.Invite.findAll({ raw: true });
     const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
     const subscriptions = yield models_1.models.Subscription.findAll({ raw: true });
+    const pendingMembers = yield models_1.models.ChatMember.findAll({ where: {
+            status: constants.chat_statuses.pending
+        } });
     const contactsResponse = contacts.map(contact => {
         let contactJson = jsonUtils.contactToJson(contact);
         let invite = invites.find(invite => invite.contactId == contact.id);
@@ -33,7 +36,14 @@ exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return contactJson;
     });
     const subsResponse = subscriptions.map(s => jsonUtils.subscriptionToJson(s, null));
-    const chatsResponse = chats.map(chat => jsonUtils.chatToJson(chat));
+    const chatsResponse = chats.map(chat => {
+        const theChat = chat.dataValues || chat;
+        if (!pendingMembers)
+            return jsonUtils.chatToJson(theChat);
+        const membs = pendingMembers.filter(m => m.chatId === chat.id) || [];
+        theChat.pendingContactIds = membs.map(m => m.contactId);
+        return jsonUtils.chatToJson(theChat);
+    });
     res_1.success(res, {
         contacts: contactsResponse,
         chats: chatsResponse,
@@ -68,6 +78,9 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
+    if (!contact) {
+        return res_1.failure(res, 'no contact found');
+    }
     // update self
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
@@ -184,7 +197,6 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
-    console.log("FOUND SENDER", sender && sender.dataValue);
     if (sender_contact_key && sender) {
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)

@@ -14,9 +14,9 @@ import * as socket from './api/utils/socket'
 import * as network from './api/network'
 
 let server: any = null
-const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
+const port = process.env.PORT || 3001 // config.node_http_port || 3001
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 
@@ -35,6 +35,8 @@ async function connectToLND(){
 	} catch(e) {
 		if(e.details) {
 			console.log(`=> [lnd] error details: ${e.details}`)
+		} else {
+			console.log(`=> [lnd] error: ${e.message}`)
 		}
 		setTimeout(async()=>{ // retry each 2 secs
 			await connectToLND()
@@ -86,6 +88,7 @@ async function authModule(req, res, next) {
 		req.path == '/app' ||
 		req.path == '/' ||
 		req.path == '/info' ||
+		req.path == '/action' ||
 		req.path == '/contacts/tokens' ||
 		req.path == '/login' ||
 		req.path.startsWith('/static') ||

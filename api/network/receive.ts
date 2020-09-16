@@ -40,7 +40,7 @@ async function onReceive(payload){
 	let isTribe = false
 	let isTribeOwner = false
 	let chat
-	if(payload.chat) {
+	if(payload.chat&&payload.chat.uuid) {
 		isTribe = payload.chat.type===constants.chat_types.tribe
 		chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
 		if(chat) chat.update({seen:false})
@@ -72,9 +72,15 @@ async function onReceive(payload){
 				})
 			}
 		}
-		// check price to join
+		// check price to join AND private chat
 		if(payload.type===msgtypes.group_join) {
 			if(payload.message.amount<chat.priceToJoin) doAction=false
+			if(chat.private) { // check if has been approved
+				const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+				if(!(senderMember && senderMember.status===constants.chat_statuses.approved)){
+					doAction=false // dont let if private and not approved
+				}
+			}
 		}
 		// check that the sender is the og poster
 		if(payload.type===msgtypes.delete) {
@@ -180,7 +186,6 @@ export async function initTribesSubscriptions(){
 	tribes.connect(async(topic, message)=>{ // onMessage callback
 		try{
 			const msg = message.toString()
-			// console.log("=====> msg received! TOPIC", topic, "MESSAGE", msg)
 			// check topic is signed by sender?
 			const payload = await parseAndVerifyPayload(msg)
 			onReceive(payload)

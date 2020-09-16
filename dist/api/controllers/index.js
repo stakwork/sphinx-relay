@@ -22,6 +22,7 @@ const payments = require("./payment");
 const subcriptions = require("./subscriptions");
 const uploads = require("./uploads");
 const confirmations = require("./confirmations");
+const actions = require("./actions");
 const gitinfo_1 = require("../utils/gitinfo");
 const path = require("path");
 const timers = require("../utils/timers");
@@ -48,6 +49,7 @@ function set(app) {
         app.put('/chat/:id', chats.addGroupMembers);
         app.put('/kick/:chat_id/:contact_id', chats.kickChatMember);
         app.post('/tribe', chatTribes.joinTribe);
+        app.put('/member/:contactId/:status/:messageId', chatTribes.approveOrRejectMember);
         app.put('/group/:id', chatTribes.editTribe);
         app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile);
         app.post('/invites', invites.createInvite);
@@ -88,6 +90,11 @@ function set(app) {
         app.get('/getinfo', details.getInfo);
         app.get('/logs', details.getLogsSince);
         app.get('/info', details.getNodeInfo);
+        app.post('/action', actions.processAction);
+        app.get('/bots', actions.getBots);
+        app.get('/bots/:chat_id', actions.getBotsForTribe);
+        app.post('/bot', actions.createBot);
+        app.delete('/bot/:id', actions.deleteBot);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 const version = yield gitinfo_1.checkTag();
@@ -134,5 +141,8 @@ exports.ACTIONS = {
     [msgtypes.group_kick]: chats.receiveGroupKick,
     [msgtypes.delete]: messages.receiveDeleteMessage,
     [msgtypes.repayment]: () => { },
+    [msgtypes.member_request]: chatTribes.receiveMemberRequest,
+    [msgtypes.member_approve]: chatTribes.receiveMemberApprove,
+    [msgtypes.member_reject]: chatTribes.receiveMemberReject,
 };
 //# sourceMappingURL=index.js.map

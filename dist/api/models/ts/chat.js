@@ -94,6 +94,17 @@ __decorate([
     __metadata("design:type", Number)
 ], Chat.prototype, "escrowMillis", void 0);
 __decorate([
+    sequelize_typescript_1.Column({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+    }),
+    __metadata("design:type", Boolean)
+], Chat.prototype, "unlisted", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Boolean)
+], Chat.prototype, "private", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Chat.prototype, "ownerPubkey", void 0);
@@ -105,6 +116,10 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], Chat.prototype, "seen", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Chat.prototype, "appUrl", void 0);
 Chat = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);

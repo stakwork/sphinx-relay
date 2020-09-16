@@ -8,6 +8,7 @@ import Subscription from './ts/subscription'
 import MediaKey from './ts/mediaKey'
 import ChatMember from './ts/chatMember'
 import Timer from './ts/timer'
+import Bot from './ts/bot'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../../config/config.json'))[env]
@@ -15,7 +16,7 @@ const config = require(path.join(__dirname,'../../config/config.json'))[env]
 const sequelize = new Sequelize({
   ...config,
   logging: process.env.SQL_LOG==='true' ? console.log : false,
-  models: [Chat,Contact,Invite,Message,Subscription,MediaKey,ChatMember,Timer]
+  models: [Chat,Contact,Invite,Message,Subscription,MediaKey,ChatMember,Timer,Bot]
 })
 const models = sequelize.models
 

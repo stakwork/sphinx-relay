@@ -15,6 +15,9 @@ export const getContacts = async (req, res) => {
 	const invites = await models.Invite.findAll({ raw: true })
 	const chats = await models.Chat.findAll({ where:{deleted:false}, raw: true })
 	const subscriptions = await models.Subscription.findAll({ raw: true })
+	const pendingMembers = await models.ChatMember.findAll({where:{
+		status: constants.chat_statuses.pending
+	}})
 
 	const contactsResponse = contacts.map(contact => {
 		let contactJson = jsonUtils.contactToJson(contact)
@@ -28,7 +31,13 @@ export const getContacts = async (req, res) => {
 	});
 
 	const subsResponse = subscriptions.map(s=> jsonUtils.subscriptionToJson(s,null))
-  	const chatsResponse = chats.map(chat => jsonUtils.chatToJson(chat))
+  	const chatsResponse = chats.map(chat=> {
+		const theChat = chat.dataValues||chat
+		if(!pendingMembers) return jsonUtils.chatToJson(theChat)
+		const membs = pendingMembers.filter(m=>m.chatId===chat.id) || []
+		theChat.pendingContactIds = membs.map(m=>m.contactId)
+		return jsonUtils.chatToJson(theChat)
+	})
 
 	success(res, {
 		contacts: contactsResponse,
@@ -72,6 +81,9 @@ export const updateContact = async (req, res) => {
 	let attrs = extractAttrs(req.body)
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id }})
+	if(!contact) {
+		return failure(res, 'no contact found')
+	}
 	
 	// update self
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
@@ -208,7 +220,6 @@ export const receiveContactKey = async (payload) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
-	console.log("FOUND SENDER",sender&&sender.dataValue)
 	if (sender_contact_key && sender) {
 		const objToUpdate:{[k:string]:any} = {contactKey: sender_contact_key}
 		if(sender_alias) objToUpdate.alias = sender_alias

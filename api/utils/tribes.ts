@@ -72,7 +72,7 @@ export function publish(topic, msg, cb) {
   })
 }
 
-export async function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis }) {
+export async function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
   try {
     await fetch('https://' + host + '/tribes', {
       method: 'POST',
@@ -84,6 +84,9 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
         owner_alias, owner_pubkey,
         escrow_amount: escrow_amount || 0,
         escrow_millis: escrow_millis || 0,
+        unlisted: unlisted||false,
+        private: is_private||false,
+        app_url: app_url||'',
       }),
       headers: { 'Content-Type': 'application/json' }
     })
@@ -94,7 +97,7 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
   }
 }
 
-export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis }) {
+export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
   try {
     const token = await genSignedTimestamp()
     await fetch('https://' + host + '/tribe?token=' + token, {
@@ -107,12 +110,28 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
         escrow_amount: escrow_amount || 0,
         escrow_millis: escrow_millis || 0,
         owner_alias,
+        unlisted: unlisted||false,
+        private: is_private||false,
+        app_url: app_url||'',
       }),
       headers: { 'Content-Type': 'application/json' }
     })
     // const j = await r.json()
   } catch(e) {
     console.log('[tribes] unauthorized to edit')
+    throw e
+  }
+}
+
+export async function putActivity( uuid:string, host:string ) {
+  try {
+    const token = await genSignedTimestamp()
+    await fetch(`https://${host}/tribeactivity/${uuid}?token=` + token, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    })
+  } catch(e) {
+    console.log('[tribes] unauthorized to putActivity')
     throw e
   }
 }

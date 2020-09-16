@@ -18,10 +18,12 @@ const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
 const receive_1 = require("./receive");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
+const MIN_SATS = 3;
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure, skipPubKey } = params;
         let msg = newmsg(type, chat, sender, message);
+        // console.log("=> MSG TO SEND",msg)
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
             console.log("NO SENDER?????");
@@ -51,6 +53,8 @@ function sendMessage(params) {
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
+                // post last_active to tribes server
+                tribes.putActivity(chat.uuid, chat.host);
             }
             else {
                 // if tribe, send to owner only
@@ -74,14 +78,18 @@ function sendMessage(params) {
                 return; // skip (for tribe owner broadcasting, not back to the sender)
             }
             console.log('-> sending to ', contact.id, destkey);
+            let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
+            // sending a payment to one subscriber (like buying a pic)
+            if (isTribeOwner && contactIds.length === 1 && amount && amount > MIN_SATS) {
+                mqttTopic = ''; // FORCE KEYSEND!!!
+            }
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
             const opts = {
                 dest: destkey,
                 data: m,
-                amt: Math.max((amount || 0), 3)
+                amt: Math.max((amount || 0), MIN_SATS)
             };
             try {
-                const mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
                 const r = yield signAndSend(opts, mqttTopic);
                 yes = r;
             }

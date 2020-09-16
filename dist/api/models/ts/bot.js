@@ -10,40 +10,38 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
-let ChatMember = class ChatMember extends sequelize_typescript_1.Model {
+let Bot = class Bot extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column({
+        type: sequelize_typescript_1.DataType.TEXT,
+        primaryKey: true,
+        unique: true,
+    }),
+    __metadata("design:type", String)
+], Bot.prototype, "id", void 0);
+__decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
-], ChatMember.prototype, "chatId", void 0);
+], Bot.prototype, "chatId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "contactId", void 0);
+    __metadata("design:type", String)
+], Bot.prototype, "name", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "role", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "totalSpent", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "totalMessages", void 0);
+    __metadata("design:type", String)
+], Bot.prototype, "secret", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], ChatMember.prototype, "lastActive", void 0);
+], Bot.prototype, "createdAt", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], ChatMember.prototype, "status", void 0);
-ChatMember = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_chat_members', underscored: true, indexes: [
-            { unique: true, fields: ['chat_id', 'contact_id'] }
-        ] })
-], ChatMember);
-exports.default = ChatMember;
-//# sourceMappingURL=chatMember.js.map
+    __metadata("design:type", Date)
+], Bot.prototype, "updatedAt", void 0);
+Bot = __decorate([
+    sequelize_typescript_1.Table({ tableName: 'sphinx_bots', underscored: true })
+], Bot);
+exports.default = Bot;
+//# sourceMappingURL=bot.js.map

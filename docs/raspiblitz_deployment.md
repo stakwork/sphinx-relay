@@ -19,6 +19,8 @@ python2 (if not present): `$ sudo apt install python2`
 
 ### Open port 3001 on Raspiblitz
 
+**note**: This port can be whatever number you want. Just add PORT to your environment like `export PORT=5005`.
+
 Open up a console window with SSH. And log in as root
 ```sh
 $ sudo su
@@ -187,6 +189,16 @@ $ sudo systemctl stop sphinx-relay
 ```
 
 # To update Sphinx-Relay
+
+### fast method:
+You can pull directly from git to update your relay. If you have only changed your config files, the following should work:
+- `systemctl stop sphinx-relay`
+- cd into your sphinx-relay directory (`cd sphinx-relay`)
+- `git stash && git checkout master && git pull && git stash pop`
+- [OPTIONAL, ONLY IF A NEW NPM DEPENDENCY HAS BEEN ADDED]: `npm i`
+- `systemctl start sphinx-relay`
+
+### full reset method:
 
 > This probably is not the most efficient way to update. But it works, so we got that going, which is nice. Feel free to optimize the process and contribute. :) 
 

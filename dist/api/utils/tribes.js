@@ -89,7 +89,7 @@ function publish(topic, msg, cb) {
         });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield fetch('https://' + host + '/tribes', {
@@ -102,6 +102,9 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     owner_alias, owner_pubkey,
                     escrow_amount: escrow_amount || 0,
                     escrow_millis: escrow_millis || 0,
+                    unlisted: unlisted || false,
+                    private: is_private || false,
+                    app_url: app_url || '',
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -114,7 +117,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
@@ -128,6 +131,9 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     escrow_amount: escrow_amount || 0,
                     escrow_millis: escrow_millis || 0,
                     owner_alias,
+                    unlisted: unlisted || false,
+                    private: is_private || false,
+                    app_url: app_url || '',
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -140,6 +146,22 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     });
 }
 exports.edit = edit;
+function putActivity(uuid, host) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield genSignedTimestamp();
+            yield fetch(`https://${host}/tribeactivity/${uuid}?token=` + token, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to putActivity');
+            throw e;
+        }
+    });
+}
+exports.putActivity = putActivity;
 function putstats({ uuid, host, member_count }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

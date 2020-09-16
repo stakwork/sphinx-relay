@@ -9,7 +9,7 @@ import * as md5 from 'md5'
 import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import * as timers from '../utils/timers'
-import {replayChatHistory,createTribeChatParams} from './chatTribes'
+import {replayChatHistory,createTribeChatParams,addPendingContactIdsToChat} from './chatTribes'
 
 const constants = require(path.join(__dirname,'../../config/constants.json'))
 
@@ -137,7 +137,6 @@ export async function createGroupChat(req, res) {
 	const {
 		name,
 		is_tribe,
-		is_listed,
 		price_per_message,
 		price_to_join,
 		escrow_amount,
@@ -145,6 +144,8 @@ export async function createGroupChat(req, res) {
 		img,
 		description,
 		tags,
+		unlisted,
+		app_url,
 	} = req.body
 	const contact_ids = req.body.contact_ids||[]
 
@@ -165,8 +166,8 @@ export async function createGroupChat(req, res) {
 	let chatParams:any = null
 	let okToCreate = true
 	if(is_tribe){
-		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis)
-		if(is_listed && chatParams.uuid){
+		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url)
+		if(chatParams.uuid){
 			// publish to tribe server
 			try {
 				await tribes.declare({
@@ -181,6 +182,9 @@ export async function createGroupChat(req, res) {
 					description, tags, img,
 					owner_pubkey: owner.publicKey,
 					owner_alias: owner.alias,
+					unlisted: unlisted||false,
+					is_private: req.body.private||false,
+					app_url,
 				})
 			} catch(e) {
 				okToCreate = false
@@ -211,6 +215,7 @@ export async function createGroupChat(req, res) {
 					contactId: owner.id,
 					chatId: chat.id,
 					role: constants.chat_roles.owner,
+					status: constants.chat_statuses.approved
 				})
 			}
 			success(res, jsonUtils.chatToJson(chat))
@@ -273,12 +278,16 @@ export const deleteChat = async (req, res) => {
 		return failure(res, "cannot leave your own tribe")
 	}
 
-	network.sendMessage({
-		chat,
-		sender: owner,
-		message: {},
-		type: constants.message_types.group_leave,
-	})
+	const isPending = chat.status===constants.chat_statuses.pending
+	const isRejected = chat.status===constants.chat_statuses.rejected
+	if(!isPending && !isRejected) { // dont send if pending
+		network.sendMessage({
+			chat,
+			sender: owner,
+			message: {},
+			type: constants.message_types.group_leave,
+		})
+	}
 
 	await chat.update({
 		deleted: true, 
@@ -311,7 +320,7 @@ export async function receiveGroupJoin(payload) {
 	const member = chat_members[sender_pub_key]
 	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
 
-	if(!isTribe || isTribeOwner) { // dont need to create contacts for these
+	if(!isTribe || isTribeOwner) { 
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if (sender) {
@@ -340,12 +349,13 @@ export async function receiveGroupJoin(payload) {
 
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
 
-		if(isTribeOwner){ // IF TRIBE, ADD TO XREF
-			models.ChatMember.create({
+		if(isTribeOwner){ // IF TRIBE, ADD new member TO XREF
+			models.ChatMember.upsert({
 				contactId: theSender.id,
 				chatId: chat.id,
 				role: constants.chat_roles.reader,
 				lastActive: date,
+				status: constants.chat_statuses.approved
 			})
 			replayChatHistory(chat, theSender)
 			tribes.putstats({
@@ -369,11 +379,12 @@ export async function receiveGroupJoin(payload) {
 	}
 	const message = await models.Message.create(msg)
 
+	const theChat = addPendingContactIdsToChat(chat)
 	socket.sendJson({
 		type: 'group_join',
 		response: {
 			contact: jsonUtils.contactToJson(theSender||{}),
-			chat: jsonUtils.chatToJson(chat),
+			chat: jsonUtils.chatToJson(theChat),
 			message: jsonUtils.messageToJson(message, null)
 		}
 	})
@@ -507,6 +518,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 				chatId: chat.id,
 				role: c.role||constants.chat_roles.reader,
 				lastActive: date,
+				status: constants.chat_statuses.approved
 			})
 		})
 	}
