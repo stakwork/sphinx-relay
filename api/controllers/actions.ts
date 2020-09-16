@@ -69,11 +69,15 @@ export async function finalAction(a:Action, bot_id:string){
 
     const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
+    let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+
+    const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey)
     console.log("=> ACTION HIT", a)
-    const myBot = await models.Bot.findOne({where:{
-        id: bot_id
-    }})
-    if(myBot) {
+    if(!iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin
+        const myBot = await models.Bot.findOne({where:{
+            id: bot_id
+        }})
+        if(!myBot) return console.log('no bot')
         // THIS is a bot member cmd res (i am bot maker)
         const botMember = await models.BotMember.findOne({where:{
             tribeUuid: chat_uuid, botId: bot_id
@@ -116,7 +120,6 @@ export async function finalAction(a:Action, bot_id:string){
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
         if (!content) throw 'no content'
-        let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
         if (!theChat) throw 'no chat'
         if (!theChat.type === constants.chat_types.tribe) throw 'not a tribe'
 
