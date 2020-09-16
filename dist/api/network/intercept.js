@@ -22,7 +22,9 @@ restrictions (be able to toggle, or dont show chat)
 // return bool whether to skip forwarding to tribe
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
-        const txt = msg.message.content;
+        const txt = msg.message && msg.message.content;
+        if (!txt)
+            return false;
         const msgType = msg.type;
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
