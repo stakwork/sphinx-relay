@@ -90,7 +90,6 @@ async function migrate(){
     await sequelize.query(`CREATE UNIQUE INDEX chat_member_index ON sphinx_chat_members(chat_id, contact_id);`)
   }catch(e){}
   
-
   addTableColumn('sphinx_chats', 'private', 'BOOLEAN')
   addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN')
   addTableColumn('sphinx_chat_members', 'status', 'BIGINT')

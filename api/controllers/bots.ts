@@ -170,6 +170,7 @@ export async function receiveBotInstall(payload) {
   // NO - send a /guildjoin msg to BOT lib!
   // and add routes to lib express with the strings for MSG_TYPE
   // and here - postToBotServer /install (also do this for /uninstall)
+  postToBotServer(payload, bot, SphinxBot.MSG_TYPE.INSTALL)
 }
 
 // ONLY FOR BOT MAKER
@@ -197,13 +198,19 @@ export async function receiveBotCmd(payload) {
   botMember.update({ msgCount: (botMember||0)+1 })
 
   console.log('=> post to remote BOT!!!!! bot owner')
-	return postToBotServer(payload, bot)
+	postToBotServer(payload, bot, SphinxBot.MSG_TYPE.MESSAGE)
    // forward to the entire Action back over MQTT
 }
 
-export async function postToBotServer(msg, bot): Promise<boolean> {
+export async function postToBotServer(msg, bot, route:string): Promise<boolean> {
   if(!bot) return false
   if(!bot.webhook || !bot.secret) return false
+  let url = bot.webhook
+  if(url.charAt(url.length-1)==='/') {
+    url += route
+  } else {
+    url += ('/'+route)
+  }
   const r = await fetch(bot.webhook, {
     method:'POST',
     body:JSON.stringify(
