@@ -102,9 +102,23 @@ function installBot(chat, bot_json) {
             pricePerUse: price_per_use
         };
         if (isLocal) {
-            yield models_1.models.ChatBot.create(chatBot);
+            // "install" my local bot and send "INSTALL" event
+            const myBot = yield models_1.models.Bot.findOne({ where: {
+                    uuid: bot_json.uuid
+                } });
+            if (myBot) {
+                yield models_1.models.ChatBot.create(chatBot);
+                postToBotServer({
+                    type: constants.message_types.bot_install,
+                    bot_uuid: myBot.uuid,
+                    message: { content: '', amount: 0 },
+                    sender: { pub_key: owner.publicKey, alias: owner.alias },
+                    chat: { uuid: chat_uuid }
+                }, myBot, SphinxBot.MSG_TYPE.INSTALL);
+            }
         }
         else {
+            // keysend to bot maker
             console.log("installBot INSTALL REMOTE BOT NOW", chatBot);
             const succeeded = yield keysendBotInstall(chatBot, chat_uuid);
             if (succeeded) {

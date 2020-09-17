@@ -73,13 +73,13 @@ function init() {
                     message.channel.send({ embed });
                     return;
                 }
-                if (!(j2 && j2.message)) {
+                if (!(j2 && j2.server_message)) {
                     return;
                 }
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('LoopBot')
                     .setTitle('Loop Initialized!')
-                    .setDescription(j2.message);
+                    .setDescription('Success!');
                 message.channel.send({ embed });
                 return;
             }

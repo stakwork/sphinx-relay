@@ -94,8 +94,22 @@ export async function installBot(chat, bot_json) {
     pricePerUse: price_per_use
   }
   if(isLocal) {
-    await models.ChatBot.create(chatBot)
+    // "install" my local bot and send "INSTALL" event
+    const myBot = await models.Bot.findOne({where:{
+      uuid: bot_json.uuid
+    }})
+    if(myBot) {
+      await models.ChatBot.create(chatBot)
+      postToBotServer(<network.Msg>{
+        type: constants.message_types.bot_install,
+        bot_uuid: myBot.uuid,
+        message: {content:'', amount:0},
+        sender: {pub_key: owner.publicKey, alias: owner.alias},
+        chat: {uuid:chat_uuid}
+      }, myBot, SphinxBot.MSG_TYPE.INSTALL)
+    }
   } else {
+    // keysend to bot maker
     console.log("installBot INSTALL REMOTE BOT NOW",chatBot)
     const succeeded = await keysendBotInstall(chatBot, chat_uuid)
     if(succeeded) {
