@@ -211,7 +211,7 @@ export async function postToBotServer(msg, bot, route:string): Promise<boolean> 
   } else {
     url += ('/'+route)
   }
-  const r = await fetch(bot.webhook, {
+  const r = await fetch(url, {
     method:'POST',
     body:JSON.stringify(
       buildBotPayload(msg)

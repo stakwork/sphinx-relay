@@ -222,7 +222,7 @@ function postToBotServer(msg, bot, route) {
         else {
             url += ('/' + route);
         }
-        const r = yield node_fetch_1.default(bot.webhook, {
+        const r = yield node_fetch_1.default(url, {
             method: 'POST',
             body: JSON.stringify(buildBotPayload(msg)),
             headers: {
