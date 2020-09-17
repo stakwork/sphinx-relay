@@ -43,7 +43,7 @@ export function init() {
       try {
         const j = await doRequest(baseurl + '/v1/loop/out/quote/'+amt)
         console.log("=> LOOP QUOTE RES", j)
-        if(!(j&&j.swap_fee)){
+        if(!(j&&j.swap_fee&&j.prepay_amt)){
           return
         }
         const j2 = await doRequest(baseurl + '/v1/loop/out', {
@@ -54,7 +54,8 @@ export function init() {
             outgoing_chan_set:[
               '704899103684034561'
             ],
-            max_swap_fee: j.swap_fee
+            max_swap_fee: j.swap_fee,
+            max_prepay_amt: j.prepay_amt
           }),
         })
         console.log("=> LOOP RESPONSE", j2)
