@@ -117,25 +117,22 @@ function keysendBotCmd(msg, b) {
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
-function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, chat_uuid, content) {
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, content) {
     return __awaiter(this, void 0, void 0, function* () {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const dest = botmaker_pubkey;
         const MIN_SATS = 3;
-        const destkey = botmaker_pubkey;
+        const amt = Math.max(amount || MIN_SATS);
         const opts = {
-            dest: destkey,
+            amt,
+            dest,
             data: {
                 type: msg_type,
                 bot_uuid,
-                message: { content: content || '' },
-                sender: {
-                    pub_key: owner.publicKey,
-                },
-                chat: {
-                    uuid: chat_uuid
-                }
+                message: { content: content || '', amount: amt },
+                sender: { pub_key: owner.publicKey, alias: owner.alias },
+                chat: { uuid: chat_uuid }
             },
-            amt: Math.max(price_per_use || MIN_SATS)
         };
         try {
             yield network.signAndSend(opts);
@@ -175,6 +172,9 @@ function receiveBotInstall(payload) {
         }
         //- need to pub back MQTT bot_install??
         //- and if the pubkey=the botOwnerPubkey, confirm chatbot?
+        // NO - send a /guildjoin msg to BOT lib!
+        // and add routes to lib express with the strings for MSG_TYPE
+        // and here - postToBotServer /install (also do this for /uninstall)
     });
 }
 exports.receiveBotInstall = receiveBotInstall;

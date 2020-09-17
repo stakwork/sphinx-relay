@@ -112,24 +112,21 @@ export async function keysendBotCmd(msg, b): Promise<boolean> {
   )
 }
 
-export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, price_per_use, chat_uuid:string, content?:string): Promise<boolean> {
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid:string, content?:string): Promise<boolean> {
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const dest = botmaker_pubkey
   const MIN_SATS = 3
-  const destkey = botmaker_pubkey
+  const amt = Math.max(amount || MIN_SATS)
   const opts = {
-    dest: destkey,
-    data: {
+    amt,
+    dest,
+    data: <network.Msg>{
       type: msg_type,
       bot_uuid,
-      message: {content: content||''},
-      sender: {
-        pub_key: owner.publicKey,
-      },
-      chat: {
-        uuid:chat_uuid
-      }
+      message: {content: content||'', amount:amt},
+      sender: {pub_key: owner.publicKey, alias: owner.alias},
+      chat: {uuid:chat_uuid}
     },
-    amt: Math.max(price_per_use || MIN_SATS)
   }
   try {
     await network.signAndSend(opts)
@@ -166,9 +163,13 @@ export async function receiveBotInstall(payload) {
     console.log("CREATE bot MEMBER", botMember)
     await models.BotMember.create(botMember)
   }
-  
+
   //- need to pub back MQTT bot_install??
   //- and if the pubkey=the botOwnerPubkey, confirm chatbot?
+
+  // NO - send a /guildjoin msg to BOT lib!
+  // and add routes to lib express with the strings for MSG_TYPE
+  // and here - postToBotServer /install (also do this for /uninstall)
 }
 
 // ONLY FOR BOT MAKER
