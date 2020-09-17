@@ -1,7 +1,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
 import fetch from 'node-fetch'
-import validate from 'bitcoin-address-validation';
+var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false

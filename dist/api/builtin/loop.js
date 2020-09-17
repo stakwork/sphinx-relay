@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
 const node_fetch_1 = require("node-fetch");
-const bitcoin_address_validation_1 = require("bitcoin-address-validation");
+var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const baseurl = 'https://localhost:8080';
@@ -30,7 +30,7 @@ function init() {
             return;
         if (arr.length === 3) { // loop
             const addy = arr[1];
-            if (!bitcoin_address_validation_1.default(addy)) {
+            if (!validate(addy)) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('LoopBot')
                     .setDescription('Invalid BTC address');
