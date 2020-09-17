@@ -64,13 +64,20 @@ function init() {
                     }),
                 });
                 console.log("=> LOOP RESPONSE", j2);
-                if (!(j2 && j2.server_message)) {
+                if (j2 && j2.error) {
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('LoopBot')
+                        .setDescription('Error: ' + j2.error);
+                    message.channel.send({ embed });
+                    return;
+                }
+                if (!(j2 && j2.message)) {
                     return;
                 }
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('LoopBot')
                     .setTitle('Loop Initialized!')
-                    .setDescription(j2.server_message);
+                    .setDescription(j2.message);
                 message.channel.send({ embed });
                 return;
             }
