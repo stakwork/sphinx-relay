@@ -48,6 +48,9 @@ export function init() {
           body: JSON.stringify({
             amt: amt,
             dest: addy,
+            outgoing_chan_set:[
+              '704899103684034561'
+            ]
           }),
         })
         console.log("=> LOOP RESPONSE", j2)

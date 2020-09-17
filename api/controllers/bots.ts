@@ -78,20 +78,31 @@ export async function installBot(chat, bot_json) {
   if(!isTribeOwner) return console.log('=> only tribe owner can install bots')
 
   const {uuid,owner_pubkey,unique_name,price_per_use} = bot_json
+
+  const isLocal = owner_pubkey===owner.publicKey
+  let botType = constants.bot_types.remote
+  if(isLocal) {
+    console.log('=> install local bot now!')
+    botType=constants.bot_types.local
+  }
   const chatBot = {
     chatId,
     botPrefix: '/' +unique_name,
-    botType: constants.bot_types.remote,
+    botType: botType,
     botUuid: uuid,
     botMakerPubkey: owner_pubkey,
     pricePerUse: price_per_use
   }
-  console.log("installBot INSTALL BOT NOW",chatBot)
-  const succeeded = await keysendBotInstall(chatBot, chat_uuid)
-  if(succeeded) {
-    try { // could fail
-      await models.ChatBot.create(chatBot)
-    } catch(e){}
+  if(isLocal) {
+    await models.ChatBot.create(chatBot)
+  } else {
+    console.log("installBot INSTALL REMOTE BOT NOW",chatBot)
+    const succeeded = await keysendBotInstall(chatBot, chat_uuid)
+    if(succeeded) {
+      try { // could fail
+        await models.ChatBot.create(chatBot)
+      } catch(e){}
+    }
   }
 }
 
