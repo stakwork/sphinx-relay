@@ -50,7 +50,7 @@ function init() {
             try {
                 const j = yield doRequest(baseurl + '/v1/loop/out/quote/' + amt);
                 console.log("=> LOOP QUOTE RES", j);
-                if (!(j && (j.swap_fee || j.swap_fee_sat))) {
+                if (!(j && j.swap_fee)) {
                     return;
                 }
                 const j2 = yield doRequest(baseurl + '/v1/loop/out', {
@@ -60,7 +60,8 @@ function init() {
                         dest: addy,
                         outgoing_chan_set: [
                             '704899103684034561'
-                        ]
+                        ],
+                        max_swap_fee: j.swap_fee
                     }),
                 });
                 console.log("=> LOOP RESPONSE", j2);
