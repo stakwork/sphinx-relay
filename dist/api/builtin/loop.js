@@ -12,8 +12,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
 const node_fetch_1 = require("node-fetch");
+const path = require("path");
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
+// /home/ec2-user/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 let initted = false;
 const baseurl = 'https://localhost:8080';
 function init() {
@@ -70,6 +72,7 @@ function init() {
                     .setTitle('Loop Initialized!')
                     .setDescription(j2.server_message);
                 message.channel.send({ embed });
+                return;
             }
             catch (e) {
                 console.log('LoopBot error', e);
@@ -108,16 +111,17 @@ function validateAmount(amtString) {
 }
 const fs = require('fs');
 const https = require("https");
-const homedir = require('os').homedir();
+// const homedir = require('os').homedir();
 const agent = new https.Agent({
     rejectUnauthorized: false
 });
-var filepath = homedir + '/.lnd/data/chain/bitcoin/mainnet/admin.macaroon';
+const env = process.env.NODE_ENV || 'development';
+const config = require(path.join(__dirname, '../../config/app.json'))[env];
 function doRequest(theurl, params) {
     return __awaiter(this, void 0, void 0, function* () {
         const ps = params || {};
         try {
-            var macaroonString = fs.readFileSync(filepath);
+            var macaroonString = fs.readFileSync(config.macaroon_location);
             var mac = Buffer.from(macaroonString, 'utf8').toString('hex');
             const theParams = Object.assign({ agent, headers: {
                     'Grpc-Metadata-macaroon': mac
