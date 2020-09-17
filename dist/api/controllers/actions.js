@@ -71,7 +71,7 @@ function finalAction(a, bot_id) {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         let theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey);
-        console.log("=> ACTION HIT", a);
+        console.log("=> ACTION HIT", a.action, a.bot_name);
         if (!iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin
             const myBot = yield models_1.models.Bot.findOne({ where: {
                     id: bot_id

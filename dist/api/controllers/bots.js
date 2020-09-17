@@ -81,7 +81,7 @@ function installBot(chat, bot_json) {
         const chat_uuid = chat && chat.uuid;
         if (!chatId || !chat_uuid)
             return console.log('no chat id in installBot');
-        console.log("=> chat to install bot into", chat);
+        console.log("=> chat to install bot into", chat.name);
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey);
         if (!isTribeOwner)

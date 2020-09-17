@@ -85,7 +85,7 @@ export function init() {
         } else {
           const bot = await getBotByName(botName)
           if(bot && bot.uuid) {
-            console.log('=> FOUDN BOT', bot)
+            console.log('=> FOUND BOT', bot.unique_name)
             const chat = await models.Chat.findOne({where:{
               uuid: message.channel.id
             }})
