@@ -19,6 +19,7 @@ const network = require("../network");
 const actions_1 = require("./actions");
 const socket = require("../utils/socket");
 const node_fetch_1 = require("node-fetch");
+const SphinxBot = require("sphinx-bot");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -175,6 +176,7 @@ function receiveBotInstall(payload) {
         // NO - send a /guildjoin msg to BOT lib!
         // and add routes to lib express with the strings for MSG_TYPE
         // and here - postToBotServer /install (also do this for /uninstall)
+        postToBotServer(payload, bot, SphinxBot.MSG_TYPE.INSTALL);
     });
 }
 exports.receiveBotInstall = receiveBotInstall;
@@ -202,17 +204,24 @@ function receiveBotCmd(payload) {
             return;
         botMember.update({ msgCount: (botMember || 0) + 1 });
         console.log('=> post to remote BOT!!!!! bot owner');
-        return postToBotServer(payload, bot);
+        postToBotServer(payload, bot, SphinxBot.MSG_TYPE.MESSAGE);
         // forward to the entire Action back over MQTT
     });
 }
 exports.receiveBotCmd = receiveBotCmd;
-function postToBotServer(msg, bot) {
+function postToBotServer(msg, bot, route) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!bot)
             return false;
         if (!bot.webhook || !bot.secret)
             return false;
+        let url = bot.webhook;
+        if (url.charAt(url.length - 1) === '/') {
+            url += route;
+        }
+        else {
+            url += ('/' + route);
+        }
         const r = yield node_fetch_1.default(bot.webhook, {
             method: 'POST',
             body: JSON.stringify(buildBotPayload(msg)),

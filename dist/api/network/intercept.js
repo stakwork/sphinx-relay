@@ -13,6 +13,7 @@ const models_1 = require("../models");
 const builtin_1 = require("../builtin");
 const bots_1 = require("../controllers/bots");
 const path = require("path");
+const SphinxBot = require("sphinx-bot");
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 /*
 default show or not
@@ -75,7 +76,7 @@ function emitMessageToBot(msg, botInTribe) {
                 const bot = yield models_1.models.Bot.findOne({ where: {
                         uuid: botInTribe.botUuid
                     } });
-                return bots_1.postToBotServer(msg, bot);
+                return bots_1.postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
             case constants.bot_types.remote:
                 return bots_1.keysendBotCmd(msg, botInTribe);
             default:
