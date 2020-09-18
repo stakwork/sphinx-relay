@@ -100,11 +100,9 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
 }
 
 export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
-  console.log('=> declare_bot',{ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted })
   const host = getHost()
-  console.log('=> https://' + host + '/bots')
   try {
-    const r = await fetch('https://' + host + '/bots', {
+    await fetch('https://' + host + '/bots', {
       method: 'POST',
       body: JSON.stringify({
         uuid, owner_pubkey,
@@ -115,8 +113,8 @@ export async function declare_bot({ uuid, name, description, tags, img, price_pe
       }),
       headers: { 'Content-Type': 'application/json' }
     })
-    const j = await r.json()
-    console.log('=> j',j)
+    // const j = await r.json()
+    // console.log('=> j',j)
   } catch (e) {
     console.log('[tribes] unauthorized to declare')
     throw e
