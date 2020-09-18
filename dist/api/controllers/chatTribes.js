@@ -210,6 +210,7 @@ function editTribe(req, res) {
                     unlisted,
                     is_private: req.body.private,
                     app_url,
+                    deleted: false,
                 });
             }
             catch (e) {
@@ -371,6 +372,35 @@ function receiveMemberReject(payload) {
     });
 }
 exports.receiveMemberReject = receiveMemberReject;
+function receiveTribeDelete(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> receiveTribeDelete');
+        const { chat, sender } = yield helpers.parseReceiveParams(payload);
+        if (!chat)
+            return console.log('no chat');
+        // await chat.update({status: constants.chat_statuses.rejected})
+        // update on tribes server too
+        let date = new Date();
+        date.setMilliseconds(0);
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types.tribe_delete,
+            sender: (sender && sender.id) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date
+        };
+        const message = yield models_1.models.Message.create(msg);
+        socket.sendJson({
+            type: 'tribe_delete',
+            response: {
+                message: jsonUtils.messageToJson(message, chat),
+                chat: jsonUtils.chatToJson(chat),
+            }
+        });
+    });
+}
+exports.receiveTribeDelete = receiveTribeDelete;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!(chat && chat.id && contact && contact.id)) {

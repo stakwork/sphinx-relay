@@ -47,7 +47,11 @@
         "repayment": 18,
         "member_request": 19,
         "member_approve": 20,
-        "member_reject": 21
+        "member_reject": 21,
+        "tribe_delete": 22,
+        "bot_install": 23,
+        "bot_cmd": 24,
+        "bot_res": 25
     },
     "payment_errors": {
         "timeout": "Timed Out",
@@ -60,6 +64,11 @@
         "conversation": 0,
         "group": 1,
         "tribe": 2
+    },
+    "bot_types": {
+        "builtin": 0,
+        "local": 1,
+        "remote": 2
     },
     "chat_roles": {
         "-": 0,

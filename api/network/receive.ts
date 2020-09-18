@@ -22,7 +22,8 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
 export const typesToForward=[
-	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, msgtypes.attachment, msgtypes.delete
+	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, 
+	msgtypes.attachment, msgtypes.delete,
 ]
 const typesToModify=[
 	msgtypes.attachment
@@ -33,13 +34,35 @@ const typesThatNeedPricePerMessage = [
 export const typesToReplay=[ // should match typesToForward
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave
 ]
+const botTypes=[
+	constants.message_types.bot_install,
+	constants.message_types.bot_cmd,
+	constants.message_types.bot_res,
+]
+const botMakerTypes=[
+	constants.message_types.bot_install,
+	constants.message_types.bot_cmd,
+]
 async function onReceive(payload){
+	console.log('===> onReceive',JSON.stringify(payload,null,2))
+	if(!(payload.type||payload.type===0)) return console.log('no payload.type')
+
+	if(botTypes.includes(payload.type)) {
+		// if is admin on tribe? or is bot maker?
+		console.log("=> got bot msg type!!!!")
+		if(botMakerTypes.includes(payload.type)) {
+			if(!payload.bot_uuid) return console.log('bot maker type: no bot uuid')
+		}
+		return ACTIONS[payload.type](payload)
+	}
+	
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn:{[k:string]:any} = {}
 	let isTribe = false
 	let isTribeOwner = false
 	let chat
+
 	if(payload.chat&&payload.chat.uuid) {
 		isTribe = payload.chat.type===constants.chat_types.tribe
 		chat = await models.Chat.findOne({where:{uuid:payload.chat.uuid}})
@@ -164,7 +187,8 @@ async function forwardMessageToTribe(ogpayload, sender){
 		type, message,
 		sender: {
 			...owner.dataValues,
-			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias}
+			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias},
+			role: constants.chat_roles.reader,
 		},
 		chat: chat,
 		skipPubKey: payload.sender.pub_key, 

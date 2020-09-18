@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const fetch = require("node-fetch");
+const node_fetch_1 = require("node-fetch");
 const ldat_1 = require("../utils/ldat");
 const rsa = require("../crypto/rsa");
 const crypto = require("crypto");
@@ -168,7 +168,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, inj
         if (!terms.host)
             return payload;
         try {
-            const r = yield fetch(`https://${terms.host}/file/${mt}`, {
+            const r = yield node_fetch_1.default(`https://${terms.host}/file/${mt}`, {
                 headers: { 'Authorization': `Bearer ${meme.mediaToken}` }
             });
             const buf = yield r.buffer();
@@ -184,7 +184,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, inj
                 knownLength: encImgBuffer.length,
             });
             const formHeaders = form.getHeaders();
-            const resp = yield fetch(`https://${terms.host}/file`, {
+            const resp = yield node_fetch_1.default(`https://${terms.host}/file`, {
                 method: 'POST',
                 headers: Object.assign(Object.assign({}, formHeaders), { 'Authorization': `Bearer ${meme.mediaToken}` }),
                 body: form

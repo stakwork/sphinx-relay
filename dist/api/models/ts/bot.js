@@ -10,6 +10,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
+/*
+BOT CREATOR - this handles the webhook and external API
+*/
 let Bot = class Bot extends sequelize_typescript_1.Model {
 };
 __decorate([
@@ -21,9 +24,9 @@ __decorate([
     __metadata("design:type", String)
 ], Bot.prototype, "id", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
-    __metadata("design:type", Number)
-], Bot.prototype, "chatId", void 0);
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Bot.prototype, "uuid", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
@@ -32,6 +35,14 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Bot.prototype, "secret", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Bot.prototype, "webhook", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Bot.prototype, "pricePerUse", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)

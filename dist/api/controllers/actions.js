@@ -9,84 +9,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const res_1 = require("../utils/res");
 const path = require("path");
 const network = require("../network");
 const models_1 = require("../models");
 const short = require("short-uuid");
 const rsa = require("../crypto/rsa");
-const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
+const socket = require("../utils/socket");
+const res_1 = require("../utils/res");
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 const constants = require(path.join(__dirname, '../../config/constants.json'));
-exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const bots = yield models_1.models.Bot.findAll();
-        res_1.success(res, {
-            bots: bots.map(b => jsonUtils.botToJson(b))
-        });
-    }
-    catch (e) {
-        res_1.failure(res, 'no bots');
-    }
-});
-exports.getBotsForTribe = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const chat_id = req.params.chat_id;
-    const chatId = parseInt(chat_id);
-    if (!chatId)
-        return res_1.failure(res, 'no chat id');
-    try {
-        const bots = yield models_1.models.Bot.findAll({ where: { chatId } });
-        res_1.success(res, {
-            bots: bots.map(b => jsonUtils.botToJson(b))
-        });
-    }
-    catch (e) {
-        res_1.failure(res, 'no bots');
-    }
-});
-exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { chat_id, name, } = req.body;
-    const chatId = parseInt(chat_id);
-    const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
-    if (!chat)
-        return res_1.failure(res, 'no chat');
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const isTribeOwner = owner.publicKey === chat.ownerPubkey;
-    if (!isTribeOwner)
-        return res_1.failure(res, 'not tribe owner');
-    const newBot = {
-        id: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        chatId: chat_id,
-        name: name,
-        secret: crypto.randomBytes(16).toString('hex').toUpperCase()
-    };
-    try {
-        const theBot = yield models_1.models.Bot.create(newBot);
-        res_1.success(res, jsonUtils.botToJson(theBot));
-    }
-    catch (e) {
-        res_1.failure(res, 'bot creation failed');
-    }
-});
-exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const id = req.params.id;
-    if (!id)
-        return;
-    try {
-        models_1.models.Bot.destroy({ where: { id } });
-        res_1.success(res, true);
-    }
-    catch (e) {
-        console.log('ERROR deleteBot', e);
-        res_1.failure(res, e);
-    }
-});
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> processAction', req.body);
         let body = req.body;
         if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try { // parse out body from "data" for github webhook action
@@ -99,7 +37,9 @@ function processAction(req, res) {
                 return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, text } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid } = body;
+        if (!bot_id)
+            return res_1.failure(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
         if (!bot)
             return res_1.failure(res, 'no bot');
@@ -109,10 +49,73 @@ function processAction(req, res) {
         if (!action) {
             return res_1.failure(res, 'no action');
         }
+        const a = {
+            bot_id,
+            action,
+            pubkey: pubkey || '',
+            content: content || '',
+            amount: amount || 0,
+            bot_name: bot.name,
+            chat_uuid: chat_uuid || '',
+        };
+        try {
+            const r = yield finalAction(a, bot_id);
+            res_1.success(res, r);
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.processAction = processAction;
+function finalAction(a, bot_id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { action, pubkey, amount, content, bot_name, chat_uuid } = a;
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        let theChat;
+        if (chat_uuid) {
+            theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        }
+        const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey);
+        console.log("=> ACTION HIT", a.action, a.bot_name);
+        if (chat_uuid && !iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
+            const myBot = yield models_1.models.Bot.findOne({ where: {
+                    id: bot_id
+                } });
+            if (!myBot)
+                return console.log('no bot');
+            // THIS is a bot member cmd res (i am bot maker)
+            const botMember = yield models_1.models.BotMember.findOne({ where: {
+                    tribeUuid: chat_uuid, botId: bot_id
+                } });
+            if (!botMember)
+                return console.log('no botMember');
+            const dest = botMember.memberPubkey;
+            if (!dest)
+                return console.log('no dest to send to');
+            const topic = `${dest}/${myBot.uuid}`;
+            const data = {
+                action, bot_id, bot_name,
+                type: constants.message_types.bot_res,
+                message: { content: a.content, amount: amount || 0 },
+                chat: { uuid: chat_uuid },
+                sender: {
+                    pub_key: String(owner.publicKey),
+                    alias: bot_name, role: 0
+                },
+            };
+            try {
+                yield network.signAndSend({ dest, data }, topic);
+            }
+            catch (e) {
+                console.log('=> couldnt mqtt publish');
+            }
+            return;
+        }
         if (action === 'keysend') {
             console.log('=> BOT KEYSEND');
             if (!(pubkey && pubkey.length === 66 && amount)) {
-                return res_1.failure(res, 'wrong params');
+                throw 'wrong params';
             }
             const MIN_SATS = 3;
             const destkey = pubkey;
@@ -123,33 +126,32 @@ function processAction(req, res) {
             };
             try {
                 yield network.signAndSend(opts);
-                return res_1.success(res, { success: true });
+                return ({ success: true });
             }
             catch (e) {
-                return res_1.failure(res, e);
+                throw e;
             }
         }
         else if (action === 'broadcast') {
             console.log('=> BOT BROADCAST');
-            if (!bot.chatId || !text)
-                return res_1.failure(res, 'no uuid or text');
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const theChat = yield models_1.models.Chat.findOne({ where: { id: bot.chatId } });
-            if (!theChat || !owner)
-                return res_1.failure(res, 'no chat');
+            if (!content)
+                throw 'no content';
+            if (!theChat)
+                throw 'no chat';
             if (!theChat.type === constants.chat_types.tribe)
-                return res_1.failure(res, 'not a tribe');
-            const encryptedForMeText = rsa.encrypt(owner.contactKey, text);
-            const encryptedText = rsa.encrypt(theChat.groupKey, text);
+                throw 'not a tribe';
+            const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
+            const encryptedText = rsa.encrypt(theChat.groupKey, content);
             const textMap = { 'chat': encryptedText };
             var date = new Date();
             date.setMilliseconds(0);
-            const alias = bot.name || 'Bot';
+            const alias = bot_name || 'Bot';
+            const botContactId = -1;
             const msg = {
                 chatId: theChat.id,
                 uuid: short.generate(),
-                type: constants.message_types.message,
-                sender: owner.id,
+                type: constants.message_types.bot_res,
+                sender: botContactId,
                 amount: amount || 0,
                 date: date,
                 messageContent: encryptedForMeText,
@@ -160,19 +162,25 @@ function processAction(req, res) {
                 senderAlias: alias,
             };
             const message = yield models_1.models.Message.create(msg);
+            socket.sendJson({
+                type: 'message',
+                response: jsonUtils.messageToJson(message, theChat, owner)
+            });
             yield network.sendMessage({
                 chat: theChat,
-                sender: Object.assign(Object.assign({}, owner.dataValues), { alias }),
+                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId }),
                 message: { content: textMap, id: message.id, uuid: message.uuid },
-                type: constants.message_types.message,
-                success: () => res_1.success(res, { success: true }),
-                failure: () => res_1.failure(res, 'failed'),
+                type: constants.message_types.bot_res,
+                success: () => ({ success: true }),
+                failure: (e) => {
+                    throw e;
+                }
             });
         }
         else {
-            return res_1.failure(res, 'no action');
+            throw 'no action';
         }
     });
 }
-exports.processAction = processAction;
+exports.finalAction = finalAction;
 //# sourceMappingURL=actions.js.map

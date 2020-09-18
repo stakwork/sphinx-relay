@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const chats = require("./chats");
 const chatTribes = require("./chatTribes");
+const bots = require("./bots");
 const details = require("./details");
 const contacts = require("./contacts");
 const invites = require("./invites");
@@ -26,11 +27,13 @@ const actions = require("./actions");
 const gitinfo_1 = require("../utils/gitinfo");
 const path = require("path");
 const timers = require("../utils/timers");
+const builtInBots = require("../builtin");
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:", env);
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
+        builtInBots.init();
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
         }
@@ -91,10 +94,9 @@ function set(app) {
         app.get('/logs', details.getLogsSince);
         app.get('/info', details.getNodeInfo);
         app.post('/action', actions.processAction);
-        app.get('/bots', actions.getBots);
-        app.get('/bots/:chat_id', actions.getBotsForTribe);
-        app.post('/bot', actions.createBot);
-        app.delete('/bot/:id', actions.deleteBot);
+        app.get('/bots', bots.getBots);
+        app.post('/bot', bots.createBot);
+        app.delete('/bot/:id', bots.deleteBot);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 const version = yield gitinfo_1.checkTag();
@@ -144,5 +146,9 @@ exports.ACTIONS = {
     [msgtypes.member_request]: chatTribes.receiveMemberRequest,
     [msgtypes.member_approve]: chatTribes.receiveMemberApprove,
     [msgtypes.member_reject]: chatTribes.receiveMemberReject,
+    [msgtypes.tribe_delete]: chatTribes.receiveTribeDelete,
+    [msgtypes.bot_install]: bots.receiveBotInstall,
+    [msgtypes.bot_cmd]: bots.receiveBotCmd,
+    [msgtypes.bot_res]: bots.receiveBotRes,
 };
 //# sourceMappingURL=index.js.map

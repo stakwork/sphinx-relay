@@ -31,13 +31,53 @@ async function setVersion(){
 }
 
 async function migrate(){
+  
+  try{
+    await sequelize.query(`
+    CREATE TABLE sphinx_chat_bots (
+      id BIGINT NOT NULL PRIMARY KEY,
+      chat_id BIGINT,
+      bot_uuid TEXT,
+      bot_type INT,
+      bot_prefix TEXT,
+      bot_maker_pubkey TEXT,
+      msg_types TEXT,
+      meta TEXT,
+      price_per_use INT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch(e){}
+
+  try{
+    await sequelize.query(`CREATE UNIQUE INDEX chat_bot_index ON sphinx_chat_bots(chat_id, bot_uuid);`)
+  }catch(e){}
+  
+  addTableColumn('sphinx_bots', 'webhook')
+  addTableColumn('sphinx_bots', 'uuid')
+  addTableColumn('sphinx_bots', 'price_per_use', 'INT')
+
+  try{
+    await sequelize.query(`
+    CREATE TABLE sphinx_bot_members (
+      id BIGINT NOT NULL PRIMARY KEY,
+      member_pubkey TEXT,
+      tribe_uuid TEXT,
+      msg_count BIGINT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch(e){}
+
+  addTableColumn('sphinx_bot_members', 'bot_id')
+
+  //////////
 
   try{
     await sequelize.query(`
     CREATE TABLE sphinx_bots (
       id TEXT NOT NULL PRIMARY KEY,
       name TEXT,
-      chat_id BIGINT,
       secret TEXT,
       created_at DATETIME,
       updated_at DATETIME
@@ -50,7 +90,6 @@ async function migrate(){
     await sequelize.query(`CREATE UNIQUE INDEX chat_member_index ON sphinx_chat_members(chat_id, contact_id);`)
   }catch(e){}
   
-
   addTableColumn('sphinx_chats', 'private', 'BOOLEAN')
   addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN')
   addTableColumn('sphinx_chat_members', 'status', 'BIGINT')

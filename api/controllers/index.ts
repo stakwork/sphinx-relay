@@ -1,6 +1,7 @@
 import {models} from '../models'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
+import * as bots from './bots'
 import * as details from './details'
 import * as contacts from './contacts'
 import * as invites from './invites'
@@ -15,7 +16,7 @@ import * as actions from './actions'
 import {checkTag} from '../utils/gitinfo'
 import * as path from 'path'
 import * as timers from '../utils/timers'
-
+import * as builtInBots from '../builtin'
 
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
@@ -23,6 +24,8 @@ const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export async function set(app) {
 	
+	builtInBots.init()
+
 	if(models && models.Subscription){
 		subcriptions.initializeCronJobs()
 	}
@@ -94,10 +97,9 @@ export async function set(app) {
 	app.get('/info', details.getNodeInfo)
 
 	app.post('/action', actions.processAction)
-	app.get('/bots', actions.getBots)
-	app.get('/bots/:chat_id',actions.getBotsForTribe)
-	app.post('/bot', actions.createBot)
-	app.delete('/bot/:id', actions.deleteBot)
+	app.get('/bots', bots.getBots)
+	app.post('/bot', bots.createBot)
+	app.delete('/bot/:id', bots.deleteBot)
 
 	app.get('/version', async function(req,res) {
 		const version = await checkTag()
@@ -147,4 +149,8 @@ export const ACTIONS = {
 	[msgtypes.member_request]: chatTribes.receiveMemberRequest,
 	[msgtypes.member_approve]: chatTribes.receiveMemberApprove,
 	[msgtypes.member_reject]: chatTribes.receiveMemberReject,
+	[msgtypes.tribe_delete]: chatTribes.receiveTribeDelete,
+	[msgtypes.bot_install]: bots.receiveBotInstall,
+	[msgtypes.bot_cmd]: bots.receiveBotCmd,
+	[msgtypes.bot_res]: bots.receiveBotRes,
 }

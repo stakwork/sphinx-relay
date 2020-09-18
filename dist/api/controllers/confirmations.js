@@ -41,7 +41,7 @@ function receiveConfirmation(payload) {
         if (msg_id) {
             lock_1.default.acquire('confirmation', function (done) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    console.log("update status map");
+                    // console.log("update status map")
                     const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
                     if (message) {
                         let statusMap = {};

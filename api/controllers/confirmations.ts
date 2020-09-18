@@ -32,7 +32,7 @@ export async function receiveConfirmation(payload) {
 	// new confirmation logic
 	if(msg_id){
 		lock.acquire('confirmation', async function(done){
-			console.log("update status map")
+			// console.log("update status map")
 			const message = await models.Message.findOne({ where:{id:msg_id} })
 			if(message){
 				let statusMap = {}
