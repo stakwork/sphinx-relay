@@ -49,9 +49,13 @@ function processAction(req, res) {
             return res_1.failure(res, 'no action');
         }
         const a = {
-            action, pubkey, content, amount,
-            bot_name: bot.name, chat_uuid,
-            bot_id
+            bot_id,
+            action,
+            pubkey: pubkey || '',
+            content: content || '',
+            amount: amount || 0,
+            bot_name: bot.name,
+            chat_uuid: chat_uuid || '',
         };
         try {
             const r = yield finalAction(a, bot_id);
@@ -66,10 +70,11 @@ exports.processAction = processAction;
 function finalAction(a, bot_id) {
     return __awaiter(this, void 0, void 0, function* () {
         const { action, pubkey, amount, content, bot_name, chat_uuid } = a;
-        if (!chat_uuid)
-            throw 'no chat_uuid';
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        let theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        let theChat;
+        if (chat_uuid) {
+            theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        }
         const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey);
         console.log("=> ACTION HIT", a.action, a.bot_name);
         if (!iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin

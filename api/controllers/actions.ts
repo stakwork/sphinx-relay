@@ -48,9 +48,13 @@ export async function processAction(req, res) {
     }
 
     const a:Action = {
-        action, pubkey, content, amount,
-        bot_name:bot.name, chat_uuid,
-        bot_id
+        bot_id,
+        action, 
+        pubkey: pubkey||'', 
+        content: content||'', 
+        amount: amount||0,
+        bot_name: bot.name, 
+        chat_uuid: chat_uuid||'',   
     }
 
     try {
@@ -63,12 +67,13 @@ export async function processAction(req, res) {
 
 export async function finalAction(a:Action, bot_id:string){
     const {action,pubkey,amount,content,bot_name,chat_uuid} = a
-    if (!chat_uuid) throw 'no chat_uuid' 
 
     const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
-    let theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
-
+    let theChat
+    if(chat_uuid){
+        theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+    }
     const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey)
     console.log("=> ACTION HIT", a.action, a.bot_name)
     if(!iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin
