@@ -123,6 +123,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
 exports.declare = declare;
 function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> declare_bot', { uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted });
         const host = getHost();
         try {
             yield node_fetch_1.default('https://' + host + '/bots', {

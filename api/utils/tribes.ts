@@ -100,6 +100,7 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
 }
 
 export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
+  console.log('=> declare_bot',{ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted })
   const host = getHost()
   try {
     await fetch('https://' + host + '/bots', {
