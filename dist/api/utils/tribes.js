@@ -125,8 +125,9 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> declare_bot', { uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted });
         const host = getHost();
+        console.log('=> https://' + host + '/bots');
         try {
-            yield node_fetch_1.default('https://' + host + '/bots', {
+            const r = yield node_fetch_1.default('https://' + host + '/bots', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid, owner_pubkey,
@@ -137,7 +138,8 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
-            // const j = await r.json()
+            const j = yield r.json();
+            console.log('=> j', j);
         }
         catch (e) {
             console.log('[tribes] unauthorized to declare');
