@@ -77,7 +77,7 @@ export async function finalAction(a:Action, bot_id:string){
     }
     const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey)
     console.log("=> ACTION HIT", a.action, a.bot_name)
-    if(!iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin
+    if(chat_uuid && !iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
         const myBot = await models.Bot.findOne({where:{
             id: bot_id
         }})
