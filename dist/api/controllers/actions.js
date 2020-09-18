@@ -24,6 +24,7 @@ hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 const constants = require(path.join(__dirname, '../../config/constants.json'));
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> processAction', req.body);
         let body = req.body;
         if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try { // parse out body from "data" for github webhook action

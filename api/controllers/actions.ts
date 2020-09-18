@@ -25,6 +25,7 @@ export interface Action {
 }
 
 export async function processAction(req, res) {
+    console.log('=> processAction',req.body)
     let body = req.body
     if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
         try { // parse out body from "data" for github webhook action
