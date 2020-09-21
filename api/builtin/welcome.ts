@@ -16,7 +16,7 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    const arr = message.content.split(' ')
+    const arr = (message.content && message.content.split(' ')) || []
     console.log('message.type',message.type)
     const isGroupJoin = message.type===constants.message_types.group_join
     if (arr.length < 2 && !isGroupJoin) return
