@@ -185,6 +185,10 @@ Save and exit:
 
 `Enter`
 
+To make the file active, we will need to link the file in the sites-available folder to a location within the sites-enabled folder. Again, change YOUR-DOMAIN here with the actual name of the file you created earlier.
+```sh
+ln -s /etc/nginx/sites-avaialable/YOUR-DOMAIN /etc/nginx/sites-enabled/YOUR-DOMAIN.conf
+```
 To test your NGINX configuration:
 ```sh
 $ nginx -t
