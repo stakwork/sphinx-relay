@@ -176,6 +176,23 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     });
 }
 exports.edit = edit;
+function delete_tribe({ uuid }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const host = getHost();
+        try {
+            const token = yield genSignedTimestamp();
+            yield node_fetch_1.default(`https://${host}/tribe/${uuid}?token=` + token, {
+                method: 'DELETE',
+            });
+            // const j = await r.json()
+        }
+        catch (e) {
+            console.log('[tribes] unauthorized to delete');
+            throw e;
+        }
+    });
+}
+exports.delete_tribe = delete_tribe;
 function putActivity(uuid, host) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

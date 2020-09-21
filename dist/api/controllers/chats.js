@@ -269,17 +269,36 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     const tribeOwnerPubKey = chat.ownerPubkey;
     if (owner.publicKey === tribeOwnerPubKey) {
-        return res_1.failure(res, "cannot leave your own tribe");
-    }
-    const isPending = chat.status === constants.chat_statuses.pending;
-    const isRejected = chat.status === constants.chat_statuses.rejected;
-    if (!isPending && !isRejected) { // dont send if pending
-        network.sendMessage({
+        // delete a group or tribe
+        let notOK = false;
+        yield network.sendMessage({
             chat,
             sender: owner,
             message: {},
-            type: constants.message_types.group_leave,
+            type: constants.message_types.tribe_delete,
+            success: function () {
+                tribes.delete_tribe(chat.uuid);
+            },
+            failure: function () {
+                res_1.failure(res, 'failed to send tribe_delete message');
+                notOK = true;
+            }
         });
+        if (notOK)
+            return console.log('failed to send tribe_delete message');
+    }
+    else {
+        // leave a group or tribe
+        const isPending = chat.status === constants.chat_statuses.pending;
+        const isRejected = chat.status === constants.chat_statuses.rejected;
+        if (!isPending && !isRejected) { // dont send if pending
+            network.sendMessage({
+                chat,
+                sender: owner,
+                message: {},
+                type: constants.message_types.group_leave,
+            });
+        }
     }
     yield chat.update({
         deleted: true,

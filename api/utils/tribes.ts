@@ -148,6 +148,21 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
   }
 }
 
+
+export async function delete_tribe({ uuid }) {
+  const host = getHost()
+  try {
+    const token = await genSignedTimestamp()
+    await fetch(`https://${host}/tribe/${uuid}?token=` + token, {
+      method: 'DELETE',
+    })
+    // const j = await r.json()
+  } catch(e) {
+    console.log('[tribes] unauthorized to delete')
+    throw e
+  }
+}
+
 export async function putActivity( uuid:string, host:string ) {
   try {
     const token = await genSignedTimestamp()
