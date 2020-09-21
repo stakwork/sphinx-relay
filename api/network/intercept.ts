@@ -36,13 +36,13 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const botsInTribe = await models.ChatBot.findAll({where:{
     chatId: chat.id
   }})
-  console.log('=> botsInTribe', botsInTribe)
+  // console.log('=> botsInTribe', botsInTribe)
 
   if(!(botsInTribe && botsInTribe.length)) return false
 
   await asyncForEach(botsInTribe, async botInTribe=>{
     if(botInTribe.msgTypes){
-      console.log('=> botInTribe.msgTypes', botInTribe)
+      // console.log('=> botInTribe.msgTypes', botInTribe)
       try {
         const msgTypes = JSON.parse(botInTribe.msgTypes)
         if(msgTypes.includes(msgType)){
@@ -55,7 +55,7 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
       } catch(e){}
     } else { // no message types defined, do all?
       if(txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
-        console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
+        // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
         didEmit = await emitMessageToBot(msg, botInTribe.dataValues)
       }
     }
@@ -65,7 +65,7 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
 }
 
 async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
-  console.log('emitMessageToBot',msg)
+  // console.log('emitMessageToBot',msg)
   switch (botInTribe.botType) {
     case constants.bot_types.builtin:
       builtinBotEmit(msg)
