@@ -193,7 +193,7 @@ async function makeBotsJSON(tribeID) {
     }
     return <BotJSON>{
       prefix: bot.botPrefix,
-      price: bot.pricePerUse,
+      price: bot.pricePerUse||0,
       commands: null,
     }
   })

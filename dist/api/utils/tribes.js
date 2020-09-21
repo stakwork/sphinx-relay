@@ -229,7 +229,7 @@ function makeBotsJSON(tribeID) {
             }
             return {
                 prefix: bot.botPrefix,
-                price: bot.pricePerUse,
+                price: bot.pricePerUse || 0,
                 commands: null,
             };
         });
