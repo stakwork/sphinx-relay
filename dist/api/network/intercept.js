@@ -68,6 +68,7 @@ function isBotMsg(msg, sentByMe) {
 exports.isBotMsg = isBotMsg;
 function emitMessageToBot(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('emitMessageToBot', msg);
         switch (botInTribe.botType) {
             case constants.bot_types.builtin:
                 builtin_1.builtinBotEmit(msg);

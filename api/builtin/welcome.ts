@@ -29,10 +29,13 @@ export function init() {
       const chatBot = await models.ChatBot.findOne({where:{
         chatId: chat.id, botPrefix:'/welcome', botType:constants.bot_types.builtin
       }})
-      if(!(chatBot && chatBot.meta)) return
+      let meta = 'Welcome to the tribe!'
+      if(chatBot && chatBot.meta) {
+        meta = chatBot.meta
+      }
       const resEmbed = new Sphinx.MessageEmbed()
         .setAuthor('WelcomeBot')
-        .setDescription(chatBot.meta)
+        .setDescription(meta)
       message.channel.send({ embed:resEmbed })
       return
     }
