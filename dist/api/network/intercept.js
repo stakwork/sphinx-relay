@@ -23,8 +23,6 @@ restrictions (be able to toggle, or dont show chat)
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message && msg.message.content;
-        if (!txt)
-            return false;
         const msgType = msg.type;
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
@@ -35,7 +33,7 @@ function isBotMsg(msg, sentByMe) {
         if (!chat)
             return false;
         let didEmit = false;
-        if (txt.startsWith('/bot ')) {
+        if (txt && txt.startsWith('/bot ')) {
             builtin_1.builtinBotEmit(msg);
             didEmit = true;
         }
@@ -44,20 +42,27 @@ function isBotMsg(msg, sentByMe) {
         const botsInTribe = yield models_1.models.ChatBot.findAll({ where: {
                 chatId: chat.id
             } });
+        // console.log('=> botsInTribe', botsInTribe)
         if (!(botsInTribe && botsInTribe.length))
             return false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
-            if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
-                if (botInTribe.msgTypes) {
-                    try {
-                        const msgTypes = JSON.parse(botInTribe.msgTypes);
-                        if (msgTypes.includes(msgType)) {
+            if (botInTribe.msgTypes) {
+                // console.log('=> botInTribe.msgTypes', botInTribe)
+                try {
+                    const msgTypes = JSON.parse(botInTribe.msgTypes);
+                    if (msgTypes.includes(msgType)) {
+                        const isMsgAndHasText = msgType === constants.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `);
+                        const isNotMsg = msgType !== constants.message_types.message;
+                        if (isMsgAndHasText || isNotMsg) {
                             didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
                         }
                     }
-                    catch (e) { }
                 }
-                else { // no message types defined, do all?
+                catch (e) { }
+            }
+            else { // no message types defined, do all?
+                if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
+                    // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
                     didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
                 }
             }
@@ -68,7 +73,7 @@ function isBotMsg(msg, sentByMe) {
 exports.isBotMsg = isBotMsg;
 function emitMessageToBot(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('emitMessageToBot', msg);
+        // console.log('emitMessageToBot',msg)
         switch (botInTribe.botType) {
             case constants.bot_types.builtin:
                 builtin_1.builtinBotEmit(msg);

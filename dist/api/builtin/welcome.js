@@ -23,7 +23,7 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', actions_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        const arr = message.content.split(' ');
+        const arr = (message.content && message.content.split(' ')) || [];
         console.log('message.type', message.type);
         const isGroupJoin = message.type === constants.message_types.group_join;
         if (arr.length < 2 && !isGroupJoin)

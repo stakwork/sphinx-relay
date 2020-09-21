@@ -39,7 +39,7 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', actions_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        const arr = message.content.split(' ');
+        const arr = (message.content && message.content.split(' ')) || [];
         if (arr.length < 2)
             return;
         if (arr[0] !== '/bot')
