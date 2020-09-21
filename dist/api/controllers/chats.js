@@ -367,6 +367,7 @@ function receiveGroupJoin(payload) {
                 });
                 chatTribes_1.replayChatHistory(chat, theSender);
                 tribes.putstats({
+                    chatId: chat.id,
                     uuid: chat.uuid,
                     host: chat.host,
                     member_count: contactIds.length,
@@ -421,6 +422,7 @@ function receiveGroupLeave(payload) {
                     }
                     catch (e) { }
                     tribes.putstats({
+                        chatId: chat.id,
                         uuid: chat.uuid,
                         host: chat.host,
                         member_count: contactIds.length,

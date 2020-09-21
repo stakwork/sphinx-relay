@@ -49,16 +49,18 @@ export async function connect(onMessage) {
   }
 }
 
-async function updateTribeStats(myPubkey){
-  const myTribes = await models.Chat.findAll({where:{
-    ownerPubkey:myPubkey
-  }})
-  await asyncForEach(myTribes, async(tribe)=>{
+async function updateTribeStats(myPubkey) {
+  const myTribes = await models.Chat.findAll({
+    where: {
+      ownerPubkey: myPubkey
+    }
+  })
+  await asyncForEach(myTribes, async (tribe) => {
     try {
       const contactIds = JSON.parse(tribe.contactIds)
-      const member_count = (contactIds&&contactIds.length)||0
-      await putstats({uuid:tribe.uuid, host:tribe.host, member_count})
-    } catch(e) {}
+      const member_count = (contactIds && contactIds.length) || 0
+      await putstats({ uuid: tribe.uuid, host: tribe.host, member_count, chatId: tribe.id })
+    } catch (e) { }
   })
   console.log(`[tribes] updated stats for ${myTribes.length} tribes`)
 }
@@ -68,9 +70,9 @@ export function subscribe(topic) {
 }
 
 export function publish(topic, msg, cb) {
-  if (client) client.publish(topic, msg, null, function(err){
-    if(err) console.log(err)
-    else if(cb) cb()
+  if (client) client.publish(topic, msg, null, function (err) {
+    if (err) console.log(err)
+    else if (cb) cb()
   })
 }
 
@@ -86,9 +88,9 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
         owner_alias, owner_pubkey,
         escrow_amount: escrow_amount || 0,
         escrow_millis: escrow_millis || 0,
-        unlisted: unlisted||false,
-        private: is_private||false,
-        app_url: app_url||'',
+        unlisted: unlisted || false,
+        private: is_private || false,
+        app_url: app_url || '',
       }),
       headers: { 'Content-Type': 'application/json' }
     })
@@ -108,8 +110,8 @@ export async function declare_bot({ uuid, name, description, tags, img, price_pe
         uuid, owner_pubkey,
         name, description, tags, img: img || '',
         price_per_use: price_per_use || 0,
-        unlisted: unlisted||false,
-        deleted: deleted||false,
+        unlisted: unlisted || false,
+        deleted: deleted || false,
       }),
       headers: { 'Content-Type': 'application/json' }
     })
@@ -134,15 +136,15 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
         escrow_amount: escrow_amount || 0,
         escrow_millis: escrow_millis || 0,
         owner_alias,
-        unlisted: unlisted||false,
-        private: is_private||false,
-        deleted: deleted||false,
-        app_url: app_url||'',
+        unlisted: unlisted || false,
+        private: is_private || false,
+        deleted: deleted || false,
+        app_url: app_url || '',
       }),
       headers: { 'Content-Type': 'application/json' }
     })
     // const j = await r.json()
-  } catch(e) {
+  } catch (e) {
     console.log('[tribes] unauthorized to edit')
     throw e
   }
@@ -157,34 +159,87 @@ export async function delete_tribe({ uuid }) {
       method: 'DELETE',
     })
     // const j = await r.json()
-  } catch(e) {
+  } catch (e) {
     console.log('[tribes] unauthorized to delete')
     throw e
   }
 }
 
-export async function putActivity( uuid:string, host:string ) {
+export async function putActivity(uuid: string, host: string) {
   try {
     const token = await genSignedTimestamp()
     await fetch(`https://${host}/tribeactivity/${uuid}?token=` + token, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' }
     })
-  } catch(e) {
+  } catch (e) {
     console.log('[tribes] unauthorized to putActivity')
     throw e
   }
 }
 
-export async function putstats({ uuid, host, member_count }) {
+async function makeBotsJSON(tribeID) {
+  const bots = await models.ChatBot.findAll({
+    where: {
+      chatId: tribeID
+    }
+  })
+  if (!bots) return []
+  if (!bots.length) return []
+  return bots.map(b => {
+    const bot = b.dataValues
+    if (bot.botPrefix === '/loopout') {
+      return loopoutBotJSON()
+    }
+    return <BotJSON>{
+      prefix: bot.botPrefix,
+      price: bot.pricePerUse,
+      commands: null,
+    }
+  })
+}
+
+interface BotJSON {
+  prefix: string,
+  price: number,
+  commands: BotCommand[] | null,
+}
+interface BotCommand {
+  command: string,
+  price: number,
+  min_price: number,
+  max_price: number,
+  price_index: number,
+  admin_only: boolean,
+}
+function loopoutBotJSON(): BotJSON {
+  return <BotJSON>{
+    prefix: '/loopout',
+    price: 0,
+    commands: [{
+      command: '*',
+      price: 0,
+      min_price: 250000,
+      max_price: 16777215,
+      price_index: 2,
+      admin_only: false
+    }]
+  }
+}
+
+export async function putstats({ uuid, host, member_count, chatId }) {
+  if (!uuid) return
+  const bots = await makeBotsJSON(chatId)
   try {
     const token = await genSignedTimestamp()
     await fetch('https://' + host + '/tribestats?token=' + token, {
       method: 'PUT',
-      body: JSON.stringify({uuid, member_count}),
+      body: JSON.stringify({
+        uuid, member_count, bots: JSON.stringify(bots || [])
+      }),
       headers: { 'Content-Type': 'application/json' }
     })
-  } catch(e) {
+  } catch (e) {
     console.log('[tribes] unauthorized to putstats')
     throw e
   }
@@ -221,7 +276,7 @@ function urlBase64(buf) {
 }
 
 async function asyncForEach(array, callback) {
-	for (let index = 0; index < array.length; index++) {
-	  	await callback(array[index], index, array);
-	}
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
 }

@@ -375,6 +375,7 @@ export async function receiveGroupJoin(payload) {
 			})
 			replayChatHistory(chat, theSender)
 			tribes.putstats({
+				chatId: chat.id,
 				uuid: chat.uuid,
 				host: chat.host,
 				member_count: contactIds.length,
@@ -431,6 +432,7 @@ export async function receiveGroupLeave(payload) {
 					await models.ChatMember.destroy({where:{chatId: chat.id, contactId: sender.id}})
 				} catch(e) {}
 				tribes.putstats({
+					chatId: chat.id,
 					uuid: chat.uuid,
 					host: chat.host,
 					member_count: contactIds.length,
