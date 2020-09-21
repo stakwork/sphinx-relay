@@ -64,14 +64,16 @@ function connect(onMessage) {
 exports.connect = connect;
 function updateTribeStats(myPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const myTribes = yield models_1.models.Chat.findAll({ where: {
+        const myTribes = yield models_1.models.Chat.findAll({
+            where: {
                 ownerPubkey: myPubkey
-            } });
+            }
+        });
         yield asyncForEach(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const contactIds = JSON.parse(tribe.contactIds);
                 const member_count = (contactIds && contactIds.length) || 0;
-                yield putstats({ uuid: tribe.uuid, host: tribe.host, member_count });
+                yield putstats({ uuid: tribe.uuid, host: tribe.host, member_count, chatId: tribe.id });
             }
             catch (e) { }
         }));
@@ -209,13 +211,56 @@ function putActivity(uuid, host) {
     });
 }
 exports.putActivity = putActivity;
-function putstats({ uuid, host, member_count }) {
+function makeBotsJSON(tribeID) {
     return __awaiter(this, void 0, void 0, function* () {
+        const bots = yield models_1.models.ChatBot.findAll({
+            where: {
+                chatId: tribeID
+            }
+        });
+        if (!bots)
+            return [];
+        if (!bots.length)
+            return [];
+        return bots.map(b => {
+            const bot = b.dataValues;
+            if (bot.botPrefix === '/loopout') {
+                return loopoutBotJSON();
+            }
+            return {
+                prefix: bot.botPrefix,
+                price: bot.pricePerUse || 0,
+                commands: null,
+            };
+        });
+    });
+}
+function loopoutBotJSON() {
+    return {
+        prefix: '/loopout',
+        price: 0,
+        commands: [{
+                command: '*',
+                price: 0,
+                min_price: 250000,
+                max_price: 16777215,
+                price_index: 2,
+                admin_only: false
+            }]
+    };
+}
+function putstats({ uuid, host, member_count, chatId }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!uuid)
+            return;
+        const bots = yield makeBotsJSON(chatId);
         try {
             const token = yield genSignedTimestamp();
             yield node_fetch_1.default('https://' + host + '/tribestats?token=' + token, {
                 method: 'PUT',
-                body: JSON.stringify({ uuid, member_count }),
+                body: JSON.stringify({
+                    uuid, member_count, bots: JSON.stringify(bots || [])
+                }),
                 headers: { 'Content-Type': 'application/json' }
             });
         }
