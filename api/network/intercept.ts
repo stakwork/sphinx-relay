@@ -15,7 +15,6 @@ restrictions (be able to toggle, or dont show chat)
 // return bool whether to skip forwarding to tribe
 export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
   const txt = msg.message&&msg.message.content
-  if(!txt) return false
 
   const msgType = msg.type
   if(msgType===constants.message_types.bot_res) {
@@ -28,7 +27,7 @@ export async function isBotMsg(msg:Msg, sentByMe:boolean): Promise<boolean> {
 
   let didEmit = false
 
-  if(txt.startsWith('/bot ')) {
+  if(txt && txt.startsWith('/bot ')) {
     builtinBotEmit(msg)
     didEmit = true
   }

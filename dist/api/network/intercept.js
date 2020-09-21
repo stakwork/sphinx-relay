@@ -23,8 +23,6 @@ restrictions (be able to toggle, or dont show chat)
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message && msg.message.content;
-        if (!txt)
-            return false;
         const msgType = msg.type;
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
@@ -35,7 +33,7 @@ function isBotMsg(msg, sentByMe) {
         if (!chat)
             return false;
         let didEmit = false;
-        if (txt.startsWith('/bot ')) {
+        if (txt && txt.startsWith('/bot ')) {
             builtin_1.builtinBotEmit(msg);
             didEmit = true;
         }
