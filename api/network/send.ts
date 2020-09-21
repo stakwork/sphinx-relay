@@ -65,7 +65,7 @@ export async function sendMessage(params) {
 
 	let yes:any = true
 	let no:any = null
-	console.log('all contactIds',contactIds)
+	// console.log('=> all contactIds',contactIds)
 	await asyncForEach(contactIds, async contactId => {
 		if (contactId == 1) { // dont send to self
 			return

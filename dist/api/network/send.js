@@ -70,7 +70,7 @@ function sendMessage(params) {
         }
         let yes = true;
         let no = null;
-        console.log('all contactIds', contactIds);
+        // console.log('=> all contactIds',contactIds)
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
             if (contactId == 1) { // dont send to self
                 return;
