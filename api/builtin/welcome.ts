@@ -9,7 +9,7 @@ const constants = require(path.join(__dirname, '../../config/constants.json'))
 let initted = false
 
 export function init() {
-  if(initted) return
+  if (initted) return
   initted = true
 
   const client = new Sphinx.Client()
@@ -17,26 +17,28 @@ export function init() {
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
     const arr = (message.content && message.content.split(' ')) || []
-    console.log('message.type',message.type)
-    const isGroupJoin = message.type===constants.message_types.group_join
+    console.log('message.type', message.type)
+    const isGroupJoin = message.type === constants.message_types.group_join
     if (arr.length < 2 && !isGroupJoin) return
-    if (arr[0]!=='/welcome' && !isGroupJoin) return
+    if (arr[0] !== '/welcome' && !isGroupJoin) return
     const cmd = arr[1]
 
-    if(isGroupJoin) {
-      const chat = await models.Chat.findOne({where:{uuid:message.channel.id}})
-      if(!chat) return
-      const chatBot = await models.ChatBot.findOne({where:{
-        chatId: chat.id, botPrefix:'/welcome', botType:constants.bot_types.builtin
-      }})
+    if (isGroupJoin) {
+      const chat = await models.Chat.findOne({ where: { uuid: message.channel.id } })
+      if (!chat) return
+      const chatBot = await models.ChatBot.findOne({
+        where: {
+          chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+        }
+      })
       let meta = 'Welcome to the tribe!'
-      if(chatBot && chatBot.meta) {
+      if (chatBot && chatBot.meta) {
         meta = chatBot.meta
       }
       const resEmbed = new Sphinx.MessageEmbed()
         .setAuthor('WelcomeBot')
         .setDescription(meta)
-      message.channel.send({ embed:resEmbed })
+      message.channel.send({ embed: resEmbed })
       return
     }
 
@@ -45,20 +47,22 @@ export function init() {
       case 'setmessage':
         if (arr.length < 3) return
         console.log("setmsg", arr[2])
-        const chat = await models.Chat.findOne({where:{uuid:message.channel.id}})
-        if(!chat) return
-        const chatBot = await models.ChatBot.findOne({where:{
-          chatId: chat.id, botPrefix:'/welcome', botType:constants.bot_types.builtin
-        }})
-        if(!chatBot) return
+        const chat = await models.Chat.findOne({ where: { uuid: message.channel.id } })
+        if (!chat) return
+        const chatBot = await models.ChatBot.findOne({
+          where: {
+            chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+          }
+        })
+        if (!chatBot) return
         const meta = arr.slice(2, arr.length).join(' ');
-        await chatBot.update({meta})
+        await chatBot.update({ meta })
         const resEmbed = new Sphinx.MessageEmbed()
           .setAuthor('WelcomeBot')
           .setDescription('Your welcome message has been updated')
-        message.channel.send({ embed:resEmbed })
+        message.channel.send({ embed: resEmbed })
         return
-        
+
       default:
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('WelcomeBot')

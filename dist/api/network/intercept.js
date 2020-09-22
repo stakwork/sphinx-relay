@@ -27,9 +27,11 @@ function isBotMsg(msg, sentByMe) {
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
         }
-        const chat = yield models_1.models.Chat.findOne({ where: {
+        const chat = yield models_1.models.Chat.findOne({
+            where: {
                 uuid: msg.chat.uuid
-            } });
+            }
+        });
         if (!chat)
             return false;
         let didEmit = false;
@@ -39,9 +41,11 @@ function isBotMsg(msg, sentByMe) {
         }
         if (didEmit)
             return didEmit;
-        const botsInTribe = yield models_1.models.ChatBot.findAll({ where: {
+        const botsInTribe = yield models_1.models.ChatBot.findAll({
+            where: {
                 chatId: chat.id
-            } });
+            }
+        });
         // console.log('=> botsInTribe', botsInTribe)
         if (!(botsInTribe && botsInTribe.length))
             return false;
@@ -79,9 +83,11 @@ function emitMessageToBot(msg, botInTribe) {
                 builtin_1.builtinBotEmit(msg);
                 return true;
             case constants.bot_types.local:
-                const bot = yield models_1.models.Bot.findOne({ where: {
+                const bot = yield models_1.models.Bot.findOne({
+                    where: {
                         uuid: botInTribe.botUuid
-                    } });
+                    }
+                });
                 return bots_1.postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
             case constants.bot_types.remote:
                 return bots_1.keysendBotCmd(msg, botInTribe);

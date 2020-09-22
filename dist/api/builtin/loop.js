@@ -47,6 +47,13 @@ function init() {
                 message.channel.send({ embed });
                 return;
             }
+            if (message.amount !== parseInt(amt)) {
+                const embed = new Sphinx.MessageEmbed()
+                    .setAuthor('LoopBot')
+                    .setDescription('Incorrect amount');
+                message.channel.send({ embed });
+                return;
+            }
             try {
                 const j = yield doRequest(baseurl + '/v1/loop/out/quote/' + amt);
                 console.log("=> LOOP QUOTE RES", j);

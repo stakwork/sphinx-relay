@@ -40,18 +40,25 @@ export function init() {
         message.channel.send({ embed })
         return
       }
+      if (message.amount!==parseInt(amt)){
+        const embed = new Sphinx.MessageEmbed()
+          .setAuthor('LoopBot')
+          .setDescription('Incorrect amount')
+        message.channel.send({ embed })
+        return
+      }
       try {
-        const j = await doRequest(baseurl + '/v1/loop/out/quote/'+amt)
+        const j = await doRequest(baseurl + '/v1/loop/out/quote/' + amt)
         console.log("=> LOOP QUOTE RES", j)
-        if(!(j&&j.swap_fee&&j.prepay_amt)){
+        if (!(j && j.swap_fee && j.prepay_amt)) {
           return
         }
         const j2 = await doRequest(baseurl + '/v1/loop/out', {
-          method:'POST',
+          method: 'POST',
           body: JSON.stringify({
             amt: amt,
             dest: addy,
-            outgoing_chan_set:[
+            outgoing_chan_set: [
               '704899103684034561'
             ],
             max_swap_fee: j.swap_fee,
@@ -59,14 +66,14 @@ export function init() {
           }),
         })
         console.log("=> LOOP RESPONSE", j2)
-        if(j2&&j2.error) {
+        if (j2 && j2.error) {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('LoopBot')
-            .setDescription('Error: '+j2.error)
+            .setDescription('Error: ' + j2.error)
           message.channel.send({ embed })
           return
         }
-        if(!(j2&&j2.server_message)) {
+        if (!(j2 && j2.server_message)) {
           return
         }
         const embed = new Sphinx.MessageEmbed()
@@ -121,9 +128,9 @@ const agent = new https.Agent({
 })
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname,'../../config/app.json'))[env]
+const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
-async function doRequest(theurl:string, params?:Object) {
+async function doRequest(theurl: string, params?: Object) {
   const ps = params || {}
   try {
     var macaroonString = fs.readFileSync(config.macaroon_location);
