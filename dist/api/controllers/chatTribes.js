@@ -151,6 +151,13 @@ function receiveMemberRequest(payload) {
             }
             if (!theSender)
                 return console.log('no sender'); // fail (no contact key?)
+            console.log("UPSERT", {
+                contactId: theSender.id,
+                chatId: chat.id,
+                role: constants.chat_roles.reader,
+                status: constants.chat_statuses.pending,
+                lastActive: date,
+            });
             // maybe check here manually????
             yield models_1.models.ChatMember.upsert({
                 contactId: theSender.id,
