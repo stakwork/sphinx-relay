@@ -1,7 +1,7 @@
 // import * as SphinxBot from '../../../sphinx-bot' 
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
-import { installBot } from '../controllers/bots'
+import { installBotAsTribeAdmin } from '../controllers/bots'
 import * as path from 'path'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
@@ -96,7 +96,7 @@ export function init() {
               }
             })
             if (!chat) return
-            installBot(chat.dataValues, bot)
+            installBotAsTribeAdmin(chat.dataValues, bot)
           } else {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')

@@ -104,7 +104,7 @@ function init() {
                         });
                         if (!chat)
                             return;
-                        bots_1.installBot(chat.dataValues, bot);
+                        bots_1.installBotAsTribeAdmin(chat.dataValues, bot);
                     }
                     else {
                         const embed = new Sphinx.MessageEmbed()

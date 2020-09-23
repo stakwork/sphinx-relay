@@ -67,7 +67,7 @@ export const deleteBot = async (req, res) => {
   }
 }
 
-export async function installBot(chat, bot_json) {
+export async function installBotAsTribeAdmin(chat, bot_json) {
   const chatId = chat && chat.id
   const chat_uuid = chat && chat.uuid
   if(!chatId || !chat_uuid) return console.log('no chat id in installBot')

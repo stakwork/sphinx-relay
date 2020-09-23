@@ -75,7 +75,7 @@ exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res_1.failure(res, e);
     }
 });
-function installBot(chat, bot_json) {
+function installBotAsTribeAdmin(chat, bot_json) {
     return __awaiter(this, void 0, void 0, function* () {
         const chatId = chat && chat.id;
         const chat_uuid = chat && chat.uuid;
@@ -134,7 +134,7 @@ function installBot(chat, bot_json) {
         }
     });
 }
-exports.installBot = installBot;
+exports.installBotAsTribeAdmin = installBotAsTribeAdmin;
 function keysendBotInstall(b, chat_uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield botKeysend(constants.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid);
