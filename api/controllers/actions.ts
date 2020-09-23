@@ -162,7 +162,7 @@ export async function finalAction(a:Action, bot_id:string){
         })
         await network.sendMessage({
             chat: theChat,
-            sender: { ...owner.dataValues, alias, id:botContactId },
+            sender: { ...owner.dataValues, alias, id:botContactId, role: constants.chat_roles.reader },
             message: { content: textMap, id: message.id, uuid: message.uuid },
             type: constants.message_types.bot_res,
             success: () => ({ success: true }),

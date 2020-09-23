@@ -416,7 +416,7 @@ function replayChatHistory(chat, contact) {
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
             if (!network.typesToReplay.includes(m.type))
                 return; // only for message for now
-            const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
+            const sender = Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants.chat_roles.reader });
             let content = '';
             try {
                 content = JSON.parse(m.remoteMessageContent);
@@ -438,7 +438,7 @@ function replayChatHistory(chat, contact) {
                     }
                 }
             }
-            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }), true);
+            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }));
             msg = yield msg_1.decryptMessage(msg, chat);
             const data = yield msg_1.personalizeMessage(msg, contact, true);
             const mqttTopic = `${contact.publicKey}/${chat.uuid}`;

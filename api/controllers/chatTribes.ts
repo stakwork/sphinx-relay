@@ -420,6 +420,7 @@ export async function replayChatHistory(chat, contact) {
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
+			role: constants.chat_roles.reader
 		}
 		let content = ''
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
@@ -446,7 +447,7 @@ export async function replayChatHistory(chat, contact) {
 			...newMediaTerms && {mediaToken: newMediaTerms},
 			...m.mediaType && {mediaType: m.mediaType},
 			...dateString && {date: dateString}
-		}, true)
+		})
 		msg = await decryptMessage(msg, chat)
 		const data = await personalizeMessage(msg, contact, true)
 		const mqttTopic = `${contact.publicKey}/${chat.uuid}`

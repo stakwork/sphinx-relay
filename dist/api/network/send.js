@@ -27,7 +27,11 @@ function sendMessage(params) {
             return;
         const isTribe = chat.type === constants.chat_types.tribe;
         let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
-        let msg = newmsg(type, chat, sender, message, isTribeOwner);
+        let theSender = sender;
+        if (isTribeOwner) {
+            theSender = Object.assign(Object.assign({}, sender), { role: constants.chat_roles.owner });
+        }
+        let msg = newmsg(type, chat, theSender, message);
         // console.log("=> MSG TO SEND",msg)
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
@@ -160,7 +164,7 @@ function checkIfAutoConfirm(data) {
         confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
     }
 }
-function newmsg(type, chat, sender, message, isTribeOwner) {
+function newmsg(type, chat, sender, message) {
     const includeGroupKey = type === constants.message_types.group_create || type === constants.message_types.group_invite;
     const includeAlias = sender && sender.alias && chat.type === constants.chat_types.tribe;
     // const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
@@ -171,7 +175,7 @@ function newmsg(type, chat, sender, message, isTribeOwner) {
         sender: {
             pub_key: sender.publicKey,
             alias: includeAlias ? sender.alias : '',
-            role: isTribeOwner ? constants.chat_roles.owner : constants.chat_roles.reader,
+            role: sender.role || constants.chat_roles.reader,
         }
     };
 }

@@ -96,7 +96,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             const msg = { mediaToken: mt, purchaser: purchaser.id };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
-                sender: Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }),
+                sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }), { role: constants.chat_roles.reader }),
                 type: constants.message_types.purchase,
                 message: msg,
                 amount: amount,
@@ -138,7 +138,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         // send it to the purchaser
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         send_1.sendMessage({
-            sender: Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }),
+            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }), { role: constants.chat_roles.reader }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaser.id] }),
             type: msgtypes.purchase_accept,
             message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ, originalMuid: muid }),

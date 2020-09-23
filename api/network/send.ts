@@ -21,7 +21,11 @@ export async function sendMessage(params) {
 	const isTribe = chat.type===constants.chat_types.tribe
 	let isTribeOwner = isTribe && sender.publicKey===chat.ownerPubkey
 	
-	let msg = newmsg(type, chat, sender, message, isTribeOwner)
+	let theSender = sender
+	if(isTribeOwner) {
+		theSender = {...sender, role:constants.chat_roles.owner}
+	}
+	let msg = newmsg(type, chat, theSender, message)
 
 	// console.log("=> MSG TO SEND",msg)
 
@@ -153,7 +157,7 @@ function checkIfAutoConfirm(data){
 	}
 }
 
-export function newmsg(type, chat, sender, message, isTribeOwner:boolean){
+export function newmsg(type, chat, sender, message){
 	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
 	const includeAlias = sender && sender.alias && chat.type===constants.chat_types.tribe
 	// const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
@@ -171,7 +175,7 @@ export function newmsg(type, chat, sender, message, isTribeOwner:boolean){
 		sender: {
 			pub_key: sender.publicKey,
 			alias: includeAlias ? sender.alias : '',
-			role: isTribeOwner ? constants.chat_roles.owner : constants.chat_roles.reader,
+			role: sender.role || constants.chat_roles.reader,
 			// ...includePhotoUrl && {photo_url: sender.photoUrl},
 			// ...sender.contactKey && {contact_key: sender.contactKey}
 		}
