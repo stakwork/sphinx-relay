@@ -16,6 +16,8 @@ const path = require("path");
 const mqtt = require("mqtt");
 const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
+const tribeBots_1 = require("./tribeBots");
+exports.declare_bot = tribeBots_1.declare_bot;
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 let client;
@@ -123,31 +125,6 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const host = getHost();
-        try {
-            yield node_fetch_1.default('https://' + host + '/bots', {
-                method: 'POST',
-                body: JSON.stringify({
-                    uuid, owner_pubkey,
-                    name, description, tags, img: img || '',
-                    price_per_use: price_per_use || 0,
-                    unlisted: unlisted || false,
-                    deleted: deleted || false,
-                }),
-                headers: { 'Content-Type': 'application/json' }
-            });
-            // const j = await r.json()
-            // console.log('=> j',j)
-        }
-        catch (e) {
-            console.log('[tribes] unauthorized to declare');
-            throw e;
-        }
-    });
-}
-exports.declare_bot = declare_bot;
 function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, deleted }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -183,7 +160,8 @@ function delete_tribe({ uuid }) {
         const host = getHost();
         try {
             const token = yield genSignedTimestamp();
-            yield node_fetch_1.default(`https://${host}/tribe/${uuid}?token=` + token, {
+            console.log('=> delete_tribe', `https://${host}/tribe/${uuid}?token=${token}`);
+            yield node_fetch_1.default(`https://${host}/tribe/${uuid}?token=${token}`, {
                 method: 'DELETE',
             });
             // const j = await r.json()
@@ -211,66 +189,11 @@ function putActivity(uuid, host) {
     });
 }
 exports.putActivity = putActivity;
-function makeBotsJSON(tribeID) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const bots = yield models_1.models.ChatBot.findAll({
-            where: {
-                chatId: tribeID
-            }
-        });
-        if (!bots)
-            return [];
-        if (!bots.length)
-            return [];
-        return bots.map(b => {
-            const bot = b.dataValues;
-            if (bot.botPrefix === '/loopout') {
-                return loopoutBotJSON();
-            }
-            if (bot.botPrefix === '/testbot') {
-                return testBotJSON();
-            }
-            return {
-                prefix: bot.botPrefix,
-                price: bot.pricePerUse || 0,
-                commands: null,
-            };
-        });
-    });
-}
-function loopoutBotJSON() {
-    return {
-        prefix: '/loopout',
-        price: 0,
-        commands: [{
-                command: '*',
-                price: 0,
-                min_price: 250000,
-                max_price: 16777215,
-                price_index: 2,
-                admin_only: false
-            }]
-    };
-}
-function testBotJSON() {
-    return {
-        prefix: '/testbot',
-        price: 0,
-        commands: [{
-                command: '*',
-                price: 0,
-                min_price: 20,
-                max_price: 50,
-                price_index: 1,
-                admin_only: false
-            }]
-    };
-}
 function putstats({ uuid, host, member_count, chatId }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!uuid)
             return;
-        const bots = yield makeBotsJSON(chatId);
+        const bots = yield tribeBots_1.makeBotsJSON(chatId);
         try {
             const token = yield genSignedTimestamp();
             yield node_fetch_1.default('https://' + host + '/tribestats?token=' + token, {

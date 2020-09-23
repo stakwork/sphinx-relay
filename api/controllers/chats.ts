@@ -283,6 +283,7 @@ export const deleteChat = async (req, res) => {
 			message: {},
 			type: constants.message_types.tribe_delete,
 			success: function () {
+				console.log("=> delete tribe", chat.uuid)
 				tribes.delete_tribe(chat.uuid)
 			},
 			failure: function(){

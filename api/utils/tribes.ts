@@ -6,6 +6,9 @@ import * as path from 'path'
 import * as mqtt from 'mqtt'
 import fetch from 'node-fetch'
 import { models } from '../models'
+import {makeBotsJSON, declare_bot} from './tribeBots'
+
+export {declare_bot}
 
 const env = process.env.NODE_ENV || 'development'
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
@@ -101,28 +104,6 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
   }
 }
 
-export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
-  const host = getHost()
-  try {
-    await fetch('https://' + host + '/bots', {
-      method: 'POST',
-      body: JSON.stringify({
-        uuid, owner_pubkey,
-        name, description, tags, img: img || '',
-        price_per_use: price_per_use || 0,
-        unlisted: unlisted || false,
-        deleted: deleted || false,
-      }),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    // const j = await r.json()
-    // console.log('=> j',j)
-  } catch (e) {
-    console.log('[tribes] unauthorized to declare')
-    throw e
-  }
-}
-
 export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, deleted }) {
   try {
     const token = await genSignedTimestamp()
@@ -150,12 +131,12 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
   }
 }
 
-
 export async function delete_tribe({ uuid }) {
   const host = getHost()
   try {
     const token = await genSignedTimestamp()
-    await fetch(`https://${host}/tribe/${uuid}?token=` + token, {
+    console.log('=> delete_tribe', `https://${host}/tribe/${uuid}?token=${token}`)
+    await fetch(`https://${host}/tribe/${uuid}?token=${token}`, {
       method: 'DELETE',
     })
     // const j = await r.json()
@@ -175,73 +156,6 @@ export async function putActivity(uuid: string, host: string) {
   } catch (e) {
     console.log('[tribes] unauthorized to putActivity')
     throw e
-  }
-}
-
-async function makeBotsJSON(tribeID) {
-  const bots = await models.ChatBot.findAll({
-    where: {
-      chatId: tribeID
-    }
-  })
-  if (!bots) return []
-  if (!bots.length) return []
-  return bots.map(b => {
-    const bot = b.dataValues
-    if (bot.botPrefix === '/loopout') {
-      return loopoutBotJSON()
-    }
-    if (bot.botPrefix === '/testbot') {
-      return testBotJSON()
-    }
-    return <BotJSON>{
-      prefix: bot.botPrefix,
-      price: bot.pricePerUse||0,
-      commands: null,
-    }
-  })
-}
-
-interface BotJSON {
-  prefix: string,
-  price: number,
-  commands: BotCommand[] | null,
-}
-interface BotCommand {
-  command: string,
-  price: number,
-  min_price: number,
-  max_price: number,
-  price_index: number,
-  admin_only: boolean,
-}
-function loopoutBotJSON(): BotJSON {
-  return <BotJSON>{
-    prefix: '/loopout',
-    price: 0,
-    commands: [{
-      command: '*',
-      price: 0,
-      min_price: 250000,
-      max_price: 16777215,
-      price_index: 2,
-      admin_only: false
-    }]
-  }
-}
-
-function testBotJSON(): BotJSON {
-  return <BotJSON>{
-    prefix: '/testbot',
-    price: 0,
-    commands: [{
-      command: '*',
-      price: 0,
-      min_price: 20,
-      max_price: 50,
-      price_index: 1,
-      admin_only: false
-    }]
   }
 }
 

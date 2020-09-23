@@ -139,7 +139,9 @@ function keysendBotInstall(b, chat_uuid) {
 exports.keysendBotInstall = keysendBotInstall;
 function keysendBotCmd(msg, b) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, b.pricePerUse, msg.chat.uuid, msg.message.content);
+        const amount = msg.message.amount || 0;
+        const amt = Math.max(amount, b.pricePerUse);
+        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, msg.message.content);
     });
 }
 exports.keysendBotCmd = keysendBotCmd;

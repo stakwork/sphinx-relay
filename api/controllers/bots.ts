@@ -129,9 +129,11 @@ export async function keysendBotInstall(b, chat_uuid:string): Promise<boolean> {
 }
 
 export async function keysendBotCmd(msg, b): Promise<boolean> {
+  const amount = msg.message.amount||0
+  const amt = Math.max(amount, b.pricePerUse)
   return await botKeysend(
     constants.message_types.bot_cmd,
-    b.botUuid, b.botMakerPubkey, b.pricePerUse,
+    b.botUuid, b.botMakerPubkey, amt,
     msg.chat.uuid,
     msg.message.content,
   )
