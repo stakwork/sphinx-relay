@@ -35,9 +35,11 @@ function init() {
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
             if (!chat)
                 return;
-            const chatBot = yield models_1.models.ChatBot.findOne({ where: {
+            const chatBot = yield models_1.models.ChatBot.findOne({
+                where: {
                     chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
-                } });
+                }
+            });
             let meta = 'Welcome to the tribe!';
             if (chatBot && chatBot.meta) {
                 meta = chatBot.meta;
@@ -56,9 +58,11 @@ function init() {
                 const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
                 if (!chat)
                     return;
-                const chatBot = yield models_1.models.ChatBot.findOne({ where: {
+                const chatBot = yield models_1.models.ChatBot.findOne({
+                    where: {
                         chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
-                    } });
+                    }
+                });
                 if (!chatBot)
                     return;
                 const meta = arr.slice(2, arr.length).join(' ');

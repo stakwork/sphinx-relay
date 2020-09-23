@@ -52,14 +52,18 @@ function init() {
                 const botName = arr[2];
                 if (builtinBots.includes(botName)) {
                     console.log("INSTALL", botName);
-                    const chat = yield models_1.models.Chat.findOne({ where: {
+                    const chat = yield models_1.models.Chat.findOne({
+                        where: {
                             uuid: message.channel.id
-                        } });
+                        }
+                    });
                     if (!chat)
                         return;
-                    const existing = yield models_1.models.ChatBot.findOne({ where: {
+                    const existing = yield models_1.models.ChatBot.findOne({
+                        where: {
                             chatId: chat.id, botPrefix: '/' + botName,
-                        } });
+                        }
+                    });
                     if (existing) {
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('MotherBot')
@@ -93,9 +97,11 @@ function init() {
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
                         console.log('=> FOUND BOT', bot.unique_name);
-                        const chat = yield models_1.models.Chat.findOne({ where: {
+                        const chat = yield models_1.models.Chat.findOne({
+                            where: {
                                 uuid: message.channel.id
-                            } });
+                            }
+                        });
                         if (!chat)
                             return;
                         bots_1.installBot(chat.dataValues, bot);

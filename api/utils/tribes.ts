@@ -191,6 +191,9 @@ async function makeBotsJSON(tribeID) {
     if (bot.botPrefix === '/loopout') {
       return loopoutBotJSON()
     }
+    if (bot.botPrefix === '/testbot') {
+      return testBotJSON()
+    }
     return <BotJSON>{
       prefix: bot.botPrefix,
       price: bot.pricePerUse||0,
@@ -222,6 +225,21 @@ function loopoutBotJSON(): BotJSON {
       min_price: 250000,
       max_price: 16777215,
       price_index: 2,
+      admin_only: false
+    }]
+  }
+}
+
+function testBotJSON(): BotJSON {
+  return <BotJSON>{
+    prefix: '/testbot',
+    price: 0,
+    commands: [{
+      command: '*',
+      price: 0,
+      min_price: 20,
+      max_price: 50,
+      price_index: 1,
       admin_only: false
     }]
   }
