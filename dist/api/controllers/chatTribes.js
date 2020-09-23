@@ -132,33 +132,33 @@ function receiveMemberRequest(payload) {
         let theSender = null;
         const member = chat_members[sender_pub_key];
         const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
+        const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
+        if (sender) {
+            theSender = sender; // might already include??
+        }
+        else {
+            if (member && member.key) {
+                const createdContact = yield models_1.models.Contact.create({
+                    publicKey: sender_pub_key,
+                    contactKey: member.key,
+                    alias: senderAlias,
+                    status: 1,
+                    fromGroup: true,
+                });
+                theSender = createdContact;
+            }
+        }
+        if (!theSender)
+            return console.log('no sender'); // fail (no contact key?)
+        console.log("UPSERT", {
+            contactId: theSender.id,
+            chatId: chat.id,
+            role: constants.chat_roles.reader,
+            status: constants.chat_statuses.pending,
+            lastActive: date,
+        });
+        // maybe check here manually????
         try {
-            const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
-            if (sender) {
-                theSender = sender; // might already include??
-            }
-            else {
-                if (member && member.key) {
-                    const createdContact = yield models_1.models.Contact.create({
-                        publicKey: sender_pub_key,
-                        contactKey: member.key,
-                        alias: senderAlias,
-                        status: 1,
-                        fromGroup: true,
-                    });
-                    theSender = createdContact;
-                }
-            }
-            if (!theSender)
-                return console.log('no sender'); // fail (no contact key?)
-            console.log("UPSERT", {
-                contactId: theSender.id,
-                chatId: chat.id,
-                role: constants.chat_roles.reader,
-                status: constants.chat_statuses.pending,
-                lastActive: date,
-            });
-            // maybe check here manually????
             yield models_1.models.ChatMember.upsert({
                 contactId: theSender.id,
                 chatId: chat.id,
@@ -166,31 +166,29 @@ function receiveMemberRequest(payload) {
                 status: constants.chat_statuses.pending,
                 lastActive: date,
             });
-            const msg = {
-                chatId: chat.id,
-                type: constants.message_types.member_request,
-                sender: (theSender && theSender.id) || 0,
-                messageContent: '', remoteMessageContent: '',
-                status: constants.statuses.confirmed,
-                date: date, createdAt: date, updatedAt: date
-            };
-            if (isTribe) {
-                msg.senderAlias = sender_alias;
+        }
+        catch (e) { }
+        const msg = {
+            chatId: chat.id,
+            type: constants.message_types.member_request,
+            sender: (theSender && theSender.id) || 0,
+            messageContent: '', remoteMessageContent: '',
+            status: constants.statuses.confirmed,
+            date: date, createdAt: date, updatedAt: date
+        };
+        if (isTribe) {
+            msg.senderAlias = sender_alias;
+        }
+        const message = yield models_1.models.Message.create(msg);
+        const theChat = yield addPendingContactIdsToChat(chat);
+        socket.sendJson({
+            type: 'member_request',
+            response: {
+                contact: jsonUtils.contactToJson(theSender || {}),
+                chat: jsonUtils.chatToJson(theChat),
+                message: jsonUtils.messageToJson(message, theChat)
             }
-            const message = yield models_1.models.Message.create(msg);
-            const theChat = yield addPendingContactIdsToChat(chat);
-            socket.sendJson({
-                type: 'member_request',
-                response: {
-                    contact: jsonUtils.contactToJson(theSender || {}),
-                    chat: jsonUtils.chatToJson(theChat),
-                    message: jsonUtils.messageToJson(message, theChat)
-                }
-            });
-        }
-        catch (e) {
-            console.log('=> receiveMemberRequest ERROR', e);
-        }
+        });
     });
 }
 exports.receiveMemberRequest = receiveMemberRequest;
