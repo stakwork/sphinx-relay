@@ -44,7 +44,7 @@ const botMakerTypes=[
 	constants.message_types.bot_cmd,
 ]
 async function onReceive(payload){
-	// console.log('===> onReceive',JSON.stringify(payload,null,2))
+	console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if(!(payload.type||payload.type===0)) return console.log('no payload.type')
 
 	if(botTypes.includes(payload.type)) {
