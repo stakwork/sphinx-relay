@@ -21,9 +21,9 @@ export async function sendMessage(params) {
 	const isTribe = chat.type===constants.chat_types.tribe
 	let isTribeOwner = isTribe && sender.publicKey===chat.ownerPubkey
 	
-	let theSender = sender
+	let theSender = (sender.dataValues||sender)
 	if(isTribeOwner) {
-		theSender = {...sender, role:constants.chat_roles.owner}
+		theSender = {...(sender.dataValues||sender), role:constants.chat_roles.owner}
 	}
 	let msg = newmsg(type, chat, theSender, message)
 

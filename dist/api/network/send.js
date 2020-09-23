@@ -27,9 +27,9 @@ function sendMessage(params) {
             return;
         const isTribe = chat.type === constants.chat_types.tribe;
         let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
-        let theSender = sender;
+        let theSender = (sender.dataValues || sender);
         if (isTribeOwner) {
-            theSender = Object.assign(Object.assign({}, sender), { role: constants.chat_roles.owner });
+            theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants.chat_roles.owner });
         }
         let msg = newmsg(type, chat, theSender, message);
         // console.log("=> MSG TO SEND",msg)
