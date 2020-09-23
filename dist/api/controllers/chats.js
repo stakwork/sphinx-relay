@@ -386,7 +386,7 @@ function receiveGroupJoin(payload) {
             msg.senderAlias = sender_alias;
         }
         const message = yield models_1.models.Message.create(msg);
-        const theChat = chatTribes_1.addPendingContactIdsToChat(chat);
+        const theChat = yield chatTribes_1.addPendingContactIdsToChat(chat);
         socket.sendJson({
             type: 'group_join',
             response: {

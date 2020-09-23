@@ -396,7 +396,7 @@ export async function receiveGroupJoin(payload) {
 	}
 	const message = await models.Message.create(msg)
 
-	const theChat = addPendingContactIdsToChat(chat)
+	const theChat = await addPendingContactIdsToChat(chat)
 	socket.sendJson({
 		type: 'group_join',
 		response: {
