@@ -22,8 +22,16 @@ const constants = require(path.join(__dirname, '../../config/constants.json'));
 const MIN_SATS = 3;
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { type, chat, message, sender, amount, success, failure, skipPubKey } = params;
-        let msg = newmsg(type, chat, sender, message);
+        const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded } = params;
+        if (!chat || !sender)
+            return;
+        const isTribe = chat.type === constants.chat_types.tribe;
+        let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
+        let theSender = (sender.dataValues || sender);
+        if (isTribeOwner && !isForwarded) {
+            theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants.chat_roles.owner });
+        }
+        let msg = newmsg(type, chat, theSender, message);
         // console.log("=> MSG TO SEND",msg)
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
@@ -39,12 +47,8 @@ function sendMessage(params) {
             }
         }
         let networkType = undefined;
-        const isTribe = chat.type === constants.chat_types.tribe;
-        let isTribeOwner = false;
         const chatUUID = chat.uuid;
         if (isTribe) {
-            const tribeOwnerPubKey = chat.ownerPubkey;
-            isTribeOwner = sender.publicKey === tribeOwnerPubKey;
             if (type === constants.message_types.confirmation) {
                 // if u are owner, go ahead!
                 if (!isTribeOwner)
@@ -64,7 +68,7 @@ function sendMessage(params) {
             }
             else {
                 // if tribe, send to owner only
-                const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: tribeOwnerPubKey } });
+                const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: chat.ownerPubkey } });
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
             }
         }

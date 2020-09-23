@@ -168,13 +168,14 @@ function finalAction(a, bot_id) {
             });
             yield network.sendMessage({
                 chat: theChat,
-                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId }),
+                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants.chat_roles.reader }),
                 message: { content: textMap, id: message.id, uuid: message.uuid },
                 type: constants.message_types.bot_res,
                 success: () => ({ success: true }),
                 failure: (e) => {
                     throw e;
-                }
+                },
+                isForwarded: true,
             });
         }
         else {

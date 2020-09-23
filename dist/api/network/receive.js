@@ -209,7 +209,8 @@ function forwardMessageToTribe(ogpayload, sender) {
             chat: chat,
             skipPubKey: payload.sender.pub_key,
             success: () => { },
-            receive: () => { }
+            receive: () => { },
+            isForwarded: true,
         });
     });
 }

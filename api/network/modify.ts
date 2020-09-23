@@ -84,13 +84,15 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       chat: {...chat.dataValues, contactIds:[ogmsg.sender]},
       sender: {
         ...owner.dataValues,
-        ...purchaser&&purchaser.alias && {alias:purchaser.alias}
+        ...purchaser&&purchaser.alias && {alias:purchaser.alias},
+        role: constants.chat_roles.reader,
       },
       type: constants.message_types.purchase,
       message: msg,
       amount: amount,
       success: ()=>{},
-      failure: ()=>{}
+      failure: ()=>{},
+      isForwarded: true,
     })
   }
 }
@@ -131,7 +133,8 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
   sendMessage({
 		sender: {
 			...owner.dataValues,
-			...sender&&sender.alias && {alias:sender.alias}
+      ...sender&&sender.alias && {alias:sender.alias},
+      role: constants.chat_roles.reader,
 		},
     chat:{
       ...chat.dataValues,
@@ -144,7 +147,8 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender){
       originalMuid:muid,
     },
 		success: ()=>{},
-		receive: ()=>{}
+    receive: ()=>{},
+    isForwarded: true,
 	})
 }
 

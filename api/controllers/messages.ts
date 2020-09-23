@@ -161,7 +161,7 @@ export const sendMessage = async (req, res) => {
 		reply_uuid,
 	} = req.body
 
-	var date = new Date();
+	var date = new Date()
 	date.setMilliseconds(0)
 
   	const owner = await models.Contact.findOne({ where: { isOwner: true }})

@@ -416,7 +416,7 @@ function replayChatHistory(chat, contact) {
         asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
             if (!network.typesToReplay.includes(m.type))
                 return; // only for message for now
-            const sender = Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias });
+            const sender = Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants.chat_roles.reader });
             let content = '';
             try {
                 content = JSON.parse(m.remoteMessageContent);
