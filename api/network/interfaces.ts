@@ -11,6 +11,6 @@ export interface Msg {
   sender: {
     pub_key: string,
     alias: string,
-    role?: number
+    role: number
   }
 }

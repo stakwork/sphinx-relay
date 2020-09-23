@@ -112,7 +112,11 @@ function installBot(chat, bot_json) {
                     type: constants.message_types.bot_install,
                     bot_uuid: myBot.uuid,
                     message: { content: '', amount: 0 },
-                    sender: { pub_key: owner.publicKey, alias: owner.alias },
+                    sender: {
+                        pub_key: owner.publicKey,
+                        alias: owner.alias,
+                        role: constants.chat_roles.owner
+                    },
                     chat: { uuid: chat_uuid }
                 }, myBot, SphinxBot.MSG_TYPE.INSTALL);
             }
@@ -141,11 +145,11 @@ function keysendBotCmd(msg, b) {
     return __awaiter(this, void 0, void 0, function* () {
         const amount = msg.message.amount || 0;
         const amt = Math.max(amount, b.pricePerUse);
-        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, msg.message.content);
+        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, msg.message.content, (msg.sender && msg.sender.role));
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
-function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, content) {
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, content, sender_role) {
     return __awaiter(this, void 0, void 0, function* () {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const dest = botmaker_pubkey;
@@ -157,10 +161,14 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, cont
             data: {
                 type: msg_type,
                 bot_uuid,
+                chat: { uuid: chat_uuid },
                 message: { content: content || '', amount: amt },
-                sender: { pub_key: owner.publicKey, alias: owner.alias },
-                chat: { uuid: chat_uuid }
-            },
+                sender: {
+                    pub_key: owner.publicKey,
+                    alias: owner.alias,
+                    role: sender_role || constants.chat_roles.reader
+                }
+            }
         };
         try {
             yield network.signAndSend(opts);
