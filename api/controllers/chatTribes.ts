@@ -131,53 +131,59 @@ export async function receiveMemberRequest(payload) {
 	const member = chat_members[sender_pub_key]
 	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
 	
-	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-	if (sender) {
-		theSender = sender // might already include??
-	} else {
-		if(member && member.key) {
-			const createdContact = await models.Contact.create({
-				publicKey: sender_pub_key,
-				contactKey: member.key,
-				alias: senderAlias,
-				status: 1,
-				fromGroup: true,
-			})
-			theSender = createdContact
+	try {
+
+		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		if (sender) {
+			theSender = sender // might already include??
+		} else {
+			if(member && member.key) {
+				const createdContact = await models.Contact.create({
+					publicKey: sender_pub_key,
+					contactKey: member.key,
+					alias: senderAlias,
+					status: 1,
+					fromGroup: true,
+				})
+				theSender = createdContact
+			}
 		}
-	}
-	if(!theSender) return console.log('no sender') // fail (no contact key?)
+		if(!theSender) return console.log('no sender') // fail (no contact key?)
 
-	await models.ChatMember.upsert({
-		contactId: theSender.id,
-		chatId: chat.id,
-		role: constants.chat_roles.reader,
-		status: constants.chat_statuses.pending,
-		lastActive: date,
-	})
+		// maybe check here manually????
+		await models.ChatMember.upsert({
+			contactId: theSender.id,
+			chatId: chat.id,
+			role: constants.chat_roles.reader,
+			status: constants.chat_statuses.pending,
+			lastActive: date,
+		})
 
-	const msg:{[k:string]:any} = {
-		chatId: chat.id,
-		type: constants.message_types.member_request,
-		sender: (theSender && theSender.id) || 0,
-		messageContent:'', remoteMessageContent:'',
-		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
-	}
-	if(isTribe) {
-		msg.senderAlias = sender_alias
-	}
-	const message = await models.Message.create(msg)
-
-	const theChat = await addPendingContactIdsToChat(chat)
-	socket.sendJson({
-		type: 'member_request',
-		response: {
-			contact: jsonUtils.contactToJson(theSender||{}),
-			chat: jsonUtils.chatToJson(theChat),
-			message: jsonUtils.messageToJson(message, theChat)
+		const msg:{[k:string]:any} = {
+			chatId: chat.id,
+			type: constants.message_types.member_request,
+			sender: (theSender && theSender.id) || 0,
+			messageContent:'', remoteMessageContent:'',
+			status: constants.statuses.confirmed,
+			date: date, createdAt: date, updatedAt: date
 		}
-	})
+		if(isTribe) {
+			msg.senderAlias = sender_alias
+		}
+		const message = await models.Message.create(msg)
+
+		const theChat = await addPendingContactIdsToChat(chat)
+		socket.sendJson({
+			type: 'member_request',
+			response: {
+				contact: jsonUtils.contactToJson(theSender||{}),
+				chat: jsonUtils.chatToJson(theChat),
+				message: jsonUtils.messageToJson(message, theChat)
+			}
+		})
+	} catch(e) {
+		console.log('=> receiveMemberRequest ERROR',e)
+	}
 }
 
 export async function editTribe(req, res) {
