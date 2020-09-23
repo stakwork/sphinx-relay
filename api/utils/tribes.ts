@@ -131,11 +131,10 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
   }
 }
 
-export async function delete_tribe({ uuid }) {
+export async function delete_tribe(uuid) {
   const host = getHost()
   try {
     const token = await genSignedTimestamp()
-    console.log('=> delete_tribe', `https://${host}/tribe/${uuid}?token=${token}`)
     await fetch(`https://${host}/tribe/${uuid}?token=${token}`, {
       method: 'DELETE',
     })

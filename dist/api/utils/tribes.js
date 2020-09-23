@@ -155,12 +155,11 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     });
 }
 exports.edit = edit;
-function delete_tribe({ uuid }) {
+function delete_tribe(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = getHost();
         try {
             const token = yield genSignedTimestamp();
-            console.log('=> delete_tribe', `https://${host}/tribe/${uuid}?token=${token}`);
             yield node_fetch_1.default(`https://${host}/tribe/${uuid}?token=${token}`, {
                 method: 'DELETE',
             });
