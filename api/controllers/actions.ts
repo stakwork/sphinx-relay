@@ -168,7 +168,8 @@ export async function finalAction(a:Action, bot_id:string){
             success: () => ({ success: true }),
             failure: (e) => {
                 throw e
-            }
+            },
+            isForwarded: true,
         })
 
     } else {

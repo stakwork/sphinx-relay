@@ -174,7 +174,8 @@ function finalAction(a, bot_id) {
                 success: () => ({ success: true }),
                 failure: (e) => {
                     throw e;
-                }
+                },
+                isForwarded: true,
             });
         }
         else {

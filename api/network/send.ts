@@ -15,14 +15,14 @@ type NetworkType = undefined | 'mqtt' | 'lightning'
 const MIN_SATS = 3;
 
 export async function sendMessage(params) {
-	const { type, chat, message, sender, amount, success, failure, skipPubKey } = params
+	const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded } = params
 	if(!chat || !sender) return
 
 	const isTribe = chat.type===constants.chat_types.tribe
 	let isTribeOwner = isTribe && sender.publicKey===chat.ownerPubkey
 	
 	let theSender = (sender.dataValues||sender)
-	if(isTribeOwner) {
+	if(isTribeOwner && !isForwarded) {
 		theSender = {...(sender.dataValues||sender), role:constants.chat_roles.owner}
 	}
 	let msg = newmsg(type, chat, theSender, message)

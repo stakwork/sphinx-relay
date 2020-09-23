@@ -420,7 +420,7 @@ export async function replayChatHistory(chat, contact) {
 		const sender = {
 			...owner.dataValues,
 			...m.senderAlias && {alias: m.senderAlias},
-			role: constants.chat_roles.reader
+			role: constants.chat_roles.reader,
 		}
 		let content = ''
 		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}

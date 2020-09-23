@@ -101,7 +101,8 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 message: msg,
                 amount: amount,
                 success: () => { },
-                failure: () => { }
+                failure: () => { },
+                isForwarded: true,
             });
         }
     });
@@ -143,7 +144,8 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
             type: msgtypes.purchase_accept,
             message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ, originalMuid: muid }),
             success: () => { },
-            receive: () => { }
+            receive: () => { },
+            isForwarded: true,
         });
     });
 }
