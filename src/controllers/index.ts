@@ -107,10 +107,11 @@ export async function set(app) {
 	})
 
 	app.get('/latest', async function(req,res) {
-		const last = await models.Message.findAll({
+		const lasts = await models.Message.findAll({
 			limit: 1,
 			order: [[ 'createdAt', 'DESC' ]]
 		})
+		const last = lasts && lasts[0]
 		console.log('=> last.dataValues',last.dataValues)
 		if(!last) {
 			res.status(404).send('Not found');

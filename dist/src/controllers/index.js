@@ -105,10 +105,11 @@ function set(app) {
         });
         app.get('/latest', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
-                const last = yield models_1.models.Message.findAll({
+                const lasts = yield models_1.models.Message.findAll({
                     limit: 1,
                     order: [['createdAt', 'DESC']]
                 });
+                const last = lasts && lasts[0];
                 console.log('=> last.dataValues', last.dataValues);
                 if (!last) {
                     res.status(404).send('Not found');
