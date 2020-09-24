@@ -130,7 +130,7 @@ export async function receiveMemberRequest(payload) {
 	let theSender: any = null
 	const member = chat_members[sender_pub_key]
 	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
-	
+
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
 	if (sender) {
 		theSender = sender // might already include??
@@ -148,13 +148,23 @@ export async function receiveMemberRequest(payload) {
 	}
 	if(!theSender) return console.log('no sender') // fail (no contact key?)
 
-	await models.ChatMember.upsert({
+	console.log("UPSERT",{
 		contactId: theSender.id,
 		chatId: chat.id,
 		role: constants.chat_roles.reader,
 		status: constants.chat_statuses.pending,
 		lastActive: date,
 	})
+	// maybe check here manually????
+	try{
+		await models.ChatMember.upsert({
+			contactId: theSender.id,
+			chatId: chat.id,
+			role: constants.chat_roles.reader,
+			status: constants.chat_statuses.pending,
+			lastActive: date,
+		})
+	} catch(e){}
 
 	const msg:{[k:string]:any} = {
 		chatId: chat.id,

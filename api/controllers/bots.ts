@@ -67,7 +67,7 @@ export const deleteBot = async (req, res) => {
   }
 }
 
-export async function installBot(chat, bot_json) {
+export async function installBotAsTribeAdmin(chat, bot_json) {
   const chatId = chat && chat.id
   const chat_uuid = chat && chat.uuid
   if(!chatId || !chat_uuid) return console.log('no chat id in installBot')
@@ -104,7 +104,11 @@ export async function installBot(chat, bot_json) {
         type: constants.message_types.bot_install,
         bot_uuid: myBot.uuid,
         message: {content:'', amount:0},
-        sender: {pub_key: owner.publicKey, alias: owner.alias},
+        sender: {
+          pub_key: owner.publicKey, 
+          alias: owner.alias,
+          role: constants.chat_roles.owner
+        },
         chat: {uuid:chat_uuid}
       }, myBot, SphinxBot.MSG_TYPE.INSTALL)
     }
@@ -136,10 +140,11 @@ export async function keysendBotCmd(msg, b): Promise<boolean> {
     b.botUuid, b.botMakerPubkey, amt,
     msg.chat.uuid,
     msg.message.content,
+    (msg.sender && msg.sender.role)
   )
 }
 
-export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid:string, content?:string): Promise<boolean> {
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid:string, content?:string, sender_role?:number): Promise<boolean> {
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
   const dest = botmaker_pubkey
   const MIN_SATS = 3
@@ -150,10 +155,14 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, ch
     data: <network.Msg>{
       type: msg_type,
       bot_uuid,
+      chat: {uuid:chat_uuid},
       message: {content: content||'', amount:amt},
-      sender: {pub_key: owner.publicKey, alias: owner.alias},
-      chat: {uuid:chat_uuid}
-    },
+      sender: {
+        pub_key: owner.publicKey, 
+        alias: owner.alias, 
+        role: sender_role||constants.chat_roles.reader
+      }
+    }
   }
   try {
     await network.signAndSend(opts)

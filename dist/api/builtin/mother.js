@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// import * as SphinxBot from '../../../sphinx-bot' 
+// import * as SphinxBot from '../../../sphinx-bot'
 const Sphinx = require("sphinx-bot");
 const actions_1 = require("../controllers/actions");
 const bots_1 = require("../controllers/bots");
@@ -45,6 +45,9 @@ function init() {
         if (arr[0] !== '/bot')
             return;
         const cmd = arr[1];
+        const isAdmin = message.member.roles.find(role => role.name === 'Admin');
+        if (!isAdmin)
+            return;
         switch (cmd) {
             case 'install':
                 if (arr.length < 3)
@@ -104,7 +107,7 @@ function init() {
                         });
                         if (!chat)
                             return;
-                        bots_1.installBot(chat.dataValues, bot);
+                        bots_1.installBotAsTribeAdmin(chat.dataValues, bot);
                     }
                     else {
                         const embed = new Sphinx.MessageEmbed()
