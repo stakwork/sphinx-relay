@@ -5,13 +5,13 @@ import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
 import * as crypto from 'crypto'
 import * as path from 'path'
-import {models} from './api/models'
-import logger from './api/utils/logger'
-import {pingHubInterval, checkInvitesHubInterval} from './api/hub'
-import {setupDatabase, setupDone} from './api/utils/setup'
-import * as controllers from './api/controllers'
-import * as socket from './api/utils/socket'
-import * as network from './api/network'
+import {models} from './src/models'
+import logger from './src/utils/logger'
+import {pingHubInterval, checkInvitesHubInterval} from './src/hub'
+import {setupDatabase, setupDone} from './src/utils/setup'
+import * as controllers from './src/controllers'
+import * as socket from './src/utils/socket'
+import * as network from './src/network'
 
 let server: any = null
 const env = process.env.NODE_ENV || 'development';
@@ -47,7 +47,7 @@ async function connectToLND(){
 async function mainSetup(){
 	await setupDatabase();
 	if (config.hub_api_url) {
-		pingHubInterval(5000)
+		pingHubInterval(15000)
 		checkInvitesHubInterval(5000)
 	}
 	await setupApp()
@@ -70,7 +70,7 @@ async function setupApp(){
 		app.use(authModule);
 	}
 	app.use('/static', express.static('public'));
-	app.get('/app', (req, res) => res.sendFile(__dirname + '/public/index.html'))
+	app.get('/app', (req, res) => res.send('INDEX'))
 
 	server.listen(port, (err) => {
 		if (err) throw err;
@@ -90,7 +90,7 @@ async function authModule(req, res, next) {
 		req.path == '/info' ||
 		req.path == '/action' ||
 		req.path == '/contacts/tokens' ||
-		req.path == '/login' ||
+		req.path == '/latest' ||
 		req.path.startsWith('/static') ||
 		req.path == '/contacts/set_dev'
 	) {

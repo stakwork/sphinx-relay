@@ -18,8 +18,8 @@
     },
     "include": [
         "./app.ts",
-        "./api/*",
-        "./api/**/*",
+        "./src/*",
+        "./src/**/*",
         "./config/*.json"
     ],
     "exclude": [
