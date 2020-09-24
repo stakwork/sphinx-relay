@@ -104,10 +104,11 @@ function isClean() {
 }
 function latestMessage() {
     return __awaiter(this, void 0, void 0, function* () {
-        const last = yield models_1.models.Message.findAll({
+        const lasts = yield models_1.models.Message.findAll({
             limit: 1,
             order: [['createdAt', 'DESC']]
         });
+        const last = lasts && lasts[0];
         if (last) {
             return last.createdAt;
         }

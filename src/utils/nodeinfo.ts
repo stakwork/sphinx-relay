@@ -95,10 +95,11 @@ async function isClean(){
 }
 
 async function latestMessage(): Promise<any> {
-  const last = await models.Message.findAll({
+  const lasts = await models.Message.findAll({
     limit: 1,
     order: [[ 'createdAt', 'DESC' ]]
   })
+  const last = lasts && lasts[0]
   if(last) {
     return last.createdAt
   } else {
