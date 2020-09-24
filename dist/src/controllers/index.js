@@ -109,6 +109,7 @@ function set(app) {
                     limit: 1,
                     order: [['createdAt', 'DESC']]
                 });
+                console.log('=> last.dataValues', last.dataValues);
                 if (!last) {
                     res.status(404).send('Not found');
                 }
