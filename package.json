@@ -6,8 +6,7 @@
   "scripts": {
     "test": "echo 'no tests yet!' && exit 0",
     "docker-dev": "nodemon ./app.js",
-    "build": "webpack --config webpack.config.js",
-    "frontend": "webpack-dev-server --entry ./frontend.jsx",
+    "build": "tsc",
     "start-ts": "ts-node ./app.ts",
     "start": "ts-node ./app.ts",
     "start-password": "USE_PASSWORD=true ts-node ./app.ts",
