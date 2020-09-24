@@ -16,13 +16,13 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const crypto = require("crypto");
 const path = require("path");
-const models_1 = require("./api/models");
-const logger_1 = require("./api/utils/logger");
-const hub_1 = require("./api/hub");
-const setup_1 = require("./api/utils/setup");
-const controllers = require("./api/controllers");
-const socket = require("./api/utils/socket");
-const network = require("./api/network");
+const models_1 = require("./src/models");
+const logger_1 = require("./src/utils/logger");
+const hub_1 = require("./src/hub");
+const setup_1 = require("./src/utils/setup");
+const controllers = require("./src/controllers");
+const socket = require("./src/utils/socket");
+const network = require("./src/network");
 let server = null;
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
@@ -80,7 +80,7 @@ function setupApp() {
             app.use(authModule);
         }
         app.use('/static', express.static('public'));
-        app.get('/app', (req, res) => res.sendFile(__dirname + '/public/index.html'));
+        app.get('/app', (req, res) => res.send('INDEX'));
         server.listen(port, (err) => {
             if (err)
                 throw err;
