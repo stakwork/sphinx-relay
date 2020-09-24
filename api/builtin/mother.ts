@@ -1,4 +1,4 @@
-// import * as SphinxBot from '../../../sphinx-bot' 
+// import * as SphinxBot from '../../../sphinx-bot'
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/actions'
 import { installBotAsTribeAdmin } from '../controllers/bots'
@@ -39,6 +39,10 @@ export function init() {
     if (arr.length < 2) return
     if (arr[0] !== '/bot') return
     const cmd = arr[1]
+
+    const isAdmin = message.member.roles.find(role => role.name === 'Admin')
+    if(!isAdmin) return
+
     switch (cmd) {
 
       case 'install':

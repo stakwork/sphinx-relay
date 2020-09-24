@@ -31,6 +31,9 @@ function init() {
         if (arr[0] !== '/welcome' && !isGroupJoin)
             return;
         const cmd = arr[1];
+        const isAdmin = message.member.roles.find(role => role.name === 'Admin');
+        if (!isAdmin)
+            return;
         if (isGroupJoin) {
             const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
             if (!chat)
