@@ -20,6 +20,8 @@ function nodeinfo(){
 
     const clean = await isClean()
 
+    const latest_message = await latestMessage()
+
     try {
       lightning.channelBalance({}, (err, channelBalance) => {
         if(err) console.log(err)
@@ -65,6 +67,7 @@ function nodeinfo(){
                   best_header_timestamp: info.best_header_timestamp,
                   testnet: info.testnet,
                   clean,
+                  latest_message,
                 }
                 resolve(node)
               }
@@ -89,4 +92,16 @@ async function isClean(){
   const onlyOneContact = allContacts===1
   if(cleanOwner && noMsgs && onlyOneContact) return true
   return false
+}
+
+async function latestMessage(): Promise<any> {
+  const last = await models.Message.findAll({
+    limit: 1,
+    order: [[ 'createdAt', 'DESC' ]]
+  })
+  if(last) {
+    return last.createdAt
+  } else {
+    return ''
+  }
 }

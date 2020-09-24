@@ -47,7 +47,7 @@ async function connectToLND(){
 async function mainSetup(){
 	await setupDatabase();
 	if (config.hub_api_url) {
-		pingHubInterval(5000)
+		pingHubInterval(15000)
 		checkInvitesHubInterval(5000)
 	}
 	await setupApp()
@@ -90,7 +90,7 @@ async function authModule(req, res, next) {
 		req.path == '/info' ||
 		req.path == '/action' ||
 		req.path == '/contacts/tokens' ||
-		req.path == '/login' ||
+		req.path == '/latest' ||
 		req.path.startsWith('/static') ||
 		req.path == '/contacts/set_dev'
 	) {

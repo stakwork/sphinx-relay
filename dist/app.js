@@ -57,7 +57,7 @@ function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setup_1.setupDatabase();
         if (config.hub_api_url) {
-            hub_1.pingHubInterval(5000);
+            hub_1.pingHubInterval(15000);
             hub_1.checkInvitesHubInterval(5000);
         }
         yield setupApp();
@@ -98,7 +98,7 @@ function authModule(req, res, next) {
             req.path == '/info' ||
             req.path == '/action' ||
             req.path == '/contacts/tokens' ||
-            req.path == '/login' ||
+            req.path == '/latest' ||
             req.path.startsWith('/static') ||
             req.path == '/contacts/set_dev') {
             next();

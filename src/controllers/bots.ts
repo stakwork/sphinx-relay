@@ -285,7 +285,7 @@ export function buildBotPayload(msg:Msg): SphinxBot.Message {
 }
 
 export async function receiveBotRes(payload) {
-  console.log("=> receiveBotRes", payload)
+  console.log("=> receiveBotRes")//, payload)
   const dat = payload.content || payload
 
   if(!dat.chat || !dat.message || !dat.sender) {

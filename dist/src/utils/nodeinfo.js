@@ -25,6 +25,7 @@ function nodeinfo() {
         const lightning = lightning_1.loadLightning();
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const clean = yield isClean();
+        const latest_message = yield latestMessage();
         try {
             lightning.channelBalance({}, (err, channelBalance) => {
                 if (err)
@@ -73,6 +74,7 @@ function nodeinfo() {
                                     best_header_timestamp: info.best_header_timestamp,
                                     testnet: info.testnet,
                                     clean,
+                                    latest_message,
                                 };
                                 resolve(node);
                             }
@@ -98,6 +100,20 @@ function isClean() {
         if (cleanOwner && noMsgs && onlyOneContact)
             return true;
         return false;
+    });
+}
+function latestMessage() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const last = yield models_1.models.Message.findAll({
+            limit: 1,
+            order: [['createdAt', 'DESC']]
+        });
+        if (last) {
+            return last.createdAt;
+        }
+        else {
+            return '';
+        }
     });
 }
 //# sourceMappingURL=nodeinfo.js.map

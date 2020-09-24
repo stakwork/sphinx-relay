@@ -296,7 +296,7 @@ function buildBotPayload(msg) {
 exports.buildBotPayload = buildBotPayload;
 function receiveBotRes(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveBotRes", payload);
+        console.log("=> receiveBotRes"); //, payload)
         const dat = payload.content || payload;
         if (!dat.chat || !dat.message || !dat.sender) {
             return console.log('=> receiveBotRes error, no chat||msg||sender');
