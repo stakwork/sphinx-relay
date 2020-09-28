@@ -419,55 +419,61 @@ export async function replayChatHistory(chat, contact) {
 	if(!(chat&&chat.id&&contact&&contact.id)){
 		return console.log('[tribes] cant replay history')
 	}
-	const msgs = await models.Message.findAll({ 
-		where:{chatId:chat.id, type:{[Op.in]:network.typesToReplay}}, 
-		order: [['id', 'desc']], 
-		limit: 40
-	})
-	msgs.reverse()
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
-	asyncForEach(msgs, async m=>{
-		if(!network.typesToReplay.includes(m.type)) return // only for message for now
-		const sender = {
-			...owner.dataValues,
-			...m.senderAlias && {alias: m.senderAlias},
-			role: constants.chat_roles.reader,
-		}
-		let content = ''
-		try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
+	try {
+		const msgs = await models.Message.findAll({ 
+			where:{chatId:chat.id, type:{[Op.in]:network.typesToReplay}}, 
+			order: [['id', 'desc']], 
+			limit: 40
+		})
+		msgs.reverse()
+		const owner = await models.Contact.findOne({ where: { isOwner: true } })
+		asyncForEach(msgs, async m=>{
+			if(!network.typesToReplay.includes(m.type)) return // only for message for now
+			const sender = {
+				...owner.dataValues,
+				...m.senderAlias && {alias: m.senderAlias},
+				role: constants.chat_roles.reader,
+			}
+			let content = ''
+			try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
 
-		const dateString = m.date&&m.date.toISOString()
-		let mediaKeyMap
-		let newMediaTerms
-		if(m.type===constants.message_types.attachment) {
-			if(m.mediaKey&&m.mediaToken) {
-				const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1]
-				if(muid) {
-					const mediaKey = await models.MediaKey.findOne({where:{
-						muid, chatId: chat.id,
-					}})
-					// console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
-					mediaKeyMap = {chat: mediaKey.key}
-					newMediaTerms = {muid: mediaKey.muid}
+			console.log("HISTORY DATE",m.date,typeof m.date)
+			console.log("HISTORY DATE STRING",m.date.toISOString())
+			const dateString = m.date&&m.date.toISOString()
+			let mediaKeyMap
+			let newMediaTerms
+			if(m.type===constants.message_types.attachment) {
+				if(m.mediaKey&&m.mediaToken) {
+					const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1]
+					if(muid) {
+						const mediaKey = await models.MediaKey.findOne({where:{
+							muid, chatId: chat.id,
+						}})
+						// console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+						mediaKeyMap = {chat: mediaKey.key}
+						newMediaTerms = {muid: mediaKey.muid}
+					}
 				}
 			}
-		}
-		let msg = network.newmsg(m.type, chat, sender, {
-			content, // replaced with the remoteMessageContent (u are owner) {}
-			...mediaKeyMap && {mediaKey: mediaKeyMap},
-			...newMediaTerms && {mediaToken: newMediaTerms},
-			...m.mediaType && {mediaType: m.mediaType},
-			...dateString && {date: dateString}
+			let msg = network.newmsg(m.type, chat, sender, {
+				content, // replaced with the remoteMessageContent (u are owner) {}
+				...mediaKeyMap && {mediaKey: mediaKeyMap},
+				...newMediaTerms && {mediaToken: newMediaTerms},
+				...m.mediaType && {mediaType: m.mediaType},
+				...dateString && {date: dateString}
+			})
+			msg = await decryptMessage(msg, chat)
+			const data = await personalizeMessage(msg, contact, true)
+			const mqttTopic = `${contact.publicKey}/${chat.uuid}`
+			const replayingHistory = true
+			await network.signAndSend({
+				data,
+				dest: contact.publicKey,
+			}, mqttTopic, replayingHistory)
 		})
-		msg = await decryptMessage(msg, chat)
-		const data = await personalizeMessage(msg, contact, true)
-		const mqttTopic = `${contact.publicKey}/${chat.uuid}`
-		const replayingHistory = true
-		await network.signAndSend({
-			data,
-			dest: contact.publicKey,
-		}, mqttTopic, replayingHistory)
-	})
+	} catch(e) {
+		console.log('replayChatHistory ERROR', e)
+	}
 }
 
 export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url): Promise<{[k:string]:any}> {
