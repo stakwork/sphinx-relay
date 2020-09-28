@@ -437,8 +437,6 @@ export async function replayChatHistory(chat, contact) {
 			let content = ''
 			try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}
 
-			console.log("HISTORY DATE",m.date,typeof m.date)
-			console.log("HISTORY DATE STRING",m.date.toISOString())
 			const dateString = m.date&&m.date.toISOString()
 			let mediaKeyMap
 			let newMediaTerms
@@ -466,7 +464,7 @@ export async function replayChatHistory(chat, contact) {
 			const data = await personalizeMessage(msg, contact, true)
 			const mqttTopic = `${contact.publicKey}/${chat.uuid}`
 			const replayingHistory = true
-			console.log("HISTORY DATA:",data)
+			// console.log("-> HISTORY DATA:",data)
 			await network.signAndSend({
 				data,
 				dest: contact.publicKey,

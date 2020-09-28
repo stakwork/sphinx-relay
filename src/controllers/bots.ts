@@ -299,6 +299,8 @@ export async function receiveBotRes(payload) {
   const action = dat.action
   const bot_name = dat.bot_name
   const sender_alias = dat.sender.alias
+  const date_string = dat.message.date
+	
   if(!chat_uuid) return console.log('=> receiveBotRes Error no chat_uuid')
 
   const chat = await models.Chat.findOne({where:{uuid:chat_uuid}})
@@ -324,6 +326,8 @@ export async function receiveBotRes(payload) {
     if(!chat) return console.log('=> receiveBotRes as sub error no chat')
     var date = new Date();
     date.setMilliseconds(0)
+    if(date_string) date=new Date(date_string)
+    
     const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
     const msg: { [k: string]: any } = {
       chatId: chat.id,

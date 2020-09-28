@@ -435,8 +435,6 @@ function replayChatHistory(chat, contact) {
                     content = JSON.parse(m.remoteMessageContent);
                 }
                 catch (e) { }
-                console.log("HISTORY DATE", m.date, typeof m.date);
-                console.log("HISTORY DATE STRING", m.date.toISOString());
                 const dateString = m.date && m.date.toISOString();
                 let mediaKeyMap;
                 let newMediaTerms;
@@ -458,7 +456,7 @@ function replayChatHistory(chat, contact) {
                 const data = yield msg_1.personalizeMessage(msg, contact, true);
                 const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
                 const replayingHistory = true;
-                console.log("HISTORY DATA:", data);
+                // console.log("-> HISTORY DATA:",data)
                 yield network.signAndSend({
                     data,
                     dest: contact.publicKey,
