@@ -458,6 +458,7 @@ function replayChatHistory(chat, contact) {
                 const data = yield msg_1.personalizeMessage(msg, contact, true);
                 const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
                 const replayingHistory = true;
+                console.log("HISTORY DATA:", data);
                 yield network.signAndSend({
                     data,
                     dest: contact.publicKey,
