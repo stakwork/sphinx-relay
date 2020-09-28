@@ -35,23 +35,28 @@ function init() {
         if (!isAdmin)
             return;
         if (isGroupJoin) {
-            const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
-            if (!chat)
-                return;
-            const chatBot = yield models_1.models.ChatBot.findOne({
-                where: {
-                    chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+            try {
+                const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
+                if (!chat)
+                    return;
+                const chatBot = yield models_1.models.ChatBot.findOne({
+                    where: {
+                        chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+                    }
+                });
+                let meta = 'Welcome to the tribe!';
+                if (chatBot && chatBot.meta) {
+                    meta = chatBot.meta;
                 }
-            });
-            let meta = 'Welcome to the tribe!';
-            if (chatBot && chatBot.meta) {
-                meta = chatBot.meta;
+                const resEmbed = new Sphinx.MessageEmbed()
+                    .setAuthor('WelcomeBot')
+                    .setDescription(meta);
+                message.channel.send({ embed: resEmbed });
+                return;
             }
-            const resEmbed = new Sphinx.MessageEmbed()
-                .setAuthor('WelcomeBot')
-                .setDescription(meta);
-            message.channel.send({ embed: resEmbed });
-            return;
+            catch (e) {
+                console.log("WELCOME BOT ERROR", e);
+            }
         }
         switch (cmd) {
             case 'setmessage':

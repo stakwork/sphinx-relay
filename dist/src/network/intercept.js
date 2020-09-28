@@ -46,7 +46,7 @@ function isBotMsg(msg, sentByMe) {
                 chatId: chat.id
             }
         });
-        // console.log('=> botsInTribe', botsInTribe)
+        console.log('=> botsInTribe', botsInTribe);
         if (!(botsInTribe && botsInTribe.length))
             return false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
@@ -77,7 +77,7 @@ function isBotMsg(msg, sentByMe) {
 exports.isBotMsg = isBotMsg;
 function emitMessageToBot(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> emitMessageToBot', JSON.stringify(msg, null, 2));
+        // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
         switch (botInTribe.botType) {
             case constants.bot_types.builtin:
                 builtin_1.builtinBotEmit(msg);
