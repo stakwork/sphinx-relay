@@ -48,6 +48,7 @@ function init() {
                 if (chatBot && chatBot.meta) {
                     meta = chatBot.meta;
                 }
+                console.log("=> WELCOMEMETA", meta);
                 const resEmbed = new Sphinx.MessageEmbed()
                     .setAuthor('WelcomeBot')
                     .setDescription(meta);

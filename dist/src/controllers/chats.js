@@ -358,13 +358,16 @@ function receiveGroupJoin(payload) {
                 return console.log('no sender'); // fail (no contact key?)
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) { // IF TRIBE, ADD new member TO XREF
-                models_1.models.ChatMember.upsert({
-                    contactId: theSender.id,
-                    chatId: chat.id,
-                    role: constants.chat_roles.reader,
-                    lastActive: date,
-                    status: constants.chat_statuses.approved
-                });
+                try {
+                    models_1.models.ChatMember.upsert({
+                        contactId: theSender.id,
+                        chatId: chat.id,
+                        role: constants.chat_roles.reader,
+                        lastActive: date,
+                        status: constants.chat_statuses.approved
+                    });
+                }
+                catch (e) { }
                 chatTribes_1.replayChatHistory(chat, theSender);
                 tribes.putstats({
                     chatId: chat.id,

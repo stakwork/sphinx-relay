@@ -40,7 +40,7 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
       chatId: chat.id
     }
   })
-  console.log('=> botsInTribe', botsInTribe)
+  // console.log('=> botsInTribe', botsInTribe)
 
   if (!(botsInTribe && botsInTribe.length)) return false
 

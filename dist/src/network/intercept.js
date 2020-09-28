@@ -46,7 +46,7 @@ function isBotMsg(msg, sentByMe) {
                 chatId: chat.id
             }
         });
-        console.log('=> botsInTribe', botsInTribe);
+        // console.log('=> botsInTribe', botsInTribe)
         if (!(botsInTribe && botsInTribe.length))
             return false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
