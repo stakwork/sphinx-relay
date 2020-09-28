@@ -185,14 +185,14 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
-    var date = new Date();
-    date.setMilliseconds(0);
     const total_spent = 1;
     const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
     const text = content;
+    var date = new Date();
+    date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
     const msg = {

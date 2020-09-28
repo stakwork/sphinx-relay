@@ -209,9 +209,6 @@ export const sendMessage = async (req, res) => {
 export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
-	var date = new Date();
-	date.setMilliseconds(0)
-
 	const total_spent = 1
 	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
@@ -219,6 +216,8 @@ export const receiveMessage = async (payload) => {
 	}
 	const text = content
 
+	var date = new Date();
+	date.setMilliseconds(0)
 	if(date_string) date=new Date(date_string)
 
 	const msg:{[k:string]:any} = {

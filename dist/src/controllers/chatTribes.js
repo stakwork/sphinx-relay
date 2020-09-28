@@ -414,51 +414,58 @@ function receiveTribeDelete(payload) {
 exports.receiveTribeDelete = receiveTribeDelete;
 function replayChatHistory(chat, contact) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('-> replayHistory');
         if (!(chat && chat.id && contact && contact.id)) {
             return console.log('[tribes] cant replay history');
         }
-        const msgs = yield models_1.models.Message.findAll({
-            where: { chatId: chat.id, type: { [sequelize_1.Op.in]: network.typesToReplay } },
-            order: [['id', 'desc']],
-            limit: 40
-        });
-        msgs.reverse();
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
-            if (!network.typesToReplay.includes(m.type))
-                return; // only for message for now
-            const sender = Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants.chat_roles.reader });
-            let content = '';
-            try {
-                content = JSON.parse(m.remoteMessageContent);
-            }
-            catch (e) { }
-            const dateString = m.date && m.date.toISOString();
-            let mediaKeyMap;
-            let newMediaTerms;
-            if (m.type === constants.message_types.attachment) {
-                if (m.mediaKey && m.mediaToken) {
-                    const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
-                    if (muid) {
-                        const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
-                                muid, chatId: chat.id,
-                            } });
-                        // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
-                        mediaKeyMap = { chat: mediaKey.key };
-                        newMediaTerms = { muid: mediaKey.muid };
+        try {
+            const msgs = yield models_1.models.Message.findAll({
+                where: { chatId: chat.id, type: { [sequelize_1.Op.in]: network.typesToReplay } },
+                order: [['id', 'desc']],
+                limit: 40
+            });
+            msgs.reverse();
+            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
+                if (!network.typesToReplay.includes(m.type))
+                    return; // only for message for now
+                const sender = Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants.chat_roles.reader });
+                let content = '';
+                try {
+                    content = JSON.parse(m.remoteMessageContent);
+                }
+                catch (e) { }
+                const dateString = m.date && m.date.toISOString();
+                let mediaKeyMap;
+                let newMediaTerms;
+                if (m.type === constants.message_types.attachment) {
+                    if (m.mediaKey && m.mediaToken) {
+                        const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
+                        if (muid) {
+                            const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
+                                    muid, chatId: chat.id,
+                                } });
+                            // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
+                            mediaKeyMap = { chat: mediaKey.key };
+                            newMediaTerms = { muid: mediaKey.muid };
+                        }
                     }
                 }
-            }
-            let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }));
-            msg = yield msg_1.decryptMessage(msg, chat);
-            const data = yield msg_1.personalizeMessage(msg, contact, true);
-            const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
-            const replayingHistory = true;
-            yield network.signAndSend({
-                data,
-                dest: contact.publicKey,
-            }, mqttTopic, replayingHistory);
-        }));
+                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }));
+                msg = yield msg_1.decryptMessage(msg, chat);
+                const data = yield msg_1.personalizeMessage(msg, contact, true);
+                const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
+                const replayingHistory = true;
+                // console.log("-> HISTORY DATA:",data)
+                yield network.signAndSend({
+                    data,
+                    dest: contact.publicKey,
+                }, mqttTopic, replayingHistory);
+            }));
+        }
+        catch (e) {
+            console.log('replayChatHistory ERROR', e);
+        }
     });
 }
 exports.replayChatHistory = replayChatHistory;

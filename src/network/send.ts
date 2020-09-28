@@ -93,6 +93,7 @@ export async function sendMessage(params) {
 		}
 
 		const m = await personalizeMessage(msg, contact, isTribeOwner)
+		// console.log('-> personalized msg',m)
 		const opts = {
 			dest: destkey,
 			data: m,
@@ -130,7 +131,7 @@ export function signAndSend(opts, mqttTopic?:string, replayingHistory?:boolean){
 		const sig = await signer.signAscii(data)
 		data = data + sig
 		
-		// console.log("ACTUALLY SEND", mqttTopic)
+		// console.log("-> ACTUALLY SEND: topic:", mqttTopic)
 		try {
 			if(mqttTopic) {
 				await tribes.publish(mqttTopic, data, function(){

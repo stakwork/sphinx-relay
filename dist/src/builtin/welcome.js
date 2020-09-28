@@ -26,33 +26,40 @@ function init() {
         const arr = (message.content && message.content.split(' ')) || [];
         console.log('message.type', message.type);
         const isGroupJoin = message.type === constants.message_types.group_join;
+        console.log('isGroupJoin', isGroupJoin);
         if (arr.length < 2 && !isGroupJoin)
             return;
         if (arr[0] !== '/welcome' && !isGroupJoin)
             return;
         const cmd = arr[1];
+        if (isGroupJoin) {
+            try {
+                const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
+                if (!chat)
+                    return;
+                const chatBot = yield models_1.models.ChatBot.findOne({
+                    where: {
+                        chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+                    }
+                });
+                let meta = 'Welcome to the tribe!';
+                if (chatBot && chatBot.meta) {
+                    meta = chatBot.meta;
+                }
+                console.log("=> WELCOMEMETA", meta);
+                const resEmbed = new Sphinx.MessageEmbed()
+                    .setAuthor('WelcomeBot')
+                    .setDescription(meta);
+                message.channel.send({ embed: resEmbed });
+                return;
+            }
+            catch (e) {
+                console.log("WELCOME BOT ERROR", e);
+            }
+        }
         const isAdmin = message.member.roles.find(role => role.name === 'Admin');
         if (!isAdmin)
             return;
-        if (isGroupJoin) {
-            const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
-            if (!chat)
-                return;
-            const chatBot = yield models_1.models.ChatBot.findOne({
-                where: {
-                    chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
-                }
-            });
-            let meta = 'Welcome to the tribe!';
-            if (chatBot && chatBot.meta) {
-                meta = chatBot.meta;
-            }
-            const resEmbed = new Sphinx.MessageEmbed()
-                .setAuthor('WelcomeBot')
-                .setDescription(meta);
-            message.channel.send({ embed: resEmbed });
-            return;
-        }
         switch (cmd) {
             case 'setmessage':
                 if (arr.length < 3)

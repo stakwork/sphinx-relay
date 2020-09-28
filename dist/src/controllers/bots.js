@@ -309,6 +309,7 @@ function receiveBotRes(payload) {
         const action = dat.action;
         const bot_name = dat.bot_name;
         const sender_alias = dat.sender.alias;
+        const date_string = dat.message.date;
         if (!chat_uuid)
             return console.log('=> receiveBotRes Error no chat_uuid');
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
@@ -334,6 +335,8 @@ function receiveBotRes(payload) {
                 return console.log('=> receiveBotRes as sub error no chat');
             var date = new Date();
             date.setMilliseconds(0);
+            if (date_string)
+                date = new Date(date_string);
             const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             const msg = {
                 chatId: chat.id,

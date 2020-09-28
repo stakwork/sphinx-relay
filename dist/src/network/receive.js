@@ -40,7 +40,10 @@ const typesThatNeedPricePerMessage = [
     msgtypes.message, msgtypes.attachment
 ];
 exports.typesToReplay = [
-    msgtypes.message, msgtypes.group_join, msgtypes.group_leave
+    msgtypes.message,
+    msgtypes.group_join,
+    msgtypes.group_leave,
+    msgtypes.bot_res,
 ];
 const botTypes = [
     constants.message_types.bot_install,

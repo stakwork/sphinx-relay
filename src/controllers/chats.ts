@@ -315,6 +315,7 @@ export const deleteChat = async (req, res) => {
 		name:''
 	})
 	await models.Message.destroy({ where: { chatId: id } })
+	await models.ChatMember.destroy({ where: {chatId: id} })
 
 	success(res, { chat_id: id })
 }
@@ -366,13 +367,15 @@ export async function receiveGroupJoin(payload) {
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
 
 		if(isTribeOwner){ // IF TRIBE, ADD new member TO XREF
-			models.ChatMember.upsert({
-				contactId: theSender.id,
-				chatId: chat.id,
-				role: constants.chat_roles.reader,
-				lastActive: date,
-				status: constants.chat_statuses.approved
-			})
+			try{
+				models.ChatMember.upsert({
+					contactId: theSender.id,
+					chatId: chat.id,
+					role: constants.chat_roles.reader,
+					lastActive: date,
+					status: constants.chat_statuses.approved
+				})
+			} catch(e) {}
 			replayChatHistory(chat, theSender)
 			tribes.putstats({
 				chatId: chat.id,

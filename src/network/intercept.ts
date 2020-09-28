@@ -69,7 +69,7 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
 }
 
 async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
-  console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
+  // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
   switch (botInTribe.botType) {
     case constants.bot_types.builtin:
       builtinBotEmit(msg)
