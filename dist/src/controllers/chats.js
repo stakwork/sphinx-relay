@@ -310,6 +310,7 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         name: ''
     });
     yield models_1.models.Message.destroy({ where: { chatId: id } });
+    yield models_1.models.ChatMember.destroy({ where: { chatId: id } });
     res_1.success(res, { chat_id: id });
 });
 function receiveGroupJoin(payload) {

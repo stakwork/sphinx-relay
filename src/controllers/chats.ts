@@ -315,6 +315,7 @@ export const deleteChat = async (req, res) => {
 		name:''
 	})
 	await models.Message.destroy({ where: { chatId: id } })
+	await models.ChatMember.destroy({ where: {chatId: id} })
 
 	success(res, { chat_id: id })
 }
