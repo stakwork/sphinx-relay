@@ -415,6 +415,7 @@ export async function receiveTribeDelete(payload) {
 }
 
 export async function replayChatHistory(chat, contact) {
+	console.log('-> replayHistory')
 	if(!(chat&&chat.id&&contact&&contact.id)){
 		return console.log('[tribes] cant replay history')
 	}

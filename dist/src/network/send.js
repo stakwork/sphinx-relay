@@ -94,6 +94,7 @@ function sendMessage(params) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
+            console.log('-> personalized msg', m);
             const opts = {
                 dest: destkey,
                 data: m,
@@ -134,7 +135,7 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
             opts.amt = opts.amt || 0;
             const sig = yield signer.signAscii(data);
             data = data + sig;
-            // console.log("ACTUALLY SEND", mqttTopic)
+            console.log("-> ACTUALLY SEND: topic:", mqttTopic);
             try {
                 if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, function () {

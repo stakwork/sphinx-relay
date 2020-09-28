@@ -26,14 +26,12 @@ function init() {
         const arr = (message.content && message.content.split(' ')) || [];
         console.log('message.type', message.type);
         const isGroupJoin = message.type === constants.message_types.group_join;
+        console.log('isGroupJoin', isGroupJoin);
         if (arr.length < 2 && !isGroupJoin)
             return;
         if (arr[0] !== '/welcome' && !isGroupJoin)
             return;
         const cmd = arr[1];
-        const isAdmin = message.member.roles.find(role => role.name === 'Admin');
-        if (!isAdmin)
-            return;
         if (isGroupJoin) {
             try {
                 const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
@@ -59,6 +57,9 @@ function init() {
                 console.log("WELCOME BOT ERROR", e);
             }
         }
+        const isAdmin = message.member.roles.find(role => role.name === 'Admin');
+        if (!isAdmin)
+            return;
         switch (cmd) {
             case 'setmessage':
                 if (arr.length < 3)
