@@ -102,6 +102,8 @@ async function migrate(){
 
   addTableColumn('sphinx_contacts', 'notification_sound')
 
+  addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
+
 //   try{
 //     await sequelize.query(`
 // CREATE TABLE sphinx_timers (
@@ -116,7 +118,6 @@ async function migrate(){
 //   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
 //   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
   
-//   addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
 }
 
 async function addTableColumn(table:string, column:string, type='TEXT') {
