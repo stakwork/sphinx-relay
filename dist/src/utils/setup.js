@@ -108,6 +108,8 @@ function migrate() {
         catch (e) { }
         addTableColumn('sphinx_contacts', 'notification_sound');
         addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN');
+        addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT');
+        addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT');
         //   try{
         //     await sequelize.query(`
         // CREATE TABLE sphinx_timers (
@@ -119,8 +121,6 @@ function migrate() {
         //   amount DECIMAL
         // )`)
         //   } catch(e){}
-        //   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
-        //   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
     });
 }
 function addTableColumn(table, column, type = 'TEXT') {

@@ -104,6 +104,9 @@ async function migrate(){
 
   addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN')
 
+  addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
+  addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
+  
 //   try{
 //     await sequelize.query(`
 // CREATE TABLE sphinx_timers (
@@ -115,8 +118,6 @@ async function migrate(){
 //   amount DECIMAL
 // )`)
 //   } catch(e){}
-//   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
-//   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
   
 }
 
