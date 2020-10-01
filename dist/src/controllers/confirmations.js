@@ -118,12 +118,13 @@ function receiveHeartbeat(payload) {
         console.log('=> received heartbeat');
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
-        const amount = dat.message.amount;
+        const receivedAmount = dat.message.amount;
         if (!(sender_pub_key && sender_pub_key.length === 66))
             return console.log('no sender');
-        if (!amount)
+        if (!receivedAmount)
             return console.log('no amount');
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const amount = Math.round(receivedAmount / 2);
         const MIN_SATS = 3;
         const amt = Math.max(amount || MIN_SATS);
         const opts = {
