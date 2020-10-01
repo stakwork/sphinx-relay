@@ -113,4 +113,37 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
     });
 }
 exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
+function receiveHeartbeat(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> received heartbeat');
+        const dat = payload.content || payload;
+        const sender_pub_key = dat.sender.pub_key;
+        const receivedAmount = dat.message.amount;
+        if (!(sender_pub_key && sender_pub_key.length === 66))
+            return console.log('no sender');
+        if (!receivedAmount)
+            return console.log('no amount');
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const amount = Math.round(receivedAmount / 2);
+        const MIN_SATS = 3;
+        const amt = Math.max(amount || MIN_SATS);
+        const opts = {
+            amt,
+            dest: sender_pub_key,
+            data: {
+                type: constants.message_types.heartbeat_confirmation,
+                message: { amount: amt },
+                sender: { pub_key: owner.publicKey }
+            }
+        };
+        try {
+            yield network.signAndSend(opts);
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
+    });
+}
+exports.receiveHeartbeat = receiveHeartbeat;
 //# sourceMappingURL=confirmations.js.map

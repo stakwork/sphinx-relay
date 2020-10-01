@@ -147,4 +147,6 @@ export const ACTIONS = {
 	[msgtypes.bot_install]: bots.receiveBotInstall,
 	[msgtypes.bot_cmd]: bots.receiveBotCmd,
 	[msgtypes.bot_res]: bots.receiveBotRes,
+	[msgtypes.heartbeat]: confirmations.receiveHeartbeat,
+	[msgtypes.heartbeat_confirmation]: ()=>{},
 }

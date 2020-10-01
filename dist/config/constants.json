@@ -51,7 +51,9 @@
         "tribe_delete": 22,
         "bot_install": 23,
         "bot_cmd": 24,
-        "bot_res": 25
+        "bot_res": 25,
+        "heartbeat": 26,
+        "heartbeat_confirmation": 27
     },
     "payment_errors": {
         "timeout": "Timed Out",
