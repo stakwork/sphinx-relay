@@ -22,6 +22,8 @@ const modify_1 = require("./modify");
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
 const timers = require("../utils/timers");
+const socket = require("../utils/socket");
+const hub_1 = require("../hub");
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -281,8 +283,14 @@ function parseKeysendInvoice(i) {
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
-        if (!data)
+        if (!data || (data && data.startsWith('{}'))) {
+            socket.sendJson({
+                type: 'direct_payment',
+                response: { amount: value || 0 }
+            });
+            hub_1.sendNotification(-1, '', 'keysend');
             return;
+        }
         let payload;
         if (data[0] === '{') {
             try {

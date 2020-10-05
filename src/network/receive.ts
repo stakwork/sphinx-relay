@@ -11,6 +11,8 @@ import {modifyPayloadAndSaveMediaKey,purchaseFromOriginalSender,sendFinalMemeIfF
 import {decryptMessage,encryptTribeBroadcast} from '../utils/msg'
 import { Op } from 'sequelize'
 import * as timers from '../utils/timers'
+import * as socket from '../utils/socket'
+import { sendNotification } from '../hub'
 
 /*
 delete type:
@@ -253,7 +255,14 @@ export async function parseKeysendInvoice(i){
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
 	const data = buf && buf.toString()
 	const value = i && i.value && parseInt(i.value)
-	if(!data) return
+	if(!data || (data&&data.startsWith('{}'))) {
+		socket.sendJson({
+			type:'direct_payment',
+			response: {amount:value||0}
+		})
+		sendNotification(-1, '', 'keysend')
+		return
+	}
 
 	let payload
 	if(data[0]==='{'){

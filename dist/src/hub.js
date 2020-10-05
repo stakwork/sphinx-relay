@@ -198,6 +198,9 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
     if (type === 'reject') {
         message = `The admin has declined your request to join "${name}"`;
     }
+    if (type === 'keysend') {
+        message = `You have received a keysend payment`;
+    }
     if (type === 'message' && chat.type == constants.chat_types.group && chat.name && chat.name.length) {
         message += ` on ${chat.name}`;
     }

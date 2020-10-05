@@ -188,7 +188,7 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
   })
 }
 
-type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject'
+type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject' | 'keysend'
 
 const sendNotification = async (chat, name, type:NotificationType) => {
   
@@ -201,6 +201,9 @@ const sendNotification = async (chat, name, type:NotificationType) => {
   }
   if(type==='reject') {
     message = `The admin has declined your request to join "${name}"`
+  }
+  if(type==='keysend') {
+    message = `You have received a keysend payment`
   }
 
   if(type==='message' && chat.type==constants.chat_types.group && chat.name && chat.name.length){
