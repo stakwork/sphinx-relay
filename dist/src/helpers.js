@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("./models");
 const md5 = require("md5");
 const network = require("./network");
-const constants = require('../config/constants.json');
+const constants_1 = require("./constants");
 exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     let chat;
@@ -35,7 +35,7 @@ exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, functio
                 contactIds: JSON.stringify([parseInt(owner_id), parseInt(recipient_id)]),
                 createdAt: date,
                 updatedAt: date,
-                type: constants.chat_types.conversation
+                type: constants_1.default.chat_types.conversation
             });
         }
     }
@@ -112,7 +112,7 @@ function findOrCreateContactByPubkey(senderPubKey) {
             exports.sendContactKeys({
                 contactIds: [sender.id],
                 sender: owner,
-                type: constants.message_types.contact_key,
+                type: constants_1.default.message_types.contact_key,
             });
         }
         return sender;
@@ -169,7 +169,7 @@ function parseReceiveParams(payload) {
         const reply_uuid = dat.message.replyUuid;
         const purchaser_id = dat.message.purchaser;
         const isTribeOwner = dat.isTribeOwner ? true : false;
-        const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation);
+        const isConversation = !chat_type || (chat_type && chat_type == constants_1.default.chat_types.conversation);
         let sender;
         let chat;
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -183,7 +183,7 @@ function parseReceiveParams(payload) {
         else { // group
             sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             // inject a "sender" with an alias
-            if (!sender && chat_type == constants.chat_types.tribe) {
+            if (!sender && chat_type == constants_1.default.chat_types.tribe) {
                 sender = { id: 0, alias: sender_alias };
             }
             chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });

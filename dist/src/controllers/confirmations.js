@@ -14,8 +14,7 @@ const models_1 = require("../models");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const network = require("../network");
-const path = require("path");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 function sendConfirmation({ chat, sender, msg_id }) {
     if (!msg_id)
         return;
@@ -23,7 +22,7 @@ function sendConfirmation({ chat, sender, msg_id }) {
         chat,
         sender,
         message: { id: msg_id },
-        type: constants.message_types.confirmation,
+        type: constants_1.default.message_types.confirmation,
     });
 }
 exports.sendConfirmation = sendConfirmation;
@@ -49,9 +48,9 @@ function receiveConfirmation(payload) {
                             statusMap = JSON.parse(message.statusMap || '{}');
                         }
                         catch (e) { }
-                        statusMap[sender.id] = constants.statuses.received;
+                        statusMap[sender.id] = constants_1.default.statuses.received;
                         yield message.update({
-                            status: constants.statuses.received,
+                            status: constants_1.default.statuses.received,
                             statusMap: JSON.stringify(statusMap)
                         });
                         socket.sendJson({
@@ -70,16 +69,16 @@ function receiveConfirmation(payload) {
                     chatId: chat.id,
                     sender: owner.id,
                     type: [
-                        constants.message_types.message,
-                        constants.message_types.invoice,
-                        constants.message_types.attachment,
+                        constants_1.default.message_types.message,
+                        constants_1.default.message_types.invoice,
+                        constants_1.default.message_types.attachment,
                     ],
-                    status: constants.statuses.pending,
+                    status: constants_1.default.statuses.pending,
                 },
                 order: [['createdAt', 'desc']]
             });
             const message = messages[0];
-            message.update({ status: constants.statuses.received });
+            message.update({ status: constants_1.default.statuses.received });
             socket.sendJson({
                 type: 'confirmation',
                 response: jsonUtils.messageToJson(message, chat, sender)
@@ -100,9 +99,9 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
                 statusMap = JSON.parse(message.statusMap || '{}');
             }
             catch (e) { }
-            statusMap['chat'] = constants.statuses.received;
+            statusMap['chat'] = constants_1.default.statuses.received;
             yield message.update({
-                status: constants.statuses.received,
+                status: constants_1.default.statuses.received,
                 statusMap: JSON.stringify(statusMap)
             });
             socket.sendJson({
@@ -125,13 +124,12 @@ function receiveHeartbeat(payload) {
             return console.log('no amount');
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const amount = Math.round(receivedAmount / 2);
-        const MIN_SATS = 3;
-        const amt = Math.max(amount || MIN_SATS);
+        const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
             amt,
             dest: sender_pub_key,
             data: {
-                type: constants.message_types.heartbeat_confirmation,
+                type: constants_1.default.message_types.heartbeat_confirmation,
                 message: { amount: amt },
                 sender: { pub_key: owner.publicKey }
             }

@@ -7,11 +7,9 @@ import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import { success } from '../utils/res'
 import {sendConfirmation} from './confirmations'
-import * as path from 'path'
 import * as network from '../network'
 import * as short from 'short-uuid'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 function stripLightningPrefix(s){
   if(s.toLowerCase().startsWith('lightning:')) return s.substring(10)

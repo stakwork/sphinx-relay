@@ -5,10 +5,8 @@ import * as helpers from '../helpers'
 import * as jsonUtils from '../utils/json'
 import {success, failure} from '../utils/res'
 import password from '../utils/password'
-import * as path from 'path'
 import { Op } from 'sequelize'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 export const getContacts = async (req, res) => {
 	const contacts = await models.Contact.findAll({ where:{deleted:false}, raw: true })

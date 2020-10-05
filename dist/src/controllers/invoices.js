@@ -18,10 +18,9 @@ const helpers = require("../helpers");
 const hub_1 = require("../hub");
 const res_1 = require("../utils/res");
 const confirmations_1 = require("./confirmations");
-const path = require("path");
 const network = require("../network");
 const short = require("short-uuid");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 function stripLightningPrefix(s) {
     if (s.toLowerCase().startsWith('lightning:'))
         return s.substring(10);
@@ -48,7 +47,7 @@ exports.payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 response: { payment_request }
             });
         }
-        message.status = constants.statuses.confirmed;
+        message.status = constants_1.default.statuses.confirmed;
         message.save();
         var date = new Date();
         date.setMilliseconds(0);
@@ -58,14 +57,14 @@ exports.payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const paidMessage = yield models_1.models.Message.create({
             chatId: message.chatId,
             sender: senderId,
-            type: constants.message_types.payment,
+            type: constants_1.default.message_types.payment,
             amount: message.amount,
             amountMsat: message.amountMsat,
             paymentHash: message.paymentHash,
             date: date,
             expirationDate: null,
             messageContent: null,
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             createdAt: date,
             updatedAt: date
         });
@@ -125,7 +124,7 @@ exports.createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
                                 chatId: chat.id,
                                 uuid: short.generate(),
                                 sender: owner.id,
-                                type: constants.message_types.invoice,
+                                type: constants_1.default.message_types.invoice,
                                 amount: parseInt(invoice.num_satoshis),
                                 amountMsat: parseInt(invoice.num_satoshis) * 1000,
                                 paymentHash: invoice.payment_hash,
@@ -134,7 +133,7 @@ exports.createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
                                 expirationDate: new Date(timestamp + expiry),
                                 messageContent: memo,
                                 remoteMessageContent: remote_memo,
-                                status: constants.statuses.pending,
+                                status: constants_1.default.statuses.pending,
                                 createdAt: new Date(timestamp),
                                 updatedAt: new Date(timestamp)
                             });
@@ -142,7 +141,7 @@ exports.createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
                             network.sendMessage({
                                 chat: chat,
                                 sender: owner,
-                                type: constants.message_types.invoice,
+                                type: constants_1.default.message_types.invoice,
                                 message: {
                                     id: message.id,
                                     invoice: message.paymentRequest
@@ -193,7 +192,7 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
-        type: constants.message_types.invoice,
+        type: constants_1.default.message_types.invoice,
         sender: sender.id,
         amount: sat,
         amountMsat: msat,
@@ -203,11 +202,11 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
         messageContent: memo,
         expirationDate: new Date(invoiceDate + expirationSeconds),
         date: new Date(invoiceDate),
-        status: constants.statuses.pending,
+        status: constants_1.default.statuses.pending,
         createdAt: date,
         updatedAt: date
     };
-    const isTribe = chat_type === constants.chat_types.tribe;
+    const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
     }

@@ -6,12 +6,10 @@ import * as rsa from '../crypto/rsa'
 import * as helpers from '../helpers'
 import * as socket from '../utils/socket'
 import * as tribes from '../utils/tribes'
-import * as path from 'path'
 import { sendNotification } from '../hub'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
 import { Op } from 'sequelize'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 export async function joinTribe(req, res){
 	console.log('=> joinTribe')

@@ -1,4 +1,3 @@
-import * as path from 'path'
 import * as lndService from '../grpc'
 import {getInfo} from '../utils/lightning'
 import {ACTIONS} from '../controllers'
@@ -13,6 +12,8 @@ import { Op } from 'sequelize'
 import * as timers from '../utils/timers'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
+import * as decodeUtils from '../utils/decode'
+import constants from '../constants'
 
 /*
 delete type:
@@ -20,7 +21,6 @@ owner needs to check that the delete is the one who made the msg
 in receiveDeleteMessage check the deleter is og sender?
 */
 
-const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
 export const typesToForward=[
@@ -250,6 +250,32 @@ async function parseAndVerifyPayload(data){
 	}
 }
 
+async function saveAnonymousKeysend(response) {
+	let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
+	var paymentHash = "";
+	for (var i=0; i<decodedPaymentRequest["data"]["tags"].length; i++) {
+		let tag = decodedPaymentRequest["data"]["tags"][i];
+		if (tag['description'] == 'payment_hash') {
+			paymentHash = tag['value'];
+			break;
+		}
+	}
+	let settleDate = parseInt(response['settle_date'] + '000');
+	await models.Message.create({
+		chatId: 0,
+		type: constants.message_types.direct_payment,
+		sender: 0,
+		amount: response['amt_paid_sat'],
+		amountMsat: response['amt_paid_msat'],
+		paymentHash: paymentHash,
+		date: new Date(settleDate),
+		messageContent: response['memo'],
+		status: constants.statuses.confirmed,
+		createdAt: new Date(settleDate),
+		updatedAt: new Date(settleDate)
+	})
+}
+
 export async function parseKeysendInvoice(i){
 	const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
@@ -261,6 +287,7 @@ export async function parseKeysendInvoice(i){
 			response: {amount:value||0}
 		})
 		sendNotification(-1, '', 'keysend')
+		saveAnonymousKeysend(i)
 		return
 	}
 

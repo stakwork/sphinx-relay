@@ -1,8 +1,7 @@
 import { models } from './models'
 import * as md5 from 'md5'
 import * as network from './network'
-
-const constants = require('../config/constants.json');
+import constants from './constants'
 
 export const findOrCreateChat = async (params) => {
 	const { chat_id, owner_id, recipient_id } = params

@@ -1,8 +1,7 @@
 
 import { tokenFromTerms } from './ldat'
-import * as path from 'path'
 import * as rsa from '../crypto/rsa'
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 function addInRemoteText(full:{[k:string]:any}, contactId, isTribe:boolean){
 	const m = full && full.message

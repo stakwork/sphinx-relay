@@ -25,12 +25,11 @@ const uploads = require("./uploads");
 const confirmations = require("./confirmations");
 const actions = require("./api");
 const gitinfo_1 = require("../utils/gitinfo");
-const path = require("path");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
+const constants_1 = require("../constants");
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:", env);
-const constants = require(path.join(__dirname, '../../config/constants.json'));
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -121,7 +120,7 @@ function set(app) {
     });
 }
 exports.set = set;
-const msgtypes = constants.message_types;
+const msgtypes = constants_1.default.message_types;
 exports.ACTIONS = {
     [msgtypes.contact_key]: contacts.receiveContactKey,
     [msgtypes.contact_key_confirmation]: contacts.receiveConfirmContactKey,

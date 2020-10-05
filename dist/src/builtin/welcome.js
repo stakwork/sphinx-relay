@@ -12,9 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
 const models_1 = require("../models");
-const path = require("path");
+const constants_1 = require("../constants");
 const msg_types = Sphinx.MSG_TYPE;
-const constants = require(path.join(__dirname, '../../config/constants.json'));
 let initted = false;
 function init() {
     if (initted)
@@ -25,7 +24,7 @@ function init() {
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         const arr = (message.content && message.content.split(' ')) || [];
         console.log('message.type', message.type);
-        const isGroupJoin = message.type === constants.message_types.group_join;
+        const isGroupJoin = message.type === constants_1.default.message_types.group_join;
         console.log('isGroupJoin', isGroupJoin);
         if (arr.length < 2 && !isGroupJoin)
             return;
@@ -39,7 +38,7 @@ function init() {
                     return;
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
-                        chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+                        chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin
                     }
                 });
                 let meta = 'Welcome to the tribe!';
@@ -70,7 +69,7 @@ function init() {
                     return;
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
-                        chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin
+                        chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin
                     }
                 });
                 if (!chatBot)

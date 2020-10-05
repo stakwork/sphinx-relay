@@ -16,10 +16,10 @@ import * as path from 'path'
 import * as network from '../network'
 import * as meme from '../utils/meme'
 import * as short from 'short-uuid'
+import constants from '../constants'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../../config/app.json'))[env]
-const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 /*
 

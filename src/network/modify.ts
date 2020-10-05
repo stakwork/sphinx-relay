@@ -1,4 +1,3 @@
-import * as path from 'path'
 import fetch from 'node-fetch'
 import {parseLDAT} from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
@@ -9,8 +8,8 @@ import { models } from '../models'
 import * as RNCryptor from 'jscryptor'
 import {sendMessage} from './send'
 // import { Op } from 'sequelize'
+import constants from '../constants'
 
-const constants = require(path.join(__dirname,'../../config/constants.json'))
 const msgtypes = constants.message_types
 
 export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {

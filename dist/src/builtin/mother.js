@@ -18,17 +18,17 @@ const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
+const constants_1 = require("../constants");
 const msg_types = Sphinx.MSG_TYPE;
 const env = process.env.NODE_ENV || 'development';
-const constants = require(path.join(__dirname, '../../config/constants.json'));
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const builtinBots = [
     'welcome', 'loopout'
 ];
 const builtInBotMsgTypes = {
     'welcome': [
-        constants.message_types.message,
-        constants.message_types.group_join
+        constants_1.default.message_types.message,
+        constants_1.default.message_types.group_join
     ],
 };
 const builtInBotNames = {
@@ -74,12 +74,12 @@ function init() {
                         return message.channel.send({ embed });
                     }
                     const msgTypes = builtInBotMsgTypes[botName] || [
-                        constants.message_types.message
+                        constants_1.default.message_types.message
                     ];
                     const chatBot = {
                         chatId: chat.id,
                         botPrefix: '/' + botName,
-                        botType: constants.bot_types.builtin,
+                        botType: constants_1.default.bot_types.builtin,
                         msgTypes: JSON.stringify(msgTypes),
                         pricePerUse: 0,
                     };

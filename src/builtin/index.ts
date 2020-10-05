@@ -4,11 +4,9 @@ import * as MotherBot from './mother'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
 import {Msg} from '../network/interfaces'
-import * as path from 'path'
 import { models } from '../models'
 import {buildBotPayload} from '../controllers/bots'
-
-const constants = require(path.join(__dirname, '../../config/constants.json'))
+import constants from '../constants'
 
 async function init(){
     MotherBot.init()

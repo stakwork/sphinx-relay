@@ -1,4 +1,3 @@
-import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import * as crypto from 'crypto'
 import { models } from '../models'
@@ -10,8 +9,7 @@ import * as socket from '../utils/socket'
 import fetch from 'node-fetch'
 import * as SphinxBot from 'sphinx-bot'
 import {Msg} from '../network/interfaces'
-
-const constants = require(path.join(__dirname, '../../config/constants.json'))
+import constants from '../constants'
 
 export const getBots = async (req, res) => {
   try {
@@ -147,8 +145,7 @@ export async function keysendBotCmd(msg, b): Promise<boolean> {
 export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid:string, content?:string, sender_role?:number): Promise<boolean> {
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
   const dest = botmaker_pubkey
-  const MIN_SATS = 3
-  const amt = Math.max(amount || MIN_SATS)
+  const amt = Math.max(amount || constants.min_sat_amount)
   const opts = {
     amt,
     dest,

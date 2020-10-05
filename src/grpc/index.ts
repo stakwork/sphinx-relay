@@ -6,9 +6,8 @@ import * as decodeUtils from '../utils/decode'
 import {loadLightning} from '../utils/lightning'
 import * as network from '../network'
 import * as moment from 'moment'
-import * as path from 'path'
+import constants from '../constants'
 
-const constants = require(path.join(__dirname,'../../config/constants.json'))
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
 
@@ -25,6 +24,19 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			if(response.is_keysend) {
 				parseKeysendInvoice(response)
 			} else {
+
+				let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
+				var paymentHash = "";
+				for (var i=0; i<decodedPaymentRequest["data"]["tags"].length; i++) {
+					let tag = decodedPaymentRequest["data"]["tags"][i];
+					if (tag['description'] == 'payment_hash') {
+						paymentHash = tag['value'];
+						break;
+					}
+				}
+
+				let settleDate = parseInt(response['settle_date'] + '000');
+
 				const invoice = await models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } })
 				if (invoice == null) {
 					// console.log("ERROR: Invoice " + response['payment_request'] + " not found");
@@ -37,22 +49,22 @@ export function subscribeInvoices(parseKeysendInvoice) {
 						type: 'invoice_payment',
 						response: {invoice: payReq}
 					})
+					await models.Message.create({
+						chatId: 0,
+						type: constants.message_types.payment,
+						sender: 0,
+						amount: response['amt_paid_sat'],
+						amountMsat: response['amt_paid_msat'],
+						paymentHash: paymentHash,
+						date: new Date(settleDate),
+						messageContent: response['memo'],
+						status: constants.statuses.confirmed,
+						createdAt: new Date(settleDate),
+						updatedAt: new Date(settleDate)
+					})
 					return
 				}
 				models.Message.update({ status: constants.statuses.confirmed }, { where: { id: invoice.id } })
-
-				let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
-
-				var paymentHash = "";
-				for (var i=0; i<decodedPaymentRequest["data"]["tags"].length; i++) {
-					let tag = decodedPaymentRequest["data"]["tags"][i];
-					if (tag['description'] == 'payment_hash') {
-						paymentHash = tag['value'];
-						break;
-					}
-				}
-
-				let settleDate = parseInt(response['settle_date'] + '000');
 
 				const chat = await models.Chat.findOne({ where: { id: invoice.chatId } })
 				const contactIds = JSON.parse(chat.contactIds)

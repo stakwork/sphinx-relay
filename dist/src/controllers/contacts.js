@@ -16,16 +16,15 @@ const helpers = require("../helpers");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
-const path = require("path");
 const sequelize_1 = require("sequelize");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false }, raw: true });
     const invites = yield models_1.models.Invite.findAll({ raw: true });
     const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
     const subscriptions = yield models_1.models.Subscription.findAll({ raw: true });
     const pendingMembers = yield models_1.models.ChatMember.findAll({ where: {
-            status: constants.chat_statuses.pending
+            status: constants_1.default.chat_statuses.pending
         } });
     const contactsResponse = contacts.map(contact => {
         let contactJson = jsonUtils.contactToJson(contact);
@@ -98,7 +97,7 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     helpers.sendContactKeys({
         contactIds: contactIds,
         sender: owner,
-        type: constants.message_types.contact_key,
+        type: constants_1.default.message_types.contact_key,
     });
 });
 exports.exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -109,7 +108,7 @@ exports.exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function*
     helpers.sendContactKeys({
         contactIds: [contact.id],
         sender: owner,
-        type: constants.message_types.contact_key,
+        type: constants_1.default.message_types.contact_key,
     });
 });
 exports.createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -132,7 +131,7 @@ exports.createContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     helpers.sendContactKeys({
         contactIds: [contact.id],
         sender: owner,
-        type: constants.message_types.contact_key,
+        type: constants_1.default.message_types.contact_key,
     });
 });
 exports.deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -168,7 +167,7 @@ exports.deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     // find and destroy chat & messages
     const chats = yield models_1.models.Chat.findAll({ where: { deleted: false } });
     chats.map((chat) => __awaiter(void 0, void 0, void 0, function* () {
-        if (chat.type === constants.chat_types.conversation) {
+        if (chat.type === constants_1.default.chat_types.conversation) {
             const contactIds = JSON.parse(chat.contactIds);
             if (contactIds.includes(id)) {
                 yield chat.update({
@@ -196,7 +195,7 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
         return console.log("no pubkey!");
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
+    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
     if (sender_contact_key && sender) {
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
@@ -215,7 +214,7 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     helpers.sendContactKeys({
         contactPubKey: sender_pub_key,
         sender: owner,
-        type: constants.message_types.contact_key_confirmation,
+        type: constants_1.default.message_types.contact_key_confirmation,
     });
 });
 exports.receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -228,7 +227,7 @@ exports.receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0
     if (!sender_pub_key) {
         return console.log("no pubkey!");
     }
-    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } });
+    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
     if (sender_contact_key && sender) {
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)

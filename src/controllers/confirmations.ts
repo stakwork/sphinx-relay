@@ -3,9 +3,7 @@ import { models } from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as network from '../network'
-import * as path from 'path'
-
-const constants = require(path.join(__dirname, '../../config/constants.json'))
+import constants from '../constants'
 
 export function sendConfirmation({ chat, sender, msg_id }) {
 	if (!msg_id) return
@@ -114,8 +112,7 @@ export async function receiveHeartbeat(payload) {
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
 	const amount = Math.round(receivedAmount/2)
-	const MIN_SATS = 3
-	const amt = Math.max(amount || MIN_SATS)
+	const amt = Math.max(amount || constants.min_sat_amount)
 	const opts = {
 		amt,
 		dest:sender_pub_key,

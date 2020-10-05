@@ -7,8 +7,8 @@ import * as helpers from './helpers'
 import {nodeinfo} from './utils/nodeinfo'
 import { loadLightning } from './utils/lightning'
 import * as path from 'path'
+import constants from './constants'
 
-const constants = require(path.join(__dirname, '../config/constants.json'))
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname,'../config/app.json'))[env];
 

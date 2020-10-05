@@ -14,13 +14,12 @@ import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './api'
 import {checkTag} from '../utils/gitinfo'
-import * as path from 'path'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
+import constants from '../constants'
 
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
-const constants = require(path.join(__dirname,'../../config/constants.json'))
 
 export async function set(app) {
 	

@@ -10,9 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const ldat_1 = require("./ldat");
-const path = require("path");
 const rsa = require("../crypto/rsa");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 function addInRemoteText(full, contactId, isTribe) {
     const m = full && full.message;
     if (!(m && m.content))
@@ -152,7 +151,7 @@ function personalizeMessage(m, contact, isTribeOwner) {
         const destkey = contact.publicKey;
         const cloned = JSON.parse(JSON.stringify(m));
         const chat = cloned && cloned.chat;
-        const isTribe = chat.type && chat.type === constants.chat_types.tribe;
+        const isTribe = chat.type && chat.type === constants_1.default.chat_types.tribe;
         const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe);
         const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey);
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);

@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
 const network = require("../network");
 const models_1 = require("../models");
 const short = require("short-uuid");
@@ -17,11 +16,7 @@ const rsa = require("../crypto/rsa");
 const jsonUtils = require("../utils/json");
 const socket = require("../utils/socket");
 const res_1 = require("../utils/res");
-/*
-hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
-hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
-*/
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> processAction', req.body);
@@ -96,7 +91,7 @@ function finalAction(a, bot_id) {
             const topic = `${dest}/${myBot.uuid}`;
             const data = {
                 action, bot_id, bot_name,
-                type: constants.message_types.bot_res,
+                type: constants_1.default.message_types.bot_res,
                 message: { content: a.content, amount: amount || 0 },
                 chat: { uuid: chat_uuid },
                 sender: {
@@ -117,12 +112,11 @@ function finalAction(a, bot_id) {
             if (!(pubkey && pubkey.length === 66 && amount)) {
                 throw 'wrong params';
             }
-            const MIN_SATS = 3;
             const destkey = pubkey;
             const opts = {
                 dest: destkey,
                 data: {},
-                amt: Math.max((amount || 0), MIN_SATS)
+                amt: Math.max((amount || 0), constants_1.default.min_sat_amount)
             };
             try {
                 yield network.signAndSend(opts);
@@ -138,7 +132,7 @@ function finalAction(a, bot_id) {
                 throw 'no content';
             if (!theChat)
                 throw 'no chat';
-            if (!theChat.type === constants.chat_types.tribe)
+            if (theChat.type !== constants_1.default.chat_types.tribe)
                 throw 'not a tribe';
             const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
             const encryptedText = rsa.encrypt(theChat.groupKey, content);
@@ -150,13 +144,13 @@ function finalAction(a, bot_id) {
             const msg = {
                 chatId: theChat.id,
                 uuid: short.generate(),
-                type: constants.message_types.bot_res,
+                type: constants_1.default.message_types.bot_res,
                 sender: botContactId,
                 amount: amount || 0,
                 date: date,
                 messageContent: encryptedForMeText,
                 remoteMessageContent: JSON.stringify(textMap),
-                status: constants.statuses.confirmed,
+                status: constants_1.default.statuses.confirmed,
                 createdAt: date,
                 updatedAt: date,
                 senderAlias: alias,
@@ -168,9 +162,9 @@ function finalAction(a, bot_id) {
             });
             yield network.sendMessage({
                 chat: theChat,
-                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants.chat_roles.reader }),
+                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }),
                 message: { content: textMap, id: message.id, uuid: message.uuid },
-                type: constants.message_types.bot_res,
+                type: constants_1.default.message_types.bot_res,
                 success: () => ({ success: true }),
                 failure: (e) => {
                     throw e;
