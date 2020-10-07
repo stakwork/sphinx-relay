@@ -279,6 +279,7 @@ function parseAndVerifyPayload(data) {
 }
 function saveAnonymousKeysend(response) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("RESPONSE ", JSON.stringify(response, null, 2));
         let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
         var paymentHash = "";
         for (var i = 0; i < decodedPaymentRequest["data"]["tags"].length; i++) {
