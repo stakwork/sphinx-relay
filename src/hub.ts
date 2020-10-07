@@ -190,7 +190,7 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
 
 type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject' | 'keysend'
 
-const sendNotification = async (chat, name, type:NotificationType) => {
+const sendNotification = async (chat, name, type:NotificationType, amount?:number) => {
   
   let message = `You have a new message from ${name}`
   if(type==='invite'){
@@ -203,7 +203,7 @@ const sendNotification = async (chat, name, type:NotificationType) => {
     message = `The admin has declined your request to join "${name}"`
   }
   if(type==='keysend') {
-    message = `You have received a keysend payment`
+    message = `You have received a payment of ${amount} sats`
   }
 
   if(type==='message' && chat.type==constants.chat_types.group && chat.name && chat.name.length){

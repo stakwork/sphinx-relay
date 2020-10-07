@@ -257,10 +257,10 @@ export async function parseKeysendInvoice(i){
 	const value = i && i.value && parseInt(i.value)
 	if(!data || (data&&data.startsWith('{}'))) {
 		socket.sendJson({
-			type:'direct_payment',
+			type:'keysend',
 			response: {amount:value||0}
 		})
-		sendNotification(-1, '', 'keysend')
+		sendNotification(-1, '', 'keysend', value||0)
 		return
 	}
 
