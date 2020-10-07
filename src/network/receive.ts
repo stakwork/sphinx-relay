@@ -12,7 +12,6 @@ import { Op } from 'sequelize'
 import * as timers from '../utils/timers'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
-import * as decodeUtils from '../utils/decode'
 import constants from '../constants'
 
 /*
@@ -251,16 +250,6 @@ async function parseAndVerifyPayload(data){
 }
 
 async function saveAnonymousKeysend(response) {
-	console.log("RESPONSE ",JSON.stringify(response,null,2))
-	let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
-	var paymentHash = "";
-	for (var i=0; i<decodedPaymentRequest["data"]["tags"].length; i++) {
-		let tag = decodedPaymentRequest["data"]["tags"][i];
-		if (tag['description'] == 'payment_hash') {
-			paymentHash = tag['value'];
-			break;
-		}
-	}
 	let settleDate = parseInt(response['settle_date'] + '000');
 	await models.Message.create({
 		chatId: 0,
@@ -268,7 +257,7 @@ async function saveAnonymousKeysend(response) {
 		sender: 0,
 		amount: response['amt_paid_sat'],
 		amountMsat: response['amt_paid_msat'],
-		paymentHash: paymentHash,
+		paymentHash: '',
 		date: new Date(settleDate),
 		messageContent: response['memo'],
 		status: constants.statuses.confirmed,
