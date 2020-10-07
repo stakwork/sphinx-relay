@@ -187,7 +187,7 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
     });
 };
 exports.createInviteInHub = createInviteInHub;
-const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0, function* () {
+const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0, void 0, function* () {
     let message = `You have a new message from ${name}`;
     if (type === 'invite') {
         message = `Your invite to ${name} is ready`;
@@ -199,7 +199,7 @@ const sendNotification = (chat, name, type) => __awaiter(void 0, void 0, void 0,
         message = `The admin has declined your request to join "${name}"`;
     }
     if (type === 'keysend') {
-        message = `You have received a keysend payment`;
+        message = `You have received a payment of ${amount} sats`;
     }
     if (type === 'message' && chat.type == constants_1.default.chat_types.group && chat.name && chat.name.length) {
         message += ` on ${chat.name}`;
