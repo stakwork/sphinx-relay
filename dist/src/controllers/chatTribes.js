@@ -438,7 +438,10 @@ function replayChatHistory(chat, contact) {
                     content = JSON.parse(m.remoteMessageContent);
                 }
                 catch (e) { }
-                const dateString = m.date && m.date.toISOString();
+                let mdate = m.date;
+                if (!mdate)
+                    mdate = new Date();
+                const dateString = mdate.toISOString();
                 let mediaKeyMap;
                 let newMediaTerms;
                 if (m.type === constants.message_types.attachment) {
