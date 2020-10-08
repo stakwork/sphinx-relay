@@ -99,6 +99,7 @@ function authModule(req, res, next) {
             req.path == '/action' ||
             req.path == '/contacts/tokens' ||
             req.path == '/latest' ||
+            req.path == '/healthcheck' ||
             req.path.startsWith('/static') ||
             req.path == '/contacts/set_dev') {
             next();

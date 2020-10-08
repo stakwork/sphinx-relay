@@ -27,10 +27,11 @@ function isBotMsg(msg, sentByMe) {
         if (msgType === constants.message_types.bot_res) {
             return false; // bot res msg type not for processing
         }
+        const uuid = msg.chat && msg.chat.uuid;
+        if (!uuid)
+            return false;
         const chat = yield models_1.models.Chat.findOne({
-            where: {
-                uuid: msg.chat.uuid
-            }
+            where: { uuid }
         });
         if (!chat)
             return false;

@@ -101,6 +101,8 @@ export async function set(app) {
 	app.post('/bot', bots.createBot)
 	app.delete('/bot/:id', bots.deleteBot)
 
+	app.get('/healthcheck', confirmations.healthcheck)
+
 	app.get('/version', async function(req,res) {
 		const version = await checkTag()
 		res.send({version})
@@ -148,5 +150,5 @@ export const ACTIONS = {
 	[msgtypes.bot_cmd]: bots.receiveBotCmd,
 	[msgtypes.bot_res]: bots.receiveBotRes,
 	[msgtypes.heartbeat]: confirmations.receiveHeartbeat,
-	[msgtypes.heartbeat_confirmation]: ()=>{},
+	[msgtypes.heartbeat_confirmation]: confirmations.receiveHeartbeatConfirmation,
 }

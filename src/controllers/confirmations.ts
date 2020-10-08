@@ -4,6 +4,7 @@ import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as network from '../network'
 import * as path from 'path'
+import { failure, success } from '../utils/res'
 
 const constants = require(path.join(__dirname, '../../config/constants.json'))
 
@@ -108,21 +109,21 @@ export async function receiveHeartbeat(payload) {
 	const sender_pub_key = dat.sender.pub_key
 	const receivedAmount = dat.message.amount
 
-	if (!(sender_pub_key && sender_pub_key.length===66)) return console.log('no sender')
+	if (!(sender_pub_key && sender_pub_key.length === 66)) return console.log('no sender')
 	if (!receivedAmount) return console.log('no amount')
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
-	const amount = Math.round(receivedAmount/2)
+	const amount = Math.round(receivedAmount / 2)
 	const MIN_SATS = 3
 	const amt = Math.max(amount || MIN_SATS)
 	const opts = {
 		amt,
-		dest:sender_pub_key,
+		dest: sender_pub_key,
 		data: <network.Msg>{
 			type: constants.message_types.heartbeat_confirmation,
 			message: { amount: amt },
-			sender: {pub_key: owner.publicKey}
+			sender: { pub_key: owner.publicKey }
 		}
 	}
 	try {
@@ -131,4 +132,60 @@ export async function receiveHeartbeat(payload) {
 	} catch (e) {
 		return false
 	}
+}
+
+let heartbeats:{[k:string]:boolean} = {}
+export async function healthcheck(req, res) {
+	const pubkey:string = req.query.pubkey
+	if (!(pubkey&&pubkey.length===66)) {
+		return failure(res, 'missing pubkey')
+	}
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
+	const amt = 10
+	const opts = {
+		amt,
+		dest: pubkey,
+		data: <network.Msg>{
+			type: constants.message_types.heartbeat,
+			message: {
+				amount: amt,
+			},
+			sender: { pub_key: owner.publicKey }
+		}
+	}
+	try {
+		await network.signAndSend(opts)
+	} catch (e) {
+		failure(res, e)
+    return
+  }
+  
+  let i = 0 
+  let interval = setInterval(()=>{
+    if(i>=15) {
+      clearInterval(interval)
+      delete heartbeats[pubkey]
+      failure(res, 'no confimration received')
+      return
+    }
+    if(heartbeats[pubkey]) {
+      success(res, 'success')
+      clearInterval(interval)
+      delete heartbeats[pubkey]
+      return
+    }
+    i ++
+  }, 1000)
+
+}
+
+export async function receiveHeartbeatConfirmation(payload) {
+  console.log('=> received heartbeat confirmation')
+
+	const dat = payload.content || payload
+	const sender_pub_key = dat.sender.pub_key
+
+  heartbeats[sender_pub_key] = true
 }
