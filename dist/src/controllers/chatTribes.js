@@ -194,7 +194,7 @@ function receiveMemberRequest(payload) {
 exports.receiveMemberRequest = receiveMemberRequest;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, } = req.body;
+        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
         const { id } = req.params;
         if (!id)
             return res_1.failure(res, 'group id is required');
@@ -221,6 +221,7 @@ function editTribe(req, res) {
                     unlisted,
                     is_private: req.body.private,
                     app_url,
+                    feed_url,
                     deleted: false,
                 });
             }
@@ -246,6 +247,8 @@ function editTribe(req, res) {
                 obj.unlisted = unlisted;
             if (app_url)
                 obj.appUrl = app_url;
+            if (feed_url)
+                obj.feedUrl = feed_url;
             if (req.body.private || req.body.private === false)
                 obj.private = req.body.private;
             if (Object.keys(obj).length > 0) {
@@ -469,7 +472,7 @@ function replayChatHistory(chat, contact) {
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url) {
     return __awaiter(this, void 0, void 0, function* () {
         let date = new Date();
         date.setMilliseconds(0);
@@ -499,6 +502,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             unlisted: unlisted || false,
             private: is_private || false,
             appUrl: app_url || '',
+            feedUrl: feed_url || '',
         };
     });
 }

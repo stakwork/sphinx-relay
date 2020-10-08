@@ -144,7 +144,7 @@ exports.mute = mute;
 // or can u add contacts as members?
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { name, is_tribe, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, } = req.body;
+        const { name, is_tribe, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
         const contact_ids = req.body.contact_ids || [];
         const members = {}; //{pubkey:{key,alias}, ...}
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -161,7 +161,7 @@ function createGroupChat(req, res) {
         let chatParams = null;
         let okToCreate = true;
         if (is_tribe) {
-            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url);
+            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url);
             if (chatParams.uuid) {
                 // publish to tribe server
                 try {
@@ -180,6 +180,7 @@ function createGroupChat(req, res) {
                         unlisted: unlisted || false,
                         is_private: req.body.private || false,
                         app_url,
+                        feed_url,
                     });
                 }
                 catch (e) {

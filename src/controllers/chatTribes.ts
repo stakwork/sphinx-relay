@@ -202,6 +202,7 @@ export async function editTribe(req, res) {
 		tags,
 		unlisted,
 		app_url,
+		feed_url,
 	} = req.body
 	const { id } = req.params
 
@@ -232,6 +233,7 @@ export async function editTribe(req, res) {
 				unlisted,
 				is_private: req.body.private,
 				app_url,
+				feed_url,
 				deleted: false,
 			})
 		} catch(e) {
@@ -249,6 +251,7 @@ export async function editTribe(req, res) {
 		if(escrow_millis||escrow_millis===0) obj.escrowMillis = escrow_millis
 		if(unlisted||unlisted===false) obj.unlisted = unlisted
 		if(app_url) obj.appUrl=app_url
+		if(feed_url) obj.feedUrl=feed_url
 		if(req.body.private||req.body.private===false) obj.private = req.body.private
 		if(Object.keys(obj).length>0) {
 			await chat.update(obj)
@@ -475,7 +478,7 @@ export async function replayChatHistory(chat, contact) {
 	}
 }
 
-export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url): Promise<{[k:string]:any}> {
+export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url): Promise<{[k:string]:any}> {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -505,6 +508,7 @@ export async function createTribeChatParams(owner, contactIds, name, img, price_
 		unlisted: unlisted||false,
 		private: is_private||false,
 		appUrl: app_url||'',
+		feedUrl: feed_url||'',
 	}
 }
 
