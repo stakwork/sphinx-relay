@@ -97,6 +97,7 @@ function set(app) {
         app.get('/bots', bots.getBots);
         app.post('/bot', bots.createBot);
         app.delete('/bot/:id', bots.deleteBot);
+        app.get('/healthcheck', confirmations.healthcheck);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 const version = yield gitinfo_1.checkTag();
@@ -148,6 +149,6 @@ exports.ACTIONS = {
     [msgtypes.bot_cmd]: bots.receiveBotCmd,
     [msgtypes.bot_res]: bots.receiveBotRes,
     [msgtypes.heartbeat]: confirmations.receiveHeartbeat,
-    [msgtypes.heartbeat_confirmation]: () => { },
+    [msgtypes.heartbeat_confirmation]: confirmations.receiveHeartbeatConfirmation,
 };
 //# sourceMappingURL=index.js.map

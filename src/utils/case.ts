@@ -8,7 +8,8 @@ function toSnake(obj) {
     for (let [key, value] of Object.entries(obj)) {
         if(dateKeys.includes(key) && value){
             const v: any = value
-            const d = new Date(v)
+            let d = new Date(v)
+            if(isNaN(d.getTime())) d=new Date()
             ret[changeCase.snakeCase(key)] = d.toISOString()
         } else if(boolKeys.includes(key)) {
             ret[changeCase.snakeCase(key)] = (!value||value==='0')?0:1
