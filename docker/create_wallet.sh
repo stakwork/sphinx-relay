@@ -19,8 +19,7 @@ match_max 100000
 expect -exact "Input wallet password: "
 send -- "$WALLET_PASSWORD\r"
 expect -exact "\r
-Confirm password:\r
-"
+Confirm password: "
 send -- "$WALLET_PASSWORD\r"
 expect -exact "\r
 \r
@@ -32,7 +31,6 @@ Your cipher seed can optionally be encrypted.\r
 Input your passphrase if you wish to encrypt it (or press enter to proceed without a cipher seed passphrase): "
 send -- "$WALLET_PASSPHRASE\r"
 expect -exact "\r
-Confirm password:\r
-"
+Confirm password: "
 send -- "$WALLET_PASSPHRASE\r"
 expect eof
