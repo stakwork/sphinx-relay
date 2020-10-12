@@ -275,6 +275,7 @@ export async function parseKeysendInvoice(i){
 	let isAnonymous = false
 	let memo = ''
 	if(data){
+		console.log("HEY GOT A KEYSENEEDDDDD!!!!!",data)
 		try {
 			const payload = JSON.parse(data)
 			if(payload.type===constants.message_types.keysend) {
