@@ -222,6 +222,17 @@ export async function initTribesSubscriptions(){
     })
 }
 
+function parsePayload(data){
+	const li = data.lastIndexOf('}')
+	const msg = data.substring(0,li+1)
+	try {
+		const payload = JSON.parse(msg)
+		return payload
+	} catch(e) {
+		throw e
+	}
+}
+
 // VERIFY PUBKEY OF SENDER from sig
 async function parseAndVerifyPayload(data){
 	let payload
@@ -277,8 +288,9 @@ export async function parseKeysendInvoice(i){
 	if(data){
 		console.log("HEY GOT A KEYSENEEDDDDD!!!!!",data)
 		try {
-			const payload = JSON.parse(data)
+			const payload = parsePayload(data)
 			if(payload.type===constants.message_types.keysend) {
+				console.log("HEY ISSSS A    TPY 28",payload)
 				isAnonymous = true
 				memo = payload.message.content
 			}
