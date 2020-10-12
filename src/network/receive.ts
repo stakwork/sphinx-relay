@@ -13,6 +13,7 @@ import * as timers from '../utils/timers'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
 import constants from '../constants'
+import * as jsonUtils from '../utils/json'
 
 /*
 delete type:
@@ -262,11 +263,12 @@ async function parseAndVerifyPayload(data){
 
 async function saveAnonymousKeysend(response, memo) {
 	let settleDate = parseInt(response['settle_date'] + '000');
-	await models.Message.create({
+	const amount = response['amt_paid_sat'] || 0
+	const msg = await models.Message.create({
 		chatId: 0,
 		type: constants.message_types.keysend,
 		sender: 0,
-		amount: response['amt_paid_sat'],
+		amount,
 		amountMsat: response['amt_paid_msat'],
 		paymentHash: '',
 		date: new Date(settleDate),
@@ -274,6 +276,10 @@ async function saveAnonymousKeysend(response, memo) {
 		status: constants.statuses.confirmed,
 		createdAt: new Date(settleDate),
 		updatedAt: new Date(settleDate)
+	})
+	socket.sendJson({
+		type:'keysend',
+		response: jsonUtils.messageToJson(msg,null)
 	})
 }
 
@@ -301,13 +307,6 @@ export async function parseKeysendInvoice(i){
 		isAnonymous = true
 	}
 	if(isAnonymous) {
-		socket.sendJson({
-			type:'keysend',
-			response: {
-				amount:value||0,
-				message_content:memo
-			}
-		})
 		sendNotification(-1, '', 'keysend', value||0)
 		saveAnonymousKeysend(i, memo)
 		return

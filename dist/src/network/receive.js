@@ -24,6 +24,7 @@ const timers = require("../utils/timers");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const constants_1 = require("../constants");
+const jsonUtils = require("../utils/json");
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -290,11 +291,12 @@ function parseAndVerifyPayload(data) {
 function saveAnonymousKeysend(response, memo) {
     return __awaiter(this, void 0, void 0, function* () {
         let settleDate = parseInt(response['settle_date'] + '000');
-        yield models_1.models.Message.create({
+        const amount = response['amt_paid_sat'] || 0;
+        const msg = yield models_1.models.Message.create({
             chatId: 0,
             type: constants_1.default.message_types.keysend,
             sender: 0,
-            amount: response['amt_paid_sat'],
+            amount,
             amountMsat: response['amt_paid_msat'],
             paymentHash: '',
             date: new Date(settleDate),
@@ -302,6 +304,10 @@ function saveAnonymousKeysend(response, memo) {
             status: constants_1.default.statuses.confirmed,
             createdAt: new Date(settleDate),
             updatedAt: new Date(settleDate)
+        });
+        socket.sendJson({
+            type: 'keysend',
+            response: jsonUtils.messageToJson(msg, null)
         });
     });
 }
@@ -331,13 +337,6 @@ function parseKeysendInvoice(i) {
             isAnonymous = true;
         }
         if (isAnonymous) {
-            socket.sendJson({
-                type: 'keysend',
-                response: {
-                    amount: value || 0,
-                    message_content: memo
-                }
-            });
             hub_1.sendNotification(-1, '', 'keysend', value || 0);
             saveAnonymousKeysend(i, memo);
             return;
