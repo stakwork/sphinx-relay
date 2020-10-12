@@ -2,10 +2,8 @@ import { Msg } from './interfaces'
 import { models } from '../models'
 import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
-import * as path from 'path'
 import * as SphinxBot from 'sphinx-bot'
-
-const constants = require(path.join(__dirname, '../../config/constants.json'))
+import constants from '../constants'
 
 /*
 default show or not

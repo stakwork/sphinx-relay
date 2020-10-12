@@ -13,23 +13,21 @@ const models_1 = require("../models");
 const LND = require("../utils/lightning");
 const signer = require("../utils/signer");
 const msg_1 = require("../utils/msg");
-const path = require("path");
 const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
 const receive_1 = require("./receive");
 const intercept = require("./intercept");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
-const MIN_SATS = 3;
+const constants_1 = require("../constants");
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded } = params;
         if (!chat || !sender)
             return;
-        const isTribe = chat.type === constants.chat_types.tribe;
+        const isTribe = chat.type === constants_1.default.chat_types.tribe;
         let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
         let theSender = (sender.dataValues || sender);
         if (isTribeOwner && !isForwarded) {
-            theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants.chat_roles.owner });
+            theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants_1.default.chat_roles.owner });
         }
         let msg = newmsg(type, chat, theSender, message);
         // console.log("=> MSG TO SEND",msg)
@@ -49,7 +47,7 @@ function sendMessage(params) {
         let networkType = undefined;
         const chatUUID = chat.uuid;
         if (isTribe) {
-            if (type === constants.message_types.confirmation) {
+            if (type === constants_1.default.message_types.confirmation) {
                 // if u are owner, go ahead!
                 if (!isTribeOwner)
                     return; // dont send confs for tribe if not owner
@@ -90,7 +88,7 @@ function sendMessage(params) {
             console.log('-> sending to ', contact.id, destkey);
             let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
             // sending a payment to one subscriber (like buying a pic)
-            if (isTribeOwner && contactIds.length === 1 && amount && amount > MIN_SATS) {
+            if (isTribeOwner && contactIds.length === 1 && amount && amount > constants_1.default.min_sat_amount) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
@@ -98,7 +96,7 @@ function sendMessage(params) {
             const opts = {
                 dest: destkey,
                 data: m,
-                amt: Math.max((amount || 0), MIN_SATS)
+                amt: Math.max((amount || 0), constants_1.default.min_sat_amount)
             };
             try {
                 const r = yield signAndSend(opts, mqttTopic);
@@ -159,15 +157,15 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
 exports.signAndSend = signAndSend;
 function checkIfAutoConfirm(data) {
     if (receive_1.typesToForward.includes(data.type)) {
-        if (data.type === constants.message_types.delete) {
+        if (data.type === constants_1.default.message_types.delete) {
             return; // dont auto confirm delete msg
         }
         confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
     }
 }
 function newmsg(type, chat, sender, message) {
-    const includeGroupKey = type === constants.message_types.group_create || type === constants.message_types.group_invite;
-    const includeAlias = sender && sender.alias && chat.type === constants.chat_types.tribe;
+    const includeGroupKey = type === constants_1.default.message_types.group_create || type === constants_1.default.message_types.group_invite;
+    const includeAlias = sender && sender.alias && chat.type === constants_1.default.chat_types.tribe;
     // const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
     return {
         type: type,
@@ -176,7 +174,7 @@ function newmsg(type, chat, sender, message) {
         sender: {
             pub_key: sender.publicKey,
             alias: includeAlias ? sender.alias : '',
-            role: sender.role || constants.chat_roles.reader,
+            role: sender.role || constants_1.default.chat_roles.reader,
         }
     };
 }

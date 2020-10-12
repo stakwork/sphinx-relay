@@ -17,11 +17,10 @@ const network = require("../network");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const md5 = require("md5");
-const path = require("path");
 const tribes = require("../utils/tribes");
 const timers = require("../utils/timers");
 const chatTribes_1 = require("./chatTribes");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 function updateChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> updateChat');
@@ -67,7 +66,7 @@ function kickChatMember(req, res) {
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),
             sender: owner,
             message: {},
-            type: constants.message_types.group_kick,
+            type: constants_1.default.message_types.group_kick,
         });
         // delete all timers for this member
         timers.removeTimersByContactIdChatId(contactId, chatId);
@@ -98,10 +97,10 @@ function receiveGroupKick(payload) {
             date = new Date(date_string);
         const msg = {
             chatId: chat.id,
-            type: constants.message_types.group_kick,
+            type: constants_1.default.message_types.group_kick,
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date,
         };
         const message = yield models_1.models.Message.create(msg);
@@ -188,7 +187,7 @@ function createGroupChat(req, res) {
                 }
             }
             // make me owner when i create
-            members[owner.publicKey].role = constants.chat_roles.owner;
+            members[owner.publicKey].role = constants_1.default.chat_roles.owner;
         }
         else {
             chatParams = createGroupChatParams(owner, contact_ids, members, name);
@@ -199,7 +198,7 @@ function createGroupChat(req, res) {
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members }),
             sender: owner,
-            type: constants.message_types.group_create,
+            type: constants_1.default.message_types.group_create,
             message: {},
             failure: function (e) {
                 res_1.failure(res, e);
@@ -207,12 +206,12 @@ function createGroupChat(req, res) {
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {
                     const chat = yield models_1.models.Chat.create(chatParams);
-                    if (chat.type === constants.chat_types.tribe) { // save me as owner when i create
+                    if (chat.type === constants_1.default.chat_types.tribe) { // save me as owner when i create
                         yield models_1.models.ChatMember.create({
                             contactId: owner.id,
                             chatId: chat.id,
-                            role: constants.chat_roles.owner,
-                            status: constants.chat_statuses.approved
+                            role: constants_1.default.chat_roles.owner,
+                            status: constants_1.default.chat_statuses.approved
                         });
                     }
                     res_1.success(res, jsonUtils.chatToJson(chat));
@@ -233,7 +232,7 @@ function addGroupMembers(req, res) {
         const contactIds = JSON.parse(chat.contactIds || '[]');
         // for all members (existing and new)
         members[owner.publicKey] = { key: owner.contactKey, alias: owner.alias };
-        if (chat.type === constants.chat_types.tribe) {
+        if (chat.type === constants_1.default.chat_types.tribe) {
             const me = yield models_1.models.ChatMember.findOne({ where: { contactId: owner.id, chatId: chat.id } });
             if (me)
                 members[owner.publicKey].role = me.role;
@@ -255,7 +254,7 @@ function addGroupMembers(req, res) {
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: contact_ids, members }),
             sender: owner,
-            type: constants.message_types.group_invite,
+            type: constants_1.default.message_types.group_invite,
             message: {}
         });
     });
@@ -276,7 +275,7 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             chat,
             sender: owner,
             message: {},
-            type: constants.message_types.tribe_delete,
+            type: constants_1.default.message_types.tribe_delete,
             success: function () {
                 tribes.delete_tribe(chat.uuid);
             },
@@ -290,14 +289,14 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     else {
         // leave a group or tribe
-        const isPending = chat.status === constants.chat_statuses.pending;
-        const isRejected = chat.status === constants.chat_statuses.rejected;
+        const isPending = chat.status === constants_1.default.chat_statuses.pending;
+        const isRejected = chat.status === constants_1.default.chat_statuses.rejected;
         if (!isPending && !isRejected) { // dont send if pending
             network.sendMessage({
                 chat,
                 sender: owner,
                 message: {},
-                type: constants.message_types.group_leave,
+                type: constants_1.default.message_types.group_leave,
             });
         }
     }
@@ -321,7 +320,7 @@ function receiveGroupJoin(payload) {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
-        const isTribe = chat_type === constants.chat_types.tribe;
+        const isTribe = chat_type === constants_1.default.chat_types.tribe;
         var date = new Date();
         date.setMilliseconds(0);
         if (date_string)
@@ -364,9 +363,9 @@ function receiveGroupJoin(payload) {
                     models_1.models.ChatMember.upsert({
                         contactId: theSender.id,
                         chatId: chat.id,
-                        role: constants.chat_roles.reader,
+                        role: constants_1.default.chat_roles.reader,
                         lastActive: date,
-                        status: constants.chat_statuses.approved
+                        status: constants_1.default.chat_statuses.approved
                     });
                 }
                 catch (e) { }
@@ -381,10 +380,10 @@ function receiveGroupJoin(payload) {
         }
         const msg = {
             chatId: chat.id,
-            type: constants.message_types.group_join,
+            type: constants_1.default.message_types.group_join,
             sender: (theSender && theSender.id) || 0,
             messageContent: '', remoteMessageContent: '',
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date
         };
         if (isTribe) {
@@ -410,7 +409,7 @@ function receiveGroupLeave(payload) {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
-        const isTribe = chat_type === constants.chat_types.tribe;
+        const isTribe = chat_type === constants_1.default.chat_types.tribe;
         let sender;
         // EITHER private chat OR tribeOwner
         if (!isTribe || isTribeOwner) {
@@ -421,7 +420,7 @@ function receiveGroupLeave(payload) {
             const contactIds = oldContactIds.filter(cid => cid !== sender.id);
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) {
-                if (chat_type === constants.chat_types.tribe) {
+                if (chat_type === constants_1.default.chat_types.tribe) {
                     try {
                         yield models_1.models.ChatMember.destroy({ where: { chatId: chat.id, contactId: sender.id } });
                     }
@@ -441,10 +440,10 @@ function receiveGroupLeave(payload) {
             date = new Date(date_string);
         const msg = {
             chatId: chat.id,
-            type: constants.message_types.group_leave,
+            type: constants_1.default.message_types.group_leave,
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date
         };
         if (isTribe) {
@@ -475,7 +474,7 @@ function receiveGroupCreateOrInvite(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         const { sender_pub_key, chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = yield helpers.parseReceiveParams(payload);
         // maybe this just needs to move to adding tribe owner ChatMember?
-        const isTribe = chat_type === constants.chat_types.tribe;
+        const isTribe = chat_type === constants_1.default.chat_types.tribe;
         if (isTribe) { // must be sent by tribe owner?????
             const validOwner = yield validateTribeOwner(chat_uuid, sender_pub_key);
             if (!validOwner)
@@ -486,11 +485,11 @@ function receiveGroupCreateOrInvite(payload) {
         for (let [pubkey, member] of Object.entries(chat_members)) {
             const contact = yield models_1.models.Contact.findOne({ where: { publicKey: pubkey } });
             let addContact = false;
-            if (chat_type === constants.chat_types.group && member && member.key) {
+            if (chat_type === constants_1.default.chat_types.group && member && member.key) {
                 addContact = true;
             }
             else if (isTribe && member && member.role) {
-                if (member.role === constants.chat_roles.owner || member.role === constants.chat_roles.admin || member.role === constants.chat_roles.mod) {
+                if (member.role === constants_1.default.chat_roles.owner || member.role === constants_1.default.chat_roles.admin || member.role === constants_1.default.chat_roles.mod) {
                     addContact = true;
                 }
             }
@@ -518,15 +517,15 @@ function receiveGroupCreateOrInvite(payload) {
         // make chat
         let date = new Date();
         date.setMilliseconds(0);
-        const chat = yield models_1.models.Chat.create(Object.assign(Object.assign({ uuid: chat_uuid, contactIds: JSON.stringify(contactIds), createdAt: date, updatedAt: date, name: chat_name, type: chat_type || constants.chat_types.group }, chat_host && { host: chat_host }), chat_key && { groupKey: chat_key }));
+        const chat = yield models_1.models.Chat.create(Object.assign(Object.assign({ uuid: chat_uuid, contactIds: JSON.stringify(contactIds), createdAt: date, updatedAt: date, name: chat_name, type: chat_type || constants_1.default.chat_types.group }, chat_host && { host: chat_host }), chat_key && { groupKey: chat_key }));
         if (isTribe) { // IF TRIBE, ADD TO XREF
             contacts.forEach(c => {
                 models_1.models.ChatMember.create({
                     contactId: c.id,
                     chatId: chat.id,
-                    role: c.role || constants.chat_roles.reader,
+                    role: c.role || constants_1.default.chat_roles.reader,
                     lastActive: date,
-                    status: constants.chat_statuses.approved
+                    status: constants_1.default.chat_statuses.approved
                 });
             });
         }
@@ -535,7 +534,7 @@ function receiveGroupCreateOrInvite(payload) {
             response: jsonUtils.messageToJson({ newContacts }, chat)
         });
         hub_1.sendNotification(chat, chat_name, 'group');
-        if (payload.type === constants.message_types.group_invite) {
+        if (payload.type === constants_1.default.message_types.group_invite) {
             const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             network.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { members: {
@@ -546,7 +545,7 @@ function receiveGroupCreateOrInvite(payload) {
                     } }),
                 sender: owner,
                 message: {},
-                type: constants.message_types.group_join,
+                type: constants_1.default.message_types.group_join,
             });
         }
     });
@@ -573,7 +572,7 @@ function createGroupChatParams(owner, contactIds, members, name) {
         createdAt: date,
         updatedAt: date,
         name: name,
-        type: constants.chat_types.group
+        type: constants_1.default.chat_types.group
     };
 }
 function asyncForEach(array, callback) {

@@ -1,10 +1,9 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/api'
 import { models } from '../models'
-import * as path from 'path'
-const msg_types = Sphinx.MSG_TYPE
+import constants from '../constants'
 
-const constants = require(path.join(__dirname, '../../config/constants.json'))
+const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
 

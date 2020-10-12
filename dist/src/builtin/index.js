@@ -14,16 +14,15 @@ const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
 const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
-const path = require("path");
 const models_1 = require("../models");
 const bots_1 = require("../controllers/bots");
 exports.buildBotPayload = bots_1.buildBotPayload;
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         MotherBot.init();
         const builtInBots = yield models_1.models.ChatBot.findAll({ where: {
-                botType: constants.bot_types.builtin
+                botType: constants_1.default.bot_types.builtin
             } });
         if (!(builtInBots && builtInBots.length))
             return;

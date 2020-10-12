@@ -19,9 +19,8 @@ const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const rsa = require("../crypto/rsa");
 const moment = require("moment");
-const path = require("path");
 const network = require("../network");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 // store all current running jobs in memory
 let jobs = {};
 // init jobs from DB
@@ -129,7 +128,7 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
         network.sendMessage({
             chat: chat,
             sender: owner,
-            type: constants.message_types.direct_payment,
+            type: constants_1.default.message_types.direct_payment,
             message: { amount: sub.amount, content: enc },
             amount: sub.amount,
             success: (data) => __awaiter(this, void 0, void 0, function* () {
@@ -152,8 +151,8 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
                 const message = yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
-                    type: constants.message_types.direct_payment,
-                    status: constants.statuses.confirmed,
+                    type: constants_1.default.message_types.direct_payment,
+                    status: constants_1.default.statuses.confirmed,
                     messageContent: encText,
                     amount: subscription.amount,
                     amountMsat: parseFloat(subscription.amount) * 1000,
@@ -169,13 +168,13 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
             }),
             failure: (err) => __awaiter(this, void 0, void 0, function* () {
                 console.log("SEND PAY ERROR");
-                let errMessage = constants.payment_errors[err] || 'Unknown';
+                let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
                 errMessage = 'Payment Failed: ' + errMessage;
                 const message = yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
-                    type: constants.message_types.direct_payment,
-                    status: constants.statuses.failed,
+                    type: constants_1.default.message_types.direct_payment,
+                    status: constants_1.default.statuses.failed,
                     messageContent: errMessage,
                     amount: sub.amount,
                     amountMsat: parseFloat(sub.amount) * 1000,

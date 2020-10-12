@@ -17,8 +17,7 @@ const decodeUtils = require("../utils/decode");
 const lightning_1 = require("../utils/lightning");
 const network = require("../network");
 const moment = require("moment");
-const path = require("path");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 function subscribeInvoices(parseKeysendInvoice) {
@@ -35,7 +34,17 @@ function subscribeInvoices(parseKeysendInvoice) {
                     parseKeysendInvoice(response);
                 }
                 else {
-                    const invoice = yield models_1.models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } });
+                    let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
+                    var paymentHash = "";
+                    for (var i = 0; i < decodedPaymentRequest["data"]["tags"].length; i++) {
+                        let tag = decodedPaymentRequest["data"]["tags"][i];
+                        if (tag['description'] == 'payment_hash') {
+                            paymentHash = tag['value'];
+                            break;
+                        }
+                    }
+                    let settleDate = parseInt(response['settle_date'] + '000');
+                    const invoice = yield models_1.models.Message.findOne({ where: { type: constants_1.default.message_types.invoice, payment_request: response['payment_request'] } });
                     if (invoice == null) {
                         // console.log("ERROR: Invoice " + response['payment_request'] + " not found");
                         const payReq = response['payment_request'];
@@ -47,32 +56,35 @@ function subscribeInvoices(parseKeysendInvoice) {
                             type: 'invoice_payment',
                             response: { invoice: payReq }
                         });
+                        yield models_1.models.Message.create({
+                            chatId: 0,
+                            type: constants_1.default.message_types.payment,
+                            sender: 0,
+                            amount: response['amt_paid_sat'],
+                            amountMsat: response['amt_paid_msat'],
+                            paymentHash: paymentHash,
+                            date: new Date(settleDate),
+                            messageContent: response['memo'],
+                            status: constants_1.default.statuses.confirmed,
+                            createdAt: new Date(settleDate),
+                            updatedAt: new Date(settleDate)
+                        });
                         return;
                     }
-                    models_1.models.Message.update({ status: constants.statuses.confirmed }, { where: { id: invoice.id } });
-                    let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
-                    var paymentHash = "";
-                    for (var i = 0; i < decodedPaymentRequest["data"]["tags"].length; i++) {
-                        let tag = decodedPaymentRequest["data"]["tags"][i];
-                        if (tag['description'] == 'payment_hash') {
-                            paymentHash = tag['value'];
-                            break;
-                        }
-                    }
-                    let settleDate = parseInt(response['settle_date'] + '000');
+                    models_1.models.Message.update({ status: constants_1.default.statuses.confirmed }, { where: { id: invoice.id } });
                     const chat = yield models_1.models.Chat.findOne({ where: { id: invoice.chatId } });
                     const contactIds = JSON.parse(chat.contactIds);
                     const senderId = contactIds.find(id => id != invoice.sender);
                     const message = yield models_1.models.Message.create({
                         chatId: invoice.chatId,
-                        type: constants.message_types.payment,
+                        type: constants_1.default.message_types.payment,
                         sender: senderId,
                         amount: response['amt_paid_sat'],
                         amountMsat: response['amt_paid_msat'],
                         paymentHash: paymentHash,
                         date: new Date(settleDate),
                         messageContent: response['memo'],
-                        status: constants.statuses.confirmed,
+                        status: constants_1.default.statuses.confirmed,
                         createdAt: new Date(settleDate),
                         updatedAt: new Date(settleDate)
                     });

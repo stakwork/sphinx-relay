@@ -2,17 +2,13 @@ import { models } from '../models'
 import * as LND from '../utils/lightning'
 import * as signer from '../utils/signer'
 import {personalizeMessage, decryptMessage} from '../utils/msg'
-import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import {tribeOwnerAutoConfirmation} from '../controllers/confirmations'
 import {typesToForward} from './receive'
 import * as intercept from './intercept'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
-
-const MIN_SATS = 3;
 
 export async function sendMessage(params) {
 	const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded } = params
@@ -88,7 +84,7 @@ export async function sendMessage(params) {
 
 		let mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
 		// sending a payment to one subscriber (like buying a pic)
-		if(isTribeOwner && contactIds.length===1 && amount && amount>MIN_SATS) {
+		if(isTribeOwner && contactIds.length===1 && amount && amount>constants.min_sat_amount) {
 			mqttTopic = '' // FORCE KEYSEND!!!
 		}
 
@@ -97,7 +93,7 @@ export async function sendMessage(params) {
 		const opts = {
 			dest: destkey,
 			data: m,
-			amt: Math.max((amount||0), MIN_SATS)
+			amt: Math.max((amount||0), constants.min_sat_amount)
 		}
 
 		try {

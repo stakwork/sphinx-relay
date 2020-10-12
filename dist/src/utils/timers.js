@@ -11,8 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const network = require("../network");
-const path = require("path");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 const timerz = {};
 function clearTimer(t) {
     const name = makeName(t);
@@ -100,7 +99,7 @@ function payBack(t) {
             sender: owner,
             message: { id: t.msgId, amount: t.amount },
             amount: t.amount,
-            type: constants.message_types.repayment,
+            type: constants_1.default.message_types.repayment,
         });
         models_1.models.Timer.destroy({ where: { id: t.id } });
     });

@@ -18,7 +18,7 @@ const helpers = require("./helpers");
 const nodeinfo_1 = require("./utils/nodeinfo");
 const lightning_1 = require("./utils/lightning");
 const path = require("path");
-const constants = require(path.join(__dirname, '../config/constants.json'));
+const constants_1 = require("./constants");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../config/app.json'))[env];
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
@@ -27,7 +27,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     //console.log('[hub] checking invites ping')
-    const inviteStrings = yield models_1.models.Invite.findAll({ where: { status: { [sequelize_1.Op.notIn]: [constants.invite_statuses.complete, constants.invite_statuses.expired] } } }).map(invite => invite.inviteString);
+    const inviteStrings = yield models_1.models.Invite.findAll({ where: { status: { [sequelize_1.Op.notIn]: [constants_1.default.invite_statuses.complete, constants_1.default.invite_statuses.expired] } } }).map(invite => invite.inviteString);
     if (inviteStrings.length === 0) {
         return; // skip if no invites
     }
@@ -54,12 +54,12 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                         type: 'invite',
                         response: jsonUtils.inviteToJson(dbInvite)
                     });
-                    if (dbInvite.status == constants.invite_statuses.ready && contact) {
+                    if (dbInvite.status == constants_1.default.invite_statuses.ready && contact) {
                         sendNotification(-1, contact.alias, 'invite');
                     }
                 }
-                if (pubkey && dbInvite.status == constants.invite_statuses.complete && contact) {
-                    contact.update({ publicKey: pubkey, status: constants.contact_statuses.confirmed });
+                if (pubkey && dbInvite.status == constants_1.default.invite_statuses.complete && contact) {
+                    contact.update({ publicKey: pubkey, status: constants_1.default.contact_statuses.confirmed });
                     var contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
@@ -69,7 +69,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     helpers.sendContactKeys({
                         contactIds: [contact.id],
                         sender: owner,
-                        type: constants.message_types.contact_key,
+                        type: constants_1.default.message_types.contact_key,
                     });
                 }
             }));
@@ -201,7 +201,7 @@ const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0,
     if (type === 'keysend') {
         message = `You have received a payment of ${amount} sats`;
     }
-    if (type === 'message' && chat.type == constants.chat_types.group && chat.name && chat.name.length) {
+    if (type === 'message' && chat.type == constants_1.default.chat_types.group && chat.name && chat.name.length) {
         message += ` on ${chat.name}`;
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -226,7 +226,7 @@ const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0,
             return; // skip on Android if no actual message
     }
     params.notification = notification;
-    if (type === 'message' && chat.type == constants.chat_types.tribe) {
+    if (type === 'message' && chat.type == constants_1.default.chat_types.tribe) {
         debounce(() => {
             const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : '';
             params.notification.message = chat.isMuted ? '' : `You have ${count}new messages in ${chat.name}`;

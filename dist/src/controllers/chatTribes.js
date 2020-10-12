@@ -17,11 +17,10 @@ const rsa = require("../crypto/rsa");
 const helpers = require("../helpers");
 const socket = require("../utils/socket");
 const tribes = require("../utils/tribes");
-const path = require("path");
 const hub_1 = require("../hub");
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
@@ -61,8 +60,8 @@ function joinTribe(req, res) {
         let date = new Date();
         date.setMilliseconds(0);
         const chatStatus = is_private ?
-            constants.chat_statuses.pending :
-            constants.chat_statuses.approved;
+            constants_1.default.chat_statuses.pending :
+            constants_1.default.chat_statuses.approved;
         const chatParams = {
             uuid: uuid,
             contactIds: JSON.stringify(contactIds),
@@ -70,7 +69,7 @@ function joinTribe(req, res) {
             createdAt: date,
             updatedAt: date,
             name: name,
-            type: constants.chat_types.tribe,
+            type: constants_1.default.chat_types.tribe,
             host: host || tribes.getHost(),
             groupKey: group_key,
             ownerPubkey: owner_pubkey,
@@ -79,8 +78,8 @@ function joinTribe(req, res) {
             priceToJoin: amount || 0,
         };
         const typeToSend = is_private ?
-            constants.message_types.member_request :
-            constants.message_types.group_join;
+            constants_1.default.message_types.member_request :
+            constants_1.default.message_types.group_join;
         const contactIdsToSend = is_private ?
             [theTribeOwner.id] : // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
             chatParams.contactIds;
@@ -106,9 +105,9 @@ function joinTribe(req, res) {
                     models_1.models.ChatMember.create({
                         contactId: theTribeOwner.id,
                         chatId: chat.id,
-                        role: constants.chat_roles.owner,
+                        role: constants_1.default.chat_roles.owner,
                         lastActive: date,
-                        status: constants.chat_statuses.approved
+                        status: constants_1.default.chat_statuses.approved
                     });
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
@@ -124,7 +123,7 @@ function receiveMemberRequest(payload) {
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return console.log('no chat');
-        const isTribe = chat_type === constants.chat_types.tribe;
+        const isTribe = chat_type === constants_1.default.chat_types.tribe;
         if (!isTribe || !isTribeOwner)
             return console.log('not a tribe');
         var date = new Date();
@@ -153,8 +152,8 @@ function receiveMemberRequest(payload) {
         console.log("UPSERT", {
             contactId: theSender.id,
             chatId: chat.id,
-            role: constants.chat_roles.reader,
-            status: constants.chat_statuses.pending,
+            role: constants_1.default.chat_roles.reader,
+            status: constants_1.default.chat_statuses.pending,
             lastActive: date,
         });
         // maybe check here manually????
@@ -162,18 +161,18 @@ function receiveMemberRequest(payload) {
             yield models_1.models.ChatMember.upsert({
                 contactId: theSender.id,
                 chatId: chat.id,
-                role: constants.chat_roles.reader,
-                status: constants.chat_statuses.pending,
+                role: constants_1.default.chat_roles.reader,
+                status: constants_1.default.chat_statuses.pending,
                 lastActive: date,
             });
         }
         catch (e) { }
         const msg = {
             chatId: chat.id,
-            type: constants.message_types.member_request,
+            type: constants_1.default.message_types.member_request,
             sender: (theSender && theSender.id) || 0,
             messageContent: '', remoteMessageContent: '',
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date
         };
         if (isTribe) {
@@ -278,11 +277,11 @@ function approveOrRejectMember(req, res) {
         if (!msgId || !contactId || !(status === 'approved' || status === 'rejected')) {
             return res_1.failure(res, 'incorrect status');
         }
-        let memberStatus = constants.chat_statuses.rejected;
-        let msgType = constants.message_types.member_reject;
+        let memberStatus = constants_1.default.chat_statuses.rejected;
+        let msgType = constants_1.default.message_types.member_reject;
         if (status === 'approved') {
-            memberStatus = constants.chat_statuses.approved;
-            msgType = constants.message_types.member_approve;
+            memberStatus = constants_1.default.chat_statuses.approved;
+            msgType = constants_1.default.message_types.member_approve;
             const contactIds = JSON.parse(chat.contactIds || '[]');
             if (!contactIds.includes(contactId))
                 contactIds.push(contactId);
@@ -318,15 +317,15 @@ function receiveMemberApprove(payload) {
         const { owner, chat, chat_name, sender } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return console.log('no chat');
-        yield chat.update({ status: constants.chat_statuses.approved });
+        yield chat.update({ status: constants_1.default.chat_statuses.approved });
         let date = new Date();
         date.setMilliseconds(0);
         const msg = {
             chatId: chat.id,
-            type: constants.message_types.member_approve,
+            type: constants_1.default.message_types.member_approve,
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date
         };
         const message = yield models_1.models.Message.create(msg);
@@ -350,7 +349,7 @@ function receiveMemberApprove(payload) {
             amount,
             sender: owner,
             message: {},
-            type: constants.message_types.group_join,
+            type: constants_1.default.message_types.group_join,
         });
         hub_1.sendNotification(chat, chat_name, 'group');
     });
@@ -362,16 +361,16 @@ function receiveMemberReject(payload) {
         const { chat, sender, chat_name } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return console.log('no chat');
-        yield chat.update({ status: constants.chat_statuses.rejected });
+        yield chat.update({ status: constants_1.default.chat_statuses.rejected });
         // dang.. nothing really to do here?
         let date = new Date();
         date.setMilliseconds(0);
         const msg = {
             chatId: chat.id,
-            type: constants.message_types.member_reject,
+            type: constants_1.default.message_types.member_reject,
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date
         };
         const message = yield models_1.models.Message.create(msg);
@@ -398,10 +397,10 @@ function receiveTribeDelete(payload) {
         date.setMilliseconds(0);
         const msg = {
             chatId: chat.id,
-            type: constants.message_types.tribe_delete,
+            type: constants_1.default.message_types.tribe_delete,
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
-            status: constants.statuses.confirmed,
+            status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date
         };
         const message = yield models_1.models.Message.create(msg);
@@ -432,7 +431,7 @@ function replayChatHistory(chat, contact) {
             asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
                 if (!network.typesToReplay.includes(m.type))
                     return; // only for message for now
-                const sender = Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants.chat_roles.reader });
+                const sender = Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants_1.default.chat_roles.reader });
                 let content = '';
                 try {
                     content = JSON.parse(m.remoteMessageContent);
@@ -444,7 +443,7 @@ function replayChatHistory(chat, contact) {
                 const dateString = mdate.toISOString();
                 let mediaKeyMap;
                 let newMediaTerms;
-                if (m.type === constants.message_types.attachment) {
+                if (m.type === constants_1.default.message_types.attachment) {
                     if (m.mediaKey && m.mediaToken) {
                         const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
                         if (muid) {
@@ -494,7 +493,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             updatedAt: date,
             photoUrl: img || '',
             name: name,
-            type: constants.chat_types.tribe,
+            type: constants_1.default.chat_types.tribe,
             groupKey: keys.public,
             groupPrivateKey: keys.private,
             host: tribes.getHost(),
@@ -514,7 +513,7 @@ function addPendingContactIdsToChat(achat) {
     return __awaiter(this, void 0, void 0, function* () {
         const members = yield models_1.models.ChatMember.findAll({ where: {
                 chatId: achat.id,
-                status: constants.chat_statuses.pending // only pending
+                status: constants_1.default.chat_statuses.pending // only pending
             } });
         if (!members)
             return achat;

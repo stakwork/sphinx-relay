@@ -1,4 +1,3 @@
-import * as path from 'path'
 import * as network from '../network'
 import { models } from '../models'
 import * as short from 'short-uuid'
@@ -6,13 +5,12 @@ import * as rsa from '../crypto/rsa'
 import * as jsonUtils from '../utils/json'
 import * as socket from '../utils/socket'
 import { success, failure } from '../utils/res'
+import constants from '../constants'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
-
-const constants = require(path.join(__dirname, '../../config/constants.json'))
 
 export interface Action {
     action: string
@@ -114,12 +112,11 @@ export async function finalAction(a:Action, bot_id:string){
         if (!(pubkey && pubkey.length === 66 && amount)) {
             throw 'wrong params'
         }
-        const MIN_SATS = 3
         const destkey = pubkey
         const opts = {
             dest: destkey,
             data: {},
-            amt: Math.max((amount || 0), MIN_SATS)
+            amt: Math.max((amount || 0), constants.min_sat_amount)
         }
         try {
             await network.signAndSend(opts)
@@ -132,7 +129,7 @@ export async function finalAction(a:Action, bot_id:string){
         console.log('=> BOT BROADCAST')
         if (!content) throw 'no content'
         if (!theChat) throw 'no chat'
-        if (!theChat.type === constants.chat_types.tribe) throw 'not a tribe'
+        if (theChat.type !== constants.chat_types.tribe) throw 'not a tribe'
 
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
         const encryptedText = rsa.encrypt(theChat.groupKey, content)

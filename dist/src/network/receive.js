@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
 const lndService = require("../grpc");
 const lightning_1 = require("../utils/lightning");
 const controllers_1 = require("../controllers");
@@ -24,13 +23,14 @@ const sequelize_1 = require("sequelize");
 const timers = require("../utils/timers");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
+const constants_1 = require("../constants");
+const jsonUtils = require("../utils/json");
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
 in receiveDeleteMessage check the deleter is og sender?
 */
-const constants = require(path.join(__dirname, '../../config/constants.json'));
-const msgtypes = constants.message_types;
+const msgtypes = constants_1.default.message_types;
 exports.typesToForward = [
     msgtypes.message, msgtypes.group_join, msgtypes.group_leave,
     msgtypes.attachment, msgtypes.delete,
@@ -48,13 +48,13 @@ exports.typesToReplay = [
     msgtypes.bot_res,
 ];
 const botTypes = [
-    constants.message_types.bot_install,
-    constants.message_types.bot_cmd,
-    constants.message_types.bot_res,
+    constants_1.default.message_types.bot_install,
+    constants_1.default.message_types.bot_cmd,
+    constants_1.default.message_types.bot_res,
 ];
 const botMakerTypes = [
-    constants.message_types.bot_install,
-    constants.message_types.bot_cmd,
+    constants_1.default.message_types.bot_install,
+    constants_1.default.message_types.bot_cmd,
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -77,7 +77,7 @@ function onReceive(payload) {
         let isTribeOwner = false;
         let chat;
         if (payload.chat && payload.chat.uuid) {
-            isTribe = payload.chat.type === constants.chat_types.tribe;
+            isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             if (chat)
                 chat.update({ seen: false });
@@ -118,7 +118,7 @@ function onReceive(payload) {
                     doAction = false;
                 if (chat.private) { // check if has been approved
                     const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
-                    if (!(senderMember && senderMember.status === constants.chat_statuses.approved)) {
+                    if (!(senderMember && senderMember.status === constants_1.default.chat_statuses.approved)) {
                         doAction = false; // dont let if private and not approved
                     }
                 }
@@ -210,7 +210,7 @@ function forwardMessageToTribe(ogpayload, sender) {
         // ASK xref TABLE and put alias there too?
         send_1.sendMessage({
             type, message,
-            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants.chat_roles.reader }),
+            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants_1.default.chat_roles.reader }),
             chat: chat,
             skipPubKey: payload.sender.pub_key,
             success: () => { },
@@ -245,6 +245,17 @@ function initTribesSubscriptions() {
     });
 }
 exports.initTribesSubscriptions = initTribesSubscriptions;
+function parsePayload(data) {
+    const li = data.lastIndexOf('}');
+    const msg = data.substring(0, li + 1);
+    try {
+        const payload = JSON.parse(msg);
+        return payload || '';
+    }
+    catch (e) {
+        throw e;
+    }
+}
 // VERIFY PUBKEY OF SENDER from sig
 function parseAndVerifyPayload(data) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -277,18 +288,57 @@ function parseAndVerifyPayload(data) {
         }
     });
 }
+function saveAnonymousKeysend(response, memo) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let settleDate = parseInt(response['settle_date'] + '000');
+        const amount = response['amt_paid_sat'] || 0;
+        const msg = yield models_1.models.Message.create({
+            chatId: 0,
+            type: constants_1.default.message_types.keysend,
+            sender: 0,
+            amount,
+            amountMsat: response['amt_paid_msat'],
+            paymentHash: '',
+            date: new Date(settleDate),
+            messageContent: memo,
+            status: constants_1.default.statuses.confirmed,
+            createdAt: new Date(settleDate),
+            updatedAt: new Date(settleDate)
+        });
+        socket.sendJson({
+            type: 'keysend',
+            response: jsonUtils.messageToJson(msg, null)
+        });
+    });
+}
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
-        if (!data || (data && data.startsWith('{}'))) {
-            socket.sendJson({
-                type: 'keysend',
-                response: { amount: value || 0 }
-            });
+        // "keysend" type is NOT encrypted
+        // and should be saved even if there is NO content
+        let isAnonymous = false;
+        let memo = '';
+        if (data) {
+            try {
+                const payload = parsePayload(data);
+                if (payload.type === constants_1.default.message_types.keysend) {
+                    isAnonymous = true;
+                    memo = payload.message.content;
+                }
+            }
+            catch (e) {
+                isAnonymous = true;
+            }
+        }
+        else {
+            isAnonymous = true;
+        }
+        if (isAnonymous) {
             hub_1.sendNotification(-1, '', 'keysend', value || 0);
+            saveAnonymousKeysend(i, memo);
             return;
         }
         let payload;

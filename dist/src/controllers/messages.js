@@ -19,10 +19,9 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const timers = require("../utils/timers");
 const confirmations_1 = require("./confirmations");
-const path = require("path");
 const network = require("../network");
 const short = require("short-uuid");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
@@ -41,14 +40,14 @@ exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     let confirmedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
         status: { [sequelize_1.Op.or]: [
-                constants.statuses.received,
+                constants_1.default.statuses.received,
             ] },
         sender: owner.id
     };
     let deletedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
         status: { [sequelize_1.Op.or]: [
-                constants.statuses.deleted
+                constants_1.default.statuses.deleted
             ] },
     };
     // if (chatId) {
@@ -88,11 +87,11 @@ exports.getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, functio
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
-    const messages = yield models_1.models.Message.findAll({ order: [['chat_id', 'asc']], limit, offset });
+    const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit, offset });
     console.log('=> got msgs', (messages && messages.length));
     const chatIds = [];
     messages.forEach((m) => {
-        if (!chatIds.includes(m.chatId)) {
+        if (m.chatId && !chatIds.includes(m.chatId)) {
             chatIds.push(m.chatId);
         }
     });
@@ -110,7 +109,7 @@ function deleteMessage(req, res) {
         const id = parseInt(req.params.id);
         const message = yield models_1.models.Message.findOne({ where: { id } });
         const uuid = message.uuid;
-        yield message.update({ status: constants.statuses.deleted });
+        yield message.update({ status: constants_1.default.statuses.deleted });
         const chat_id = message.chatId;
         let chat;
         if (chat_id) {
@@ -119,7 +118,7 @@ function deleteMessage(req, res) {
         res_1.success(res, jsonUtils.messageToJson(message, chat));
         if (!chat)
             return;
-        const isTribe = chat.type === constants.chat_types.tribe;
+        const isTribe = chat.type === constants_1.default.chat_types.tribe;
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
         if (isTribeOwner) {
@@ -128,7 +127,7 @@ function deleteMessage(req, res) {
         network.sendMessage({
             chat: chat,
             sender: owner,
-            type: constants.message_types.delete,
+            type: constants_1.default.message_types.delete,
             message: { id, uuid },
         });
     });
@@ -153,13 +152,13 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const msg = {
         chatId: chat.id,
         uuid: short.generate(),
-        type: constants.message_types.message,
+        type: constants_1.default.message_types.message,
         sender: owner.id,
         amount: amount || 0,
         date: date,
         messageContent: text,
         remoteMessageContent,
-        status: constants.statuses.pending,
+        status: constants_1.default.statuses.pending,
         createdAt: date,
         updatedAt: date,
     };
@@ -179,7 +178,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         chat: chat,
         sender: owner,
         amount: amount || 0,
-        type: constants.message_types.message,
+        type: constants_1.default.message_types.message,
         message: msgToSend,
     });
 });
@@ -198,16 +197,16 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
-        type: constants.message_types.message,
+        type: constants_1.default.message_types.message,
         asciiEncodedTotal: total_spent,
         sender: sender.id,
         date: date,
         messageContent: text,
         createdAt: date,
         updatedAt: date,
-        status: constants.statuses.received
+        status: constants_1.default.statuses.received
     };
-    const isTribe = chat_type === constants.chat_types.tribe;
+    const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
         if (remote_content)
@@ -231,7 +230,7 @@ exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, fu
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
-    const isTribe = chat_type === constants.chat_types.tribe;
+    const isTribe = chat_type === constants_1.default.chat_types.tribe;
     // in tribe this is already validated on admin's node
     let where = { uuid: msg_uuid };
     if (!isTribe) {
@@ -240,7 +239,7 @@ exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, fu
     const message = yield models_1.models.Message.findOne({ where });
     if (!message)
         return;
-    yield message.update({ status: constants.statuses.deleted });
+    yield message.update({ status: constants_1.default.statuses.deleted });
     socket.sendJson({
         type: 'delete',
         response: jsonUtils.messageToJson(message, chat, sender)

@@ -6,12 +6,10 @@ import * as network from '../network'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
 import * as md5 from 'md5'
-import * as path from 'path'
 import * as tribes from '../utils/tribes'
 import * as timers from '../utils/timers'
 import {replayChatHistory,createTribeChatParams,addPendingContactIdsToChat} from './chatTribes'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 export async function updateChat(req, res){
 	console.log('=> updateChat')
@@ -150,7 +148,7 @@ export async function createGroupChat(req, res) {
 	} = req.body
 	const contact_ids = req.body.contact_ids||[]
 
-	const members: { [k: string]: {[k:string]:string} } = {} //{pubkey:{key,alias}, ...}
+	const members: { [k: string]: {[k:string]:(string|number)} } = {} //{pubkey:{key,alias}, ...}
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
 	members[owner.publicKey] = {

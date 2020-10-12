@@ -8,10 +8,8 @@ import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
 import * as rsa from '../crypto/rsa'
 import * as moment from 'moment'
-import * as path from 'path'
 import * as network from '../network'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 // store all current running jobs in memory
 let jobs = {}

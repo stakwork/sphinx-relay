@@ -27,9 +27,9 @@ const path = require("path");
 const network = require("../network");
 const meme = require("../utils/meme");
 const short = require("short-uuid");
+const constants_1 = require("../constants");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
-const constants = require(path.join(__dirname, '../../config/constants.json'));
 /*
 
 TODO line 233: parse that from token itself, dont use getMediaInfo at all
@@ -85,8 +85,8 @@ exports.sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, 
         chatId: chat.id,
         uuid: uuid,
         sender: owner.id,
-        type: constants.message_types.attachment,
-        status: constants.statuses.pending,
+        type: constants_1.default.message_types.attachment,
+        status: constants_1.default.statuses.pending,
         amount: amount || 0,
         messageContent: text || file_name || '',
         remoteMessageContent,
@@ -120,7 +120,7 @@ exports.sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, 
     network.sendMessage({
         chat: chat,
         sender: owner,
-        type: constants.message_types.attachment,
+        type: constants_1.default.message_types.attachment,
         amount: amount || 0,
         message: msg,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -170,7 +170,7 @@ exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         chatId: chat.id,
         uuid: short.generate(),
         sender: owner.id,
-        type: constants.message_types.purchase,
+        type: constants_1.default.message_types.purchase,
         amount: amount || 0,
         mediaToken: media_token,
         date: date,
@@ -184,7 +184,7 @@ exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
         sender: owner,
-        type: constants.message_types.purchase,
+        type: constants_1.default.message_types.purchase,
         message: msg,
         amount: amount,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -207,7 +207,7 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
         chatId: chat.id,
         uuid: msg_uuid,
         sender: sender.id,
-        type: constants.message_types.purchase,
+        type: constants_1.default.message_types.purchase,
         amount: amount || 0,
         mediaToken: mediaToken,
         date: date,
@@ -218,7 +218,7 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
         type: 'purchase',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    const isTribe = chat_type === constants.chat_types.tribe;
+    const isTribe = chat_type === constants_1.default.chat_types.tribe;
     // if sats forwarded from tribe owner, for the >1 time
     // dont need to send back token, because admin already has it
     if (isTribe && skip_payment_processing) {
@@ -262,14 +262,14 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
             sender: owner,
             amount: amount,
-            type: constants.message_types.purchase_deny,
+            type: constants_1.default.message_types.purchase_deny,
             message: { amount, content: 'Payment Denied', mediaToken },
             success: (data) => __awaiter(void 0, void 0, void 0, function* () {
                 console.log('purchase_deny sent');
                 const denyMsg = yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
-                    type: constants.message_types.purchase_deny,
+                    type: constants_1.default.message_types.purchase_deny,
                     mediaToken: mediaToken,
                     date: date, createdAt: date, updatedAt: date
                 });
@@ -296,14 +296,14 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
         sender: owner,
-        type: constants.message_types.purchase_accept,
+        type: constants_1.default.message_types.purchase_accept,
         message: msgToSend,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('purchase_accept sent!');
             const acceptMsg = yield models_1.models.Message.create({
                 chatId: chat.id,
                 sender: owner.id,
-                type: constants.message_types.purchase_accept,
+                type: constants_1.default.message_types.purchase_accept,
                 mediaToken: theMediaToken,
                 date: date, createdAt: date, updatedAt: date
             });
@@ -341,8 +341,8 @@ exports.receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, f
     const msg = yield models_1.models.Message.create({
         chatId: chat.id,
         sender: sender.id,
-        type: constants.message_types.purchase_accept,
-        status: constants.statuses.received,
+        type: constants_1.default.message_types.purchase_accept,
+        status: constants_1.default.statuses.received,
         mediaToken,
         mediaKey,
         mediaType,
@@ -367,8 +367,8 @@ exports.receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, fun
     const msg = yield models_1.models.Message.create({
         chatId: chat.id,
         sender: sender.id,
-        type: constants.message_types.purchase_deny,
-        status: constants.statuses.received,
+        type: constants_1.default.message_types.purchase_deny,
+        status: constants_1.default.statuses.received,
         messageContent: 'Purchase has been denied and sats returned to you',
         amount: amount,
         amountMsat: parseFloat(amount) * 1000,
@@ -393,7 +393,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
-        type: constants.message_types.attachment,
+        type: constants_1.default.message_types.attachment,
         sender: sender.id,
         date: date,
         createdAt: date,
@@ -409,7 +409,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
         msg.mediaType = mediaType;
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
-    const isTribe = chat_type === constants.chat_types.tribe;
+    const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
     }

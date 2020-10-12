@@ -8,11 +8,9 @@ import * as helpers from '../helpers'
 import { success } from '../utils/res'
 import * as timers from '../utils/timers'
 import {sendConfirmation} from './confirmations'
-import * as path from 'path'
 import * as network from '../network'
 import * as short from 'short-uuid'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 export const getMessages = async (req, res) => {
 	const dateToReturn = req.query.date;
@@ -93,11 +91,11 @@ export const getAllMessages = async (req, res) => {
 	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 	console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
 
-	const messages = await models.Message.findAll({ order: [['chat_id', 'asc']], limit, offset })
+	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset })
 	console.log('=> got msgs',(messages&&messages.length))
 	const chatIds:number[] = []
 	messages.forEach((m) => {
-		if(!chatIds.includes(m.chatId)) {
+		if(m.chatId && !chatIds.includes(m.chatId)) {
 			chatIds.push(m.chatId)
 		}
 	})

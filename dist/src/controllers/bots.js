@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
 const tribes = require("../utils/tribes");
 const crypto = require("crypto");
 const models_1 = require("../models");
@@ -20,7 +19,7 @@ const api_1 = require("./api");
 const socket = require("../utils/socket");
 const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bots = yield models_1.models.Bot.findAll();
@@ -88,10 +87,10 @@ function installBotAsTribeAdmin(chat, bot_json) {
             return console.log('=> only tribe owner can install bots');
         const { uuid, owner_pubkey, unique_name, price_per_use } = bot_json;
         const isLocal = owner_pubkey === owner.publicKey;
-        let botType = constants.bot_types.remote;
+        let botType = constants_1.default.bot_types.remote;
         if (isLocal) {
             console.log('=> install local bot now!');
-            botType = constants.bot_types.local;
+            botType = constants_1.default.bot_types.local;
         }
         const chatBot = {
             chatId,
@@ -109,13 +108,13 @@ function installBotAsTribeAdmin(chat, bot_json) {
             if (myBot) {
                 yield models_1.models.ChatBot.create(chatBot);
                 postToBotServer({
-                    type: constants.message_types.bot_install,
+                    type: constants_1.default.message_types.bot_install,
                     bot_uuid: myBot.uuid,
                     message: { content: '', amount: 0 },
                     sender: {
                         pub_key: owner.publicKey,
                         alias: owner.alias,
-                        role: constants.chat_roles.owner
+                        role: constants_1.default.chat_roles.owner
                     },
                     chat: { uuid: chat_uuid }
                 }, myBot, SphinxBot.MSG_TYPE.INSTALL);
@@ -137,7 +136,7 @@ function installBotAsTribeAdmin(chat, bot_json) {
 exports.installBotAsTribeAdmin = installBotAsTribeAdmin;
 function keysendBotInstall(b, chat_uuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid);
+        return yield botKeysend(constants_1.default.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid);
     });
 }
 exports.keysendBotInstall = keysendBotInstall;
@@ -145,7 +144,7 @@ function keysendBotCmd(msg, b) {
     return __awaiter(this, void 0, void 0, function* () {
         const amount = msg.message.amount || 0;
         const amt = Math.max(amount, b.pricePerUse);
-        return yield botKeysend(constants.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, msg.message.content, (msg.sender && msg.sender.role));
+        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, msg.message.content, (msg.sender && msg.sender.role));
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
@@ -153,8 +152,7 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, cont
     return __awaiter(this, void 0, void 0, function* () {
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const dest = botmaker_pubkey;
-        const MIN_SATS = 3;
-        const amt = Math.max(amount || MIN_SATS);
+        const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
             amt,
             dest,
@@ -166,7 +164,7 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, cont
                 sender: {
                     pub_key: owner.publicKey,
                     alias: owner.alias,
-                    role: sender_role || constants.chat_roles.reader
+                    role: sender_role || constants_1.default.chat_roles.reader
                 }
             }
         };
@@ -286,7 +284,7 @@ function buildBotPayload(msg) {
             roles: []
         }
     };
-    if (msg.sender.role === constants.chat_roles.owner) {
+    if (msg.sender.role === constants_1.default.chat_roles.owner) {
         if (m.member)
             m.member.roles = [{
                     name: 'Admin'
@@ -342,12 +340,12 @@ function receiveBotRes(payload) {
             const msg = {
                 chatId: chat.id,
                 uuid: msg_uuid,
-                type: constants.message_types.bot_res,
+                type: constants_1.default.message_types.bot_res,
                 sender: (sender && sender.id) || 0,
                 amount: amount || 0,
                 date: date,
                 messageContent: content,
-                status: constants.statuses.confirmed,
+                status: constants_1.default.statuses.confirmed,
                 createdAt: date,
                 updatedAt: date,
                 senderAlias: sender_alias || 'Bot',

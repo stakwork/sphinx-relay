@@ -1,8 +1,6 @@
 import { models } from '../models'
 import * as network from '../network'
-import * as path from 'path'
-
-const constants = require(path.join(__dirname,'../../config/constants.json'))
+import constants from '../constants'
 
 const timerz={}
 function clearTimer(t){

@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
 const node_fetch_1 = require("node-fetch");
 const ldat_1 = require("../utils/ldat");
 const rsa = require("../crypto/rsa");
@@ -20,8 +19,8 @@ const models_1 = require("../models");
 const RNCryptor = require("jscryptor");
 const send_1 = require("./send");
 // import { Op } from 'sequelize'
-const constants = require(path.join(__dirname, '../../config/constants.json'));
-const msgtypes = constants.message_types;
+const constants_1 = require("../constants");
+const msgtypes = constants_1.default.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         if (payload.type !== msgtypes.attachment)
@@ -69,7 +68,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
                 sender: owner,
-                type: constants.message_types.purchase_accept,
+                type: constants_1.default.message_types.purchase_accept,
                 message: msg,
                 success: () => { },
                 failure: () => { }
@@ -78,7 +77,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
                 sender: owner,
-                type: constants.message_types.purchase,
+                type: constants_1.default.message_types.purchase,
                 amount: amount,
                 message: {
                     mediaToken: mt,
@@ -96,8 +95,8 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             const msg = { mediaToken: mt, purchaser: purchaser.id };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
-                sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }), { role: constants.chat_roles.reader }),
-                type: constants.message_types.purchase,
+                sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }), { role: constants_1.default.chat_roles.reader }),
+                type: constants_1.default.message_types.purchase,
                 message: msg,
                 amount: amount,
                 success: () => { },
@@ -139,7 +138,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         // send it to the purchaser
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         send_1.sendMessage({
-            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }), { role: constants.chat_roles.reader }),
+            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }), { role: constants_1.default.chat_roles.reader }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaser.id] }),
             type: msgtypes.purchase_accept,
             message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ, originalMuid: muid }),

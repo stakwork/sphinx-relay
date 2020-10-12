@@ -12,9 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const builtin_1 = require("../builtin");
 const bots_1 = require("../controllers/bots");
-const path = require("path");
 const SphinxBot = require("sphinx-bot");
-const constants = require(path.join(__dirname, '../../config/constants.json'));
+const constants_1 = require("../constants");
 /*
 default show or not
 restrictions (be able to toggle, or dont show chat)
@@ -24,7 +23,7 @@ function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
         const txt = msg.message && msg.message.content;
         const msgType = msg.type;
-        if (msgType === constants.message_types.bot_res) {
+        if (msgType === constants_1.default.message_types.bot_res) {
             return false; // bot res msg type not for processing
         }
         const uuid = msg.chat && msg.chat.uuid;
@@ -56,8 +55,8 @@ function isBotMsg(msg, sentByMe) {
                 try {
                     const msgTypes = JSON.parse(botInTribe.msgTypes);
                     if (msgTypes.includes(msgType)) {
-                        const isMsgAndHasText = msgType === constants.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `);
-                        const isNotMsg = msgType !== constants.message_types.message;
+                        const isMsgAndHasText = msgType === constants_1.default.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `);
+                        const isNotMsg = msgType !== constants_1.default.message_types.message;
                         if (isMsgAndHasText || isNotMsg) {
                             didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
                         }
@@ -80,17 +79,17 @@ function emitMessageToBot(msg, botInTribe) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
         switch (botInTribe.botType) {
-            case constants.bot_types.builtin:
+            case constants_1.default.bot_types.builtin:
                 builtin_1.builtinBotEmit(msg);
                 return true;
-            case constants.bot_types.local:
+            case constants_1.default.bot_types.local:
                 const bot = yield models_1.models.Bot.findOne({
                     where: {
                         uuid: botInTribe.botUuid
                     }
                 });
                 return bots_1.postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
-            case constants.bot_types.remote:
+            case constants_1.default.bot_types.remote:
                 return bots_1.keysendBotCmd(msg, botInTribe);
             default:
                 return false;

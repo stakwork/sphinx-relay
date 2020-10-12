@@ -15,21 +15,26 @@ const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
-const lightning = require("../utils/lightning");
 const ldat_1 = require("../utils/ldat");
-const constants = require("../../config/constants.json");
 const network = require("../network");
 const short = require("short-uuid");
+const constants_1 = require("../constants");
+const sequelize_1 = require("sequelize");
 exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (destination_key && !contact_id && !chat_id) {
+        const msg = {
+            type: constants_1.default.message_types.keysend,
+        };
+        if (text)
+            msg.message = { content: text };
         return helpers.performKeysendMessage({
             sender: owner,
             destination_key,
             amount,
-            msg: {},
+            msg,
             success: () => {
                 console.log('payment sent!');
                 res_1.success(res, { destination_key, amount });
@@ -52,7 +57,7 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         chatId: chat.id,
         uuid: short.generate(),
         sender: owner.id,
-        type: constants.message_types.direct_payment,
+        type: constants_1.default.message_types.direct_payment,
         amount: amount,
         amountMsat: parseFloat(amount) * 1000,
         date: date,
@@ -99,7 +104,7 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     network.sendMessage({
         chat: theChat,
         sender: owner,
-        type: constants.message_types.direct_payment,
+        type: constants_1.default.message_types.direct_payment,
         message: msgToSend,
         amount: amount,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -107,7 +112,7 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             res_1.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            yield message.update({ status: constants.statuses.failed });
+            yield message.update({ status: constants_1.default.statuses.failed });
             res.status(200);
             res.json({
                 success: false,
@@ -128,7 +133,7 @@ exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
-        type: constants.message_types.direct_payment,
+        type: constants_1.default.message_types.direct_payment,
         sender: sender.id,
         amount: amount,
         amountMsat: parseFloat(amount) * 1000,
@@ -142,7 +147,7 @@ exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function
         msg.mediaType = mediaType;
     if (mediaToken)
         msg.mediaToken = mediaToken;
-    if (chat_type === constants.chat_types.tribe) {
+    if (chat_type === constants_1.default.chat_types.tribe) {
         msg.senderAlias = sender_alias;
     }
     if (reply_uuid)
@@ -158,44 +163,27 @@ exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function
 exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
-    const payments = [];
-    const MIN_VAL = 3;
-    const invs = yield lightning.listAllInvoices();
-    if (invs && invs.length) {
-        invs.forEach(inv => {
-            const val = inv.value && parseInt(inv.value);
-            if (val && val > MIN_VAL) {
-                let payment_hash = '';
-                if (inv.r_hash) {
-                    payment_hash = Buffer.from(inv.r_hash).toString('hex');
+    const MIN_VAL = constants_1.default.min_sat_amount;
+    try {
+        const msgs = yield models_1.models.Message.findAll({
+            where: {
+                type: { [sequelize_1.Op.or]: [
+                        constants_1.default.message_types.payment,
+                        constants_1.default.message_types.direct_payment
+                    ] },
+                amount: {
+                    [sequelize_1.Op.gt]: MIN_VAL // greater than
                 }
-                payments.push({
-                    type: 'invoice',
-                    amount: parseInt(inv.value),
-                    date: parseInt(inv.creation_date),
-                    payment_request: inv.payment_request,
-                    payment_hash
-                });
-            }
+            },
+            order: [['createdAt', 'desc']],
+            limit,
+            offset
         });
+        const ret = msgs || [];
+        res_1.success(res, ret.map(message => jsonUtils.messageToJson(message, null)));
     }
-    const pays = yield lightning.listAllPayments();
-    if (pays && pays.length) {
-        pays.forEach(pay => {
-            const val = pay.value && parseInt(pay.value);
-            if (val && val > MIN_VAL) {
-                payments.push({
-                    type: 'payment',
-                    amount: parseInt(pay.value),
-                    date: parseInt(pay.creation_date),
-                    // pubkey:pay.path[pay.path.length-1],
-                    payment_hash: pay.payment_hash,
-                });
-            }
-        });
+    catch (e) {
+        res_1.failure(res, 'cant find payments');
     }
-    // latest one first
-    payments.sort((a, b) => b.date - a.date);
-    res_1.success(res, payments.splice(offset, limit));
 });
 //# sourceMappingURL=payment.js.map

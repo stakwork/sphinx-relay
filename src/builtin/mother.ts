@@ -7,10 +7,11 @@ import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
 import { models } from '../models'
 import fetch from 'node-fetch'
+import constants from '../constants'
+
 const msg_types = Sphinx.MSG_TYPE
 
 const env = process.env.NODE_ENV || 'development'
-const constants = require(path.join(__dirname, '../../config/constants.json'))
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
 const builtinBots = [

@@ -3,12 +3,12 @@ import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
-import { success } from '../utils/res'
-import * as lightning from '../utils/lightning'
+import { failure, success } from '../utils/res'
 import {tokenFromTerms} from '../utils/ldat'
-import * as constants from '../../config/constants.json'
 import * as network from '../network'
 import * as short from 'short-uuid'
+import constants from '../constants'
+import { Op } from 'sequelize' 
 
 export const sendPayment = async (req, res) => {
   const {
@@ -31,11 +31,15 @@ export const sendPayment = async (req, res) => {
   const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
   if (destination_key && !contact_id && !chat_id) {
+    const msg:{[k:string]:any} = {
+      type:constants.message_types.keysend,
+    }
+    if(text) msg.message = {content:text}
     return helpers.performKeysendMessage({
       sender:owner,
       destination_key,
       amount,
-      msg:{},
+      msg,
       success: () => {
         console.log('payment sent!')
         success(res, {destination_key, amount})
@@ -171,49 +175,26 @@ export const listPayments = async (req, res) => {
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
   
-  const payments: any[] = []
-
-  const MIN_VAL=3
-
-  const invs:any = await lightning.listAllInvoices()
-  if(invs && invs.length){
-    invs.forEach(inv=>{
-      const val = inv.value && parseInt(inv.value)
-      if(val && val>MIN_VAL) {
-        let payment_hash=''
-        if(inv.r_hash){
-          payment_hash = Buffer.from(inv.r_hash).toString('hex')
+  const MIN_VAL=constants.min_sat_amount
+  try {
+    const msgs = await models.Message.findAll({
+      where:{
+        type: {[Op.or]: [
+          constants.message_types.payment,
+          constants.message_types.direct_payment
+        ]},
+        amount: {
+          [Op.gt]: MIN_VAL // greater than
         }
-        payments.push({
-          type:'invoice',
-          amount:parseInt(inv.value), 
-          date:parseInt(inv.creation_date),
-          payment_request:inv.payment_request,
-          payment_hash
-        })
-      }
+      },
+      order: [['createdAt', 'desc']],
+      limit,
+      offset
     })
+    const ret = msgs||[]
+    success(res, ret.map(message=> jsonUtils.messageToJson(message, null)))
+  } catch(e) {
+    failure(res, 'cant find payments')
   }
-
-  const pays:any = await lightning.listAllPayments()
-  if(pays && pays.length){
-    pays.forEach(pay=>{
-      const val = pay.value && parseInt(pay.value)
-      if(val && val>MIN_VAL) {
-        payments.push({
-          type:'payment',
-          amount:parseInt(pay.value),
-          date:parseInt(pay.creation_date),
-          // pubkey:pay.path[pay.path.length-1],
-          payment_hash: pay.payment_hash,
-        })
-      }
-    })
-  }
-
-  // latest one first
-  payments.sort((a,b)=> b.date - a.date)
-
-  success(res, payments.splice(offset, limit))
 };
 
