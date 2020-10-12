@@ -303,7 +303,10 @@ export async function parseKeysendInvoice(i){
 	if(isAnonymous) {
 		socket.sendJson({
 			type:'keysend',
-			response: {amount:value||0}
+			response: {
+				amount:value||0,
+				message_content:memo
+			}
 		})
 		sendNotification(-1, '', 'keysend', value||0)
 		saveAnonymousKeysend(i, memo)
