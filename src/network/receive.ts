@@ -301,7 +301,6 @@ export async function parseKeysendInvoice(i){
 		isAnonymous = true
 	}
 	if(isAnonymous) {
-		console.log("SETND SOCKET NOW!",memo)
 		socket.sendJson({
 			type:'keysend',
 			response: {
