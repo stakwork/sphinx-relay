@@ -18,10 +18,11 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
   if (msgType === constants.message_types.bot_res) {
     return false // bot res msg type not for processing
   }
+  const uuid = msg.chat && msg.chat.uuid
+  if(!uuid) return false
+  
   const chat = await models.Chat.findOne({
-    where: {
-      uuid: msg.chat.uuid
-    }
+    where: {uuid}
   })
   if (!chat) return false
 

@@ -15,6 +15,7 @@ const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const network = require("../network");
 const constants_1 = require("../constants");
+const res_1 = require("../utils/res");
 function sendConfirmation({ chat, sender, msg_id }) {
     if (!msg_id)
         return;
@@ -144,4 +145,59 @@ function receiveHeartbeat(payload) {
     });
 }
 exports.receiveHeartbeat = receiveHeartbeat;
+let heartbeats = {};
+function healthcheck(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const pubkey = req.query.pubkey;
+        if (!(pubkey && pubkey.length === 66)) {
+            return res_1.failure(res, 'missing pubkey');
+        }
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const amt = 10;
+        const opts = {
+            amt,
+            dest: pubkey,
+            data: {
+                type: constants_1.default.message_types.heartbeat,
+                message: {
+                    amount: amt,
+                },
+                sender: { pub_key: owner.publicKey }
+            }
+        };
+        try {
+            yield network.signAndSend(opts);
+        }
+        catch (e) {
+            res_1.failure(res, e);
+            return;
+        }
+        let i = 0;
+        let interval = setInterval(() => {
+            if (i >= 15) {
+                clearInterval(interval);
+                delete heartbeats[pubkey];
+                res_1.failure(res, 'no confimration received');
+                return;
+            }
+            if (heartbeats[pubkey]) {
+                res_1.success(res, 'success');
+                clearInterval(interval);
+                delete heartbeats[pubkey];
+                return;
+            }
+            i++;
+        }, 1000);
+    });
+}
+exports.healthcheck = healthcheck;
+function receiveHeartbeatConfirmation(payload) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> received heartbeat confirmation');
+        const dat = payload.content || payload;
+        const sender_pub_key = dat.sender.pub_key;
+        heartbeats[sender_pub_key] = true;
+    });
+}
+exports.receiveHeartbeatConfirmation = receiveHeartbeatConfirmation;
 //# sourceMappingURL=confirmations.js.map

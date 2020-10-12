@@ -268,9 +268,10 @@ function postToBotServer(msg, bot, route) {
 }
 exports.postToBotServer = postToBotServer;
 function buildBotPayload(msg) {
+    const chat_uuid = msg.chat && msg.chat.uuid;
     const m = {
         channel: {
-            id: msg.chat.uuid,
+            id: chat_uuid,
             send: function () { },
         },
         reply: function () { },

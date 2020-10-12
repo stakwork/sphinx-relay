@@ -97,7 +97,7 @@ function publish(topic, msg, cb) {
         });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield node_fetch_1.default('https://' + host + '/tribes', {
@@ -113,6 +113,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     unlisted: unlisted || false,
                     private: is_private || false,
                     app_url: app_url || '',
+                    feed_url: feed_url || ''
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -125,7 +126,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, deleted }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, deleted }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
@@ -143,6 +144,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     private: is_private || false,
                     deleted: deleted || false,
                     app_url: app_url || '',
+                    feed_url: feed_url || ''
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });

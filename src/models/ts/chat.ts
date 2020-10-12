@@ -89,4 +89,7 @@ export default class Chat extends Model<Chat> {
   @Column
   appUrl: string
 
+  @Column
+  feedUrl: string
+
 }

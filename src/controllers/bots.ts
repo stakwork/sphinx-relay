@@ -258,9 +258,10 @@ export async function postToBotServer(msg, bot, route:string): Promise<boolean> 
 }
 
 export function buildBotPayload(msg:Msg): SphinxBot.Message {
+  const chat_uuid = msg.chat&&msg.chat.uuid
   const m = <SphinxBot.Message>{
       channel:{
-          id: msg.chat.uuid,
+          id: chat_uuid,
           send:function(){},
       },
       reply:function(){},
