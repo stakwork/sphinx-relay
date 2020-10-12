@@ -276,18 +276,18 @@ function parseAndVerifyPayload(data) {
         }
     });
 }
-function saveAnonymousKeysend(response) {
+function saveAnonymousKeysend(response, memo) {
     return __awaiter(this, void 0, void 0, function* () {
         let settleDate = parseInt(response['settle_date'] + '000');
         yield models_1.models.Message.create({
             chatId: 0,
-            type: constants_1.default.message_types.direct_payment,
+            type: constants_1.default.message_types.keysend,
             sender: 0,
             amount: response['amt_paid_sat'],
             amountMsat: response['amt_paid_msat'],
             paymentHash: '',
             date: new Date(settleDate),
-            messageContent: response['memo'],
+            messageContent: memo,
             status: constants_1.default.statuses.confirmed,
             createdAt: new Date(settleDate),
             updatedAt: new Date(settleDate)
@@ -300,13 +300,30 @@ function parseKeysendInvoice(i) {
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
-        if (!data || (data && data.startsWith('{}'))) {
+        let isAnonymous = false;
+        let memo = '';
+        if (data) {
+            try {
+                const payload = JSON.parse(data);
+                if (payload.type === constants_1.default.message_types.keysend) {
+                    isAnonymous = true;
+                    memo = payload.message.content;
+                }
+            }
+            catch (e) {
+                isAnonymous = true;
+            }
+        }
+        else {
+            isAnonymous = true;
+        }
+        if (isAnonymous) {
             socket.sendJson({
                 type: 'keysend',
                 response: { amount: value || 0 }
             });
             hub_1.sendNotification(-1, '', 'keysend', value || 0);
-            saveAnonymousKeysend(i);
+            saveAnonymousKeysend(i, memo);
             return;
         }
         let payload;

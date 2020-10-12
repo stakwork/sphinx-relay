@@ -54,7 +54,8 @@ const constants = {
     "bot_cmd": 24,
     "bot_res": 25,
     "heartbeat": 26,
-    "heartbeat_confirmation": 27
+    "heartbeat_confirmation": 27,
+    "keysend": 28, // no e2e
   },
   payment_errors: {
     "timeout": "Timed Out",

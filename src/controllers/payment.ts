@@ -31,11 +31,15 @@ export const sendPayment = async (req, res) => {
   const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
   if (destination_key && !contact_id && !chat_id) {
+    const msg:{[k:string]:any} = {
+      type:constants.message_types.keysend,
+    }
+    if(text) msg.message = {content:text}
     return helpers.performKeysendMessage({
       sender:owner,
       destination_key,
       amount,
-      msg:{},
+      msg,
       success: () => {
         console.log('payment sent!')
         success(res, {destination_key, amount})

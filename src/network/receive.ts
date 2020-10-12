@@ -249,17 +249,17 @@ async function parseAndVerifyPayload(data){
 	}
 }
 
-async function saveAnonymousKeysend(response) {
+async function saveAnonymousKeysend(response, memo) {
 	let settleDate = parseInt(response['settle_date'] + '000');
 	await models.Message.create({
 		chatId: 0,
-		type: constants.message_types.direct_payment,
+		type: constants.message_types.keysend,
 		sender: 0,
 		amount: response['amt_paid_sat'],
 		amountMsat: response['amt_paid_msat'],
 		paymentHash: '',
 		date: new Date(settleDate),
-		messageContent: response['memo'],
+		messageContent: memo,
 		status: constants.statuses.confirmed,
 		createdAt: new Date(settleDate),
 		updatedAt: new Date(settleDate)
@@ -271,13 +271,29 @@ export async function parseKeysendInvoice(i){
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
 	const data = buf && buf.toString()
 	const value = i && i.value && parseInt(i.value)
-	if(!data || (data&&data.startsWith('{}'))) {
+	
+	let isAnonymous = false
+	let memo = ''
+	if(data){
+		try {
+			const payload = JSON.parse(data)
+			if(payload.type===constants.message_types.keysend) {
+				isAnonymous = true
+				memo = payload.message.content
+			}
+		} catch(e) {
+			isAnonymous = true
+		}
+	} else {
+		isAnonymous = true
+	}
+	if(isAnonymous) {
 		socket.sendJson({
 			type:'keysend',
 			response: {amount:value||0}
 		})
 		sendNotification(-1, '', 'keysend', value||0)
-		saveAnonymousKeysend(i)
+		saveAnonymousKeysend(i, memo)
 		return
 	}
 

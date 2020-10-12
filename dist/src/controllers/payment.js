@@ -25,11 +25,16 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     console.log('[send payment]', req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (destination_key && !contact_id && !chat_id) {
+        const msg = {
+            type: constants_1.default.message_types.keysend,
+        };
+        if (text)
+            msg.message = { content: text };
         return helpers.performKeysendMessage({
             sender: owner,
             destination_key,
             amount,
-            msg: {},
+            msg,
             success: () => {
                 console.log('payment sent!');
                 res_1.success(res, { destination_key, amount });
