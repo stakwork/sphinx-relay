@@ -249,7 +249,7 @@ function parsePayload(data) {
     const msg = data.substring(0, li + 1);
     try {
         const payload = JSON.parse(msg);
-        return payload;
+        return payload || '';
     }
     catch (e) {
         throw e;
@@ -311,14 +311,14 @@ function parseKeysendInvoice(i) {
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
+        // "keysend" type is NOT encrypted
+        // and should be saved even if there is NO content
         let isAnonymous = false;
         let memo = '';
         if (data) {
-            console.log("HEY GOT A KEYSENEEDDDDD!!!!!", data);
             try {
                 const payload = parsePayload(data);
                 if (payload.type === constants_1.default.message_types.keysend) {
-                    console.log("HEY ISSSS A    TPY 28", payload);
                     isAnonymous = true;
                     memo = payload.message.content;
                 }
