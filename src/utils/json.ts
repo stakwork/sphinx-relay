@@ -25,6 +25,8 @@ function messageToJson(msg, chat, contact?) {
   }
   return toSnake({
     ...message,
+    amount:message.amount?parseInt(message.amount):0,
+    amountMsat:message.amountMsat?parseInt(message.amountMsat):0,
     statusMap,
     chat: chat ? chatToJson(chat) : null,
     contact: contact ? contactToJson(contact) : null

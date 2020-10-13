@@ -272,7 +272,7 @@ async function saveAnonymousKeysend(response, memo) {
 		amountMsat: response['amt_paid_msat'],
 		paymentHash: '',
 		date: new Date(settleDate),
-		messageContent: memo,
+		messageContent: memo||'',
 		status: constants.statuses.confirmed,
 		createdAt: new Date(settleDate),
 		updatedAt: new Date(settleDate)
@@ -298,7 +298,7 @@ export async function parseKeysendInvoice(i){
 			const payload = parsePayload(data)
 			if(payload && payload.type===constants.message_types.keysend) {
 				isAnonymous = true
-				memo = payload.message.content
+				memo = payload.message && payload.message.content
 			}
 		} catch(e) {} // err could be a threaded TLV
 	} else {

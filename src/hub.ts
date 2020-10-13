@@ -248,7 +248,11 @@ async function finalNotification(ownerID: number, params:{[k:string]:any}){
   if(params.notification.message) {
     console.log('[send notification]', params.notification)
   }
-  let unseenMessages = await models.Message.count({ where: { sender: { [Op.ne]: ownerID }, seen: false } })
+  let unseenMessages = await models.Message.count({ where: { 
+    sender: { [Op.ne]: ownerID },
+    seen: false,
+    chatId: { [Op.ne]: 0 } // no anon keysends
+  } })
   params.notification.badge = unseenMessages
   triggerNotification(params)
 }
