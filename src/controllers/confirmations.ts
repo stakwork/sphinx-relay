@@ -4,7 +4,7 @@ import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as network from '../network'
 import constants from '../constants'
-import { failure, success } from '../utils/res'
+import { success, failure200 } from '../utils/res'
 
 export function sendConfirmation({ chat, sender, msg_id }) {
 	if (!msg_id) return
@@ -112,7 +112,7 @@ export async function receiveHeartbeat(payload) {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
-	const amount = Math.round(receivedAmount/2)
+	const amount = Math.round(receivedAmount / 2)
 	const amt = Math.max(amount || constants.min_sat_amount)
 	const opts = {
 		amt,
@@ -131,11 +131,11 @@ export async function receiveHeartbeat(payload) {
 	}
 }
 
-let heartbeats:{[k:string]:boolean} = {}
+let heartbeats: { [k: string]: boolean } = {}
 export async function healthcheck(req, res) {
-	const pubkey:string = req.query.pubkey
-	if (!(pubkey&&pubkey.length===66)) {
-		return failure(res, 'missing pubkey')
+	const pubkey: string = req.query.pubkey
+	if (!(pubkey && pubkey.length === 66)) {
+		return failure200(res, 'missing pubkey')
 	}
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
@@ -155,34 +155,34 @@ export async function healthcheck(req, res) {
 	try {
 		await network.signAndSend(opts)
 	} catch (e) {
-		failure(res, e)
-    return
-  }
-  
-  let i = 0 
-  let interval = setInterval(()=>{
-    if(i>=15) {
-      clearInterval(interval)
-      delete heartbeats[pubkey]
-      failure(res, 'no confimration received')
-      return
-    }
-    if(heartbeats[pubkey]) {
-      success(res, 'success')
-      clearInterval(interval)
-      delete heartbeats[pubkey]
-      return
-    }
-    i ++
-  }, 1000)
+		failure200(res, e)
+		return
+	}
+
+	let i = 0
+	let interval = setInterval(() => {
+		if (i >= 15) {
+			clearInterval(interval)
+			delete heartbeats[pubkey]
+			failure200(res, 'no confimration received')
+			return
+		}
+		if (heartbeats[pubkey]) {
+			success(res, 'success')
+			clearInterval(interval)
+			delete heartbeats[pubkey]
+			return
+		}
+		i++
+	}, 1000)
 
 }
 
 export async function receiveHeartbeatConfirmation(payload) {
-  console.log('=> received heartbeat confirmation')
+	console.log('=> received heartbeat confirmation')
 
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
 
-  heartbeats[sender_pub_key] = true
+	heartbeats[sender_pub_key] = true
 }
