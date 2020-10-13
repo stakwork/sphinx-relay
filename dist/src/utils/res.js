@@ -18,4 +18,13 @@ function failure(res, e) {
     res.end();
 }
 exports.failure = failure;
+function failure200(res, e) {
+    res.status(200);
+    res.json({
+        success: false,
+        error: (e && e.message) || e,
+    });
+    res.end();
+}
+exports.failure200 = failure200;
 //# sourceMappingURL=res.js.map

@@ -150,7 +150,7 @@ function healthcheck(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const pubkey = req.query.pubkey;
         if (!(pubkey && pubkey.length === 66)) {
-            return res_1.failure(res, 'missing pubkey');
+            return res_1.failure200(res, 'missing pubkey');
         }
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const amt = 10;
@@ -169,7 +169,7 @@ function healthcheck(req, res) {
             yield network.signAndSend(opts);
         }
         catch (e) {
-            res_1.failure(res, e);
+            res_1.failure200(res, e);
             return;
         }
         let i = 0;
@@ -177,7 +177,7 @@ function healthcheck(req, res) {
             if (i >= 15) {
                 clearInterval(interval);
                 delete heartbeats[pubkey];
-                res_1.failure(res, 'no confimration received');
+                res_1.failure200(res, 'no confimration received');
                 return;
             }
             if (heartbeats[pubkey]) {

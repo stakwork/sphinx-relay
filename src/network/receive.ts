@@ -296,18 +296,18 @@ export async function parseKeysendInvoice(i){
 	if(data){
 		try {
 			const payload = parsePayload(data)
-			if(payload.type===constants.message_types.keysend) {
+			if(payload && payload.type===constants.message_types.keysend) {
 				isAnonymous = true
 				memo = payload.message.content
 			}
-		} catch(e) {
-			isAnonymous = true
-		}
+		} catch(e) {} // err could be a threaded TLV
 	} else {
 		isAnonymous = true
 	}
 	if(isAnonymous) {
-		sendNotification(-1, '', 'keysend', value||0)
+		if(!memo) {
+			sendNotification(-1, '', 'keysend', value||0)
+		}
 		saveAnonymousKeysend(i, memo)
 		return
 	}

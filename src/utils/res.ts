@@ -16,4 +16,13 @@ function failure(res, e) {
   res.end();
 }
 
-export {success, failure}
+function failure200(res, e) {
+  res.status(200);
+  res.json({
+    success: false,
+    error: (e&&e.message) || e,
+  });
+  res.end();
+}
+
+export {success, failure, failure200}
