@@ -324,20 +324,20 @@ function parseKeysendInvoice(i) {
         if (data) {
             try {
                 const payload = parsePayload(data);
-                if (payload.type === constants_1.default.message_types.keysend) {
+                if (payload && payload.type === constants_1.default.message_types.keysend) {
                     isAnonymous = true;
                     memo = payload.message.content;
                 }
             }
-            catch (e) {
-                isAnonymous = true;
-            }
+            catch (e) { } // err could be a threaded TLV
         }
         else {
             isAnonymous = true;
         }
         if (isAnonymous) {
-            hub_1.sendNotification(-1, '', 'keysend', value || 0);
+            if (!memo) {
+                hub_1.sendNotification(-1, '', 'keysend', value || 0);
+            }
             saveAnonymousKeysend(i, memo);
             return;
         }
