@@ -191,7 +191,8 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
             where: {
                 type: { [sequelize_1.Op.or]: [
                         constants_1.default.message_types.payment,
-                        constants_1.default.message_types.direct_payment
+                        constants_1.default.message_types.direct_payment,
+                        constants_1.default.message_types.keysend,
                     ] },
                 amount: {
                     [sequelize_1.Op.gt]: MIN_VAL // greater than

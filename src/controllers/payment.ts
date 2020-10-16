@@ -204,7 +204,8 @@ export const listPayments = async (req, res) => {
       where:{
         type: {[Op.or]: [
           constants.message_types.payment,
-          constants.message_types.direct_payment
+          constants.message_types.direct_payment,
+          constants.message_types.keysend,
         ]},
         amount: {
           [Op.gt]: MIN_VAL // greater than
