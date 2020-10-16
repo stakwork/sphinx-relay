@@ -28,29 +28,12 @@ export const sendPayment = async (req, res) => {
 
   console.log('[send payment]', req.body)
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true }})
-
   if (destination_key && !contact_id && !chat_id) {
-    const msg:{[k:string]:any} = {
-      type:constants.message_types.keysend,
-    }
-    if(text) msg.message = {content:text}
-    return helpers.performKeysendMessage({
-      sender:owner,
-      destination_key,
-      amount,
-      msg,
-      success: () => {
-        console.log('payment sent!')
-        success(res, {destination_key, amount})
-      },
-      failure: (error) => {
-        res.status(200);
-        res.json({ success: false, error });
-        res.end();
-      }
-    })
+    anonymousKeysend(res, destination_key, amount||'', text||'')
+    return
   }
+
+  const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
   const chat = await helpers.findOrCreateChat({
     chat_id,
@@ -129,6 +112,46 @@ export const sendPayment = async (req, res) => {
   })
 };
 
+async function anonymousKeysend(res, destination_key:string, amount:number, text:string){
+  const owner = await models.Contact.findOne({ where: { isOwner: true }})
+
+  const msg:{[k:string]:any} = {
+    type:constants.message_types.keysend,
+  }
+  if(text) msg.message = {content:text}
+
+  return helpers.performKeysendMessage({
+    sender:owner,
+    destination_key,
+    amount,
+    msg,
+    success: () => {
+      console.log('payment sent!')
+      var date = new Date();
+      date.setMilliseconds(0)
+      models.Message.create({
+        chatId: 0,
+        type: constants.message_types.keysend,
+        sender: 1,
+        amount,
+        amountMsat: amount*1000,
+        paymentHash: '',
+        date,
+        messageContent: text||'',
+        status: constants.statuses.confirmed,
+        createdAt: date,
+        updatedAt: date
+      })
+      success(res, {destination_key, amount})
+    },
+    failure: (error) => {
+      res.status(200);
+      res.json({ success: false, error });
+      res.end();
+    }
+  })
+}
+
 export const receivePayment = async (payload) => {
   console.log('received payment', { payload })
 
@@ -181,7 +204,8 @@ export const listPayments = async (req, res) => {
       where:{
         type: {[Op.or]: [
           constants.message_types.payment,
-          constants.message_types.direct_payment
+          constants.message_types.direct_payment,
+          constants.message_types.keysend,
         ]},
         amount: {
           [Op.gt]: MIN_VAL // greater than

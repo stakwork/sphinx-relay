@@ -42,10 +42,8 @@ exports.payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.log('[pay invoice data]', response);
         const message = yield models_1.models.Message.findOne({ where: { payment_request } });
         if (!message) { // invoice still paid
-            return res_1.success(res, {
-                success: true,
-                response: { payment_request }
-            });
+            anonymousInvoice(res, payment_request);
+            return;
         }
         message.status = constants_1.default.statuses.confirmed;
         message.save();
@@ -73,6 +71,30 @@ exports.payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }));
     call.write({ payment_request });
 });
+function anonymousInvoice(res, payment_request) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(payment_request);
+        var date = new Date();
+        date.setMilliseconds(0);
+        models_1.models.Message.create({
+            chatId: 0,
+            type: constants_1.default.message_types.payment,
+            sender: 1,
+            amount: sat,
+            amountMsat: msat,
+            paymentHash: paymentHash,
+            date: new Date(invoiceDate),
+            messageContent: memo,
+            status: constants_1.default.statuses.confirmed,
+            createdAt: date,
+            updatedAt: date
+        });
+        return res_1.success(res, {
+            success: true,
+            response: { payment_request }
+        });
+    });
+}
 exports.cancelInvoice = (req, res) => {
     res.status(200);
     res.json({ success: false });
