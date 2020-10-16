@@ -36,10 +36,8 @@ export const payInvoice = async (req, res) => {
 
     const message = await models.Message.findOne({ where: { payment_request } })
     if (!message) { // invoice still paid
-      return success(res, {
-        success: true,
-        response: { payment_request }
-      })
+      anonymousInvoice(res, payment_request)
+      return
     }
 
     message.status = constants.statuses.confirmed;
@@ -72,6 +70,30 @@ export const payInvoice = async (req, res) => {
 
   call.write({ payment_request })
 };
+
+
+async function anonymousInvoice(res, payment_request:string){
+  const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(payment_request)
+  var date = new Date();
+  date.setMilliseconds(0)
+  models.Message.create({
+    chatId: 0,
+    type: constants.message_types.payment,
+    sender: 1,
+    amount: sat,
+    amountMsat: msat,
+    paymentHash: paymentHash,
+    date: new Date(invoiceDate),
+    messageContent: memo,
+    status: constants.statuses.confirmed,
+    createdAt: date,
+    updatedAt: date
+  })
+  return success(res, {
+    success: true,
+    response: { payment_request }
+  })
+}
 
 export const cancelInvoice = (req, res) => {
   res.status(200);
