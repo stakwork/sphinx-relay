@@ -113,6 +113,21 @@ const getRoute = (pub_key, amt, callback) => __awaiter(void 0, void 0, void 0, f
     lightning.queryRoutes({ pub_key, amt }, (err, response) => callback(err, response));
 });
 exports.getRoute = getRoute;
+const queryRoute = (pub_key, amt) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise(function (resolve, reject) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let lightning = yield loadLightning();
+            lightning.queryRoutes({ pub_key, amt }, (err, response) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(response);
+            });
+        });
+    });
+});
+exports.queryRoute = queryRoute;
 const keysend = (opts) => {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {

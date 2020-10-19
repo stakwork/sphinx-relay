@@ -92,6 +92,7 @@ function set(app) {
         app.get('/getinfo', details.getInfo);
         app.get('/logs', details.getLogsSince);
         app.get('/info', details.getNodeInfo);
+        app.get('/route', details.checkRoute);
         app.post('/action', actions.processAction);
         app.get('/bots', bots.getBots);
         app.post('/bot', bots.createBot);

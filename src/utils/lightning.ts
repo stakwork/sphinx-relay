@@ -103,6 +103,22 @@ const getRoute = async (pub_key, amt, callback) => {
   )
 }
 
+const queryRoute = async (pub_key, amt) => {
+  return new Promise(async function(resolve, reject) { 
+    let lightning = await loadLightning()
+    lightning.queryRoutes(
+      { pub_key, amt },
+      (err, response) => {
+        if(err) {
+          reject(err)
+          return
+        }
+        resolve(response)
+      }
+    )
+  })
+}
+
 const keysend = (opts) => {
   return new Promise(async function(resolve, reject) {
     let lightning = await loadLightning()
@@ -406,4 +422,5 @@ export {
   getInfo,
   listAllInvoices,
   listAllPaymentsFull,
+  queryRoute,
 }
