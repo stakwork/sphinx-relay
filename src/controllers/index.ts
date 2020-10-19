@@ -18,8 +18,6 @@ import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
 
-import { queryRoute } from '../utils/lightning'
-
 const env = process.env.NODE_ENV || 'development';
 console.log("=> env:",env)
 
@@ -122,10 +120,6 @@ export async function set(app) {
 			res.status(200).send(last.createdAt)
 		}
 	})
-
-	const pubkey = '03a9a8d953fe747d0dd94dd3c567ddc58451101e987e2d2bf7a4d1e10a2c89ff38'
-	const r = await queryRoute(pubkey, constants.min_sat_amount)
-	console.log(JSON.stringify(r))
 
 }
 

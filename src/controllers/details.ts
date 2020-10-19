@@ -8,13 +8,16 @@ import constants from '../constants'
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
-
-export const checkRoute = (req, res) => {
+export const checkRoute = async (req, res) => {
 	const {pubkey, amount} = req.params
 	if(!(pubkey && pubkey.length===66)) return failure(res, 'wrong pubkey')
 
-	const r = queryRoute(pubkey, amount||constants.min_sat_amount)
-	console.log(JSON.stringify(r))
+	try {
+		const r = await queryRoute(pubkey, amount||constants.min_sat_amount)
+		success(res, r)
+	} catch(e) {
+		failure(res, e)
+	}
 };
 
 const defaultLogFiles = [
