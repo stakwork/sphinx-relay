@@ -124,7 +124,7 @@ export async function set(app) {
 	})
 
 	const pubkey = '03a9a8d953fe747d0dd94dd3c567ddc58451101e987e2d2bf7a4d1e10a2c89ff38'
-	const r = queryRoute(pubkey, constants.min_sat_amount)
+	const r = await queryRoute(pubkey, constants.min_sat_amount)
 	console.log(JSON.stringify(r))
 
 }
