@@ -13,7 +13,7 @@ export const checkRoute = async (req, res) => {
 	if(!(pubkey && pubkey.length===66)) return failure(res, 'wrong pubkey')
 
 	try {
-		const r = await queryRoute(pubkey, amount||constants.min_sat_amount)
+		const r = await queryRoute(pubkey, parseInt(amount)||constants.min_sat_amount)
 		success(res, r)
 	} catch(e) {
 		failure(res, e)
