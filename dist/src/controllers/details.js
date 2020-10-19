@@ -18,7 +18,7 @@ const constants_1 = require("../constants");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 exports.checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { pubkey, amount } = req.params;
+    const { pubkey, amount } = req.query;
     if (!(pubkey && pubkey.length === 66))
         return res_1.failure(res, 'wrong pubkey');
     try {

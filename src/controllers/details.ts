@@ -9,7 +9,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
 export const checkRoute = async (req, res) => {
-	const {pubkey, amount} = req.params
+	const {pubkey, amount} = req.query
 	if(!(pubkey && pubkey.length===66)) return failure(res, 'wrong pubkey')
 
 	try {
