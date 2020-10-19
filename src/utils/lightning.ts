@@ -106,11 +106,16 @@ const getRoute = async (pub_key, amt, callback) => {
 const queryRoute = async (pub_key, amt) => {
   return new Promise(async function(resolve, reject) { 
     let lightning = await loadLightning()
+    console.log("QUERY ROUTES",pub_key)
     lightning.queryRoutes(
       { pub_key, amt },
       (err, response) => {
-        if(err) reject(err)
-        else resolve(response)
+        if(err) {
+          reject(err)
+          return
+        }
+        console.log("QUERY ROUTES RES",response)
+        resolve(response)
       }
     )
   })
