@@ -14,8 +14,16 @@ const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
 const nodeinfo_1 = require("../utils/nodeinfo");
 const path = require("path");
+const constants_1 = require("../constants");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
+exports.checkRoute = (req, res) => {
+    const { pubkey, amount } = req.params;
+    if (!(pubkey && pubkey.length === 66))
+        return res_1.failure(res, 'wrong pubkey');
+    const r = lightning_1.queryRoute(pubkey, amount || constants_1.default.min_sat_amount);
+    console.log(JSON.stringify(r));
+};
 const defaultLogFiles = [
     '/var/log/supervisor/relay.log',
     '/home/lnd/.pm2/logs/app-error.log',
