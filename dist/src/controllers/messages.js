@@ -257,13 +257,18 @@ exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
     });
     const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
-    yield chat.update({ seen: true });
-    res_1.success(res, {});
-    hub_1.sendNotification(chat, '', 'badge');
-    socket.sendJson({
-        type: 'chat_seen',
-        response: jsonUtils.chatToJson(chat)
-    });
+    if (chat) {
+        yield chat.update({ seen: true });
+        res_1.success(res, {});
+        hub_1.sendNotification(chat, '', 'badge');
+        socket.sendJson({
+            type: 'chat_seen',
+            response: jsonUtils.chatToJson(chat)
+        });
+    }
+    else {
+        res_1.failure(res, 'no chat');
+    }
 });
 exports.clearMessages = (req, res) => {
     models_1.models.Message.destroy({ where: {}, truncate: true });

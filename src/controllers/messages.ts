@@ -5,7 +5,7 @@ import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
-import { success } from '../utils/res'
+import { failure, success } from '../utils/res'
 import * as timers from '../utils/timers'
 import {sendConfirmation} from './confirmations'
 import * as network from '../network'
@@ -288,15 +288,17 @@ export const readMessages = async (req, res) => {
 		}
 	});
 	const chat = await models.Chat.findOne({ where: { id: chat_id } })
-	await chat.update({ seen: true });
-
-	success(res, {})
-
-	sendNotification(chat, '', 'badge')
-	socket.sendJson({
-		type: 'chat_seen',
-		response: jsonUtils.chatToJson(chat)
-	})
+	if(chat) {
+		await chat.update({ seen: true });
+		success(res, {})
+		sendNotification(chat, '', 'badge')
+		socket.sendJson({
+			type: 'chat_seen',
+			response: jsonUtils.chatToJson(chat)
+		})
+	} else {
+		failure(res, 'no chat')
+	}
 }
 
 export const clearMessages = (req, res) => {
