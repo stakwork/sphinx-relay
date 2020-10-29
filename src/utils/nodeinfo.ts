@@ -1,5 +1,5 @@
 
-import {loadLightning} from '../utils/lightning'
+import {loadLightning, getInfo} from '../utils/lightning'
 import * as publicIp from 'public-ip'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 import {models} from '../models'
@@ -15,13 +15,32 @@ function nodeinfo(){
 
     const tag = await checkTag()
 
-    const lightning = loadLightning()
     const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
     const clean = await isClean()
 
     const latest_message = await latestMessage()
 
+    try {
+      await getInfo()
+    } catch(e) { // no LND
+      const node = {
+        node_alias: process.env.NODE_ALIAS,
+        ip: process.env.NODE_IP,
+        lnd_port: process.env.NODE_LND_PORT,
+        relay_commit: commitHash,
+        public_ip: public_ip,
+        pubkey: owner.publicKey,
+        relay_version: tag,
+        clean,
+        latest_message,
+        wallet_locked: true,
+      }
+      resolve(node)
+      return
+    }
+
+    const lightning = loadLightning()
     try {
       lightning.channelBalance({}, (err, channelBalance) => {
         if(err) console.log(err)
@@ -68,6 +87,7 @@ function nodeinfo(){
                   testnet: info.testnet,
                   clean,
                   latest_message,
+                  wallet_locked: false,
                 }
                 resolve(node)
               }

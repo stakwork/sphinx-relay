@@ -31,6 +31,7 @@ process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 var i = 0;
 // START SETUP!
 connectToLND();
+hub_1.pingHubInterval(15000);
 function connectToLND() {
     return __awaiter(this, void 0, void 0, function* () {
         i++;
@@ -57,7 +58,7 @@ function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setup_1.setupDatabase();
         if (config.hub_api_url) {
-            hub_1.pingHubInterval(15000);
+            // pingHubInterval(15000)
             hub_1.checkInvitesHubInterval(5000);
         }
         yield setupApp();

@@ -22,10 +22,29 @@ function nodeinfo() {
         catch (e) { }
         const commitHash = yield gitinfo_1.checkCommitHash();
         const tag = yield gitinfo_1.checkTag();
-        const lightning = lightning_1.loadLightning();
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const clean = yield isClean();
         const latest_message = yield latestMessage();
+        try {
+            yield lightning_1.getInfo();
+        }
+        catch (e) { // no LND
+            const node = {
+                node_alias: process.env.NODE_ALIAS,
+                ip: process.env.NODE_IP,
+                lnd_port: process.env.NODE_LND_PORT,
+                relay_commit: commitHash,
+                public_ip: public_ip,
+                pubkey: owner.publicKey,
+                relay_version: tag,
+                clean,
+                latest_message,
+                wallet_locked: true,
+            };
+            resolve(node);
+            return;
+        }
+        const lightning = lightning_1.loadLightning();
         try {
             lightning.channelBalance({}, (err, channelBalance) => {
                 if (err)
@@ -75,6 +94,7 @@ function nodeinfo() {
                                     testnet: info.testnet,
                                     clean,
                                     latest_message,
+                                    wallet_locked: false,
                                 };
                                 resolve(node);
                             }
