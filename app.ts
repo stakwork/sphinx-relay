@@ -23,7 +23,12 @@ process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 var i = 0
 
 // START SETUP!
-connectToLND()
+async function start(){
+	await setupDatabase()
+	connectToLND()
+	pingHubInterval(15000)
+}
+start()
 
 async function connectToLND(){
 	i++
@@ -45,9 +50,8 @@ async function connectToLND(){
 }
 
 async function mainSetup(){
-	await setupDatabase();
 	if (config.hub_api_url) {
-		pingHubInterval(15000)
+		// pingHubInterval(15000)
 		checkInvitesHubInterval(5000)
 	}
 	await setupApp()

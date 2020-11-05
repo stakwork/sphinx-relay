@@ -1,11 +1,31 @@
 
-import {loadLightning} from '../utils/lightning'
+import {loadLightning, getInfo} from '../utils/lightning'
 import * as publicIp from 'public-ip'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 import {models} from '../models'
 
 function nodeinfo(){
   return new Promise(async (resolve, reject)=>{
+
+    let owner
+    try {
+      owner = await models.Contact.findOne({ where: { isOwner: true }})
+    } catch(e){
+      return // just skip in SQLITE not open yet
+    }
+    if(!owner) return
+
+    try {
+      await getInfo()
+    } catch(e) { // no LND
+      const node = {
+        pubkey: owner.publicKey,
+        wallet_locked: true,
+      }
+      resolve(node)
+      return
+    }
+
     let public_ip = ""
     try {
       public_ip = await publicIp.v4()
@@ -15,13 +35,11 @@ function nodeinfo(){
 
     const tag = await checkTag()
 
-    const lightning = loadLightning()
-    const owner = await models.Contact.findOne({ where: { isOwner: true }})
-
     const clean = await isClean()
 
     const latest_message = await latestMessage()
 
+    const lightning = loadLightning()
     try {
       lightning.channelBalance({}, (err, channelBalance) => {
         if(err) console.log(err)
@@ -68,6 +86,7 @@ function nodeinfo(){
                   testnet: info.testnet,
                   clean,
                   latest_message,
+                  wallet_locked: false,
                 }
                 resolve(node)
               }
