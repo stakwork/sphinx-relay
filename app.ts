@@ -23,12 +23,14 @@ process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 var i = 0
 
 // START SETUP!
-connectToLND()
-pingHubInterval(15000)
+async function start(){
+	await setupDatabase()
+	connectToLND()
+	pingHubInterval(15000)
+}
+start()
 
 async function connectToLND(){
-	await setupDatabase()
-	
 	i++
 	console.log(`=> [lnd] connecting... attempt #${i}`)
 	try {

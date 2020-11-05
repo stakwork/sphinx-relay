@@ -30,11 +30,16 @@ const port = process.env.PORT || 3001; // config.node_http_port || 3001
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 var i = 0;
 // START SETUP!
-connectToLND();
-hub_1.pingHubInterval(15000);
-function connectToLND() {
+function start() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setup_1.setupDatabase();
+        connectToLND();
+        hub_1.pingHubInterval(15000);
+    });
+}
+start();
+function connectToLND() {
+    return __awaiter(this, void 0, void 0, function* () {
         i++;
         console.log(`=> [lnd] connecting... attempt #${i}`);
         try {
