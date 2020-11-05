@@ -7,19 +7,14 @@ import {models} from '../models'
 function nodeinfo(){
   return new Promise(async (resolve, reject)=>{
 
-    const commitHash = await checkCommitHash()
-
-    const tag = await checkTag()
+    console.log("=> GET NODE INFO")
 
     try {
       await getInfo()
+      console.log("=> GET LND INFO")
     } catch(e) { // no LND
+      console.log("=> FAUILED, PING NOW")
       const node = {
-        node_alias: process.env.NODE_ALIAS,
-        ip: process.env.NODE_IP,
-        lnd_port: process.env.NODE_LND_PORT,
-        relay_commit: commitHash,
-        relay_version: tag,
         wallet_locked: true,
       }
       resolve(node)
@@ -30,6 +25,10 @@ function nodeinfo(){
     try {
       public_ip = await publicIp.v4()
     } catch(e){}
+
+    const commitHash = await checkCommitHash()
+
+    const tag = await checkTag()
 
     const owner = await models.Contact.findOne({ where: { isOwner: true }})
 

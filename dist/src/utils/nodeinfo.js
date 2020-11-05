@@ -15,18 +15,14 @@ const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        const commitHash = yield gitinfo_1.checkCommitHash();
-        const tag = yield gitinfo_1.checkTag();
+        console.log("=> GET NODE INFO");
         try {
             yield lightning_1.getInfo();
+            console.log("=> GET LND INFO");
         }
         catch (e) { // no LND
+            console.log("=> FAUILED, PING NOW");
             const node = {
-                node_alias: process.env.NODE_ALIAS,
-                ip: process.env.NODE_IP,
-                lnd_port: process.env.NODE_LND_PORT,
-                relay_commit: commitHash,
-                relay_version: tag,
                 wallet_locked: true,
             };
             resolve(node);
@@ -37,6 +33,8 @@ function nodeinfo() {
             public_ip = yield publicIp.v4();
         }
         catch (e) { }
+        const commitHash = yield gitinfo_1.checkCommitHash();
+        const tag = yield gitinfo_1.checkTag();
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const clean = yield isClean();
         const latest_message = yield latestMessage();
