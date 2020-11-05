@@ -15,7 +15,6 @@ const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        console.log("=> GET NODE INFO");
         let owner;
         try {
             owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -27,10 +26,8 @@ function nodeinfo() {
             return;
         try {
             yield lightning_1.getInfo();
-            console.log("=> GET LND INFO", owner.publicKey);
         }
         catch (e) { // no LND
-            console.log("=> FAUILED, PING NOW");
             const node = {
                 pubkey: owner.publicKey,
                 wallet_locked: true,

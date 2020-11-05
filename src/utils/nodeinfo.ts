@@ -7,7 +7,6 @@ import {models} from '../models'
 function nodeinfo(){
   return new Promise(async (resolve, reject)=>{
 
-    console.log("=> GET NODE INFO")
     let owner
     try {
       owner = await models.Contact.findOne({ where: { isOwner: true }})
@@ -18,9 +17,7 @@ function nodeinfo(){
 
     try {
       await getInfo()
-      console.log("=> GET LND INFO",owner.publicKey)
     } catch(e) { // no LND
-      console.log("=> FAUILED, PING NOW")
       const node = {
         pubkey: owner.publicKey,
         wallet_locked: true,
