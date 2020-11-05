@@ -16,13 +16,23 @@ const models_1 = require("../models");
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         console.log("=> GET NODE INFO");
+        let owner;
+        try {
+            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        }
+        catch (e) {
+            return; // just skip in SQLITE not open yet
+        }
+        if (!owner)
+            return;
         try {
             yield lightning_1.getInfo();
-            console.log("=> GET LND INFO");
+            console.log("=> GET LND INFO", owner.publicKey);
         }
         catch (e) { // no LND
             console.log("=> FAUILED, PING NOW");
             const node = {
+                pubkey: owner.publicKey,
                 wallet_locked: true,
             };
             resolve(node);
@@ -35,7 +45,6 @@ function nodeinfo() {
         catch (e) { }
         const commitHash = yield gitinfo_1.checkCommitHash();
         const tag = yield gitinfo_1.checkTag();
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const clean = yield isClean();
         const latest_message = yield latestMessage();
         const lightning = lightning_1.loadLightning();

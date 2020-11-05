@@ -8,13 +8,21 @@ function nodeinfo(){
   return new Promise(async (resolve, reject)=>{
 
     console.log("=> GET NODE INFO")
+    let owner
+    try {
+      owner = await models.Contact.findOne({ where: { isOwner: true }})
+    } catch(e){
+      return // just skip in SQLITE not open yet
+    }
+    if(!owner) return
 
     try {
       await getInfo()
-      console.log("=> GET LND INFO")
+      console.log("=> GET LND INFO",owner.publicKey)
     } catch(e) { // no LND
       console.log("=> FAUILED, PING NOW")
       const node = {
+        pubkey: owner.publicKey,
         wallet_locked: true,
       }
       resolve(node)
@@ -29,8 +37,6 @@ function nodeinfo(){
     const commitHash = await checkCommitHash()
 
     const tag = await checkTag()
-
-    const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
     const clean = await isClean()
 

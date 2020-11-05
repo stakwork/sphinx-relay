@@ -27,6 +27,8 @@ connectToLND()
 pingHubInterval(15000)
 
 async function connectToLND(){
+	await setupDatabase()
+	
 	i++
 	console.log(`=> [lnd] connecting... attempt #${i}`)
 	try {
@@ -46,7 +48,6 @@ async function connectToLND(){
 }
 
 async function mainSetup(){
-	await setupDatabase();
 	if (config.hub_api_url) {
 		// pingHubInterval(15000)
 		checkInvitesHubInterval(5000)

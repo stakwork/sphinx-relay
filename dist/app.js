@@ -34,6 +34,7 @@ connectToLND();
 hub_1.pingHubInterval(15000);
 function connectToLND() {
     return __awaiter(this, void 0, void 0, function* () {
+        yield setup_1.setupDatabase();
         i++;
         console.log(`=> [lnd] connecting... attempt #${i}`);
         try {
@@ -56,7 +57,6 @@ function connectToLND() {
 }
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield setup_1.setupDatabase();
         if (config.hub_api_url) {
             // pingHubInterval(15000)
             hub_1.checkInvitesHubInterval(5000);
