@@ -6,20 +6,10 @@ import {models} from '../models'
 
 function nodeinfo(){
   return new Promise(async (resolve, reject)=>{
-    let public_ip = ""
-    try {
-      public_ip = await publicIp.v4()
-    } catch(e){}
 
     const commitHash = await checkCommitHash()
 
     const tag = await checkTag()
-
-    const owner = await models.Contact.findOne({ where: { isOwner: true }})
-
-    const clean = await isClean()
-
-    const latest_message = await latestMessage()
 
     try {
       await getInfo()
@@ -29,16 +19,23 @@ function nodeinfo(){
         ip: process.env.NODE_IP,
         lnd_port: process.env.NODE_LND_PORT,
         relay_commit: commitHash,
-        public_ip: public_ip,
-        pubkey: owner.publicKey,
         relay_version: tag,
-        clean,
-        latest_message,
         wallet_locked: true,
       }
       resolve(node)
       return
     }
+
+    let public_ip = ""
+    try {
+      public_ip = await publicIp.v4()
+    } catch(e){}
+
+    const owner = await models.Contact.findOne({ where: { isOwner: true }})
+
+    const clean = await isClean()
+
+    const latest_message = await latestMessage()
 
     const lightning = loadLightning()
     try {

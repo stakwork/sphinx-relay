@@ -15,16 +15,8 @@ const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        let public_ip = "";
-        try {
-            public_ip = yield publicIp.v4();
-        }
-        catch (e) { }
         const commitHash = yield gitinfo_1.checkCommitHash();
         const tag = yield gitinfo_1.checkTag();
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const clean = yield isClean();
-        const latest_message = yield latestMessage();
         try {
             yield lightning_1.getInfo();
         }
@@ -34,16 +26,20 @@ function nodeinfo() {
                 ip: process.env.NODE_IP,
                 lnd_port: process.env.NODE_LND_PORT,
                 relay_commit: commitHash,
-                public_ip: public_ip,
-                pubkey: owner.publicKey,
                 relay_version: tag,
-                clean,
-                latest_message,
                 wallet_locked: true,
             };
             resolve(node);
             return;
         }
+        let public_ip = "";
+        try {
+            public_ip = yield publicIp.v4();
+        }
+        catch (e) { }
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const clean = yield isClean();
+        const latest_message = yield latestMessage();
         const lightning = lightning_1.loadLightning();
         try {
             lightning.channelBalance({}, (err, channelBalance) => {
