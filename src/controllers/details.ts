@@ -4,18 +4,19 @@ import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo';
 import * as path from 'path'
 import constants from '../constants'
+import { models } from '../models'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
 export const checkRoute = async (req, res) => {
-	const {pubkey, amount} = req.query
-	if(!(pubkey && pubkey.length===66)) return failure(res, 'wrong pubkey')
+	const { pubkey, amount } = req.query
+	if (!(pubkey && pubkey.length === 66)) return failure(res, 'wrong pubkey')
 
 	try {
-		const r = await queryRoute(pubkey, parseInt(amount)||constants.min_sat_amount)
+		const r = await queryRoute(pubkey, parseInt(amount) || constants.min_sat_amount)
 		success(res, r)
-	} catch(e) {
+	} catch (e) {
 		failure(res, e)
 	}
 };
@@ -75,7 +76,13 @@ export const getChannels = async (req, res) => {
 	});
 };
 
-export const getBalance = (req, res) => {
+export const getBalance = async (req, res) => {
+
+	var date = new Date()
+	date.setMilliseconds(0)
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	owner.update({ lastActive: date })
+
 	const lightning = loadLightning()
 	var request = {}
 	lightning.channelBalance(request, function (err, response) {

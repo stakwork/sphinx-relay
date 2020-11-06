@@ -15,6 +15,7 @@ const readLastLines = require("read-last-lines");
 const nodeinfo_1 = require("../utils/nodeinfo");
 const path = require("path");
 const constants_1 = require("../constants");
+const models_1 = require("../models");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 exports.checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -89,7 +90,11 @@ exports.getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.end();
     });
 });
-exports.getBalance = (req, res) => {
+exports.getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var date = new Date();
+    date.setMilliseconds(0);
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    owner.update({ lastActive: date });
     const lightning = lightning_1.loadLightning();
     var request = {};
     lightning.channelBalance(request, function (err, response) {
@@ -102,7 +107,7 @@ exports.getBalance = (req, res) => {
         }
         res.end();
     });
-};
+});
 exports.getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = lightning_1.loadLightning();
     lightning.listChannels({}, (err, channelList) => {

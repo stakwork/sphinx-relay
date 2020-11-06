@@ -24,6 +24,10 @@ function nodeinfo() {
         }
         if (!owner)
             return;
+        let lastActive = owner.lastActive;
+        if (!lastActive) {
+            lastActive = new Date();
+        }
         try {
             yield lightning_1.getInfo();
         }
@@ -31,6 +35,7 @@ function nodeinfo() {
             const node = {
                 pubkey: owner.publicKey,
                 wallet_locked: true,
+                last_active: lastActive
             };
             resolve(node);
             return;
@@ -94,6 +99,7 @@ function nodeinfo() {
                                     testnet: info.testnet,
                                     clean,
                                     latest_message,
+                                    last_active: lastActive,
                                     wallet_locked: false,
                                 };
                                 resolve(node);
