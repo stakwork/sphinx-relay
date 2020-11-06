@@ -25,11 +25,9 @@ function nodeinfo() {
         if (!owner)
             return;
         let lastActive = owner.lastActive;
-        console.log("FIRST LAST ACTIVE", lastActive);
         if (!lastActive) {
             lastActive = new Date();
         }
-        console.log("NEXT LAST ACTIVE", JSON.stringify({ l: lastActive }));
         try {
             yield lightning_1.getInfo();
         }
