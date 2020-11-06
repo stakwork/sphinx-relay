@@ -133,7 +133,11 @@ const config = require(path.join(__dirname, '../../config/app.json'))[env]
 async function doRequest(theurl: string, params?: Object) {
   const ps = params || {}
   try {
-    var macaroonString = fs.readFileSync(config.macaroon_location);
+    const macLocation=config.loop_macaroon_location
+    if(!macLocation) {
+      throw new Error('no macaroon')
+    }
+    var macaroonString = fs.readFileSync(macLocation);
     var mac = Buffer.from(macaroonString, 'utf8').toString('hex');
     const theParams = {
       agent,
