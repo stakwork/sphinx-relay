@@ -6,7 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import {checkTag, checkCommitHash} from '../utils/gitinfo'
 
-const USER_VERSION = 6
+const USER_VERSION = 7
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -31,6 +31,8 @@ async function setVersion(){
 }
 
 async function migrate(){
+
+  addTableColumn('sphinx_contacts', 'last_active', 'DATETIME')
   
   try{
     await sequelize.query(`

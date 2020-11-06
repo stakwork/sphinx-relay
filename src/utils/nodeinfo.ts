@@ -15,12 +15,22 @@ function nodeinfo(){
     }
     if(!owner) return
 
+    let lastActive = owner.lastActive
+    console.log("FIRST LAST ACTIVE",lastActive)
+    if(!lastActive) {
+      lastActive = new Date()
+    }
+    console.log("NEXT LAST ACTIVE",
+      JSON.stringify({l:lastActive})
+    )
+
     try {
       await getInfo()
     } catch(e) { // no LND
       const node = {
         pubkey: owner.publicKey,
         wallet_locked: true,
+        last_active: lastActive
       }
       resolve(node)
       return
@@ -86,6 +96,7 @@ function nodeinfo(){
                   testnet: info.testnet,
                   clean,
                   latest_message,
+                  last_active: lastActive,
                   wallet_locked: false,
                 }
                 resolve(node)

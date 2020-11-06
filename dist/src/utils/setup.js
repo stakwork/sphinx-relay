@@ -16,7 +16,7 @@ const QRCode = require("qrcode");
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
 const gitinfo_1 = require("../utils/gitinfo");
-const USER_VERSION = 6;
+const USER_VERSION = 7;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
@@ -44,6 +44,7 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_contacts', 'last_active', 'DATETIME');
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_chat_bots (

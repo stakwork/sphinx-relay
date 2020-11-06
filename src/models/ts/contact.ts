@@ -63,4 +63,7 @@ export default class Contact extends Model<Contact> {
   @Column
   notificationSound: string
 
+  @Column
+  lastActive: Date
+
 }
