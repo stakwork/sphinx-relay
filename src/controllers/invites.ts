@@ -42,6 +42,7 @@ export const payInvite = async (req, res) => {
 		// 	dbInvite.update({ status: invite.invite_status })
 		// }
 		if(response.payment_error) {
+			console.log("=> payInvite ERROR",response.payment_error)
 			res.status(200)
 			res.json({success:false, error:response.payment_error})
 			res.end()
@@ -53,6 +54,7 @@ export const payInvite = async (req, res) => {
 	}
 
 	const onFailure = (response) => {
+		console.log("=> payInvite ERROR",response)
 		res.status(200)
 		res.json({ success: false })
 		res.end()
