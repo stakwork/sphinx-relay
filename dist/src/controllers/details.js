@@ -95,18 +95,24 @@ exports.getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     date.setMilliseconds(0);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     owner.update({ lastActive: date });
-    const lightning = lightning_1.loadLightning();
-    var request = {};
-    lightning.channelBalance(request, function (err, response) {
-        res.status(200);
-        if (err == null) {
-            res.json({ success: true, response });
-        }
-        else {
-            res.json({ success: false });
-        }
-        res.end();
-    });
+    res.status(200);
+    try {
+        const response = yield lightning_1.channelBalance();
+        const channelList = yield lightning_1.listChannels();
+        const { channels } = channelList;
+        const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
+        res.json({ success: true, response: {
+                reserve,
+                full_balance: parseInt(response.balance),
+                balance: parseInt(response.balance) - reserve,
+                pending_open_balance: parseInt(response.pending_open_balance),
+            } });
+    }
+    catch (e) {
+        console.log("ERROR getBalance", e);
+        res.json({ success: false });
+    }
+    res.end();
 });
 exports.getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const lightning = lightning_1.loadLightning();

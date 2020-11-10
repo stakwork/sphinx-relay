@@ -390,6 +390,32 @@ async function getInfo(): Promise<{[k:string]:any}>{
 	})
 }
 
+async function listChannels(): Promise<{[k:string]:any}>{
+	return new Promise((resolve,reject)=>{
+		const lightning = loadLightning()
+		lightning.listChannels({}, function(err, response) {
+			if (err == null) {
+				resolve(response)
+			} else {
+				reject(err)
+			}
+		});
+	})
+}
+
+async function channelBalance(): Promise<{[k:string]:any}>{
+	return new Promise((resolve,reject)=>{
+		const lightning = loadLightning()
+		lightning.channelBalance({}, function(err, response) {
+			if (err == null) {
+				resolve(response)
+			} else {
+				reject(err)
+			}
+		});
+	})
+}
+
 function ascii_to_hexa(str){
 	var arr1 = <string[]> [];
 	for (var n = 0, l = str.length; n < l; n ++) {
@@ -423,4 +449,6 @@ export {
   listAllInvoices,
   listAllPaymentsFull,
   queryRoute,
+  listChannels,
+  channelBalance,
 }

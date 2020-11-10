@@ -1,4 +1,4 @@
-import { loadLightning, queryRoute } from '../utils/lightning'
+import { loadLightning, queryRoute, channelBalance, listChannels } from '../utils/lightning'
 import { success, failure } from '../utils/res'
 import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo';
@@ -76,6 +76,11 @@ export const getChannels = async (req, res) => {
 	});
 };
 
+interface BalanceRes {
+	pending_open_balance: number
+	balance: number
+	reserve: number
+}
 export const getBalance = async (req, res) => {
 
 	var date = new Date()
@@ -83,17 +88,23 @@ export const getBalance = async (req, res) => {
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	owner.update({ lastActive: date })
 
-	const lightning = loadLightning()
-	var request = {}
-	lightning.channelBalance(request, function (err, response) {
-		res.status(200);
-		if (err == null) {
-			res.json({ success: true, response });
-		} else {
-			res.json({ success: false });
-		}
-		res.end();
-	});
+	res.status(200);
+	try {
+		const response = await channelBalance()
+		const channelList = await listChannels()
+		const { channels } = channelList
+		const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0)
+		res.json({ success: true, response:<BalanceRes>{
+			reserve,
+			full_balance: parseInt(response.balance),
+			balance: parseInt(response.balance) - reserve,
+			pending_open_balance: parseInt(response.pending_open_balance),
+		} });
+	} catch(e) {
+		console.log("ERROR getBalance",e)
+		res.json({ success: false });
+	}
+	res.end();
 };
 
 export const getLocalRemoteBalance = async (req, res) => {
