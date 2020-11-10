@@ -13,7 +13,7 @@
     "hub_check_invite_url": "http://lvh.me/check_invite",
     "media_host": "localhost:5000",
     "tribes_host": "tribes.sphinx.chat",
-    "domain": ""
+    "public_url": ""
   },
   "production": {
     "senza_url": "https://staging.senza.us/api/v2/",
@@ -30,6 +30,6 @@
     "hub_check_invite_url": "https://hub.sphinx.chat/check_invite",
     "media_host": "memes.sphinx.chat",
     "tribes_host": "tribes.sphinx.chat",
-    "domain": ""
+    "public_url": ""
   }
 }

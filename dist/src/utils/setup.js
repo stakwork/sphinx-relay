@@ -200,11 +200,9 @@ function printGitInfo() {
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
         let public_ip;
-        const domain = config.domain;
-        const port = config.node_http_port;
-        if (domain && port) {
-            public_ip = `${domain}:${port}`;
-        }
+        const public_url = config.public_url;
+        if (public_url)
+            public_ip = public_url;
         if (!public_ip) {
             const ip = process.env.NODE_IP;
             if (!ip) {

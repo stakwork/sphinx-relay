@@ -199,11 +199,8 @@ async function printQR() {
 
   let public_ip
 
-  const domain = config.domain
-  const port = config.node_http_port
-  if (domain && port) {
-    public_ip = `${domain}:${port}`
-  }
+  const public_url = config.public_url
+  if (public_url) public_ip = public_url
 
   if (!public_ip) {
     const ip = process.env.NODE_IP
