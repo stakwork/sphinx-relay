@@ -88,7 +88,7 @@ export const getBalance = async (req, res) => {
 		const response = await channelBalance()
 		const channelList = await listChannels()
 		const { channels } = channelList
-		response.reserve = channels.reduce((a, chan) => a + parseInt(chan.local_constraints.chan_reserve_sat), 0)
+		response.reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0)
 	} catch(e) {
 		console.log("ERROR getBalance",e)
 		res.json({ success: false });
