@@ -1,10 +1,14 @@
 import { loadLightning } from './lightning'
-import {sequelize, models} from '../models'
-import { exec } from 'child_process'
+import { sequelize, models } from '../models'
+import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as publicIp from 'public-ip'
 import password from '../utils/password'
-import {checkTag, checkCommitHash} from '../utils/gitinfo'
+import * as path from 'path'
+import { checkTag, checkCommitHash } from '../utils/gitinfo'
+
+const env = process.env.NODE_ENV || 'development';
+const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
 const USER_VERSION = 7
 
@@ -14,27 +18,27 @@ const setupDatabase = async () => {
   try {
     await sequelize.sync()
     console.log("=> [db] done syncing")
-  } catch(e) {
-    console.log("db sync failed",e)
+  } catch (e) {
+    console.log("db sync failed", e)
   }
   await migrate()
   setupOwnerContact()
   console.log('=> [db] setup done')
 }
 
-async function setVersion(){
+async function setVersion() {
   try {
     await sequelize.query(`PRAGMA user_version = ${USER_VERSION}`)
-  } catch(e) {
-    console.log('=> setVersion failed',e)
+  } catch (e) {
+    console.log('=> setVersion failed', e)
   }
 }
 
-async function migrate(){
+async function migrate() {
 
   addTableColumn('sphinx_contacts', 'last_active', 'DATETIME')
-  
-  try{
+
+  try {
     await sequelize.query(`
     CREATE TABLE sphinx_chat_bots (
       id BIGINT NOT NULL PRIMARY KEY,
@@ -49,17 +53,17 @@ async function migrate(){
       created_at DATETIME,
       updated_at DATETIME
     )`)
-  } catch(e){}
+  } catch (e) { }
 
-  try{
+  try {
     await sequelize.query(`CREATE UNIQUE INDEX chat_bot_index ON sphinx_chat_bots(chat_id, bot_uuid);`)
-  }catch(e){}
-  
+  } catch (e) { }
+
   addTableColumn('sphinx_bots', 'webhook')
   addTableColumn('sphinx_bots', 'uuid')
   addTableColumn('sphinx_bots', 'price_per_use', 'INT')
 
-  try{
+  try {
     await sequelize.query(`
     CREATE TABLE sphinx_bot_members (
       id BIGINT NOT NULL PRIMARY KEY,
@@ -69,13 +73,13 @@ async function migrate(){
       created_at DATETIME,
       updated_at DATETIME
     )`)
-  } catch(e){}
+  } catch (e) { }
 
   addTableColumn('sphinx_bot_members', 'bot_id')
 
   //////////
 
-  try{
+  try {
     await sequelize.query(`
     CREATE TABLE sphinx_bots (
       id TEXT NOT NULL PRIMARY KEY,
@@ -84,24 +88,24 @@ async function migrate(){
       created_at DATETIME,
       updated_at DATETIME
     )`)
-  } catch(e){}
+  } catch (e) { }
 
   addTableColumn('sphinx_chats', 'app_url')
   addTableColumn('sphinx_chats', 'feed_url')
 
-  try{
+  try {
     await sequelize.query(`CREATE UNIQUE INDEX chat_member_index ON sphinx_chat_members(chat_id, contact_id);`)
-  }catch(e){}
-  
+  } catch (e) { }
+
   addTableColumn('sphinx_chats', 'private', 'BOOLEAN')
   addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN')
   addTableColumn('sphinx_chat_members', 'status', 'BIGINT')
 
   addTableColumn('sphinx_chats', 'seen', 'BOOLEAN')
 
-  try{
+  try {
     await sequelize.query(`CREATE INDEX idx_messages_sender ON sphinx_messages (sender);`)
-  }catch(e){}
+  } catch (e) { }
 
   addTableColumn('sphinx_contacts', 'notification_sound')
 
@@ -109,31 +113,31 @@ async function migrate(){
 
   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
-  
-//   try{
-//     await sequelize.query(`
-// CREATE TABLE sphinx_timers (
-//   id BIGINT,
-//   chat_id BIGINT,
-//   receiver BIGINT,
-//   millis BIGINT,
-//   msg_id BIGINT,
-//   amount DECIMAL
-// )`)
-//   } catch(e){}
-  
+
+  //   try{
+  //     await sequelize.query(`
+  // CREATE TABLE sphinx_timers (
+  //   id BIGINT,
+  //   chat_id BIGINT,
+  //   receiver BIGINT,
+  //   millis BIGINT,
+  //   msg_id BIGINT,
+  //   amount DECIMAL
+  // )`)
+  //   } catch(e){}
+
 }
 
-async function addTableColumn(table:string, column:string, type='TEXT') {
+async function addTableColumn(table: string, column: string, type = 'TEXT') {
   try {
     await sequelize.query(`alter table ${table} add ${column} ${type}`)
-  } catch(e) {
+  } catch (e) {
     //console.log('=> migrate failed',e)
   }
 }
 
 const setupOwnerContact = async () => {
-  const owner = await models.Contact.findOne({ where: { isOwner: true }})
+  const owner = await models.Contact.findOne({ where: { isOwner: true } })
   if (!owner) {
     const lightning = await loadLightning()
     lightning.getInfo({}, async (err, info) => {
@@ -141,8 +145,8 @@ const setupOwnerContact = async () => {
         console.log('[db] error creating node owner due to lnd failure', err)
       } else {
         try {
-          const one = await models.Contact.findOne({ where: { id: 1 }})
-          if(!one){
+          const one = await models.Contact.findOne({ where: { id: 1 } })
+          if (!one) {
             const contact = await models.Contact.create({
               id: 1,
               publicKey: info.identity_pubkey,
@@ -150,8 +154,8 @@ const setupOwnerContact = async () => {
               authToken: null
             })
             console.log('[db] created node owner contact, id:', contact.id)
-          }          
-        } catch(error) {
+          }
+        } catch (error) {
           console.log('[db] error creating owner contact', error)
         }
       }
@@ -162,7 +166,7 @@ const setupOwnerContact = async () => {
 const runMigrations = async () => {
   await new Promise((resolve, reject) => {
     const migrate: any = exec('node_modules/.bin/sequelize db:migrate',
-      {env: process.env},
+      { env: process.env },
       (err, stdout, stderr) => {
         if (err) {
           reject(err);
@@ -180,38 +184,48 @@ const runMigrations = async () => {
 
 export { setupDatabase, setupOwnerContact, runMigrations, setupDone }
 
-async function setupDone(){
+async function setupDone() {
   await printGitInfo()
   printQR()
 }
 
-async function printGitInfo(){
+async function printGitInfo() {
   const commitHash = await checkCommitHash()
   const tag = await checkTag()
   console.log(`=> Relay version: ${tag}, commit: ${commitHash}`)
 }
 
-async function printQR(){
-  const ip = process.env.NODE_IP
+async function printQR() {
+
   let public_ip
-  if(!ip) {
-    try {
-      public_ip = await publicIp.v4()
-    } catch(e){}
-  } else {
-    public_ip = ip
+
+  const domain = config.domain
+  const port = config.node_http_port
+  if (domain && port) {
+    public_ip = `${domain}:${port}`
   }
-  if(!public_ip) {
+
+  if (!public_ip) {
+    const ip = process.env.NODE_IP
+    if (!ip) {
+      try {
+        public_ip = await publicIp.v4()
+      } catch (e) { }
+    } else {
+      public_ip = ip
+    }
+  }
+  if (!public_ip) {
     console.log('=> no public IP provided')
     return
   }
   let theIP = public_ip
   // if(!theIP.includes(":")) theIP = public_ip+':3001'
 
-  const b64 = Buffer.from(`ip::${theIP}::${password||''}`).toString('base64')
+  const b64 = Buffer.from(`ip::${theIP}::${password || ''}`).toString('base64')
   console.log('Scan this QR in Sphinx app:')
   console.log(b64)
-  QRCode.toString(b64,{type:'terminal'}, function (err, url) {
+  QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
     console.log(url)
   })
 }
