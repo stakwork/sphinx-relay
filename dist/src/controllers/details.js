@@ -103,6 +103,7 @@ exports.getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         response.reserve = channels.reduce((a, chan) => a + parseInt(chan.local_constraints.chan_reserve_sat), 0);
     }
     catch (e) {
+        console.log("ERROR getBalance", e);
         res.json({ success: false });
     }
     res.end();
