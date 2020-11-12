@@ -144,6 +144,7 @@ const keysend = (opts) => {
                 },
                 payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
                 dest_features: [9],
+                fee_limit: { fixed: 10 }
             };
             const call = lightning.sendPayment();
             call.on('data', function (payment) {
