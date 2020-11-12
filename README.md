@@ -135,7 +135,6 @@ To connect your Desktop Sphinx to your Relay:
 - restart the Relay machine;
 - connect as `admin`;
 - switch to user `bitcoin` with `sudo su bitcoin`;
-- make sure `NODE_IP` environment variable contains correct `<IP>:<port>` values, `export` again if necessary;
 - `cd ~/sphinx-relay; npm run prod`
 
 Then try again.

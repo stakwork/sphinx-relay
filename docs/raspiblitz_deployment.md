@@ -19,7 +19,7 @@ python2 (if not present): `$ sudo apt install python2`
 
 ### Open port 3001 on Raspiblitz
 
-**note**: This port can be whatever number you want. Just add PORT to your environment like `export PORT=5005`.
+**note**: This port can be whatever number you want. You can edit it in config/app.json in the `node_http_port` setting
 
 Open up a console window with SSH. And log in as root
 ```sh
@@ -90,12 +90,7 @@ Save and exit:
 
 #### If you want to use your Sphinx client within the same local network
 
-```sh 
-$ cd
-$ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:3001
-```
-where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay on your local network.
+Edit the `public_url` in config/app.json to equal your local IP
 
 **note:** Sphinx client uses HTTP to communicate with **sphinx-relay**. Since setting up SSL on a local network is problematic (you don't have any domain names to authenticate with certificates), you have to rely on your local network security. Below is an example of how Sphinx/sphinx-relay communications look like in **tcpdump**:
 
@@ -109,12 +104,7 @@ where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay
 
 **note:** it is recommended to use SSL encryption for any communications between **Sphinx** and **sphinx-relay** outside of a trusted network. [**Docker deployment guide**](docs/docker-deployment.md) sets up SSL encryption for you automatically, you only have to obtain your domain and certificates. If you still want to set up **sphinx-relay** manually, the instructions to set up the SSL are below.
 
-```sh 
-$ cd
-$ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:3001
-```
-where `x.x.x.x` is the permanent public IP address of your router.
+Edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
 Make sure that port 3001 forwarding is properly set up.
 
@@ -325,6 +315,8 @@ Change the following 4 lines:
 "lncli_location": "/home/bitcoin/go/bin",
 ```
 
+Also edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
+
 Save and exit:
 `Ctrl + X`
 
@@ -347,17 +339,6 @@ Save and exit:
 
 `Enter`
 
-To connect to your app:
-(replace x.x.x.x with your IP - NOTE: This is your external IP)
-```sh 
-$ cd
-$ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:3001
-```
-For extra security:
-```sh
-$ export USE_PASSWORD=true
-```
 ### Turn on the service.
 Login as admin.
 ```sh 

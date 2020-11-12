@@ -19,7 +19,7 @@ python2 (if not present): `$ sudo apt install python2`
 
 ### Open port 53001 on myNode
 
-**note**: Port 3001 is now taken by one of myNode apps. In this document we use port 53001, but this port can be whatever number you want. Just add PORT to your environment like `export PORT=55005`.
+**note**: Port 3001 is now taken by one of myNode apps. In this document we use port 53001, but this port can be whatever number you want. Just edit the `node_http_port` setting in config/app.json
 
 Open up a console window with SSH. And login as root
 ```sh
@@ -65,7 +65,9 @@ Change the following 4 lines:
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/mynode/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
-```
+``` 
+
+Edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
 Save and exit:
 `Ctrl + X`
@@ -91,12 +93,8 @@ Save and exit:
 
 #### If you want to use your Sphinx client within the same local network
 
-```sh 
-$ cd
-$ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:3001
-```
-where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay on your local network.
+Edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
+
 
 **note:** Sphinx client uses HTTP to communicate with **sphinx-relay**. Since setting up SSL on a local network is problematic (you don't have any domain names to authenticate with certificates), you have to rely on your local network security. Below is an example of how Sphinx/sphinx-relay communications look like in **tcpdump**:
 
@@ -110,19 +108,11 @@ where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay
 
 **note:** it is recommended to use SSL encryption for any communications between **Sphinx** and **sphinx-relay** outside of a trusted network. [**Docker deployment guide**](docs/docker-deployment.md) sets up SSL encryption for you automatically, you only have to obtain your domain and certificates. If you still want to set up **sphinx-relay** manually, the instructions to set up the SSL are below.
 
-```sh 
-$ cd
-$ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:53001
-```
-where `x.x.x.x` is the permanent public IP address of your router.
+Edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
 Make sure that port 53001 forwarding is properly set up.
 
-For extra security:
-```sh
-$ export USE_PASSWORD=true
-```
+
 As noted in the previous section, you might want to protect communications between your Sphinx client and **sphinx-relay** with SSL.
 
 In order to do that, obtain a domain and an SSL certificate for your **sphinx-relay** server and set up a reverse proxy with NGINX (or a more lightweight alternative).
@@ -259,23 +249,7 @@ Save and exit:
 
 `Enter`
 
-Now we have to set the environment variables `PORT` and `NODE_IP` for the new `sphinx-relay.service`:
-
-`sudo systemctl edit sphinx-relay`
-
-This opens `nano` editor with an empty configuration file that you should type the following text into:
-
-```
-[Service]
-Environment="PORT=53001"
-Environment="NODE_IP=x.x.x.x:53001"
-```
-Save and exit:
-`Ctrl + X`
-
-`Y`
-
-`Enter`
+Edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name.
 
 Let's run!
 ```sh 
@@ -370,21 +344,11 @@ Save and exit:
 
 #### If you want to use your Sphinx client within the same local network
 
-```sh 
-$ cd
-$ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:53001
-```
-where `x.x.x.x` is the local IP address of the machine running your Sphinx-Relay on your local network.
+Edit the `public_url` in config/app.json to equal the local IP address of your node
 
 #### If you want to connect to your Sphinx-Relay from outside of your local network
 
-```sh 
-$ cd
-$ cd sphinx-relay/config/
-$ export NODE_IP=x.x.x.x:53001
-```
-where `x.x.x.x` is the permanent public IP address of your router.
+Edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
 > Make sure that port 53001 forwarding is properly set up.
 
