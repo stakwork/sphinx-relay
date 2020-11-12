@@ -112,6 +112,7 @@ function migrate() {
         }
         catch (e) { }
         addTableColumn('sphinx_contacts', 'notification_sound');
+        addTableColumn('sphinx_contacts', 'from_group', 'BOOLEAN');
         addTableColumn('sphinx_contacts', 'private_photo', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT');
         addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT');
