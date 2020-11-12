@@ -27,6 +27,9 @@ let server = null;
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
 const port = process.env.PORT || config.node_http_port || 3001;
+console.log("=> env:", env);
+console.log('=> process.env.PORT:', process.env.PORT);
+console.log('=> config.node_http_port:', config.node_http_port);
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 var i = 0;
 // START SETUP!

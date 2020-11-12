@@ -18,9 +18,6 @@ import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
 
-const env = process.env.NODE_ENV || 'development';
-console.log("=> env:",env)
-
 export async function set(app) {
 	
 	builtInBots.init()

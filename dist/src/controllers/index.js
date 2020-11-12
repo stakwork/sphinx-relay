@@ -28,8 +28,6 @@ const gitinfo_1 = require("../utils/gitinfo");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
-const env = process.env.NODE_ENV || 'development';
-console.log("=> env:", env);
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
