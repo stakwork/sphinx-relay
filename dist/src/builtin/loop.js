@@ -30,6 +30,7 @@ function init() {
             return;
         if (arr[0] !== '/loopout')
             return;
+        const messageAmount = Number(message.amount) || 0;
         if (arr.length === 3) { // loop
             const addy = arr[1];
             if (!validate(addy)) {
@@ -47,7 +48,7 @@ function init() {
                 message.channel.send({ embed });
                 return;
             }
-            if (message.amount !== parseInt(amt)) {
+            if (messageAmount < parseInt(amt)) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('LoopBot')
                     .setDescription('Incorrect amount');
