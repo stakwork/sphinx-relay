@@ -6,6 +6,7 @@ import * as publicIp from 'public-ip'
 import password from '../utils/password'
 import * as path from 'path'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
+import * as fs from 'fs';
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
@@ -222,7 +223,12 @@ async function printQR() {
   const b64 = Buffer.from(`ip::${theIP}::${password || ''}`).toString('base64')
   console.log('Scan this QR in Sphinx app:')
   console.log(b64)
+  connectionStringFile(b64)
   QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
     console.log(url)
   })
+}
+
+function connectionStringFile(str:string){
+  fs.appendFile('connection_string.txt', str, function (err) {});
 }

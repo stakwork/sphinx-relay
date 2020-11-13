@@ -203,6 +203,7 @@ export const listPayments = async (req, res) => {
     const msgs = await models.Message.findAll({
       where:{
         type: {[Op.or]: [
+          constants.message_types.message, // for example /loopout message
           constants.message_types.payment,
           constants.message_types.direct_payment,
           constants.message_types.keysend,

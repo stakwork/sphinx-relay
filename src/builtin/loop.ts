@@ -2,10 +2,10 @@ import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/api'
 import fetch from 'node-fetch'
 import * as path from 'path'
+import { models } from '../models'
+import constants from '../constants'
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE
-
-// /home/ec2-user/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 
 let initted = false
 
@@ -52,19 +52,28 @@ export function init() {
       try {
         const j = await doRequest(baseurl + '/v1/loop/out/quote/' + amt)
         console.log("=> LOOP QUOTE RES", j)
-        if (!(j && j.swap_fee && j.prepay_amt)) {
+        if (!(j && j.swap_fee_sat && j.prepay_amt_sat)) {
           return
         }
+
+        let chan
+        const bot = await getBot(message.channel.id)
+        if (bot && bot.meta) chan = bot.meta
+        if (!chan) {
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('LoopBot')
+            .setDescription('No channel set')
+          message.channel.send({ embed })
+        }
+  
         const j2 = await doRequest(baseurl + '/v1/loop/out', {
           method: 'POST',
           body: JSON.stringify({
             amt: amt,
             dest: addy,
-            outgoing_chan_set: [
-              '704899103684034561'
-            ],
-            max_swap_fee: j.swap_fee,
-            max_prepay_amt: j.prepay_amt
+            outgoing_chan_set: [chan],
+            max_swap_fee: j.swap_fee_sat,
+            max_prepay_amt: j.prepay_amt_sat
           }),
         })
         console.log("=> LOOP RESPONSE", j2)
@@ -75,13 +84,13 @@ export function init() {
           message.channel.send({ embed })
           return
         }
-        if (!(j2 && j2.server_message)) {
-          return
-        }
+        // if (!(j2 && j2.server_message)) {
+        //   return
+        // }
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('LoopBot')
-          .setTitle('Loop Initialized!')
-          .setDescription('Success!')
+          .setTitle('Payment was sent!')
+          // .setDescription('Success!')
         message.channel.send({ embed })
         return
       } catch (e) {
@@ -90,6 +99,22 @@ export function init() {
     }
 
     const cmd = arr[1]
+
+    const isAdmin = message.member.roles.find(role => role.name === 'Admin')
+
+    if(isAdmin && cmd.startsWith('setchan=')) {
+      const bot = await getBot(message.channel.id)
+      const arr = cmd.split('=')
+      if(bot && arr.length>1) {
+        const chan = arr[1]
+        await bot.update({meta: chan})
+        const embed = new Sphinx.MessageEmbed()
+          .setAuthor('LoopBot')
+          .setDescription('Channel updated to '+chan)
+          .setThumbnail(botSVG)
+        message.channel.send({ embed })
+      }
+    }
     switch (cmd) {
       case 'help':
         const embed = new Sphinx.MessageEmbed()
@@ -97,7 +122,8 @@ export function init() {
           .setTitle('LoopBot Commands:')
           .addFields([
             { name: 'Send to your on-chain address', value: '/loopout {ADDRESS} {AMOUNT}' },
-            { name: 'Help', value: '/loopout help' }
+            { name: 'Set Channel', value: '/loopout setchan=***' },
+            { name: 'Help', value: '/loopout help' },
           ])
           .setThumbnail(botSVG)
         message.channel.send({ embed })
@@ -110,6 +136,19 @@ export function init() {
         return
     }
   })
+}
+
+async function getBot(tribeUUID:string){
+  const chat = await models.Chat.findOne({ where:{ 
+    uuid: tribeUUID
+  }})
+  if (!chat) return
+  const chatBot = await models.ChatBot.findOne({where: {
+    chatId: chat.id, 
+    botPrefix: '/loopout', 
+    botType: constants.bot_types.builtin
+  }})
+  return chatBot
 }
 
 const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">

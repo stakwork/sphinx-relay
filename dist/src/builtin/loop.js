@@ -13,9 +13,10 @@ const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
 const node_fetch_1 = require("node-fetch");
 const path = require("path");
+const models_1 = require("../models");
+const constants_1 = require("../constants");
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
-// /home/ec2-user/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 let initted = false;
 const baseurl = 'https://localhost:8080';
 function init() {
@@ -58,19 +59,27 @@ function init() {
             try {
                 const j = yield doRequest(baseurl + '/v1/loop/out/quote/' + amt);
                 console.log("=> LOOP QUOTE RES", j);
-                if (!(j && j.swap_fee && j.prepay_amt)) {
+                if (!(j && j.swap_fee_sat && j.prepay_amt_sat)) {
                     return;
+                }
+                let chan;
+                const bot = yield getBot(message.channel.id);
+                if (bot && bot.meta)
+                    chan = bot.meta;
+                if (!chan) {
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('LoopBot')
+                        .setDescription('No channel set');
+                    message.channel.send({ embed });
                 }
                 const j2 = yield doRequest(baseurl + '/v1/loop/out', {
                     method: 'POST',
                     body: JSON.stringify({
                         amt: amt,
                         dest: addy,
-                        outgoing_chan_set: [
-                            '704899103684034561'
-                        ],
-                        max_swap_fee: j.swap_fee,
-                        max_prepay_amt: j.prepay_amt
+                        outgoing_chan_set: [chan],
+                        max_swap_fee: j.swap_fee_sat,
+                        max_prepay_amt: j.prepay_amt_sat
                     }),
                 });
                 console.log("=> LOOP RESPONSE", j2);
@@ -81,13 +90,13 @@ function init() {
                     message.channel.send({ embed });
                     return;
                 }
-                if (!(j2 && j2.server_message)) {
-                    return;
-                }
+                // if (!(j2 && j2.server_message)) {
+                //   return
+                // }
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('LoopBot')
-                    .setTitle('Loop Initialized!')
-                    .setDescription('Success!');
+                    .setTitle('Payment was sent!');
+                // .setDescription('Success!')
                 message.channel.send({ embed });
                 return;
             }
@@ -96,6 +105,20 @@ function init() {
             }
         }
         const cmd = arr[1];
+        const isAdmin = message.member.roles.find(role => role.name === 'Admin');
+        if (isAdmin && cmd.startsWith('setchan=')) {
+            const bot = yield getBot(message.channel.id);
+            const arr = cmd.split('=');
+            if (bot && arr.length > 1) {
+                const chan = arr[1];
+                yield bot.update({ meta: chan });
+                const embed = new Sphinx.MessageEmbed()
+                    .setAuthor('LoopBot')
+                    .setDescription('Channel updated to ' + chan)
+                    .setThumbnail(botSVG);
+                message.channel.send({ embed });
+            }
+        }
         switch (cmd) {
             case 'help':
                 const embed = new Sphinx.MessageEmbed()
@@ -103,7 +126,8 @@ function init() {
                     .setTitle('LoopBot Commands:')
                     .addFields([
                     { name: 'Send to your on-chain address', value: '/loopout {ADDRESS} {AMOUNT}' },
-                    { name: 'Help', value: '/loopout help' }
+                    { name: 'Set Channel', value: '/loopout setchan=***' },
+                    { name: 'Help', value: '/loopout help' },
                 ])
                     .setThumbnail(botSVG);
                 message.channel.send({ embed });
@@ -118,6 +142,21 @@ function init() {
     }));
 }
 exports.init = init;
+function getBot(tribeUUID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const chat = yield models_1.models.Chat.findOne({ where: {
+                uuid: tribeUUID
+            } });
+        if (!chat)
+            return;
+        const chatBot = yield models_1.models.ChatBot.findOne({ where: {
+                chatId: chat.id,
+                botPrefix: '/loopout',
+                botType: constants_1.default.bot_types.builtin
+            } });
+        return chatBot;
+    });
+}
 const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
   <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
 </svg>`;
