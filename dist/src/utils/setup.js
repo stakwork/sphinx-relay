@@ -17,6 +17,7 @@ const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
 const path = require("path");
 const gitinfo_1 = require("../utils/gitinfo");
+const fs = require("fs");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const USER_VERSION = 7;
@@ -225,9 +226,13 @@ function printQR() {
         const b64 = Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
         console.log('Scan this QR in Sphinx app:');
         console.log(b64);
+        connectionStringFile(b64);
         QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
             console.log(url);
         });
     });
+}
+function connectionStringFile(str) {
+    fs.appendFile('../connection_string.txt', str, function (err) { });
 }
 //# sourceMappingURL=setup.js.map
