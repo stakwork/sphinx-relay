@@ -64,6 +64,7 @@ export function init() {
             .setAuthor('LoopBot')
             .setDescription('No channel set')
           message.channel.send({ embed })
+          return
         }
   
         const j2 = await doRequest(baseurl + '/v1/loop/out', {
@@ -113,6 +114,7 @@ export function init() {
           .setDescription('Channel updated to '+chan)
           .setThumbnail(botSVG)
         message.channel.send({ embed })
+        return
       }
     }
     switch (cmd) {
