@@ -230,5 +230,5 @@ async function printQR() {
 }
 
 function connectionStringFile(str:string){
-  fs.appendFile('../connection_string.txt', str, function (err) {});
+  fs.appendFile('connection_string.txt', str, function (err) {});
 }

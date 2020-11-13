@@ -233,6 +233,6 @@ function printQR() {
     });
 }
 function connectionStringFile(str) {
-    fs.appendFile('../connection_string.txt', str, function (err) { });
+    fs.appendFile('connection_string.txt', str, function (err) { });
 }
 //# sourceMappingURL=setup.js.map
