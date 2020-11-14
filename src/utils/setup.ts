@@ -230,5 +230,7 @@ async function printQR() {
 }
 
 function connectionStringFile(str:string){
-  fs.writeFile('connection_string.txt', str, function (err) {});
+  fs.writeFile('connection_string.txt', str, function (err) {
+    if (err) console.log('ERROR SAVING connection_string.txt.', err);
+  });
 }
