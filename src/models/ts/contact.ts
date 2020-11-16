@@ -66,4 +66,7 @@ export default class Contact extends Model<Contact> {
   @Column
   lastActive: Date
 
+  @Column(DataType.BIGINT)
+  tipAmount: number
+
 }

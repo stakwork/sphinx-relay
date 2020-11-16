@@ -20,14 +20,21 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
+const feed_1 = require("./feed");
 exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (destination_key && !contact_id && !chat_id) {
-        anonymousKeysend(res, destination_key, amount || '', text || '');
+        feed_1.anonymousKeysend(owner, destination_key, amount || '', text || '', function (body) {
+            res_1.success(res, body);
+        }, function (error) {
+            res.status(200);
+            res.json({ success: false, error });
+            res.end();
+        });
         return;
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield helpers.findOrCreateChat({
         chat_id,
         owner_id: owner.id,
@@ -104,46 +111,6 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         })
     });
 });
-function anonymousKeysend(res, destination_key, amount, text) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const msg = {
-            type: constants_1.default.message_types.keysend,
-        };
-        if (text)
-            msg.message = { content: text };
-        return helpers.performKeysendMessage({
-            sender: owner,
-            destination_key,
-            amount,
-            msg,
-            success: () => {
-                console.log('payment sent!');
-                var date = new Date();
-                date.setMilliseconds(0);
-                models_1.models.Message.create({
-                    chatId: 0,
-                    type: constants_1.default.message_types.keysend,
-                    sender: 1,
-                    amount,
-                    amountMsat: amount * 1000,
-                    paymentHash: '',
-                    date,
-                    messageContent: text || '',
-                    status: constants_1.default.statuses.confirmed,
-                    createdAt: date,
-                    updatedAt: date
-                });
-                res_1.success(res, { destination_key, amount });
-            },
-            failure: (error) => {
-                res.status(200);
-                res.json({ success: false, error });
-                res.end();
-            }
-        });
-    });
-}
 exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received payment', { payload });
     var date = new Date();

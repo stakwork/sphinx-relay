@@ -17,6 +17,7 @@ import {checkTag} from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
+import * as feed from './feed'
 
 export async function set(app) {
 	
@@ -76,6 +77,8 @@ export async function set(app) {
 	app.post('/attachment', media.sendAttachmentMessage)
 	app.post('/purchase', media.purchase)
 	app.get('/signer/:challenge', media.signer)
+
+	app.post('/stream', feed.streamFeed)
 
 	app.post('/invoices', invoices.createInvoice)
 	app.get('/invoices', invoices.listInvoices)

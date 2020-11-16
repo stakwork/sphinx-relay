@@ -83,13 +83,19 @@ export const updateContact = async (req, res) => {
 		return failure(res, 'no contact found')
 	}
 	
-	// update self
+	// update contact
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
 	success(res, jsonUtils.contactToJson(owner))
 
 	if (!contact.isOwner) return 
 	if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
 		return // skip if not at least one of these
+	}
+	const contactKeyChanged = contact.contactKey!==attrs['contact_key']
+	const aliasChanged = contact.alias!==attrs['alias']
+	const photoChanged = contact.photoUrl!==attrs['photo_url']
+	if(!(contactKeyChanged || aliasChanged || photoChanged)) {
+		return
 	}
 
 	// send updated owner info to others!
@@ -267,7 +273,7 @@ export const receiveConfirmContactKey = async (payload) => {
 }
 
 const extractAttrs = body => {
-	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound"]
+	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount"]
 	let attrs = {}
 	Object.keys(body).forEach(key => {
 		if (fields_to_update.includes(key)) {

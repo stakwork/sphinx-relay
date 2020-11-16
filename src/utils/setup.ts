@@ -37,6 +37,10 @@ async function setVersion() {
 
 async function migrate() {
 
+  addTableColumn('sphinx_chats', 'meta')
+
+  addTableColumn('sphinx_contacts', 'tip_amount', 'BIGINT')
+
   addTableColumn('sphinx_contacts', 'last_active', 'DATETIME')
 
   try {
