@@ -29,7 +29,7 @@ exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (meta && meta.itemID) {
         const cm = {
             itemID: meta.itemID,
-            timestamp: meta.timestamp || 0,
+            ts: meta.ts || 0,
             sats_per_minute: amount || 0,
         };
         const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });

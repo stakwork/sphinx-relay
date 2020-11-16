@@ -6,7 +6,7 @@ import constants from '../constants'
 
 export interface ChatMeta {
   itemID: number,
-  timestamp: number,
+  ts: number,
   sats_per_minute: number,
 }
 
@@ -44,7 +44,7 @@ export const streamFeed = async (req,res) => {
   if(meta && meta.itemID) {
     const cm:ChatMeta = {
       itemID: meta.itemID,
-      timestamp: meta.timestamp||0,
+      ts: meta.ts||0,
       sats_per_minute: amount||0,
     }
     const chat = await models.Chat.findOne({ where: { id: chat_id } })
