@@ -100,8 +100,6 @@ If you have a permanent public IP on your internet connection and you want your 
 
 If you plan to use your Sphinx clients within the local network, then you do not have to do anything special.
 
-Since none of Sphinx clients support connecting to Sphinx-Relay over Tor as of this moment, you could set up a [Tor2IP tunnel](https://github.com/openoms/bitcoin-tutorials/blob/eaac48a5decb6aef8540de249816d255b310dc3a/tor2ip_tunnel.md) as well (for extra privacy/security or because of unavailability of a permanent public IP address on your local internet connection).
-
 ## Deployment
 
 * [Docker deployment](docs/docker_deployment.md)
