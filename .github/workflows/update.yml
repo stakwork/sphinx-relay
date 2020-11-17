@@ -8,6 +8,8 @@ jobs:
     name: Webhook Job
     runs-on:
       - ubuntu-latest
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
       - name: Check out from Git
         uses: actions/checkout@v2
