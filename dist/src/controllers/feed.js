@@ -18,25 +18,27 @@ exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (!(destinations && destinations.length)) {
         return res_1.failure(res, 'no destinations');
     }
-    let meta;
-    try {
-        meta = JSON.parse(text);
-    }
-    catch (e) { }
-    if (!meta) {
-        return res_1.failure(res, 'no meta');
-    }
-    if (update_meta && meta && meta.itemID) {
-        const cm = {
-            itemID: meta.itemID,
-            ts: meta.ts || 0,
-            sats_per_minute: amount || 0,
-        };
-        const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
-        if (!chat) {
-            return res_1.failure(res, 'no chat');
+    if (update_meta) {
+        let meta;
+        try {
+            meta = JSON.parse(text);
         }
-        yield chat.update({ meta: JSON.stringify(cm) });
+        catch (e) { }
+        if (!meta) {
+            return res_1.failure(res, 'no meta');
+        }
+        if (meta && meta.itemID) {
+            const cm = {
+                itemID: meta.itemID,
+                ts: meta.ts || 0,
+                sats_per_minute: amount || 0,
+            };
+            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+            if (!chat) {
+                return res_1.failure(res, 'no chat');
+            }
+            yield chat.update({ meta: JSON.stringify(cm) });
+        }
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (amount && typeof amount === 'number') {
