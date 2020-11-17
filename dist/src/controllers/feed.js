@@ -14,7 +14,7 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
 exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { destinations, amount, chat_id, text } = req.body;
+    const { destinations, amount, chat_id, text, update_meta, } = req.body;
     if (!(destinations && destinations.length)) {
         return res_1.failure(res, 'no destinations');
     }
@@ -26,7 +26,7 @@ exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (!meta) {
         return res_1.failure(res, 'no meta');
     }
-    if (meta && meta.itemID) {
+    if (update_meta && meta && meta.itemID) {
         const cm = {
             itemID: meta.itemID,
             ts: meta.ts || 0,

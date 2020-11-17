@@ -22,12 +22,14 @@ export const streamFeed = async (req,res) => {
     destinations,
     amount,
     chat_id,
-    text
+    text,
+    update_meta,
   }:{
     destinations:Destination[],
     amount:number,
     chat_id:number,
-    text:string
+    text:string,
+    update_meta:boolean,
   } = req.body
 
   if(!(destinations && destinations.length)) {
@@ -41,7 +43,7 @@ export const streamFeed = async (req,res) => {
     return failure(res, 'no meta')
   }
 
-  if(meta && meta.itemID) {
+  if(update_meta && meta && meta.itemID) {
     const cm:ChatMeta = {
       itemID: meta.itemID,
       ts: meta.ts||0,
