@@ -9,6 +9,7 @@ import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { Op } from 'sequelize' 
+import {anonymousKeysend} from './feed'
 
 export const sendPayment = async (req, res) => {
   const {
@@ -28,12 +29,21 @@ export const sendPayment = async (req, res) => {
 
   console.log('[send payment]', req.body)
 
+  const owner = await models.Contact.findOne({ where: { isOwner: true }})
+
   if (destination_key && !contact_id && !chat_id) {
-    anonymousKeysend(res, destination_key, amount||'', text||'')
+    anonymousKeysend(owner, destination_key, amount||'', text||'', 
+      function(body) {
+        success(res, body)
+      },
+      function(error) {
+        res.status(200);
+        res.json({ success: false, error });
+        res.end();
+      }
+    )
     return
   }
-
-  const owner = await models.Contact.findOne({ where: { isOwner: true }})
 
   const chat = await helpers.findOrCreateChat({
     chat_id,
@@ -111,46 +121,6 @@ export const sendPayment = async (req, res) => {
     }
   })
 };
-
-async function anonymousKeysend(res, destination_key:string, amount:number, text:string){
-  const owner = await models.Contact.findOne({ where: { isOwner: true }})
-
-  const msg:{[k:string]:any} = {
-    type:constants.message_types.keysend,
-  }
-  if(text) msg.message = {content:text}
-
-  return helpers.performKeysendMessage({
-    sender:owner,
-    destination_key,
-    amount,
-    msg,
-    success: () => {
-      console.log('payment sent!')
-      var date = new Date();
-      date.setMilliseconds(0)
-      models.Message.create({
-        chatId: 0,
-        type: constants.message_types.keysend,
-        sender: 1,
-        amount,
-        amountMsat: amount*1000,
-        paymentHash: '',
-        date,
-        messageContent: text||'',
-        status: constants.statuses.confirmed,
-        createdAt: date,
-        updatedAt: date
-      })
-      success(res, {destination_key, amount})
-    },
-    failure: (error) => {
-      res.status(200);
-      res.json({ success: false, error });
-      res.end();
-    }
-  })
-}
 
 export const receivePayment = async (payload) => {
   console.log('received payment', { payload })

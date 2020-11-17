@@ -28,6 +28,7 @@ const gitinfo_1 = require("../utils/gitinfo");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
+const feed = require("./feed");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -78,6 +79,7 @@ function set(app) {
         app.post('/attachment', media.sendAttachmentMessage);
         app.post('/purchase', media.purchase);
         app.get('/signer/:challenge', media.signer);
+        app.post('/stream', feed.streamFeed);
         app.post('/invoices', invoices.createInvoice);
         app.get('/invoices', invoices.listInvoices);
         app.put('/invoices', invoices.payInvoice);
