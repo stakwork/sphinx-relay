@@ -32,12 +32,14 @@ function updateChat(req, res) {
         if (!chat) {
             return res_1.failure(res, 'chat not found');
         }
-        const { name, photo_url } = req.body;
+        const { name, photo_url, meta } = req.body;
         const obj = {};
         if (name)
             obj.name = name;
         if (photo_url)
             obj.photoUrl = photo_url;
+        if (meta && typeof meta === 'string')
+            obj.meta = meta;
         if (Object.keys(obj).length > 0) {
             yield chat.update(obj);
         }
