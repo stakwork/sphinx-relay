@@ -16,6 +16,7 @@ const helpers_1 = require("../helpers");
 const sha = require("js-sha256");
 const crypto = require("crypto");
 const path = require("path");
+const constants_1 = require("../constants");
 // var protoLoader = require('@grpc/proto-loader')
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
@@ -135,7 +136,7 @@ const keysend = (opts) => {
             const randoStr = crypto.randomBytes(32).toString('hex');
             const preimage = ByteBuffer.fromHex(randoStr);
             const options = {
-                amt: Math.max(opts.amt, 3),
+                amt: Math.max(opts.amt, constants_1.default.min_sat_amount || 3),
                 final_cltv_delta: 10,
                 dest: ByteBuffer.fromHex(opts.dest),
                 dest_custom_records: {
@@ -191,8 +192,9 @@ function keysendMessage(opts) {
                 yield asyncForEach(Array.from(Array(n)), (u, i) => __awaiter(this, void 0, void 0, function* () {
                     const spliti = Math.ceil(opts.data.length / n);
                     const m = opts.data.substr(i * spliti, spliti);
+                    const amt = Math.round(opts.amt / n);
                     try {
-                        res = yield keysend(Object.assign(Object.assign({}, opts), { data: `${ts}_${i}_${n}_${m}` }));
+                        res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }));
                         success = true;
                         yield helpers_1.sleep(432);
                     }
