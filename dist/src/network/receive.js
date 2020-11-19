@@ -143,7 +143,7 @@ function onReceive(payload) {
                 if (ogMsg && ogMsg.sender && ogMsg.sender !== 1) {
                     const amtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
                     if (amtToForward > 0) {
-                        forwardSatsToContact(chat, ogMsg.sender, amtToForward, payload.message.replyUuid);
+                        forwardSatsToContact(chat, ogMsg.sender, amtToForward);
                     }
                 }
             }
@@ -203,8 +203,9 @@ function doTheAction(data) {
         }
     });
 }
-function forwardSatsToContact(chat, contactId, amount, theuuid) {
+function forwardSatsToContact(chat, contactId, amount) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> forwardSatsToContact', contactId);
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         send_1.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),
