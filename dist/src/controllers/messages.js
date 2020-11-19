@@ -139,7 +139,10 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, } = req.body;
+    let msgtype = constants_1.default.message_types.message;
+    if (boost)
+        msgtype = constants_1.default.message_types.boost;
     var date = new Date();
     date.setMilliseconds(0);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -152,7 +155,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const msg = {
         chatId: chat.id,
         uuid: short.generate(),
-        type: constants_1.default.message_types.message,
+        type: msgtype,
         sender: owner.id,
         amount: amount || 0,
         date: date,
@@ -178,18 +181,17 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         chat: chat,
         sender: owner,
         amount: amount || 0,
-        type: constants_1.default.message_types.message,
+        type: msgtype,
         message: msgToSend,
     });
 });
 exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
-    const total_spent = 1;
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
-    const text = content;
+    const text = content || '';
     var date = new Date();
     date.setMilliseconds(0);
     if (date_string)
@@ -198,9 +200,9 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
         chatId: chat.id,
         uuid: msg_uuid,
         type: constants_1.default.message_types.message,
-        asciiEncodedTotal: total_spent,
         sender: sender.id,
         date: date,
+        amount: amount || 0,
         messageContent: text,
         createdAt: date,
         updatedAt: date,
@@ -215,7 +217,6 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
     const message = yield models_1.models.Message.create(msg);
-    // console.log('saved message', message.dataValues)
     socket.sendJson({
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender)
@@ -223,6 +224,43 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
+});
+exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('received boost', { payload });
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
+    if (!owner || !sender || !chat) {
+        return console.log('=> no group chat!');
+    }
+    const text = content;
+    var date = new Date();
+    date.setMilliseconds(0);
+    if (date_string)
+        date = new Date(date_string);
+    const msg = {
+        chatId: chat.id,
+        uuid: msg_uuid,
+        type: constants_1.default.message_types.boost,
+        sender: sender.id,
+        date: date,
+        amount: amount || 0,
+        messageContent: text,
+        createdAt: date,
+        updatedAt: date,
+        status: constants_1.default.statuses.received
+    };
+    const isTribe = chat_type === constants_1.default.chat_types.tribe;
+    if (isTribe) {
+        msg.senderAlias = sender_alias;
+        if (remote_content)
+            msg.remoteMessageContent = remote_content;
+    }
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
+    const message = yield models_1.models.Message.create(msg);
+    socket.sendJson({
+        type: 'boost',
+        response: jsonUtils.messageToJson(message, chat, sender)
+    });
 });
 exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received delete message');

@@ -25,13 +25,13 @@ const msgtypes = constants.message_types
 
 export const typesToForward=[
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, 
-	msgtypes.attachment, msgtypes.delete,
+	msgtypes.attachment, msgtypes.delete, msgtypes.boost,
 ]
 const typesToModify=[
 	msgtypes.attachment
 ]
 const typesThatNeedPricePerMessage = [
-	msgtypes.message, msgtypes.attachment
+	msgtypes.message, msgtypes.attachment, msgtypes.boost
 ]
 export const typesToReplay=[ // should match typesToForward
 	msgtypes.message, 
@@ -121,6 +121,18 @@ async function onReceive(payload){
 				if(ogMsg) doAction = true
 			}
 		}
+		// forward boost sats to recipient
+		if(payload.type===msgtypes.boost && payload.message.replyUuid) {
+			const ogMsg = await models.Message.findOne({where:{
+				uuid: payload.message.replyUuid,
+			}})
+			if(ogMsg) {
+				const amtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
+				if(amtToForward>0) {
+					forwardSatsToContact(chat,ogMsg.sender,amtToForward,payload.message.replyUuid)
+				}
+			}
+		}
 		if(doAction) forwardMessageToTribe(payload, senderContact)
 		else console.log('=> insufficient payment for this action')
 	}
@@ -152,7 +164,8 @@ async function onReceive(payload){
 
 async function doTheAction(data){
 	let payload = data
-	if(payload.isTribeOwner) {
+	if(payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
+		// actual encryption for tribe happens in personalizeMessage
 		const ogContent = data.message && data.message.content
 		// const ogMediaKey = data.message && data.message.mediaKey
 		/* decrypt and re-encrypt with phone's pubkey for storage */
@@ -168,6 +181,19 @@ async function doTheAction(data){
 	} else {
 		console.log('Incorrect payload type:', payload.type)
 	}
+}
+
+async function forwardSatsToContact(chat,contactId:number,amount:number,theuuid) {
+	const owner = await models.Contact.findOne({where:{isOwner:true}})
+	sendMessage({
+		chat: {...chat.dataValues, contactIds:[contactId]},
+		sender: owner,
+		type: constants.message_types.keysend,
+		amount: amount,
+		message: { content:'!' },
+		success: ()=>{},
+		failure: ()=>{}
+	})
 }
 
 async function forwardMessageToTribe(ogpayload, sender){

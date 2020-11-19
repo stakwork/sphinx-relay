@@ -157,7 +157,11 @@ export const sendMessage = async (req, res) => {
 		remote_text_map,
 		amount,
 		reply_uuid,
+		boost,
 	} = req.body
+
+	let msgtype = constants.message_types.message
+	if(boost) msgtype = constants.message_types.boost
 
 	var date = new Date()
 	date.setMilliseconds(0)
@@ -173,7 +177,7 @@ export const sendMessage = async (req, res) => {
 	const msg:{[k:string]:any}={
 		chatId: chat.id,
 		uuid: short.generate(),
-		type: constants.message_types.message,
+		type: msgtype,
 		sender: owner.id,
 		amount: amount||0,
 		date: date,
@@ -199,7 +203,7 @@ export const sendMessage = async (req, res) => {
 		chat: chat,
 		sender: owner,
 		amount: amount||0,
-		type: constants.message_types.message,
+		type: msgtype,
 		message: msgToSend,
 	})
 }
@@ -207,12 +211,11 @@ export const sendMessage = async (req, res) => {
 export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
-	const total_spent = 1
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
-	const text = content
+	const text = content||''
 
 	var date = new Date();
 	date.setMilliseconds(0)
@@ -222,9 +225,9 @@ export const receiveMessage = async (payload) => {
 		chatId: chat.id,
 		uuid: msg_uuid,
 		type: constants.message_types.message,
-		asciiEncodedTotal: total_spent,
 		sender: sender.id,
 		date: date,
+		amount: amount||0,
 		messageContent: text,
 		createdAt: date,
 		updatedAt: date,
@@ -238,8 +241,6 @@ export const receiveMessage = async (payload) => {
 	if(reply_uuid) msg.replyUuid = reply_uuid
 	const message = await models.Message.create(msg)
 
-	// console.log('saved message', message.dataValues)
-
 	socket.sendJson({
 		type: 'message',
 		response: jsonUtils.messageToJson(message, chat, sender)
@@ -249,6 +250,45 @@ export const receiveMessage = async (payload) => {
 
 	const theChat = {...chat.dataValues, contactIds:[sender.id]}
 	sendConfirmation({ chat:theChat, sender: owner, msg_id })
+}
+
+export const receiveBoost = async (payload) => {
+	console.log('received boost', { payload })
+
+	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount} = await helpers.parseReceiveParams(payload)
+	if(!owner || !sender || !chat) {
+		return console.log('=> no group chat!')
+	}
+	const text = content
+
+	var date = new Date();
+	date.setMilliseconds(0)
+	if(date_string) date=new Date(date_string)
+
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		uuid: msg_uuid,
+		type: constants.message_types.boost,
+		sender: sender.id,
+		date: date,
+		amount: amount||0,
+		messageContent: text,
+		createdAt: date,
+		updatedAt: date,
+		status: constants.statuses.received
+	}
+	const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe) {
+		msg.senderAlias = sender_alias
+		if(remote_content) msg.remoteMessageContent=remote_content
+	}
+	if(reply_uuid) msg.replyUuid = reply_uuid
+	const message = await models.Message.create(msg)
+
+	socket.sendJson({
+		type: 'boost',
+		response: jsonUtils.messageToJson(message, chat, sender)
+	})
 }
 
 export const receiveDeleteMessage = async (payload) => {

@@ -33,13 +33,13 @@ in receiveDeleteMessage check the deleter is og sender?
 const msgtypes = constants_1.default.message_types;
 exports.typesToForward = [
     msgtypes.message, msgtypes.group_join, msgtypes.group_leave,
-    msgtypes.attachment, msgtypes.delete,
+    msgtypes.attachment, msgtypes.delete, msgtypes.boost,
 ];
 const typesToModify = [
     msgtypes.attachment
 ];
 const typesThatNeedPricePerMessage = [
-    msgtypes.message, msgtypes.attachment
+    msgtypes.message, msgtypes.attachment, msgtypes.boost
 ];
 exports.typesToReplay = [
     msgtypes.message,
@@ -135,6 +135,18 @@ function onReceive(payload) {
                         doAction = true;
                 }
             }
+            // forward boost sats to recipient
+            if (payload.type === msgtypes.boost && payload.message.replyUuid) {
+                const ogMsg = yield models_1.models.Message.findOne({ where: {
+                        uuid: payload.message.replyUuid,
+                    } });
+                if (ogMsg) {
+                    const amtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
+                    if (amtToForward > 0) {
+                        forwardSatsToContact(chat, ogMsg.sender, amtToForward, payload.message.replyUuid);
+                    }
+                }
+            }
             if (doAction)
                 forwardMessageToTribe(payload, senderContact);
             else
@@ -170,7 +182,8 @@ function onReceive(payload) {
 function doTheAction(data) {
     return __awaiter(this, void 0, void 0, function* () {
         let payload = data;
-        if (payload.isTribeOwner) {
+        if (payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
+            // actual encryption for tribe happens in personalizeMessage
             const ogContent = data.message && data.message.content;
             // const ogMediaKey = data.message && data.message.mediaKey
             /* decrypt and re-encrypt with phone's pubkey for storage */
@@ -188,6 +201,20 @@ function doTheAction(data) {
         else {
             console.log('Incorrect payload type:', payload.type);
         }
+    });
+}
+function forwardSatsToContact(chat, contactId, amount, theuuid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        send_1.sendMessage({
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),
+            sender: owner,
+            type: constants_1.default.message_types.keysend,
+            amount: amount,
+            message: { content: '!' },
+            success: () => { },
+            failure: () => { }
+        });
     });
 }
 function forwardMessageToTribe(ogpayload, sender) {

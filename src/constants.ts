@@ -56,6 +56,7 @@ const constants = {
     "heartbeat": 26,
     "heartbeat_confirmation": 27,
     "keysend": 28, // no e2e
+    "boost": 29,
   },
   payment_errors: {
     "timeout": "Timed Out",
