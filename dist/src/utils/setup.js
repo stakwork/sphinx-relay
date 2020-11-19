@@ -18,6 +18,7 @@ const password_1 = require("../utils/password");
 const path = require("path");
 const gitinfo_1 = require("../utils/gitinfo");
 const fs = require("fs");
+const nodeinfo_1 = require("./nodeinfo");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const USER_VERSION = 7;
@@ -29,7 +30,7 @@ const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         console.log("=> [db] done syncing");
     }
     catch (e) {
-        console.log("db sync failed", e);
+        // console.log("db sync failed", e)
     }
     yield migrate();
     setupOwnerContact();
@@ -203,6 +204,9 @@ function printGitInfo() {
 }
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
+        const clean = yield nodeinfo_1.isClean();
+        if (!clean)
+            return; // skip it if already setup!
         let public_ip;
         const public_url = config.public_url;
         if (public_url)

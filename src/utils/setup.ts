@@ -7,6 +7,7 @@ import password from '../utils/password'
 import * as path from 'path'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs';
+import {isClean} from './nodeinfo'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
@@ -20,7 +21,7 @@ const setupDatabase = async () => {
     await sequelize.sync()
     console.log("=> [db] done syncing")
   } catch (e) {
-    console.log("db sync failed", e)
+    // console.log("db sync failed", e)
   }
   await migrate()
   setupOwnerContact()
@@ -201,6 +202,9 @@ async function printGitInfo() {
 }
 
 async function printQR() {
+
+  const clean = await isClean()
+  if(!clean) return // skip it if already setup!
 
   let public_ip
 

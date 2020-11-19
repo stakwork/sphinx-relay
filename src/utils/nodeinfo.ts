@@ -109,7 +109,7 @@ function nodeinfo(){
 
 export {nodeinfo}
 
-async function isClean(){
+export async function isClean(){
   // has owner but with no auth token
   const cleanOwner = await models.Contact.findOne({ where: { isOwner: true, authToken: null }})
   const msgs = await models.Message.count()

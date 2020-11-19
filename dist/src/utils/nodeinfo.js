@@ -128,6 +128,7 @@ function isClean() {
         return false;
     });
 }
+exports.isClean = isClean;
 function latestMessage() {
     return __awaiter(this, void 0, void 0, function* () {
         const lasts = yield models_1.models.Message.findAll({

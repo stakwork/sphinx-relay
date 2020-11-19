@@ -172,15 +172,21 @@ export const listPayments = async (req, res) => {
   try {
     const msgs = await models.Message.findAll({
       where:{
-        type: {[Op.or]: [
-          constants.message_types.message, // for example /loopout message
-          constants.message_types.payment,
-          constants.message_types.direct_payment,
-          constants.message_types.keysend,
-        ]},
-        amount: {
-          [Op.gt]: MIN_VAL // greater than
-        }
+        [Op.or]: [
+          {
+            type: {[Op.or]: [
+              constants.message_types.payment,
+              constants.message_types.direct_payment,
+              constants.message_types.keysend,
+            ]}
+          },
+          {
+            type: constants.message_types.message, // for example /loopout message
+            amount: {
+              [Op.gt]: MIN_VAL // greater than
+            }
+          }
+        ],
       },
       order: [['createdAt', 'desc']],
       limit,

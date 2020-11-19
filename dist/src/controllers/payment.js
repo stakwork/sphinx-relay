@@ -156,15 +156,21 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const msgs = yield models_1.models.Message.findAll({
             where: {
-                type: { [sequelize_1.Op.or]: [
-                        constants_1.default.message_types.message,
-                        constants_1.default.message_types.payment,
-                        constants_1.default.message_types.direct_payment,
-                        constants_1.default.message_types.keysend,
-                    ] },
-                amount: {
-                    [sequelize_1.Op.gt]: MIN_VAL // greater than
-                }
+                [sequelize_1.Op.or]: [
+                    {
+                        type: { [sequelize_1.Op.or]: [
+                                constants_1.default.message_types.payment,
+                                constants_1.default.message_types.direct_payment,
+                                constants_1.default.message_types.keysend,
+                            ] }
+                    },
+                    {
+                        type: constants_1.default.message_types.message,
+                        amount: {
+                            [sequelize_1.Op.gt]: MIN_VAL // greater than
+                        }
+                    }
+                ],
             },
             order: [['createdAt', 'desc']],
             limit,
