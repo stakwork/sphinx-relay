@@ -187,7 +187,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -202,7 +202,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
         type: constants_1.default.message_types.message,
         sender: sender.id,
         date: date,
-        amount: amount || 0,
+        // amount: amount||0,
         messageContent: text,
         createdAt: date,
         updatedAt: date,
@@ -227,7 +227,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received boost', { payload });
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -242,7 +242,7 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: constants_1.default.message_types.boost,
         sender: sender.id,
         date: date,
-        amount: amount || 0,
+        // amount: amount||0,
         messageContent: text,
         createdAt: date,
         updatedAt: date,

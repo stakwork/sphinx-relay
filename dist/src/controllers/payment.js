@@ -152,7 +152,7 @@ exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function
 exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
-    const MIN_VAL = constants_1.default.min_sat_amount;
+    // const MIN_VAL=constants.min_sat_amount
     try {
         const msgs = yield models_1.models.Message.findAll({
             where: {
@@ -164,12 +164,6 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
                                 constants_1.default.message_types.keysend,
                             ] }
                     },
-                    {
-                        type: constants_1.default.message_types.message,
-                        amount: {
-                            [sequelize_1.Op.gt]: MIN_VAL // greater than
-                        }
-                    }
                 ],
             },
             order: [['createdAt', 'desc']],

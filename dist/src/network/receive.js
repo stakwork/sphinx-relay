@@ -316,14 +316,21 @@ function parseAndVerifyPayload(data) {
         }
     });
 }
-function saveAnonymousKeysend(response, memo) {
+function saveAnonymousKeysend(response, memo, sender_pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
+        let sender = 0;
+        if (sender_pubkey) {
+            const theSender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pubkey } });
+            if (theSender && theSender.id) {
+                sender = theSender.id;
+            }
+        }
         let settleDate = parseInt(response['settle_date'] + '000');
         const amount = response['amt_paid_sat'] || 0;
         const msg = yield models_1.models.Message.create({
             chatId: 0,
             type: constants_1.default.message_types.keysend,
-            sender: 0,
+            sender,
             amount,
             amountMsat: response['amt_paid_msat'],
             paymentHash: '',
@@ -347,26 +354,28 @@ function parseKeysendInvoice(i) {
         const value = i && i.value && parseInt(i.value);
         // "keysend" type is NOT encrypted
         // and should be saved even if there is NO content
-        let isAnonymous = false;
+        let isKeysendType = false;
         let memo = '';
+        let sender_pubkey;
         if (data) {
             try {
                 const payload = parsePayload(data);
                 if (payload && payload.type === constants_1.default.message_types.keysend) {
-                    isAnonymous = true;
+                    isKeysendType = true;
                     memo = payload.message && payload.message.content;
+                    sender_pubkey = payload.sender && payload.sender.pub_key;
                 }
             }
             catch (e) { } // err could be a threaded TLV
         }
         else {
-            isAnonymous = true;
+            isKeysendType = true;
         }
-        if (isAnonymous) {
+        if (isKeysendType) {
             if (!memo) {
                 hub_1.sendNotification(-1, '', 'keysend', value || 0);
             }
-            saveAnonymousKeysend(i, memo);
+            saveAnonymousKeysend(i, memo, sender_pubkey);
             return;
         }
         let payload;

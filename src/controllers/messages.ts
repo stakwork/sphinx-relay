@@ -211,7 +211,7 @@ export const sendMessage = async (req, res) => {
 export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -227,7 +227,7 @@ export const receiveMessage = async (payload) => {
 		type: constants.message_types.message,
 		sender: sender.id,
 		date: date,
-		amount: amount||0,
+		// amount: amount||0,
 		messageContent: text,
 		createdAt: date,
 		updatedAt: date,
@@ -255,7 +255,7 @@ export const receiveMessage = async (payload) => {
 export const receiveBoost = async (payload) => {
 	console.log('received boost', { payload })
 
-	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -271,7 +271,7 @@ export const receiveBoost = async (payload) => {
 		type: constants.message_types.boost,
 		sender: sender.id,
 		date: date,
-		amount: amount||0,
+		// amount: amount||0,
 		messageContent: text,
 		createdAt: date,
 		updatedAt: date,

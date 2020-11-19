@@ -168,7 +168,7 @@ export const listPayments = async (req, res) => {
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
   
-  const MIN_VAL=constants.min_sat_amount
+  // const MIN_VAL=constants.min_sat_amount
   try {
     const msgs = await models.Message.findAll({
       where:{
@@ -180,12 +180,12 @@ export const listPayments = async (req, res) => {
               constants.message_types.keysend,
             ]}
           },
-          {
-            type: constants.message_types.message, // for example /loopout message
-            amount: {
-              [Op.gt]: MIN_VAL // greater than
-            }
-          }
+          // {
+          //   type: constants.message_types.message, // for example /loopout message
+          //   amount: {
+          //     [Op.gt]: MIN_VAL // greater than
+          //   }
+          // }
         ],
       },
       order: [['createdAt', 'desc']],

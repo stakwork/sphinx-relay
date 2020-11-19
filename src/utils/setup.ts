@@ -203,9 +203,6 @@ async function printGitInfo() {
 
 async function printQR() {
 
-  const clean = await isClean()
-  if(!clean) return // skip it if already setup!
-
   let public_ip
 
   const public_url = config.public_url
@@ -229,9 +226,13 @@ async function printQR() {
   // if(!theIP.includes(":")) theIP = public_ip+':3001'
 
   const b64 = Buffer.from(`ip::${theIP}::${password || ''}`).toString('base64')
-  console.log('Scan this QR in Sphinx app:')
-  console.log(b64)
+  console.log('>>', b64)
   connectionStringFile(b64)
+
+  const clean = await isClean()
+  if(!clean) return // skip it if already setup!
+
+  console.log('Scan this QR in Sphinx app:')
   QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
     console.log(url)
   })

@@ -204,9 +204,6 @@ function printGitInfo() {
 }
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
-        const clean = yield nodeinfo_1.isClean();
-        if (!clean)
-            return; // skip it if already setup!
         let public_ip;
         const public_url = config.public_url;
         if (public_url)
@@ -230,9 +227,12 @@ function printQR() {
         let theIP = public_ip;
         // if(!theIP.includes(":")) theIP = public_ip+':3001'
         const b64 = Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
-        console.log('Scan this QR in Sphinx app:');
-        console.log(b64);
+        console.log('>>', b64);
         connectionStringFile(b64);
+        const clean = yield nodeinfo_1.isClean();
+        if (!clean)
+            return; // skip it if already setup!
+        console.log('Scan this QR in Sphinx app:');
         QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
             console.log(url);
         });
