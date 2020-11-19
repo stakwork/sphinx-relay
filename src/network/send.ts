@@ -85,7 +85,10 @@ export async function sendMessage(params) {
 		let mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
 		
 		// sending a payment to one subscriber, buying a pic from OG poster
-		if(isTribeOwner && contactIds.length===1 && amount && amount>constants.min_sat_amount && msg.type===constants.message_types.purchase) {
+		// or keysend such as forwarding boost to og poster
+		if(isTribeOwner && contactIds.length===1 && amount && amount>constants.min_sat_amount && 
+			(msg.type===constants.message_types.purchase || msg.type===constants.message_types.keysend)
+		) {
 			mqttTopic = '' // FORCE KEYSEND!!!
 		}
 
