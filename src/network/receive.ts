@@ -126,7 +126,7 @@ async function onReceive(payload){
 			const ogMsg = await models.Message.findOne({where:{
 				uuid: payload.message.replyUuid,
 			}})
-			if(ogMsg) {
+			if(ogMsg && ogMsg.sender && ogMsg.sender!==1) {
 				const amtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
 				if(amtToForward>0) {
 					forwardSatsToContact(chat,ogMsg.sender,amtToForward,payload.message.replyUuid)
