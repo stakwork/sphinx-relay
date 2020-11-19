@@ -137,13 +137,10 @@ function onReceive(payload) {
             }
             // forward boost sats to recipient
             if (payload.type === msgtypes.boost && payload.message.replyUuid) {
-                console.log('===> OK!!!!!');
                 const ogMsg = yield models_1.models.Message.findOne({ where: {
                         uuid: payload.message.replyUuid,
                     } });
-                console.log('===> ogmsg!!!!!', ogMsg && ogMsg.dataValues);
                 if (ogMsg && ogMsg.sender && ogMsg.sender !== 1) {
-                    console.log('===> asdfasdfasdfamt!!!!!', payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0));
                     const amtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
                     if (amtToForward > 0) {
                         forwardSatsToContact(chat, ogMsg.sender, amtToForward);
