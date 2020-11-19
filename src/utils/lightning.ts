@@ -5,6 +5,7 @@ import { sleep } from '../helpers';
 import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
 import * as path from 'path'
+import constants from '../constants'
 
 // var protoLoader = require('@grpc/proto-loader')
 const env = process.env.NODE_ENV || 'development';
@@ -125,7 +126,7 @@ const keysend = (opts) => {
     const randoStr = crypto.randomBytes(32).toString('hex');
     const preimage = ByteBuffer.fromHex(randoStr)
     const options = {
-      amt: Math.max(opts.amt, 3),
+      amt: Math.max(opts.amt, constants.min_sat_amount||3),
       final_cltv_delta: 10,
       dest: ByteBuffer.fromHex(opts.dest),
       dest_custom_records: {
@@ -177,8 +178,10 @@ async function keysendMessage(opts) {
     await asyncForEach(Array.from(Array(n)), async(u,i)=> {
       const spliti = Math.ceil(opts.data.length/n)
       const m = opts.data.substr(i*spliti, spliti)
+      const amt = Math.round(opts.amt/n)
       try {
-        res = await keysend({...opts,
+        res = await keysend({
+          ...opts, amt, // split the amt too
           data: `${ts}_${i}_${n}_${m}`
         })
         success = true
