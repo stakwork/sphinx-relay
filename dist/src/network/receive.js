@@ -137,20 +137,22 @@ function onReceive(payload) {
             }
             // forward boost sats to recipient
             let realSatsContactId = null;
+            let amtToForward = 0;
             if (payload.type === msgtypes.boost && payload.message.replyUuid) {
                 const ogMsg = yield models_1.models.Message.findOne({ where: {
                         uuid: payload.message.replyUuid,
                     } });
                 if (ogMsg && ogMsg.sender && ogMsg.sender !== 1) {
-                    const amtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
-                    if (amtToForward > 0) {
+                    const theAmtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
+                    if (theAmtToForward > 0) {
                         realSatsContactId = ogMsg.sender;
+                        amtToForward = theAmtToForward;
                         console.log('=======> ADMIN WILL FORWARD BOOST TO', ogMsg.sender);
                     }
                 }
             }
             if (doAction)
-                forwardMessageToTribe(payload, senderContact, realSatsContactId);
+                forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward);
             else
                 console.log('=> insufficient payment for this action');
         }
@@ -205,7 +207,7 @@ function doTheAction(data) {
         }
     });
 }
-function forwardMessageToTribe(ogpayload, sender, realSatsContactId) {
+function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForward) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('forwardMessageToTribe')
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
@@ -226,9 +228,10 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId) {
         send_1.sendMessage({
             type, message,
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants_1.default.chat_roles.reader }),
+            amount: amtToForward || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,
-            realSatsContactId: realSatsContactId,
+            realSatsContactId,
             success: () => { },
             receive: () => { },
             isForwarded: true,

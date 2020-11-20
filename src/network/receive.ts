@@ -123,19 +123,21 @@ async function onReceive(payload){
 		}
 		// forward boost sats to recipient
 		let realSatsContactId = null
+		let amtToForward = 0
 		if(payload.type===msgtypes.boost && payload.message.replyUuid) {
 			const ogMsg = await models.Message.findOne({where:{
 				uuid: payload.message.replyUuid,
 			}})
 			if(ogMsg && ogMsg.sender && ogMsg.sender!==1) {
-				const amtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
-				if(amtToForward>0) {
+				const theAmtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
+				if(theAmtToForward>0) {
 					realSatsContactId = ogMsg.sender
+					amtToForward = theAmtToForward
 					console.log('=======> ADMIN WILL FORWARD BOOST TO',ogMsg.sender)
 				}
 			}
 		}
-		if(doAction) forwardMessageToTribe(payload, senderContact, realSatsContactId)
+		if(doAction) forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward)
 		else console.log('=> insufficient payment for this action')
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase) {
@@ -185,7 +187,7 @@ async function doTheAction(data){
 	}
 }
 
-async function forwardMessageToTribe(ogpayload, sender, realSatsContactId){
+async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForward){
 	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
@@ -210,9 +212,10 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId){
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias},
 			role: constants.chat_roles.reader,
 		},
+		amount: amtToForward||0,
 		chat: chat,
 		skipPubKey: payload.sender.pub_key, 
-		realSatsContactId: realSatsContactId,
+		realSatsContactId,
 		success: ()=>{},
 		receive: ()=>{},
 		isForwarded: true,
