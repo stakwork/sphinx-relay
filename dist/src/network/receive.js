@@ -207,7 +207,7 @@ function doTheAction(data) {
         }
     });
 }
-function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForward) {
+function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('forwardMessageToTribe')
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
@@ -228,7 +228,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         send_1.sendMessage({
             type, message,
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants_1.default.chat_roles.reader }),
-            amount: amtToForward || 0,
+            amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,
             realSatsContactId,

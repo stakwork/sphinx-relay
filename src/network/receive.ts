@@ -187,7 +187,7 @@ async function doTheAction(data){
 	}
 }
 
-async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForward){
+async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId){
 	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
@@ -212,7 +212,7 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias},
 			role: constants.chat_roles.reader,
 		},
-		amount: amtToForward||0,
+		amount: amtToForwardToRealSatsContactId||0,
 		chat: chat,
 		skipPubKey: payload.sender.pub_key, 
 		realSatsContactId,
