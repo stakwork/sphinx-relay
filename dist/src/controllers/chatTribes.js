@@ -119,7 +119,7 @@ exports.joinTribe = joinTribe;
 function receiveMemberRequest(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveMemberRequest');
-        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, network_type } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return console.log('no chat');
@@ -173,7 +173,8 @@ function receiveMemberRequest(payload) {
             sender: (theSender && theSender.id) || 0,
             messageContent: '', remoteMessageContent: '',
             status: constants_1.default.statuses.confirmed,
-            date: date, createdAt: date, updatedAt: date
+            date: date, createdAt: date, updatedAt: date,
+            network_type
         };
         if (isTribe) {
             msg.senderAlias = sender_alias;
@@ -314,7 +315,7 @@ exports.approveOrRejectMember = approveOrRejectMember;
 function receiveMemberApprove(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveMemberApprove');
-        const { owner, chat, chat_name, sender } = yield helpers.parseReceiveParams(payload);
+        const { owner, chat, chat_name, sender, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return console.log('no chat');
         yield chat.update({ status: constants_1.default.chat_statuses.approved });
@@ -326,7 +327,8 @@ function receiveMemberApprove(payload) {
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
             status: constants_1.default.statuses.confirmed,
-            date: date, createdAt: date, updatedAt: date
+            date: date, createdAt: date, updatedAt: date,
+            network_type
         };
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
@@ -358,7 +360,7 @@ exports.receiveMemberApprove = receiveMemberApprove;
 function receiveMemberReject(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveMemberReject');
-        const { chat, sender, chat_name } = yield helpers.parseReceiveParams(payload);
+        const { chat, sender, chat_name, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return console.log('no chat');
         yield chat.update({ status: constants_1.default.chat_statuses.rejected });
@@ -371,7 +373,8 @@ function receiveMemberReject(payload) {
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
             status: constants_1.default.statuses.confirmed,
-            date: date, createdAt: date, updatedAt: date
+            date: date, createdAt: date, updatedAt: date,
+            network_type
         };
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
@@ -388,7 +391,7 @@ exports.receiveMemberReject = receiveMemberReject;
 function receiveTribeDelete(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveTribeDelete');
-        const { chat, sender } = yield helpers.parseReceiveParams(payload);
+        const { chat, sender, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return console.log('no chat');
         // await chat.update({status: constants.chat_statuses.rejected})
@@ -401,7 +404,8 @@ function receiveTribeDelete(payload) {
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
             status: constants_1.default.statuses.confirmed,
-            date: date, createdAt: date, updatedAt: date
+            date: date, createdAt: date, updatedAt: date,
+            network_type
         };
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({

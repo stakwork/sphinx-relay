@@ -60,6 +60,10 @@ const constants = {
         "keysend": 28,
         "boost": 29,
     },
+    network_types: {
+        "lightning": 0,
+        "mqtt": 1,
+    },
     payment_errors: {
         "timeout": "Timed Out",
         "no_route": "No Route To Receiver",

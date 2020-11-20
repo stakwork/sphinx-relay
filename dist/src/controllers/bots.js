@@ -309,6 +309,7 @@ function receiveBotRes(payload) {
         const bot_name = dat.bot_name;
         const sender_alias = dat.sender.alias;
         const date_string = dat.message.date;
+        const network_type = dat.network_type || 0;
         if (!chat_uuid)
             return console.log('=> receiveBotRes Error no chat_uuid');
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
@@ -349,6 +350,7 @@ function receiveBotRes(payload) {
                 createdAt: date,
                 updatedAt: date,
                 senderAlias: sender_alias || 'Bot',
+                network_type
             };
             const message = yield models_1.models.Message.create(msg);
             socket.sendJson({

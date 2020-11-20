@@ -128,7 +128,7 @@ export const receivePayment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, network_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -142,7 +142,8 @@ export const receivePayment = async (payload) => {
     amountMsat: parseFloat(amount) * 1000,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type
   }
   if(content) msg.messageContent = content
   if(mediaType) msg.mediaType = mediaType
@@ -168,7 +169,7 @@ export const listPayments = async (req, res) => {
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
   
-  // const MIN_VAL=constants.min_sat_amount
+  const MIN_VAL=constants.min_sat_amount
   try {
     const msgs = await models.Message.findAll({
       where:{
@@ -180,12 +181,16 @@ export const listPayments = async (req, res) => {
               constants.message_types.keysend,
             ]}
           },
-          // {
-          //   type: constants.message_types.message, // for example /loopout message
-          //   amount: {
-          //     [Op.gt]: MIN_VAL // greater than
-          //   }
-          // }
+          {
+            type:  {[Op.or]: [
+              constants.message_types.message, // paid bot msgs
+              constants.message_types.boost,
+            ]},
+            amount: {
+              [Op.gt]: MIN_VAL // greater than
+            },
+            network_type: constants.network_types.lightning
+          }
         ],
       },
       order: [['createdAt', 'desc']],

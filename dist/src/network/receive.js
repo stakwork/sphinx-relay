@@ -136,6 +136,7 @@ function onReceive(payload) {
                 }
             }
             // forward boost sats to recipient
+            let realSatsContactId = null;
             if (payload.type === msgtypes.boost && payload.message.replyUuid) {
                 const ogMsg = yield models_1.models.Message.findOne({ where: {
                         uuid: payload.message.replyUuid,
@@ -143,12 +144,12 @@ function onReceive(payload) {
                 if (ogMsg && ogMsg.sender && ogMsg.sender !== 1) {
                     const amtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
                     if (amtToForward > 0) {
-                        forwardBoostSatsToContact(chat, ogMsg.sender, amtToForward);
+                        realSatsContactId = ogMsg.sender;
                     }
                 }
             }
             if (doAction)
-                forwardMessageToTribe(payload, senderContact);
+                forwardMessageToTribe(payload, senderContact, realSatsContactId);
             else
                 console.log('=> insufficient payment for this action');
         }
@@ -203,23 +204,7 @@ function doTheAction(data) {
         }
     });
 }
-function forwardBoostSatsToContact(chat, contactId, amount) {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> forwardBoostSatsToContact', contactId);
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        send_1.sendMessage({
-            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),
-            sender: owner,
-            type: constants_1.default.message_types.keysend,
-            amount: amount,
-            message: { content: '!' },
-            success: () => { },
-            failure: () => { }
-        });
-    });
-}
-exports.forwardBoostSatsToContact = forwardBoostSatsToContact;
-function forwardMessageToTribe(ogpayload, sender) {
+function forwardMessageToTribe(ogpayload, sender, realSatsContactId) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('forwardMessageToTribe')
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
@@ -242,6 +227,7 @@ function forwardMessageToTribe(ogpayload, sender) {
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants_1.default.chat_roles.reader }),
             chat: chat,
             skipPubKey: payload.sender.pub_key,
+            realSatsContactId: realSatsContactId,
             success: () => { },
             receive: () => { },
             isForwarded: true,
@@ -267,6 +253,7 @@ function initTribesSubscriptions() {
                 const msg = message.toString();
                 // check topic is signed by sender?
                 const payload = yield parseAndVerifyPayload(msg);
+                payload.network_type = constants_1.default.network_types.mqtt;
                 onReceive(payload);
             }
             catch (e) { }
@@ -339,7 +326,8 @@ function saveAnonymousKeysend(response, memo, sender_pubkey) {
             messageContent: memo || '',
             status: constants_1.default.statuses.confirmed,
             createdAt: new Date(settleDate),
-            updatedAt: new Date(settleDate)
+            updatedAt: new Date(settleDate),
+            network_type: constants_1.default.network_types.lightning
         });
         socket.sendJson({
             type: 'keysend',
@@ -396,6 +384,7 @@ function parseKeysendInvoice(i) {
             if (value && dat && dat.message) {
                 dat.message.amount = value; // ADD IN TRUE VALUE
             }
+            dat.network_type = constants_1.default.network_types.lightning;
             onReceive(dat);
         }
     });

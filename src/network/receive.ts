@@ -122,6 +122,7 @@ async function onReceive(payload){
 			}
 		}
 		// forward boost sats to recipient
+		let realSatsContactId = null
 		if(payload.type===msgtypes.boost && payload.message.replyUuid) {
 			const ogMsg = await models.Message.findOne({where:{
 				uuid: payload.message.replyUuid,
@@ -129,11 +130,11 @@ async function onReceive(payload){
 			if(ogMsg && ogMsg.sender && ogMsg.sender!==1) {
 				const amtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
 				if(amtToForward>0) {
-					forwardBoostSatsToContact(chat,ogMsg.sender,amtToForward)
+					realSatsContactId = ogMsg.sender
 				}
 			}
 		}
-		if(doAction) forwardMessageToTribe(payload, senderContact)
+		if(doAction) forwardMessageToTribe(payload, senderContact, realSatsContactId)
 		else console.log('=> insufficient payment for this action')
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase) {
@@ -183,21 +184,7 @@ async function doTheAction(data){
 	}
 }
 
-export async function forwardBoostSatsToContact(chat,contactId:number,amount:number) {
-	console.log('=> forwardBoostSatsToContact',contactId)
-	const owner = await models.Contact.findOne({where:{isOwner:true}})
-	sendMessage({
-		chat: {...chat.dataValues, contactIds:[contactId]},
-		sender: owner,
-		type: constants.message_types.keysend,
-		amount: amount,
-		message: { content:'!' },
-		success: ()=>{},
-		failure: ()=>{}
-	})
-}
-
-async function forwardMessageToTribe(ogpayload, sender){
+async function forwardMessageToTribe(ogpayload, sender, realSatsContactId){
 	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
@@ -224,6 +211,7 @@ async function forwardMessageToTribe(ogpayload, sender){
 		},
 		chat: chat,
 		skipPubKey: payload.sender.pub_key, 
+		realSatsContactId: realSatsContactId,
 		success: ()=>{},
 		receive: ()=>{},
 		isForwarded: true,
@@ -245,6 +233,7 @@ export async function initTribesSubscriptions(){
 			const msg = message.toString()
 			// check topic is signed by sender?
 			const payload = await parseAndVerifyPayload(msg)
+			payload.network_type = constants.network_types.mqtt
 			onReceive(payload)
 		} catch(e){}
     })
@@ -309,7 +298,8 @@ async function saveAnonymousKeysend(response, memo, sender_pubkey) {
 		messageContent: memo||'',
 		status: constants.statuses.confirmed,
 		createdAt: new Date(settleDate),
-		updatedAt: new Date(settleDate)
+		updatedAt: new Date(settleDate),
+		network_type: constants.network_types.lightning
 	})
 	socket.sendJson({
 		type:'keysend',
@@ -361,7 +351,8 @@ export async function parseKeysendInvoice(i){
 		const dat = payload
 		if(value && dat && dat.message){
 			dat.message.amount = value // ADD IN TRUE VALUE
-        }
+		}
+		dat.network_type = constants.network_types.lightning
 		onReceive(dat)
 	}
 }

@@ -114,7 +114,7 @@ export async function joinTribe(req, res){
 
 export async function receiveMemberRequest(payload) {
 	console.log('=> receiveMemberRequest')
-	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, network_type } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return console.log('no chat')
@@ -170,7 +170,8 @@ export async function receiveMemberRequest(payload) {
 		sender: (theSender && theSender.id) || 0,
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
+		date: date, createdAt: date, updatedAt: date,
+		network_type
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias
@@ -316,7 +317,7 @@ export async function approveOrRejectMember(req,res) {
 
 export async function receiveMemberApprove(payload) {
 	console.log('=> receiveMemberApprove')
-	const { owner, chat, chat_name, sender } = await helpers.parseReceiveParams(payload)
+	const { owner, chat, chat_name, sender, network_type } = await helpers.parseReceiveParams(payload)
 	if(!chat) return console.log('no chat')
 	await chat.update({status: constants.chat_statuses.approved})
 
@@ -328,7 +329,8 @@ export async function receiveMemberApprove(payload) {
 		sender: (sender && sender.id) || 0,
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
+		date: date, createdAt: date, updatedAt: date,
+		network_type
 	}
 	const message = await models.Message.create(msg)
 	socket.sendJson({
@@ -362,7 +364,7 @@ export async function receiveMemberApprove(payload) {
 
 export async function receiveMemberReject(payload) {
 	console.log('=> receiveMemberReject')
-	const { chat, sender, chat_name } = await helpers.parseReceiveParams(payload)
+	const { chat, sender, chat_name, network_type } = await helpers.parseReceiveParams(payload)
 	if(!chat) return console.log('no chat')
 	await chat.update({status: constants.chat_statuses.rejected})
 	// dang.. nothing really to do here?
@@ -374,7 +376,8 @@ export async function receiveMemberReject(payload) {
 		sender: (sender && sender.id) || 0,
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
+		date: date, createdAt: date, updatedAt: date,
+		network_type
 	}
 	const message = await models.Message.create(msg)
 	socket.sendJson({
@@ -391,7 +394,7 @@ export async function receiveMemberReject(payload) {
 
 export async function receiveTribeDelete(payload) {
 	console.log('=> receiveTribeDelete')
-	const { chat, sender } = await helpers.parseReceiveParams(payload)
+	const { chat, sender, network_type } = await helpers.parseReceiveParams(payload)
 	if(!chat) return console.log('no chat')
 	// await chat.update({status: constants.chat_statuses.rejected})
 	// update on tribes server too
@@ -403,7 +406,8 @@ export async function receiveTribeDelete(payload) {
 		sender: (sender && sender.id) || 0,
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
+		date: date, createdAt: date, updatedAt: date,
+		network_type
 	}
 	const message = await models.Message.create(msg)
 	socket.sendJson({

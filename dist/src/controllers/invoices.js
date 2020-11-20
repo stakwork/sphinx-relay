@@ -204,6 +204,7 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
     const total_spent = 1;
     const dat = payload.content || payload;
     const payment_request = dat.message.invoice;
+    const network_type = dat.network_type || 0;
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
@@ -226,7 +227,8 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
         date: new Date(invoiceDate),
         status: constants_1.default.statuses.pending,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type: network_type,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {

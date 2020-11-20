@@ -22,7 +22,6 @@ const confirmations_1 = require("./confirmations");
 const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
-const receive_1 = require("../network/receive");
 exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
@@ -178,47 +177,30 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     };
     if (reply_uuid)
         msgToSend.replyUuid = reply_uuid;
-    network.sendMessage({
+    const sendMessageParams = {
         chat: chat,
         sender: owner,
         amount: amount || 0,
         type: msgtype,
         message: msgToSend,
-    });
+    };
+    // IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
     if (isTribeOwner && reply_uuid && boost && amount) {
-        processTribeAdminBoost(chat, reply_uuid, amount);
-    }
-});
-function processTribeAdminBoost(chat, reply_uuid, amount) {
-    return __awaiter(this, void 0, void 0, function* () {
         const ogMsg = yield models_1.models.Message.findOne({ where: {
                 uuid: reply_uuid,
             } });
-        if (ogMsg && ogMsg.sender && ogMsg.sender !== 1) {
-            receive_1.forwardBoostSatsToContact(chat, ogMsg.sender, amount);
-            var date = new Date();
-            date.setMilliseconds(0);
-            models_1.models.Message.create({
-                chatId: 0,
-                type: constants_1.default.message_types.keysend,
-                sender: 1,
-                amount,
-                amountMsat: amount * 1000,
-                paymentHash: '',
-                date: date,
-                messageContent: '!',
-                status: constants_1.default.statuses.confirmed,
-                createdAt: date,
-                updatedAt: date
-            });
+        if (ogMsg && ogMsg.sender) {
+            sendMessageParams.realSatsContactId = 123;
         }
-    });
-}
+    }
+    // final send
+    network.sendMessage(sendMessageParams);
+});
 exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -237,7 +219,8 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
         messageContent: text,
         createdAt: date,
         updatedAt: date,
-        status: constants_1.default.statuses.received
+        status: constants_1.default.statuses.received,
+        network_type: network_type,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -258,7 +241,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received boost', { payload });
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -277,7 +260,8 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         messageContent: text,
         createdAt: date,
         updatedAt: date,
-        status: constants_1.default.statuses.received
+        status: constants_1.default.statuses.received,
+        network_type
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {

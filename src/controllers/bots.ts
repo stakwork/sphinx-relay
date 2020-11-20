@@ -176,6 +176,7 @@ export async function receiveBotInstall(payload) {
   const sender_pub_key = dat.sender && dat.sender.pub_key
   const bot_uuid = dat.bot_uuid
   const chat_uuid = dat.chat && dat.chat.uuid
+
   if(!chat_uuid || !sender_pub_key) return console.log('no chat uuid or sender pub key')
 
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
@@ -298,6 +299,7 @@ export async function receiveBotRes(payload) {
   const bot_name = dat.bot_name
   const sender_alias = dat.sender.alias
   const date_string = dat.message.date
+  const network_type = dat.network_type||0
 	
   if(!chat_uuid) return console.log('=> receiveBotRes Error no chat_uuid')
 
@@ -339,6 +341,7 @@ export async function receiveBotRes(payload) {
       createdAt: date,
       updatedAt: date,
       senderAlias: sender_alias || 'Bot',
+      network_type
     }
     const message = await models.Message.create(msg)
     socket.sendJson({

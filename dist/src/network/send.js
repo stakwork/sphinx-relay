@@ -20,7 +20,7 @@ const intercept = require("./intercept");
 const constants_1 = require("../constants");
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded } = params;
+        const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, realSatsContactId } = params;
         if (!chat || !sender)
             return;
         const isTribe = chat.type === constants_1.default.chat_types.tribe;
@@ -88,9 +88,8 @@ function sendMessage(params) {
             console.log('-> sending to ', contact.id, destkey);
             let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
             // sending a payment to one subscriber, buying a pic from OG poster
-            // or keysend such as forwarding boost to og poster
-            if (isTribeOwner && contactIds.length === 1 && amount && amount > constants_1.default.min_sat_amount &&
-                (msg.type === constants_1.default.message_types.purchase || msg.type === constants_1.default.message_types.keysend)) {
+            // or boost to og poster
+            if (isTribeOwner && amount && realSatsContactId === contactId) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);

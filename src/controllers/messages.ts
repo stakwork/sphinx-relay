@@ -11,7 +11,6 @@ import {sendConfirmation} from './confirmations'
 import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
-import {forwardBoostSatsToContact} from '../network/receive'
 
 export const getMessages = async (req, res) => {
 	const dateToReturn = req.query.date;
@@ -200,49 +199,35 @@ export const sendMessage = async (req, res) => {
 		content: remote_text_map || remote_text || text
 	}
 	if(reply_uuid) msgToSend.replyUuid=reply_uuid
-	network.sendMessage({
+
+	const sendMessageParams:{[k:string]:any} = {
 		chat: chat,
 		sender: owner,
 		amount: amount||0,
 		type: msgtype,
 		message: msgToSend,
-	})
+	}
 
+	// IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
 	const isTribe = chat.type===constants.chat_types.tribe
 	const isTribeOwner = isTribe && owner.publicKey===chat.ownerPubkey
 	if(isTribeOwner && reply_uuid && boost && amount) {
-		processTribeAdminBoost(chat, reply_uuid, amount)
+		const ogMsg = await models.Message.findOne({where:{
+			uuid: reply_uuid,
+		}})
+		if(ogMsg && ogMsg.sender) {
+			sendMessageParams.realSatsContactId = 123
+		}	
 	}
-}
 
-async function processTribeAdminBoost(chat, reply_uuid, amount){
-	const ogMsg = await models.Message.findOne({where:{
-		uuid: reply_uuid,
-	}})
-	if(ogMsg && ogMsg.sender && ogMsg.sender!==1) {
-		forwardBoostSatsToContact(chat,ogMsg.sender,amount)
-		var date = new Date();
-		date.setMilliseconds(0)
-		models.Message.create({ // gen keysend record on owner side
-			chatId: 0,
-			type: constants.message_types.keysend,
-			sender: 1,
-			amount,
-			amountMsat: amount*1000,
-			paymentHash: '',
-			date: date,
-			messageContent: '!',
-			status: constants.statuses.confirmed,
-			createdAt: date,
-			updatedAt: date
-		})
-	}
+	// final send
+	network.sendMessage(sendMessageParams)
 }
 
 export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -262,7 +247,8 @@ export const receiveMessage = async (payload) => {
 		messageContent: text,
 		createdAt: date,
 		updatedAt: date,
-		status: constants.statuses.received
+		status: constants.statuses.received,
+		network_type: network_type,
 	}
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
@@ -286,7 +272,7 @@ export const receiveMessage = async (payload) => {
 export const receiveBoost = async (payload) => {
 	console.log('received boost', { payload })
 
-	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -306,7 +292,8 @@ export const receiveBoost = async (payload) => {
 		messageContent: text,
 		createdAt: date,
 		updatedAt: date,
-		status: constants.statuses.received
+		status: constants.statuses.received,
+		network_type
 	}
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {

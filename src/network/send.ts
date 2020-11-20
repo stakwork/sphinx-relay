@@ -11,7 +11,7 @@ import constants from '../constants'
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
 export async function sendMessage(params) {
-	const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded } = params
+	const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, realSatsContactId } = params
 	if(!chat || !sender) return
 
 	const isTribe = chat.type===constants.chat_types.tribe
@@ -83,12 +83,10 @@ export async function sendMessage(params) {
 		console.log('-> sending to ', contact.id, destkey)
 
 		let mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
-		
+
 		// sending a payment to one subscriber, buying a pic from OG poster
-		// or keysend such as forwarding boost to og poster
-		if(isTribeOwner && contactIds.length===1 && amount && amount>constants.min_sat_amount && 
-			(msg.type===constants.message_types.purchase || msg.type===constants.message_types.keysend)
-		) {
+		// or boost to og poster
+		if(isTribeOwner && amount && realSatsContactId===contactId) {
 			mqttTopic = '' // FORCE KEYSEND!!!
 		}
 
