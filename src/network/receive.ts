@@ -129,7 +129,7 @@ async function onReceive(payload){
 			if(ogMsg && ogMsg.sender && ogMsg.sender!==1) {
 				const amtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
 				if(amtToForward>0) {
-					forwardSatsToContact(chat,ogMsg.sender,amtToForward)
+					forwardBoostSatsToContact(chat,ogMsg.sender,amtToForward)
 				}
 			}
 		}
@@ -183,8 +183,8 @@ async function doTheAction(data){
 	}
 }
 
-async function forwardSatsToContact(chat,contactId:number,amount:number) {
-	console.log('=> forwardSatsToContact',contactId)
+export async function forwardBoostSatsToContact(chat,contactId:number,amount:number) {
+	console.log('=> forwardBoostSatsToContact',contactId)
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
 	sendMessage({
 		chat: {...chat.dataValues, contactIds:[contactId]},

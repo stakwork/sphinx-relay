@@ -22,6 +22,7 @@ const confirmations_1 = require("./confirmations");
 const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
+const receive_1 = require("../network/receive");
 exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
@@ -184,10 +185,40 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         type: msgtype,
         message: msgToSend,
     });
+    const isTribe = chat.type === constants_1.default.chat_types.tribe;
+    const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
+    if (isTribeOwner && reply_uuid && boost && amount) {
+        processTribeAdminBoost(chat, reply_uuid, amount);
+    }
 });
+function processTribeAdminBoost(chat, reply_uuid, amount) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ogMsg = yield models_1.models.Message.findOne({ where: {
+                uuid: reply_uuid,
+            } });
+        if (ogMsg && ogMsg.sender && ogMsg.sender !== 1) {
+            receive_1.forwardBoostSatsToContact(chat, ogMsg.sender, amount);
+            var date = new Date();
+            date.setMilliseconds(0);
+            models_1.models.Message.create({
+                chatId: 0,
+                type: constants_1.default.message_types.keysend,
+                sender: 1,
+                amount,
+                amountMsat: amount * 1000,
+                paymentHash: '',
+                date: date,
+                messageContent: '!',
+                status: constants_1.default.statuses.confirmed,
+                createdAt: date,
+                updatedAt: date
+            });
+        }
+    });
+}
 exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -202,7 +233,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
         type: constants_1.default.message_types.message,
         sender: sender.id,
         date: date,
-        // amount: amount||0,
+        amount: amount || 0,
         messageContent: text,
         createdAt: date,
         updatedAt: date,
@@ -227,7 +258,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received boost', { payload });
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -242,7 +273,7 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: constants_1.default.message_types.boost,
         sender: sender.id,
         date: date,
-        // amount: amount||0,
+        amount: amount || 0,
         messageContent: text,
         createdAt: date,
         updatedAt: date,
