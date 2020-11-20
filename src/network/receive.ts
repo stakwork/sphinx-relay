@@ -131,6 +131,7 @@ async function onReceive(payload){
 				const amtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
 				if(amtToForward>0) {
 					realSatsContactId = ogMsg.sender
+					console.log('=======> ADMIN WILL FORWARD BOOST TO',ogMsg.sender)
 				}
 			}
 		}

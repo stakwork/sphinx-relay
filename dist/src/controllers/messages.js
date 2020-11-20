@@ -192,7 +192,8 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 uuid: reply_uuid,
             } });
         if (ogMsg && ogMsg.sender) {
-            sendMessageParams.realSatsContactId = 123;
+            console.log('=======> ADMIN BOOSTED A MSG to', ogMsg.sender);
+            sendMessageParams.realSatsContactId = ogMsg.sender;
         }
     }
     // final send
