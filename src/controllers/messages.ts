@@ -216,7 +216,6 @@ export const sendMessage = async (req, res) => {
 			uuid: reply_uuid,
 		}})
 		if(ogMsg && ogMsg.sender) {
-			console.log('=======> ADMIN BOOSTED A MSG to',ogMsg.sender)
 			sendMessageParams.realSatsContactId = ogMsg.sender
 		}	
 	}
@@ -271,9 +270,8 @@ export const receiveMessage = async (payload) => {
 }
 
 export const receiveBoost = async (payload) => {
-	console.log('received boost', { payload })
-
 	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
+	console.log('received boost ' +amount+ ' sats on network:', network_type)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}

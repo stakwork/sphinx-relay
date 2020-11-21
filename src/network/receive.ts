@@ -133,7 +133,6 @@ async function onReceive(payload){
 				if(theAmtToForward>0) {
 					realSatsContactId = ogMsg.sender
 					amtToForward = theAmtToForward
-					console.log('=======> ADMIN WILL FORWARD BOOST TO',ogMsg.sender)
 				}
 			}
 		}

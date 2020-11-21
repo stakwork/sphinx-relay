@@ -192,7 +192,6 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 uuid: reply_uuid,
             } });
         if (ogMsg && ogMsg.sender) {
-            console.log('=======> ADMIN BOOSTED A MSG to', ogMsg.sender);
             sendMessageParams.realSatsContactId = ogMsg.sender;
         }
     }
@@ -241,8 +240,8 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received boost', { payload });
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type } = yield helpers.parseReceiveParams(payload);
+    console.log('received boost ' + amount + ' sats on network:', network_type);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }

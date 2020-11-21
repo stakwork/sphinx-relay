@@ -89,11 +89,6 @@ function sendMessage(params) {
             let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
             // sending a payment to one subscriber, buying a pic from OG poster
             // or boost to og poster
-            if (realSatsContactId) {
-                console.log("REAL SATS CONTACT ID", realSatsContactId);
-                console.log("is tribe owenr", isTribeOwner);
-                console.log('amount', amount);
-            }
             if (isTribeOwner && amount && realSatsContactId === contactId) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
