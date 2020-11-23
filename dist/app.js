@@ -41,9 +41,12 @@ function start() {
 start();
 function connectToLND() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield grpc.reconnectToLND(Math.random()); // recursive
-        console.log(">> SETUP MAIN");
-        yield mainSetup();
+        grpc.reconnectToLND(Math.random(), function () {
+            return __awaiter(this, void 0, void 0, function* () {
+                console.log(">> SETUP MAIN");
+                yield mainSetup();
+            });
+        }); // recursive
     });
 }
 function mainSetup() {
