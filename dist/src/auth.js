@@ -17,7 +17,7 @@ const res_1 = require("./utils/res");
 const macaroon_1 = require("./utils/macaroon");
 const fs = require('fs');
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, 'config/app.json'))[env];
+const config = require(path.join(__dirname, '../config/app.json'))[env];
 function unlocker(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { password } = req.body;

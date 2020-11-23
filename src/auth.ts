@@ -7,7 +7,7 @@ import {setInMemoryMacaroon} from './utils/macaroon'
 const fs = require('fs')
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, 'config/app.json'))[env];
+const config = require(path.join(__dirname, '../config/app.json'))[env];
 
 export async function unlocker(req, res): Promise<boolean> {
   const { password } = req.body
