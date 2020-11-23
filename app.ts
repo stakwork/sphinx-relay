@@ -11,6 +11,7 @@ import * as controllers from './src/controllers'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
 import {authModule, unlocker} from './src/auth'
+import * as grpc from './src/grpc'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
@@ -22,8 +23,6 @@ console.log('=> config.node_http_port:',config.node_http_port)
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 
-var i = 0
-
 // START SETUP!
 async function start(){
 	await setupDatabase()
@@ -33,25 +32,13 @@ async function start(){
 start()
 
 async function connectToLND(){
-	i++
-	console.log(`=> [lnd] connecting... attempt #${i}`)
-	try {
-		await network.initGrpcSubscriptions()   // LND
-		await mainSetup()						// DB + express
-		await network.initTribesSubscriptions() // MQTT
-	} catch(e) {
-		if(e.details) {
-			console.log(`=> [lnd] error details: ${e.details}`)
-		} else {
-			console.log(`=> [lnd] error: ${e.message}`)
-		}
-		setTimeout(async()=>{ // retry each 2 secs
-			await connectToLND()
-		},2000)
-	}
+	await grpc.reconnectToLND(Math.random()) // recursive
+	console.log(">> SETUP MAIN")
+	await mainSetup()
 }
 
 async function mainSetup(){
+	await network.initTribesSubscriptions() 
 	if (config.hub_api_url) {
 		// pingHubInterval(15000)
 		checkInvitesHubInterval(5000)

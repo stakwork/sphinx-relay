@@ -136,23 +136,27 @@ var i = 0;
 var ctx = 0;
 function reconnectToLND(innerCtx) {
     return __awaiter(this, void 0, void 0, function* () {
-        ctx = innerCtx;
-        i++;
-        const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-        console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`);
-        try {
-            yield network.initGrpcSubscriptions();
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            ctx = innerCtx;
+            i++;
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            console.log(`=> [lnd] reconnected! ${now}`);
-        }
-        catch (e) {
-            console.log("COULD NOT RECONNECT", e, e.message, e.code);
-            setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                if (ctx === innerCtx) { // if another retry fires, then this will not run
-                    yield reconnectToLND(innerCtx);
-                }
-            }), 2000);
-        }
+            console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`);
+            try {
+                yield network.initGrpcSubscriptions();
+                const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+                console.log(`=> [lnd] connected! ${now}`);
+                resolve();
+            }
+            catch (e) {
+                console.log("COULD NOT RECONNECT", e, e.message, e.code);
+                setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                    if (ctx === innerCtx) { // if another retry fires, then this will not run
+                        yield reconnectToLND(innerCtx);
+                    }
+                }), 2000);
+            }
+        }));
     });
 }
+exports.reconnectToLND = reconnectToLND;
 //# sourceMappingURL=index.js.map

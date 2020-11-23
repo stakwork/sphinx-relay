@@ -22,6 +22,7 @@ const controllers = require("./src/controllers");
 const socket = require("./src/utils/socket");
 const network = require("./src/network");
 const auth_1 = require("./src/auth");
+const grpc = require("./src/grpc");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -29,7 +30,6 @@ console.log("=> env:", env);
 console.log('=> process.env.PORT:', process.env.PORT);
 console.log('=> config.node_http_port:', config.node_http_port);
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
-var i = 0;
 // START SETUP!
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -41,28 +41,14 @@ function start() {
 start();
 function connectToLND() {
     return __awaiter(this, void 0, void 0, function* () {
-        i++;
-        console.log(`=> [lnd] connecting... attempt #${i}`);
-        try {
-            yield network.initGrpcSubscriptions(); // LND
-            yield mainSetup(); // DB + express
-            yield network.initTribesSubscriptions(); // MQTT
-        }
-        catch (e) {
-            if (e.details) {
-                console.log(`=> [lnd] error details: ${e.details}`);
-            }
-            else {
-                console.log(`=> [lnd] error: ${e.message}`);
-            }
-            setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                yield connectToLND();
-            }), 2000);
-        }
+        yield grpc.reconnectToLND(Math.random()); // recursive
+        console.log(">> SETUP MAIN");
+        yield mainSetup();
     });
 }
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
+        yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             // pingHubInterval(15000)
             hub_1.checkInvitesHubInterval(5000);
