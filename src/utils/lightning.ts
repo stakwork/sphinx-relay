@@ -51,8 +51,11 @@ const loadLightning = () => {
     try{
       var credentials = loadCredentials()
       var lnrpcDescriptor = grpc.load("proto/rpc.proto");
+      console.log('lnrpcDescriptor',lnrpcDescriptor)
       var lnrpc: any = lnrpcDescriptor.lnrpc
+      console.log('lnrpc',lnrpc)
       lightningClient = new lnrpc.Lightning(config.node_ip + ':' + config.lnd_port, credentials);
+      console.log("lightningClient",lightningClient)
       return lightningClient
     } catch(e) {
       throw e

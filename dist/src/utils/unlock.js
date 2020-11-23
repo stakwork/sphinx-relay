@@ -16,7 +16,9 @@ const readline = require('readline');
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 console.log(JSON.stringify(config, null, 2));
-// /relay/.lnd/.lndpwd
+/*
+"lnd_pwd_path": "/relay/.lnd/.lndpwd"
+*/
 function tryToUnlockLND() {
     return __awaiter(this, void 0, void 0, function* () {
         const p = config.lnd_pwd_path;

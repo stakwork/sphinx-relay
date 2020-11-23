@@ -8,7 +8,9 @@ const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
 console.log(JSON.stringify(config,null,2))
 
-// /relay/.lnd/.lndpwd
+/*
+"lnd_pwd_path": "/relay/.lnd/.lndpwd"
+*/
 
 export async function tryToUnlockLND() {
     const p = config.lnd_pwd_path

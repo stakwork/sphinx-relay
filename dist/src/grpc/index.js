@@ -18,7 +18,7 @@ const lightning_1 = require("../utils/lightning");
 const network = require("../network");
 const moment = require("moment");
 const constants_1 = require("../constants");
-const unlock_1 = require("../utils/unlock");
+// import {tryToUnlockLND} from '../utils/unlock'
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
@@ -151,7 +151,7 @@ function reconnectToLND(innerCtx) {
             }
             catch (e) {
                 if (e.code === ERR_CODE_UNIMPLEMENTED) {
-                    yield unlock_1.tryToUnlockLND();
+                    // await tryToUnlockLND()
                 }
                 setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                     if (ctx === innerCtx) { // if another retry fires, then this will not run
