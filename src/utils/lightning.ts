@@ -50,7 +50,7 @@ const loadLightning = () => {
   } else {
     try{
       var credentials = loadCredentials()
-      var lnrpcDescriptor = grpc.load("rpc.proto");
+      var lnrpcDescriptor = grpc.load("proto/rpc.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
       lightningClient = new lnrpc.Lightning(config.node_ip + ':' + config.lnd_port, credentials);
       return lightningClient
@@ -66,7 +66,7 @@ const loadWalletUnlocker = () => {
   } else {
     var credentials = loadCredentials()
     try{
-      var lnrpcDescriptor = grpc.load("rpc.proto");
+      var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
       walletUnlocker = new lnrpc.WalletUnlocker(config.node_ip + ':' + config.lnd_port, credentials);
       return walletUnlocker

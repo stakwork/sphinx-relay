@@ -6,6 +6,8 @@ const readline = require('readline');
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
+console.log(JSON.stringify(config,null,2))
+
 // /relay/.lnd/.lndpwd
 
 export async function tryToUnlockLND() {
@@ -14,7 +16,7 @@ export async function tryToUnlockLND() {
 
     console.log('==>',p)
 
-    var pwd = getFirstLine(config.lnd_pwd_path);
+    var pwd = await getFirstLine(config.lnd_pwd_path);
     if(!pwd) return
 
     console.log('==>',pwd)
