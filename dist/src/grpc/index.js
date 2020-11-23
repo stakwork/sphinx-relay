@@ -138,13 +138,15 @@ function reconnectToLND(innerCtx) {
     return __awaiter(this, void 0, void 0, function* () {
         ctx = innerCtx;
         i++;
-        console.log(`=> [lnd] reconnecting... attempt #${i}`);
+        const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+        console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`);
         try {
             yield network.initGrpcSubscriptions();
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
             console.log(`=> [lnd] reconnected! ${now}`);
         }
         catch (e) {
+            console.log("COULD NOT RECONNECT", e, e.message, e.code);
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 if (ctx === innerCtx) { // if another retry fires, then this will not run
                     yield reconnectToLND(innerCtx);
