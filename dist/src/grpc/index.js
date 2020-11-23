@@ -20,6 +20,7 @@ const moment = require("moment");
 const constants_1 = require("../constants");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
+const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning();
@@ -148,7 +149,10 @@ function reconnectToLND(innerCtx) {
                 resolve();
             }
             catch (e) {
-                console.log("COULD NOT RECONNECT", e, e.message, e.code);
+                console.log(`=> ${now} [lnd] error connecting ${e.message}`);
+                if (e.code === ERR_CODE_UNIMPLEMENTED) {
+                    console.log("UNLOCK EHRE!!!!!");
+                }
                 setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                     if (ctx === innerCtx) { // if another retry fires, then this will not run
                         yield reconnectToLND(innerCtx);

@@ -10,6 +10,7 @@ import constants from '../constants'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
+const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
 export function subscribeInvoices(parseKeysendInvoice) {	
 	return new Promise(async(resolve,reject)=>{
@@ -141,7 +142,10 @@ export async function reconnectToLND(innerCtx:number) {
 			console.log(`=> [lnd] connected! ${now}`)
 			resolve()
 		} catch(e) {
-			console.log("COULD NOT RECONNECT",e,e.message,e.code)
+			console.log(`=> ${now} [lnd] error connecting ${e.message}`)
+			if(e.code===ERR_CODE_UNIMPLEMENTED) {
+				console.log("UNLOCK EHRE!!!!!")
+			}
 			setTimeout(async()=>{ // retry each 2 secs
 				if(ctx===innerCtx) { // if another retry fires, then this will not run
 					await reconnectToLND(innerCtx)
