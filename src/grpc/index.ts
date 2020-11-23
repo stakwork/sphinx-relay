@@ -95,7 +95,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			}
 		});
 		call.on('status', function(status) {
-			console.log("Status", status);
+			console.log("Status", status.code, status);
 			// The server is unavailable, trying to reconnect.
 			if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
 				i = 0

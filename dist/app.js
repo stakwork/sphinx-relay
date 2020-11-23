@@ -14,16 +14,14 @@ const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const crypto = require("crypto");
 const path = require("path");
-const models_1 = require("./src/models");
 const logger_1 = require("./src/utils/logger");
 const hub_1 = require("./src/hub");
 const setup_1 = require("./src/utils/setup");
 const controllers = require("./src/controllers");
 const socket = require("./src/utils/socket");
 const network = require("./src/network");
-let server = null;
+const auth_1 = require("./src/auth");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -86,7 +84,7 @@ function setupApp() {
         }));
         app.use(cookieParser());
         if (env != 'development') {
-            app.use(authModule);
+            app.use(auth_1.authModule);
         }
         app.use('/static', express.static('public'));
         app.get('/app', (req, res) => res.send('INDEX'));
@@ -96,51 +94,22 @@ function setupApp() {
             /* eslint-disable no-console */
             console.log(`Node listening on ${port}.`);
         });
-        controllers.set(app);
-        socket.connect(server);
-    });
-}
-function authModule(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (req.path == '/app' ||
-            req.path == '/' ||
-            req.path == '/info' ||
-            req.path == '/action' ||
-            req.path == '/contacts/tokens' ||
-            req.path == '/latest' ||
-            req.path.startsWith('/static') ||
-            req.path == '/contacts/set_dev') {
-            next();
-            return;
-        }
-        if (process.env.HOSTING_PROVIDER === 'true') {
-            // const domain = process.env.INVITE_SERVER
-            const host = req.headers.origin;
-            console.log('=> host:', host);
-            const referer = req.headers.referer;
-            console.log('=> referer:', referer);
-            if (req.path === '/invoices') {
-                next();
-                return;
-            }
-        }
-        const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
-        if (token == null) {
-            res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
-            res.end('Invalid credentials');
+        // start all routes!
+        if (!config.unlock) {
+            controllers.set(app);
+            socket.connect(server);
         }
         else {
-            const user = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-            if (user.authToken == null || user.authToken != hashedToken) {
-                res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
-                res.end('Invalid credentials');
-            }
-            else {
-                next();
-            }
+            app.post('/unlock', function (req, res) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    const ok = yield auth_1.unlocker(req, res);
+                    if (ok) {
+                        controllers.set(app);
+                        socket.connect(server);
+                    }
+                });
+            });
         }
     });
 }
-exports.default = server;
 //# sourceMappingURL=app.js.map

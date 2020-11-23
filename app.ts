@@ -3,17 +3,15 @@ import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
-import * as crypto from 'crypto'
 import * as path from 'path'
-import {models} from './src/models'
 import logger from './src/utils/logger'
 import {pingHubInterval, checkInvitesHubInterval} from './src/hub'
 import {setupDatabase, setupDone} from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
+import {authModule, unlocker} from './src/auth'
 
-let server: any = null
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
 const port = process.env.PORT || config.node_http_port || 3001
@@ -86,53 +84,17 @@ async function setupApp(){
 		console.log(`Node listening on ${port}.`);
 	});
 
-	controllers.set(app);
-
-	socket.connect(server)
-}
-
-async function authModule(req, res, next) {
-	if (
-		req.path == '/app' ||
-		req.path == '/' ||
-		req.path == '/info' ||
-		req.path == '/action' ||
-		req.path == '/contacts/tokens' ||
-		req.path == '/latest' ||
-		req.path.startsWith('/static') ||
-		req.path == '/contacts/set_dev'
-	) {
-		next()
-		return
-	}
-
-	if (process.env.HOSTING_PROVIDER==='true'){
-		// const domain = process.env.INVITE_SERVER
-		const host = req.headers.origin
-		console.log('=> host:', host)
-		const referer = req.headers.referer
-		console.log('=> referer:', referer)
-		if (req.path === '/invoices') {
-			next()
-			return
-		}
-	}
-
-	const token = req.headers['x-user-token'] || req.cookies['x-user-token']
-
-	if (token == null) {
-		res.writeHead(401, 'Access invalid for user', {'Content-Type' : 'text/plain'});
-    	res.end('Invalid credentials');
+	// start all routes!
+	if(!config.unlock) {
+		controllers.set(app);
+		socket.connect(server)
 	} else {
-		const user = await models.Contact.findOne({ where: { isOwner: true }})
-		const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-		if (user.authToken == null || user.authToken != hashedToken) {
-			res.writeHead(401, 'Access invalid for user', {'Content-Type' : 'text/plain'});
-			res.end('Invalid credentials');
-		} else {
-			next();
-		}
+		app.post('/unlock', async function(req,res){
+			const ok = await unlocker(req,res)
+			if(ok) {
+				controllers.set(app);
+				socket.connect(server)
+			}
+		}) 
 	}
 }
-
-export default server
