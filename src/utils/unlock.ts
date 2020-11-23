@@ -9,11 +9,15 @@ const config = require(path.join(__dirname, '../../config/app.json'))[env]
 // /relay/.lnd/.lndpwd
 
 export async function tryToUnlockLND() {
-    const p = config.lnd_pwd
+    const p = config.lnd_pwd_path
     if (!p) return
 
-    var pwd = getFirstLine(config.lnd_pwd);
+    console.log('==>',p)
+
+    var pwd = getFirstLine(config.lnd_pwd_path);
     if(!pwd) return
+
+    console.log('==>',pwd)
 
     await unlockWallet(pwd)
 }

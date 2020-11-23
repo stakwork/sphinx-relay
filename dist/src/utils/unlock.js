@@ -18,12 +18,14 @@ const config = require(path.join(__dirname, '../../config/app.json'))[env];
 // /relay/.lnd/.lndpwd
 function tryToUnlockLND() {
     return __awaiter(this, void 0, void 0, function* () {
-        const p = config.lnd_pwd;
+        const p = config.lnd_pwd_path;
         if (!p)
             return;
-        var pwd = getFirstLine(config.lnd_pwd);
+        console.log('==>', p);
+        var pwd = getFirstLine(config.lnd_pwd_path);
         if (!pwd)
             return;
+        console.log('==>', pwd);
         yield lightning_1.unlockWallet(pwd);
     });
 }

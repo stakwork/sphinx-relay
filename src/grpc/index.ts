@@ -7,6 +7,7 @@ import {loadLightning} from '../utils/lightning'
 import * as network from '../network'
 import * as moment from 'moment'
 import constants from '../constants'
+import {tryToUnlockLND} from '../utils/unlock'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
@@ -142,9 +143,8 @@ export async function reconnectToLND(innerCtx:number) {
 			console.log(`=> [lnd] connected! ${now}`)
 			resolve()
 		} catch(e) {
-			console.log(`=> ${now} [lnd] error connecting ${e.message}`)
 			if(e.code===ERR_CODE_UNIMPLEMENTED) {
-				console.log("UNLOCK EHRE!!!!!")
+				await tryToUnlockLND()
 			}
 			setTimeout(async()=>{ // retry each 2 secs
 				if(ctx===innerCtx) { // if another retry fires, then this will not run
