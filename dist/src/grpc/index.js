@@ -136,30 +136,29 @@ function subscribeInvoices(parseKeysendInvoice) {
 exports.subscribeInvoices = subscribeInvoices;
 var i = 0;
 var ctx = 0;
-function reconnectToLND(innerCtx) {
+function reconnectToLND(innerCtx, callback) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            ctx = innerCtx;
-            i++;
+        ctx = innerCtx;
+        i++;
+        const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+        console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`);
+        try {
+            yield network.initGrpcSubscriptions();
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`);
-            try {
-                yield network.initGrpcSubscriptions();
-                const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-                console.log(`=> [lnd] connected! ${now}`);
-                resolve();
+            console.log(`=> [lnd] connected! ${now}`);
+            if (callback)
+                callback();
+        }
+        catch (e) {
+            if (e.code === ERR_CODE_UNIMPLEMENTED) {
+                // await tryToUnlockLND()
             }
-            catch (e) {
-                if (e.code === ERR_CODE_UNIMPLEMENTED) {
-                    // await tryToUnlockLND()
+            setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                if (ctx === innerCtx) { // if another retry fires, then this will not run
+                    yield reconnectToLND(innerCtx);
                 }
-                setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                    if (ctx === innerCtx) { // if another retry fires, then this will not run
-                        yield reconnectToLND(innerCtx);
-                    }
-                }), 2000);
-            }
-        }));
+            }), 2000);
+        }
     });
 }
 exports.reconnectToLND = reconnectToLND;

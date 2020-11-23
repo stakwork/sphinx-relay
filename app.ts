@@ -32,9 +32,10 @@ async function start(){
 start()
 
 async function connectToLND(){
-	await grpc.reconnectToLND(Math.random()) // recursive
-	console.log(">> SETUP MAIN")
-	await mainSetup()
+	grpc.reconnectToLND(Math.random(), async function(){
+		console.log(">> SETUP MAIN")
+		await mainSetup()
+	}) // recursive
 }
 
 async function mainSetup(){
