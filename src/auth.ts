@@ -9,6 +9,11 @@ const fs = require('fs')
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../config/app.json'))[env];
 
+/*
+"unlock": true,
+"encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
+*/
+
 export async function unlocker(req, res): Promise<boolean> {
   const { password } = req.body
   if(!password) {

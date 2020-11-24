@@ -152,10 +152,8 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         recipient_id: contact_id,
     });
     let realSatsContactId;
-    // IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
-    const isTribe = chat.type === constants_1.default.chat_types.tribe;
-    const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
-    if (isTribeOwner && reply_uuid && boost && amount) {
+    // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
+    if (reply_uuid && boost && amount) {
         const ogMsg = yield models_1.models.Message.findOne({ where: {
                 uuid: reply_uuid,
             } });
@@ -177,7 +175,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         status: constants_1.default.statuses.pending,
         createdAt: date,
         updatedAt: date,
-        network_type: (!isTribe || realSatsContactId) ?
+        network_type: realSatsContactId ?
             constants_1.default.network_types.lightning :
             constants_1.default.network_types.mqtt
     };

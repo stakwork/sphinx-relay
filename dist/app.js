@@ -93,6 +93,7 @@ function setupApp() {
                 return __awaiter(this, void 0, void 0, function* () {
                     const ok = yield auth_1.unlocker(req, res);
                     if (ok) {
+                        console.log('=> relay unlocked!');
                         controllers.set(app);
                         socket.connect(server);
                     }

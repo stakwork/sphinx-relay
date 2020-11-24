@@ -18,6 +18,10 @@ const macaroon_1 = require("./utils/macaroon");
 const fs = require('fs');
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../config/app.json'))[env];
+/*
+"unlock": true,
+"encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
+*/
 function unlocker(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { password } = req.body;

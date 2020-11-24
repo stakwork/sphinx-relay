@@ -80,6 +80,7 @@ async function setupApp(){
 		app.post('/unlock', async function(req,res){
 			const ok = await unlocker(req,res)
 			if(ok) {
+				console.log('=> relay unlocked!')
 				controllers.set(app);
 				socket.connect(server)
 			}
