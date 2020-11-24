@@ -204,14 +204,11 @@ function keysendMessage(opts) {
                 let res = null;
                 const ts = new Date().valueOf();
                 // WEAVE MESSAGE If TOO LARGE
-                console.log("===> WEAVE");
                 yield asyncForEach(Array.from(Array(n)), (u, i) => __awaiter(this, void 0, void 0, function* () {
                     const spliti = Math.ceil(opts.data.length / n);
                     const m = opts.data.substr(i * spliti, spliti);
                     const isLastThread = i === n - 1;
-                    console.log("===> WEAVE i:", i);
                     const amt = isLastThread ? opts.amt : constants_1.default.min_sat_amount;
-                    console.log("===> WEAVE amt:", amt);
                     try {
                         res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }));
                         success = true;

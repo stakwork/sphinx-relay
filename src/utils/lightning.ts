@@ -191,14 +191,11 @@ async function keysendMessage(opts) {
     let res:any = null
     const ts = new Date().valueOf()
     // WEAVE MESSAGE If TOO LARGE
-    console.log("===> WEAVE")
     await asyncForEach(Array.from(Array(n)), async(u,i)=> {
       const spliti = Math.ceil(opts.data.length/n)
       const m = opts.data.substr(i*spliti, spliti)
       const isLastThread = i===n-1
-      console.log("===> WEAVE i:",i)
       const amt = isLastThread ? opts.amt : constants.min_sat_amount
-      console.log("===> WEAVE amt:",amt)
       try {
         res = await keysend({
           ...opts, amt, // split the amt too
