@@ -76,11 +76,11 @@ const loadWalletUnlocker = () => {
   }
 }
 
-const unlockWallet = async (wallet_password) => {
+const unlockWallet = async (pwd:string) => {
   return new Promise(async function(resolve, reject) { 
     let wu = await loadWalletUnlocker()
     wu.unlockWallet(
-      { wallet_password },
+      { wallet_password: ByteBuffer.fromUTF8(pwd) },
       (err, response) => {
         if(err) {
           reject(err)

@@ -28,8 +28,13 @@ function tryToUnlockLND() {
         var pwd = yield getFirstLine(config.lnd_pwd_path);
         if (!pwd)
             return;
-        console.log('==>', pwd);
-        yield lightning_1.unlockWallet(pwd);
+        console.log('==>', pwd, typeof pwd);
+        try {
+            yield lightning_1.unlockWallet(String(pwd));
+        }
+        catch (e) {
+            console.log('[unlock] Error:', e);
+        }
     });
 }
 exports.tryToUnlockLND = tryToUnlockLND;

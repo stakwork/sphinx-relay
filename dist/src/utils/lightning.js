@@ -87,11 +87,11 @@ const loadWalletUnlocker = () => {
     }
 };
 exports.loadWalletUnlocker = loadWalletUnlocker;
-const unlockWallet = (wallet_password) => __awaiter(void 0, void 0, void 0, function* () {
+const unlockWallet = (pwd) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             let wu = yield loadWalletUnlocker();
-            wu.unlockWallet({ wallet_password }, (err, response) => {
+            wu.unlockWallet({ wallet_password: ByteBuffer.fromUTF8(pwd) }, (err, response) => {
                 if (err) {
                     reject(err);
                     return;

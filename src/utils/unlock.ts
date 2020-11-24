@@ -21,9 +21,13 @@ export async function tryToUnlockLND() {
     var pwd = await getFirstLine(config.lnd_pwd_path);
     if(!pwd) return
 
-    console.log('==>',pwd)
+    console.log('==>',pwd,typeof pwd)
 
-    await unlockWallet(pwd)
+    try {
+        await unlockWallet(String(pwd))
+    } catch(e) {
+        console.log('[unlock] Error:',e)
+    }
 }
 
 async function getFirstLine(pathToFile) {
