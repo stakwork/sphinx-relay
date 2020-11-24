@@ -147,7 +147,7 @@ export async function reconnectToLND(innerCtx:number, callback?:Function) {
 		}
 		setTimeout(async()=>{ // retry each 2 secs
 			if(ctx===innerCtx) { // if another retry fires, then this will not run
-				await reconnectToLND(innerCtx)
+				await reconnectToLND(innerCtx, callback)
 			}
 		},2000)
 	}

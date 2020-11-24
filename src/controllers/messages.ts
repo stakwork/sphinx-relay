@@ -206,6 +206,7 @@ export const sendMessage = async (req, res) => {
 	}
 	if(reply_uuid) msg.replyUuid=reply_uuid
 	// console.log(msg)
+	console.log("=> SAVED MSG",JSON.stringify(msg,null,2))
 	const message = await models.Message.create(msg)
 
 	success(res, jsonUtils.messageToJson(message, chat))

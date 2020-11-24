@@ -184,6 +184,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
     // console.log(msg)
+    console.log("=> SAVED MSG", JSON.stringify(msg, null, 2));
     const message = yield models_1.models.Message.create(msg);
     res_1.success(res, jsonUtils.messageToJson(message, chat));
     const msgToSend = {
