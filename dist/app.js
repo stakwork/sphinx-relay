@@ -41,11 +41,10 @@ function start() {
 start();
 function connectToLND() {
     return __awaiter(this, void 0, void 0, function* () {
+        // await unlocker here?
         grpc.reconnectToLND(Math.random(), function () {
-            return __awaiter(this, void 0, void 0, function* () {
-                console.log(">> SETUP MAIN");
-                yield mainSetup();
-            });
+            console.log(">> SETUP MAIN");
+            mainSetup();
         }); // recursive
     });
 }

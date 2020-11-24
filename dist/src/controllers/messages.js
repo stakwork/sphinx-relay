@@ -153,6 +153,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
     let realSatsContactId;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
+    const isTribe = chat.type === constants_1.default.chat_types.tribe;
     if (reply_uuid && boost && amount) {
         const ogMsg = yield models_1.models.Message.findOne({ where: {
                 uuid: reply_uuid,
@@ -175,7 +176,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         status: constants_1.default.statuses.pending,
         createdAt: date,
         updatedAt: date,
-        network_type: realSatsContactId ?
+        network_type: (!isTribe || realSatsContactId) ?
             constants_1.default.network_types.lightning :
             constants_1.default.network_types.mqtt
     };

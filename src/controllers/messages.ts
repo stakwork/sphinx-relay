@@ -175,6 +175,7 @@ export const sendMessage = async (req, res) => {
 
 	let realSatsContactId
 	// IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
+	const isTribe = chat.type===constants.chat_types.tribe
 	if(reply_uuid && boost && amount) {
 		const ogMsg = await models.Message.findOne({where:{
 			uuid: reply_uuid,
@@ -198,7 +199,7 @@ export const sendMessage = async (req, res) => {
 		status: constants.statuses.pending,
 		createdAt: date,
 		updatedAt: date,
-		network_type: realSatsContactId ? 
+		network_type: (!isTribe || realSatsContactId) ? 
 			constants.network_types.lightning :
 			constants.network_types.mqtt
 	}

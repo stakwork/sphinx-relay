@@ -180,6 +180,7 @@ export const listPayments = async (req, res) => {
               constants.message_types.payment,
               constants.message_types.direct_payment,
               constants.message_types.keysend,
+              constants.message_types.purchase,
             ]}
           },
           {

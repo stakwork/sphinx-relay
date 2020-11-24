@@ -164,6 +164,7 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
                                 constants_1.default.message_types.payment,
                                 constants_1.default.message_types.direct_payment,
                                 constants_1.default.message_types.keysend,
+                                constants_1.default.message_types.purchase,
                             ] }
                     },
                     {
