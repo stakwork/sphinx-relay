@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto = require("crypto");
 const models_1 = require("./models");
-const crypto_js_1 = require("crypto-js");
+const cryptoJS = require("crypto-js");
 const path = require("path");
 const res_1 = require("./utils/res");
 const macaroon_1 = require("./utils/macaroon");
@@ -110,7 +110,7 @@ function authModule(req, res, next) {
 exports.authModule = authModule;
 function decryptMacaroon(password, macaroon) {
     try {
-        const decrypted = crypto_js_1.default.AES.decrypt(macaroon || '', password).toString(crypto_js_1.default.enc.Base64);
+        const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);
         const decryptResult = atob(decrypted);
         return decryptResult;
     }
