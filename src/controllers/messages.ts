@@ -185,6 +185,8 @@ export const sendMessage = async (req, res) => {
 		}	
 	}
 
+	const hasRealAmount = amount && amount>constants.min_sat_amount
+
 	const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
 	const uuid = short.generate()
 	const msg:{[k:string]:any}={
@@ -199,7 +201,7 @@ export const sendMessage = async (req, res) => {
 		status: constants.statuses.pending,
 		createdAt: date,
 		updatedAt: date,
-		network_type: (!isTribe || realSatsContactId) ? 
+		network_type: (!isTribe || hasRealAmount || realSatsContactId) ? 
 			constants.network_types.lightning :
 			constants.network_types.mqtt
 	}

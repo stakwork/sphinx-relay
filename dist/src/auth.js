@@ -68,6 +68,7 @@ function authModule(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         if (req.path == '/app' ||
             req.path == '/' ||
+            req.path == '/unlock' ||
             req.path == '/info' ||
             req.path == '/action' ||
             req.path == '/contacts/tokens' ||

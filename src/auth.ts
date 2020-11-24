@@ -64,6 +64,7 @@ export async function authModule(req, res, next) {
   if (
     req.path == '/app' ||
     req.path == '/' ||
+    req.path == '/unlock' ||
     req.path == '/info' ||
     req.path == '/action' ||
     req.path == '/contacts/tokens' ||

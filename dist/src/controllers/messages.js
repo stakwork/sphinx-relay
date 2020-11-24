@@ -162,6 +162,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             realSatsContactId = ogMsg.sender;
         }
     }
+    const hasRealAmount = amount && amount > constants_1.default.min_sat_amount;
     const remoteMessageContent = remote_text_map ? JSON.stringify(remote_text_map) : remote_text;
     const uuid = short.generate();
     const msg = {
@@ -176,7 +177,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         status: constants_1.default.statuses.pending,
         createdAt: date,
         updatedAt: date,
-        network_type: (!isTribe || realSatsContactId) ?
+        network_type: (!isTribe || hasRealAmount || realSatsContactId) ?
             constants_1.default.network_types.lightning :
             constants_1.default.network_types.mqtt
     };
