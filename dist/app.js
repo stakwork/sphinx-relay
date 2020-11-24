@@ -34,33 +34,33 @@ process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setup_1.setupDatabase();
-        connectToLND();
-        hub_1.pingHubInterval(15000);
+        mainSetup();
+        if (config.hub_api_url) {
+            hub_1.pingHubInterval(15000);
+        }
     });
 }
 start();
-function connectToLND() {
+function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
-        // await unlocker here?
+        yield setupApp(); // setup routes
         grpc.reconnectToLND(Math.random(), function () {
-            console.log(">> SETUP MAIN");
-            mainSetup();
+            console.log(">> FINISH SETUP");
+            finishSetup();
         }); // recursive
     });
 }
-function mainSetup() {
+function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
-            // pingHubInterval(15000)
             hub_1.checkInvitesHubInterval(5000);
         }
-        yield setupApp();
         setup_1.setupDone();
     });
 }
 function setupApp() {
-    return __awaiter(this, void 0, void 0, function* () {
+    return new Promise(resolve => {
         const app = express();
         const server = require("http").Server(app);
         app.use(helmet());
@@ -86,6 +86,7 @@ function setupApp() {
         if (!config.unlock) {
             controllers.set(app);
             socket.connect(server);
+            resolve();
         }
         else {
             app.post('/unlock', function (req, res) {
@@ -95,6 +96,7 @@ function setupApp() {
                         console.log('=> relay unlocked!');
                         controllers.set(app);
                         socket.connect(server);
+                        resolve();
                     }
                 });
             });

@@ -26,65 +26,71 @@ process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 // START SETUP!
 async function start(){
 	await setupDatabase()
-	connectToLND()
-	pingHubInterval(15000)
+	mainSetup()
+	if (config.hub_api_url) {
+		pingHubInterval(15000)
+	}
 }
 start()
 
-async function connectToLND(){
-	// await unlocker here?
+async function mainSetup(){
+	await setupApp() // setup routes
 	grpc.reconnectToLND(Math.random(), function(){
-		console.log(">> SETUP MAIN")
-		mainSetup()
+		console.log(">> FINISH SETUP")
+		finishSetup()
 	}) // recursive
 }
 
-async function mainSetup(){
+async function finishSetup(){
 	await network.initTribesSubscriptions() 
 	if (config.hub_api_url) {
-		// pingHubInterval(15000)
 		checkInvitesHubInterval(5000)
 	}
-	await setupApp()
 	setupDone()
 }
 
-async function setupApp(){
-	const app = express();
-	const server = require("http").Server(app);
+function setupApp(){
+	return new Promise(resolve=>{
 
-	app.use(helmet());
-	app.use(bodyParser.json());
-	app.use(bodyParser.urlencoded({ extended: true }));
-	app.use(logger)
-	app.use(cors({
-		allowedHeaders:['X-Requested-With','Content-Type','Accept','x-user-token']
-	}))
-	app.use(cookieParser())
-	if (env != 'development') {
-		app.use(authModule);
-	}
-	app.use('/static', express.static('public'));
-	app.get('/app', (req, res) => res.send('INDEX'))
+		const app = express();
+		const server = require("http").Server(app);
 
-	server.listen(port, (err) => {
-		if (err) throw err;
-		/* eslint-disable no-console */
-		console.log(`Node listening on ${port}.`);
-	});
+		app.use(helmet());
+		app.use(bodyParser.json());
+		app.use(bodyParser.urlencoded({ extended: true }));
+		app.use(logger)
+		app.use(cors({
+			allowedHeaders:['X-Requested-With','Content-Type','Accept','x-user-token']
+		}))
+		app.use(cookieParser())
+		if (env != 'development') {
+			app.use(authModule);
+		}
+		app.use('/static', express.static('public'));
+		app.get('/app', (req, res) => res.send('INDEX'))
 
-	// start all routes!
-	if(!config.unlock) {
-		controllers.set(app);
-		socket.connect(server)
-	} else {
-		app.post('/unlock', async function(req,res){
-			const ok = await unlocker(req,res)
-			if(ok) {
-				console.log('=> relay unlocked!')
-				controllers.set(app);
-				socket.connect(server)
-			}
-		}) 
-	}
+		server.listen(port, (err) => {
+			if (err) throw err;
+			/* eslint-disable no-console */
+			console.log(`Node listening on ${port}.`);
+		});
+
+		// start all routes!
+		if(!config.unlock) {
+			controllers.set(app);
+			socket.connect(server)
+			resolve()
+		} else {
+			app.post('/unlock', async function(req,res){
+				const ok = await unlocker(req,res)
+				if(ok) {
+					console.log('=> relay unlocked!')
+					controllers.set(app);
+					socket.connect(server)
+					resolve()
+				}
+			}) 
+		}
+
+	})
 }
