@@ -72,7 +72,7 @@ function sendMessage(params) {
         }
         let yes = true;
         let no = null;
-        // console.log('=> all contactIds',contactIds)
+        console.log('=> sending to', contactIds.length, 'contacts');
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
             if (contactId == 1) { // dont send to self
                 return;
@@ -85,7 +85,7 @@ function sendMessage(params) {
             if (destkey === skipPubKey) {
                 return; // skip (for tribe owner broadcasting, not back to the sender)
             }
-            console.log('-> sending to ', contact.id, destkey);
+            // console.log('-> sending to ', contact.id, destkey)
             let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
             // sending a payment to one subscriber, buying a pic from OG poster
             // or boost to og poster

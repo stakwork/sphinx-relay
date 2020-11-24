@@ -66,7 +66,7 @@ export async function sendMessage(params) {
 
 	let yes:any = true
 	let no:any = null
-	// console.log('=> all contactIds',contactIds)
+	console.log('=> sending to',contactIds.length,'contacts')
 	await asyncForEach(contactIds, async contactId => {
 		if (contactId == 1) { // dont send to self
 			return
@@ -80,7 +80,7 @@ export async function sendMessage(params) {
 		if(destkey===skipPubKey) {
 			return // skip (for tribe owner broadcasting, not back to the sender)
 		}
-		console.log('-> sending to ', contact.id, destkey)
+		// console.log('-> sending to ', contact.id, destkey)
 
 		let mqttTopic = networkType==='mqtt' ? `${destkey}/${chatUUID}` : ''
 

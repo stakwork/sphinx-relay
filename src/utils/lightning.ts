@@ -194,7 +194,8 @@ async function keysendMessage(opts) {
     await asyncForEach(Array.from(Array(n)), async(u,i)=> {
       const spliti = Math.ceil(opts.data.length/n)
       const m = opts.data.substr(i*spliti, spliti)
-      const amt = Math.round(opts.amt/n)
+      const isLastThread = i===n-1
+      const amt = isLastThread ? opts.amt : constants.min_sat_amount
       try {
         res = await keysend({
           ...opts, amt, // split the amt too
