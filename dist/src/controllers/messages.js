@@ -155,7 +155,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
-    if (isTribeOwner && reply_uuid && boost && amount) {
+    if ((!isTribe || isTribeOwner) && reply_uuid && boost && amount) {
         const ogMsg = yield models_1.models.Message.findOne({ where: {
                 uuid: reply_uuid,
             } });

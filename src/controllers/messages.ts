@@ -177,7 +177,7 @@ export const sendMessage = async (req, res) => {
 	// IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
 	const isTribe = chat.type===constants.chat_types.tribe
 	const isTribeOwner = isTribe && owner.publicKey===chat.ownerPubkey
-	if(isTribeOwner && reply_uuid && boost && amount) {
+	if((!isTribe || isTribeOwner) && reply_uuid && boost && amount) {
 		const ogMsg = await models.Message.findOne({where:{
 			uuid: reply_uuid,
 		}})
