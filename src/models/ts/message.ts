@@ -92,4 +92,7 @@ export default class Message extends Model<Message> {
 
   @Column
   replyUuid: string
+
+  @Column(DataType.INTEGER)
+  network_type: number
 }

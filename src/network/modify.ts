@@ -67,6 +67,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
       sender: owner,
       type: constants.message_types.purchase,
       amount: amount,
+      realSatsContactId: mediaKey.sender,
       message: {
         mediaToken: mt,
         skipPaymentProcessing: true,
@@ -87,6 +88,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser){
         role: constants.chat_roles.reader,
       },
       type: constants.message_types.purchase,
+      realSatsContactId: ogmsg.sender,
       message: msg,
       amount: amount,
       success: ()=>{},

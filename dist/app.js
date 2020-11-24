@@ -14,16 +14,15 @@ const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const crypto = require("crypto");
 const path = require("path");
-const models_1 = require("./src/models");
 const logger_1 = require("./src/utils/logger");
 const hub_1 = require("./src/hub");
 const setup_1 = require("./src/utils/setup");
 const controllers = require("./src/controllers");
 const socket = require("./src/utils/socket");
 const network = require("./src/network");
-let server = null;
+const auth_1 = require("./src/auth");
+const grpc = require("./src/grpc");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -31,50 +30,37 @@ console.log("=> env:", env);
 console.log('=> process.env.PORT:', process.env.PORT);
 console.log('=> config.node_http_port:', config.node_http_port);
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
-var i = 0;
 // START SETUP!
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setup_1.setupDatabase();
-        connectToLND();
-        hub_1.pingHubInterval(15000);
+        mainSetup();
+        if (config.hub_api_url) {
+            hub_1.pingHubInterval(15000);
+        }
     });
 }
 start();
-function connectToLND() {
-    return __awaiter(this, void 0, void 0, function* () {
-        i++;
-        console.log(`=> [lnd] connecting... attempt #${i}`);
-        try {
-            yield network.initGrpcSubscriptions(); // LND
-            yield mainSetup(); // DB + express
-            yield network.initTribesSubscriptions(); // MQTT
-        }
-        catch (e) {
-            if (e.details) {
-                console.log(`=> [lnd] error details: ${e.details}`);
-            }
-            else {
-                console.log(`=> [lnd] error: ${e.message}`);
-            }
-            setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                yield connectToLND();
-            }), 2000);
-        }
-    });
-}
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
+        yield setupApp(); // setup routes
+        grpc.reconnectToLND(Math.random(), function () {
+            console.log(">> FINISH SETUP");
+            finishSetup();
+        }); // recursive
+    });
+}
+function finishSetup() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
-            // pingHubInterval(15000)
             hub_1.checkInvitesHubInterval(5000);
         }
-        yield setupApp();
         setup_1.setupDone();
     });
 }
 function setupApp() {
-    return __awaiter(this, void 0, void 0, function* () {
+    return new Promise(resolve => {
         const app = express();
         const server = require("http").Server(app);
         app.use(helmet());
@@ -86,7 +72,7 @@ function setupApp() {
         }));
         app.use(cookieParser());
         if (env != 'development') {
-            app.use(authModule);
+            app.use(auth_1.authModule);
         }
         app.use('/static', express.static('public'));
         app.get('/app', (req, res) => res.send('INDEX'));
@@ -96,51 +82,25 @@ function setupApp() {
             /* eslint-disable no-console */
             console.log(`Node listening on ${port}.`);
         });
-        controllers.set(app);
-        socket.connect(server);
-    });
-}
-function authModule(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (req.path == '/app' ||
-            req.path == '/' ||
-            req.path == '/info' ||
-            req.path == '/action' ||
-            req.path == '/contacts/tokens' ||
-            req.path == '/latest' ||
-            req.path.startsWith('/static') ||
-            req.path == '/contacts/set_dev') {
-            next();
-            return;
-        }
-        if (process.env.HOSTING_PROVIDER === 'true') {
-            // const domain = process.env.INVITE_SERVER
-            const host = req.headers.origin;
-            console.log('=> host:', host);
-            const referer = req.headers.referer;
-            console.log('=> referer:', referer);
-            if (req.path === '/invoices') {
-                next();
-                return;
-            }
-        }
-        const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
-        if (token == null) {
-            res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
-            res.end('Invalid credentials');
+        // start all routes!
+        if (!config.unlock) {
+            controllers.set(app);
+            socket.connect(server);
+            resolve();
         }
         else {
-            const user = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-            const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-            if (user.authToken == null || user.authToken != hashedToken) {
-                res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
-                res.end('Invalid credentials');
-            }
-            else {
-                next();
-            }
+            app.post('/unlock', function (req, res) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    const ok = yield auth_1.unlocker(req, res);
+                    if (ok) {
+                        console.log('=> relay unlocked!');
+                        controllers.set(app);
+                        socket.connect(server);
+                        resolve();
+                    }
+                });
+            });
         }
     });
 }
-exports.default = server;
 //# sourceMappingURL=app.js.map

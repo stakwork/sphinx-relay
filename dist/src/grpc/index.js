@@ -18,8 +18,10 @@ const lightning_1 = require("../utils/lightning");
 const network = require("../network");
 const moment = require("moment");
 const constants_1 = require("../constants");
+const unlock_1 = require("../utils/unlock");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
+const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning();
@@ -98,7 +100,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             });
         });
         call.on('status', function (status) {
-            console.log("Status", status);
+            console.log("Status", status.code, status);
             // The server is unavailable, trying to reconnect.
             if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
@@ -134,23 +136,30 @@ function subscribeInvoices(parseKeysendInvoice) {
 exports.subscribeInvoices = subscribeInvoices;
 var i = 0;
 var ctx = 0;
-function reconnectToLND(innerCtx) {
+function reconnectToLND(innerCtx, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         ctx = innerCtx;
         i++;
-        console.log(`=> [lnd] reconnecting... attempt #${i}`);
+        const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+        console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`);
         try {
             yield network.initGrpcSubscriptions();
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            console.log(`=> [lnd] reconnected! ${now}`);
+            console.log(`=> [lnd] connected! ${now}`);
+            if (callback)
+                callback();
         }
         catch (e) {
+            if (e.code === ERR_CODE_UNIMPLEMENTED) {
+                yield unlock_1.tryToUnlockLND();
+            }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 if (ctx === innerCtx) { // if another retry fires, then this will not run
-                    yield reconnectToLND(innerCtx);
+                    yield reconnectToLND(innerCtx, callback);
                 }
             }), 2000);
         }
     });
 }
+exports.reconnectToLND = reconnectToLND;
 //# sourceMappingURL=index.js.map

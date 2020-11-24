@@ -157,7 +157,11 @@ export const sendMessage = async (req, res) => {
 		remote_text_map,
 		amount,
 		reply_uuid,
+		boost,
 	} = req.body
+
+	let msgtype = constants.message_types.message
+	if(boost) msgtype = constants.message_types.boost
 
 	var date = new Date()
 	date.setMilliseconds(0)
@@ -169,11 +173,26 @@ export const sendMessage = async (req, res) => {
 		recipient_id: contact_id,
 	})
 
+	let realSatsContactId
+	// IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
+	const isTribe = chat.type===constants.chat_types.tribe
+	if(reply_uuid && boost && amount) {
+		const ogMsg = await models.Message.findOne({where:{
+			uuid: reply_uuid,
+		}})
+		if(ogMsg && ogMsg.sender) {
+			realSatsContactId = ogMsg.sender
+		}	
+	}
+
+	const hasRealAmount = amount && amount>constants.min_sat_amount
+
 	const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
+	const uuid = short.generate()
 	const msg:{[k:string]:any}={
 		chatId: chat.id,
-		uuid: short.generate(),
-		type: constants.message_types.message,
+		uuid: uuid,
+		type: msgtype,
 		sender: owner.id,
 		amount: amount||0,
 		date: date,
@@ -182,6 +201,9 @@ export const sendMessage = async (req, res) => {
 		status: constants.statuses.pending,
 		createdAt: date,
 		updatedAt: date,
+		network_type: (!isTribe || hasRealAmount || realSatsContactId) ? 
+			constants.network_types.lightning :
+			constants.network_types.mqtt
 	}
 	if(reply_uuid) msg.replyUuid=reply_uuid
 	// console.log(msg)
@@ -195,20 +217,68 @@ export const sendMessage = async (req, res) => {
 		content: remote_text_map || remote_text || text
 	}
 	if(reply_uuid) msgToSend.replyUuid=reply_uuid
-	network.sendMessage({
+
+	const sendMessageParams:{[k:string]:any} = {
 		chat: chat,
 		sender: owner,
 		amount: amount||0,
-		type: constants.message_types.message,
+		type: msgtype,
 		message: msgToSend,
-	})
+	}
+	if(realSatsContactId) sendMessageParams.realSatsContactId = realSatsContactId
+
+	// final send
+	network.sendMessage(sendMessageParams)
 }
 
 export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
-	const total_spent = 1
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
+	if(!owner || !sender || !chat) {
+		return console.log('=> no group chat!')
+	}
+	const text = content||''
+
+	var date = new Date();
+	date.setMilliseconds(0)
+	if(date_string) date=new Date(date_string)
+
+	const msg:{[k:string]:any} = {
+		chatId: chat.id,
+		uuid: msg_uuid,
+		type: constants.message_types.message,
+		sender: sender.id,
+		date: date,
+		amount: amount||0,
+		messageContent: text,
+		createdAt: date,
+		updatedAt: date,
+		status: constants.statuses.received,
+		network_type: network_type,
+	}
+	const isTribe = chat_type===constants.chat_types.tribe
+	if(isTribe) {
+		msg.senderAlias = sender_alias
+		if(remote_content) msg.remoteMessageContent=remote_content
+	}
+	if(reply_uuid) msg.replyUuid = reply_uuid
+	const message = await models.Message.create(msg)
+
+	socket.sendJson({
+		type: 'message',
+		response: jsonUtils.messageToJson(message, chat, sender)
+	})
+
+	sendNotification(chat, msg.senderAlias||sender.alias, 'message')
+
+	const theChat = {...chat.dataValues, contactIds:[sender.id]}
+	sendConfirmation({ chat:theChat, sender: owner, msg_id })
+}
+
+export const receiveBoost = async (payload) => {
+	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
+	console.log('received boost ' +amount+ ' sats on network:', network_type)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -221,14 +291,15 @@ export const receiveMessage = async (payload) => {
 	const msg:{[k:string]:any} = {
 		chatId: chat.id,
 		uuid: msg_uuid,
-		type: constants.message_types.message,
-		asciiEncodedTotal: total_spent,
+		type: constants.message_types.boost,
 		sender: sender.id,
 		date: date,
+		amount: amount||0,
 		messageContent: text,
 		createdAt: date,
 		updatedAt: date,
-		status: constants.statuses.received
+		status: constants.statuses.received,
+		network_type
 	}
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
@@ -238,17 +309,10 @@ export const receiveMessage = async (payload) => {
 	if(reply_uuid) msg.replyUuid = reply_uuid
 	const message = await models.Message.create(msg)
 
-	// console.log('saved message', message.dataValues)
-
 	socket.sendJson({
-		type: 'message',
+		type: 'boost',
 		response: jsonUtils.messageToJson(message, chat, sender)
 	})
-
-	sendNotification(chat, msg.senderAlias||sender.alias, 'message')
-
-	const theChat = {...chat.dataValues, contactIds:[sender.id]}
-	sendConfirmation({ chat:theChat, sender: owner, msg_id })
 }
 
 export const receiveDeleteMessage = async (payload) => {

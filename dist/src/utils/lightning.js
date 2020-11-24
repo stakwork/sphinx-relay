@@ -17,6 +17,7 @@ const sha = require("js-sha256");
 const crypto = require("crypto");
 const path = require("path");
 const constants_1 = require("../constants");
+const macaroon_1 = require("./macaroon");
 // var protoLoader = require('@grpc/proto-loader')
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
@@ -29,8 +30,7 @@ var walletUnlocker = null;
 const loadCredentials = () => {
     var lndCert = fs.readFileSync(config.tls_location);
     var sslCreds = grpc.credentials.createSsl(lndCert);
-    var m = fs.readFileSync(config.macaroon_location);
-    var macaroon = m.toString('hex');
+    var macaroon = macaroon_1.getMacaroon();
     var metadata = new grpc.Metadata();
     metadata.add('macaroon', macaroon);
     var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
@@ -58,7 +58,7 @@ const loadLightning = () => {
     else {
         try {
             var credentials = loadCredentials();
-            var lnrpcDescriptor = grpc.load("rpc.proto");
+            var lnrpcDescriptor = grpc.load("proto/rpc.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
             lightningClient = new lnrpc.Lightning(config.node_ip + ':' + config.lnd_port, credentials);
             return lightningClient;
@@ -76,7 +76,7 @@ const loadWalletUnlocker = () => {
     else {
         var credentials = loadCredentials();
         try {
-            var lnrpcDescriptor = grpc.load("rpc.proto");
+            var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
             walletUnlocker = new lnrpc.WalletUnlocker(config.node_ip + ':' + config.lnd_port, credentials);
             return walletUnlocker;
@@ -87,6 +87,21 @@ const loadWalletUnlocker = () => {
     }
 };
 exports.loadWalletUnlocker = loadWalletUnlocker;
+const unlockWallet = (pwd) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise(function (resolve, reject) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let wu = yield loadWalletUnlocker();
+            wu.unlockWallet({ wallet_password: ByteBuffer.fromUTF8(pwd) }, (err, response) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(response);
+            });
+        });
+    });
+});
+exports.unlockWallet = unlockWallet;
 const getHeaders = (req) => {
     return {
         "X-User-Token": req.headers['x-user-token'],

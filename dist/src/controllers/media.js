@@ -175,7 +175,8 @@ exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         mediaToken: media_token,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type: constants_1.default.network_types.lightning
     });
     const msg = {
         mediaToken: media_token, id: message.id, uuid: message.uuid,
@@ -185,6 +186,7 @@ exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
         sender: owner,
         type: constants_1.default.message_types.purchase,
+        realSatsContactId: contact_id,
         message: msg,
         amount: amount,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -199,7 +201,7 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
     console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> group chat not found!');
     }
@@ -212,7 +214,8 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
         mediaToken: mediaToken,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type
     });
     socket.sendJson({
         type: 'purchase',
@@ -319,7 +322,7 @@ exports.receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, f
     console.log('=> receivePurchaseAccept');
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -349,7 +352,8 @@ exports.receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, f
         originalMuid: originalMuid || '',
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type
     });
     socket.sendJson({
         type: 'purchase_accept',
@@ -360,7 +364,7 @@ exports.receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, fun
     console.log('=> receivePurchaseDeny');
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, mediaToken } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, mediaToken, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -375,7 +379,8 @@ exports.receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, fun
         mediaToken,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type
     });
     socket.sendJson({
         type: 'purchase_deny',
@@ -386,7 +391,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
     // console.log('received attachment', { payload })
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -397,7 +402,8 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
         sender: sender.id,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type
     };
     if (content)
         msg.messageContent = content;

@@ -150,5 +150,6 @@ exports.ACTIONS = {
     [msgtypes.bot_res]: bots.receiveBotRes,
     [msgtypes.heartbeat]: confirmations.receiveHeartbeat,
     [msgtypes.heartbeat_confirmation]: confirmations.receiveHeartbeatConfirmation,
+    [msgtypes.boost]: messages.receiveBoost,
 };
 //# sourceMappingURL=index.js.map

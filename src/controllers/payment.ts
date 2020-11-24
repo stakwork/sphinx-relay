@@ -63,7 +63,8 @@ export const sendPayment = async (req, res) => {
     amountMsat: parseFloat(amount) * 1000,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type: constants.network_types.lightning,
   }
   if(text) msg.messageContent = text
   if(remote_text) msg.remoteMessageContent = remote_text
@@ -128,7 +129,7 @@ export const receivePayment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, network_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -142,7 +143,8 @@ export const receivePayment = async (payload) => {
     amountMsat: parseFloat(amount) * 1000,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type
   }
   if(content) msg.messageContent = content
   if(mediaType) msg.mediaType = mediaType
@@ -172,15 +174,26 @@ export const listPayments = async (req, res) => {
   try {
     const msgs = await models.Message.findAll({
       where:{
-        type: {[Op.or]: [
-          constants.message_types.message, // for example /loopout message
-          constants.message_types.payment,
-          constants.message_types.direct_payment,
-          constants.message_types.keysend,
-        ]},
-        amount: {
-          [Op.gt]: MIN_VAL // greater than
-        }
+        [Op.or]: [
+          {
+            type: {[Op.or]: [
+              constants.message_types.payment,
+              constants.message_types.direct_payment,
+              constants.message_types.keysend,
+              constants.message_types.purchase,
+            ]}
+          },
+          {
+            type:  {[Op.or]: [
+              constants.message_types.message, // paid bot msgs, or price_per_message msgs
+              constants.message_types.boost,
+            ]},
+            amount: {
+              [Op.gt]: MIN_VAL // greater than
+            },
+            network_type: constants.network_types.lightning
+          }
+        ],
       },
       order: [['createdAt', 'desc']],
       limit,

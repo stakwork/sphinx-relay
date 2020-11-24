@@ -195,7 +195,8 @@ export const purchase = async (req, res) => {
     mediaToken: media_token,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type: constants.network_types.lightning
   })
 
   const msg={
@@ -206,6 +207,7 @@ export const purchase = async (req, res) => {
     chat: {...chat.dataValues, contactIds:[contact_id]},
     sender: owner,
     type: constants.message_types.purchase,
+    realSatsContactId: contact_id, // ALWAYS will be keysend, so doesnt matter if tribe owner or not
     message: msg,
     amount: amount,
     success: async (data) => {
@@ -224,7 +226,7 @@ export const receivePurchase = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id, network_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
@@ -238,7 +240,8 @@ export const receivePurchase = async (payload) => {
     mediaToken: mediaToken,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type
   })
   socket.sendJson({
     type: 'purchase',
@@ -351,7 +354,7 @@ export const receivePurchaseAccept = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid, network_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -383,7 +386,8 @@ export const receivePurchaseAccept = async (payload) => {
     originalMuid:originalMuid||'',
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type
   })
   socket.sendJson({
     type: 'purchase_accept',
@@ -395,7 +399,7 @@ export const receivePurchaseDeny = async (payload) => {
   console.log('=> receivePurchaseDeny')
   var date = new Date()
   date.setMilliseconds(0)
-  const {owner, sender, chat, amount, mediaToken} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, amount, mediaToken, network_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -410,7 +414,8 @@ export const receivePurchaseDeny = async (payload) => {
     mediaToken,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type
   })
   socket.sendJson({
     type: 'purchase_deny',
@@ -424,7 +429,7 @@ export const receiveAttachment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -436,7 +441,8 @@ export const receiveAttachment = async (payload) => {
     sender: sender.id,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type
   }
   if(content) msg.messageContent = content
   if(mediaToken) msg.mediaToken = mediaToken

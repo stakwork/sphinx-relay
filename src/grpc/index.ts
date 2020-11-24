@@ -7,9 +7,11 @@ import {loadLightning} from '../utils/lightning'
 import * as network from '../network'
 import * as moment from 'moment'
 import constants from '../constants'
+import {tryToUnlockLND} from '../utils/unlock'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
+const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
 export function subscribeInvoices(parseKeysendInvoice) {	
 	return new Promise(async(resolve,reject)=>{
@@ -95,7 +97,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			}
 		});
 		call.on('status', function(status) {
-			console.log("Status", status);
+			console.log("Status", status.code, status);
 			// The server is unavailable, trying to reconnect.
 			if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
 				i = 0
@@ -129,18 +131,23 @@ export function subscribeInvoices(parseKeysendInvoice) {
 
 var i = 0
 var ctx = 0
-async function reconnectToLND(innerCtx:number){
+export async function reconnectToLND(innerCtx:number, callback?:Function) {
 	ctx = innerCtx
 	i++
-	console.log(`=> [lnd] reconnecting... attempt #${i}`)
+	const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
+	console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`)
 	try {
 		await network.initGrpcSubscriptions()
 		const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-		console.log(`=> [lnd] reconnected! ${now}`)
+		console.log(`=> [lnd] connected! ${now}`)
+		if(callback) callback()
 	} catch(e) {
+		if(e.code===ERR_CODE_UNIMPLEMENTED) {
+			await tryToUnlockLND()
+		}
 		setTimeout(async()=>{ // retry each 2 secs
 			if(ctx===innerCtx) { // if another retry fires, then this will not run
-				await reconnectToLND(innerCtx)
+				await reconnectToLND(innerCtx, callback)
 			}
 		},2000)
 	}

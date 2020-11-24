@@ -6,6 +6,7 @@ import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
 import * as path from 'path'
 import constants from '../constants'
+import {getMacaroon} from './macaroon'
 
 // var protoLoader = require('@grpc/proto-loader')
 const env = process.env.NODE_ENV || 'development';
@@ -20,8 +21,7 @@ var walletUnlocker  = <any> null;
 const loadCredentials = () => {
   var lndCert = fs.readFileSync(config.tls_location);
   var sslCreds = grpc.credentials.createSsl(lndCert);
-  var m = fs.readFileSync(config.macaroon_location);
-	var macaroon = m.toString('hex');
+  var macaroon = getMacaroon()
 	var metadata = new grpc.Metadata()
 	metadata.add('macaroon', macaroon)
 	var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
@@ -50,7 +50,7 @@ const loadLightning = () => {
   } else {
     try{
       var credentials = loadCredentials()
-      var lnrpcDescriptor = grpc.load("rpc.proto");
+      var lnrpcDescriptor = grpc.load("proto/rpc.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
       lightningClient = new lnrpc.Lightning(config.node_ip + ':' + config.lnd_port, credentials);
       return lightningClient
@@ -66,7 +66,7 @@ const loadWalletUnlocker = () => {
   } else {
     var credentials = loadCredentials()
     try{
-      var lnrpcDescriptor = grpc.load("rpc.proto");
+      var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
       walletUnlocker = new lnrpc.WalletUnlocker(config.node_ip + ':' + config.lnd_port, credentials);
       return walletUnlocker
@@ -74,6 +74,22 @@ const loadWalletUnlocker = () => {
       console.log(e)
     }
   }
+}
+
+const unlockWallet = async (pwd:string) => {
+  return new Promise(async function(resolve, reject) { 
+    let wu = await loadWalletUnlocker()
+    wu.unlockWallet(
+      { wallet_password: ByteBuffer.fromUTF8(pwd) },
+      (err, response) => {
+        if(err) {
+          reject(err)
+          return
+        }
+        resolve(response)
+      }
+    )
+  })
 }
 
 const getHeaders = (req) => {
@@ -455,4 +471,5 @@ export {
   queryRoute,
   listChannels,
   channelBalance,
+  unlockWallet,
 }

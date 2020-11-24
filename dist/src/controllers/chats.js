@@ -79,7 +79,7 @@ exports.kickChatMember = kickChatMember;
 function receiveGroupKick(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupKick');
-        const { chat, sender, date_string } = yield helpers.parseReceiveParams(payload);
+        const { chat, sender, date_string, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return;
         // const owner = await models.Contact.findOne({where:{isOwner:true}})
@@ -104,6 +104,7 @@ function receiveGroupKick(payload) {
             messageContent: '', remoteMessageContent: '',
             status: constants_1.default.statuses.confirmed,
             date: date, createdAt: date, updatedAt: date,
+            network_type
         };
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
@@ -318,7 +319,7 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');
-        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string, network_type } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
@@ -386,7 +387,8 @@ function receiveGroupJoin(payload) {
             sender: (theSender && theSender.id) || 0,
             messageContent: '', remoteMessageContent: '',
             status: constants_1.default.statuses.confirmed,
-            date: date, createdAt: date, updatedAt: date
+            date: date, createdAt: date, updatedAt: date,
+            network_type
         };
         if (isTribe) {
             msg.senderAlias = sender_alias;
@@ -407,7 +409,7 @@ exports.receiveGroupJoin = receiveGroupJoin;
 function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupLeave');
-        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, network_type } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return;
@@ -446,7 +448,8 @@ function receiveGroupLeave(payload) {
             sender: (sender && sender.id) || 0,
             messageContent: '', remoteMessageContent: '',
             status: constants_1.default.statuses.confirmed,
-            date: date, createdAt: date, updatedAt: date
+            date: date, createdAt: date, updatedAt: date,
+            network_type
         };
         if (isTribe) {
             msg.senderAlias = sender_alias;

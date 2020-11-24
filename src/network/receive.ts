@@ -25,13 +25,13 @@ const msgtypes = constants.message_types
 
 export const typesToForward=[
 	msgtypes.message, msgtypes.group_join, msgtypes.group_leave, 
-	msgtypes.attachment, msgtypes.delete,
+	msgtypes.attachment, msgtypes.delete, msgtypes.boost,
 ]
 const typesToModify=[
 	msgtypes.attachment
 ]
 const typesThatNeedPricePerMessage = [
-	msgtypes.message, msgtypes.attachment
+	msgtypes.message, msgtypes.attachment, msgtypes.boost
 ]
 export const typesToReplay=[ // should match typesToForward
 	msgtypes.message, 
@@ -121,7 +121,22 @@ async function onReceive(payload){
 				if(ogMsg) doAction = true
 			}
 		}
-		if(doAction) forwardMessageToTribe(payload, senderContact)
+		// forward boost sats to recipient
+		let realSatsContactId = null
+		let amtToForward = 0
+		if(payload.type===msgtypes.boost && payload.message.replyUuid) {
+			const ogMsg = await models.Message.findOne({where:{
+				uuid: payload.message.replyUuid,
+			}})
+			if(ogMsg && ogMsg.sender && ogMsg.sender!==1) {
+				const theAmtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
+				if(theAmtToForward>0) {
+					realSatsContactId = ogMsg.sender
+					amtToForward = theAmtToForward
+				}
+			}
+		}
+		if(doAction) forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward)
 		else console.log('=> insufficient payment for this action')
 	}
 	if(isTribeOwner && payload.type===msgtypes.purchase) {
@@ -152,7 +167,8 @@ async function onReceive(payload){
 
 async function doTheAction(data){
 	let payload = data
-	if(payload.isTribeOwner) {
+	if(payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
+		// actual encryption for tribe happens in personalizeMessage
 		const ogContent = data.message && data.message.content
 		// const ogMediaKey = data.message && data.message.mediaKey
 		/* decrypt and re-encrypt with phone's pubkey for storage */
@@ -170,7 +186,7 @@ async function doTheAction(data){
 	}
 }
 
-async function forwardMessageToTribe(ogpayload, sender){
+async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId){
 	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
 
@@ -195,8 +211,10 @@ async function forwardMessageToTribe(ogpayload, sender){
 			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias},
 			role: constants.chat_roles.reader,
 		},
+		amount: amtToForwardToRealSatsContactId||0,
 		chat: chat,
 		skipPubKey: payload.sender.pub_key, 
+		realSatsContactId,
 		success: ()=>{},
 		receive: ()=>{},
 		isForwarded: true,
@@ -218,6 +236,7 @@ export async function initTribesSubscriptions(){
 			const msg = message.toString()
 			// check topic is signed by sender?
 			const payload = await parseAndVerifyPayload(msg)
+			payload.network_type = constants.network_types.mqtt
 			onReceive(payload)
 		} catch(e){}
     })
@@ -261,13 +280,20 @@ async function parseAndVerifyPayload(data){
 	}
 }
 
-async function saveAnonymousKeysend(response, memo) {
+async function saveAnonymousKeysend(response, memo, sender_pubkey) {
+	let sender = 0
+	if(sender_pubkey) {
+		const theSender = await models.Contact.findOne({ where: { publicKey: sender_pubkey }})
+		if(theSender && theSender.id) {
+			sender = theSender.id
+		}
+	}
 	let settleDate = parseInt(response['settle_date'] + '000');
 	const amount = response['amt_paid_sat'] || 0
 	const msg = await models.Message.create({
 		chatId: 0,
 		type: constants.message_types.keysend,
-		sender: 0,
+		sender,
 		amount,
 		amountMsat: response['amt_paid_msat'],
 		paymentHash: '',
@@ -275,7 +301,8 @@ async function saveAnonymousKeysend(response, memo) {
 		messageContent: memo||'',
 		status: constants.statuses.confirmed,
 		createdAt: new Date(settleDate),
-		updatedAt: new Date(settleDate)
+		updatedAt: new Date(settleDate),
+		network_type: constants.network_types.lightning
 	})
 	socket.sendJson({
 		type:'keysend',
@@ -291,24 +318,26 @@ export async function parseKeysendInvoice(i){
 	
 	// "keysend" type is NOT encrypted
 	// and should be saved even if there is NO content
-	let isAnonymous = false
+	let isKeysendType = false
 	let memo = ''
+	let sender_pubkey;
 	if(data){
 		try {
 			const payload = parsePayload(data)
 			if(payload && payload.type===constants.message_types.keysend) {
-				isAnonymous = true
+				isKeysendType = true
 				memo = payload.message && payload.message.content
+				sender_pubkey = payload.sender && payload.sender.pub_key
 			}
 		} catch(e) {} // err could be a threaded TLV
 	} else {
-		isAnonymous = true
+		isKeysendType = true
 	}
-	if(isAnonymous) {
+	if(isKeysendType) {
 		if(!memo) {
 			sendNotification(-1, '', 'keysend', value||0)
 		}
-		saveAnonymousKeysend(i, memo)
+		saveAnonymousKeysend(i, memo, sender_pubkey)
 		return
 	}
 
@@ -325,7 +354,8 @@ export async function parseKeysendInvoice(i){
 		const dat = payload
 		if(value && dat && dat.message){
 			dat.message.amount = value // ADD IN TRUE VALUE
-        }
+		}
+		dat.network_type = constants.network_types.lightning
 		onReceive(dat)
 	}
 }

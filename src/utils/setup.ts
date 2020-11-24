@@ -7,6 +7,7 @@ import password from '../utils/password'
 import * as path from 'path'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs';
+import {isClean} from './nodeinfo'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
@@ -20,7 +21,7 @@ const setupDatabase = async () => {
     await sequelize.sync()
     console.log("=> [db] done syncing")
   } catch (e) {
-    console.log("db sync failed", e)
+    // console.log("db sync failed", e)
   }
   await migrate()
   setupOwnerContact()
@@ -36,6 +37,8 @@ async function setVersion() {
 }
 
 async function migrate() {
+
+  addTableColumn('sphinx_messages', 'network_type', 'INTEGER')
 
   addTableColumn('sphinx_chats', 'meta')
 
@@ -225,9 +228,13 @@ async function printQR() {
   // if(!theIP.includes(":")) theIP = public_ip+':3001'
 
   const b64 = Buffer.from(`ip::${theIP}::${password || ''}`).toString('base64')
-  console.log('Scan this QR in Sphinx app:')
-  console.log(b64)
+  console.log('>>', b64)
   connectionStringFile(b64)
+
+  const clean = await isClean()
+  if(!clean) return // skip it if already setup!
+
+  console.log('Scan this QR in Sphinx app:')
   QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
     console.log(url)
   })

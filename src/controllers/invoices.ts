@@ -221,6 +221,7 @@ export const receiveInvoice = async (payload) => {
   const total_spent = 1
   const dat = payload.content || payload
   const payment_request = dat.message.invoice
+  const network_type = dat.network_type||0
   var date = new Date();
   date.setMilliseconds(0)
 
@@ -246,7 +247,8 @@ export const receiveInvoice = async (payload) => {
     date: new Date(invoiceDate),
     status: constants.statuses.pending,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type: network_type,
   }
   const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {

@@ -18,6 +18,7 @@ const password_1 = require("../utils/password");
 const path = require("path");
 const gitinfo_1 = require("../utils/gitinfo");
 const fs = require("fs");
+const nodeinfo_1 = require("./nodeinfo");
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env];
 const USER_VERSION = 7;
@@ -29,7 +30,7 @@ const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         console.log("=> [db] done syncing");
     }
     catch (e) {
-        console.log("db sync failed", e);
+        // console.log("db sync failed", e)
     }
     yield migrate();
     setupOwnerContact();
@@ -48,6 +49,7 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_messages', 'network_type', 'INTEGER');
         addTableColumn('sphinx_chats', 'meta');
         addTableColumn('sphinx_contacts', 'tip_amount', 'BIGINT');
         addTableColumn('sphinx_contacts', 'last_active', 'DATETIME');
@@ -226,9 +228,12 @@ function printQR() {
         let theIP = public_ip;
         // if(!theIP.includes(":")) theIP = public_ip+':3001'
         const b64 = Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
-        console.log('Scan this QR in Sphinx app:');
-        console.log(b64);
+        console.log('>>', b64);
         connectionStringFile(b64);
+        const clean = yield nodeinfo_1.isClean();
+        if (!clean)
+            return; // skip it if already setup!
+        console.log('Scan this QR in Sphinx app:');
         QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
             console.log(url);
         });

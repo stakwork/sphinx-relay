@@ -51,7 +51,8 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         amountMsat: parseFloat(amount) * 1000,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type: constants_1.default.network_types.lightning,
     };
     if (text)
         msg.messageContent = text;
@@ -115,7 +116,7 @@ exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -128,7 +129,8 @@ exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function
         amountMsat: parseFloat(amount) * 1000,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type
     };
     if (content)
         msg.messageContent = content;
@@ -156,15 +158,26 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const msgs = yield models_1.models.Message.findAll({
             where: {
-                type: { [sequelize_1.Op.or]: [
-                        constants_1.default.message_types.message,
-                        constants_1.default.message_types.payment,
-                        constants_1.default.message_types.direct_payment,
-                        constants_1.default.message_types.keysend,
-                    ] },
-                amount: {
-                    [sequelize_1.Op.gt]: MIN_VAL // greater than
-                }
+                [sequelize_1.Op.or]: [
+                    {
+                        type: { [sequelize_1.Op.or]: [
+                                constants_1.default.message_types.payment,
+                                constants_1.default.message_types.direct_payment,
+                                constants_1.default.message_types.keysend,
+                                constants_1.default.message_types.purchase,
+                            ] }
+                    },
+                    {
+                        type: { [sequelize_1.Op.or]: [
+                                constants_1.default.message_types.message,
+                                constants_1.default.message_types.boost,
+                            ] },
+                        amount: {
+                            [sequelize_1.Op.gt]: MIN_VAL // greater than
+                        },
+                        network_type: constants_1.default.network_types.lightning
+                    }
+                ],
             },
             order: [['createdAt', 'desc']],
             limit,

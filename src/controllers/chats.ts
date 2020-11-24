@@ -67,7 +67,7 @@ export async function kickChatMember(req, res){
 
 export async function receiveGroupKick(payload) {
 	console.log('=> receiveGroupKick')
-	const { chat, sender, date_string } = await helpers.parseReceiveParams(payload)
+	const { chat, sender, date_string, network_type } = await helpers.parseReceiveParams(payload)
 	if (!chat) return
 
 	// const owner = await models.Contact.findOne({where:{isOwner:true}})
@@ -92,6 +92,7 @@ export async function receiveGroupKick(payload) {
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
+		network_type
 	}
 	const message = await models.Message.create(msg)
 
@@ -323,7 +324,7 @@ export const deleteChat = async (req, res) => {
 
 export async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
-	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string, network_type } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -393,7 +394,8 @@ export async function receiveGroupJoin(payload) {
 		sender: (theSender && theSender.id) || 0,
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
+		date: date, createdAt: date, updatedAt: date,
+		network_type
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias
@@ -413,7 +415,7 @@ export async function receiveGroupJoin(payload) {
 
 export async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
-	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, network_type } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -454,7 +456,8 @@ export async function receiveGroupLeave(payload) {
 		sender: (sender && sender.id) || 0,
 		messageContent:'', remoteMessageContent:'',
 		status: constants.statuses.confirmed,
-		date: date, createdAt: date, updatedAt: date
+		date: date, createdAt: date, updatedAt: date,
+		network_type
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias

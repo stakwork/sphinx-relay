@@ -79,6 +79,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 sender: owner,
                 type: constants_1.default.message_types.purchase,
                 amount: amount,
+                realSatsContactId: mediaKey.sender,
                 message: {
                     mediaToken: mt,
                     skipPaymentProcessing: true,
@@ -97,6 +98,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
                 sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }), { role: constants_1.default.chat_roles.reader }),
                 type: constants_1.default.message_types.purchase,
+                realSatsContactId: ogmsg.sender,
                 message: msg,
                 amount: amount,
                 success: () => { },
