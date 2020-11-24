@@ -151,10 +151,23 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         owner_id: owner.id,
         recipient_id: contact_id,
     });
+    let realSatsContactId;
+    // IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
+    const isTribe = chat.type === constants_1.default.chat_types.tribe;
+    const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
+    if (isTribeOwner && reply_uuid && boost && amount) {
+        const ogMsg = yield models_1.models.Message.findOne({ where: {
+                uuid: reply_uuid,
+            } });
+        if (ogMsg && ogMsg.sender) {
+            realSatsContactId = ogMsg.sender;
+        }
+    }
     const remoteMessageContent = remote_text_map ? JSON.stringify(remote_text_map) : remote_text;
+    const uuid = short.generate();
     const msg = {
         chatId: chat.id,
-        uuid: short.generate(),
+        uuid: uuid,
         type: msgtype,
         sender: owner.id,
         amount: amount || 0,
@@ -164,6 +177,9 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         status: constants_1.default.statuses.pending,
         createdAt: date,
         updatedAt: date,
+        network_type: realSatsContactId ?
+            constants_1.default.network_types.lightning :
+            constants_1.default.network_types.mqtt
     };
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
@@ -184,17 +200,8 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         type: msgtype,
         message: msgToSend,
     };
-    // IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
-    const isTribe = chat.type === constants_1.default.chat_types.tribe;
-    const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
-    if (isTribeOwner && reply_uuid && boost && amount) {
-        const ogMsg = yield models_1.models.Message.findOne({ where: {
-                uuid: reply_uuid,
-            } });
-        if (ogMsg && ogMsg.sender) {
-            sendMessageParams.realSatsContactId = ogMsg.sender;
-        }
-    }
+    if (realSatsContactId)
+        sendMessageParams.realSatsContactId = realSatsContactId;
     // final send
     network.sendMessage(sendMessageParams);
 });
