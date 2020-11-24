@@ -89,7 +89,9 @@ async function onReceive(payload){
 		}
 		// CHECK PRICES
 		if(needsPricePerMessage) {
-			if(payload.message.amount<chat.pricePerMessage) doAction=false
+			if(payload.message.amount<chat.pricePerMessage) {
+				doAction=false
+			}
 			if(chat.escrowAmount) {
 				timers.addTimer({ // pay them back
 					amount: chat.escrowAmount, 

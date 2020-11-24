@@ -100,8 +100,9 @@ function onReceive(payload) {
             }
             // CHECK PRICES
             if (needsPricePerMessage) {
-                if (payload.message.amount < chat.pricePerMessage)
+                if (payload.message.amount < chat.pricePerMessage) {
                     doAction = false;
+                }
                 if (chat.escrowAmount) {
                     timers.addTimer({
                         amount: chat.escrowAmount,
