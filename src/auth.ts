@@ -37,6 +37,8 @@ export async function unlocker(req, res): Promise<boolean> {
       return false
     }
 
+    console.log("PWD",password,typeof password)
+    console.log("ENCMAC",encMac,typeof encMac)
     const decMac = decryptMacaroon(password, encMac)
     if(!decMac) {
       failure(res, 'failed to decrypt macaroon')
