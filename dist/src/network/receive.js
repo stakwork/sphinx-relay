@@ -100,8 +100,10 @@ function onReceive(payload) {
             }
             // CHECK PRICES
             if (needsPricePerMessage) {
-                if (payload.message.amount < chat.pricePerMessage)
+                if (payload.message.amount < chat.pricePerMessage) {
+                    console.log("===> WEAVE AMOUNT IS TOO LOW", payload.message.amount, chat.pricePerMessage);
                     doAction = false;
+                }
                 if (chat.escrowAmount) {
                     timers.addTimer({
                         amount: chat.escrowAmount,
@@ -385,6 +387,7 @@ function parseKeysendInvoice(i) {
         if (payload) {
             const dat = payload;
             if (value && dat && dat.message) {
+                console.log("===> WEAVE TRUE VALUE:", value);
                 dat.message.amount = value; // ADD IN TRUE VALUE
             }
             dat.network_type = constants_1.default.network_types.lightning;

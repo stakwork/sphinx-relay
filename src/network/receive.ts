@@ -89,7 +89,10 @@ async function onReceive(payload){
 		}
 		// CHECK PRICES
 		if(needsPricePerMessage) {
-			if(payload.message.amount<chat.pricePerMessage) doAction=false
+			if(payload.message.amount<chat.pricePerMessage) {
+				console.log("===> WEAVE AMOUNT IS TOO LOW", payload.message.amount, chat.pricePerMessage)
+				doAction=false
+			}
 			if(chat.escrowAmount) {
 				timers.addTimer({ // pay them back
 					amount: chat.escrowAmount, 
@@ -353,6 +356,7 @@ export async function parseKeysendInvoice(i){
 	if(payload){
 		const dat = payload
 		if(value && dat && dat.message){
+			console.log("===> WEAVE TRUE VALUE:", value)
 			dat.message.amount = value // ADD IN TRUE VALUE
 		}
 		dat.network_type = constants.network_types.lightning
