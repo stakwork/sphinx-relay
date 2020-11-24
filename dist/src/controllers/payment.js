@@ -51,7 +51,8 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         amountMsat: parseFloat(amount) * 1000,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type: constants_1.default.network_types.lightning,
     };
     if (text)
         msg.messageContent = text;

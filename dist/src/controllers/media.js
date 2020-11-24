@@ -175,7 +175,8 @@ exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         mediaToken: media_token,
         date: date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        network_type: constants_1.default.network_types.lightning
     });
     const msg = {
         mediaToken: media_token, id: message.id, uuid: message.uuid,

@@ -177,7 +177,7 @@ export const sendMessage = async (req, res) => {
 	// IF BOOST AND TRIBE OWNER NEED TO SEND ACTUAL SATS TO OG POSTER
 	const isTribe = chat.type===constants.chat_types.tribe
 	const isTribeOwner = isTribe && owner.publicKey===chat.ownerPubkey
-	if((!isTribe || isTribeOwner) && reply_uuid && boost && amount) {
+	if(isTribeOwner && reply_uuid && boost && amount) {
 		const ogMsg = await models.Message.findOne({where:{
 			uuid: reply_uuid,
 		}})
@@ -200,13 +200,12 @@ export const sendMessage = async (req, res) => {
 		status: constants.statuses.pending,
 		createdAt: date,
 		updatedAt: date,
-		network_type: realSatsContactId ? 
+		network_type: (!isTribe || realSatsContactId) ? 
 			constants.network_types.lightning :
 			constants.network_types.mqtt
 	}
 	if(reply_uuid) msg.replyUuid=reply_uuid
 	// console.log(msg)
-	console.log("=> SAVED MSG",JSON.stringify(msg,null,2))
 	const message = await models.Message.create(msg)
 
 	success(res, jsonUtils.messageToJson(message, chat))

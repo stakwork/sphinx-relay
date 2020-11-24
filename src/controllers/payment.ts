@@ -63,7 +63,8 @@ export const sendPayment = async (req, res) => {
     amountMsat: parseFloat(amount) * 1000,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type: constants.network_types.lightning,
   }
   if(text) msg.messageContent = text
   if(remote_text) msg.remoteMessageContent = remote_text

@@ -195,7 +195,8 @@ export const purchase = async (req, res) => {
     mediaToken: media_token,
     date: date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    network_type: constants.network_types.lightning
   })
 
   const msg={
