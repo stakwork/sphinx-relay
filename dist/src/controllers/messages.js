@@ -154,7 +154,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     let realSatsContactId;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
-    // const isTribeOwner = owner.publicKey===chat.owner_pubkey
+    const isTribeOwner = owner.publicKey === chat.owner_pubkey;
     if (reply_uuid && boost && amount) {
         const ogMsg = yield models_1.models.Message.findOne({ where: {
                 uuid: reply_uuid,
@@ -208,6 +208,9 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     };
     if (realSatsContactId)
         sendMessageParams.realSatsContactId = realSatsContactId;
+    if (realSatsContactId && isTribeOwner && amtToStore) {
+        sendMessageParams.amount = amtToStore;
+    }
     // final send
     network.sendMessage(sendMessageParams);
 });

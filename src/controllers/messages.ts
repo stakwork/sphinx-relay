@@ -177,7 +177,7 @@ export const sendMessage = async (req, res) => {
 	let realSatsContactId
 	// IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
 	const isTribe = chat.type===constants.chat_types.tribe
-	// const isTribeOwner = owner.publicKey===chat.owner_pubkey
+	const isTribeOwner = owner.publicKey===chat.owner_pubkey
 	if(reply_uuid && boost && amount) {
 		const ogMsg = await models.Message.findOne({where:{
 			uuid: reply_uuid,
@@ -233,7 +233,9 @@ export const sendMessage = async (req, res) => {
 		message: msgToSend,
 	}
 	if(realSatsContactId) sendMessageParams.realSatsContactId = realSatsContactId
-
+	if(realSatsContactId && isTribeOwner && amtToStore) {
+		sendMessageParams.amount = amtToStore
+	}
 	// final send
 	network.sendMessage(sendMessageParams)
 }
