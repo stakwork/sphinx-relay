@@ -139,7 +139,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, } = req.body;
     let msgtype = constants_1.default.message_types.message;
     if (boost)
         msgtype = constants_1.default.message_types.boost;
@@ -165,12 +165,16 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const hasRealAmount = amount && amount > constants_1.default.min_sat_amount;
     const remoteMessageContent = remote_text_map ? JSON.stringify(remote_text_map) : remote_text;
     const uuid = short.generate();
+    let amtToStore = amount || 0;
+    if (boost && message_price && typeof message_price === 'number' && amount && message_price < amount) {
+        amtToStore = amount - message_price;
+    }
     const msg = {
         chatId: chat.id,
         uuid: uuid,
         type: msgtype,
         sender: owner.id,
-        amount: amount || 0,
+        amount: amtToStore,
         date: date,
         messageContent: text,
         remoteMessageContent,

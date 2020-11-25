@@ -158,6 +158,7 @@ export const sendMessage = async (req, res) => {
 		amount,
 		reply_uuid,
 		boost,
+		message_price,
 	} = req.body
 
 	let msgtype = constants.message_types.message
@@ -182,19 +183,23 @@ export const sendMessage = async (req, res) => {
 		}})
 		if(ogMsg && ogMsg.sender) {
 			realSatsContactId = ogMsg.sender
-		}	
+		}
 	}
 
 	const hasRealAmount = amount && amount>constants.min_sat_amount
 
 	const remoteMessageContent = remote_text_map?JSON.stringify(remote_text_map) : remote_text
 	const uuid = short.generate()
+	let amtToStore = amount || 0
+	if(boost && message_price && typeof message_price==='number' && amount && message_price<amount) {
+		amtToStore = amount - message_price
+	}
 	const msg:{[k:string]:any}={
 		chatId: chat.id,
 		uuid: uuid,
 		type: msgtype,
 		sender: owner.id,
-		amount: amount||0,
+		amount: amtToStore,
 		date: date,
 		messageContent: text,
 		remoteMessageContent,
