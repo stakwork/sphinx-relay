@@ -208,11 +208,10 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     };
     if (realSatsContactId)
         sendMessageParams.realSatsContactId = realSatsContactId;
-    console.log(realSatsContactId, isTribeOwner, amtToStore);
+    // tribe owner deducts the "price per message + escrow amount" 
     if (realSatsContactId && isTribeOwner && amtToStore) {
         sendMessageParams.amount = amtToStore;
     }
-    console.log("=> sendMsgParams", sendMessageParams);
     // final send
     network.sendMessage(sendMessageParams);
 });
