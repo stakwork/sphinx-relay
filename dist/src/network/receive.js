@@ -58,7 +58,7 @@ const botMakerTypes = [
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('===> onReceive',JSON.stringify(payload,null,2))
+        console.log('===> onReceive', JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return console.log('no payload.type');
         if (botTypes.includes(payload.type)) {

@@ -252,7 +252,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type } = yield helpers.parseReceiveParams(payload);
-    console.log('received boost ' + amount + ' sats on network:', network_type);
+    console.log('=> received boost ' + amount + ' sats on network:', network_type);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
