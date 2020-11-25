@@ -127,11 +127,15 @@ async function onReceive(payload){
 		let realSatsContactId = null
 		let amtToForward = 0
 		if(payload.type===msgtypes.boost && payload.message.replyUuid) {
+			console.log("==< YOYO boost type")
 			const ogMsg = await models.Message.findOne({where:{
 				uuid: payload.message.replyUuid,
 			}})
+			if(ogMsg) console.log("==< OG MSG FOUND!")
+			if(ogMsg) console.log("==< amt", payload.message.amount)
 			if(ogMsg && ogMsg.sender && ogMsg.sender!==1) {
 				const theAmtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
+				console.log('==< theAmtToForward',theAmtToForward)
 				if(theAmtToForward>0) {
 					realSatsContactId = ogMsg.sender
 					amtToForward = theAmtToForward
@@ -168,7 +172,7 @@ async function onReceive(payload){
 }
 
 async function doTheAction(data){
-	console.log("DO THE ACTION",data)
+	console.log("==< DO THE ACTION",data)
 	let payload = data
 	if(payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
 		// actual encryption for tribe happens in personalizeMessage
