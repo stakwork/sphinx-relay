@@ -188,7 +188,6 @@ function onReceive(payload) {
 }
 function doTheAction(data) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("==< DO THE ACTION", data);
         let payload = data;
         if (payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
             // actual encryption for tribe happens in personalizeMessage
