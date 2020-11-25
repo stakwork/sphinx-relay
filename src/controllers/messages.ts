@@ -177,6 +177,7 @@ export const sendMessage = async (req, res) => {
 	let realSatsContactId
 	// IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
 	const isTribe = chat.type===constants.chat_types.tribe
+	const isTribeOwner = isTribe && owner.publicKey===chat.ownerPubkey
 	if(reply_uuid && boost && amount) {
 		const ogMsg = await models.Message.findOne({where:{
 			uuid: reply_uuid,
@@ -219,7 +220,8 @@ export const sendMessage = async (req, res) => {
 	const msgToSend:{[k:string]:any} = {
 		id: message.id,
 		uuid: message.uuid,
-		content: remote_text_map || remote_text || text
+		content: remote_text_map || remote_text || text,
+		amount: amtToStore,
 	}
 	if(reply_uuid) msgToSend.replyUuid=reply_uuid
 
@@ -231,7 +233,10 @@ export const sendMessage = async (req, res) => {
 		message: msgToSend,
 	}
 	if(realSatsContactId) sendMessageParams.realSatsContactId = realSatsContactId
-
+	// tribe owner deducts the "price per message + escrow amount" 
+	if(realSatsContactId && isTribeOwner && amtToStore) {
+		sendMessageParams.amount = amtToStore
+	}
 	// final send
 	network.sendMessage(sendMessageParams)
 }
@@ -283,7 +288,7 @@ export const receiveMessage = async (payload) => {
 
 export const receiveBoost = async (payload) => {
 	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
-	console.log('received boost ' +amount+ ' sats on network:', network_type)
+	console.log('=> received boost ' +amount+ ' sats on network:', network_type)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}

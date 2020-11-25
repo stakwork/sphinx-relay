@@ -154,6 +154,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     let realSatsContactId;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
+    const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
     if (reply_uuid && boost && amount) {
         const ogMsg = yield models_1.models.Message.findOne({ where: {
                 uuid: reply_uuid,
@@ -193,7 +194,8 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const msgToSend = {
         id: message.id,
         uuid: message.uuid,
-        content: remote_text_map || remote_text || text
+        content: remote_text_map || remote_text || text,
+        amount: amtToStore,
     };
     if (reply_uuid)
         msgToSend.replyUuid = reply_uuid;
@@ -206,6 +208,10 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     };
     if (realSatsContactId)
         sendMessageParams.realSatsContactId = realSatsContactId;
+    // tribe owner deducts the "price per message + escrow amount" 
+    if (realSatsContactId && isTribeOwner && amtToStore) {
+        sendMessageParams.amount = amtToStore;
+    }
     // final send
     network.sendMessage(sendMessageParams);
 });
@@ -252,7 +258,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type } = yield helpers.parseReceiveParams(payload);
-    console.log('received boost ' + amount + ' sats on network:', network_type);
+    console.log('=> received boost ' + amount + ' sats on network:', network_type);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
