@@ -168,6 +168,7 @@ async function onReceive(payload){
 }
 
 async function doTheAction(data){
+	console.log("DO THE ACTION",data)
 	let payload = data
 	if(payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
 		// actual encryption for tribe happens in personalizeMessage
@@ -206,6 +207,9 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 	const message = payload.message
 	// HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
 	// ASK xref TABLE and put alias there too?
+	if(amtToForwardToRealSatsContactId && message.amount) { // mutate the payload
+		message.amount = amtToForwardToRealSatsContactId // show the real amount
+	}
 	sendMessage({
 		type, message,
 		sender: {

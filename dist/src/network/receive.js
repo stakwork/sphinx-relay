@@ -185,6 +185,7 @@ function onReceive(payload) {
 }
 function doTheAction(data) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("DO THE ACTION", data);
         let payload = data;
         if (payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
             // actual encryption for tribe happens in personalizeMessage
@@ -225,6 +226,9 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         const message = payload.message;
         // HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
         // ASK xref TABLE and put alias there too?
+        if (amtToForwardToRealSatsContactId && message.amount) { // mutate the payload
+            message.amount = amtToForwardToRealSatsContactId; // show the real amount
+        }
         send_1.sendMessage({
             type, message,
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants_1.default.chat_roles.reader }),
