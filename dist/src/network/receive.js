@@ -140,20 +140,17 @@ function onReceive(payload) {
             let realSatsContactId = null;
             let amtToForward = 0;
             if (payload.type === msgtypes.boost && payload.message.replyUuid) {
-                console.log("==< YOYO boost type");
                 const ogMsg = yield models_1.models.Message.findOne({ where: {
                         uuid: payload.message.replyUuid,
                     } });
-                if (ogMsg)
-                    console.log("==< OG MSG FOUND!");
-                if (ogMsg)
-                    console.log("==< amt", payload.message.amount);
                 if (ogMsg && ogMsg.sender) { // even include "me"
                     const theAmtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
-                    console.log('==< theAmtToForward', theAmtToForward);
                     if (theAmtToForward > 0) {
                         realSatsContactId = ogMsg.sender;
                         amtToForward = theAmtToForward;
+                        if (amtToForward && payload.message && payload.message.amount) {
+                            payload.message.amount = amtToForward; // mutate the payload amount
+                        }
                     }
                 }
             }
@@ -232,9 +229,6 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         const message = payload.message;
         // HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
         // ASK xref TABLE and put alias there too?
-        if (amtToForwardToRealSatsContactId && message.amount) { // mutate the payload
-            message.amount = amtToForwardToRealSatsContactId; // show the real amount
-        }
         send_1.sendMessage({
             type, message,
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants_1.default.chat_roles.reader }),

@@ -127,18 +127,17 @@ async function onReceive(payload){
 		let realSatsContactId = null
 		let amtToForward = 0
 		if(payload.type===msgtypes.boost && payload.message.replyUuid) {
-			console.log("==< YOYO boost type")
 			const ogMsg = await models.Message.findOne({where:{
 				uuid: payload.message.replyUuid,
 			}})
-			if(ogMsg) console.log("==< OG MSG FOUND!")
-			if(ogMsg) console.log("==< amt", payload.message.amount)
 			if(ogMsg && ogMsg.sender) { // even include "me"
 				const theAmtToForward = payload.message.amount - (chat.pricePerMessage||0) - (chat.escrowAmount||0)
-				console.log('==< theAmtToForward',theAmtToForward)
 				if(theAmtToForward>0) {
 					realSatsContactId = ogMsg.sender
 					amtToForward = theAmtToForward
+					if(amtToForward && payload.message && payload.message.amount) { 
+						payload.message.amount = amtToForward // mutate the payload amount
+					}
 				}
 			}
 		}
@@ -211,9 +210,6 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 	const message = payload.message
 	// HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
 	// ASK xref TABLE and put alias there too?
-	if(amtToForwardToRealSatsContactId && message.amount) { // mutate the payload
-		message.amount = amtToForwardToRealSatsContactId // show the real amount
-	}
 	sendMessage({
 		type, message,
 		sender: {
