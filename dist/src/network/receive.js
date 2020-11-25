@@ -148,7 +148,7 @@ function onReceive(payload) {
                     console.log("==< OG MSG FOUND!");
                 if (ogMsg)
                     console.log("==< amt", payload.message.amount);
-                if (ogMsg && ogMsg.sender && ogMsg.sender !== 1) {
+                if (ogMsg && ogMsg.sender) { // even include "me"
                     const theAmtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
                     console.log('==< theAmtToForward', theAmtToForward);
                     if (theAmtToForward > 0) {
