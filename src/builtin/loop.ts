@@ -116,6 +116,7 @@ export function init() {
         const cmd = `loop`
         const args = [
           `--tlscertpath=${config.tls_location}`,
+          `--macaroonpath=${config.loop_macaroon_location}`,
           `--rpcserver=localhost:10009`,
           'out',
           `--channel=${chan}`,
