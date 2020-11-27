@@ -337,7 +337,7 @@ export const receiveRepayment = async (payload) => {
 	if(date_string) date=new Date(date_string)
 
 	const message = await models.Message.create({
-		chatId: chat.id,
+		// chatId: chat.id,
 		type: constants.message_types.repayment,
 		sender: sender.id,
 		date: date,

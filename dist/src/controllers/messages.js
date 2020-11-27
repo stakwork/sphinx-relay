@@ -305,7 +305,7 @@ exports.receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, functi
     if (date_string)
         date = new Date(date_string);
     const message = yield models_1.models.Message.create({
-        chatId: chat.id,
+        // chatId: chat.id,
         type: constants_1.default.message_types.repayment,
         sender: sender.id,
         date: date,
