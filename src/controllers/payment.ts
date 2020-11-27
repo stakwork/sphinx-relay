@@ -181,17 +181,20 @@ export const listPayments = async (req, res) => {
               constants.message_types.direct_payment,
               constants.message_types.keysend,
               constants.message_types.purchase,
-            ]}
+            ]},
+            status: {[Op.not]: constants.statuses.failed}
           },
           {
             type:  {[Op.or]: [
               constants.message_types.message, // paid bot msgs, or price_per_message msgs
               constants.message_types.boost,
+              constants.message_types.repayment,
             ]},
             amount: {
               [Op.gt]: MIN_VAL // greater than
             },
-            network_type: constants.network_types.lightning
+            network_type: constants.network_types.lightning,
+            status: {[Op.not]: constants.statuses.failed}
           }
         ],
       },

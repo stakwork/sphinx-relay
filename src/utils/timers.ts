@@ -72,6 +72,7 @@ export async function payBack(t){
         message: {id:t.msgId,amount:t.amount},
         amount: t.amount,
         type: constants.message_types.repayment,
+        realSatsContactId: t.receiver
     })
     models.Timer.destroy({where:{id:t.id}})
 }

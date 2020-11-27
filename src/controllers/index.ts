@@ -141,7 +141,7 @@ export const ACTIONS = {
 	[msgtypes.group_leave]: chats.receiveGroupLeave,
 	[msgtypes.group_kick]: chats.receiveGroupKick,
 	[msgtypes.delete]: messages.receiveDeleteMessage,
-	[msgtypes.repayment]: ()=>{},
+	[msgtypes.repayment]: messages.receiveRepayment,
 	[msgtypes.member_request]: chatTribes.receiveMemberRequest,
 	[msgtypes.member_approve]: chatTribes.receiveMemberApprove,
 	[msgtypes.member_reject]: chatTribes.receiveMemberReject,
