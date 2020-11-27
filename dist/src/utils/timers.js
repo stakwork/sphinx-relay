@@ -100,7 +100,23 @@ function payBack(t) {
             message: { id: t.msgId, amount: t.amount },
             amount: t.amount,
             type: constants_1.default.message_types.repayment,
-            realSatsContactId: t.receiver
+            realSatsContactId: t.receiver,
+            success: function () {
+                var date = new Date();
+                date.setMilliseconds(0);
+                models_1.models.Message.create({
+                    // chatId: chat.id,
+                    type: constants_1.default.message_types.repayment,
+                    sender: 1,
+                    receiver: t.receiver,
+                    date: date,
+                    amount: t.amount,
+                    createdAt: date,
+                    updatedAt: date,
+                    status: constants_1.default.statuses.received,
+                    network_type: constants_1.default.network_types.lightning
+                });
+            }
         });
         models_1.models.Timer.destroy({ where: { id: t.id } });
     });
