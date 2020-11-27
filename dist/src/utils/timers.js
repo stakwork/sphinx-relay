@@ -108,6 +108,7 @@ function payBack(t) {
                     // chatId: chat.id,
                     type: constants_1.default.message_types.repayment,
                     sender: 1,
+                    receiver: t.receiver,
                     date: date,
                     amount: t.amount,
                     createdAt: date,
