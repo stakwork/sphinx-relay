@@ -325,6 +325,35 @@ export const receiveBoost = async (payload) => {
 	})
 }
 
+export const receiveRepayment = async (payload) => {
+	const {owner, sender, chat, date_string, amount, network_type} = await helpers.parseReceiveParams(payload)
+	console.log('=> received repayment ' +amount+ ' sats')
+	if(!owner || !sender || !chat) {
+		return console.log('=> no group chat!')
+	}
+
+	var date = new Date();
+	date.setMilliseconds(0)
+	if(date_string) date=new Date(date_string)
+
+	const message = await models.Message.create({
+		chatId: chat.id,
+		type: constants.message_types.repayment,
+		sender: sender.id,
+		date: date,
+		amount: amount||0,
+		createdAt: date,
+		updatedAt: date,
+		status: constants.statuses.received,
+		network_type
+	})
+
+	socket.sendJson({
+		type: 'repayment',
+		response: jsonUtils.messageToJson(message, chat, sender)
+	})
+}
+
 export const receiveDeleteMessage = async (payload) => {
 	console.log('=> received delete message')
 	const {owner, sender, chat, chat_type, msg_uuid} = await helpers.parseReceiveParams(payload)

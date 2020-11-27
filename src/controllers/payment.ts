@@ -188,6 +188,7 @@ export const listPayments = async (req, res) => {
             type:  {[Op.or]: [
               constants.message_types.message, // paid bot msgs, or price_per_message msgs
               constants.message_types.boost,
+              constants.message_types.repayment,
             ]},
             amount: {
               [Op.gt]: MIN_VAL // greater than

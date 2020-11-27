@@ -294,6 +294,32 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         response: jsonUtils.messageToJson(message, chat, sender)
     });
 });
+exports.receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { owner, sender, chat, date_string, amount, network_type } = yield helpers.parseReceiveParams(payload);
+    console.log('=> received repayment ' + amount + ' sats');
+    if (!owner || !sender || !chat) {
+        return console.log('=> no group chat!');
+    }
+    var date = new Date();
+    date.setMilliseconds(0);
+    if (date_string)
+        date = new Date(date_string);
+    const message = yield models_1.models.Message.create({
+        chatId: chat.id,
+        type: constants_1.default.message_types.repayment,
+        sender: sender.id,
+        date: date,
+        amount: amount || 0,
+        createdAt: date,
+        updatedAt: date,
+        status: constants_1.default.statuses.received,
+        network_type
+    });
+    socket.sendJson({
+        type: 'repayment',
+        response: jsonUtils.messageToJson(message, chat, sender)
+    });
+});
 exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received delete message');
     const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);

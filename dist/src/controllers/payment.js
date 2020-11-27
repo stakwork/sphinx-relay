@@ -172,6 +172,7 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
                         type: { [sequelize_1.Op.or]: [
                                 constants_1.default.message_types.message,
                                 constants_1.default.message_types.boost,
+                                constants_1.default.message_types.repayment,
                             ] },
                         amount: {
                             [sequelize_1.Op.gt]: MIN_VAL // greater than
