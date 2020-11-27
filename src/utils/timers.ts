@@ -72,7 +72,22 @@ export async function payBack(t){
         message: {id:t.msgId,amount:t.amount},
         amount: t.amount,
         type: constants.message_types.repayment,
-        realSatsContactId: t.receiver
+        realSatsContactId: t.receiver,
+        success: function() {
+            var date = new Date();
+	        date.setMilliseconds(0)
+            models.Message.create({
+                // chatId: chat.id,
+                type: constants.message_types.repayment,
+                sender: 1,
+                date: date,
+                amount: t.amount,
+                createdAt: date,
+                updatedAt: date,
+                status: constants.statuses.received,
+                network_type: constants.network_types.lightning
+            })
+        }
     })
     models.Timer.destroy({where:{id:t.id}})
 }
