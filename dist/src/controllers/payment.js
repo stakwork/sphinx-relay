@@ -165,7 +165,8 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
                                 constants_1.default.message_types.direct_payment,
                                 constants_1.default.message_types.keysend,
                                 constants_1.default.message_types.purchase,
-                            ] }
+                            ] },
+                        status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed }
                     },
                     {
                         type: { [sequelize_1.Op.or]: [
@@ -175,7 +176,8 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
                         amount: {
                             [sequelize_1.Op.gt]: MIN_VAL // greater than
                         },
-                        network_type: constants_1.default.network_types.lightning
+                        network_type: constants_1.default.network_types.lightning,
+                        status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed }
                     }
                 ],
             },

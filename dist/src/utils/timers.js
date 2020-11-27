@@ -100,6 +100,7 @@ function payBack(t) {
             message: { id: t.msgId, amount: t.amount },
             amount: t.amount,
             type: constants_1.default.message_types.repayment,
+            realSatsContactId: t.receiver
         });
         models_1.models.Timer.destroy({ where: { id: t.id } });
     });
