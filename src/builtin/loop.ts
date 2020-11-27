@@ -113,9 +113,17 @@ export function init() {
           message.channel.send({ embed })
           return
         }
-        const cmd = `loop --tlscertpath=${config.tls_location} --rpcserver=localhost:10009 out --channel=${chan} --amt=${amt} --fast --addr=${addy}`
-        console.log("=> LOOPBOT cmd:",cmd)
-        let childProcess = spawn(cmd)
+        const cmd = `loop`
+        const args = [
+          'out',
+          `--tlscertpath=${config.tls_location}`,
+          `--rpcserver=localhost:10009`,
+          `--channel=${chan}`,
+          `--amt=${amt}`,
+          `--fast`,
+          `--addr=${addy}`
+        ]
+        let childProcess = spawn(cmd, args)
         childProcess.stdout.on('data', function (data) {
           const stdout = data.toString()
           console.log("LOOPBOT stdout:",stdout)
@@ -134,6 +142,9 @@ export function init() {
             }
           }
         })
+        childProcess.on('error', (error) => {
+          console.log(error.toString());
+        });
       } catch (e) {
         console.log('LoopBot error', e)
       }

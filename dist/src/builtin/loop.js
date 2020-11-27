@@ -117,9 +117,17 @@ function init() {
                     message.channel.send({ embed });
                     return;
                 }
-                const cmd = `loop --tlscertpath=${config.tls_location} --rpcserver=localhost:10009 out --channel=${chan} --amt=${amt} --fast --addr=${addy}`;
-                console.log("=> LOOPBOT cmd:", cmd);
-                let childProcess = child_process_1.spawn(cmd);
+                const cmd = `loop`;
+                const args = [
+                    'out',
+                    `--tlscertpath=${config.tls_location}`,
+                    `--rpcserver=localhost:10009`,
+                    `--channel=${chan}`,
+                    `--amt=${amt}`,
+                    `--fast`,
+                    `--addr=${addy}`
+                ];
+                let childProcess = child_process_1.spawn(cmd, args);
                 childProcess.stdout.on('data', function (data) {
                     const stdout = data.toString();
                     console.log("LOOPBOT stdout:", stdout);
@@ -137,6 +145,9 @@ function init() {
                             return;
                         }
                     }
+                });
+                childProcess.on('error', (error) => {
+                    console.log(error.toString());
                 });
             }
             catch (e) {
