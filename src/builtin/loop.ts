@@ -115,9 +115,9 @@ export function init() {
         }
         const cmd = `loop`
         const args = [
-          'out',
           `--tlscertpath=${config.tls_location}`,
           `--rpcserver=localhost:10009`,
+          'out',
           `--channel=${chan}`,
           `--amt=${amt}`,
           `--fast`,
@@ -148,6 +148,7 @@ export function init() {
       } catch (e) {
         console.log('LoopBot error', e)
       }
+      return // return here
     }
 
     const cmd = arr[1]
