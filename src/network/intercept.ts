@@ -12,15 +12,18 @@ restrictions (be able to toggle, or dont show chat)
 
 // return bool whether to skip forwarding to tribe
 export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
+  console.log('=> is bot msg')
   const txt = msg.message && msg.message.content
 
   const msgType = msg.type
   if (msgType === constants.message_types.bot_res) {
     return false // bot res msg type not for processing
   }
+  console.log('=> is bot msg 2')
   const uuid = msg.chat && msg.chat.uuid
   if(!uuid) return false
   
+  console.log('=> is bot msg 3')
   const chat = await models.Chat.findOne({
     where: {uuid}
   })
@@ -28,12 +31,14 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
 
   let didEmit = false
 
+  console.log('=> is bot msg 4')
   if (txt && txt.startsWith('/bot ')) {
     builtinBotEmit(msg)
     didEmit = true
   }
   if (didEmit) return didEmit
 
+  console.log('=> is bot msg 5')
   const botsInTribe = await models.ChatBot.findAll({
     where: {
       chatId: chat.id
@@ -43,6 +48,7 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
 
   if (!(botsInTribe && botsInTribe.length)) return false
 
+  console.log('=> is bot msg 6')
   await asyncForEach(botsInTribe, async botInTribe => {
     if (botInTribe.msgTypes) {
       // console.log('=> botInTribe.msgTypes', botInTribe)
@@ -52,12 +58,14 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
           const isMsgAndHasText = msgType === constants.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `)
           const isNotMsg = msgType !== constants.message_types.message
           if (isMsgAndHasText || isNotMsg) {
+            console.log('=> is bot msg emitMessageToBot',msg,botInTribe.dataValues)
             didEmit = await emitMessageToBot(msg, botInTribe.dataValues)
           }
         }
       } catch (e) { }
     } else { // no message types defined, do all?
       if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
+        console.log('=> is bot msg emitMessageToBot2',msg,botInTribe.dataValues)
         // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
         didEmit = await emitMessageToBot(msg, botInTribe.dataValues)
       }

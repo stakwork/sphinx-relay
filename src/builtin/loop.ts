@@ -123,6 +123,7 @@ export function init() {
           `--fast`,
           `--addr=${addy}`
         ]
+        console.log("=> SPAWN",cmd,args)
         let childProcess = spawn(cmd, args)
         childProcess.stdout.on('data', function (data) {
           const stdout = data.toString()

@@ -127,6 +127,7 @@ function init() {
                     `--fast`,
                     `--addr=${addy}`
                 ];
+                console.log("=> SPAWN", cmd, args);
                 let childProcess = child_process_1.spawn(cmd, args);
                 childProcess.stdout.on('data', function (data) {
                     const stdout = data.toString();
