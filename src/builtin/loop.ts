@@ -130,7 +130,7 @@ export function init() {
           console.log("LOOPBOT stdout:",stdout)
           if(stdout){
             console.log('=> LOOPBOT stdout',stdout)
-            if(stdout.startsWith('CONTINUE SWAP?')) {
+            if(stdout.includes('CONTINUE SWAP?')) {
               childProcess.stdin.write('y\n')                  
             }
             if(stdout.startsWith('Swap initiated')) {
@@ -143,53 +143,61 @@ export function init() {
             }
           }
         })
+        childProcess.stderr.on('data', function (data) {
+          console.log("STDERR:",data.toString())
+        });
         childProcess.on('error', (error) => {
-          console.log(error.toString());
+          console.log("error",error.toString());
+        });
+        childProcess.on('close', (code) => {
+          console.log("CHILD PROCESS closed",code)
         });
       } catch (e) {
         console.log('LoopBot error', e)
       }
-      return // return here
-    }
+    } else {
 
-    const cmd = arr[1]
+      const cmd = arr[1]
 
-    const isAdmin = message.member.roles.find(role => role.name === 'Admin')
+      const isAdmin = message.member.roles.find(role => role.name === 'Admin')
 
-    if (isAdmin && cmd.startsWith('setchan=')) {
-      const bot = await getBot(message.channel.id)
-      const arr = cmd.split('=')
-      if (bot && arr.length > 1) {
-        const chan = arr[1]
-        await bot.update({ meta: chan })
-        const embed = new Sphinx.MessageEmbed()
-          .setAuthor('LoopBot')
-          .setDescription('Channel updated to ' + chan)
-          .setThumbnail(botSVG)
-        message.channel.send({ embed })
-        return
+      if (isAdmin && cmd.startsWith('setchan=')) {
+        const bot = await getBot(message.channel.id)
+        const arr = cmd.split('=')
+        if (bot && arr.length > 1) {
+          const chan = arr[1]
+          await bot.update({ meta: chan })
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('LoopBot')
+            .setDescription('Channel updated to ' + chan)
+            .setThumbnail(botSVG)
+          message.channel.send({ embed })
+          return
+        }
       }
-    }
-    switch (cmd) {
-      case 'help':
-        const embed = new Sphinx.MessageEmbed()
-          .setAuthor('LoopBot')
-          .setTitle('LoopBot Commands:')
-          .addFields([
-            { name: 'Send to your on-chain address', value: '/loopout {ADDRESS} {AMOUNT}' },
-            { name: 'Set Channel', value: '/loopout setchan=***' },
-            { name: 'Help', value: '/loopout help' },
-          ])
-          .setThumbnail(botSVG)
-        message.channel.send({ embed })
-        return
-      default:
-        const embed2 = new Sphinx.MessageEmbed()
-          .setAuthor('LoopBot')
-          .setDescription('Command not recognized')
-        message.channel.send({ embed: embed2 })
-        return
-    }
+      switch (cmd) {
+        case 'help':
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('LoopBot')
+            .setTitle('LoopBot Commands:')
+            .addFields([
+              { name: 'Send to your on-chain address', value: '/loopout {ADDRESS} {AMOUNT}' },
+              { name: 'Set Channel', value: '/loopout setchan=***' },
+              { name: 'Help', value: '/loopout help' },
+            ])
+            .setThumbnail(botSVG)
+          message.channel.send({ embed })
+          return
+        default:
+          const embed2 = new Sphinx.MessageEmbed()
+            .setAuthor('LoopBot')
+            .setDescription('Command not recognized')
+          message.channel.send({ embed: embed2 })
+          return
+      }
+
+    } // end else
+
   })
 }
 

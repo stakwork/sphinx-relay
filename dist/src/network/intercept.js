@@ -21,31 +21,26 @@ restrictions (be able to toggle, or dont show chat)
 // return bool whether to skip forwarding to tribe
 function isBotMsg(msg, sentByMe) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> is bot msg');
         const txt = msg.message && msg.message.content;
         const msgType = msg.type;
         if (msgType === constants_1.default.message_types.bot_res) {
             return false; // bot res msg type not for processing
         }
-        console.log('=> is bot msg 2');
         const uuid = msg.chat && msg.chat.uuid;
         if (!uuid)
             return false;
-        console.log('=> is bot msg 3');
         const chat = yield models_1.models.Chat.findOne({
             where: { uuid }
         });
         if (!chat)
             return false;
         let didEmit = false;
-        console.log('=> is bot msg 4');
         if (txt && txt.startsWith('/bot ')) {
             builtin_1.builtinBotEmit(msg);
             didEmit = true;
         }
         if (didEmit)
             return didEmit;
-        console.log('=> is bot msg 5');
         const botsInTribe = yield models_1.models.ChatBot.findAll({
             where: {
                 chatId: chat.id
@@ -54,7 +49,6 @@ function isBotMsg(msg, sentByMe) {
         // console.log('=> botsInTribe', botsInTribe)
         if (!(botsInTribe && botsInTribe.length))
             return false;
-        console.log('=> is bot msg 6');
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
             if (botInTribe.msgTypes) {
                 // console.log('=> botInTribe.msgTypes', botInTribe)
@@ -64,7 +58,6 @@ function isBotMsg(msg, sentByMe) {
                         const isMsgAndHasText = msgType === constants_1.default.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `);
                         const isNotMsg = msgType !== constants_1.default.message_types.message;
                         if (isMsgAndHasText || isNotMsg) {
-                            console.log('=> is bot msg emitMessageToBot', msg, botInTribe.dataValues);
                             didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
                         }
                     }
@@ -73,7 +66,6 @@ function isBotMsg(msg, sentByMe) {
             }
             else { // no message types defined, do all?
                 if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
-                    console.log('=> is bot msg emitMessageToBot2', msg, botInTribe.dataValues);
                     // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
                     didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
                 }
