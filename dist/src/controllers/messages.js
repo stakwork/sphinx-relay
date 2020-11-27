@@ -317,7 +317,7 @@ exports.receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, functi
     });
     socket.sendJson({
         type: 'repayment',
-        response: jsonUtils.messageToJson(message, chat, sender)
+        response: jsonUtils.messageToJson(message, null, sender)
     });
 });
 exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
