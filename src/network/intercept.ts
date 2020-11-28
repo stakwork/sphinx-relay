@@ -29,7 +29,6 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
   let didEmit = false
 
   if (txt && txt.startsWith('/bot ')) {
-    console.log("===== BOT: /bot command detected")
     builtinBotEmit(msg)
     didEmit = true
   }

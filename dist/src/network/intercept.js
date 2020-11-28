@@ -36,7 +36,6 @@ function isBotMsg(msg, sentByMe) {
             return false;
         let didEmit = false;
         if (txt && txt.startsWith('/bot ')) {
-            console.log("===== BOT: /bot command detected");
             builtin_1.builtinBotEmit(msg);
             didEmit = true;
         }

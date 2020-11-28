@@ -24,7 +24,6 @@ async function init(){
 
 function builtinBotEmit(msg:Msg){
     setTimeout(()=>{
-        console.log("===== BUILT IN BOT EMIT",buildBotPayload(msg))
         SphinxBot._emit('message', buildBotPayload(msg))
     },1200)
 }
