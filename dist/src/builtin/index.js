@@ -37,6 +37,7 @@ function init() {
 exports.init = init;
 function builtinBotEmit(msg) {
     setTimeout(() => {
+        console.log("BUILT IN BOT EMIT", bots_1.buildBotPayload(msg));
         SphinxBot._emit('message', bots_1.buildBotPayload(msg));
     }, 1200);
 }
