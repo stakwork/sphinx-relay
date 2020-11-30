@@ -8,6 +8,7 @@ export interface ChatMeta {
   itemID: number,
   ts: number,
   sats_per_minute: number,
+  speed?: string,
 }
 
 type DestinationType = 'wallet' | 'node'
@@ -49,6 +50,7 @@ export const streamFeed = async (req, res) => {
         itemID: meta.itemID,
         ts: meta.ts || 0,
         sats_per_minute: amount || 0,
+        speed: meta.speed || '1'
       }
       const chat = await models.Chat.findOne({ where: { id: chat_id } })
       if (!chat) {

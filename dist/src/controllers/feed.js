@@ -32,6 +32,7 @@ exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 itemID: meta.itemID,
                 ts: meta.ts || 0,
                 sats_per_minute: amount || 0,
+                speed: meta.speed || '1'
             };
             const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
             if (!chat) {

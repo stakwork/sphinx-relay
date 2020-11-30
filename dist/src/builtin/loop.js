@@ -11,14 +11,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
-const node_fetch_1 = require("node-fetch");
+// import fetch from 'node-fetch'
 const path = require("path");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
+const child_process_1 = require("child_process");
+const env = process.env.NODE_ENV || 'development';
+const config = require(path.join(__dirname, '../../config/app.json'))[env];
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
-const baseurl = 'https://localhost:8080';
+// const baseurl = 'https://localhost:8080'
 function init() {
     if (initted)
         return;
@@ -56,12 +59,53 @@ function init() {
                 message.channel.send({ embed });
                 return;
             }
+            // try {
+            //   const j = await doRequest(baseurl + '/v1/loop/out/quote/' + amt)
+            //   console.log("=> LOOP QUOTE RES", j)
+            //   if (!(j && j.swap_fee_sat && j.prepay_amt_sat)) {
+            //     return
+            //   }
+            //   let chan
+            //   const bot = await getBot(message.channel.id)
+            //   if (bot && bot.meta) chan = bot.meta
+            //   if (!chan) {
+            //     const embed = new Sphinx.MessageEmbed()
+            //       .setAuthor('LoopBot')
+            //       .setDescription('No channel set')
+            //     message.channel.send({ embed })
+            //     return
+            //   }
+            //   const j2 = await doRequest(baseurl + '/v1/loop/out', {
+            //     method: 'POST',
+            //     body: JSON.stringify({
+            //       amt: amt,
+            //       dest: addy,
+            //       outgoing_chan_set: [chan],
+            //       max_swap_fee: j.swap_fee_sat,
+            //       max_prepay_amt: j.prepay_amt_sat
+            //     }),
+            //   })
+            //   console.log("=> LOOP RESPONSE", j2)
+            //   if (j2 && j2.error) {
+            //     const embed = new Sphinx.MessageEmbed()
+            //       .setAuthor('LoopBot')
+            //       .setDescription('Error: ' + j2.error)
+            //     message.channel.send({ embed })
+            //     return
+            //   }
+            //   // if (!(j2 && j2.server_message)) {
+            //   //   return
+            //   // }
+            //   const embed = new Sphinx.MessageEmbed()
+            //     .setAuthor('LoopBot')
+            //     .setTitle('Payment was sent!')
+            //     // .setDescription('Success!')
+            //   message.channel.send({ embed })
+            //   return
+            // } catch (e) {
+            //   console.log('LoopBot error', e)
+            // }
             try {
-                const j = yield doRequest(baseurl + '/v1/loop/out/quote/' + amt);
-                console.log("=> LOOP QUOTE RES", j);
-                if (!(j && j.swap_fee_sat && j.prepay_amt_sat)) {
-                    return;
-                }
                 let chan;
                 const bot = yield getBot(message.channel.id);
                 if (bot && bot.meta)
@@ -73,89 +117,108 @@ function init() {
                     message.channel.send({ embed });
                     return;
                 }
-                const j2 = yield doRequest(baseurl + '/v1/loop/out', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        amt: amt,
-                        dest: addy,
-                        outgoing_chan_set: [chan],
-                        max_swap_fee: j.swap_fee_sat,
-                        max_prepay_amt: j.prepay_amt_sat
-                    }),
+                const cmd = `loop`;
+                const args = [
+                    `--tlscertpath=${config.tls_location}`,
+                    `--macaroonpath=${config.loop_macaroon_location}`,
+                    `--rpcserver=localhost:10009`,
+                    'out',
+                    `--channel=${chan}`,
+                    `--amt=${amt}`,
+                    `--fast`,
+                    `--addr=${addy}`
+                ];
+                console.log("=> SPAWN", cmd, args);
+                let childProcess = child_process_1.spawn(cmd, args);
+                childProcess.stdout.on('data', function (data) {
+                    const stdout = data.toString();
+                    console.log("LOOPBOT stdout:", stdout);
+                    if (stdout) {
+                        console.log('=> LOOPBOT stdout', stdout);
+                        if (stdout.includes('CONTINUE SWAP?')) {
+                            childProcess.stdin.write('y\n');
+                        }
+                        if (stdout.startsWith('Swap initiated')) {
+                            const embed = new Sphinx.MessageEmbed()
+                                .setAuthor('LoopBot')
+                                .setTitle('Payment was sent!');
+                            // .setDescription('Success!')
+                            message.channel.send({ embed });
+                            return;
+                        }
+                    }
                 });
-                console.log("=> LOOP RESPONSE", j2);
-                if (j2 && j2.error) {
-                    const embed = new Sphinx.MessageEmbed()
-                        .setAuthor('LoopBot')
-                        .setDescription('Error: ' + j2.error);
-                    message.channel.send({ embed });
-                    return;
-                }
-                // if (!(j2 && j2.server_message)) {
-                //   return
-                // }
-                const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('LoopBot')
-                    .setTitle('Payment was sent!');
-                // .setDescription('Success!')
-                message.channel.send({ embed });
-                return;
+                childProcess.stderr.on('data', function (data) {
+                    console.log("STDERR:", data.toString());
+                });
+                childProcess.on('error', (error) => {
+                    console.log("error", error.toString());
+                });
+                childProcess.on('close', (code) => {
+                    console.log("CHILD PROCESS closed", code);
+                });
             }
             catch (e) {
                 console.log('LoopBot error', e);
             }
         }
-        const cmd = arr[1];
-        const isAdmin = message.member.roles.find(role => role.name === 'Admin');
-        if (isAdmin && cmd.startsWith('setchan=')) {
-            const bot = yield getBot(message.channel.id);
-            const arr = cmd.split('=');
-            if (bot && arr.length > 1) {
-                const chan = arr[1];
-                yield bot.update({ meta: chan });
-                const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('LoopBot')
-                    .setDescription('Channel updated to ' + chan)
-                    .setThumbnail(botSVG);
-                message.channel.send({ embed });
-                return;
+        else {
+            const cmd = arr[1];
+            const isAdmin = message.member.roles.find(role => role.name === 'Admin');
+            if (isAdmin && cmd.startsWith('setchan=')) {
+                const bot = yield getBot(message.channel.id);
+                const arr = cmd.split('=');
+                if (bot && arr.length > 1) {
+                    const chan = arr[1];
+                    yield bot.update({ meta: chan });
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('LoopBot')
+                        .setDescription('Channel updated to ' + chan)
+                        .setThumbnail(botSVG);
+                    message.channel.send({ embed });
+                    return;
+                }
             }
-        }
-        switch (cmd) {
-            case 'help':
-                const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('LoopBot')
-                    .setTitle('LoopBot Commands:')
-                    .addFields([
-                    { name: 'Send to your on-chain address', value: '/loopout {ADDRESS} {AMOUNT}' },
-                    { name: 'Set Channel', value: '/loopout setchan=***' },
-                    { name: 'Help', value: '/loopout help' },
-                ])
-                    .setThumbnail(botSVG);
-                message.channel.send({ embed });
-                return;
-            default:
-                const embed2 = new Sphinx.MessageEmbed()
-                    .setAuthor('LoopBot')
-                    .setDescription('Command not recognized');
-                message.channel.send({ embed: embed2 });
-                return;
-        }
+            switch (cmd) {
+                case 'help':
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('LoopBot')
+                        .setTitle('LoopBot Commands:')
+                        .addFields([
+                        { name: 'Send to your on-chain address', value: '/loopout {ADDRESS} {AMOUNT}' },
+                        { name: 'Set Channel', value: '/loopout setchan=***' },
+                        { name: 'Help', value: '/loopout help' },
+                    ])
+                        .setThumbnail(botSVG);
+                    message.channel.send({ embed });
+                    return;
+                default:
+                    const embed2 = new Sphinx.MessageEmbed()
+                        .setAuthor('LoopBot')
+                        .setDescription('Command not recognized');
+                    message.channel.send({ embed: embed2 });
+                    return;
+            }
+        } // end else
     }));
 }
 exports.init = init;
 function getBot(tribeUUID) {
     return __awaiter(this, void 0, void 0, function* () {
-        const chat = yield models_1.models.Chat.findOne({ where: {
+        const chat = yield models_1.models.Chat.findOne({
+            where: {
                 uuid: tribeUUID
-            } });
+            }
+        });
         if (!chat)
             return;
-        const chatBot = yield models_1.models.ChatBot.findOne({ where: {
+        const chatBot = yield models_1.models.ChatBot.findOne({
+            where: {
                 chatId: chat.id,
                 botPrefix: '/loopout',
                 botType: constants_1.default.bot_types.builtin
-            } });
+            }
+        });
         return chatBot;
     });
 }
@@ -167,34 +230,33 @@ function validateAmount(amtString) {
     const ok = amt > 0;
     return ok;
 }
-const fs = require('fs');
-const https = require("https");
+// const fs = require('fs')
+// const https = require("https");
 // const homedir = require('os').homedir();
-const agent = new https.Agent({
-    rejectUnauthorized: false
-});
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
-function doRequest(theurl, params) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const ps = params || {};
-        try {
-            const macLocation = config.loop_macaroon_location;
-            if (!macLocation) {
-                throw new Error('no macaroon');
-            }
-            var macaroonString = fs.readFileSync(macLocation);
-            var mac = Buffer.from(macaroonString, 'utf8').toString('hex');
-            const theParams = Object.assign({ agent, headers: {
-                    'Grpc-Metadata-macaroon': mac
-                } }, ps);
-            const r = yield node_fetch_1.default(theurl, theParams);
-            const j = yield r.json();
-            return j;
-        }
-        catch (e) {
-            throw e;
-        }
-    });
-}
+// const agent = new https.Agent({
+//   rejectUnauthorized: false
+// })
+// async function doRequest(theurl: string, params?: Object) {
+//   const ps = params || {}
+//   try {
+//     const macLocation = config.loop_macaroon_location
+//     if (!macLocation) {
+//       throw new Error('no macaroon')
+//     }
+//     var macaroonString = fs.readFileSync(macLocation);
+//     var mac = Buffer.from(macaroonString, 'utf8').toString('hex');
+//     const theParams = {
+//       agent,
+//       headers: {
+//         'Grpc-Metadata-macaroon': mac
+//       },
+//       ...ps
+//     }
+//     const r = await fetch(theurl, theParams)
+//     const j = await r.json()
+//     return j
+//   } catch (e) {
+//     throw e
+//   }
+// }
 //# sourceMappingURL=loop.js.map
