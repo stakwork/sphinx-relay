@@ -38,6 +38,8 @@ async function setVersion() {
 
 async function migrate() {
 
+  addTableColumn('sphinx_messages', 'sender_pic')
+
   addTableColumn('sphinx_messages', 'network_type', 'INTEGER')
 
   addTableColumn('sphinx_chats', 'meta')

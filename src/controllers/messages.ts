@@ -244,7 +244,7 @@ export const sendMessage = async (req, res) => {
 export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -270,6 +270,7 @@ export const receiveMessage = async (payload) => {
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
 		msg.senderAlias = sender_alias
+		msg.senderPic = sender_photo_url
 		if(remote_content) msg.remoteMessageContent=remote_content
 	}
 	if(reply_uuid) msg.replyUuid = reply_uuid
@@ -287,7 +288,7 @@ export const receiveMessage = async (payload) => {
 }
 
 export const receiveBoost = async (payload) => {
-	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url} = await helpers.parseReceiveParams(payload)
 	console.log('=> received boost ' +amount+ ' sats on network:', network_type)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
@@ -314,6 +315,7 @@ export const receiveBoost = async (payload) => {
 	const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
 		msg.senderAlias = sender_alias
+		msg.senderPic = sender_photo_url
 		if(remote_content) msg.remoteMessageContent=remote_content
 	}
 	if(reply_uuid) msg.replyUuid = reply_uuid

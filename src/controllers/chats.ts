@@ -324,7 +324,7 @@ export const deleteChat = async (req, res) => {
 
 export async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
-	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string, network_type } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -359,6 +359,7 @@ export async function receiveGroupJoin(payload) {
 					alias: senderAlias,
 					status: 1,
 					fromGroup: true,
+					photoUrl: sender_photo_url
 				})
 				theSender = createdContact
 				contactIds.push(createdContact.id)
@@ -399,6 +400,7 @@ export async function receiveGroupJoin(payload) {
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias
+		msg.senderPic = sender_photo_url
 	}
 	const message = await models.Message.create(msg)
 
@@ -415,7 +417,7 @@ export async function receiveGroupJoin(payload) {
 
 export async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
-	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, network_type } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
@@ -461,6 +463,7 @@ export async function receiveGroupLeave(payload) {
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias
+		msg.senderPic = sender_photo_url
 	}
 	const message = await models.Message.create(msg)
 

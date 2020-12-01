@@ -119,7 +119,7 @@ exports.joinTribe = joinTribe;
 function receiveMemberRequest(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveMemberRequest');
-        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, network_type } = yield helpers.parseReceiveParams(payload);
+        const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url } = yield helpers.parseReceiveParams(payload);
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
         if (!chat)
             return console.log('no chat');
@@ -143,6 +143,7 @@ function receiveMemberRequest(payload) {
                     alias: senderAlias,
                     status: 1,
                     fromGroup: true,
+                    photoUrl: sender_photo_url
                 });
                 theSender = createdContact;
             }
@@ -178,6 +179,7 @@ function receiveMemberRequest(payload) {
         };
         if (isTribe) {
             msg.senderAlias = sender_alias;
+            msg.senderPic = sender_photo_url;
         }
         const message = yield models_1.models.Message.create(msg);
         const theChat = yield addPendingContactIdsToChat(chat);
@@ -435,7 +437,7 @@ function replayChatHistory(chat, contact) {
             asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
                 if (!network.typesToReplay.includes(m.type))
                     return; // only for message for now
-                const sender = Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants_1.default.chat_roles.reader });
+                const sender = Object.assign(Object.assign(Object.assign(Object.assign({}, owner.dataValues), m.senderAlias && { alias: m.senderAlias }), { role: constants_1.default.chat_roles.reader }), m.senderPic && { photoUrl: m.senderPic });
                 let content = '';
                 try {
                     content = JSON.parse(m.remoteMessageContent);

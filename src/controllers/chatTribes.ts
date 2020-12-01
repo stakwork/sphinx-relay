@@ -114,7 +114,7 @@ export async function joinTribe(req, res){
 
 export async function receiveMemberRequest(payload) {
 	console.log('=> receiveMemberRequest')
-	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, network_type } = await helpers.parseReceiveParams(payload)
+	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
 
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return console.log('no chat')
@@ -140,6 +140,7 @@ export async function receiveMemberRequest(payload) {
 				alias: senderAlias,
 				status: 1,
 				fromGroup: true,
+				photoUrl: sender_photo_url
 			})
 			theSender = createdContact
 		}
@@ -175,6 +176,7 @@ export async function receiveMemberRequest(payload) {
 	}
 	if(isTribe) {
 		msg.senderAlias = sender_alias
+		msg.senderPic = sender_photo_url
 	}
 	const message = await models.Message.create(msg)
 
@@ -438,6 +440,7 @@ export async function replayChatHistory(chat, contact) {
 				...owner.dataValues,
 				...m.senderAlias && {alias: m.senderAlias},
 				role: constants.chat_roles.reader,
+				...m.senderPic && {photoUrl: m.senderPic}
 			}
 			let content = ''
 			try {content = JSON.parse(m.remoteMessageContent)} catch(e) {}

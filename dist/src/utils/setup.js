@@ -49,6 +49,7 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_messages', 'sender_pic');
         addTableColumn('sphinx_messages', 'network_type', 'INTEGER');
         addTableColumn('sphinx_chats', 'meta');
         addTableColumn('sphinx_contacts', 'tip_amount', 'BIGINT');

@@ -167,16 +167,12 @@ function checkIfAutoConfirm(data) {
 function newmsg(type, chat, sender, message) {
     const includeGroupKey = type === constants_1.default.message_types.group_create || type === constants_1.default.message_types.group_invite;
     const includeAlias = sender && sender.alias && chat.type === constants_1.default.chat_types.tribe;
-    // const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
+    const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto && chat && chat.type === constants_1.default.chat_types.tribe;
     return {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),
         message: message,
-        sender: {
-            pub_key: sender.publicKey,
-            alias: includeAlias ? sender.alias : '',
-            role: sender.role || constants_1.default.chat_roles.reader,
-        }
+        sender: Object.assign({ pub_key: sender.publicKey, alias: includeAlias ? sender.alias : '', role: sender.role || constants_1.default.chat_roles.reader }, includePhotoUrl && { photo_url: sender.photoUrl })
     };
 }
 exports.newmsg = newmsg;

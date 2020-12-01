@@ -298,6 +298,7 @@ export async function receiveBotRes(payload) {
   const action = dat.action
   const bot_name = dat.bot_name
   const sender_alias = dat.sender.alias
+  const sender_pic = dat.sender_photo_url
   const date_string = dat.message.date
   const network_type = dat.network_type||0
 	
@@ -341,6 +342,7 @@ export async function receiveBotRes(payload) {
       createdAt: date,
       updatedAt: date,
       senderAlias: sender_alias || 'Bot',
+      senderPic: sender_pic,
       network_type
     }
     const message = await models.Message.create(msg)

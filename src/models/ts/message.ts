@@ -88,6 +88,9 @@ export default class Message extends Model<Message> {
   senderAlias: string // for tribes, no "sender" id maybe
 
   @Column
+  senderPic: string // for tribes, no "sender" id maybe
+
+  @Column
   originalMuid: string // for tribe, remember the og muid
 
   @Column
