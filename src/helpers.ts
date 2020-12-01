@@ -134,7 +134,7 @@ export async function parseReceiveParams(payload) {
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
 	const sender_alias = dat.sender.alias
-	const sender_photo_url = dat.sender.photo_url
+	const sender_photo_url = dat.sender.photo_url || ''
 	const chat_uuid = dat.chat.uuid
 	const chat_type = dat.chat.type
 	const chat_members: { [k: string]: any } = dat.chat.members || {}

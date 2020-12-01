@@ -207,7 +207,7 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
     const network_type = dat.network_type || 0;
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid, sender_photo_url } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -233,6 +233,7 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
+        msg.senderPic = sender_photo_url;
     }
     const message = yield models_1.models.Message.create(msg);
     console.log('received keysend invoice message', message.id);

@@ -217,7 +217,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -242,6 +242,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
+        msg.senderPic = sender_photo_url;
         if (remote_content)
             msg.remoteMessageContent = remote_content;
     }
@@ -257,7 +258,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url } = yield helpers.parseReceiveParams(payload);
     console.log('=> received boost ' + amount + ' sats on network:', network_type);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
@@ -283,6 +284,7 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
+        msg.senderPic = sender_photo_url;
         if (remote_content)
             msg.remoteMessageContent = remote_content;
     }

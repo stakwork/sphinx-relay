@@ -429,7 +429,7 @@ export const receiveAttachment = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type} = await helpers.parseReceiveParams(payload)
+  const {owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type, sender_photo_url} = await helpers.parseReceiveParams(payload)
   if(!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -451,7 +451,8 @@ export const receiveAttachment = async (payload) => {
   if(reply_uuid) msg.replyUuid = reply_uuid
   const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
-		msg.senderAlias = sender_alias
+    msg.senderAlias = sender_alias
+    msg.senderPic = sender_photo_url
 	}
 
   const message = await models.Message.create(msg)

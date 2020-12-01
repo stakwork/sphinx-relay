@@ -225,7 +225,7 @@ export const receiveInvoice = async (payload) => {
   var date = new Date();
   date.setMilliseconds(0)
 
-  const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid } = await helpers.parseReceiveParams(payload)
+  const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid, sender_photo_url } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
@@ -252,7 +252,8 @@ export const receiveInvoice = async (payload) => {
   }
   const isTribe = chat_type===constants.chat_types.tribe
 	if(isTribe) {
-		msg.senderAlias = sender_alias
+    msg.senderAlias = sender_alias
+    msg.senderPic = sender_photo_url
 	}
   const message = await models.Message.create(msg)
   console.log('received keysend invoice message', message.id)

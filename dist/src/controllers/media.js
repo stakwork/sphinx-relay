@@ -391,7 +391,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
     // console.log('received attachment', { payload })
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type, sender_photo_url } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -418,6 +418,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
+        msg.senderPic = sender_photo_url;
     }
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved attachment', message.dataValues)
