@@ -230,7 +230,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         // ASK xref TABLE and put alias there too?
         send_1.sendMessage({
             type, message,
-            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), { role: constants_1.default.chat_roles.reader }),
+            sender: Object.assign(Object.assign(Object.assign(Object.assign({}, owner.dataValues), payload.sender && payload.sender.alias && { alias: payload.sender.alias }), payload.sender && payload.sender.photo_url && { photo_url: payload.sender.photo_url }), { role: constants_1.default.chat_roles.reader }),
             amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,
