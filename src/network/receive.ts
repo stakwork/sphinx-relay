@@ -213,8 +213,8 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 		type, message,
 		sender: {
 			...owner.dataValues,
-			...payload.sender&&payload.sender.alias && {alias:payload.sender.alias},
-			...payload.sender&&payload.sender.photo_url && {photoUrl:payload.sender.photo_url}, // camelcase here, this is usually the "sender" from DB
+			alias: (payload.sender&&payload.sender.alias) || '',
+			photoUrl: (payload.sender&&payload.sender.photo_url) || '',
 			role: constants.chat_roles.reader,
 		},
 		amount: amtToForwardToRealSatsContactId||0,
