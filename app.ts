@@ -12,6 +12,7 @@ import * as socket from './src/utils/socket'
 import * as network from './src/network'
 import {authModule, unlocker} from './src/auth'
 import * as grpc from './src/grpc'
+import * as cert from './src/utils/cert'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, 'config/app.json'))[env];
@@ -50,10 +51,9 @@ async function finishSetup(){
 }
 
 function setupApp(){
-	return new Promise(resolve=>{
+	return new Promise(async resolve=>{
 
 		const app = express();
-		const server = require("http").Server(app);
 
 		app.use(helmet());
 		app.use(bodyParser.json());
@@ -68,6 +68,14 @@ function setupApp(){
 		}
 		app.use('/static', express.static('public'));
 		app.get('/app', (req, res) => res.send('INDEX'))
+
+		if ('ssl' in config && config.ssl.enabled) {
+			var certData = await cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save)
+			var credentials = { key: certData?.privateKey.toString(), ca: certData?.caBundle, cert: certData?.certificate };
+			var server = require("https").createServer(credentials, app);
+		} else {
+			var server = require("http").Server(app);
+		}
 
 		server.listen(port, (err) => {
 			if (err) throw err;
