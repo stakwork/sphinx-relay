@@ -69,14 +69,20 @@ function setupApp(){
 		app.use('/static', express.static('public'));
 		app.get('/app', (req, res) => res.send('INDEX'))
 
+		let server;
 		if ('ssl' in config && config.ssl.enabled) {
-			var certData = await cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save)
-			var credentials = { key: certData?.privateKey.toString(), ca: certData?.caBundle, cert: certData?.certificate };
-			var server = require("https").createServer(credentials, app);
+			try {
+				var certData = await cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save)
+				var credentials = { key: certData?.privateKey.toString(), ca: certData?.caBundle, cert: certData?.certificate };
+				server = require("https").createServer(credentials, app);
+			} catch(e) {
+				console.log("getCertificate ERROR", e)
+			}
 		} else {
-			var server = require("http").Server(app);
+			server = require("http").Server(app);
 		}
 
+		if(!server) return // done
 		server.listen(port, (err) => {
 			if (err) throw err;
 			/* eslint-disable no-console */

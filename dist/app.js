@@ -77,14 +77,22 @@ function setupApp() {
         }
         app.use('/static', express.static('public'));
         app.get('/app', (req, res) => res.send('INDEX'));
+        let server;
         if ('ssl' in config && config.ssl.enabled) {
-            var certData = yield cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save);
-            var credentials = { key: (_a = certData) === null || _a === void 0 ? void 0 : _a.privateKey.toString(), ca: (_b = certData) === null || _b === void 0 ? void 0 : _b.caBundle, cert: (_c = certData) === null || _c === void 0 ? void 0 : _c.certificate };
-            var server = require("https").createServer(credentials, app);
+            try {
+                var certData = yield cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save);
+                var credentials = { key: (_a = certData) === null || _a === void 0 ? void 0 : _a.privateKey.toString(), ca: (_b = certData) === null || _b === void 0 ? void 0 : _b.caBundle, cert: (_c = certData) === null || _c === void 0 ? void 0 : _c.certificate };
+                server = require("https").createServer(credentials, app);
+            }
+            catch (e) {
+                console.log("getCertificate ERROR", e);
+            }
         }
         else {
-            var server = require("http").Server(app);
+            server = require("http").Server(app);
         }
+        if (!server)
+            return; // done
         server.listen(port, (err) => {
             if (err)
                 throw err;
