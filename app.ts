@@ -82,7 +82,7 @@ function setupApp(){
 			server = require("http").Server(app);
 		}
 
-		if(!server) return // done
+		if(!server) return console.log("=> FAILED to create server")
 		server.listen(port, (err) => {
 			if (err) throw err;
 			/* eslint-disable no-console */
