@@ -29,7 +29,7 @@ function sendMessage(params) {
         if (isTribeOwner && !isForwarded) {
             theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants_1.default.chat_roles.owner });
         }
-        let msg = newmsg(type, chat, theSender, message);
+        let msg = newmsg(type, chat, theSender, message, isForwarded);
         // console.log("=> MSG TO SEND",msg)
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
@@ -164,16 +164,16 @@ function checkIfAutoConfirm(data) {
         confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
     }
 }
-function newmsg(type, chat, sender, message) {
+function newmsg(type, chat, sender, message, isForwarded) {
     const includeGroupKey = type === constants_1.default.message_types.group_create || type === constants_1.default.message_types.group_invite;
     const includeAlias = sender && sender.alias && chat.type === constants_1.default.chat_types.tribe;
     let aliasToInclude = sender.alias;
-    if (includeAlias && chat.myAlias) {
+    if (!isForwarded && includeAlias && chat.myAlias) {
         aliasToInclude = chat.myAlias;
     }
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto && chat && chat.type === constants_1.default.chat_types.tribe;
     let photoUrlToInclude = sender.photoUrl;
-    if (includePhotoUrl && chat.myPhotoUrl) {
+    if (!isForwarded && includePhotoUrl && chat.myPhotoUrl) {
         photoUrlToInclude = chat.myPhotoUrl;
     }
     return {

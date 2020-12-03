@@ -21,7 +21,7 @@ export async function sendMessage(params) {
 	if(isTribeOwner && !isForwarded) {
 		theSender = {...(sender.dataValues||sender), role:constants.chat_roles.owner}
 	}
-	let msg = newmsg(type, chat, theSender, message)
+	let msg = newmsg(type, chat, theSender, message, isForwarded)
 
 	// console.log("=> MSG TO SEND",msg)
 
@@ -156,16 +156,16 @@ function checkIfAutoConfirm(data){
 	}
 }
 
-export function newmsg(type, chat, sender, message){
+export function newmsg(type, chat, sender, message, isForwarded:boolean){
 	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
 	const includeAlias = sender && sender.alias && chat.type===constants.chat_types.tribe
 	let aliasToInclude = sender.alias
-	if(includeAlias && chat.myAlias) {
+	if(!isForwarded && includeAlias && chat.myAlias) {
 		aliasToInclude = chat.myAlias
 	}
 	const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto && chat && chat.type===constants.chat_types.tribe
 	let photoUrlToInclude = sender.photoUrl
-	if(includePhotoUrl && chat.myPhotoUrl) {
+	if(!isForwarded && includePhotoUrl && chat.myPhotoUrl) {
 		photoUrlToInclude = chat.myPhotoUrl
 	}
 	return {
