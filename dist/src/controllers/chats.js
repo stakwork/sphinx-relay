@@ -32,7 +32,7 @@ function updateChat(req, res) {
         if (!chat) {
             return res_1.failure(res, 'chat not found');
         }
-        const { name, photo_url, meta } = req.body;
+        const { name, photo_url, meta, my_alias, my_photo_url } = req.body;
         const obj = {};
         if (name)
             obj.name = name;
@@ -40,6 +40,10 @@ function updateChat(req, res) {
             obj.photoUrl = photo_url;
         if (meta && typeof meta === 'string')
             obj.meta = meta;
+        if (my_alias)
+            obj.myAlias = my_alias;
+        if (my_photo_url)
+            obj.myPhotoUrl = my_photo_url;
         if (Object.keys(obj).length > 0) {
             yield chat.update(obj);
         }

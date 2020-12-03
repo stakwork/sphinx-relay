@@ -128,6 +128,14 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Chat.prototype, "meta", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Chat.prototype, "myPhotoUrl", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Chat.prototype, "myAlias", void 0);
 Chat = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);
