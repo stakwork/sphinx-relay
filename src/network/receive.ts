@@ -201,7 +201,6 @@ async function uniqueifyAlias(payload, sender, chat, owner):Promise<Object> {
 	if(!(payload && payload.sender)) return payload
 	const senderContactId = sender.id // og msg sender
 
-	console.log("uniqueifyAliasuniqueifyAliasuniqueifyAliasuniqueifyAlias!!!")
 	const owner_alias = chat.myAlias || owner.alias
 	const sender_alias = payload.sender&&payload.sender.alias
 	let final_sender_alias = sender_alias
@@ -215,10 +214,7 @@ async function uniqueifyAlias(payload, sender, chat, owner):Promise<Object> {
 		}
 	})
 	if(sender_alias!==final_sender_alias) {
-		console.log("UPDATE THE CHAT MEMBER",senderContactId,chat.id)
-		const theChatMember = await models.ChatMember.findOne({where:{chatId:chat.id,contactId:senderContactId}})
-		console.log(theChatMember.dataValues)
-		await models.ChatMember.update(
+		await models.ChatMember.update( // this syntax is necessary when no unique ID on the Model
 			{lastAlias:final_sender_alias},
 			{where:{chatId:chat.id,contactId:senderContactId}}
 		)

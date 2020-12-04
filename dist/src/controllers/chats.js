@@ -334,7 +334,7 @@ function receiveGroupJoin(payload) {
             date = new Date(date_string);
         let theSender = null;
         const member = chat_members[sender_pub_key];
-        const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
+        const senderAlias = (member && member.alias) || sender_alias || 'Unknown';
         if (!isTribe || isTribeOwner) {
             const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             const contactIds = JSON.parse(chat.contactIds || '[]');
@@ -367,16 +367,27 @@ function receiveGroupJoin(payload) {
                 return console.log('no sender'); // fail (no contact key?)
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) { // IF TRIBE, ADD new member TO XREF
+                console.log("UPSERT CHAT MEMBER", {
+                    contactId: theSender.id,
+                    chatId: chat.id,
+                    role: constants_1.default.chat_roles.reader,
+                    status: constants_1.default.chat_statuses.pending,
+                    lastActive: date,
+                    lastAlias: senderAlias,
+                });
                 try {
                     models_1.models.ChatMember.upsert({
                         contactId: theSender.id,
                         chatId: chat.id,
                         role: constants_1.default.chat_roles.reader,
                         lastActive: date,
-                        status: constants_1.default.chat_statuses.approved
+                        status: constants_1.default.chat_statuses.approved,
+                        lastAlias: senderAlias,
                     });
                 }
-                catch (e) { }
+                catch (e) {
+                    console.log('=> groupJoin could not upsert ChatMember');
+                }
                 chatTribes_1.replayChatHistory(chat, theSender);
                 tribes.putstats({
                     chatId: chat.id,

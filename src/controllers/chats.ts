@@ -339,7 +339,7 @@ export async function receiveGroupJoin(payload) {
 
 	let theSender: any = null
 	const member = chat_members[sender_pub_key]
-	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
+	const senderAlias = (member && member.alias) || sender_alias || 'Unknown'
 
 	if(!isTribe || isTribeOwner) { 
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
@@ -372,15 +372,26 @@ export async function receiveGroupJoin(payload) {
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
 
 		if(isTribeOwner){ // IF TRIBE, ADD new member TO XREF
+			console.log("UPSERT CHAT MEMBER",{
+				contactId: theSender.id,
+				chatId: chat.id,
+				role: constants.chat_roles.reader,
+				status: constants.chat_statuses.pending,
+				lastActive: date,
+				lastAlias: senderAlias,
+			})
 			try{
 				models.ChatMember.upsert({
 					contactId: theSender.id,
 					chatId: chat.id,
 					role: constants.chat_roles.reader,
 					lastActive: date,
-					status: constants.chat_statuses.approved
+					status: constants.chat_statuses.approved,
+					lastAlias: senderAlias,
 				})
-			} catch(e) {}
+			} catch(e) {
+				console.log('=> groupJoin could not upsert ChatMember')
+			}
 			replayChatHistory(chat, theSender)
 			tribes.putstats({
 				chatId: chat.id,
