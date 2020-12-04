@@ -218,7 +218,10 @@ async function uniqueifyAlias(payload, sender, chat, owner):Promise<Object> {
 		console.log("UPDATE THE CHAT MEMBER",senderContactId,chat.id)
 		const theChatMember = await models.ChatMember.findOne({where:{chatId:chat.id,contactId:senderContactId}})
 		console.log(theChatMember.dataValues)
-		await theChatMember.update({lastAlias:final_sender_alias})
+		await theChatMember.update(
+			{lastAlias:final_sender_alias},
+			{where:{chatId:chat.id,contactId:senderContactId}}
+		)
 	}
 
 	payload.sender.alias = final_sender_alias
