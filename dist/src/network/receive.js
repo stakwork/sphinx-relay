@@ -241,6 +241,7 @@ function uniqueifyAlias(payload, sender, chat, owner) {
         if (sender_alias !== final_sender_alias) {
             console.log("UPDATE THE CHAT MEMBER", senderContactId, chat.id);
             const theChatMember = yield models_1.models.ChatMember.findOne({ where: { chatId: chat.id, contactId: senderContactId } });
+            console.log(theChatMember.dataValues);
             yield theChatMember.update({ lastAlias: final_sender_alias });
         }
         payload.sender.alias = final_sender_alias;
