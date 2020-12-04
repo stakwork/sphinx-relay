@@ -105,7 +105,7 @@ export async function sendMessage(params) {
 			console.log("KEYSEND ERROR", e)
 			no = e
 		}
-		await sleep(2)
+		await sleep(10)
 	})
 	if(no){
 		if(failure) failure(no)

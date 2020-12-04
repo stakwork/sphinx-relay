@@ -83,8 +83,10 @@ async function onReceive(payload){
 		const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type)
 		// CHECK THEY ARE IN THE GROUP if message
 		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+		if(!senderContact) return // need sender contact!
+		const senderContactId = senderContact.id
 		if(needsPricePerMessage) {
-			const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+			const senderMember = await models.ChatMember.findOne({where:{contactId:senderContactId, chatId:chat.id}})
 			if(!senderMember) doAction=false
 		}
 		// CHECK PRICES
@@ -96,7 +98,7 @@ async function onReceive(payload){
 				timers.addTimer({ // pay them back
 					amount: chat.escrowAmount, 
 					millis:chat.escrowMillis,
-					receiver: senderContact.id,
+					receiver: senderContactId,
 					msgId: payload.message.id,
 					chatId: chat.id,
 				})
@@ -106,7 +108,7 @@ async function onReceive(payload){
 		if(payload.type===msgtypes.group_join) {
 			if(payload.message.amount<chat.priceToJoin) doAction=false
 			if(chat.private) { // check if has been approved
-				const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+				const senderMember = await models.ChatMember.findOne({where:{contactId:senderContactId, chatId:chat.id}})
 				if(!(senderMember && senderMember.status===constants.chat_statuses.approved)){
 					doAction=false // dont let if private and not approved
 				}
@@ -118,7 +120,7 @@ async function onReceive(payload){
 			if(payload.message.uuid) {
 				const ogMsg = await models.Message.findOne({where:{
 					uuid: payload.message.uuid,
-					sender: senderContact.id,
+					sender: senderContactId,
 				}})
 				if(ogMsg) doAction = true
 			}
@@ -194,6 +196,9 @@ async function doTheAction(data){
 async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId){
 	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
+	if(!chat) return
+
+	const senderContactId = sender.id // og msg sender
 
 	let payload
 	if(sender && typesToModify.includes(ogpayload.type)){
@@ -201,25 +206,41 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 	} else {
 		payload = ogpayload
 	}
-	// dont need sender beyond here
 
-	//const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
 	const type = payload.type
 	const message = payload.message
 	// HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
 	// ASK xref TABLE and put alias there too?
+
+	const owner_alias = chat.myAlias || owner.alias
+	const sender_alias = payload.sender&&payload.sender.alias
+	let final_sender_alias = sender_alias
+	const chatMembers = await models.ChatMember.findAll({where:{chatId:chat.id}})
+	if(!(chatMembers && chatMembers.length)) return
+	asyncForEach(chatMembers, (cm)=>{
+		if(cm.contactId===senderContactId) return // dont check against self of course
+		if(sender_alias===cm.lastAlias || sender_alias===owner_alias) {
+			// impersonating! switch it up!
+			final_sender_alias = `${sender_alias}_2`
+		}
+	})
+	if(sender_alias!==final_sender_alias) {
+		const theChatMember = await models.ChatMember.findOne({where:{chatId:chat.id,contactId:senderContactId}})
+		await theChatMember.update({lastAlias:final_sender_alias})
+	}
+
 	sendMessage({
 		type, message,
 		sender: {
 			...owner.dataValues,
-			alias: (payload.sender&&payload.sender.alias) || '',
+			alias: final_sender_alias || '',
 			photoUrl: (payload.sender&&payload.sender.photo_url) || '',
 			role: constants.chat_roles.reader,
 		},
 		amount: amtToForwardToRealSatsContactId||0,
 		chat: chat,
-		skipPubKey: payload.sender.pub_key, 
+		skipPubKey: payload.sender.pub_key, // dont forward back to self
 		realSatsContactId,
 		success: ()=>{},
 		receive: ()=>{},
@@ -384,5 +405,11 @@ function weave(p){
 		})
 		delete chunks[ts]
 		return payload
+	}
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+	  	await callback(array[index], index, array);
 	}
 }

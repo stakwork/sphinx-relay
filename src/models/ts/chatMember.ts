@@ -26,4 +26,7 @@ export default class ChatMember extends Model<ChatMember> {
   @Column
   status: number
 
+  @Column
+  lastAlias: string
+
 }

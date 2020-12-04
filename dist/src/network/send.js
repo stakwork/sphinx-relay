@@ -107,7 +107,7 @@ function sendMessage(params) {
                 console.log("KEYSEND ERROR", e);
                 no = e;
             }
-            yield sleep(2);
+            yield sleep(10);
         }));
         if (no) {
             if (failure)
