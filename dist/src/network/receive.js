@@ -76,6 +76,7 @@ function onReceive(payload) {
         let isTribe = false;
         let isTribeOwner = false;
         let chat;
+        let owner;
         if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
@@ -84,7 +85,7 @@ function onReceive(payload) {
         }
         if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
         if (isTribeOwner)
@@ -157,6 +158,8 @@ function onReceive(payload) {
                     }
                 }
             }
+            // make sure alias is unique among chat members
+            payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
             if (doAction)
                 forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward);
             else
@@ -213,31 +216,20 @@ function doTheAction(data) {
         }
     });
 }
-function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId) {
+function uniqueifyAlias(payload, sender, chat, owner) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('forwardMessageToTribe')
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
-        if (!chat)
-            return;
+        if (!chat || !sender || !owner)
+            return payload;
+        if (!(payload && payload.sender))
+            return payload;
         const senderContactId = sender.id; // og msg sender
-        let payload;
-        if (sender && typesToModify.includes(ogpayload.type)) {
-            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender);
-        }
-        else {
-            payload = ogpayload;
-        }
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const type = payload.type;
-        const message = payload.message;
-        // HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
-        // ASK xref TABLE and put alias there too?
+        console.log("uniqueifyAliasuniqueifyAliasuniqueifyAliasuniqueifyAlias!!!");
         const owner_alias = chat.myAlias || owner.alias;
         const sender_alias = payload.sender && payload.sender.alias;
         let final_sender_alias = sender_alias;
         const chatMembers = yield models_1.models.ChatMember.findAll({ where: { chatId: chat.id } });
         if (!(chatMembers && chatMembers.length))
-            return;
+            return payload;
         asyncForEach(chatMembers, (cm) => {
             if (cm.contactId === senderContactId)
                 return; // dont check against self of course
@@ -250,9 +242,29 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
             const theChatMember = yield models_1.models.ChatMember.findOne({ where: { chatId: chat.id, contactId: senderContactId } });
             yield theChatMember.update({ lastAlias: final_sender_alias });
         }
+        payload.sender.alias = final_sender_alias;
+        return payload;
+    });
+}
+function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // console.log('forwardMessageToTribe')
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
+        if (!chat)
+            return;
+        let payload;
+        if (sender && typesToModify.includes(ogpayload.type)) {
+            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender);
+        }
+        else {
+            payload = ogpayload;
+        }
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const type = payload.type;
+        const message = payload.message;
         send_1.sendMessage({
             type, message,
-            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: final_sender_alias || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader }),
             amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,
