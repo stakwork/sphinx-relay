@@ -88,16 +88,12 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
         return; // skip if not at least one of these
     }
-    const contactKeyChanged = contact.contactKey !== attrs['contact_key'];
-    const aliasChanged = contact.alias !== attrs['alias'];
-    const photoChanged = contact.photoUrl !== attrs['photo_url'];
+    const contactKeyChanged = attrs['contact_key'] && contact.contactKey !== attrs['contact_key'];
+    const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias'];
+    const photoChanged = attrs['photo_url'] && contact.photoUrl !== attrs['photo_url'];
     if (!(contactKeyChanged || aliasChanged || photoChanged)) {
         return;
     }
-    console.log('contact.alias', contact.alias);
-    console.log("attrs['alias']", attrs['alias']);
-    console.log('===', contact.alias !== attrs['alias']);
-    return;
     // send updated owner info to others!
     const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
         .filter(c => c.id !== 1 && c.publicKey).map(c => c.id);
