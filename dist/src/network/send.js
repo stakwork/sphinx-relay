@@ -171,8 +171,8 @@ function newmsg(type, chat, sender, message, isForwarded) {
     if (!isForwarded && includeAlias && chat.myAlias) {
         aliasToInclude = chat.myAlias;
     }
-    const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto && chat && chat.type === constants_1.default.chat_types.tribe;
-    let photoUrlToInclude = sender.photoUrl;
+    const includePhotoUrl = sender && !sender.privatePhoto && chat && chat.type === constants_1.default.chat_types.tribe;
+    let photoUrlToInclude = sender.photoUrl || '';
     if (!isForwarded && includePhotoUrl && chat.myPhotoUrl) {
         photoUrlToInclude = chat.myPhotoUrl;
     }
