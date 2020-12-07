@@ -28,7 +28,7 @@ export async function updateChat(req, res){
 	if(photo_url) obj.photoUrl=photo_url
 	if(meta && typeof meta==='string') obj.meta=meta
 	if(my_alias) obj.myAlias=my_alias
-	if(my_photo_url) obj.myPhotoUrl=my_photo_url
+	if(my_photo_url || my_photo_url==="") obj.myPhotoUrl=my_photo_url
 
 	if(Object.keys(obj).length>0) {
 		await chat.update(obj)

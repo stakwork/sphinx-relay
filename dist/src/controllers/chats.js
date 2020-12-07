@@ -42,7 +42,7 @@ function updateChat(req, res) {
             obj.meta = meta;
         if (my_alias)
             obj.myAlias = my_alias;
-        if (my_photo_url)
+        if (my_photo_url || my_photo_url === "")
             obj.myPhotoUrl = my_photo_url;
         if (Object.keys(obj).length > 0) {
             yield chat.update(obj);

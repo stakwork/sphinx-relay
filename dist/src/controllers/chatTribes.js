@@ -21,10 +21,6 @@ const hub_1 = require("../hub");
 const msg_1 = require("../utils/msg");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
-/*
-add myAlias to leave tribe also
-sphinx.chat://?action=tribe&uuid=XyyNsiAM4pbbX4vjtYz2kcFye-h4dd9Nd2twi2Az8gGDQdIbM3HU1WV3XoASXLedCaVpl0YrAvjvBpAPt9ZB0-rpV4Y1&host=tribes.sphinx.chat
-*/
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
