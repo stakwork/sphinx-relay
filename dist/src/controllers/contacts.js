@@ -94,6 +94,10 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!(contactKeyChanged || aliasChanged || photoChanged)) {
         return;
     }
+    console.log('contact.alias', contact.alias);
+    console.log("attrs['alias']", attrs['alias']);
+    console.log('===', contact.alias !== attrs['alias']);
+    return;
     // send updated owner info to others!
     const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
         .filter(c => c.id !== 1 && c.publicKey).map(c => c.id);

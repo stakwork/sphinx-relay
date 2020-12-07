@@ -98,6 +98,11 @@ export const updateContact = async (req, res) => {
 		return
 	}
 
+	console.log('contact.alias',contact.alias)
+	console.log("attrs['alias']", attrs['alias'])
+	console.log('===', contact.alias!==attrs['alias'])
+	return
+
 	// send updated owner info to others!
 	const contactIds = await models.Contact.findAll({where:{deleted:false}})
 		.filter(c=> c.id!==1 && c.publicKey).map(c=> c.id)
