@@ -15,7 +15,7 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
     return __awaiter(this, void 0, void 0, function* () {
         const host = tribes_1.getHost();
         try {
-            yield fetch('https://' + host + '/bots', {
+            const r = yield fetch('https://' + host + '/bots', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid, owner_pubkey,
@@ -26,8 +26,8 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
-            // const j = await r.json()
-            // console.log('=> j',j)
+            const j = yield r.json();
+            console.log('=> bot created:', j);
         }
         catch (e) {
             console.log('[tribes] unauthorized to declare');
