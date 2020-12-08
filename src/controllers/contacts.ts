@@ -82,6 +82,10 @@ export const updateContact = async (req, res) => {
 	if(!contact) {
 		return failure(res, 'no contact found')
 	}
+
+	const contactKeyChanged = attrs['contact_key'] && contact.contactKey!==attrs['contact_key']
+	const aliasChanged = attrs['alias'] && contact.alias!==attrs['alias']
+	const photoChanged = attrs['photo_url'] && contact.photoUrl!==attrs['photo_url']
 	
 	// update contact
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
@@ -91,10 +95,6 @@ export const updateContact = async (req, res) => {
 	if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
 		return // skip if not at least one of these
 	}
-	console.log("PHOTO URL", attrs["photo_url"], contact.photoUrl)
-	const contactKeyChanged = attrs['contact_key'] && contact.contactKey!==attrs['contact_key']
-	const aliasChanged = attrs['alias'] && contact.alias!==attrs['alias']
-	const photoChanged = attrs['photo_url'] && contact.photoUrl!==attrs['photo_url']
 	if(!(contactKeyChanged || aliasChanged || photoChanged)) {
 		return
 	}
