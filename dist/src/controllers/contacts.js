@@ -88,6 +88,7 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
         return; // skip if not at least one of these
     }
+    console.log("PHOTO URL", attrs["photo_url"], contact.photoUrl);
     const contactKeyChanged = attrs['contact_key'] && contact.contactKey !== attrs['contact_key'];
     const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias'];
     const photoChanged = attrs['photo_url'] && contact.photoUrl !== attrs['photo_url'];
