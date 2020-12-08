@@ -226,7 +226,6 @@ export const receiveContactKey = async (payload) => {
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
 	let contactKeyChanged = false
-	console.log("ContACT KEY CHANGED?",contactKeyChanged)
 	if (sender_contact_key && sender) {
 		if(sender_contact_key!==sender.contactKey) {
 			contactKeyChanged = true
@@ -244,7 +243,6 @@ export const receiveContactKey = async (payload) => {
 		console.log("DID NOT FIND SENDER")
 	}
 
-	console.log("ContACT KEY CHANGED 2?",contactKeyChanged)
 	if(contactKeyChanged) {
 		helpers.sendContactKeys({
 			contactPubKey: sender_pub_key,
