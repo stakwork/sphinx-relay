@@ -202,7 +202,12 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
+    let contactKeyChanged = false;
+    console.log("ContACT KEY CHANGED?", contactKeyChanged);
     if (sender_contact_key && sender) {
+        if (sender_contact_key !== sender.contactKey) {
+            contactKeyChanged = true;
+        }
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
             objToUpdate.alias = sender_alias;
@@ -217,11 +222,14 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     else {
         console.log("DID NOT FIND SENDER");
     }
-    helpers.sendContactKeys({
-        contactPubKey: sender_pub_key,
-        sender: owner,
-        type: constants_1.default.message_types.contact_key_confirmation,
-    });
+    console.log("ContACT KEY CHANGED 2?", contactKeyChanged);
+    if (contactKeyChanged) {
+        helpers.sendContactKeys({
+            contactPubKey: sender_pub_key,
+            sender: owner,
+            type: constants_1.default.message_types.contact_key_confirmation,
+        });
+    }
 });
 exports.receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`, JSON.stringify(payload));
