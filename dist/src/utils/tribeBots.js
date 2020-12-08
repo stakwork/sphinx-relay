@@ -11,11 +11,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const tribes_1 = require("./tribes");
+const node_fetch_1 = require("node-fetch");
 function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = tribes_1.getHost();
         try {
-            const r = yield fetch('https://' + host + '/bots', {
+            const r = yield node_fetch_1.default('https://' + host + '/bots', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid, owner_pubkey,

@@ -1,5 +1,6 @@
 import { models } from '../models'
 import {getHost} from './tribes'
+import fetch from 'node-fetch'
 
 export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
     const host = getHost()
