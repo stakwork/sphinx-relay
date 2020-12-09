@@ -32,7 +32,7 @@ function updateChat(req, res) {
         if (!chat) {
             return res_1.failure(res, 'chat not found');
         }
-        const { name, photo_url, meta } = req.body;
+        const { name, photo_url, meta, my_alias, my_photo_url } = req.body;
         const obj = {};
         if (name)
             obj.name = name;
@@ -40,6 +40,10 @@ function updateChat(req, res) {
             obj.photoUrl = photo_url;
         if (meta && typeof meta === 'string')
             obj.meta = meta;
+        if (my_alias)
+            obj.myAlias = my_alias;
+        if (my_photo_url || my_photo_url === "")
+            obj.myPhotoUrl = my_photo_url;
         if (Object.keys(obj).length > 0) {
             yield chat.update(obj);
         }
@@ -330,7 +334,7 @@ function receiveGroupJoin(payload) {
             date = new Date(date_string);
         let theSender = null;
         const member = chat_members[sender_pub_key];
-        const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
+        const senderAlias = (member && member.alias) || sender_alias || 'Unknown';
         if (!isTribe || isTribeOwner) {
             const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
             const contactIds = JSON.parse(chat.contactIds || '[]');
@@ -363,16 +367,27 @@ function receiveGroupJoin(payload) {
                 return console.log('no sender'); // fail (no contact key?)
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) { // IF TRIBE, ADD new member TO XREF
+                console.log("UPSERT CHAT MEMBER", {
+                    contactId: theSender.id,
+                    chatId: chat.id,
+                    role: constants_1.default.chat_roles.reader,
+                    status: constants_1.default.chat_statuses.pending,
+                    lastActive: date,
+                    lastAlias: senderAlias,
+                });
                 try {
                     models_1.models.ChatMember.upsert({
                         contactId: theSender.id,
                         chatId: chat.id,
                         role: constants_1.default.chat_roles.reader,
                         lastActive: date,
-                        status: constants_1.default.chat_statuses.approved
+                        status: constants_1.default.chat_statuses.approved,
+                        lastAlias: senderAlias,
                     });
                 }
-                catch (e) { }
+                catch (e) {
+                    console.log('=> groupJoin could not upsert ChatMember');
+                }
                 chatTribes_1.replayChatHistory(chat, theSender);
                 tribes.putstats({
                     chatId: chat.id,

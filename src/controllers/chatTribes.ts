@@ -13,7 +13,7 @@ import constants from '../constants'
 
 export async function joinTribe(req, res){
 	console.log('=> joinTribe')
-	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias } = req.body
+	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias, my_alias, my_photo_url } = req.body
 	const is_private = req.body.private
 
 	const existing = await models.Chat.findOne({where:{uuid}})
@@ -56,7 +56,7 @@ export async function joinTribe(req, res){
 	const chatStatus = is_private ?
 		constants.chat_statuses.pending :
 		constants.chat_statuses.approved
-	const chatParams = {
+	const chatParams:{[k:string]:any} = {
 		uuid: uuid,
 		contactIds: JSON.stringify(contactIds),
 		photoUrl: img||'',
@@ -71,6 +71,8 @@ export async function joinTribe(req, res){
 		status: chatStatus,
 		priceToJoin: amount||0,
 	}
+	if(my_alias) chatParams.myAlias = my_alias
+	if(my_photo_url) chatParams.myPhotoUrl = my_photo_url
 	
 	const typeToSend = is_private ?
 		constants.message_types.member_request :
@@ -80,6 +82,9 @@ export async function joinTribe(req, res){
 		chatParams.contactIds
 	console.log('=> joinTribe: typeToSend', typeToSend)
 	console.log('=> joinTribe: contactIdsToSend', contactIdsToSend)
+	// set my alias to be the custom one
+	const theOwner = owner.dataValues||owner
+	if(my_alias) theOwner.alias = my_alias
 	network.sendMessage({ // send my data to tribe owner
 		chat: {
 			...chatParams, 
@@ -87,12 +92,12 @@ export async function joinTribe(req, res){
 			members: {
 				[owner.publicKey]: {
 					key: owner.contactKey,
-					alias: owner.alias||''
+					alias: my_alias||owner.alias||''
 				}
 			}
 		},
-		amount:amount||0,
-		sender: owner,
+		amount: amount||0,
+		sender: theOwner,
 		message: {},
 		type: typeToSend,
 		failure: function (e) {
@@ -127,7 +132,7 @@ export async function receiveMemberRequest(payload) {
 	
 	let theSender: any = null
 	const member = chat_members[sender_pub_key]
-	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
+	const senderAlias = (member && member.alias) || sender_alias || 'Unknown'
 
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
 	if (sender) {
@@ -137,7 +142,7 @@ export async function receiveMemberRequest(payload) {
 			const createdContact = await models.Contact.create({
 				publicKey: sender_pub_key,
 				contactKey: member.key,
-				alias: senderAlias,
+				alias: sender_alias || senderAlias,
 				status: 1,
 				fromGroup: true,
 				photoUrl: sender_photo_url
@@ -153,6 +158,7 @@ export async function receiveMemberRequest(payload) {
 		role: constants.chat_roles.reader,
 		status: constants.chat_statuses.pending,
 		lastActive: date,
+		lastAlias: senderAlias,
 	})
 	// maybe check here manually????
 	try{
@@ -162,6 +168,7 @@ export async function receiveMemberRequest(payload) {
 			role: constants.chat_roles.reader,
 			status: constants.chat_statuses.pending,
 			lastActive: date,
+			lastAlias: senderAlias,
 		})
 	} catch(e){}
 
@@ -175,7 +182,7 @@ export async function receiveMemberRequest(payload) {
 		network_type
 	}
 	if(isTribe) {
-		msg.senderAlias = sender_alias
+		msg.senderAlias = senderAlias
 		msg.senderPic = sender_photo_url
 	}
 	const message = await models.Message.create(msg)
@@ -318,7 +325,7 @@ export async function approveOrRejectMember(req,res) {
 }
 
 export async function receiveMemberApprove(payload) {
-	console.log('=> receiveMemberApprove')
+	console.log('=> receiveMemberApprove') // received by the joiner only
 	const { owner, chat, chat_name, sender, network_type } = await helpers.parseReceiveParams(payload)
 	if(!chat) return console.log('no chat')
 	await chat.update({status: constants.chat_statuses.approved})
@@ -345,18 +352,21 @@ export async function receiveMemberApprove(payload) {
 
 	const amount = chat.priceToJoin||0
 	const theChat = chat.dataValues||chat
+	const theOwner = owner.dataValues||owner
+	const theAlias = chat.myAlias || owner.alias
+	if(theAlias) theOwner.alias = theAlias
 	// send JOIN and my info to all 
 	network.sendMessage({
 		chat: { ...theChat, 
 			members: {
 				[owner.publicKey]: {
 					key: owner.contactKey,
-					alias: owner.alias||''
+					alias: theAlias||''
 				}
 			}
 		},
 		amount,
-		sender: owner,
+		sender: theOwner,
 		message: {},
 		type: constants.message_types.group_join,
 	})
@@ -464,13 +474,20 @@ export async function replayChatHistory(chat, contact) {
 					}
 				}
 			}
+			const isForwarded = m.sender!==1
+			const includeStatus = true
 			let msg = network.newmsg(m.type, chat, sender, {
 				content, // replaced with the remoteMessageContent (u are owner) {}
+				uuid: m.uuid,
+				replyUuid: m.replyUuid,
+				status: m.status,
+				amount: m.amount,
 				...mediaKeyMap && {mediaKey: mediaKeyMap},
 				...newMediaTerms && {mediaToken: newMediaTerms},
 				...m.mediaType && {mediaType: m.mediaType},
 				...dateString && {date: dateString}
-			})
+			}, isForwarded, includeStatus)
+
 			msg = await decryptMessage(msg, chat)
 			const data = await personalizeMessage(msg, contact, true)
 			const mqttTopic = `${contact.publicKey}/${chat.uuid}`

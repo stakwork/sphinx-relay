@@ -46,6 +46,7 @@ exports.typesToReplay = [
     msgtypes.group_join,
     msgtypes.group_leave,
     msgtypes.bot_res,
+    msgtypes.boost,
 ];
 const botTypes = [
     constants_1.default.message_types.bot_install,
@@ -76,6 +77,7 @@ function onReceive(payload) {
         let isTribe = false;
         let isTribeOwner = false;
         let chat;
+        let owner;
         if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
@@ -84,7 +86,7 @@ function onReceive(payload) {
         }
         if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
         if (isTribeOwner)
@@ -93,8 +95,11 @@ function onReceive(payload) {
             const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
             // CHECK THEY ARE IN THE GROUP if message
             const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+            if (!senderContact)
+                return; // need sender contact!
+            const senderContactId = senderContact.id;
             if (needsPricePerMessage) {
-                const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
                 if (!senderMember)
                     doAction = false;
             }
@@ -107,7 +112,7 @@ function onReceive(payload) {
                     timers.addTimer({
                         amount: chat.escrowAmount,
                         millis: chat.escrowMillis,
-                        receiver: senderContact.id,
+                        receiver: senderContactId,
                         msgId: payload.message.id,
                         chatId: chat.id,
                     });
@@ -118,7 +123,7 @@ function onReceive(payload) {
                 if (payload.message.amount < chat.priceToJoin)
                     doAction = false;
                 if (chat.private) { // check if has been approved
-                    const senderMember = senderContact && (yield models_1.models.ChatMember.findOne({ where: { contactId: senderContact.id, chatId: chat.id } }));
+                    const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
                     if (!(senderMember && senderMember.status === constants_1.default.chat_statuses.approved)) {
                         doAction = false; // dont let if private and not approved
                     }
@@ -130,7 +135,7 @@ function onReceive(payload) {
                 if (payload.message.uuid) {
                     const ogMsg = yield models_1.models.Message.findOne({ where: {
                             uuid: payload.message.uuid,
-                            sender: senderContact.id,
+                            sender: senderContactId,
                         } });
                     if (ogMsg)
                         doAction = true;
@@ -154,6 +159,8 @@ function onReceive(payload) {
                     }
                 }
             }
+            // make sure alias is unique among chat members
+            payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
             if (doAction)
                 forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward);
             else
@@ -210,10 +217,41 @@ function doTheAction(data) {
         }
     });
 }
+function uniqueifyAlias(payload, sender, chat, owner) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!chat || !sender || !owner)
+            return payload;
+        if (!(payload && payload.sender))
+            return payload;
+        const senderContactId = sender.id; // og msg sender
+        const owner_alias = chat.myAlias || owner.alias;
+        const sender_alias = payload.sender && payload.sender.alias;
+        let final_sender_alias = sender_alias;
+        const chatMembers = yield models_1.models.ChatMember.findAll({ where: { chatId: chat.id } });
+        if (!(chatMembers && chatMembers.length))
+            return payload;
+        asyncForEach(chatMembers, (cm) => {
+            if (cm.contactId === senderContactId)
+                return; // dont check against self of course
+            if (sender_alias === cm.lastAlias || sender_alias === owner_alias) {
+                // impersonating! switch it up!
+                final_sender_alias = `${sender_alias}_2`;
+            }
+        });
+        if (sender_alias !== final_sender_alias) {
+            yield models_1.models.ChatMember.update(// this syntax is necessary when no unique ID on the Model
+            { lastAlias: final_sender_alias }, { where: { chatId: chat.id, contactId: senderContactId } });
+        }
+        payload.sender.alias = final_sender_alias;
+        return payload;
+    });
+}
 function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('forwardMessageToTribe')
         const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
+        if (!chat)
+            return;
         let payload;
         if (sender && typesToModify.includes(ogpayload.type)) {
             payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender);
@@ -221,13 +259,9 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         else {
             payload = ogpayload;
         }
-        // dont need sender beyond here
-        //const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const type = payload.type;
         const message = payload.message;
-        // HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
-        // ASK xref TABLE and put alias there too?
         send_1.sendMessage({
             type, message,
             sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader }),
@@ -417,5 +451,12 @@ function weave(p) {
         delete chunks[ts];
         return payload;
     }
+}
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
 }
 //# sourceMappingURL=receive.js.map

@@ -38,6 +38,7 @@ export const typesToReplay=[ // should match typesToForward
 	msgtypes.group_join, 
 	msgtypes.group_leave,
 	msgtypes.bot_res,
+	msgtypes.boost,
 ]
 const botTypes=[
 	constants.message_types.bot_install,
@@ -67,6 +68,7 @@ async function onReceive(payload){
 	let isTribe = false
 	let isTribeOwner = false
 	let chat
+	let owner
 
 	if(payload.chat&&payload.chat.uuid) {
 		isTribe = payload.chat.type===constants.chat_types.tribe
@@ -75,7 +77,7 @@ async function onReceive(payload){
 	}
 	if(isTribe) {
 		const tribeOwnerPubKey = chat && chat.ownerPubkey
-		const owner = await models.Contact.findOne({where: {isOwner:true}})
+		owner = await models.Contact.findOne({where: {isOwner:true}})
 		isTribeOwner = owner.publicKey===tribeOwnerPubKey
 	}
 	if(isTribeOwner) toAddIn.isTribeOwner = true
@@ -83,8 +85,10 @@ async function onReceive(payload){
 		const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type)
 		// CHECK THEY ARE IN THE GROUP if message
 		const senderContact = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
+		if(!senderContact) return // need sender contact!
+		const senderContactId = senderContact.id
 		if(needsPricePerMessage) {
-			const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+			const senderMember = await models.ChatMember.findOne({where:{contactId:senderContactId, chatId:chat.id}})
 			if(!senderMember) doAction=false
 		}
 		// CHECK PRICES
@@ -96,7 +100,7 @@ async function onReceive(payload){
 				timers.addTimer({ // pay them back
 					amount: chat.escrowAmount, 
 					millis:chat.escrowMillis,
-					receiver: senderContact.id,
+					receiver: senderContactId,
 					msgId: payload.message.id,
 					chatId: chat.id,
 				})
@@ -106,7 +110,7 @@ async function onReceive(payload){
 		if(payload.type===msgtypes.group_join) {
 			if(payload.message.amount<chat.priceToJoin) doAction=false
 			if(chat.private) { // check if has been approved
-				const senderMember = senderContact && await models.ChatMember.findOne({where:{contactId:senderContact.id, chatId:chat.id}})
+				const senderMember = await models.ChatMember.findOne({where:{contactId:senderContactId, chatId:chat.id}})
 				if(!(senderMember && senderMember.status===constants.chat_statuses.approved)){
 					doAction=false // dont let if private and not approved
 				}
@@ -118,7 +122,7 @@ async function onReceive(payload){
 			if(payload.message.uuid) {
 				const ogMsg = await models.Message.findOne({where:{
 					uuid: payload.message.uuid,
-					sender: senderContact.id,
+					sender: senderContactId,
 				}})
 				if(ogMsg) doAction = true
 			}
@@ -141,6 +145,8 @@ async function onReceive(payload){
 				}
 			}
 		}
+		// make sure alias is unique among chat members
+		payload = await uniqueifyAlias(payload, senderContact, chat, owner)
 		if(doAction) forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward)
 		else console.log('=> insufficient payment for this action')
 	}
@@ -191,9 +197,38 @@ async function doTheAction(data){
 	}
 }
 
+async function uniqueifyAlias(payload, sender, chat, owner):Promise<Object> {
+	if(!chat || !sender || !owner) return payload
+	if(!(payload && payload.sender)) return payload
+	const senderContactId = sender.id // og msg sender
+
+	const owner_alias = chat.myAlias || owner.alias
+	const sender_alias = payload.sender&&payload.sender.alias
+	let final_sender_alias = sender_alias
+	const chatMembers = await models.ChatMember.findAll({where:{chatId:chat.id}})
+	if(!(chatMembers && chatMembers.length)) return payload
+	asyncForEach(chatMembers, (cm)=>{
+		if(cm.contactId===senderContactId) return // dont check against self of course
+		if(sender_alias===cm.lastAlias || sender_alias===owner_alias) {
+			// impersonating! switch it up!
+			final_sender_alias = `${sender_alias}_2`
+		}
+	})
+	if(sender_alias!==final_sender_alias) {
+		await models.ChatMember.update( // this syntax is necessary when no unique ID on the Model
+			{lastAlias:final_sender_alias},
+			{where:{chatId:chat.id,contactId:senderContactId}}
+		)
+	}
+
+	payload.sender.alias = final_sender_alias
+	return payload
+}
+
 async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId){
 	// console.log('forwardMessageToTribe')
 	const chat = await models.Chat.findOne({where:{uuid:ogpayload.chat.uuid}})
+	if(!chat) return
 
 	let payload
 	if(sender && typesToModify.includes(ogpayload.type)){
@@ -201,14 +236,10 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 	} else {
 		payload = ogpayload
 	}
-	// dont need sender beyond here
 
-	//const sender = await models.Contact.findOne({where:{publicKey:payload.sender.pub_key}})
 	const owner = await models.Contact.findOne({where:{isOwner:true}})
 	const type = payload.type
 	const message = payload.message
-	// HERE: NEED TO MAKE SURE ALIAS IS UNIQUE
-	// ASK xref TABLE and put alias there too?
 	sendMessage({
 		type, message,
 		sender: {
@@ -219,7 +250,7 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 		},
 		amount: amtToForwardToRealSatsContactId||0,
 		chat: chat,
-		skipPubKey: payload.sender.pub_key, 
+		skipPubKey: payload.sender.pub_key, // dont forward back to self
 		realSatsContactId,
 		success: ()=>{},
 		receive: ()=>{},
@@ -384,5 +415,11 @@ function weave(p){
 		})
 		delete chunks[ts]
 		return payload
+	}
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+	  	await callback(array[index], index, array);
 	}
 }

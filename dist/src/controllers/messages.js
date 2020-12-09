@@ -217,7 +217,7 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, message_status } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
@@ -236,7 +236,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
         messageContent: text,
         createdAt: date,
         updatedAt: date,
-        status: constants_1.default.statuses.received,
+        status: message_status || constants_1.default.statuses.received,
         network_type: network_type,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;

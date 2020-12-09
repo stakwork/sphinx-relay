@@ -82,6 +82,10 @@ export const updateContact = async (req, res) => {
 	if(!contact) {
 		return failure(res, 'no contact found')
 	}
+
+	const contactKeyChanged = attrs['contact_key'] && contact.contactKey!==attrs['contact_key']
+	const aliasChanged = attrs['alias'] && contact.alias!==attrs['alias']
+	const photoChanged = attrs['photo_url'] && contact.photoUrl!==attrs['photo_url']
 	
 	// update contact
 	const owner = await contact.update(jsonUtils.jsonToContact(attrs))
@@ -91,9 +95,6 @@ export const updateContact = async (req, res) => {
 	if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
 		return // skip if not at least one of these
 	}
-	const contactKeyChanged = contact.contactKey!==attrs['contact_key']
-	const aliasChanged = contact.alias!==attrs['alias']
-	const photoChanged = contact.photoUrl!==attrs['photo_url']
 	if(!(contactKeyChanged || aliasChanged || photoChanged)) {
 		return
 	}
@@ -224,7 +225,11 @@ export const receiveContactKey = async (payload) => {
 
 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed }})
+	let contactKeyChanged = false
 	if (sender_contact_key && sender) {
+		if(sender_contact_key!==sender.contactKey) {
+			contactKeyChanged = true
+		}
 		const objToUpdate:{[k:string]:any} = {contactKey: sender_contact_key}
 		if(sender_alias) objToUpdate.alias = sender_alias
 		if(sender_photo_url) objToUpdate.photoUrl = sender_photo_url
@@ -238,11 +243,13 @@ export const receiveContactKey = async (payload) => {
 		console.log("DID NOT FIND SENDER")
 	}
 
-	helpers.sendContactKeys({
-		contactPubKey: sender_pub_key,
-		sender: owner,
-		type: constants.message_types.contact_key_confirmation,
-	})
+	if(contactKeyChanged) {
+		helpers.sendContactKeys({
+			contactPubKey: sender_pub_key,
+			sender: owner,
+			type: constants.message_types.contact_key_confirmation,
+		})
+	}
 }
 
 export const receiveConfirmContactKey = async (payload) => {

@@ -80,6 +80,9 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!contact) {
         return res_1.failure(res, 'no contact found');
     }
+    const contactKeyChanged = attrs['contact_key'] && contact.contactKey !== attrs['contact_key'];
+    const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias'];
+    const photoChanged = attrs['photo_url'] && contact.photoUrl !== attrs['photo_url'];
     // update contact
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
@@ -88,9 +91,6 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
         return; // skip if not at least one of these
     }
-    const contactKeyChanged = contact.contactKey !== attrs['contact_key'];
-    const aliasChanged = contact.alias !== attrs['alias'];
-    const photoChanged = contact.photoUrl !== attrs['photo_url'];
     if (!(contactKeyChanged || aliasChanged || photoChanged)) {
         return;
     }
@@ -202,7 +202,11 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
+    let contactKeyChanged = false;
     if (sender_contact_key && sender) {
+        if (sender_contact_key !== sender.contactKey) {
+            contactKeyChanged = true;
+        }
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
             objToUpdate.alias = sender_alias;
@@ -217,11 +221,13 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     else {
         console.log("DID NOT FIND SENDER");
     }
-    helpers.sendContactKeys({
-        contactPubKey: sender_pub_key,
-        sender: owner,
-        type: constants_1.default.message_types.contact_key_confirmation,
-    });
+    if (contactKeyChanged) {
+        helpers.sendContactKeys({
+            contactPubKey: sender_pub_key,
+            sender: owner,
+            type: constants_1.default.message_types.contact_key_confirmation,
+        });
+    }
 });
 exports.receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`, JSON.stringify(payload));

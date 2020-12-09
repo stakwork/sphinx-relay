@@ -95,4 +95,10 @@ export default class Chat extends Model<Chat> {
   @Column
   meta: string
 
+  @Column
+  myPhotoUrl: string
+
+  @Column
+  myAlias: string
+
 }

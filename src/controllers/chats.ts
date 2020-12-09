@@ -21,12 +21,14 @@ export async function updateChat(req, res){
 	if(!chat) {
 		return failure(res,'chat not found')
 	}
-	const {name,photo_url,meta} = req.body
+	const {name,photo_url,meta,my_alias,my_photo_url} = req.body
 
 	const obj:{[k:string]:any} = {}
 	if(name) obj.name=name
 	if(photo_url) obj.photoUrl=photo_url
 	if(meta && typeof meta==='string') obj.meta=meta
+	if(my_alias) obj.myAlias=my_alias
+	if(my_photo_url || my_photo_url==="") obj.myPhotoUrl=my_photo_url
 
 	if(Object.keys(obj).length>0) {
 		await chat.update(obj)
@@ -337,7 +339,7 @@ export async function receiveGroupJoin(payload) {
 
 	let theSender: any = null
 	const member = chat_members[sender_pub_key]
-	const senderAlias = sender_alias || (member && member.alias) || 'Unknown'
+	const senderAlias = (member && member.alias) || sender_alias || 'Unknown'
 
 	if(!isTribe || isTribeOwner) { 
 		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
@@ -370,15 +372,26 @@ export async function receiveGroupJoin(payload) {
 		await chat.update({ contactIds: JSON.stringify(contactIds) })
 
 		if(isTribeOwner){ // IF TRIBE, ADD new member TO XREF
+			console.log("UPSERT CHAT MEMBER",{
+				contactId: theSender.id,
+				chatId: chat.id,
+				role: constants.chat_roles.reader,
+				status: constants.chat_statuses.pending,
+				lastActive: date,
+				lastAlias: senderAlias,
+			})
 			try{
 				models.ChatMember.upsert({
 					contactId: theSender.id,
 					chatId: chat.id,
 					role: constants.chat_roles.reader,
 					lastActive: date,
-					status: constants.chat_statuses.approved
+					status: constants.chat_statuses.approved,
+					lastAlias: senderAlias,
 				})
-			} catch(e) {}
+			} catch(e) {
+				console.log('=> groupJoin could not upsert ChatMember')
+			}
 			replayChatHistory(chat, theSender)
 			tribes.putstats({
 				chatId: chat.id,

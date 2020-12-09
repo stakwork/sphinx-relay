@@ -24,7 +24,7 @@ const constants_1 = require("../constants");
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> joinTribe');
-        const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias } = req.body;
+        const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias, my_alias, my_photo_url } = req.body;
         const is_private = req.body.private;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
         if (existing) {
@@ -77,6 +77,10 @@ function joinTribe(req, res) {
             status: chatStatus,
             priceToJoin: amount || 0,
         };
+        if (my_alias)
+            chatParams.myAlias = my_alias;
+        if (my_photo_url)
+            chatParams.myPhotoUrl = my_photo_url;
         const typeToSend = is_private ?
             constants_1.default.message_types.member_request :
             constants_1.default.message_types.group_join;
@@ -85,15 +89,19 @@ function joinTribe(req, res) {
             chatParams.contactIds;
         console.log('=> joinTribe: typeToSend', typeToSend);
         console.log('=> joinTribe: contactIdsToSend', contactIdsToSend);
+        // set my alias to be the custom one
+        const theOwner = owner.dataValues || owner;
+        if (my_alias)
+            theOwner.alias = my_alias;
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { contactIds: contactIdsToSend, members: {
                     [owner.publicKey]: {
                         key: owner.contactKey,
-                        alias: owner.alias || ''
+                        alias: my_alias || owner.alias || ''
                     }
                 } }),
             amount: amount || 0,
-            sender: owner,
+            sender: theOwner,
             message: {},
             type: typeToSend,
             failure: function (e) {
@@ -130,7 +138,7 @@ function receiveMemberRequest(payload) {
         date.setMilliseconds(0);
         let theSender = null;
         const member = chat_members[sender_pub_key];
-        const senderAlias = sender_alias || (member && member.alias) || 'Unknown';
+        const senderAlias = (member && member.alias) || sender_alias || 'Unknown';
         const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
         if (sender) {
             theSender = sender; // might already include??
@@ -140,7 +148,7 @@ function receiveMemberRequest(payload) {
                 const createdContact = yield models_1.models.Contact.create({
                     publicKey: sender_pub_key,
                     contactKey: member.key,
-                    alias: senderAlias,
+                    alias: sender_alias || senderAlias,
                     status: 1,
                     fromGroup: true,
                     photoUrl: sender_photo_url
@@ -156,6 +164,7 @@ function receiveMemberRequest(payload) {
             role: constants_1.default.chat_roles.reader,
             status: constants_1.default.chat_statuses.pending,
             lastActive: date,
+            lastAlias: senderAlias,
         });
         // maybe check here manually????
         try {
@@ -165,6 +174,7 @@ function receiveMemberRequest(payload) {
                 role: constants_1.default.chat_roles.reader,
                 status: constants_1.default.chat_statuses.pending,
                 lastActive: date,
+                lastAlias: senderAlias,
             });
         }
         catch (e) { }
@@ -178,7 +188,7 @@ function receiveMemberRequest(payload) {
             network_type
         };
         if (isTribe) {
-            msg.senderAlias = sender_alias;
+            msg.senderAlias = senderAlias;
             msg.senderPic = sender_photo_url;
         }
         const message = yield models_1.models.Message.create(msg);
@@ -316,7 +326,7 @@ function approveOrRejectMember(req, res) {
 exports.approveOrRejectMember = approveOrRejectMember;
 function receiveMemberApprove(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> receiveMemberApprove');
+        console.log('=> receiveMemberApprove'); // received by the joiner only
         const { owner, chat, chat_name, sender, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return console.log('no chat');
@@ -342,16 +352,20 @@ function receiveMemberApprove(payload) {
         });
         const amount = chat.priceToJoin || 0;
         const theChat = chat.dataValues || chat;
+        const theOwner = owner.dataValues || owner;
+        const theAlias = chat.myAlias || owner.alias;
+        if (theAlias)
+            theOwner.alias = theAlias;
         // send JOIN and my info to all 
         network.sendMessage({
             chat: Object.assign(Object.assign({}, theChat), { members: {
                     [owner.publicKey]: {
                         key: owner.contactKey,
-                        alias: owner.alias || ''
+                        alias: theAlias || ''
                     }
                 } }),
             amount,
-            sender: owner,
+            sender: theOwner,
             message: {},
             type: constants_1.default.message_types.group_join,
         });
@@ -462,7 +476,9 @@ function replayChatHistory(chat, contact) {
                         }
                     }
                 }
-                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }));
+                const isForwarded = m.sender !== 1;
+                const includeStatus = true;
+                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, status: m.status, amount: m.amount }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }), isForwarded, includeStatus);
                 msg = yield msg_1.decryptMessage(msg, chat);
                 const data = yield msg_1.personalizeMessage(msg, contact, true);
                 const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
