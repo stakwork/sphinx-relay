@@ -244,7 +244,7 @@ export const sendMessage = async (req, res) => {
 export const receiveMessage = async (payload) => {
 	// console.log('received message', { payload })
 
-	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, message_status} = await helpers.parseReceiveParams(payload)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
@@ -264,7 +264,7 @@ export const receiveMessage = async (payload) => {
 		messageContent: text,
 		createdAt: date,
 		updatedAt: date,
-		status: constants.statuses.received,
+		status: message_status || constants.statuses.received,
 		network_type: network_type,
 	}
 	const isTribe = chat_type===constants.chat_types.tribe
