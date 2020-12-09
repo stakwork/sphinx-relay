@@ -38,6 +38,7 @@ export const typesToReplay=[ // should match typesToForward
 	msgtypes.group_join, 
 	msgtypes.group_leave,
 	msgtypes.bot_res,
+	msgtypes.boost,
 ]
 const botTypes=[
 	constants.message_types.bot_install,

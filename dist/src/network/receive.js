@@ -46,6 +46,7 @@ exports.typesToReplay = [
     msgtypes.group_join,
     msgtypes.group_leave,
     msgtypes.bot_res,
+    msgtypes.boost,
 ];
 const botTypes = [
     constants_1.default.message_types.bot_install,
