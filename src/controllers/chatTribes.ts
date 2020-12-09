@@ -478,6 +478,7 @@ export async function replayChatHistory(chat, contact) {
 			let msg = network.newmsg(m.type, chat, sender, {
 				content, // replaced with the remoteMessageContent (u are owner) {}
 				uuid: m.uuid,
+				status: m.status,
 				...mediaKeyMap && {mediaKey: mediaKeyMap},
 				...newMediaTerms && {mediaToken: newMediaTerms},
 				...m.mediaType && {mediaType: m.mediaType},
