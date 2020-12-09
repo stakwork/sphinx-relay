@@ -481,6 +481,7 @@ export async function replayChatHistory(chat, contact) {
 				uuid: m.uuid,
 				replyUuid: m.replyUuid,
 				status: m.status,
+				amount: m.amount,
 				...mediaKeyMap && {mediaKey: mediaKeyMap},
 				...newMediaTerms && {mediaToken: newMediaTerms},
 				...m.mediaType && {mediaType: m.mediaType},
