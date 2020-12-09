@@ -164,7 +164,7 @@ function checkIfAutoConfirm(data) {
         confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
     }
 }
-function newmsg(type, chat, sender, message, isForwarded) {
+function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
     const includeGroupKey = type === constants_1.default.message_types.group_create || type === constants_1.default.message_types.group_invite;
     const includeAlias = sender && sender.alias && chat.type === constants_1.default.chat_types.tribe;
     let aliasToInclude = sender.alias;
@@ -175,6 +175,9 @@ function newmsg(type, chat, sender, message, isForwarded) {
     let photoUrlToInclude = sender.photoUrl || '';
     if (!isForwarded && includePhotoUrl && chat.myPhotoUrl) {
         photoUrlToInclude = chat.myPhotoUrl;
+    }
+    if (!includeStatus && message.status) {
+        delete message.status;
     }
     return {
         type: type,

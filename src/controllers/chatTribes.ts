@@ -475,15 +475,18 @@ export async function replayChatHistory(chat, contact) {
 				}
 			}
 			const isForwarded = m.sender!==1
+			const includeStatus = true
 			let msg = network.newmsg(m.type, chat, sender, {
 				content, // replaced with the remoteMessageContent (u are owner) {}
 				uuid: m.uuid,
+				replyUuid: m.replyUuid,
 				status: m.status,
 				...mediaKeyMap && {mediaKey: mediaKeyMap},
 				...newMediaTerms && {mediaToken: newMediaTerms},
 				...m.mediaType && {mediaType: m.mediaType},
 				...dateString && {date: dateString}
-			}, isForwarded)
+			}, isForwarded, includeStatus)
+			console.log("=====> A MESSAGE TO SEND",msg)
 			msg = await decryptMessage(msg, chat)
 			const data = await personalizeMessage(msg, contact, true)
 			const mqttTopic = `${contact.publicKey}/${chat.uuid}`

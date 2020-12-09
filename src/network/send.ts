@@ -156,7 +156,7 @@ function checkIfAutoConfirm(data){
 	}
 }
 
-export function newmsg(type, chat, sender, message, isForwarded:boolean){
+export function newmsg(type, chat, sender, message, isForwarded:boolean, includeStatus?:boolean){
 	const includeGroupKey = type===constants.message_types.group_create || type===constants.message_types.group_invite
 	const includeAlias = sender && sender.alias && chat.type===constants.chat_types.tribe
 	let aliasToInclude = sender.alias
@@ -167,6 +167,9 @@ export function newmsg(type, chat, sender, message, isForwarded:boolean){
 	let photoUrlToInclude = sender.photoUrl || ''
 	if(!isForwarded && includePhotoUrl && chat.myPhotoUrl) {
 		photoUrlToInclude = chat.myPhotoUrl
+	}
+	if(!includeStatus && message.status) {
+		delete message.status
 	}
 	return {
 		type: type,
