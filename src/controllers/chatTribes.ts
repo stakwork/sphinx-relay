@@ -487,7 +487,7 @@ export async function replayChatHistory(chat, contact) {
 				...m.mediaType && {mediaType: m.mediaType},
 				...dateString && {date: dateString}
 			}, isForwarded, includeStatus)
-			console.log("=====> A MESSAGE TO SEND",msg)
+
 			msg = await decryptMessage(msg, chat)
 			const data = await personalizeMessage(msg, contact, true)
 			const mqttTopic = `${contact.publicKey}/${chat.uuid}`
