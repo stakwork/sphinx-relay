@@ -301,9 +301,7 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         const ogMsg = yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid }
         });
-        console.log("FOUND OG MSG");
         if (ogMsg && ogMsg.sender === 1) {
-            console.log("OG MSG WAS ME! SEND NOTIFY");
             hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost');
         }
     }

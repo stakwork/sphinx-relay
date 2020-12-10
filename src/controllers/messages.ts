@@ -333,9 +333,7 @@ export const receiveBoost = async (payload) => {
 		const ogMsg = await models.Message.findOne({
 			where: {uuid: msg.replyUuid}
 		})
-		console.log("FOUND OG MSG")
 		if(ogMsg && ogMsg.sender===1) {
-			console.log("OG MSG WAS ME! SEND NOTIFY")
 			sendNotification(chat, msg.senderAlias||sender.alias, 'boost')
 		}
 	}
