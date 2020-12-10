@@ -258,7 +258,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
     confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id } = yield helpers.parseReceiveParams(payload);
     console.log('=> received boost ' + amount + ' sats on network:', network_type);
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
@@ -295,6 +295,18 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'boost',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
+    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
+    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
+    if (msg.replyUuid) {
+        const ogMsg = yield models_1.models.Message.findOne({
+            where: { uuid: msg.replyUuid }
+        });
+        console.log("FOUND OG MSG");
+        if (ogMsg && ogMsg.sender === 1) {
+            console.log("OG MSG WAS ME! SEND NOTIFY");
+            hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost');
+        }
+    }
 });
 exports.receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, date_string, amount, network_type } = yield helpers.parseReceiveParams(payload);

@@ -188,7 +188,7 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
   })
 }
 
-type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject' | 'keysend'
+type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject' | 'keysend' | 'boost'
 
 const sendNotification = async (chat, name, type:NotificationType, amount?:number) => {
   
@@ -206,8 +206,17 @@ const sendNotification = async (chat, name, type:NotificationType, amount?:numbe
     message = `You have received a payment of ${amount} sats`
   }
 
+  // group
   if(type==='message' && chat.type==constants.chat_types.group && chat.name && chat.name.length){
-    message += ` on ${chat.name}`
+    message += ` in ${chat.name}`
+  }
+
+  // tribe
+  if((type==='message'||type==='boost') && chat.type===constants.chat_types.tribe) {
+    message = `You have a new ${type}`
+    if(chat.name && chat.name.length) {
+      message += ` in ${chat.name}`
+    }
   }
 
   const owner = await models.Contact.findOne({ where: { isOwner: true }})

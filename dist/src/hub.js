@@ -201,8 +201,16 @@ const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0,
     if (type === 'keysend') {
         message = `You have received a payment of ${amount} sats`;
     }
+    // group
     if (type === 'message' && chat.type == constants_1.default.chat_types.group && chat.name && chat.name.length) {
-        message += ` on ${chat.name}`;
+        message += ` in ${chat.name}`;
+    }
+    // tribe
+    if ((type === 'message' || type === 'boost') && chat.type === constants_1.default.chat_types.tribe) {
+        message = `You have a new ${type}`;
+        if (chat.name && chat.name.length) {
+            message += ` in ${chat.name}`;
+        }
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (!owner.deviceId) {
