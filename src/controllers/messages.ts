@@ -288,7 +288,7 @@ export const receiveMessage = async (payload) => {
 }
 
 export const receiveBoost = async (payload) => {
-	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url} = await helpers.parseReceiveParams(payload)
+	const {owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id} = await helpers.parseReceiveParams(payload)
 	console.log('=> received boost ' +amount+ ' sats on network:', network_type)
 	if(!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
@@ -325,6 +325,18 @@ export const receiveBoost = async (payload) => {
 		type: 'boost',
 		response: jsonUtils.messageToJson(message, chat, sender)
 	})
+
+	const theChat = {...chat.dataValues, contactIds:[sender.id]}
+	sendConfirmation({ chat:theChat, sender: owner, msg_id })
+
+	if(msg.replyUuid) {
+		const ogMsg = await models.Message.findOne({
+			where: {uuid: msg.replyUuid}
+		})
+		if(ogMsg && ogMsg.sender===1) {
+			sendNotification(chat, msg.senderAlias||sender.alias, 'boost')
+		}
+	}
 }
 
 export const receiveRepayment = async (payload) => {
