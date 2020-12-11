@@ -49,6 +49,8 @@ export const sendContactKeys = async ({ type, contactIds, sender, success, failu
 		const contact = await models.Contact.findOne({ where: { id: contactId } })
 		if(!(contact && contact.publicKey)) return
 		destination_key = contact.publicKey
+
+		console.log("=> KEY EXCHANGE", msg)
 		performKeysendMessage({
 			sender,
 			destination_key,

@@ -55,6 +55,7 @@ exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontAct
         if (!(contact && contact.publicKey))
             return;
         destination_key = contact.publicKey;
+        console.log("=> KEY EXCHANGE", msg);
         exports.performKeysendMessage({
             sender,
             destination_key,
