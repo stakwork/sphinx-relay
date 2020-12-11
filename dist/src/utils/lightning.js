@@ -20,6 +20,7 @@ const macaroon_1 = require("./macaroon");
 const config_1 = require("./config");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
+const LND_IP = config.lnd_ip || 'localhost';
 const LND_KEYSEND_KEY = 5482373484;
 exports.LND_KEYSEND_KEY = LND_KEYSEND_KEY;
 const SPHINX_CUSTOM_RECORD_KEY = 133773310;
@@ -46,7 +47,7 @@ exports.loadCredentials = loadCredentials;
 //     const packageDefinition = await protoLoader.load("rpc.proto", {})
 //     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
 //     var { lnrpc } = lnrpcDescriptor;
-//     lightningClient = new lnrpc.Lightning(config.lnd_ip + ':' + config.lnd_port, credentials);
+//     lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
 //     return lightningClient
 //   }
 // }
@@ -59,7 +60,7 @@ const loadLightning = () => {
             var credentials = loadCredentials();
             var lnrpcDescriptor = grpc.load("proto/rpc.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
-            lightningClient = new lnrpc.Lightning(config.lnd_ip + ':' + config.lnd_port, credentials);
+            lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
             return lightningClient;
         }
         catch (e) {
@@ -77,7 +78,7 @@ const loadWalletUnlocker = () => {
         try {
             var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
-            walletUnlocker = new lnrpc.WalletUnlocker(config.lnd_ip + ':' + config.lnd_port, credentials);
+            walletUnlocker = new lnrpc.WalletUnlocker(LND_IP + ':' + config.lnd_port, credentials);
             return walletUnlocker;
         }
         catch (e) {

@@ -6,6 +6,7 @@ import {loadConfig} from './config'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
+const LND_IP = config.lnd_ip || 'localhost'
 
 var signerClient = <any>null;
 
@@ -17,7 +18,7 @@ export const loadSigner = () => {
       var credentials = loadCredentials()
       var lnrpcDescriptor = grpc.load("proto/signer.proto");
       var signer: any = lnrpcDescriptor.signrpc
-      signerClient = new signer.Signer(config.lnd_ip + ':' + config.lnd_port, credentials);
+      signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
       return signerClient
     } catch (e) {
       throw e

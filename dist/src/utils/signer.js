@@ -15,6 +15,7 @@ const ByteBuffer = require("bytebuffer");
 const config_1 = require("./config");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
+const LND_IP = config.lnd_ip || 'localhost';
 var signerClient = null;
 exports.loadSigner = () => {
     if (signerClient) {
@@ -25,7 +26,7 @@ exports.loadSigner = () => {
             var credentials = lightning_1.loadCredentials();
             var lnrpcDescriptor = grpc.load("proto/signer.proto");
             var signer = lnrpcDescriptor.signrpc;
-            signerClient = new signer.Signer(config.lnd_ip + ':' + config.lnd_port, credentials);
+            signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
             return signerClient;
         }
         catch (e) {

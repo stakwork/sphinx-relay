@@ -10,6 +10,7 @@ import {loadConfig} from './config'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
+const LND_IP = config.lnd_ip || 'localhost'
 
 const LND_KEYSEND_KEY = 5482373484
 const SPHINX_CUSTOM_RECORD_KEY = 133773310
@@ -38,7 +39,7 @@ const loadCredentials = () => {
 //     const packageDefinition = await protoLoader.load("rpc.proto", {})
 //     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
 //     var { lnrpc } = lnrpcDescriptor;
-//     lightningClient = new lnrpc.Lightning(config.lnd_ip + ':' + config.lnd_port, credentials);
+//     lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
 //     return lightningClient
 //   }
 // }
@@ -51,7 +52,7 @@ const loadLightning = () => {
       var credentials = loadCredentials()
       var lnrpcDescriptor = grpc.load("proto/rpc.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
-      lightningClient = new lnrpc.Lightning(config.lnd_ip + ':' + config.lnd_port, credentials);
+      lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
       return lightningClient
     } catch (e) {
       throw e
@@ -67,7 +68,7 @@ const loadWalletUnlocker = () => {
     try {
       var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
-      walletUnlocker = new lnrpc.WalletUnlocker(config.lnd_ip + ':' + config.lnd_port, credentials);
+      walletUnlocker = new lnrpc.WalletUnlocker(LND_IP + ':' + config.lnd_port, credentials);
       return walletUnlocker
     } catch (e) {
       console.log(e)
