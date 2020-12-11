@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table({tableName: 'sphinx_timers', underscored: true})
+@Table({ tableName: 'sphinx_timers', underscored: true })
 export default class Timer extends Model<Timer> {
 
   @Column({

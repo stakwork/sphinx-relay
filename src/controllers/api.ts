@@ -23,7 +23,7 @@ export interface Action {
 }
 
 export async function processAction(req, res) {
-    console.log('=> processAction',req.body)
+    console.log('=> processAction', req.body)
     let body = req.body
     if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
         try { // parse out body from "data" for github webhook action
@@ -46,62 +46,66 @@ export async function processAction(req, res) {
         return failure(res, 'no action')
     }
 
-    const a:Action = {
+    const a: Action = {
         bot_id,
-        action, 
-        pubkey: pubkey||'', 
-        content: content||'', 
-        amount: amount||0,
-        bot_name: bot.name, 
-        chat_uuid: chat_uuid||'',   
+        action,
+        pubkey: pubkey || '',
+        content: content || '',
+        amount: amount || 0,
+        bot_name: bot.name,
+        chat_uuid: chat_uuid || '',
     }
 
     try {
-        const r = await finalAction(a,bot_id)
+        const r = await finalAction(a, bot_id)
         success(res, r)
-    } catch(e) {
+    } catch (e) {
         failure(res, e)
     }
 }
 
-export async function finalAction(a:Action, bot_id:string){
-    const {action,pubkey,amount,content,bot_name,chat_uuid} = a
+export async function finalAction(a: Action, bot_id: string) {
+    const { action, pubkey, amount, content, bot_name, chat_uuid } = a
 
     const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
     let theChat
-    if(chat_uuid){
+    if (chat_uuid) {
         theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
     }
     const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey)
     console.log("=> ACTION HIT", a.action, a.bot_name)
-    if(chat_uuid && !iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-        const myBot = await models.Bot.findOne({where:{
-            id: bot_id
-        }})
-        if(!myBot) return console.log('no bot')
+    if (chat_uuid && !iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
+        const myBot = await models.Bot.findOne({
+            where: {
+                id: bot_id
+            }
+        })
+        if (!myBot) return console.log('no bot')
         // THIS is a bot member cmd res (i am bot maker)
-        const botMember = await models.BotMember.findOne({where:{
-            tribeUuid: chat_uuid, botId: bot_id
-        }})
-        if(!botMember) return console.log('no botMember')
+        const botMember = await models.BotMember.findOne({
+            where: {
+                tribeUuid: chat_uuid, botId: bot_id
+            }
+        })
+        if (!botMember) return console.log('no botMember')
 
         const dest = botMember.memberPubkey
-        if(!dest) return console.log('no dest to send to')
+        if (!dest) return console.log('no dest to send to')
         const topic = `${dest}/${myBot.uuid}`
         const data = <network.Msg>{
             action, bot_id, bot_name,
-            type:constants.message_types.bot_res,
-            message:{ content:a.content, amount:amount||0 },
-            chat:{ uuid: chat_uuid},
-            sender:{
+            type: constants.message_types.bot_res,
+            message: { content: a.content, amount: amount || 0 },
+            chat: { uuid: chat_uuid },
+            sender: {
                 pub_key: String(owner.publicKey),
-                alias: bot_name, role:0
+                alias: bot_name, role: 0
             }, // for verify sig
         }
         try {
-            await network.signAndSend({dest,data}, topic)
-        } catch(e) {
+            await network.signAndSend({ dest, data }, topic)
+        } catch (e) {
             console.log('=> couldnt mqtt publish')
         }
         return
@@ -159,7 +163,7 @@ export async function finalAction(a:Action, bot_id:string){
         })
         await network.sendMessage({
             chat: theChat,
-            sender: { ...owner.dataValues, alias, id:botContactId, role: constants.chat_roles.reader },
+            sender: { ...owner.dataValues, alias, id: botContactId, role: constants.chat_roles.reader },
             message: { content: textMap, id: message.id, uuid: message.uuid },
             type: constants.message_types.bot_res,
             success: () => ({ success: true }),

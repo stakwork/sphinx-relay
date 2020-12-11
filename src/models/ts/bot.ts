@@ -4,7 +4,7 @@ import { Table, Column, Model, DataType } from 'sequelize-typescript';
 BOT CREATOR - this handles the webhook and external API
 */
 
-@Table({tableName: 'sphinx_bots', underscored: true})
+@Table({ tableName: 'sphinx_bots', underscored: true })
 export default class Bot extends Model<Bot> {
 
   @Column({

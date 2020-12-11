@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table({tableName: 'sphinx_messages', underscored: true})
+@Table({ tableName: 'sphinx_messages', underscored: true })
 export default class Message extends Model<Message> {
 
   @Column({
@@ -77,7 +77,7 @@ export default class Message extends Model<Message> {
     allowNull: false
   })
   seen: boolean
-  
+
   @Column
   createdAt: Date
 

@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table({tableName: 'sphinx_chats', underscored: true})
+@Table({ tableName: 'sphinx_chats', underscored: true })
 export default class Chat extends Model<Chat> {
 
   @Column({
@@ -76,7 +76,7 @@ export default class Chat extends Model<Chat> {
   @Column
   private: boolean // joining requires approval of admin
 
-  @Column 
+  @Column
   ownerPubkey: string
 
   @Column({

@@ -1,4 +1,4 @@
-import {models} from '../models'
+import { models } from '../models'
 import * as crypto from 'crypto'
 
 // import * as WebSocket from 'ws'
@@ -23,7 +23,7 @@ export function connect(server) {
   });
   io.use(async (socket, next) => {
     let userToken = socket.handshake.headers['x-user-token'];
-    const isValid = await isValidToken(userToken) 
+    const isValid = await isValidToken(userToken)
     if (isValid) {
       return next();
     }
@@ -34,9 +34,9 @@ export function connect(server) {
   });
 }
 
-async function isValidToken(token:string):Promise<Boolean> {
-  if(!token) return false
-  const user = await models.Contact.findOne({ where: { isOwner: true }})
+async function isValidToken(token: string): Promise<Boolean> {
+  if (!token) return false
+  const user = await models.Contact.findOne({ where: { isOwner: true } })
   const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
   if (user.authToken == null || user.authToken != hashedToken) {
     return false // failed
@@ -45,7 +45,7 @@ async function isValidToken(token:string):Promise<Boolean> {
 }
 
 export const send = (body) => {
-  if(io) io.sockets.emit('message',body)
+  if (io) io.sockets.emit('message', body)
 
   // if(srvr){
   //   srvr.clients.forEach(c=>{

@@ -45,9 +45,11 @@ __decorate([
     __metadata("design:type", String)
 ], ChatMember.prototype, "lastAlias", void 0);
 ChatMember = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_chat_members', underscored: true, indexes: [
+    sequelize_typescript_1.Table({
+        tableName: 'sphinx_chat_members', underscored: true, indexes: [
             { unique: true, fields: ['chat_id', 'contact_id'] }
-        ] })
+        ]
+    })
 ], ChatMember);
 exports.default = ChatMember;
 //# sourceMappingURL=chatMember.js.map

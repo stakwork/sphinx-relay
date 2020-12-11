@@ -1,20 +1,20 @@
-import {sendMessage,signAndSend,newmsg} from './send'
+import { sendMessage, signAndSend, newmsg } from './send'
 import {
-    initGrpcSubscriptions,initTribesSubscriptions,parseKeysendInvoice,
-    typesToReplay,typesToForward,
+    initGrpcSubscriptions, initTribesSubscriptions, parseKeysendInvoice,
+    typesToReplay, typesToForward,
 } from './receive'
-import {Msg} from './interfaces'
+import { Msg } from './interfaces'
 
 /*
 Abstracts between lightning network and MQTT depending on Chat type and sender
 */
 
 export {
-    sendMessage,signAndSend,newmsg,
+    sendMessage, signAndSend, newmsg,
     initGrpcSubscriptions,
     initTribesSubscriptions,
     parseKeysendInvoice,
-    typesToReplay,typesToForward,
+    typesToReplay, typesToForward,
     Msg,
 }
 

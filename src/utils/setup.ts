@@ -7,7 +7,7 @@ import password from '../utils/password'
 import * as path from 'path'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs';
-import {isClean} from './nodeinfo'
+import { isClean } from './nodeinfo'
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(path.join(__dirname, '../../config/app.json'))[env]
@@ -239,7 +239,7 @@ async function printQR() {
   connectionStringFile(b64)
 
   const clean = await isClean()
-  if(!clean) return // skip it if already setup!
+  if (!clean) return // skip it if already setup!
 
   console.log('Scan this QR in Sphinx app:')
   QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
@@ -247,7 +247,7 @@ async function printQR() {
   })
 }
 
-function connectionStringFile(str:string){
+function connectionStringFile(str: string) {
   fs.writeFile('connection_string.txt', str, function (err) {
     if (err) console.log('ERROR SAVING connection_string.txt.', err);
   });

@@ -14,17 +14,17 @@ export async function tryToUnlockLND() {
     const p = config.lnd_pwd_path
     if (!p) return
 
-    console.log('==>',p)
+    console.log('==>', p)
 
     var pwd = await getFirstLine(config.lnd_pwd_path);
-    if(!pwd) return
+    if (!pwd) return
 
-    console.log('==>',pwd,typeof pwd)
+    console.log('==>', pwd, typeof pwd)
 
     try {
         await unlockWallet(String(pwd))
-    } catch(e) {
-        console.log('[unlock] Error:',e)
+    } catch (e) {
+        console.log('[unlock] Error:', e)
     }
 }
 

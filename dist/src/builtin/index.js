@@ -21,9 +21,11 @@ const constants_1 = require("../constants");
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         MotherBot.init();
-        const builtInBots = yield models_1.models.ChatBot.findAll({ where: {
+        const builtInBots = yield models_1.models.ChatBot.findAll({
+            where: {
                 botType: constants_1.default.bot_types.builtin
-            } });
+            }
+        });
         if (!(builtInBots && builtInBots.length))
             return;
         builtInBots.forEach(b => {

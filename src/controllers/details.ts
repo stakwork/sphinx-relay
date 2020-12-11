@@ -94,14 +94,16 @@ export const getBalance = async (req, res) => {
 		const channelList = await listChannels()
 		const { channels } = channelList
 		const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0)
-		res.json({ success: true, response:<BalanceRes>{
-			reserve,
-			full_balance: parseInt(response.balance),
-			balance: parseInt(response.balance) - reserve,
-			pending_open_balance: parseInt(response.pending_open_balance),
-		} });
-	} catch(e) {
-		console.log("ERROR getBalance",e)
+		res.json({
+			success: true, response: <BalanceRes>{
+				reserve,
+				full_balance: parseInt(response.balance),
+				balance: parseInt(response.balance) - reserve,
+				pending_open_balance: parseInt(response.pending_open_balance),
+			}
+		});
+	} catch (e) {
+		console.log("ERROR getBalance", e)
 		res.json({ success: false });
 	}
 	res.end();

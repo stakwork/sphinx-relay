@@ -6,27 +6,27 @@ import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
 import * as path from 'path'
 import constants from '../constants'
-import {getMacaroon} from './macaroon'
+import { getMacaroon } from './macaroon'
 
 // var protoLoader = require('@grpc/proto-loader')
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname,'../../config/app.json'))[env]
+const config = require(path.join(__dirname, '../../config/app.json'))[env]
 
 const LND_KEYSEND_KEY = 5482373484
 const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
-var lightningClient = <any> null;
-var walletUnlocker  = <any> null;
+var lightningClient = <any>null;
+var walletUnlocker = <any>null;
 
 const loadCredentials = () => {
   var lndCert = fs.readFileSync(config.tls_location);
   var sslCreds = grpc.credentials.createSsl(lndCert);
   var macaroon = getMacaroon()
-	var metadata = new grpc.Metadata()
-	metadata.add('macaroon', macaroon)
-	var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
-		callback(null, metadata);
-	});
+  var metadata = new grpc.Metadata()
+  metadata.add('macaroon', macaroon)
+  var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
+    callback(null, metadata);
+  });
 
   return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
 }
@@ -48,13 +48,13 @@ const loadLightning = () => {
   if (lightningClient) {
     return lightningClient
   } else {
-    try{
+    try {
       var credentials = loadCredentials()
       var lnrpcDescriptor = grpc.load("proto/rpc.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
       lightningClient = new lnrpc.Lightning(config.node_ip + ':' + config.lnd_port, credentials);
       return lightningClient
-    } catch(e) {
+    } catch (e) {
       throw e
     }
   }
@@ -65,24 +65,24 @@ const loadWalletUnlocker = () => {
     return walletUnlocker
   } else {
     var credentials = loadCredentials()
-    try{
+    try {
       var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
       var lnrpc: any = lnrpcDescriptor.lnrpc
       walletUnlocker = new lnrpc.WalletUnlocker(config.node_ip + ':' + config.lnd_port, credentials);
       return walletUnlocker
-    } catch(e) {
+    } catch (e) {
       console.log(e)
     }
   }
 }
 
-const unlockWallet = async (pwd:string) => {
-  return new Promise(async function(resolve, reject) { 
+const unlockWallet = async (pwd: string) => {
+  return new Promise(async function (resolve, reject) {
     let wu = await loadWalletUnlocker()
     wu.unlockWallet(
       { wallet_password: ByteBuffer.fromUTF8(pwd) },
       (err, response) => {
-        if(err) {
+        if (err) {
           reject(err)
           return
         }
@@ -93,10 +93,10 @@ const unlockWallet = async (pwd:string) => {
 }
 
 const getHeaders = (req) => {
-	return {
-		"X-User-Token": req.headers['x-user-token'],
-		"X-User-Email": req.headers['x-user-email']
-	}
+  return {
+    "X-User-Token": req.headers['x-user-token'],
+    "X-User-Email": req.headers['x-user-email']
+  }
 }
 
 var isLocked = false
@@ -121,12 +121,12 @@ const getRoute = async (pub_key, amt, callback) => {
 }
 
 const queryRoute = async (pub_key, amt) => {
-  return new Promise(async function(resolve, reject) { 
+  return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning()
     lightning.queryRoutes(
       { pub_key, amt },
       (err, response) => {
-        if(err) {
+        if (err) {
           reject(err)
           return
         }
@@ -137,12 +137,12 @@ const queryRoute = async (pub_key, amt) => {
 }
 
 const keysend = (opts) => {
-  return new Promise(async function(resolve, reject) {
+  return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning()
     const randoStr = crypto.randomBytes(32).toString('hex');
     const preimage = ByteBuffer.fromHex(randoStr)
     const options = {
-      amt: Math.max(opts.amt, constants.min_sat_amount||3),
+      amt: Math.max(opts.amt, constants.min_sat_amount || 3),
       final_cltv_delta: 10,
       dest: ByteBuffer.fromHex(opts.dest),
       dest_custom_records: {
@@ -150,18 +150,18 @@ const keysend = (opts) => {
         [`${SPHINX_CUSTOM_RECORD_KEY}`]: ByteBuffer.fromUTF8(opts.data),
       },
       payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
-      dest_features:[9],
-      fee_limit: {fixed:10}
+      dest_features: [9],
+      fee_limit: { fixed: 10 }
     }
     const call = lightning.sendPayment()
-    call.on('data', function(payment) {
-      if(payment.payment_error){
+    call.on('data', function (payment) {
+      if (payment.payment_error) {
         reject(payment.payment_error)
       } else {
         resolve(payment)
       }
     })
-    call.on('error', function(err) {
+    call.on('error', function (err) {
       reject(err)
     })
     call.write(options)
@@ -170,16 +170,16 @@ const keysend = (opts) => {
 
 const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
 async function keysendMessage(opts) {
-  return new Promise(async function(resolve, reject) {
-    if(!opts.data || typeof opts.data!=='string') {
+  return new Promise(async function (resolve, reject) {
+    if (!opts.data || typeof opts.data !== 'string') {
       return reject('string plz')
     }
 
-    if(opts.data.length<MAX_MSG_LENGTH){
+    if (opts.data.length < MAX_MSG_LENGTH) {
       try {
         const res = await keysend(opts)
         resolve(res)
-      } catch(e) {
+      } catch (e) {
         reject(e)
       }
       return
@@ -188,13 +188,13 @@ async function keysendMessage(opts) {
     const n = Math.ceil(opts.data.length / MAX_MSG_LENGTH)
     let success = false
     let fail = false
-    let res:any = null
+    let res: any = null
     const ts = new Date().valueOf()
     // WEAVE MESSAGE If TOO LARGE
-    await asyncForEach(Array.from(Array(n)), async(u,i)=> {
-      const spliti = Math.ceil(opts.data.length/n)
-      const m = opts.data.substr(i*spliti, spliti)
-      const isLastThread = i===n-1
+    await asyncForEach(Array.from(Array(n)), async (u, i) => {
+      const spliti = Math.ceil(opts.data.length / n)
+      const m = opts.data.substr(i * spliti, spliti)
+      const isLastThread = i === n - 1
       const amt = isLastThread ? opts.amt : constants.min_sat_amount
       try {
         res = await keysend({
@@ -203,12 +203,12 @@ async function keysendMessage(opts) {
         })
         success = true
         await sleep(432)
-      } catch(e) {
+      } catch (e) {
         console.log(e)
         fail = true
       }
     })
-    if(success && !fail) {
+    if (success && !fail) {
       resolve(res)
     } else {
       reject(new Error('fail'))
@@ -217,28 +217,28 @@ async function keysendMessage(opts) {
 }
 
 async function asyncForEach(array, callback) {
-	for (let index = 0; index < array.length; index++) {
-	  	await callback(array[index], index, array);
-	}
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
 }
 
 async function signAscii(ascii) {
   try {
     const sig = await signMessage(ascii_to_hexa(ascii))
     return sig
-  } catch(e) {
+  } catch (e) {
     throw e
   }
 }
 
-function listInvoices() {  
-  return new Promise(async(resolve, reject)=> {
+function listInvoices() {
+  return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listInvoices({
-      num_max_invoices:100000,
-      reversed:true,
+      num_max_invoices: 100000,
+      reversed: true,
     }, (err, response) => {
-      if(!err) {
+      if (!err) {
         resolve(response)
       } else {
         reject(err)
@@ -247,76 +247,76 @@ function listInvoices() {
   })
 }
 
-async function listAllInvoices(){
+async function listAllInvoices() {
   console.log('=> list all invoices')
   const invs = await paginateInvoices(40)
   return invs
 }
-async function paginateInvoices(limit,i=0){
-  try{
-    const r:any = await listInvoicesPaginated(limit,i)
+async function paginateInvoices(limit, i = 0) {
+  try {
+    const r: any = await listInvoicesPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset)
-    if(lastOffset>0) {
-      return r.invoices.concat(await paginateInvoices(limit,lastOffset))
+    if (lastOffset > 0) {
+      return r.invoices.concat(await paginateInvoices(limit, lastOffset))
     }
     return r.invoices
-  }catch(e){
+  } catch (e) {
     return []
   }
 }
 function listInvoicesPaginated(limit, offset) {
-  return new Promise(async(resolve, reject)=> {
+  return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listInvoices({
       num_max_invoices: limit,
       index_offset: offset,
-      reversed:true,
+      reversed: true,
     }, (err, response) => {
-      if(!err && response && response.invoices) resolve(response)
+      if (!err && response && response.invoices) resolve(response)
       else reject(err)
     })
   })
 }
 
 // need to upgrade to .10 for this
-async function listAllPayments(){
+async function listAllPayments() {
   console.log("=> list all payments")
   const pays = await paginatePayments(40) // max num
   console.log('pays', pays && pays.length)
   return pays
 }
-async function paginatePayments(limit,i=0){
-  try{
-    const r:any = await listPaymentsPaginated(limit,i)
+async function paginatePayments(limit, i = 0) {
+  try {
+    const r: any = await listPaymentsPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset) // this is "first" cuz its in reverse (lowest index)
-    if(lastOffset>0) {
-      return r.payments.concat(await paginatePayments(limit,lastOffset))
+    if (lastOffset > 0) {
+      return r.payments.concat(await paginatePayments(limit, lastOffset))
     }
     return r.payments
-  }catch(e){
+  } catch (e) {
     return []
   }
 }
 function listPaymentsPaginated(limit, offset) {
-  return new Promise(async(resolve, reject)=> {
+  return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listPayments({
       max_payments: limit,
       index_offset: offset,
       reversed: true,
     }, (err, response) => {
-      if(!err && response && response.payments) resolve(response)
+      if (!err && response && response.payments) resolve(response)
       else reject(err)
     })
   })
 }
 
-function listAllPaymentsFull() { 
-  console.log('=> list all payments') 
-  return new Promise(async(resolve, reject)=> {
+function listAllPaymentsFull() {
+  console.log('=> list all payments')
+  return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listPayments({}, (err, response) => {
-      if(!err && response && response.payments) {
+      if (!err && response && response.payments) {
         resolve(response.payments)
       } else {
         reject(err)
@@ -326,124 +326,124 @@ function listAllPaymentsFull() {
 }
 
 const signMessage = (msg) => {
-  return new Promise(async(resolve, reject)=> {
+  return new Promise(async (resolve, reject) => {
     let lightning = await loadLightning()
     try {
-      const options = {msg:ByteBuffer.fromHex(msg)}
-      lightning.signMessage(options, function(err,sig){
-        if(err || !sig.signature) {
+      const options = { msg: ByteBuffer.fromHex(msg) }
+      lightning.signMessage(options, function (err, sig) {
+        if (err || !sig.signature) {
           reject(err)
         } else {
           resolve(sig.signature)
         }
       })
-    } catch(e) {
+    } catch (e) {
       reject(e)
     }
   })
 }
 
 const signBuffer = (msg) => {
-  return new Promise(async (resolve, reject)=> {
+  return new Promise(async (resolve, reject) => {
     let lightning = await loadLightning()
     try {
-      const options = {msg}
-      lightning.signMessage(options, function(err,sig){
-        if(err || !sig.signature) {
+      const options = { msg }
+      lightning.signMessage(options, function (err, sig) {
+        if (err || !sig.signature) {
           reject(err)
         } else {
           resolve(sig.signature)
         }
       })
-    } catch(e) {
+    } catch (e) {
       reject(e)
     }
   })
 }
 
-async function verifyBytes(msg,sig): Promise<{[k:string]:any}> {
+async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
   try {
-    const r = await verifyMessage(msg.toString('hex'),sig)
+    const r = await verifyMessage(msg.toString('hex'), sig)
     return r
-  } catch(e) {
+  } catch (e) {
     throw e
   }
 }
-function verifyMessage(msg,sig): Promise<{[k:string]:any}> {
-  return new Promise(async(resolve, reject)=> {
+function verifyMessage(msg, sig): Promise<{ [k: string]: any }> {
+  return new Promise(async (resolve, reject) => {
     let lightning = await loadLightning()
     try {
       const options = {
-        msg:ByteBuffer.fromHex(msg),
-        signature:sig, // zbase32 encoded string
+        msg: ByteBuffer.fromHex(msg),
+        signature: sig, // zbase32 encoded string
       }
-      lightning.verifyMessage(options, function(err,res){
-        if(err || !res.pubkey) {
+      lightning.verifyMessage(options, function (err, res) {
+        if (err || !res.pubkey) {
           reject(err)
         } else {
           resolve(res)
         }
       })
-    } catch(e) {
+    } catch (e) {
       reject(e)
     }
   })
 }
-async function verifyAscii(ascii,sig): Promise<{[k:string]:any}>{
+async function verifyAscii(ascii, sig): Promise<{ [k: string]: any }> {
   try {
-    const r = await verifyMessage(ascii_to_hexa(ascii),sig)
+    const r = await verifyMessage(ascii_to_hexa(ascii), sig)
     return r
-  } catch(e) {
+  } catch (e) {
     throw e
   }
 }
 
-async function getInfo(): Promise<{[k:string]:any}>{
-	return new Promise((resolve,reject)=>{
-		const lightning = loadLightning()
-		lightning.getInfo({}, function(err, response) {
-			if (err == null) {
-				resolve(response)
-			} else {
-				reject(err)
-			}
-		});
-	})
+async function getInfo(): Promise<{ [k: string]: any }> {
+  return new Promise((resolve, reject) => {
+    const lightning = loadLightning()
+    lightning.getInfo({}, function (err, response) {
+      if (err == null) {
+        resolve(response)
+      } else {
+        reject(err)
+      }
+    });
+  })
 }
 
-async function listChannels(): Promise<{[k:string]:any}>{
-	return new Promise((resolve,reject)=>{
-		const lightning = loadLightning()
-		lightning.listChannels({}, function(err, response) {
-			if (err == null) {
-				resolve(response)
-			} else {
-				reject(err)
-			}
-		});
-	})
+async function listChannels(): Promise<{ [k: string]: any }> {
+  return new Promise((resolve, reject) => {
+    const lightning = loadLightning()
+    lightning.listChannels({}, function (err, response) {
+      if (err == null) {
+        resolve(response)
+      } else {
+        reject(err)
+      }
+    });
+  })
 }
 
-async function channelBalance(): Promise<{[k:string]:any}>{
-	return new Promise((resolve,reject)=>{
-		const lightning = loadLightning()
-		lightning.channelBalance({}, function(err, response) {
-			if (err == null) {
-				resolve(response)
-			} else {
-				reject(err)
-			}
-		});
-	})
+async function channelBalance(): Promise<{ [k: string]: any }> {
+  return new Promise((resolve, reject) => {
+    const lightning = loadLightning()
+    lightning.channelBalance({}, function (err, response) {
+      if (err == null) {
+        resolve(response)
+      } else {
+        reject(err)
+      }
+    });
+  })
 }
 
-function ascii_to_hexa(str){
-	var arr1 = <string[]> [];
-	for (var n = 0, l = str.length; n < l; n ++) {
-		var hex = Number(str.charCodeAt(n)).toString(16);
-		arr1.push(hex);
-	 }
-	return arr1.join('');
+function ascii_to_hexa(str) {
+  var arr1 = <string[]>[];
+  for (var n = 0, l = str.length; n < l; n++) {
+    var hex = Number(str.charCodeAt(n)).toString(16);
+    arr1.push(hex);
+  }
+  return arr1.join('');
 }
 
 export {

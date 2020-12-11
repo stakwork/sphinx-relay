@@ -23,9 +23,11 @@ exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const invites = yield models_1.models.Invite.findAll({ raw: true });
     const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
     const subscriptions = yield models_1.models.Subscription.findAll({ raw: true });
-    const pendingMembers = yield models_1.models.ChatMember.findAll({ where: {
+    const pendingMembers = yield models_1.models.ChatMember.findAll({
+        where: {
             status: constants_1.default.chat_statuses.pending
-        } });
+        }
+    });
     const contactsResponse = contacts.map(contact => {
         let contactJson = jsonUtils.contactToJson(contact);
         let invite = invites.find(invite => invite.contactId == contact.id);

@@ -43,7 +43,7 @@ export function init() {
     const cmd = arr[1]
 
     const isAdmin = message.member.roles.find(role => role.name === 'Admin')
-    if(!isAdmin) return
+    if (!isAdmin) return
 
     switch (cmd) {
 

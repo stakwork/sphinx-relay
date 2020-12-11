@@ -1,12 +1,12 @@
-import {models} from '../models'
+import { models } from '../models'
 import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
-import {finishInviteInHub, createInviteInHub, payInviteInvoice} from '../hub'
+import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 
 export const finishInvite = async (req, res) => {
 	const {
 		invite_string
-  	} = req.body
+	} = req.body
 	const params = {
 		invite: {
 			pin: invite_string
@@ -23,8 +23,8 @@ export const finishInvite = async (req, res) => {
 		res.json({ success: false })
 		res.end()
 	}
-    
-    finishInviteInHub(params, onSuccess, onFailure)
+
+	finishInviteInHub(params, onSuccess, onFailure)
 }
 
 export const payInvite = async (req, res) => {
@@ -33,7 +33,7 @@ export const payInvite = async (req, res) => {
 	// }
 
 	const invite_string = req.params['invite_string']
-	const dbInvite = await models.Invite.findOne({ where: { inviteString: invite_string }})
+	const dbInvite = await models.Invite.findOne({ where: { inviteString: invite_string } })
 
 	const onSuccess = async (response) => {
 		// const invite = response.object
@@ -41,10 +41,10 @@ export const payInvite = async (req, res) => {
 		// if (dbInvite.status != invite.invite_status) {
 		// 	dbInvite.update({ status: invite.invite_status })
 		// }
-		if(response.payment_error) {
-			console.log("=> payInvite ERROR",response.payment_error)
+		if (response.payment_error) {
+			console.log("=> payInvite ERROR", response.payment_error)
 			res.status(200)
-			res.json({success:false, error:response.payment_error})
+			res.json({ success: false, error: response.payment_error })
 			res.end()
 		} else {
 			res.status(200)
@@ -54,12 +54,12 @@ export const payInvite = async (req, res) => {
 	}
 
 	const onFailure = (response) => {
-		console.log("=> payInvite ERROR",response)
+		console.log("=> payInvite ERROR", response)
 		res.status(200)
 		res.json({ success: false })
 		res.end()
 	}
-    
+
 	// payInviteInHub(invite_string, params, onSuccess, onFailure)
 	payInviteInvoice(dbInvite.invoice, onSuccess, onFailure)
 }
@@ -68,9 +68,9 @@ export const createInvite = async (req, res) => {
 	const {
 		nickname,
 		welcome_message
-  	} = req.body
-	  
- 	const owner = await models.Contact.findOne({ where: { isOwner: true }})
+	} = req.body
+
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
 	const params = {
 		invite: {
@@ -113,7 +113,7 @@ export const createInvite = async (req, res) => {
 		res.json(response)
 		res.end()
 	}
-    
-    createInviteInHub(params, onSuccess, onFailure)
+
+	createInviteInHub(params, onSuccess, onFailure)
 }
 

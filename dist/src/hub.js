@@ -251,11 +251,13 @@ function finalNotification(ownerID, params) {
         if (params.notification.message) {
             console.log('[send notification]', params.notification);
         }
-        let unseenMessages = yield models_1.models.Message.count({ where: {
+        let unseenMessages = yield models_1.models.Message.count({
+            where: {
                 sender: { [sequelize_1.Op.ne]: ownerID },
                 seen: false,
                 chatId: { [sequelize_1.Op.ne]: 0 } // no anon keysends
-            } });
+            }
+        });
         params.notification.badge = unseenMessages;
         triggerNotification(params);
     });

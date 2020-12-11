@@ -102,9 +102,11 @@ function installBotAsTribeAdmin(chat, bot_json) {
         };
         if (isLocal) {
             // "install" my local bot and send "INSTALL" event
-            const myBot = yield models_1.models.Bot.findOne({ where: {
+            const myBot = yield models_1.models.Bot.findOne({
+                where: {
                     uuid: bot_json.uuid
-                } });
+                }
+            });
             if (myBot) {
                 yield models_1.models.ChatBot.create(chatBot);
                 postToBotServer({
@@ -188,9 +190,11 @@ function receiveBotInstall(payload) {
         if (!chat_uuid || !sender_pub_key)
             return console.log('no chat uuid or sender pub key');
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const bot = yield models_1.models.Bot.findOne({ where: {
+        const bot = yield models_1.models.Bot.findOne({
+            where: {
                 uuid: bot_uuid
-            } });
+            }
+        });
         if (!bot)
             return;
         const verifiedOwnerPubkey = yield tribes.verifySignedTimestamp(bot_uuid);
@@ -224,15 +228,19 @@ function receiveBotCmd(payload) {
         if (!chat_uuid)
             return console.log('no chat uuid');
         // const amount = dat.message.amount - check price_per_use
-        const bot = yield models_1.models.Bot.findOne({ where: {
+        const bot = yield models_1.models.Bot.findOne({
+            where: {
                 uuid: bot_uuid
-            } });
+            }
+        });
         if (!bot)
             return;
-        const botMember = yield models_1.models.BotMember.findOne({ where: {
+        const botMember = yield models_1.models.BotMember.findOne({
+            where: {
                 botId: bot.id,
                 tribeUuid: chat_uuid,
-            } });
+            }
+        });
         if (!botMember)
             return;
         botMember.update({ msgCount: (botMember || 0) + 1 });
@@ -329,9 +337,11 @@ function receiveBotRes(payload) {
             }, bot_id);
         }
         else {
-            const theChat = yield models_1.models.Chat.findOne({ where: {
+            const theChat = yield models_1.models.Chat.findOne({
+                where: {
                     uuid: chat_uuid
-                } });
+                }
+            });
             if (!chat)
                 return console.log('=> receiveBotRes as sub error no chat');
             var date = new Date();

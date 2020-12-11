@@ -124,34 +124,34 @@ export function init() {
           `--fast`,
           `--addr=${addy}`
         ]
-        console.log("=> SPAWN",cmd,args)
+        console.log("=> SPAWN", cmd, args)
         let childProcess = spawn(cmd, args)
         childProcess.stdout.on('data', function (data) {
           const stdout = data.toString()
-          console.log("LOOPBOT stdout:",stdout)
-          if(stdout){
-            console.log('=> LOOPBOT stdout',stdout)
-            if(stdout.includes('CONTINUE SWAP?')) {
-              childProcess.stdin.write('y\n')                  
+          console.log("LOOPBOT stdout:", stdout)
+          if (stdout) {
+            console.log('=> LOOPBOT stdout', stdout)
+            if (stdout.includes('CONTINUE SWAP?')) {
+              childProcess.stdin.write('y\n')
             }
-            if(stdout.startsWith('Swap initiated')) {
+            if (stdout.startsWith('Swap initiated')) {
               const embed = new Sphinx.MessageEmbed()
                 .setAuthor('LoopBot')
                 .setTitle('Payment was sent!')
-                // .setDescription('Success!')
+              // .setDescription('Success!')
               message.channel.send({ embed })
               return
             }
           }
         })
         childProcess.stderr.on('data', function (data) {
-          console.log("STDERR:",data.toString())
+          console.log("STDERR:", data.toString())
         });
         childProcess.on('error', (error) => {
-          console.log("error",error.toString());
+          console.log("error", error.toString());
         });
         childProcess.on('close', (code) => {
-          console.log("CHILD PROCESS closed",code)
+          console.log("CHILD PROCESS closed", code)
         });
       } catch (e) {
         console.log('LoopBot error', e)

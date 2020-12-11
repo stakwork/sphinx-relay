@@ -18,13 +18,13 @@ export function init() {
     const arr = (message.content && message.content.split(' ')) || []
     console.log('message.type', message.type)
     const isGroupJoin = message.type === constants.message_types.group_join
-    console.log('isGroupJoin',isGroupJoin)
+    console.log('isGroupJoin', isGroupJoin)
     if (arr.length < 2 && !isGroupJoin) return
     if (arr[0] !== '/welcome' && !isGroupJoin) return
     const cmd = arr[1]
 
     if (isGroupJoin) {
-      try{
+      try {
         const chat = await models.Chat.findOne({ where: { uuid: message.channel.id } })
         if (!chat) return
         const chatBot = await models.ChatBot.findOne({
@@ -42,13 +42,13 @@ export function init() {
           .setDescription(meta)
         message.channel.send({ embed: resEmbed })
         return
-      } catch(e) {
-        console.log("WELCOME BOT ERROR",e)
+      } catch (e) {
+        console.log("WELCOME BOT ERROR", e)
       }
     }
 
     const isAdmin = message.member.roles.find(role => role.name === 'Admin')
-    if(!isAdmin) return
+    if (!isAdmin) return
 
     switch (cmd) {
 

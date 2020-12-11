@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table({tableName: 'sphinx_subscriptions', underscored: true})
+@Table({ tableName: 'sphinx_subscriptions', underscored: true })
 export default class Subscription extends Model<Subscription> {
 
   @Column({
@@ -40,7 +40,7 @@ export default class Subscription extends Model<Subscription> {
 
   @Column
   paused: boolean
-  
+
   @Column
   createdAt: Date
 

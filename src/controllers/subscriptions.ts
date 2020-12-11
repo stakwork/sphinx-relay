@@ -1,7 +1,7 @@
-import {models} from '../models'
-import {success, failure} from '../utils/res'
-import {CronJob} from 'cron'
-import {toCamel} from '../utils/case'
+import { models } from '../models'
+import { success, failure } from '../utils/res'
+import { CronJob } from 'cron'
+import { toCamel } from '../utils/case'
 import * as cronUtils from '../utils/cron'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
@@ -19,7 +19,7 @@ export const initializeCronJobs = async () => {
   await helpers.sleep(1000)
   const subs = await getRawSubs({ where: { ended: false } })
   subs.length && subs.forEach(sub => {
-    console.log("=> starting subscription cron job",sub.id+":",sub.cron)
+    console.log("=> starting subscription cron job", sub.id + ":", sub.cron)
     startCronJob(sub)
   })
 }
@@ -79,7 +79,7 @@ function checkSubscriptionShouldEndAfterThisPayment(sub) {
   return false
 }
 
-function msgForSubPayment(owner, sub, isFirstMessage, forMe){
+function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
   let text = ''
   if (isFirstMessage) {
     const alias = forMe ? 'You' : owner.alias
@@ -89,11 +89,11 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe){
   }
   text += `Amount: ${sub.amount} sats\n`
   text += `Interval: ${cronUtils.parse(sub.cron).interval}\n`
-  if(sub.endDate) {
+  if (sub.endDate) {
     text += `End: ${moment(sub.endDate).format('MM/DD/YY')}\n`
-    text += `Status: ${sub.count+1} sent`
-  } else if(sub.endNumber) {
-    text += `Status: ${sub.count+1} of ${sub.endNumber} sent`
+    text += `Status: ${sub.count + 1} sent`
+  } else if (sub.endNumber) {
+    text += `Status: ${sub.count + 1} of ${sub.endNumber} sent`
   }
   return text
 }
@@ -108,7 +108,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage) {
   if (!subscription) {
     return
   }
-  const chat = await models.Chat.findOne({ where: {id:subscription.chatId} })
+  const chat = await models.Chat.findOne({ where: { id: subscription.chatId } })
   if (!subscription) {
     console.log("=> no sub for this payment!!!")
     return
@@ -129,13 +129,13 @@ async function sendSubscriptionPayment(sub, isFirstMessage) {
     success: async (data) => {
       const shouldEnd = checkSubscriptionShouldEndAfterThisPayment(subscription)
       const obj = {
-        totalPaid: parseFloat(subscription.totalPaid||0) + parseFloat(subscription.amount),
-        count: parseInt(subscription.count||0) + 1,
+        totalPaid: parseFloat(subscription.totalPaid || 0) + parseFloat(subscription.amount),
+        count: parseInt(subscription.count || 0) + 1,
         ended: false,
       }
-      if(shouldEnd) {
+      if (shouldEnd) {
         obj.ended = true
-        if(jobs[sub.id]) jobs[subscription.id].stop()
+        if (jobs[sub.id]) jobs[subscription.id].stop()
         delete jobs[subscription.id]
       }
       await subscription.update(obj)
@@ -194,7 +194,7 @@ export async function pauseSubscription(req, res) {
     if (sub) {
       sub.update({ paused: true })
       if (jobs[id]) jobs[id].stop()
-      success(res, jsonUtils.subscriptionToJson(sub,null))
+      success(res, jsonUtils.subscriptionToJson(sub, null))
     } else {
       failure(res, 'not found')
     }
@@ -212,7 +212,7 @@ export async function restartSubscription(req, res) {
     if (sub) {
       sub.update({ paused: false })
       if (jobs[id]) jobs[id].start()
-      success(res, jsonUtils.subscriptionToJson(sub,null))
+      success(res, jsonUtils.subscriptionToJson(sub, null))
     } else {
       failure(res, 'not found')
     }
@@ -223,7 +223,7 @@ export async function restartSubscription(req, res) {
 };
 
 async function getRawSubs(opts = {}) {
-  const options: {[k: string]: any} = { order: [['id', 'asc']], ...opts }
+  const options: { [k: string]: any } = { order: [['id', 'asc']], ...opts }
   try {
     const subs = await models.Subscription.findAll(options)
     return subs
@@ -236,7 +236,7 @@ async function getRawSubs(opts = {}) {
 export const getAllSubscriptions = async (req, res) => {
   try {
     const subs = await getRawSubs()
-    success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub,null)))
+    success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)))
   } catch (e) {
     console.log('ERROR getAllSubscriptions', e)
     failure(res, e)
@@ -247,7 +247,7 @@ export const getAllSubscriptions = async (req, res) => {
 export async function getSubscription(req, res) {
   try {
     const sub = await models.Subscription.findOne({ where: { id: req.params.id } })
-    success(res, jsonUtils.subscriptionToJson(sub,null))
+    success(res, jsonUtils.subscriptionToJson(sub, null))
   } catch (e) {
     console.log('ERROR getSubscription', e)
     failure(res, e)
@@ -275,7 +275,7 @@ export async function deleteSubscription(req, res) {
 export const getSubscriptionsForContact = async (req, res) => {
   try {
     const subs = await getRawSubs({ where: { contactId: req.params.contactId } })
-    success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub,null)))
+    success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)))
   } catch (e) {
     console.log('ERROR getSubscriptionsForContact', e)
     failure(res, e)
@@ -294,7 +294,7 @@ export async function createSubscription(req, res) {
     ended: false,
     paused: false
   })
-  if(!s.cron){
+  if (!s.cron) {
     return failure(res, 'Invalid interval')
   }
   try {
@@ -305,7 +305,7 @@ export async function createSubscription(req, res) {
       recipient_id: req.body.contact_id,
     })
     s.chatId = chat.id // add chat id if newly created
-    if(!owner || !chat){
+    if (!owner || !chat) {
       return failure(res, 'Invalid chat or contact')
     }
     const sub = await models.Subscription.create(s)
@@ -332,32 +332,32 @@ export async function editSubscription(req, res) {
     paused: false
   })
   try {
-    if(!id || !s.chatId || !s.cron){
+    if (!id || !s.chatId || !s.cron) {
       return failure(res, 'Invalid data')
     }
-    const subRecord = await models.Subscription.findOne({ where: { id }})
-    if(!subRecord) {
+    const subRecord = await models.Subscription.findOne({ where: { id } })
+    if (!subRecord) {
       return failure(res, 'No subscription found')
     }
     // stop so it can be restarted
     if (jobs[id]) jobs[id].stop()
-    const obj: {[k: string]: any} = {
+    const obj: { [k: string]: any } = {
       cron: s.cron,
       updatedAt: date,
     }
-    if(s.amount) obj.amount = s.amount
-    if(s.endDate) obj.endDate = s.endDate
-    if(s.endNumber) obj.endNumber = s.endNumber
+    if (s.amount) obj.amount = s.amount
+    if (s.endDate) obj.endDate = s.endDate
+    if (s.endNumber) obj.endNumber = s.endNumber
 
     const sub = await subRecord.update(obj)
     const end = checkSubscriptionShouldAlreadyHaveEnded(sub)
-    if(end) {
-      await subRecord.update({ended:true})
+    if (end) {
+      await subRecord.update({ ended: true })
       delete jobs[id]
     } else {
       startCronJob(sub) // restart
     }
-    const chat = await models.Chat.findOne({ where: { id: s.chatId }})
+    const chat = await models.Chat.findOne({ where: { id: s.chatId } })
     success(res, jsonUtils.subscriptionToJson(sub, chat))
   } catch (e) {
     console.log('ERROR createSubscription', e)
@@ -366,7 +366,7 @@ export async function editSubscription(req, res) {
 };
 
 function jsonToSubscription(j) {
-  console.log("=>",j)
+  console.log("=>", j)
   const cron = cronUtils.make(j.interval)
   return toCamel({
     ...j,

@@ -7,7 +7,7 @@ const config = require(path.join(__dirname, '../../config/app.json'))[env]
 let inMemoryMacaroon: string = ''; // hex encoded
 
 export function getMacaroon() {
-  if(config.unlock) {
+  if (config.unlock) {
     return inMemoryMacaroon
   } else {
     const m = fs.readFileSync(config.macaroon_location)
@@ -15,6 +15,6 @@ export function getMacaroon() {
   }
 }
 
-export function setInMemoryMacaroon(mac:string) {
+export function setInMemoryMacaroon(mac: string) {
   inMemoryMacaroon = mac
 }

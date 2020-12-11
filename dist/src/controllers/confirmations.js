@@ -16,11 +16,24 @@ const jsonUtils = require("../utils/json");
 const network = require("../network");
 const constants_1 = require("../constants");
 const res_1 = require("../utils/res");
-function sendConfirmation({ chat, sender, msg_id }) {
-    if (!msg_id)
+/*
+ if in tribe: dont send
+ UNLESS tribe admin:
+   then send only to the og sender
+*/
+function sendConfirmation({ chat, sender, msg_id, receiver }) {
+    if (!msg_id || !chat || !sender)
         return;
+    let theChat = chat;
+    const isTribe = chat.type === constants_1.default.chat_types.tribe;
+    const isTribeOwner = isTribe && (sender && sender.publicKey) === (chat && chat.ownerPubkey);
+    if (isTribe && !isTribeOwner)
+        return; // DONT SEND IF NORMAL MEMBER
+    if (isTribeOwner && (receiver && receiver.id)) {
+        theChat = Object.assign(Object.assign({}, (chat.dataValues || chat)), { contactIds: [receiver.id] });
+    }
     network.sendMessage({
-        chat,
+        chat: theChat,
         sender,
         message: { id: msg_id },
         type: constants_1.default.message_types.confirmation,

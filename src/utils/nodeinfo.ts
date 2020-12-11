@@ -1,28 +1,28 @@
 
-import {loadLightning, getInfo} from '../utils/lightning'
+import { loadLightning, getInfo } from '../utils/lightning'
 import * as publicIp from 'public-ip'
-import {checkTag, checkCommitHash} from '../utils/gitinfo'
-import {models} from '../models'
+import { checkTag, checkCommitHash } from '../utils/gitinfo'
+import { models } from '../models'
 
-function nodeinfo(){
-  return new Promise(async (resolve, reject)=>{
+function nodeinfo() {
+  return new Promise(async (resolve, reject) => {
 
     let owner
     try {
-      owner = await models.Contact.findOne({ where: { isOwner: true }})
-    } catch(e){
+      owner = await models.Contact.findOne({ where: { isOwner: true } })
+    } catch (e) {
       return // just skip in SQLITE not open yet
     }
-    if(!owner) return
+    if (!owner) return
 
     let lastActive = owner.lastActive
-    if(!lastActive) {
+    if (!lastActive) {
       lastActive = new Date()
     }
 
     try {
       await getInfo()
-    } catch(e) { // no LND
+    } catch (e) { // no LND
       const node = {
         pubkey: owner.publicKey,
         wallet_locked: true,
@@ -35,7 +35,7 @@ function nodeinfo(){
     let public_ip = ""
     try {
       public_ip = await publicIp.v4()
-    } catch(e){}
+    } catch (e) { }
 
     const commitHash = await checkCommitHash()
 
@@ -48,11 +48,11 @@ function nodeinfo(){
     const lightning = loadLightning()
     try {
       lightning.channelBalance({}, (err, channelBalance) => {
-        if(err) console.log(err)
+        if (err) console.log(err)
         // const { balance, pending_open_balance } = channelBalance
         lightning.listChannels({}, (err, channelList) => {
-          if(err) console.log(err)
-          if(!channelList) return
+          if (err) console.log(err)
+          if (!channelList) return
           const { channels } = channelList
 
           const localBalances = channels.map(c => c.local_balance)
@@ -62,10 +62,10 @@ function nodeinfo(){
           const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0)
 
           lightning.pendingChannels({}, (err, pendingChannels) => {
-            if(err) console.log(err)
+            if (err) console.log(err)
             lightning.getInfo({}, (err, info) => {
-              if(err) console.log(err)
-              if(!err && info){
+              if (err) console.log(err)
+              if (!err && info) {
                 const node = {
                   node_alias: process.env.NODE_ALIAS,
                   ip: process.env.NODE_IP,
@@ -101,32 +101,32 @@ function nodeinfo(){
           })
         })
       });
-    } catch(e){
-      console.log('=>',e)
+    } catch (e) {
+      console.log('=>', e)
     }
   })
 }
 
-export {nodeinfo}
+export { nodeinfo }
 
-export async function isClean(){
+export async function isClean() {
   // has owner but with no auth token
-  const cleanOwner = await models.Contact.findOne({ where: { isOwner: true, authToken: null }})
+  const cleanOwner = await models.Contact.findOne({ where: { isOwner: true, authToken: null } })
   const msgs = await models.Message.count()
   const allContacts = await models.Contact.count()
-  const noMsgs = msgs===0
-  const onlyOneContact = allContacts===1
-  if(cleanOwner && noMsgs && onlyOneContact) return true
+  const noMsgs = msgs === 0
+  const onlyOneContact = allContacts === 1
+  if (cleanOwner && noMsgs && onlyOneContact) return true
   return false
 }
 
 async function latestMessage(): Promise<any> {
   const lasts = await models.Message.findAll({
     limit: 1,
-    order: [[ 'createdAt', 'DESC' ]]
+    order: [['createdAt', 'DESC']]
   })
   const last = lasts && lasts[0]
-  if(last) {
+  if (last) {
     return last.createdAt
   } else {
     return ''

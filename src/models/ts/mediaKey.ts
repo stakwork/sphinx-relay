@@ -8,7 +8,7 @@ When they buy the file, they can retrieve the key from here.
 "received" media keys are not stored here, only in Message
 */
 
-@Table({tableName: 'sphinx_media_keys', underscored: true})
+@Table({ tableName: 'sphinx_media_keys', underscored: true })
 export default class MediaKey extends Model<MediaKey> {
 
   @Column({
@@ -18,7 +18,7 @@ export default class MediaKey extends Model<MediaKey> {
     autoIncrement: true
   })
   id: number
-  
+
   @Column
   muid: string
 
@@ -33,7 +33,7 @@ export default class MediaKey extends Model<MediaKey> {
 
   @Column(DataType.BIGINT)
   messageId: number
-  
+
   @Column
   createdAt: Date
 

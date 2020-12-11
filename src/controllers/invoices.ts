@@ -6,13 +6,13 @@ import * as decodeUtils from '../utils/decode'
 import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import { success } from '../utils/res'
-import {sendConfirmation} from './confirmations'
+import { sendConfirmation } from './confirmations'
 import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 
-function stripLightningPrefix(s){
-  if(s.toLowerCase().startsWith('lightning:')) return s.substring(10)
+function stripLightningPrefix(s) {
+  if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)
   return s
 }
 
@@ -20,10 +20,10 @@ export const payInvoice = async (req, res) => {
   const lightning = await loadLightning()
   const payment_request = stripLightningPrefix(req.body.payment_request)
 
-  if(!payment_request){
+  if (!payment_request) {
     console.log('[pay invoice] "payment_request" is empty')
     res.status(400)
-    res.json({success:false, error:'payment_request is empty'})
+    res.json({ success: false, error: 'payment_request is empty' })
     res.end()
     return
   }
@@ -72,7 +72,7 @@ export const payInvoice = async (req, res) => {
 };
 
 
-async function anonymousInvoice(res, payment_request:string){
+async function anonymousInvoice(res, payment_request: string) {
   const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(payment_request)
   var date = new Date();
   date.setMilliseconds(0)
@@ -113,11 +113,11 @@ export const createInvoice = async (req, res) => {
     expiry,
   } = req.body;
 
-  var request:{[k:string]:any} = {
+  var request: { [k: string]: any } = {
     value: amount,
     memo: remote_memo || memo
   }
-  if(expiry) request.expiry = expiry
+  if (expiry) request.expiry = expiry
 
   if (amount == null) {
     res.status(200);
@@ -221,7 +221,7 @@ export const receiveInvoice = async (payload) => {
   const total_spent = 1
   const dat = payload.content || payload
   const payment_request = dat.message.invoice
-  const network_type = dat.network_type||0
+  const network_type = dat.network_type || 0
   var date = new Date();
   date.setMilliseconds(0)
 
@@ -232,7 +232,7 @@ export const receiveInvoice = async (payload) => {
 
   const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request)
 
-  const msg:{[k:string]:any} = {
+  const msg: { [k: string]: any } = {
     chatId: chat.id,
     uuid: msg_uuid,
     type: constants.message_types.invoice,
@@ -250,11 +250,11 @@ export const receiveInvoice = async (payload) => {
     updatedAt: date,
     network_type: network_type,
   }
-  const isTribe = chat_type===constants.chat_types.tribe
-	if(isTribe) {
+  const isTribe = chat_type === constants.chat_types.tribe
+  if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
-	}
+  }
   const message = await models.Message.create(msg)
   console.log('received keysend invoice message', message.id)
 
@@ -263,10 +263,10 @@ export const receiveInvoice = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, msg.senderAlias||sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias || sender.alias, 'message')
 
-  const theChat = {...chat.dataValues, contactIds:[sender.id]}
-  sendConfirmation({ chat:theChat, sender: owner, msg_id })
+  const theChat = { ...chat.dataValues, contactIds: [sender.id] }
+  sendConfirmation({ chat: theChat, sender: owner, msg_id, receiver: sender })
 }
 
 // lnd invoice stuff
@@ -279,7 +279,7 @@ function decodePaymentRequest(paymentRequest) {
 
   for (var i = 0; i < decodedPaymentRequest.data.tags.length; i++) {
     let tag = decodedPaymentRequest.data.tags[i];
-    if(tag) {
+    if (tag) {
       if (tag.description == 'payment_hash') {
         paymentHash = tag.value;
       } else if (tag.description == 'description') {

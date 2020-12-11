@@ -6,9 +6,9 @@ import * as path from 'path'
 import * as mqtt from 'mqtt'
 import fetch from 'node-fetch'
 import { models } from '../models'
-import {makeBotsJSON, declare_bot} from './tribeBots'
+import { makeBotsJSON, declare_bot } from './tribeBots'
 
-export {declare_bot}
+export { declare_bot }
 
 const env = process.env.NODE_ENV || 'development'
 const config = require(path.join(__dirname, '../../config/app.json'))[env]

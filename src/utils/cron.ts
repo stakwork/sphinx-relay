@@ -27,19 +27,19 @@ function parse(s) {
     var interval = parser.parseExpression(s);
     const next = interval.next().toString()
 
-    if(s.endsWith(' * * *')) {
-        return {interval: 'daily', next, ms:86400000}
+    if (s.endsWith(' * * *')) {
+        return { interval: 'daily', next, ms: 86400000 }
     }
-    if(s.endsWith(' * *')) {
-        return {interval: 'monthly', next, ms:86400000*30}
+    if (s.endsWith(' * *')) {
+        return { interval: 'monthly', next, ms: 86400000 * 30 }
     }
-    return {interval: 'weekly', next, ms:86400000*7}
+    return { interval: 'weekly', next, ms: 86400000 * 7 }
 }
 
 function make(interval) {
-    if(interval==='daily') return daily()
-    if(interval==='weekly') return weekly()
-    if(interval==='monthly') return monthly()
+    if (interval === 'daily') return daily()
+    if (interval === 'weekly') return weekly()
+    if (interval === 'monthly') return monthly()
 }
 
 export {

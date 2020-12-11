@@ -238,9 +238,11 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
         return console.log('no original message');
     }
     // find mediaKey for who sent
-    const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
+    const mediaKey = yield models_1.models.MediaKey.findOne({
+        where: {
             muid, receiver: isTribe ? 0 : sender.id,
-        } });
+        }
+    });
     // console.log('mediaKey found!',mediaKey.dataValues)
     if (!mediaKey)
         return; // this is from another person (admin is forwarding)
@@ -428,7 +430,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
     const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
+    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id, receiver: sender });
 });
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {

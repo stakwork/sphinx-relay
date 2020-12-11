@@ -3,7 +3,7 @@ import { models } from './models'
 import * as cryptoJS from 'crypto-js'
 import * as path from 'path'
 import { success, failure } from './utils/res'
-import {setInMemoryMacaroon} from './utils/macaroon'
+import { setInMemoryMacaroon } from './utils/macaroon'
 const fs = require('fs')
 
 const env = process.env.NODE_ENV || 'development';
@@ -16,43 +16,43 @@ const config = require(path.join(__dirname, '../config/app.json'))[env];
 
 export async function unlocker(req, res): Promise<boolean> {
   const { password } = req.body
-  if(!password) {
+  if (!password) {
     failure(res, 'no password')
     return false
   }
 
   const encMacPath = config.encrypted_macaroon_path
-  if(!encMacPath) {
+  if (!encMacPath) {
     failure(res, 'no macaroon path')
     return false
   }
 
-  let hexMac:string
+  let hexMac: string
 
   try {
 
     var encMac = fs.readFileSync(config.encrypted_macaroon_path, "utf8");
-    if(!encMac) {
+    if (!encMac) {
       failure(res, 'no macaroon')
       return false
     }
 
-    console.log("PWD",password,typeof password)
-    console.log("ENCMAC",encMac,typeof encMac)
+    console.log("PWD", password, typeof password)
+    console.log("ENCMAC", encMac, typeof encMac)
     const decMac = decryptMacaroon(password, encMac)
-    if(!decMac) {
+    if (!decMac) {
       failure(res, 'failed to decrypt macaroon')
       return false
     }
 
     hexMac = base64ToHex(decMac)
 
-  } catch(e) {
+  } catch (e) {
     failure(res, e)
     return false
   }
 
-  if(hexMac) {
+  if (hexMac) {
     setInMemoryMacaroon(hexMac)
     success(res, 'success!')
     return true
@@ -119,7 +119,7 @@ function decryptMacaroon(password: string, macaroon: string) {
   }
 }
 
-export function base64ToHex (str) {
+export function base64ToHex(str) {
   const raw = atob(str)
   let result = ''
   for (let i = 0; i < raw.length; i++) {
