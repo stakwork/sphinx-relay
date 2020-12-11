@@ -11,6 +11,7 @@ function loadConfig() {
         tls_location: ENV.TLS_LOCATION || config.tls_location,
         lnd_log_location: ENV.LND_LOG_LOCATION || config.lnd_log_location,
         node_ip: ENV.NODE_IP || config.node_ip,
+        lnd_ip: ENV.LND_IP || config.lnd_ip,
         node_http_protocol: ENV.NODE_HTTP_PROTOCOL || config.node_http_protocol,
         node_http_port: ENV.NODE_HTTP_PORT || config.node_http_port,
         lnd_port: ENV.LND_PORT || config.lnd_port,
