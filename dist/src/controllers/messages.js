@@ -260,8 +260,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
         response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
-    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id, receiver: sender });
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id } = yield helpers.parseReceiveParams(payload);
@@ -301,8 +300,7 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'boost',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id, receiver: sender });
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
     if (msg.replyUuid) {
         const ogMsg = yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid }

@@ -428,8 +428,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
         response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
-    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id, receiver: sender });
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {

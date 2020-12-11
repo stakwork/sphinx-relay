@@ -289,8 +289,7 @@ export const receiveMessage = async (payload) => {
 
 	sendNotification(chat, msg.senderAlias || sender.alias, 'message')
 
-	const theChat = { ...chat.dataValues, contactIds: [sender.id] }
-	sendConfirmation({ chat: theChat, sender: owner, msg_id, receiver: sender })
+	sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
 export const receiveBoost = async (payload) => {
@@ -332,8 +331,7 @@ export const receiveBoost = async (payload) => {
 		response: jsonUtils.messageToJson(message, chat, sender)
 	})
 
-	const theChat = { ...chat.dataValues, contactIds: [sender.id] }
-	sendConfirmation({ chat: theChat, sender: owner, msg_id, receiver: sender })
+	sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 
 	if (msg.replyUuid) {
 		const ogMsg = await models.Message.findOne({

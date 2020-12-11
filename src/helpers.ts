@@ -51,7 +51,7 @@ export const sendContactKeys = async ({ type, contactIds, sender, success, failu
 		destination_key = contact.publicKey
 
 		console.log("=> KEY EXCHANGE", msg)
-		performKeysendMessage({
+		await performKeysendMessage({
 			sender,
 			destination_key,
 			amount: 3,
@@ -63,6 +63,7 @@ export const sendContactKeys = async ({ type, contactIds, sender, success, failu
 				no = error
 			}
 		})
+		await sleep(1000)
 	})
 	if (no && failure) {
 		failure(no)

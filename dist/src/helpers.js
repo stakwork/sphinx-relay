@@ -56,7 +56,7 @@ exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontAct
             return;
         destination_key = contact.publicKey;
         console.log("=> KEY EXCHANGE", msg);
-        exports.performKeysendMessage({
+        yield exports.performKeysendMessage({
             sender,
             destination_key,
             amount: 3,
@@ -68,6 +68,7 @@ exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontAct
                 no = error;
             }
         });
+        yield sleep(1000);
     }));
     if (no && failure) {
         failure(no);
