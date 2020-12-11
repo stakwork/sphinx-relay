@@ -234,10 +234,10 @@ export const receiveContactKey = async (payload) => {
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed } })
 	let msgIncludedContactKey = false // ???????
+	if(sender_contact_key) {
+		msgIncludedContactKey = true
+	}
 	if (sender_contact_key && sender) {
-		if (sender_contact_key !== sender.contactKey) {
-			msgIncludedContactKey = true
-		}
 		const objToUpdate: { [k: string]: any } = { contactKey: sender_contact_key }
 		if (sender_alias) objToUpdate.alias = sender_alias
 		if (sender_photo_url) objToUpdate.photoUrl = sender_photo_url

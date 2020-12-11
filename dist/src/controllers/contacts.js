@@ -212,10 +212,10 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
     let msgIncludedContactKey = false; // ???????
+    if (sender_contact_key) {
+        msgIncludedContactKey = true;
+    }
     if (sender_contact_key && sender) {
-        if (sender_contact_key !== sender.contactKey) {
-            msgIncludedContactKey = true;
-        }
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
             objToUpdate.alias = sender_alias;
