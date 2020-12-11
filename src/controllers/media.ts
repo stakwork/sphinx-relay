@@ -12,14 +12,13 @@ import { CronJob } from 'cron'
 import * as zbase32 from '../utils/zbase32'
 import * as schemas from './schemas'
 import { sendConfirmation } from './confirmations'
-import * as path from 'path'
 import * as network from '../network'
 import * as meme from '../utils/meme'
 import * as short from 'short-uuid'
 import constants from '../constants'
+import {loadConfig} from '../utils/config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 /*
 

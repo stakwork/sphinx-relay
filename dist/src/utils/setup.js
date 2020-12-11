@@ -15,12 +15,11 @@ const child_process_1 = require("child_process");
 const QRCode = require("qrcode");
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
-const path = require("path");
 const gitinfo_1 = require("../utils/gitinfo");
 const fs = require("fs");
 const nodeinfo_1 = require("./nodeinfo");
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("./config");
+const config = config_1.loadConfig();
 const USER_VERSION = 7;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');

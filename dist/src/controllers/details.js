@@ -13,11 +13,10 @@ const lightning_1 = require("../utils/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
 const nodeinfo_1 = require("../utils/nodeinfo");
-const path = require("path");
 const constants_1 = require("../constants");
 const models_1 = require("../models");
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 exports.checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { pubkey, amount } = req.query;
     if (!(pubkey && pubkey.length === 66))

@@ -1,12 +1,11 @@
 
 import * as grpc from 'grpc'
 import { loadCredentials } from './lightning'
-import * as path from 'path'
 import * as ByteBuffer from 'bytebuffer'
+import {loadConfig} from './config'
 
 // var protoLoader = require('@grpc/proto-loader')
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 var signerClient = <any>null;
 

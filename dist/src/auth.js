@@ -12,12 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const crypto = require("crypto");
 const models_1 = require("./models");
 const cryptoJS = require("crypto-js");
-const path = require("path");
 const res_1 = require("./utils/res");
 const macaroon_1 = require("./utils/macaroon");
+const config_1 = require("./utils/config");
 const fs = require('fs');
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../config/app.json'))[env];
+const config = config_1.loadConfig();
 /*
 "unlock": true,
 "encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"

@@ -11,11 +11,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const grpc = require("grpc");
 const lightning_1 = require("./lightning");
-const path = require("path");
 const ByteBuffer = require("bytebuffer");
+const config_1 = require("./config");
 // var protoLoader = require('@grpc/proto-loader')
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config = config_1.loadConfig();
 var signerClient = null;
 exports.loadSigner = () => {
     if (signerClient) {

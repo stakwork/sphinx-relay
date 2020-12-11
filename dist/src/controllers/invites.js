@@ -33,9 +33,6 @@ exports.finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function*
     hub_1.finishInviteInHub(params, onSuccess, onFailure);
 });
 exports.payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // const params = {
-    // 	node_ip: process.env.NODE_IP
-    // }
     const invite_string = req.params['invite_string'];
     const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite_string } });
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {

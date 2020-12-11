@@ -28,9 +28,6 @@ export const finishInvite = async (req, res) => {
 }
 
 export const payInvite = async (req, res) => {
-	// const params = {
-	// 	node_ip: process.env.NODE_IP
-	// }
 
 	const invite_string = req.params['invite_string']
 	const dbInvite = await models.Invite.findOne({ where: { inviteString: invite_string } })

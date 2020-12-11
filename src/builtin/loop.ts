@@ -1,13 +1,11 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/api'
-// import fetch from 'node-fetch'
-import * as path from 'path'
 import { models } from '../models'
 import constants from '../constants'
 import { spawn } from 'child_process'
+import {loadConfig} from '../utils/config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE

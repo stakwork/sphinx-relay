@@ -4,13 +4,12 @@ import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as publicIp from 'public-ip'
 import password from '../utils/password'
-import * as path from 'path'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs';
 import { isClean } from './nodeinfo'
+import {loadConfig} from './config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 const USER_VERSION = 7
 

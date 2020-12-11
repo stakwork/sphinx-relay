@@ -1,10 +1,9 @@
-import * as path from 'path'
 import { unlockWallet } from './lightning'
+import {loadConfig} from './config'
 const fs = require('fs')
 const readline = require('readline');
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 /*
 "lnd_pwd_path": "/relay/.lnd/.lndpwd"

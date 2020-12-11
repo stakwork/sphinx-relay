@@ -1,8 +1,8 @@
 import { models } from '../models'
 import * as path from 'path'
+import {loadConfig} from '../utils/config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 // setup disk storage
 var multer = require('multer')

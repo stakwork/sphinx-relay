@@ -1,9 +1,8 @@
 import * as zbase32 from './zbase32'
 import { signBuffer } from './lightning'
-import * as path from 'path'
+import {loadConfig} from './config'
 
-const env = process.env.NODE_ENV || 'development'
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 /*
 Lightning Data Access Token

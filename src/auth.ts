@@ -1,13 +1,12 @@
 import * as crypto from 'crypto'
 import { models } from './models'
 import * as cryptoJS from 'crypto-js'
-import * as path from 'path'
 import { success, failure } from './utils/res'
 import { setInMemoryMacaroon } from './utils/macaroon'
+import { loadConfig } from './utils/config'
 const fs = require('fs')
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../config/app.json'))[env];
+const config = loadConfig()
 
 /*
 "unlock": true,

@@ -1,8 +1,7 @@
 import * as fs from 'fs'
-import * as path from 'path'
+import {loadConfig} from './config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 let inMemoryMacaroon: string = ''; // hex encoded
 

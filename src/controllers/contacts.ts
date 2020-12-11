@@ -49,7 +49,7 @@ export const getContacts = async (req, res) => {
 export const generateToken = async (req, res) => {
 	console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query })
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true, authToken: null } })
+	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
 	const pwd = password
 	if (process.env.USE_PASSWORD === 'true') {
@@ -64,10 +64,15 @@ export const generateToken = async (req, res) => {
 	if (owner) {
 		const hash = crypto.createHash('sha256').update(req.body['token']).digest('base64');
 
-		console.log("req.params['token']", req.params['token']);
-		console.log("hash", hash);
+		console.log("req.body['token']", req.body['token']);
 
-		owner.update({ authToken: hash })
+		if (owner.authToken) {
+			if (owner.authToken!==hash) {
+				return failure(res, {})
+			}
+		} else {
+			owner.update({ authToken: hash })
+		}
 
 		success(res, {})
 	} else {
