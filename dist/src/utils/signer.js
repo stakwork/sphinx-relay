@@ -25,7 +25,7 @@ exports.loadSigner = () => {
             var credentials = lightning_1.loadCredentials();
             var lnrpcDescriptor = grpc.load("proto/signer.proto");
             var signer = lnrpcDescriptor.signrpc;
-            signerClient = new signer.Signer(config.node_ip + ':' + config.lnd_port, credentials);
+            signerClient = new signer.Signer(config.lnd_ip + ':' + config.lnd_port, credentials);
             return signerClient;
         }
         catch (e) {

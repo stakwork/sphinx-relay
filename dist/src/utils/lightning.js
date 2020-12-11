@@ -46,7 +46,7 @@ exports.loadCredentials = loadCredentials;
 //     const packageDefinition = await protoLoader.load("rpc.proto", {})
 //     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
 //     var { lnrpc } = lnrpcDescriptor;
-//     lightningClient = new lnrpc.Lightning(config.node_ip + ':' + config.lnd_port, credentials);
+//     lightningClient = new lnrpc.Lightning(config.lnd_ip + ':' + config.lnd_port, credentials);
 //     return lightningClient
 //   }
 // }
@@ -59,7 +59,7 @@ const loadLightning = () => {
             var credentials = loadCredentials();
             var lnrpcDescriptor = grpc.load("proto/rpc.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
-            lightningClient = new lnrpc.Lightning(config.node_ip + ':' + config.lnd_port, credentials);
+            lightningClient = new lnrpc.Lightning(config.lnd_ip + ':' + config.lnd_port, credentials);
             return lightningClient;
         }
         catch (e) {
@@ -77,7 +77,7 @@ const loadWalletUnlocker = () => {
         try {
             var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
-            walletUnlocker = new lnrpc.WalletUnlocker(config.node_ip + ':' + config.lnd_port, credentials);
+            walletUnlocker = new lnrpc.WalletUnlocker(config.lnd_ip + ':' + config.lnd_port, credentials);
             return walletUnlocker;
         }
         catch (e) {
