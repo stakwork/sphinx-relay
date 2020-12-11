@@ -22,6 +22,7 @@ const config = config_1.loadConfig();
 let client;
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> CONNECT TO TRIBES SERVER', config);
         try {
             const info = yield LND.getInfo();
             function reconnect() {
