@@ -14,7 +14,6 @@ const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const path = require("path");
 const logger_1 = require("./src/utils/logger");
 const hub_1 = require("./src/hub");
 const setup_1 = require("./src/utils/setup");
@@ -24,12 +23,12 @@ const network = require("./src/network");
 const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc");
 const cert = require("./src/utils/cert");
+const config_1 = require("./src/utils/config");
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, 'config/app.json'))[env];
+const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
 console.log("=> env:", env);
-console.log('=> process.env.PORT:', process.env.PORT);
-console.log('=> config.node_http_port:', config.node_http_port);
+console.log('=> config: ', config);
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 // START SETUP!
 function start() {

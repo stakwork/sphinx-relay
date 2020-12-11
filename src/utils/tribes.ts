@@ -15,7 +15,6 @@ const config = loadConfig()
 let client: any
 
 export async function connect(onMessage) {
-  console.log('=> CONNECT TO TRIBES SERVER',config)
   try {
     const info = await LND.getInfo()
 

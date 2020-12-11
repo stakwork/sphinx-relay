@@ -3,7 +3,6 @@ import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
-import * as path from 'path'
 import logger from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { setupDatabase, setupDone } from './src/utils/setup'
@@ -13,14 +12,14 @@ import * as network from './src/network'
 import { authModule, unlocker } from './src/auth'
 import * as grpc from './src/grpc'
 import * as cert from './src/utils/cert'
+import {loadConfig} from './src/utils/config'
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, 'config/app.json'))[env];
+const config = loadConfig()
 const port = process.env.PORT || config.node_http_port || 3001
 
 console.log("=> env:", env)
-console.log('=> process.env.PORT:', process.env.PORT)
-console.log('=> config.node_http_port:', config.node_http_port)
+console.log('=> config: ',config)
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 
