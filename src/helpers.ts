@@ -34,26 +34,21 @@ export const findOrCreateChat = async (params) => {
 	return chat
 }
 
-export const sendContactKeys = async (args) => {
-	const { type, contactIds, contactPubKey, sender, success, failure } = args
-	const msg = newkeyexchangemsg(type, sender)
+export const sendContactKeys = async ({ type, contactIds, sender, success, failure, dontActuallySendContactKey }:{type:number,contactIds:number[],sender:any,success?:Function,failure?:Function,dontActuallySendContactKey?:boolean}) => {
+	const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey||false)
 
 	let yes: any = null
 	let no: any = null
-	let cids = contactIds
+	let cids = contactIds || []
 
-	if (!contactIds) cids = [null] // nully
 	await asyncForEach(cids, async contactId => {
 		let destination_key: string
-		if (!contactId) { // nully
-			destination_key = contactPubKey
-		} else {
-			if (contactId == sender.id) {
-				return
-			}
-			const contact = await models.Contact.findOne({ where: { id: contactId } })
-			destination_key = contact.publicKey
+		if (contactId == sender.id) {
+			return
 		}
+		const contact = await models.Contact.findOne({ where: { id: contactId } })
+		if(!(contact && contact.publicKey)) return
+		destination_key = contact.publicKey
 		performKeysendMessage({
 			sender,
 			destination_key,
@@ -187,13 +182,13 @@ async function asyncForEach(array, callback) {
 	}
 }
 
-function newkeyexchangemsg(type, sender) {
+function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
 	const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
 	return {
 		type: type,
 		sender: {
 			pub_key: sender.publicKey,
-			contact_key: sender.contactKey,
+			...!dontActuallySendContactKey && {contact_key: sender.contactKey},
 			...sender.alias && { alias: sender.alias },
 			...includePhotoUrl && { photo_url: sender.photoUrl }
 		}

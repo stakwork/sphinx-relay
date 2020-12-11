@@ -112,6 +112,7 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
         contactIds: contactIds,
         sender: owner,
         type: constants_1.default.message_types.contact_key,
+        dontActuallySendContactKey: !contactKeyChanged
     });
 });
 exports.exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -210,10 +211,10 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
-    let contactKeyChanged = true; // ???????
+    let msgIncludedContactKey = false; // ???????
     if (sender_contact_key && sender) {
         if (sender_contact_key !== sender.contactKey) {
-            contactKeyChanged = true;
+            msgIncludedContactKey = true;
         }
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
@@ -229,9 +230,9 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     else {
         console.log("DID NOT FIND SENDER");
     }
-    if (contactKeyChanged) {
+    if (msgIncludedContactKey && sender) {
         helpers.sendContactKeys({
-            contactPubKey: sender_pub_key,
+            contactIds: [sender.id],
             sender: owner,
             type: constants_1.default.message_types.contact_key_confirmation,
         });

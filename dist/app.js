@@ -28,7 +28,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
 console.log("=> env:", env);
-console.log('=> config: ', config);
+// console.log('=> config: ',config)
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 // START SETUP!
 function start() {
