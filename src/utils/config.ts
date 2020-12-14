@@ -32,5 +32,6 @@ export function loadConfig() {
     log_file: ENV.LOG_FILE || config.log_file,
     unlock: (ENV.unlock || config.unlock) ? true : false,
     lnd_pwd_path: ENV.LND_PWD_PATH || config.lnd_pwd_path,
+    connect_ui: ENV.CONNECT_UI || config.connect_ui,
   }
 }

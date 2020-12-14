@@ -2,14 +2,10 @@ import { loadLightning } from './lightning'
 import { sequelize, models } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
-import * as publicIp from 'public-ip'
-import password from '../utils/password'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs';
 import { isClean } from './nodeinfo'
-import {loadConfig} from './config'
-
-const config = loadConfig()
+import { getQR } from './connect'
 
 const USER_VERSION = 7
 
@@ -185,7 +181,7 @@ const runMigrations = async () => {
         if (err) {
           reject(err);
         } else {
-          resolve();
+          resolve(true);
         }
       }
     );
@@ -211,29 +207,12 @@ async function printGitInfo() {
 
 async function printQR() {
 
-  let public_ip
-
-  const public_url = config.public_url
-  if (public_url) public_ip = public_url
-
-  if (!public_ip) {
-    const ip = process.env.NODE_IP
-    if (!ip) {
-      try {
-        public_ip = await publicIp.v4()
-      } catch (e) { }
-    } else {
-      public_ip = ip
-    }
-  }
-  if (!public_ip) {
+  const b64 = await getQR()
+  if (!b64) {
     console.log('=> no public IP provided')
-    return
+    return ''
   }
-  let theIP = public_ip
-  // if(!theIP.includes(":")) theIP = public_ip+':3001'
 
-  const b64 = Buffer.from(`ip::${theIP}::${password || ''}`).toString('base64')
   console.log('>>', b64)
   connectionStringFile(b64)
 

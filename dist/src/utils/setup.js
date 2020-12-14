@@ -13,13 +13,10 @@ const lightning_1 = require("./lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
 const QRCode = require("qrcode");
-const publicIp = require("public-ip");
-const password_1 = require("../utils/password");
 const gitinfo_1 = require("../utils/gitinfo");
 const fs = require("fs");
 const nodeinfo_1 = require("./nodeinfo");
-const config_1 = require("./config");
-const config = config_1.loadConfig();
+const connect_1 = require("./connect");
 const USER_VERSION = 7;
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
@@ -183,7 +180,7 @@ const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
                 reject(err);
             }
             else {
-                resolve();
+                resolve(true);
             }
         });
         // Forward stdout+stderr to this process
@@ -208,29 +205,11 @@ function printGitInfo() {
 }
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
-        let public_ip;
-        const public_url = config.public_url;
-        if (public_url)
-            public_ip = public_url;
-        if (!public_ip) {
-            const ip = process.env.NODE_IP;
-            if (!ip) {
-                try {
-                    public_ip = yield publicIp.v4();
-                }
-                catch (e) { }
-            }
-            else {
-                public_ip = ip;
-            }
-        }
-        if (!public_ip) {
+        const b64 = yield connect_1.getQR();
+        if (!b64) {
             console.log('=> no public IP provided');
-            return;
+            return '';
         }
-        let theIP = public_ip;
-        // if(!theIP.includes(":")) theIP = public_ip+':3001'
-        const b64 = Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
         console.log('>>', b64);
         connectionStringFile(b64);
         const clean = yield nodeinfo_1.isClean();

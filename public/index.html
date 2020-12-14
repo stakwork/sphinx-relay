@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    html {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: #292a2d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .qr-wrap {
+      background: white;
+      width: 300px;
+      height: 300px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    canvas {
+      height: 280px;
+      width: 280px;
+    }
+
+    pre {
+      margin-top: 20px;
+      border-radius: 10px;
+      max-width: 250px;
+      padding: 0px 25px;
+      border: 1px solid tan;
+      background: white;
+      overflow: hidden;
+      overflow-wrap: break-word;
+      display: block;
+      white-space: pre-wrap;
+    }
+
+    img {
+      height: 100px;
+      width: 100px;
+      margin-top: 20px;
+    }
+
+    p {
+      color: white;
+      margin-top: 30px;
+      max-width: 300px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <img src="/static/sphinx-logo.png" alt="logo" />
+
+  <div class="qr-wrap">
+    <canvas id="qr"></canvas>
+  </div>
+
+  <p>
+    Scan the QR or copy the connection string into your Sphinx app
+  </p>
+
+  <pre>
+    CONNECTION_STRING
+  </pre>
+
+  <script src="/static/js/qrious.js"></script>
+  <script>
+    (function () {
+      var qr = new QRious({
+        element: document.getElementById('qr'),
+        value: 'CONNECTION_STRING',
+        size: 300
+      });
+    })();
+  </script>
+</body>
+
+</html>
