@@ -4,18 +4,19 @@ env:
 
 on:
   push:
-    branches: [ docker-workflow-build ]
+    tags:
+      - '*'
 
 jobs:
   build:
     runs-on: ubuntu-18.04
-    name: Build and push dashboard image
+    name: Build and push Relay image
     steps:
       - name: Set env variables
-        run: echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
+        run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
       - name: Show set env variables
         run: |
-          printf "    BRANCH: %s\n"  "$BRANCH"
+          printf "    HEAD_TAG: %s\n"  "$HEAD_TAG"
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: Checkout project
@@ -42,5 +43,5 @@ jobs:
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --cache-to "type=local,dest=/tmp/.buildx-cache" \
           --platform linux/amd64,linux/arm64,linux/arm/v7 \
-          --tag ${{ secrets.DOCKER_HUB_USER }}/sphinxrelay:$BRANCH \
+          --tag ${{ secrets.DOCKER_HUB_USER }}/sphinx-relay:${{ env.HEAD_TAG }} \
           --output "type=registry" ./
