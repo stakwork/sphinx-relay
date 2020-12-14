@@ -68,9 +68,9 @@ function setupApp() {
 		}
 		app.use('/static', express.static('public'));
 		app.get('/app', (req, res) => res.send('INDEX'))
-		// if (config.connect_ui) {
+		if (config.connect_ui) {
 			app.get('/connect', connect.connect)
-		// }
+		}
 
 		let server;
 		if ('ssl' in config && config.ssl.enabled) {

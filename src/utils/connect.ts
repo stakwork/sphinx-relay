@@ -31,7 +31,6 @@ export async function connect(req, res) {
       res.writeHead(404);
       res.write('Contents you are looking are Not Found');
     } else {
-      console.log(pgResp, typeof pgResp)
       const htmlString = Buffer.from(pgResp).toString()
       const qr = await getQR()
       const rep = htmlString.replace(/CONNECTION_STRING/g, qr)
