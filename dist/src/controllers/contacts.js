@@ -65,8 +65,11 @@ exports.generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
     }
     if (owner) {
-        const hash = crypto.createHash('sha256').update(req.body['token']).digest('base64');
-        console.log("req.body['token']", req.body['token']);
+        const token = req.body['token'];
+        if (!token) {
+            return res_1.failure(res, {});
+        }
+        const hash = crypto.createHash('sha256').update(token).digest('base64');
         if (owner.authToken) {
             if (owner.authToken !== hash) {
                 return res_1.failure(res, {});
