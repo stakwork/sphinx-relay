@@ -75,7 +75,8 @@ function authModule(req, res, next) {
             req.path == '/contacts/tokens' ||
             req.path == '/latest' ||
             req.path.startsWith('/static') ||
-            req.path == '/contacts/set_dev') {
+            req.path == '/contacts/set_dev' ||
+            req.path == '/connect') {
             next();
             return;
         }
