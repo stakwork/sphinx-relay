@@ -18,7 +18,8 @@ let queries: { [k: string]: Query } = {}
 // const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
 const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b'
 
-export async function queryOnchainAddres(req, res) {
+export async function queryOnchainAddress(req, res) {
+  console.log('=> queryOnchainAddress')
   const uuid = short.generate()
 	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 	const app = req.params.app;
@@ -81,6 +82,7 @@ export const receiveQuery = async (payload) => {
     console.log("=> ERROR receiveQuery,",e)
     return
   }
+  console.log('=> query received', q)
   let result = ''
   switch (q.type) {
     case 'onchain_address':
@@ -125,6 +127,7 @@ export const receiveQuery = async (payload) => {
 }
 
 export const receiveQueryResponse = async (payload) => {
+  console.log('=> receiveQueryResponse')
   const dat = payload.content || payload
   // const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content

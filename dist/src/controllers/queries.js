@@ -18,8 +18,9 @@ const lightning = require("../utils/lightning");
 let queries = {};
 // const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
 const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b';
-function queryOnchainAddres(req, res) {
+function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> queryOnchainAddress');
         const uuid = short.generate();
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const app = req.params.app;
@@ -64,7 +65,7 @@ function queryOnchainAddres(req, res) {
         }, 1000);
     });
 }
-exports.queryOnchainAddres = queryOnchainAddres;
+exports.queryOnchainAddress = queryOnchainAddress;
 exports.receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
@@ -81,6 +82,7 @@ exports.receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* 
         console.log("=> ERROR receiveQuery,", e);
         return;
     }
+    console.log('=> query received', q);
     let result = '';
     switch (q.type) {
         case 'onchain_address':
@@ -125,6 +127,7 @@ exports.receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('=> receiveQueryResponse');
     const dat = payload.content || payload;
     // const sender_pub_key = dat.sender.pub_key
     const content = dat.message.content;

@@ -94,7 +94,7 @@ function set(app) {
         app.get('/logs', details.getLogsSince);
         app.get('/info', details.getNodeInfo);
         app.get('/route', details.checkRoute);
-        app.get('/query/onchain_address/:app', queries.queryOnchainAddres);
+        app.get('/query/onchain_address/:app', queries.queryOnchainAddress);
         app.post('/action', actions.processAction);
         app.get('/bots', bots.getBots);
         app.post('/bot', bots.createBot);
