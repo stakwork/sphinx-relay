@@ -136,6 +136,27 @@ const queryRoute = async (pub_key, amt) => {
   })
 }
 
+export type NewAddressType = 'np2wkh'
+export async function newAddress(type:NewAddressType='np2wkh'): Promise<string> {
+  return new Promise(async function (resolve, reject) {
+    let lightning = await loadLightning()
+    lightning.newAddress(
+      { type },
+      (err, response) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        if(!(response && response.address)) {
+          reject('no address')
+          return
+        }
+        resolve(response.address)
+      }
+    )
+  })
+}
+
 const keysend = (opts) => {
   return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning()
