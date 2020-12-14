@@ -18,6 +18,7 @@ const logger_1 = require("./src/utils/logger");
 const hub_1 = require("./src/hub");
 const setup_1 = require("./src/utils/setup");
 const controllers = require("./src/controllers");
+const connect = require("./src/utils/connect");
 const socket = require("./src/utils/socket");
 const network = require("./src/network");
 const auth_1 = require("./src/auth");
@@ -76,6 +77,9 @@ function setupApp() {
         }
         app.use('/static', express.static('public'));
         app.get('/app', (req, res) => res.send('INDEX'));
+        if (config.connect_ui) {
+            app.get('/connect', connect.connect);
+        }
         let server;
         if ('ssl' in config && config.ssl.enabled) {
             try {
@@ -102,7 +106,7 @@ function setupApp() {
         if (!config.unlock) {
             controllers.set(app);
             socket.connect(server);
-            resolve();
+            resolve(true);
         }
         else {
             app.post('/unlock', function (req, res) {
@@ -112,7 +116,7 @@ function setupApp() {
                         console.log('=> relay unlocked!');
                         controllers.set(app);
                         socket.connect(server);
-                        resolve();
+                        resolve(true);
                     }
                 });
             });

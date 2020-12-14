@@ -7,6 +7,7 @@ import logger from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { setupDatabase, setupDone } from './src/utils/setup'
 import * as controllers from './src/controllers'
+import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
 import { authModule, unlocker } from './src/auth'
@@ -67,6 +68,9 @@ function setupApp() {
 		}
 		app.use('/static', express.static('public'));
 		app.get('/app', (req, res) => res.send('INDEX'))
+		if (config.connect_ui) {
+			app.get('/connect', connect.connect)
+		}
 
 		let server;
 		if ('ssl' in config && config.ssl.enabled) {
@@ -92,7 +96,7 @@ function setupApp() {
 		if (!config.unlock) {
 			controllers.set(app);
 			socket.connect(server)
-			resolve()
+			resolve(true)
 		} else {
 			app.post('/unlock', async function (req, res) {
 				const ok = await unlocker(req, res)
@@ -100,7 +104,7 @@ function setupApp() {
 					console.log('=> relay unlocked!')
 					controllers.set(app);
 					socket.connect(server)
-					resolve()
+					resolve(true)
 				}
 			})
 		}
