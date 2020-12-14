@@ -62,9 +62,11 @@ export const generateToken = async (req, res) => {
 	}
 
 	if (owner) {
-		const hash = crypto.createHash('sha256').update(req.body['token']).digest('base64');
-
-		console.log("req.body['token']", req.body['token']);
+		const token = req.body['token']
+		if(!token) {
+			return failure(res, {})
+		}
+		const hash = crypto.createHash('sha256').update(token).digest('base64');
 
 		if (owner.authToken) {
 			if (owner.authToken!==hash) {
