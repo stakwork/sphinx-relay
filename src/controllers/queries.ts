@@ -15,7 +15,8 @@ export interface Query {
 
 let queries: { [k: string]: Query } = {}
 
-const gameb = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
+// const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
+const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b'
 
 export async function queryOnchainAddres(req, res) {
   const uuid = short.generate()
@@ -30,7 +31,7 @@ export async function queryOnchainAddres(req, res) {
 
 	const opts = {
 		amt: constants.min_sat_amount,
-		dest: gameb,
+		dest: hub_pubkey,
 		data: <network.Msg>{
 			type: constants.message_types.query,
 			message: {

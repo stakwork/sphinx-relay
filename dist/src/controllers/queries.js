@@ -16,7 +16,8 @@ const constants_1 = require("../constants");
 const short = require("short-uuid");
 const lightning = require("../utils/lightning");
 let queries = {};
-const gameb = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f';
+// const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
+const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b';
 function queryOnchainAddres(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const uuid = short.generate();
@@ -29,7 +30,7 @@ function queryOnchainAddres(req, res) {
         };
         const opts = {
             amt: constants_1.default.min_sat_amount,
-            dest: gameb,
+            dest: hub_pubkey,
             data: {
                 type: constants_1.default.message_types.query,
                 message: {

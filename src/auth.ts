@@ -72,7 +72,8 @@ export async function authModule(req, res, next) {
     req.path == '/latest' ||
     req.path.startsWith('/static') ||
     req.path == '/contacts/set_dev' ||
-    req.path == '/connect'
+    req.path == '/connect' ||
+    req.path.startsWith('/query/onchain_address')
   ) {
     next()
     return
