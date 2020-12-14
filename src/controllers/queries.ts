@@ -84,7 +84,7 @@ export const receiveQuery = async (payload) => {
   let result = ''
   switch (q.type) {
     case 'onchain_address':
-      const addy = await lightning.newAddress('np2wkh')
+      const addy = await lightning.newAddress(lightning.NESTED_PUBKEY_HASH)
       const acc = {
         date: new Date(),
         pubkey: sender_pub_key,
