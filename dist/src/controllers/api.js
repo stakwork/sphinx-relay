@@ -74,15 +74,19 @@ function finalAction(a, bot_id) {
         const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey);
         console.log("=> ACTION HIT", a.action, a.bot_name);
         if (chat_uuid && !iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-            const myBot = yield models_1.models.Bot.findOne({ where: {
+            const myBot = yield models_1.models.Bot.findOne({
+                where: {
                     id: bot_id
-                } });
+                }
+            });
             if (!myBot)
                 return console.log('no bot');
             // THIS is a bot member cmd res (i am bot maker)
-            const botMember = yield models_1.models.BotMember.findOne({ where: {
+            const botMember = yield models_1.models.BotMember.findOne({
+                where: {
                     tribeUuid: chat_uuid, botId: bot_id
-                } });
+                }
+            });
             if (!botMember)
                 return console.log('no botMember');
             const dest = botMember.memberPubkey;

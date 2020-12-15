@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table({tableName: 'sphinx_invites', underscored: true})
+@Table({ tableName: 'sphinx_invites', underscored: true })
 export default class Invite extends Model<Invite> {
 
   @Column({

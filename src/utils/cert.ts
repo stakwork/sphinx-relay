@@ -129,7 +129,7 @@ async function getCertificate(endpoint, port, save_ssl) {
     var csr = generateCsr(keys, endpoint)
     console.log("=> [ssl] Generated CSR")
     var res = await requestCert(endpoint, csr, apiKey)
-    console.log("=> [ssl] Requested certificate")   
+    console.log("=> [ssl] Requested certificate")
     await validateCert(port, res, endpoint, apiKey)
     var certData = await downloadCert(res.id, apiKey)
     if (save_ssl === true) {

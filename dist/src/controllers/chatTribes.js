@@ -467,9 +467,11 @@ function replayChatHistory(chat, contact) {
                     if (m.mediaKey && m.mediaToken) {
                         const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
                         if (muid) {
-                            const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
+                            const mediaKey = yield models_1.models.MediaKey.findOne({
+                                where: {
                                     muid, chatId: chat.id,
-                                } });
+                                }
+                            });
                             // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
                             mediaKeyMap = { chat: mediaKey.key };
                             newMediaTerms = { muid: mediaKey.muid };
@@ -533,10 +535,12 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
 exports.createTribeChatParams = createTribeChatParams;
 function addPendingContactIdsToChat(achat) {
     return __awaiter(this, void 0, void 0, function* () {
-        const members = yield models_1.models.ChatMember.findAll({ where: {
+        const members = yield models_1.models.ChatMember.findAll({
+            where: {
                 chatId: achat.id,
                 status: constants_1.default.chat_statuses.pending // only pending
-            } });
+            }
+        });
         if (!members)
             return achat;
         const pendingContactIds = members.map(m => m.contactId);

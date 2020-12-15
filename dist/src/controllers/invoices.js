@@ -242,8 +242,7 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
         response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
-    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 // lnd invoice stuff
 function decodePaymentRequest(paymentRequest) {

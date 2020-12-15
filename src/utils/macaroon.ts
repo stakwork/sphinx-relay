@@ -1,13 +1,12 @@
 import * as fs from 'fs'
-import * as path from 'path'
+import {loadConfig} from './config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 let inMemoryMacaroon: string = ''; // hex encoded
 
 export function getMacaroon() {
-  if(config.unlock) {
+  if (config.unlock) {
     return inMemoryMacaroon
   } else {
     const m = fs.readFileSync(config.macaroon_location)
@@ -15,6 +14,6 @@ export function getMacaroon() {
   }
 }
 
-export function setInMemoryMacaroon(mac:string) {
+export function setInMemoryMacaroon(mac: string) {
   inMemoryMacaroon = mac
 }

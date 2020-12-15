@@ -17,10 +17,10 @@ const jsonUtils = require("./utils/json");
 const helpers = require("./helpers");
 const nodeinfo_1 = require("./utils/nodeinfo");
 const lightning_1 = require("./utils/lightning");
-const path = require("path");
 const constants_1 = require("./constants");
+const config_1 = require("./utils/config");
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../config/app.json'))[env];
+const config = config_1.loadConfig();
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
     if (env != "production") {
         return;
@@ -251,11 +251,13 @@ function finalNotification(ownerID, params) {
         if (params.notification.message) {
             console.log('[send notification]', params.notification);
         }
-        let unseenMessages = yield models_1.models.Message.count({ where: {
+        let unseenMessages = yield models_1.models.Message.count({
+            where: {
                 sender: { [sequelize_1.Op.ne]: ownerID },
                 seen: false,
                 chatId: { [sequelize_1.Op.ne]: 0 } // no anon keysends
-            } });
+            }
+        });
         params.notification.badge = unseenMessages;
         triggerNotification(params);
     });

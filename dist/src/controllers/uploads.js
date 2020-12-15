@@ -11,8 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 const path = require("path");
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 // setup disk storage
 var multer = require('multer');
 var avatarStorage = multer.diskStorage({

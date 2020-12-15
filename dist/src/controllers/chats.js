@@ -64,9 +64,11 @@ function kickChatMember(req, res) {
         const newContactIds = contactIds.filter(cid => cid !== contactId);
         yield chat.update({ contactIds: JSON.stringify(newContactIds) });
         // remove from ChatMembers
-        yield models_1.models.ChatMember.destroy({ where: {
+        yield models_1.models.ChatMember.destroy({
+            where: {
                 chatId, contactId,
-            } });
+            }
+        });
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),

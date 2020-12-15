@@ -2,15 +2,10 @@ import { loadLightning } from './lightning'
 import { sequelize, models } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
-import * as publicIp from 'public-ip'
-import password from '../utils/password'
-import * as path from 'path'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs';
-import {isClean} from './nodeinfo'
-
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+import { isClean } from './nodeinfo'
+import { getQR } from './connect'
 
 const USER_VERSION = 7
 
@@ -186,7 +181,7 @@ const runMigrations = async () => {
         if (err) {
           reject(err);
         } else {
-          resolve();
+          resolve(true);
         }
       }
     );
@@ -212,34 +207,17 @@ async function printGitInfo() {
 
 async function printQR() {
 
-  let public_ip
-
-  const public_url = config.public_url
-  if (public_url) public_ip = public_url
-
-  if (!public_ip) {
-    const ip = process.env.NODE_IP
-    if (!ip) {
-      try {
-        public_ip = await publicIp.v4()
-      } catch (e) { }
-    } else {
-      public_ip = ip
-    }
-  }
-  if (!public_ip) {
+  const b64 = await getQR()
+  if (!b64) {
     console.log('=> no public IP provided')
-    return
+    return ''
   }
-  let theIP = public_ip
-  // if(!theIP.includes(":")) theIP = public_ip+':3001'
 
-  const b64 = Buffer.from(`ip::${theIP}::${password || ''}`).toString('base64')
   console.log('>>', b64)
   connectionStringFile(b64)
 
   const clean = await isClean()
-  if(!clean) return // skip it if already setup!
+  if (!clean) return // skip it if already setup!
 
   console.log('Scan this QR in Sphinx app:')
   QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
@@ -247,7 +225,7 @@ async function printQR() {
   })
 }
 
-function connectionStringFile(str:string){
+function connectionStringFile(str: string) {
   fs.writeFile('connection_string.txt', str, function (err) {
     if (err) console.log('ERROR SAVING connection_string.txt.', err);
   });

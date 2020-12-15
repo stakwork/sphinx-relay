@@ -1,4 +1,4 @@
-import {models} from '../models'
+import { models } from '../models'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -13,22 +13,22 @@ import * as subcriptions from './subscriptions'
 import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './api'
-import {checkTag} from '../utils/gitinfo'
+import { checkTag } from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
 import * as feed from './feed'
 
 export async function set(app) {
-	
+
 	builtInBots.init()
 
-	if(models && models.Subscription){
+	if (models && models.Subscription) {
 		subcriptions.initializeCronJobs()
 	}
-	try{
+	try {
 		await media.cycleMediaToken()
-	} catch(e) {
+	} catch (e) {
 		console.log('=> could not auth with media server', e.message)
 	}
 
@@ -73,7 +73,7 @@ export async function set(app) {
 	app.get('/subscriptions/contact/:contactId', subcriptions.getSubscriptionsForContact)
 	app.put('/subscription/:id/pause', subcriptions.pauseSubscription)
 	app.put('/subscription/:id/restart', subcriptions.restartSubscription)
-	
+
 	app.post('/attachment', media.sendAttachmentMessage)
 	app.post('/purchase', media.purchase)
 	app.get('/signer/:challenge', media.signer)
@@ -103,18 +103,18 @@ export async function set(app) {
 
 	app.get('/healthcheck', confirmations.healthcheck)
 
-	app.get('/version', async function(req,res) {
+	app.get('/version', async function (req, res) {
 		const version = await checkTag()
-		res.send({version})
+		res.send({ version })
 	})
 
-	app.get('/latest', async function(req,res) {
+	app.get('/latest', async function (req, res) {
 		const lasts = await models.Message.findAll({
 			limit: 1,
-			order: [[ 'createdAt', 'DESC' ]]
+			order: [['createdAt', 'DESC']]
 		})
 		const last = lasts && lasts[0]
-		if(!last) {
+		if (!last) {
 			res.status(404).send('Not found');
 		} else {
 			res.status(200).send(last.createdAt)
@@ -125,19 +125,19 @@ export async function set(app) {
 
 const msgtypes = constants.message_types
 export const ACTIONS = {
-    [msgtypes.contact_key]: contacts.receiveContactKey,
-    [msgtypes.contact_key_confirmation]: contacts.receiveConfirmContactKey,
-    [msgtypes.message]: messages.receiveMessage,
-    [msgtypes.invoice]: invoices.receiveInvoice,
-    [msgtypes.direct_payment]: payments.receivePayment,
-    [msgtypes.confirmation]: confirmations.receiveConfirmation,
-    [msgtypes.attachment]: media.receiveAttachment,
-    [msgtypes.purchase]: media.receivePurchase,
-    [msgtypes.purchase_accept]: media.receivePurchaseAccept,
-    [msgtypes.purchase_deny]: media.receivePurchaseDeny,
-    [msgtypes.group_create]: chats.receiveGroupCreateOrInvite,
-    [msgtypes.group_invite]: chats.receiveGroupCreateOrInvite,
-    [msgtypes.group_join]: chats.receiveGroupJoin,
+	[msgtypes.contact_key]: contacts.receiveContactKey,
+	[msgtypes.contact_key_confirmation]: contacts.receiveConfirmContactKey,
+	[msgtypes.message]: messages.receiveMessage,
+	[msgtypes.invoice]: invoices.receiveInvoice,
+	[msgtypes.direct_payment]: payments.receivePayment,
+	[msgtypes.confirmation]: confirmations.receiveConfirmation,
+	[msgtypes.attachment]: media.receiveAttachment,
+	[msgtypes.purchase]: media.receivePurchase,
+	[msgtypes.purchase_accept]: media.receivePurchaseAccept,
+	[msgtypes.purchase_deny]: media.receivePurchaseDeny,
+	[msgtypes.group_create]: chats.receiveGroupCreateOrInvite,
+	[msgtypes.group_invite]: chats.receiveGroupCreateOrInvite,
+	[msgtypes.group_join]: chats.receiveGroupJoin,
 	[msgtypes.group_leave]: chats.receiveGroupLeave,
 	[msgtypes.group_kick]: chats.receiveGroupKick,
 	[msgtypes.delete]: messages.receiveDeleteMessage,

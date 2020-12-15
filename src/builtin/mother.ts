@@ -2,17 +2,16 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/api'
 import { installBotAsTribeAdmin } from '../controllers/bots'
-import * as path from 'path'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import constants from '../constants'
+import {loadConfig} from '../utils/config'
 
 const msg_types = Sphinx.MSG_TYPE
 
-const env = process.env.NODE_ENV || 'development'
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 const builtinBots = [
   'welcome', 'loopout'
@@ -43,7 +42,7 @@ export function init() {
     const cmd = arr[1]
 
     const isAdmin = message.member.roles.find(role => role.name === 'Admin')
-    if(!isAdmin) return
+    if (!isAdmin) return
 
     switch (cmd) {
 

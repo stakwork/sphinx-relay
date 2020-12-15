@@ -13,11 +13,10 @@ const lightning_1 = require("../utils/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
 const nodeinfo_1 = require("../utils/nodeinfo");
-const path = require("path");
 const constants_1 = require("../constants");
 const models_1 = require("../models");
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 exports.checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { pubkey, amount } = req.query;
     if (!(pubkey && pubkey.length === 66))
@@ -101,12 +100,14 @@ exports.getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const channelList = yield lightning_1.listChannels();
         const { channels } = channelList;
         const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
-        res.json({ success: true, response: {
+        res.json({
+            success: true, response: {
                 reserve,
                 full_balance: parseInt(response.balance),
                 balance: parseInt(response.balance) - reserve,
                 pending_open_balance: parseInt(response.pending_open_balance),
-            } });
+            }
+        });
     }
     catch (e) {
         console.log("ERROR getBalance", e);

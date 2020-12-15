@@ -1,13 +1,11 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/api'
-// import fetch from 'node-fetch'
-import * as path from 'path'
 import { models } from '../models'
 import constants from '../constants'
 import { spawn } from 'child_process'
+import {loadConfig} from '../utils/config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE
@@ -124,34 +122,34 @@ export function init() {
           `--fast`,
           `--addr=${addy}`
         ]
-        console.log("=> SPAWN",cmd,args)
+        console.log("=> SPAWN", cmd, args)
         let childProcess = spawn(cmd, args)
         childProcess.stdout.on('data', function (data) {
           const stdout = data.toString()
-          console.log("LOOPBOT stdout:",stdout)
-          if(stdout){
-            console.log('=> LOOPBOT stdout',stdout)
-            if(stdout.includes('CONTINUE SWAP?')) {
-              childProcess.stdin.write('y\n')                  
+          console.log("LOOPBOT stdout:", stdout)
+          if (stdout) {
+            console.log('=> LOOPBOT stdout', stdout)
+            if (stdout.includes('CONTINUE SWAP?')) {
+              childProcess.stdin.write('y\n')
             }
-            if(stdout.startsWith('Swap initiated')) {
+            if (stdout.startsWith('Swap initiated')) {
               const embed = new Sphinx.MessageEmbed()
                 .setAuthor('LoopBot')
                 .setTitle('Payment was sent!')
-                // .setDescription('Success!')
+              // .setDescription('Success!')
               message.channel.send({ embed })
               return
             }
           }
         })
         childProcess.stderr.on('data', function (data) {
-          console.log("STDERR:",data.toString())
+          console.log("STDERR:", data.toString())
         });
         childProcess.on('error', (error) => {
-          console.log("error",error.toString());
+          console.log("error", error.toString());
         });
         childProcess.on('close', (code) => {
-          console.log("CHILD PROCESS closed",code)
+          console.log("CHILD PROCESS closed", code)
         });
       } catch (e) {
         console.log('LoopBot error', e)

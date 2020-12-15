@@ -9,12 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
 const lightning_1 = require("./lightning");
+const config_1 = require("./config");
 const fs = require('fs');
 const readline = require('readline');
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config = config_1.loadConfig();
 /*
 "lnd_pwd_path": "/relay/.lnd/.lndpwd"
 */

@@ -133,10 +133,12 @@ function onReceive(payload) {
             if (payload.type === msgtypes.delete) {
                 doAction = false;
                 if (payload.message.uuid) {
-                    const ogMsg = yield models_1.models.Message.findOne({ where: {
+                    const ogMsg = yield models_1.models.Message.findOne({
+                        where: {
                             uuid: payload.message.uuid,
                             sender: senderContactId,
-                        } });
+                        }
+                    });
                     if (ogMsg)
                         doAction = true;
                 }
@@ -145,9 +147,11 @@ function onReceive(payload) {
             let realSatsContactId = null;
             let amtToForward = 0;
             if (payload.type === msgtypes.boost && payload.message.replyUuid) {
-                const ogMsg = yield models_1.models.Message.findOne({ where: {
+                const ogMsg = yield models_1.models.Message.findOne({
+                    where: {
                         uuid: payload.message.replyUuid,
-                    } });
+                    }
+                });
                 if (ogMsg && ogMsg.sender) { // even include "me"
                     const theAmtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
                     if (theAmtToForward > 0) {
@@ -170,10 +174,12 @@ function onReceive(payload) {
             const mt = payload.message.mediaToken;
             const host = mt && mt.split('.').length && mt.split('.')[0];
             const muid = mt && mt.split('.').length && mt.split('.')[1];
-            const myAttachmentMessage = yield models_1.models.Message.findOne({ where: {
+            const myAttachmentMessage = yield models_1.models.Message.findOne({
+                where: {
                     mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
                     type: msgtypes.attachment, sender: 1,
-                } });
+                }
+            });
             if (!myAttachmentMessage) { // someone else's attachment
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
                 modify_1.purchaseFromOriginalSender(payload, chat, senderContact);

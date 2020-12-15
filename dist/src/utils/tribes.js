@@ -12,14 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("./lightning");
-const path = require("path");
 const mqtt = require("mqtt");
 const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
 const tribeBots_1 = require("./tribeBots");
 exports.declare_bot = tribeBots_1.declare_bot;
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("./config");
+const config = config_1.loadConfig();
 let client;
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {

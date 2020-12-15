@@ -19,9 +19,9 @@ export const findOrCreateChat = async (params) => {
 		const uuid = md5([owner.publicKey, recipient.publicKey].sort().join("-"))
 
 		// find by uuid
-		chat = await models.Chat.findOne({ where:{uuid} })
-		
-		if(!chat){ // no chat! create new
+		chat = await models.Chat.findOne({ where: { uuid } })
+
+		if (!chat) { // no chat! create new
 			chat = await models.Chat.create({
 				uuid: uuid,
 				contactIds: JSON.stringify([parseInt(owner_id), parseInt(recipient_id)]),
@@ -34,27 +34,24 @@ export const findOrCreateChat = async (params) => {
 	return chat
 }
 
-export const sendContactKeys = async (args) => {
-	const { type, contactIds, contactPubKey, sender, success, failure } = args
-	const msg = newkeyexchangemsg(type, sender)
+export const sendContactKeys = async ({ type, contactIds, sender, success, failure, dontActuallySendContactKey }:{type:number,contactIds:number[],sender:any,success?:Function,failure?:Function,dontActuallySendContactKey?:boolean}) => {
+	const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey||false)
 
-	let yes:any = null
-	let no:any = null
-	let cids = contactIds
+	let yes: any = null
+	let no: any = null
+	let cids = contactIds || []
 
-	if(!contactIds) cids = [null] // nully
 	await asyncForEach(cids, async contactId => {
-		let destination_key:string
-		if(!contactId){ // nully
-			destination_key = contactPubKey
-		} else {
-			if (contactId == sender.id) {
-				return
-			}
-			const contact = await models.Contact.findOne({ where: { id: contactId } })
-			destination_key = contact.publicKey
+		let destination_key: string
+		if (contactId == sender.id) {
+			return
 		}
-		performKeysendMessage({
+		const contact = await models.Contact.findOne({ where: { id: contactId } })
+		if(!(contact && contact.publicKey)) return
+		destination_key = contact.publicKey
+
+		console.log("=> KEY EXCHANGE", msg)
+		await performKeysendMessage({
 			sender,
 			destination_key,
 			amount: 3,
@@ -66,11 +63,12 @@ export const sendContactKeys = async (args) => {
 				no = error
 			}
 		})
+		await sleep(1000)
 	})
-	if(no && failure){
+	if (no && failure) {
 		failure(no)
 	}
-	if(!no && yes && success){
+	if (!no && yes && success) {
 		success(yes)
 	}
 }
@@ -147,16 +145,16 @@ export async function parseReceiveParams(payload) {
 	const message_status = dat.message.status
 	const mediaToken = dat.message.mediaToken
 	const originalMuid = dat.message.originalMuid
-	const msg_id = dat.message.id||0
-	const msg_uuid = dat.message.uuid||''
+	const msg_id = dat.message.id || 0
+	const msg_uuid = dat.message.uuid || ''
 	const mediaKey = dat.message.mediaKey
 	const mediaType = dat.message.mediaType
 	const date_string = dat.message.date
 	const skip_payment_processing = dat.message.skipPaymentProcessing
 	const reply_uuid = dat.message.replyUuid
 	const purchaser_id = dat.message.purchaser
-	const network_type = dat.network_type||0
-	const isTribeOwner = dat.isTribeOwner?true:false
+	const network_type = dat.network_type || 0
+	const isTribeOwner = dat.isTribeOwner ? true : false
 
 	const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
 	let sender
@@ -167,14 +165,14 @@ export async function parseReceiveParams(payload) {
 		chat = await findOrCreateChatByUUID(
 			chat_uuid, [parseInt(owner.id), parseInt(sender.id)]
 		)
-		if(sender.fromGroup) { // if a private msg received, update the contact
-			await sender.update({fromGroup:false})
+		if (sender.fromGroup) { // if a private msg received, update the contact
+			await sender.update({ fromGroup: false })
 		}
 	} else { // group
 		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
 		// inject a "sender" with an alias
-		if(!sender && chat_type == constants.chat_types.tribe){
-			sender = {id:0, alias:sender_alias}
+		if (!sender && chat_type == constants.chat_types.tribe) {
+			sender = { id: 0, alias: sender_alias }
 		}
 		chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	}
@@ -183,19 +181,19 @@ export async function parseReceiveParams(payload) {
 
 async function asyncForEach(array, callback) {
 	for (let index = 0; index < array.length; index++) {
-	  	await callback(array[index], index, array);
+		await callback(array[index], index, array);
 	}
 }
 
-function newkeyexchangemsg(type, sender){
+function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
 	const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto
 	return {
 		type: type,
 		sender: {
 			pub_key: sender.publicKey,
-			contact_key: sender.contactKey,
-			...sender.alias && {alias: sender.alias},
-			...includePhotoUrl && {photo_url: sender.photoUrl}
+			...!dontActuallySendContactKey && {contact_key: sender.contactKey},
+			...sender.alias && { alias: sender.alias },
+			...includePhotoUrl && { photo_url: sender.photoUrl }
 		}
 	}
 }

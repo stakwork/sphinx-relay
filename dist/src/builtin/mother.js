@@ -13,15 +13,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
 const bots_1 = require("../controllers/bots");
-const path = require("path");
 const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const constants_1 = require("../constants");
+const config_1 = require("../utils/config");
 const msg_types = Sphinx.MSG_TYPE;
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config = config_1.loadConfig();
 const builtinBots = [
     'welcome', 'loopout'
 ];

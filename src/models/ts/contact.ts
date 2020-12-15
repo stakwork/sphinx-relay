@@ -1,6 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table({tableName: 'sphinx_contacts', underscored: true})
+@Table({ tableName: 'sphinx_contacts', underscored: true })
 export default class Contact extends Model<Contact> {
 
   @Column({

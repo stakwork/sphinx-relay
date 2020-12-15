@@ -41,27 +41,22 @@ exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, functio
     }
     return chat;
 });
-exports.sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* () {
-    const { type, contactIds, contactPubKey, sender, success, failure } = args;
-    const msg = newkeyexchangemsg(type, sender);
+exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey }) => __awaiter(void 0, void 0, void 0, function* () {
+    const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey || false);
     let yes = null;
     let no = null;
-    let cids = contactIds;
-    if (!contactIds)
-        cids = [null]; // nully
+    let cids = contactIds || [];
     yield asyncForEach(cids, (contactId) => __awaiter(void 0, void 0, void 0, function* () {
         let destination_key;
-        if (!contactId) { // nully
-            destination_key = contactPubKey;
+        if (contactId == sender.id) {
+            return;
         }
-        else {
-            if (contactId == sender.id) {
-                return;
-            }
-            const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
-            destination_key = contact.publicKey;
-        }
-        exports.performKeysendMessage({
+        const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
+        if (!(contact && contact.publicKey))
+            return;
+        destination_key = contact.publicKey;
+        console.log("=> KEY EXCHANGE", msg);
+        yield exports.performKeysendMessage({
             sender,
             destination_key,
             amount: 3,
@@ -73,6 +68,7 @@ exports.sendContactKeys = (args) => __awaiter(void 0, void 0, void 0, function* 
                 no = error;
             }
         });
+        yield sleep(1000);
     }));
     if (no && failure) {
         failure(no);
@@ -201,11 +197,11 @@ function asyncForEach(array, callback) {
         }
     });
 }
-function newkeyexchangemsg(type, sender) {
+function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {
         type: type,
-        sender: Object.assign(Object.assign({ pub_key: sender.publicKey, contact_key: sender.contactKey }, sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
+        sender: Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, !dontActuallySendContactKey && { contact_key: sender.contactKey }), sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
     };
 }
 //# sourceMappingURL=helpers.js.map

@@ -23,9 +23,11 @@ exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const invites = yield models_1.models.Invite.findAll({ raw: true });
     const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
     const subscriptions = yield models_1.models.Subscription.findAll({ raw: true });
-    const pendingMembers = yield models_1.models.ChatMember.findAll({ where: {
+    const pendingMembers = yield models_1.models.ChatMember.findAll({
+        where: {
             status: constants_1.default.chat_statuses.pending
-        } });
+        }
+    });
     const contactsResponse = contacts.map(contact => {
         let contactJson = jsonUtils.contactToJson(contact);
         let invite = invites.find(invite => invite.contactId == contact.id);
@@ -51,7 +53,7 @@ exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query });
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, authToken: null } });
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const pwd = password_1.default;
     if (process.env.USE_PASSWORD === 'true') {
         if (pwd !== req.query.pwd) {
@@ -63,10 +65,19 @@ exports.generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
     }
     if (owner) {
-        const hash = crypto.createHash('sha256').update(req.body['token']).digest('base64');
-        console.log("req.params['token']", req.params['token']);
-        console.log("hash", hash);
-        owner.update({ authToken: hash });
+        const token = req.body['token'];
+        if (!token) {
+            return res_1.failure(res, {});
+        }
+        const hash = crypto.createHash('sha256').update(token).digest('base64');
+        if (owner.authToken) {
+            if (owner.authToken !== hash) {
+                return res_1.failure(res, {});
+            }
+        }
+        else {
+            owner.update({ authToken: hash });
+        }
         res_1.success(res, {});
     }
     else {
@@ -104,6 +115,7 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
         contactIds: contactIds,
         sender: owner,
         type: constants_1.default.message_types.contact_key,
+        dontActuallySendContactKey: !contactKeyChanged
     });
 });
 exports.exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -202,11 +214,11 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
-    let contactKeyChanged = true; // ???????
+    let msgIncludedContactKey = false; // ???????
+    if (sender_contact_key) {
+        msgIncludedContactKey = true;
+    }
     if (sender_contact_key && sender) {
-        if (sender_contact_key !== sender.contactKey) {
-            contactKeyChanged = true;
-        }
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
             objToUpdate.alias = sender_alias;
@@ -221,9 +233,9 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     else {
         console.log("DID NOT FIND SENDER");
     }
-    if (contactKeyChanged) {
+    if (msgIncludedContactKey && sender) {
         helpers.sendContactKeys({
-            contactPubKey: sender_pub_key,
+            contactIds: [sender.id],
             sender: owner,
             type: constants_1.default.message_types.contact_key_confirmation,
         });

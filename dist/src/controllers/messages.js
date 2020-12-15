@@ -39,16 +39,20 @@ exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     };
     let confirmedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
-        status: { [sequelize_1.Op.or]: [
+        status: {
+            [sequelize_1.Op.or]: [
                 constants_1.default.statuses.received,
-            ] },
+            ]
+        },
         sender: owner.id
     };
     let deletedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
-        status: { [sequelize_1.Op.or]: [
+        status: {
+            [sequelize_1.Op.or]: [
                 constants_1.default.statuses.deleted
-            ] },
+            ]
+        },
     };
     // if (chatId) {
     // 	newMessagesWhere.chat_id = chatId
@@ -156,9 +160,11 @@ exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
     if (reply_uuid && boost && amount) {
-        const ogMsg = yield models_1.models.Message.findOne({ where: {
+        const ogMsg = yield models_1.models.Message.findOne({
+            where: {
                 uuid: reply_uuid,
-            } });
+            }
+        });
         if (ogMsg && ogMsg.sender) {
             realSatsContactId = ogMsg.sender;
         }
@@ -254,8 +260,7 @@ exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function
         response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
-    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id } = yield helpers.parseReceiveParams(payload);
@@ -295,8 +300,7 @@ exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'boost',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
     if (msg.replyUuid) {
         const ogMsg = yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid }

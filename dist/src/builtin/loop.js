@@ -11,13 +11,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
-// import fetch from 'node-fetch'
-const path = require("path");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
 const child_process_1 = require("child_process");
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;

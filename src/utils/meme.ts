@@ -5,4 +5,4 @@ function setMediaToken(mt) {
     mediaToken = mt
 }
 
-export {mediaToken, setMediaToken}
+export { mediaToken, setMediaToken }

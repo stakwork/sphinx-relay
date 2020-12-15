@@ -3,29 +3,29 @@ import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
-import * as path from 'path'
 import logger from './src/utils/logger'
-import {pingHubInterval, checkInvitesHubInterval} from './src/hub'
-import {setupDatabase, setupDone} from './src/utils/setup'
+import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
+import { setupDatabase, setupDone } from './src/utils/setup'
 import * as controllers from './src/controllers'
+import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
-import {authModule, unlocker} from './src/auth'
+import { authModule, unlocker } from './src/auth'
 import * as grpc from './src/grpc'
 import * as cert from './src/utils/cert'
+import {loadConfig} from './src/utils/config'
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, 'config/app.json'))[env];
+const config = loadConfig()
 const port = process.env.PORT || config.node_http_port || 3001
 
-console.log("=> env:",env)
-console.log('=> process.env.PORT:',process.env.PORT)
-console.log('=> config.node_http_port:',config.node_http_port)
+console.log("=> env:", env)
+// console.log('=> config: ',config)
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 
 // START SETUP!
-async function start(){
+async function start() {
 	await setupDatabase()
 	mainSetup()
 	if (config.hub_api_url) {
@@ -34,24 +34,24 @@ async function start(){
 }
 start()
 
-async function mainSetup(){
+async function mainSetup() {
 	await setupApp() // setup routes
-	grpc.reconnectToLND(Math.random(), function(){
+	grpc.reconnectToLND(Math.random(), function () {
 		console.log(">> FINISH SETUP")
 		finishSetup()
 	}) // recursive
 }
 
-async function finishSetup(){
-	await network.initTribesSubscriptions() 
+async function finishSetup() {
+	await network.initTribesSubscriptions()
 	if (config.hub_api_url) {
 		checkInvitesHubInterval(5000)
 	}
 	setupDone()
 }
 
-function setupApp(){
-	return new Promise(async resolve=>{
+function setupApp() {
+	return new Promise(async resolve => {
 
 		const app = express();
 
@@ -60,7 +60,7 @@ function setupApp(){
 		app.use(bodyParser.urlencoded({ extended: true }));
 		app.use(logger)
 		app.use(cors({
-			allowedHeaders:['X-Requested-With','Content-Type','Accept','x-user-token']
+			allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token']
 		}))
 		app.use(cookieParser())
 		if (env != 'development') {
@@ -68,6 +68,9 @@ function setupApp(){
 		}
 		app.use('/static', express.static('public'));
 		app.get('/app', (req, res) => res.send('INDEX'))
+		if (config.connect_ui) {
+			app.get('/connect', connect.connect)
+		}
 
 		let server;
 		if ('ssl' in config && config.ssl.enabled) {
@@ -75,14 +78,14 @@ function setupApp(){
 				var certData = await cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save)
 				var credentials = { key: certData?.privateKey.toString(), ca: certData?.caBundle, cert: certData?.certificate };
 				server = require("https").createServer(credentials, app);
-			} catch(e) {
+			} catch (e) {
 				console.log("getCertificate ERROR", e)
 			}
 		} else {
 			server = require("http").Server(app);
 		}
 
-		if(!server) return console.log("=> FAILED to create server")
+		if (!server) return console.log("=> FAILED to create server")
 		server.listen(port, (err) => {
 			if (err) throw err;
 			/* eslint-disable no-console */
@@ -90,20 +93,20 @@ function setupApp(){
 		});
 
 		// start all routes!
-		if(!config.unlock) {
+		if (!config.unlock) {
 			controllers.set(app);
 			socket.connect(server)
-			resolve()
+			resolve(true)
 		} else {
-			app.post('/unlock', async function(req,res){
-				const ok = await unlocker(req,res)
-				if(ok) {
+			app.post('/unlock', async function (req, res) {
+				const ok = await unlocker(req, res)
+				if (ok) {
 					console.log('=> relay unlocked!')
 					controllers.set(app);
 					socket.connect(server)
-					resolve()
+					resolve(true)
 				}
-			}) 
+			})
 		}
 
 	})

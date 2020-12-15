@@ -2,12 +2,11 @@ import { loadLightning, queryRoute, channelBalance, listChannels } from '../util
 import { success, failure } from '../utils/res'
 import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo';
-import * as path from 'path'
 import constants from '../constants'
 import { models } from '../models'
+import {loadConfig} from '../utils/config'
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = loadConfig()
 
 export const checkRoute = async (req, res) => {
 	const { pubkey, amount } = req.query
@@ -94,14 +93,16 @@ export const getBalance = async (req, res) => {
 		const channelList = await listChannels()
 		const { channels } = channelList
 		const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0)
-		res.json({ success: true, response:<BalanceRes>{
-			reserve,
-			full_balance: parseInt(response.balance),
-			balance: parseInt(response.balance) - reserve,
-			pending_open_balance: parseInt(response.pending_open_balance),
-		} });
-	} catch(e) {
-		console.log("ERROR getBalance",e)
+		res.json({
+			success: true, response: <BalanceRes>{
+				reserve,
+				full_balance: parseInt(response.balance),
+				balance: parseInt(response.balance) - reserve,
+				pending_open_balance: parseInt(response.pending_open_balance),
+			}
+		});
+	} catch (e) {
+		console.log("ERROR getBalance", e)
 		res.json({ success: false });
 	}
 	res.end();

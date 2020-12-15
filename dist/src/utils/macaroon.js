@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
-const path = require("path");
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("./config");
+const config = config_1.loadConfig();
 let inMemoryMacaroon = ''; // hex encoded
 function getMacaroon() {
     if (config.unlock) {

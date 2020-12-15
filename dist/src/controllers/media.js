@@ -23,13 +23,12 @@ const cron_1 = require("cron");
 const zbase32 = require("../utils/zbase32");
 const schemas = require("./schemas");
 const confirmations_1 = require("./confirmations");
-const path = require("path");
 const network = require("../network");
 const meme = require("../utils/meme");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env];
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 /*
 
 TODO line 233: parse that from token itself, dont use getMediaInfo at all
@@ -238,9 +237,11 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
         return console.log('no original message');
     }
     // find mediaKey for who sent
-    const mediaKey = yield models_1.models.MediaKey.findOne({ where: {
+    const mediaKey = yield models_1.models.MediaKey.findOne({
+        where: {
             muid, receiver: isTribe ? 0 : sender.id,
-        } });
+        }
+    });
     // console.log('mediaKey found!',mediaKey.dataValues)
     if (!mediaKey)
         return; // this is from another person (admin is forwarding)
@@ -427,8 +428,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
         response: jsonUtils.messageToJson(message, chat, sender)
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
-    const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] });
-    confirmations_1.sendConfirmation({ chat: theChat, sender: owner, msg_id });
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
