@@ -22,13 +22,11 @@ jobs:
       - name: Check out from Git
         uses: actions/checkout@v2
       - name: Test env
-        run: echo "action_state=yellow" >> $GITHUB_ENV
-      - name: Test env 2
-        run: echo "$action_state"
-      - name: Git tag
-        run: echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
-      - name: Test git tag
-        run: echo "$head_tag"
+        run: echo "RELEASE_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Test print env
+        run: |
+          echo $RELEASE_TAG
+          echo ${{ env.RELEASE_TAG }}
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: Checkout project
