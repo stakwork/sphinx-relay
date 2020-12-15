@@ -11,6 +11,8 @@ jobs:
   build:
     runs-on: ubuntu-18.04
     name: Build and push Relay image
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
       - name: Set env variables
         run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
