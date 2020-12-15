@@ -4,8 +4,8 @@ WORKDIR /relay
 RUN mkdir /relay/.lnd
 RUN touch /relay/connection_string.txt
 RUN chmod 777 /relay/connection_string.txt
-RUN cp config/app.json dist/config/app.json
-RUN cp config/config.json dist/config/config.json
+RUN cp /relay/config/app.json /relay/dist/config/app.json
+RUN cp /relay/config/config.json /relay/dist/config/config.json
 COPY . .
 
 RUN apt-get update
