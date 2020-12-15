@@ -21,11 +21,11 @@ jobs:
     steps:
       - name: Check out from Git
         uses: actions/checkout@v2
-      - name: Set env variables
-        run: echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
-      - name: Show set env variables
+      - name: Git tag
+        run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
+      - name: Show set env variables again
         run: |
-          printf "    HEAD_TAG: %s\n"  "$head_tag"
+          printf "    HEAD_TAG: %s\n"  "${{ env.HEAD_TAG }}"
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: Checkout project
