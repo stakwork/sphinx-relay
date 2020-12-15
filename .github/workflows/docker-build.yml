@@ -19,6 +19,8 @@ jobs:
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
+      - name: Check out from Git
+        uses: actions/checkout@v2
       - name: Set env variables
         run: echo "head_tag=$(git tag --points-at HEAD)" >> $GITHUB_ENV
       - name: Show set env variables
