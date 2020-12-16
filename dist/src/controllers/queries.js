@@ -16,13 +16,18 @@ const constants_1 = require("../constants");
 const short = require("short-uuid");
 const lightning = require("../utils/lightning");
 const wallet_1 = require("../utils/wallet");
+const jsonUtils = require("../utils/json");
 let queries = {};
 const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f';
 function listUTXOs(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const utxos = yield wallet_1.listUnspent();
-            res_1.success(res, utxos);
+            const accountings = yield models_1.models.Accounting.findAll();
+            res_1.success(res, {
+                utxos,
+                accountings: accountings.map(acc => jsonUtils.accountingToJson(acc))
+            });
         }
         catch (e) {
             res_1.failure(res, e);

@@ -31,10 +31,10 @@ export const listUnspent = () => {
     try {
       const opts = {min_confs:1,max_confs:100}
       walletkit.listUnspent(opts, function(err, res){
-        if (err) {
+        if (err || !(res&&res.utxos)) {
           reject(err)
         } else {
-          resolve(res)
+          resolve(res.utxos)
         }
       })
     } catch(e) {

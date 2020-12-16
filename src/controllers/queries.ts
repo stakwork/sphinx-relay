@@ -5,6 +5,7 @@ import constants from '../constants'
 import * as short from 'short-uuid'
 import * as lightning from '../utils/lightning'
 import {listUnspent} from '../utils/wallet'
+import * as jsonUtils from '../utils/json'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -21,7 +22,11 @@ const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b28
 export async function listUTXOs(req, res) {
   try {
     const utxos = await listUnspent()
-    success(res, utxos)
+    const accountings = await models.Accounting.findAll()
+    success(res, {
+      utxos,
+      accountings: accountings.map(acc=> jsonUtils.accountingToJson(acc))
+    })
   } catch(e) {
     failure(res, e)
   }
