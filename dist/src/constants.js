@@ -59,6 +59,8 @@ const constants = {
         "heartbeat_confirmation": 27,
         "keysend": 28,
         "boost": 29,
+        "query": 30,
+        "query_response": 31
     },
     network_types: {
         "lightning": 0,

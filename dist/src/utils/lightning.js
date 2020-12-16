@@ -144,6 +144,31 @@ const queryRoute = (pub_key, amt) => __awaiter(void 0, void 0, void 0, function*
     });
 });
 exports.queryRoute = queryRoute;
+exports.WITNESS_PUBKEY_HASH = 0;
+exports.NESTED_PUBKEY_HASH = 1;
+exports.UNUSED_WITNESS_PUBKEY_HASH = 2;
+exports.UNUSED_NESTED_PUBKEY_HASH = 3;
+function newAddress(type = exports.NESTED_PUBKEY_HASH) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(function (resolve, reject) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let lightning = yield loadLightning();
+                lightning.newAddress({ type }, (err, response) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    if (!(response && response.address)) {
+                        reject('no address');
+                        return;
+                    }
+                    resolve(response.address);
+                });
+            });
+        });
+    });
+}
+exports.newAddress = newAddress;
 const keysend = (opts) => {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
