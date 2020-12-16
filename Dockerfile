@@ -5,6 +5,7 @@ RUN mkdir /relay/.lnd
 RUN touch /relay/connection_string.txt
 RUN touch /relay/.lnd/sphinx.db
 RUN chmod 777 /relay/connection_string.txt
+RUN chmod 777 /relay/.lnd/sphinx.db
 COPY --chown=1000:1000 . .
 
 RUN apt-get update
