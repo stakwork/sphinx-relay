@@ -25,7 +25,6 @@ export async function listUTXOs(req, res) {
     const utxos:UTXO[] = await listUnspent() // at least 1 confg
     const addys = utxos.map(utxo=> utxo.address)
 
-    console.log('addys', addys)
     const accountings = await models.Accounting.findAll({
       where:{
         onchain_address: {
@@ -41,6 +40,7 @@ export async function listUTXOs(req, res) {
       const utxo = utxos.find(u=>u.address===a.onchainAddress)
       if(utxo) {
         acc.amount = utxo.amount_sat
+        acc.confirmations = utxo.confirmations
         ret.push(acc)
       }
     })

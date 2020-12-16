@@ -30,6 +30,7 @@ export interface UTXO {
   address: string
   address_type: number
   amount_sat: number
+  confirmations: number
 }
 
 export async function listUnspent():Promise<UTXO[]> {
