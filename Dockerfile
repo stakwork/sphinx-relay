@@ -1,92 +1,33 @@
-FROM golang:1.13-alpine as builder
-LABEL maintainer="gonzaloaune@stakwork.com"
+FROM node:12-buster-slim AS builder
 
-# Force Go to use the cgo based DNS resolver. This is required to ensure DNS
-# queries required to connect to linked containers succeed.
-ENV GODEBUG netdns=cgo
+WORKDIR /relay
+RUN mkdir /relay/.lnd
+RUN touch /relay/connection_string.txt
+RUN chmod 777 /relay/connection_string.txt
+RUN cp /relay/config/app.json /relay/dist/config/app.json
+RUN cp /relay/config/config.json /relay/dist/config/config.json
+COPY . .
 
-# Pass a tag, branch or a commit using build-arg.  This allows a docker
-# image to be built from a specified Git state.  The default image
-# will use the Git tip of master by default.
-ARG checkout="v0.11.1-beta"
-# ARG checkout="master"
+RUN apt-get update
 
-# Install dependencies and build the binaries.
-RUN apk add --no-cache --update alpine-sdk git make gcc openssh-client
+RUN apt install -y make python-minimal
+RUN apt install -y g++ gcc libmcrypt-dev
 
-RUN git clone https://github.com/lightningnetwork/lnd /go/src/github.com/lightningnetwork/lnd
-RUN cd /go/src/github.com/lightningnetwork/lnd \
-&&  git checkout $checkout \
-&&  make \
-&&  make install tags="signrpc walletrpc chainrpc invoicesrpc experimental"
+RUN npm install bcrypt
+RUN npm install
 
-# Start a new, final image.
-FROM alpine:3.11 as final
+FROM node:12-buster-slim
 
-EXPOSE 80
-EXPOSE 9735
+USER 1000
+
+WORKDIR /relay
+
+COPY --from=builder /relay .
+
+EXPOSE 3300
 
 ENV NODE_ENV production
 ENV NODE_SCHEME http
+ENV PORT 3300
 
-# Add bash and ca-certs, for quality of life and SSL-related reasons.
-RUN apk --no-cache add bash ca-certificates
-
-# Copy the binaries from the builder image.
-COPY --from=builder /go/bin/lncli /bin/
-COPY --from=builder /go/bin/lnd /bin/
-
-RUN apk add --no-cache --update nodejs=12.15.0-r1 nodejs-npm=12.15.0-r1 sqlite=3.30.1-r2 git supervisor
-
-RUN git clone https://github.com/stakwork/sphinx-relay /relay/
-
-WORKDIR /relay/
-
-ARG sphinx_checkout="master"
-
-RUN git checkout $sphinx_checkout
-
-RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git curl libmcrypt-dev
-
-USER root
-
-RUN rm -rf node_modules/
-RUN npm install
-RUN npm install --quiet node-gyp@3.8.0 -g
-RUN npm -g config set user root
-RUN npm install nw-gyp -g
-RUN npm uninstall sqlite3
-RUN npm install sqlite3 --build-from-source --runtime=node-webkit --target_arch=x64 --target=0.42.0
-RUN npm uninstall sqlite3
-RUN npm install sqlite3 --build-from-source --runtime=node-webkit --target_arch=x64 --target=0.42.0
-RUN npm rebuild
-RUN npm run tsc
-
-VOLUME /relay/.lnd
-
-COPY ./docker/lnd.conf.sample /relay/.lnd/lnd.conf
-
-#Uncomment if you have a copy of the channel.db you want to use.
-#COPY ./channel.db /relay/.lnd/data/graph/mainnet/
-
-RUN git clone https://github.com/stakwork/sphinx-keysend-test/ /sphinx-keysend/
-WORKDIR /sphinx-keysend/
-
-ARG sphinx_keysend_checkout="binary"
-
-RUN git checkout $sphinx_keysend_checkout
-RUN npm install
-
-WORKDIR /relay/
-
-RUN apk --no-cache add expect bash
-
-RUN mkdir -p /var/log/supervisor
-COPY ./docker/supervisord.conf /etc/supervisord.conf
-COPY ./docker/lnd_supervisor.conf /etc/supervisor.d/lnd_supervisor.ini
-COPY ./docker/relay_supervisor.conf /etc/supervisor.d/relay_supervisor.ini
-COPY ./docker/aliases.sh /etc/profile.d/aliases.sh
-
-ENV ENV="/etc/profile"
-
-ENTRYPOINT [ "bash", "/relay/docker/entrypoint.sh" ]
+CMD [ "node", "/relay/dist/app.js" ]

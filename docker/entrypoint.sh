@@ -8,6 +8,9 @@ echo "Setting ENV vars..."
 if [ ! -z ${ECS_CONTAINER_METADATA_URI+x} ]; then
   echo "ECS environment found, setting domain..."
   export NODE_DOMAIN=$(curl $ECS_CONTAINER_METADATA_URI | echo $(jq -r .DockerName).$NODE_DOMAIN)
+else
+  export UNIQUE_NAME=$(curl --unix-socket /var/run/docker.sock http:/v1.40/containers/$HOSTNAME/json | jq '.Name' --raw-output | cut -c 2-)
+  export NODE_DOMAIN="$UNIQUE_NAME.$NODE_DOMAIN"
 fi
 
 # For dev purposes only
