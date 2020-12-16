@@ -28,7 +28,7 @@ export async function listUTXOs(req, res) {
     console.log('addys', addys)
     const accountings = await models.Accounting.findAll({
       where:{
-        address: {
+        onchain_address: {
           [Op.in]: addys
         },
         status: constants.statuses.pending

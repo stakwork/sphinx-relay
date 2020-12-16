@@ -28,7 +28,7 @@ function listUTXOs(req, res) {
             console.log('addys', addys);
             const accountings = yield models_1.models.Accounting.findAll({
                 where: {
-                    address: {
+                    onchain_address: {
                         [sequelize_1.Op.in]: addys
                     },
                     status: constants_1.default.statuses.pending
