@@ -4,6 +4,7 @@ import * as network from '../network'
 import constants from '../constants'
 import * as short from 'short-uuid'
 import * as lightning from '../utils/lightning'
+import {listUnspent} from '../utils/wallet'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -16,6 +17,15 @@ export interface Query {
 let queries: { [k: string]: Query } = {}
 
 const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
+
+export async function listUTXOs(req, res) {
+  try {
+    const utxos = await listUnspent()
+    success(res, utxos)
+  } catch(e) {
+    failure(res, e)
+  }
+}
 
 export async function queryOnchainAddress(req, res) {
   console.log('=> queryOnchainAddress')

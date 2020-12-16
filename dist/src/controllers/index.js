@@ -95,6 +95,7 @@ function set(app) {
         app.get('/info', details.getNodeInfo);
         app.get('/route', details.checkRoute);
         app.get('/query/onchain_address/:app', queries.queryOnchainAddress);
+        app.get('/utxos', queries.listUTXOs);
         app.post('/action', actions.processAction);
         app.get('/bots', bots.getBots);
         app.post('/bot', bots.createBot);
