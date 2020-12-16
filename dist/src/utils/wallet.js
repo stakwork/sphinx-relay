@@ -32,23 +32,26 @@ exports.loadWalletKit = () => {
         }
     }
 };
-exports.listUnspent = () => {
-    return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let walletkit = yield exports.loadWalletKit();
-        try {
-            const opts = { min_confs: 1, max_confs: 100 };
-            walletkit.listUnspent(opts, function (err, res) {
-                if (err || !(res && res.utxos)) {
-                    reject(err);
-                }
-                else {
-                    resolve(res.utxos);
-                }
-            });
-        }
-        catch (e) {
-            reject(e);
-        }
-    }));
-};
+function listUnspent() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            let walletkit = yield exports.loadWalletKit();
+            try {
+                const opts = { min_confs: 0, max_confs: 10000 };
+                walletkit.listUnspent(opts, function (err, res) {
+                    if (err || !(res && res.utxos)) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(res.utxos);
+                    }
+                });
+            }
+            catch (e) {
+                reject(e);
+            }
+        }));
+    });
+}
+exports.listUnspent = listUnspent;
 //# sourceMappingURL=wallet.js.map

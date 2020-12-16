@@ -124,7 +124,6 @@ export async function set(app) {
 			res.status(200).send(last.createdAt)
 		}
 	})
-
 }
 
 const msgtypes = constants.message_types

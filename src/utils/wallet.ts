@@ -25,11 +25,17 @@ export const loadWalletKit = () => {
   }
 }
 
-export const listUnspent = () => {
+
+export interface UTXO {
+  address: string
+  address_type: number
+}
+
+export async function listUnspent():Promise<UTXO[]> {
   return new Promise(async (resolve, reject) => {
     let walletkit = await loadWalletKit()
     try {
-      const opts = {min_confs:1,max_confs:100}
+      const opts = {min_confs:0,max_confs:10000}
       walletkit.listUnspent(opts, function(err, res){
         if (err || !(res&&res.utxos)) {
           reject(err)
