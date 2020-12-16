@@ -2,11 +2,6 @@ FROM node:12-buster-slim AS builder
 
 WORKDIR /relay
 RUN mkdir /relay/.lnd
-RUN touch /relay/connection_string.txt
-RUN touch /relay/.lnd/sphinx.db
-RUN chmod 777 /relay/connection_string.txt
-RUN chmod 777 /relay/.lnd/sphinx.db
-COPY --chown=1000:1000 . .
 
 RUN apt-get update
 
@@ -18,6 +13,8 @@ RUN npm install
 
 RUN cp /relay/config/app.json /relay/dist/config/app.json
 RUN cp /relay/config/config.json /relay/dist/config/config.json
+
+RUN chown -R 1000:1000 /relay
 
 FROM node:12-buster-slim
 
