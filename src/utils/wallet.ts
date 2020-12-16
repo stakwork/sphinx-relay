@@ -29,6 +29,7 @@ export const loadWalletKit = () => {
 export interface UTXO {
   address: string
   address_type: number
+  amount_sat: number
 }
 
 export async function listUnspent():Promise<UTXO[]> {

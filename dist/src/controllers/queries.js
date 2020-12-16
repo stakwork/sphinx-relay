@@ -34,7 +34,16 @@ function listUTXOs(req, res) {
                     status: constants_1.default.statuses.pending
                 }
             });
-            res_1.success(res, accountings.map(acc => jsonUtils.accountingToJson(acc)));
+            const ret = [];
+            accountings.forEach(a => {
+                const acc = Object.assign({}, a.dataValues);
+                const utxo = utxos.find(u => u.address === a.onchainAddress);
+                if (utxo) {
+                    acc.amount = utxo.amount_sat;
+                    ret.push(acc);
+                }
+            });
+            res_1.success(res, ret.map(acc => jsonUtils.accountingToJson(acc)));
         }
         catch (e) {
             res_1.failure(res, e);

@@ -35,7 +35,17 @@ export async function listUTXOs(req, res) {
       }
     })
 
-    success(res, accountings.map(acc=> jsonUtils.accountingToJson(acc)))
+    const ret: any[] = []
+    accountings.forEach(a=>{
+      const acc = {...a.dataValues}
+      const utxo = utxos.find(u=>u.address===a.onchainAddress)
+      if(utxo) {
+        acc.amount = utxo.amount_sat
+        ret.push(acc)
+      }
+    })
+
+    success(res, ret.map(acc=> jsonUtils.accountingToJson(acc)))
   } catch(e) {
     failure(res, e)
   }
