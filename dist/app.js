@@ -53,6 +53,7 @@ function mainSetup() {
 }
 function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
+        setup_1.setupOwnerContact();
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             hub_1.checkInvitesHubInterval(5000);

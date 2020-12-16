@@ -29,7 +29,6 @@ const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         // console.log("db sync failed", e)
     }
     yield migrate();
-    setupOwnerContact();
     console.log('=> [db] setup done');
 });
 exports.setupDatabase = setupDatabase;
