@@ -12,6 +12,7 @@ export function getMacaroon(macName?:string) {
     let macLocation = config.macaroon_location
     if(macName) {
       macLocation = macLocation.replace(/admin.macaroon/, macName)
+      console.log('macLocation',macLocation)
     }
     const m = fs.readFileSync(macLocation)
     return m.toString('hex');
