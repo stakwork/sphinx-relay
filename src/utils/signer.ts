@@ -2,7 +2,7 @@
 import * as grpc from 'grpc'
 import { loadCredentials } from './lightning'
 import * as ByteBuffer from 'bytebuffer'
-import {loadConfig} from './config'
+import { loadConfig } from './config'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()

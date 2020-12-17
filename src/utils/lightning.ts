@@ -6,7 +6,7 @@ import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
 import constants from '../constants'
 import { getMacaroon } from './macaroon'
-import {loadConfig} from './config'
+import { loadConfig } from './config'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -18,7 +18,7 @@ const SPHINX_CUSTOM_RECORD_KEY = 133773310
 var lightningClient = <any>null;
 var walletUnlocker = <any>null;
 
-const loadCredentials = (macName?:string) => {
+const loadCredentials = (macName?: string) => {
   var lndCert = fs.readFileSync(config.tls_location);
   var sslCreds = grpc.credentials.createSsl(lndCert);
   var macaroon = getMacaroon(macName)
@@ -140,8 +140,8 @@ export const WITNESS_PUBKEY_HASH = 0;
 export const NESTED_PUBKEY_HASH = 1;
 export const UNUSED_WITNESS_PUBKEY_HASH = 2;
 export const UNUSED_NESTED_PUBKEY_HASH = 3;
-export type NewAddressType = 0|1|2|3
-export async function newAddress(type:NewAddressType=NESTED_PUBKEY_HASH): Promise<string> {
+export type NewAddressType = 0 | 1 | 2 | 3
+export async function newAddress(type: NewAddressType = NESTED_PUBKEY_HASH): Promise<string> {
   return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning()
     lightning.newAddress(
@@ -151,7 +151,7 @@ export async function newAddress(type:NewAddressType=NESTED_PUBKEY_HASH): Promis
           reject(err)
           return
         }
-        if(!(response && response.address)) {
+        if (!(response && response.address)) {
           reject('no address')
           return
         }
