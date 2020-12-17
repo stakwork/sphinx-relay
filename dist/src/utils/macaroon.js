@@ -4,12 +4,16 @@ const fs = require("fs");
 const config_1 = require("./config");
 const config = config_1.loadConfig();
 let inMemoryMacaroon = ''; // hex encoded
-function getMacaroon() {
+function getMacaroon(macName) {
     if (config.unlock) {
         return inMemoryMacaroon;
     }
     else {
-        const m = fs.readFileSync(config.macaroon_location);
+        let macLocation = config.macaroon_location;
+        if (macName) {
+            macLocation = macLocation.replace(/admin.macaroon/, macName);
+        }
+        const m = fs.readFileSync(macLocation);
         return m.toString('hex');
     }
 }

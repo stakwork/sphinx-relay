@@ -18,10 +18,10 @@ const SPHINX_CUSTOM_RECORD_KEY = 133773310
 var lightningClient = <any>null;
 var walletUnlocker = <any>null;
 
-const loadCredentials = () => {
+const loadCredentials = (macName?:string) => {
   var lndCert = fs.readFileSync(config.tls_location);
   var sslCreds = grpc.credentials.createSsl(lndCert);
-  var macaroon = getMacaroon()
+  var macaroon = getMacaroon(macName)
   var metadata = new grpc.Metadata()
   metadata.add('macaroon', macaroon)
   var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {

@@ -5,11 +5,15 @@ const config = loadConfig()
 
 let inMemoryMacaroon: string = ''; // hex encoded
 
-export function getMacaroon() {
+export function getMacaroon(macName?:string) {
   if (config.unlock) {
     return inMemoryMacaroon
   } else {
-    const m = fs.readFileSync(config.macaroon_location)
+    let macLocation = config.macaroon_location
+    if(macName) {
+      macLocation = macLocation.replace(/admin.macaroon/, macName)
+    }
+    const m = fs.readFileSync(macLocation)
     return m.toString('hex');
   }
 }

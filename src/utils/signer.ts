@@ -15,7 +15,7 @@ export const loadSigner = () => {
     return signerClient
   } else {
     try {
-      var credentials = loadCredentials()
+      var credentials = loadCredentials('signer.macaroon')
       var lnrpcDescriptor = grpc.load("proto/signer.proto");
       var signer: any = lnrpcDescriptor.signrpc
       signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
