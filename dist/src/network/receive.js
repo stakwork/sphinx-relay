@@ -332,6 +332,7 @@ function parseAndVerifyPayload(data) {
                 let v;
                 if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
+                    console.log("SIGNER RES", v);
                 }
                 if (v && v.valid) {
                     return payload;
@@ -345,6 +346,7 @@ function parseAndVerifyPayload(data) {
             }
         }
         catch (e) {
+            console.log("SIGNER ERROR", e);
             if (payload)
                 return payload; // => RM THIS
             return null;
