@@ -2,7 +2,7 @@ FROM node:12-buster-slim AS builder
 
 WORKDIR /relay
 RUN mkdir /relay/.lnd
-COPY . .
+COPY --chown=1000:1000 . .
 
 RUN apt-get update
 
