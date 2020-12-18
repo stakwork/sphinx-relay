@@ -24,6 +24,7 @@ const subcriptions = require("./subscriptions");
 const uploads = require("./uploads");
 const confirmations = require("./confirmations");
 const actions = require("./api");
+const queries = require("./queries");
 const gitinfo_1 = require("../utils/gitinfo");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
@@ -88,6 +89,8 @@ function set(app) {
         app.get('/logs', details.getLogsSince);
         app.get('/info', details.getNodeInfo);
         app.get('/route', details.checkRoute);
+        app.get('/query/onchain_address/:app', queries.queryOnchainAddress);
+        app.get('/utxos', queries.listUTXOs);
         app.post('/action', actions.processAction);
         app.get('/bots', bots.getBots);
         app.post('/bot', bots.createBot);
@@ -146,5 +149,7 @@ exports.ACTIONS = {
     [msgtypes.heartbeat]: confirmations.receiveHeartbeat,
     [msgtypes.heartbeat_confirmation]: confirmations.receiveHeartbeatConfirmation,
     [msgtypes.boost]: messages.receiveBoost,
+    [msgtypes.query]: queries.receiveQuery,
+    [msgtypes.query_response]: queries.receiveQueryResponse,
 };
 //# sourceMappingURL=index.js.map

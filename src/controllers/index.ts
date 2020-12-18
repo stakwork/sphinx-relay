@@ -13,6 +13,7 @@ import * as subcriptions from './subscriptions'
 import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './api'
+import * as queries from './queries'
 import { checkTag } from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
@@ -93,6 +94,9 @@ export async function set(app) {
 	app.get('/info', details.getNodeInfo)
 	app.get('/route', details.checkRoute)
 
+	app.get('/query/onchain_address/:app', queries.queryOnchainAddress)
+	app.get('/utxos', queries.listUTXOs)
+
 	app.post('/action', actions.processAction)
 	app.get('/bots', bots.getBots)
 	app.post('/bot', bots.createBot)
@@ -117,7 +121,6 @@ export async function set(app) {
 			res.status(200).send(last.createdAt)
 		}
 	})
-
 }
 
 const msgtypes = constants.message_types
@@ -149,4 +152,6 @@ export const ACTIONS = {
 	[msgtypes.heartbeat]: confirmations.receiveHeartbeat,
 	[msgtypes.heartbeat_confirmation]: confirmations.receiveHeartbeatConfirmation,
 	[msgtypes.boost]: messages.receiveBoost,
+	[msgtypes.query]: queries.receiveQuery,
+	[msgtypes.query_response]: queries.receiveQueryResponse,
 }

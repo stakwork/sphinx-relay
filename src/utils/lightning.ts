@@ -136,6 +136,31 @@ const queryRoute = async (pub_key, amt) => {
   })
 }
 
+export const WITNESS_PUBKEY_HASH = 0;
+export const NESTED_PUBKEY_HASH = 1;
+export const UNUSED_WITNESS_PUBKEY_HASH = 2;
+export const UNUSED_NESTED_PUBKEY_HASH = 3;
+export type NewAddressType = 0|1|2|3
+export async function newAddress(type:NewAddressType=NESTED_PUBKEY_HASH): Promise<string> {
+  return new Promise(async function (resolve, reject) {
+    let lightning = await loadLightning()
+    lightning.newAddress(
+      { type },
+      (err, response) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        if(!(response && response.address)) {
+          reject('no address')
+          return
+        }
+        resolve(response.address)
+      }
+    )
+  })
+}
+
 const keysend = (opts) => {
   return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning()

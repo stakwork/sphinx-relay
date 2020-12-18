@@ -36,6 +36,8 @@ const inviteToJson = (invite) => case_1.toSnake(invite.dataValues || invite);
 exports.inviteToJson = inviteToJson;
 const botToJson = (bot) => case_1.toSnake(bot.dataValues || bot);
 exports.botToJson = botToJson;
+const accountingToJson = (acc) => case_1.toSnake(acc.dataValues || acc);
+exports.accountingToJson = accountingToJson;
 const jsonToContact = (json) => case_1.toCamel(json);
 exports.jsonToContact = jsonToContact;
 function subscriptionToJson(subscription, chat) {

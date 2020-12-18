@@ -42,6 +42,8 @@ const inviteToJson = (invite) => toSnake(invite.dataValues || invite)
 
 const botToJson = (bot) => toSnake(bot.dataValues || bot)
 
+const accountingToJson = (acc) => toSnake(acc.dataValues || acc)
+
 const jsonToContact = (json) => toCamel(json)
 
 function subscriptionToJson(subscription, chat) {
@@ -63,4 +65,5 @@ export {
   chatToJson,
   subscriptionToJson,
   botToJson,
+  accountingToJson
 }

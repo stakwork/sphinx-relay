@@ -76,7 +76,8 @@ function authModule(req, res, next) {
             req.path == '/latest' ||
             req.path.startsWith('/static') ||
             req.path == '/contacts/set_dev' ||
-            req.path == '/connect') {
+            req.path == '/connect' ||
+            req.path == '/utxos') {
             next();
             return;
         }
