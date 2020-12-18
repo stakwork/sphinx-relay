@@ -56,6 +56,7 @@ export async function set(app) {
 	app.post('/contacts', contacts.createContact)
 	app.delete('/contacts/:id', contacts.deleteContact)
 
+	app.get('/msgs', messages.getMsgs)
 	app.get('/allmessages', messages.getAllMessages)
 	app.get('/messages', messages.getMessages)
 	app.delete('/message/:id', messages.deleteMessage)

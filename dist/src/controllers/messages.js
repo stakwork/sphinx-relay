@@ -108,6 +108,39 @@ exports.getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, functio
         confirmed_messages: []
     });
 });
+exports.getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const limit = (req.query.limit && parseInt(req.query.limit));
+    const offset = (req.query.offset && parseInt(req.query.offset));
+    const dateToReturn = req.query.date;
+    if (!dateToReturn) {
+        return exports.getAllMessages(req, res);
+    }
+    console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`);
+    const clause = {
+        order: [['id', 'asc']],
+        where: {
+            updated_at: { [sequelize_1.Op.gte]: dateToReturn },
+        }
+    };
+    if (limit) {
+        clause.limit = limit;
+        clause.offset = offset;
+    }
+    console.log('=> clause:', clause);
+    const messages = yield models_1.models.Message.findAll(clause);
+    console.log('=> got msgs', (messages && messages.length));
+    const chatIds = [];
+    messages.forEach((m) => {
+        if (m.chatId && !chatIds.includes(m.chatId)) {
+            chatIds.push(m.chatId);
+        }
+    });
+    let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
+    const chatsById = underscore_1.indexBy(chats, 'id');
+    res_1.success(res, {
+        new_messages: messages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+    });
+});
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const id = parseInt(req.params.id);
@@ -365,7 +398,11 @@ exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             sender: {
                 [sequelize_1.Op.ne]: owner.id
             },
-            chatId: chat_id
+            chatId: chat_id,
+            [sequelize_1.Op.or]: [
+                { seen: false },
+                { seen: null }
+            ]
         }
     });
     const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });

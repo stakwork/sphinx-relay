@@ -23,7 +23,7 @@ exports.loadSigner = () => {
     }
     else {
         try {
-            var credentials = lightning_1.loadCredentials();
+            var credentials = lightning_1.loadCredentials('signer.macaroon');
             var lnrpcDescriptor = grpc.load("proto/signer.proto");
             var signer = lnrpcDescriptor.signrpc;
             signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
