@@ -93,6 +93,7 @@ export const getMessages = async (req, res) => {
 export const getAllMessages = async (req, res) => {
 	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
 	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
+
 	console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
 
 	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset })
@@ -113,6 +114,43 @@ export const getAllMessages = async (req, res) => {
 			message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
 		),
 		confirmed_messages: []
+	})
+};
+
+export const getMsgs = async (req, res) => {
+	const limit = (req.query.limit && parseInt(req.query.limit))
+	const offset = (req.query.offset && parseInt(req.query.offset))
+	const dateToReturn = req.query.date;
+	if (!dateToReturn) {
+		return getAllMessages(req, res)
+	}
+	console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`)
+
+	const clause:{[k:string]:any} = {
+		order: [['id', 'asc']], 
+		where: {
+			updated_at: { [Op.gte]: dateToReturn },
+		}
+	}
+	if(limit) {
+		clause.limit = limit 
+		clause.offset = offset
+	}
+	const messages = await models.Message.findAll(clause)
+	console.log('=> got msgs', (messages && messages.length))
+	const chatIds: number[] = []
+	messages.forEach((m) => {
+		if (m.chatId && !chatIds.includes(m.chatId)) {
+			chatIds.push(m.chatId)
+		}
+	})
+
+	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : []
+	const chatsById = indexBy(chats, 'id')
+	success(res, {
+		new_messages: messages.map(
+			message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+		),
 	})
 };
 
