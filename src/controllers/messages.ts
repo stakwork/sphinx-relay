@@ -444,7 +444,11 @@ export const readMessages = async (req, res) => {
 			sender: {
 				[Op.ne]: owner.id
 			},
-			chatId: chat_id
+			chatId: chat_id,
+			[Op.or]: [
+				{ seen: false },
+				{ seen: null }
+			]
 		}
 	});
 	const chat = await models.Chat.findOne({ where: { id: chat_id } })

@@ -398,7 +398,11 @@ exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             sender: {
                 [sequelize_1.Op.ne]: owner.id
             },
-            chatId: chat_id
+            chatId: chat_id,
+            [sequelize_1.Op.or]: [
+                { seen: false },
+                { seen: null }
+            ]
         }
     });
     const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
