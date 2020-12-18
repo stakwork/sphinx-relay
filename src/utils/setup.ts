@@ -19,7 +19,6 @@ const setupDatabase = async () => {
     // console.log("db sync failed", e)
   }
   await migrate()
-  setupOwnerContact()
   console.log('=> [db] setup done')
 }
 
