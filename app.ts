@@ -5,7 +5,7 @@ import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
 import logger from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
-import { setupDatabase, setupDone } from './src/utils/setup'
+import { setupDatabase, setupDone, setupOwnerContact } from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
@@ -43,6 +43,7 @@ async function mainSetup() {
 }
 
 async function finishSetup() {
+	setupOwnerContact()
 	await network.initTribesSubscriptions()
 	if (config.hub_api_url) {
 		checkInvitesHubInterval(5000)

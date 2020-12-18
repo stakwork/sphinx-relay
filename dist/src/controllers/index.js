@@ -36,12 +36,7 @@ function set(app) {
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
         }
-        try {
-            yield media.cycleMediaToken();
-        }
-        catch (e) {
-            console.log('=> could not auth with media server', e.message);
-        }
+        media.cycleMediaToken();
         timers.reloadTimers();
         app.get('/chats', chats.getChats);
         app.post('/group', chats.createGroupChat);

@@ -27,11 +27,8 @@ export async function set(app) {
 	if (models && models.Subscription) {
 		subcriptions.initializeCronJobs()
 	}
-	try {
-		await media.cycleMediaToken()
-	} catch (e) {
-		console.log('=> could not auth with media server', e.message)
-	}
+
+	media.cycleMediaToken()
 
 	timers.reloadTimers()
 
