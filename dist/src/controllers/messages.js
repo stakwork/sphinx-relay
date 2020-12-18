@@ -126,6 +126,7 @@ exports.getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         clause.limit = limit;
         clause.offset = offset;
     }
+    console.log('=> clause:', clause);
     const messages = yield models_1.models.Message.findAll(clause);
     console.log('=> got msgs', (messages && messages.length));
     const chatIds = [];
