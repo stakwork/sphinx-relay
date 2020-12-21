@@ -111,9 +111,12 @@ export async function authModule(req, res, next) {
 }
 
 function decryptMacaroon(password: string, macaroon: string) {
+  console.log('=> decryptMacaroon','password',password,'macaroon',macaroon)
   try {
     const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64)
+    console.log("=> DECRYPTED",decrypted)
     const decryptResult = atob(decrypted)
+    console.log("=> DECRYPTED rESULT",decryptResult)
     return decryptResult
   } catch (e) {
     console.error('cipher mismatch, macaroon decryption failed')
