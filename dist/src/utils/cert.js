@@ -123,7 +123,7 @@ function downloadCert(id, apiKey) {
         return res.data;
     });
 }
-function getCertificate(endpoint, port, save_ssl) {
+function getCertificate(domain, port, save_ssl) {
     return __awaiter(this, void 0, void 0, function* () {
         if (fs_1.existsSync(__dirname + "/zerossl/tls.cert") && fs_1.existsSync(__dirname + "/zerossl/tls.key")) {
             var certificate = fs_1.readFileSync(__dirname + '/zerossl/tls.cert', 'utf-8').toString();
@@ -139,6 +139,8 @@ function getCertificate(endpoint, port, save_ssl) {
         if (!apiKey) {
             throw new Error("=> [ssl] ZEROSSL_API_KEY is not set");
         }
+        var endpoint_tmp = domain.replace('https://', '');
+        var endpoint = endpoint_tmp.replace(':3001', '');
         var keys = forge.pki.rsa.generateKeyPair(2048);
         var csr = generateCsr(keys, endpoint);
         console.log("=> [ssl] Generated CSR");
