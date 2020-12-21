@@ -7,7 +7,6 @@ let inMemoryMacaroon: string = ''; // hex encoded
 
 export function getMacaroon(macName?:string) {
   if (config.unlock) {
-    console.log('=> getMacaroon: inMemoryMacaroon', inMemoryMacaroon)
     return inMemoryMacaroon
   } else {
     let macLocation = config.macaroon_location
@@ -20,6 +19,5 @@ export function getMacaroon(macName?:string) {
 }
 
 export function setInMemoryMacaroon(mac: string) {
-  console.log('=> setInMemoryMacaroon', mac)
   inMemoryMacaroon = mac
 }

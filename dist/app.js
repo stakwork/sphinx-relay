@@ -37,7 +37,8 @@ function start() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setup_1.setupDatabase();
         mainSetup();
-        if (config.hub_api_url) {
+        // // IF NOT UNLOCK, go ahead and start this now
+        if (config.hub_api_url && !config.unlock) {
             hub_1.pingHubInterval(15000);
         }
     });
@@ -58,6 +59,9 @@ function finishSetup() {
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             hub_1.checkInvitesHubInterval(5000);
+        }
+        if (config.unlock) { // IF UNLOCK, start this only after unlocked!
+            hub_1.pingHubInterval(15000);
         }
         setup_1.setupDone();
     });

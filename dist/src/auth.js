@@ -50,7 +50,6 @@ function unlocker(req, res) {
                 res_1.failure(res, 'failed to decode macaroon');
                 return false;
             }
-            console.log('=> decMac', decMac);
             hexMac = base64ToHex(decMac);
         }
         catch (e) {
@@ -87,11 +86,8 @@ function authModule(req, res, next) {
             return;
         }
         if (process.env.HOSTING_PROVIDER === 'true') {
-            // const domain = process.env.INVITE_SERVER
-            const host = req.headers.origin;
-            console.log('=> host:', host);
-            const referer = req.headers.referer;
-            console.log('=> referer:', referer);
+            // const host = req.headers.origin
+            // const referer = req.headers.referer
             if (req.path === '/invoices') {
                 next();
                 return;
