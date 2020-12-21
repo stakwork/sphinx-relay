@@ -40,13 +40,11 @@ function unlocker(req, res) {
                 res_1.failure(res, 'no macaroon');
                 return false;
             }
-            console.log('=> encMac', encMac);
             const decMac = decryptMacaroon(password, encMac);
             if (!decMac) {
                 res_1.failure(res, 'failed to decrypt macaroon');
                 return false;
             }
-            console.log('=> decMac', decMac);
             hexMac = base64ToHex(decMac);
         }
         catch (e) {
@@ -113,12 +111,9 @@ function authModule(req, res, next) {
 }
 exports.authModule = authModule;
 function decryptMacaroon(password, macaroon) {
-    console.log('=> decryptMacaroon', 'password', password, 'macaroon', macaroon);
     try {
         const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);
-        console.log("=> DECRYPTED", decrypted);
         const decryptResult = atob(decrypted);
-        console.log("=> DECRYPTED rESULT", decryptResult);
         return decryptResult;
     }
     catch (e) {
