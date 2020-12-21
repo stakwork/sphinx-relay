@@ -449,6 +449,25 @@ async function listChannels(): Promise<{ [k: string]: any }> {
   })
 }
 
+export interface OpenChannelArgs {
+  node_pubkey: any // bytes
+  local_funding_amount: number
+  push_sat: number // 0
+  sat_per_byte: number // 75?
+}
+export async function openChannel(args: OpenChannelArgs): Promise<{ [k: string]: any }> {
+  return new Promise((resolve, reject) => {
+    const lightning = loadLightning()
+    lightning.openChannelSync(args, function (err, response) {
+      if (err == null) {
+        resolve(response)
+      } else {
+        reject(err)
+      }
+    });
+  })
+}
+
 async function channelBalance(): Promise<{ [k: string]: any }> {
   return new Promise((resolve, reject) => {
     const lightning = loadLightning()

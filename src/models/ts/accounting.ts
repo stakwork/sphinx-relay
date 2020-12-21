@@ -35,4 +35,7 @@ export default class Accounting extends Model<Accounting> {
   @Column(DataType.BIGINT)
   chanId: number
 
+  @Column
+  fundingTxid: string
+
 }

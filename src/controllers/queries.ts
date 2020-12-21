@@ -7,6 +7,7 @@ import * as lightning from '../utils/lightning'
 import { listUnspent, UTXO } from '../utils/wallet'
 import * as jsonUtils from '../utils/json'
 import { Op } from 'sequelize'
+import fetch from 'node-fetch'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -30,7 +31,7 @@ interface Accounting {
   date: string
 }
 
-async function getPendingAccountings():Promise<Accounting[]> {
+async function getPendingAccountings(): Promise<Accounting[]> {
   const utxos: UTXO[] = await listUnspent() // at least 1 confg
   const accountings = await models.Accounting.findAll({
     where: {
@@ -68,16 +69,49 @@ export async function listUTXOs(req, res) {
   }
 }
 
-// function genChannel(acc: Accounting) {
+async function getSuggestedSatPerByte(): Promise<number> {
+  const MAX_AMT = 250
+  try {
+    const r = await fetch('https://mempool.space/api/v1/fees/recommended')
+    const j = await r.json()
+    return Math.min(MAX_AMT, j.hourFee)
+  } catch (e) {
+    return MAX_AMT
+  }
+}
 
-// }
+// https://mempool.space/api/v1/fees/recommended
+async function genChannelAndConfirmAccounting(acc: Accounting) {
+  const sat_per_byte = await getSuggestedSatPerByte()
+  console.log("[WATCH]=> sat_per_byte", sat_per_byte)
+  try {
+    const r = await lightning.openChannel({
+      node_pubkey: acc.pubkey,
+      local_funding_amount: acc.amount,
+      push_sat: 0,
+      sat_per_byte
+    })
+    console.log("[WATCH]=> CHANNEL OPENED!", r)
+    await models.Accounting.update({
+      status: constants.statuses.confirmed,
+      fudingTxid: r.funding_txid_str
+    },{
+      where: {id: acc.id}
+    })
+    console.log("[WATCH]=> ACCOUNTINGS UPDATED!")
+  } catch (e) {
+    console.log('[ACCOUNTING] error creating channel',e)
+  }
+}
 
-async function pollUTXOs(){
+async function pollUTXOs() {
+  console.log("[WATCH]=> pollUTXOs")
   const accs: Accounting[] = await getPendingAccountings()
-  if(!accs) return
-  accs.forEach(acc=>{
-    if(acc.confirmations<1) return
-
+  if (!accs) return
+  console.log("[WATCH]=> accs", accs.length)
+  asyncForEach(accs, async acc=>{
+    if (acc.confirmations < 1) return
+    await genChannelAndConfirmAccounting(acc)
   })
 }
 
@@ -202,4 +236,10 @@ export const receiveQueryResponse = async (payload) => {
   } catch (e) {
     console.log("=> ERROR receiveQueryResponse,", e)
   }
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+		await callback(array[index], index, array);
+	}
 }

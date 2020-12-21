@@ -503,6 +503,22 @@ function listChannels() {
     });
 }
 exports.listChannels = listChannels;
+function openChannel(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => {
+            const lightning = loadLightning();
+            lightning.openChannelSync(args, function (err, response) {
+                if (err == null) {
+                    resolve(response);
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    });
+}
+exports.openChannel = openChannel;
 function channelBalance() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {

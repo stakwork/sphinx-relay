@@ -18,6 +18,7 @@ const lightning = require("../utils/lightning");
 const wallet_1 = require("../utils/wallet");
 const jsonUtils = require("../utils/json");
 const sequelize_1 = require("sequelize");
+const node_fetch_1 = require("node-fetch");
 let queries = {};
 const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f';
 function getPendingAccountings() {
@@ -61,17 +62,57 @@ function listUTXOs(req, res) {
     });
 }
 exports.listUTXOs = listUTXOs;
-// function genChannel(acc: Accounting) {
-// }
+function getSuggestedSatPerByte() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const MAX_AMT = 250;
+        try {
+            const r = yield node_fetch_1.default('https://mempool.space/api/v1/fees/recommended');
+            const j = yield r.json();
+            return Math.min(MAX_AMT, j.hourFee);
+        }
+        catch (e) {
+            return MAX_AMT;
+        }
+    });
+}
+// https://mempool.space/api/v1/fees/recommended
+function genChannelAndConfirmAccounting(acc) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const sat_per_byte = yield getSuggestedSatPerByte();
+        console.log("[WATCH]=> sat_per_byte", sat_per_byte);
+        try {
+            const r = yield lightning.openChannel({
+                node_pubkey: acc.pubkey,
+                local_funding_amount: acc.amount,
+                push_sat: 0,
+                sat_per_byte
+            });
+            console.log("[WATCH]=> CHANNEL OPENED!", r);
+            yield models_1.models.Accounting.update({
+                status: constants_1.default.statuses.confirmed,
+                fudingTxid: r.funding_txid_str
+            }, {
+                where: { id: acc.id }
+            });
+            console.log("[WATCH]=> ACCOUNTINGS UPDATED!");
+        }
+        catch (e) {
+            console.log('[ACCOUNTING] error creating channel', e);
+        }
+    });
+}
 function pollUTXOs() {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("[WATCH]=> pollUTXOs");
         const accs = yield getPendingAccountings();
         if (!accs)
             return;
-        accs.forEach(acc => {
+        console.log("[WATCH]=> accs", accs.length);
+        asyncForEach(accs, (acc) => __awaiter(this, void 0, void 0, function* () {
             if (acc.confirmations < 1)
                 return;
-        });
+            yield genChannelAndConfirmAccounting(acc);
+        }));
     });
 }
 function startWatchingUTXOs() {
@@ -197,4 +238,11 @@ exports.receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, fu
         console.log("=> ERROR receiveQueryResponse,", e);
     }
 });
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
+}
 //# sourceMappingURL=queries.js.map

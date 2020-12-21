@@ -53,6 +53,10 @@ __decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "chanId", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Accounting.prototype, "fundingTxid", void 0);
 Accounting = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_accountings', underscored: true })
 ], Accounting);

@@ -32,6 +32,9 @@ async function setVersion() {
 
 async function migrate() {
 
+  addTableColumn('sphinx_accountings', 'funding_txid')
+
+
   addTableColumn('sphinx_chat_members', 'last_alias')
 
   addTableColumn('sphinx_chats', 'my_photo_url')
