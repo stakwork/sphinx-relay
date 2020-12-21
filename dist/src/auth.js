@@ -40,8 +40,6 @@ function unlocker(req, res) {
                 res_1.failure(res, 'no macaroon');
                 return false;
             }
-            console.log("PWD", password, typeof password);
-            console.log("ENCMAC", encMac, typeof encMac);
             const decMac = decryptMacaroon(password, encMac);
             if (!decMac) {
                 res_1.failure(res, 'failed to decrypt macaroon');

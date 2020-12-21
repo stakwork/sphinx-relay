@@ -6,6 +6,7 @@ const config = config_1.loadConfig();
 let inMemoryMacaroon = ''; // hex encoded
 function getMacaroon(macName) {
     if (config.unlock) {
+        console.log('=> getMacaroon: inMemoryMacaroon', inMemoryMacaroon);
         return inMemoryMacaroon;
     }
     else {
@@ -19,6 +20,7 @@ function getMacaroon(macName) {
 }
 exports.getMacaroon = getMacaroon;
 function setInMemoryMacaroon(mac) {
+    console.log('=> setInMemoryMacaroon', mac);
     inMemoryMacaroon = mac;
 }
 exports.setInMemoryMacaroon = setInMemoryMacaroon;

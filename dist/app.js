@@ -30,7 +30,8 @@ const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
 console.log("=> env:", env);
 // console.log('=> config: ',config)
-process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
+process.env.GRPC_SSL_CIPHER_SUITES = 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384';
+process.env.NODE_EXTRA_CA_CERTS = config.tls_location;
 // START SETUP!
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
