@@ -54,6 +54,7 @@ function unlocker(req, res) {
         if (hexMac) {
             macaroon_1.setInMemoryMacaroon(hexMac);
             res_1.success(res, 'success!');
+            yield sleep(100);
             return true;
         }
         else {
@@ -132,4 +133,9 @@ function base64ToHex(str) {
 }
 exports.base64ToHex = base64ToHex;
 const atob = a => Buffer.from(a, 'base64').toString('binary');
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    });
+}
 //# sourceMappingURL=auth.js.map

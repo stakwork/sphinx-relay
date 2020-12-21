@@ -52,6 +52,7 @@ export async function unlocker(req, res): Promise<boolean> {
   if (hexMac) {
     setInMemoryMacaroon(hexMac)
     success(res, 'success!')
+    await sleep(100)
     return true
   } else {
     failure(res, 'failed to set macaroon in memory')
@@ -129,3 +130,7 @@ export function base64ToHex(str) {
 }
 
 const atob = a => Buffer.from(a, 'base64').toString('binary')
+
+async function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
