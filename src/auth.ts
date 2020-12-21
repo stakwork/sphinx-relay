@@ -35,12 +35,15 @@ export async function unlocker(req, res): Promise<boolean> {
       failure(res, 'no macaroon')
       return false
     }
+    console.log('=> encMac',encMac)
 
     const decMac = decryptMacaroon(password, encMac)
     if (!decMac) {
       failure(res, 'failed to decrypt macaroon')
       return false
     }
+
+    console.log('=> decMac',decMac)
 
     hexMac = base64ToHex(decMac)
 

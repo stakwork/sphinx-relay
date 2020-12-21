@@ -40,11 +40,13 @@ function unlocker(req, res) {
                 res_1.failure(res, 'no macaroon');
                 return false;
             }
+            console.log('=> encMac', encMac);
             const decMac = decryptMacaroon(password, encMac);
             if (!decMac) {
                 res_1.failure(res, 'failed to decrypt macaroon');
                 return false;
             }
+            console.log('=> decMac', decMac);
             hexMac = base64ToHex(decMac);
         }
         catch (e) {
