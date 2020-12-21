@@ -40,11 +40,14 @@ function unlocker(req, res) {
                 res_1.failure(res, 'no macaroon');
                 return false;
             }
-            console.log("PWD", password, typeof password);
-            console.log("ENCMAC", encMac, typeof encMac);
             const decMac = decryptMacaroon(password, encMac);
             if (!decMac) {
                 res_1.failure(res, 'failed to decrypt macaroon');
+                return false;
+            }
+            const isBase64 = b64regex.test(decMac);
+            if (!isBase64) {
+                res_1.failure(res, 'failed to decode macaroon');
                 return false;
             }
             hexMac = base64ToHex(decMac);
@@ -56,6 +59,7 @@ function unlocker(req, res) {
         if (hexMac) {
             macaroon_1.setInMemoryMacaroon(hexMac);
             res_1.success(res, 'success!');
+            yield sleep(100);
             return true;
         }
         else {
@@ -82,11 +86,8 @@ function authModule(req, res, next) {
             return;
         }
         if (process.env.HOSTING_PROVIDER === 'true') {
-            // const domain = process.env.INVITE_SERVER
-            const host = req.headers.origin;
-            console.log('=> host:', host);
-            const referer = req.headers.referer;
-            console.log('=> referer:', referer);
+            // const host = req.headers.origin
+            // const referer = req.headers.referer
             if (req.path === '/invoices') {
                 next();
                 return;
@@ -134,4 +135,10 @@ function base64ToHex(str) {
 }
 exports.base64ToHex = base64ToHex;
 const atob = a => Buffer.from(a, 'base64').toString('binary');
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    });
+}
+const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
 //# sourceMappingURL=auth.js.map

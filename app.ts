@@ -29,7 +29,8 @@ process.env.NODE_EXTRA_CA_CERTS = config.tls_location;
 async function start() {
 	await setupDatabase()
 	mainSetup()
-	if (config.hub_api_url) {
+	// // IF NOT UNLOCK, go ahead and start this now
+	if (config.hub_api_url && !config.unlock) {
 		pingHubInterval(15000)
 	}
 }
@@ -48,6 +49,9 @@ async function finishSetup() {
 	await network.initTribesSubscriptions()
 	if (config.hub_api_url) {
 		checkInvitesHubInterval(5000)
+	}
+	if (config.unlock) { // IF UNLOCK, start this only after unlocked!
+		pingHubInterval(15000)
 	}
 	setupDone()
 }

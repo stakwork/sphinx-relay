@@ -30,13 +30,15 @@ const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
 console.log("=> env:", env);
 // console.log('=> config: ',config)
-process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
+process.env.GRPC_SSL_CIPHER_SUITES = 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384';
+process.env.NODE_EXTRA_CA_CERTS = config.tls_location;
 // START SETUP!
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setup_1.setupDatabase();
         mainSetup();
-        if (config.hub_api_url) {
+        // // IF NOT UNLOCK, go ahead and start this now
+        if (config.hub_api_url && !config.unlock) {
             hub_1.pingHubInterval(15000);
         }
     });
@@ -57,6 +59,9 @@ function finishSetup() {
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             hub_1.checkInvitesHubInterval(5000);
+        }
+        if (config.unlock) { // IF UNLOCK, start this only after unlocked!
+            hub_1.pingHubInterval(15000);
         }
         setup_1.setupDone();
     });

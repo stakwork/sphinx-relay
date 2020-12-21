@@ -42,6 +42,12 @@ export async function unlocker(req, res): Promise<boolean> {
       return false
     }
 
+    const isBase64 = b64regex.test(decMac)
+    if(!isBase64) {
+      failure(res, 'failed to decode macaroon')
+      return false
+    }
+
     hexMac = base64ToHex(decMac)
 
   } catch (e) {
@@ -52,6 +58,7 @@ export async function unlocker(req, res): Promise<boolean> {
   if (hexMac) {
     setInMemoryMacaroon(hexMac)
     success(res, 'success!')
+    await sleep(100)
     return true
   } else {
     failure(res, 'failed to set macaroon in memory')
@@ -78,11 +85,8 @@ export async function authModule(req, res, next) {
   }
 
   if (process.env.HOSTING_PROVIDER === 'true') {
-    // const domain = process.env.INVITE_SERVER
-    const host = req.headers.origin
-    console.log('=> host:', host)
-    const referer = req.headers.referer
-    console.log('=> referer:', referer)
+    // const host = req.headers.origin
+    // const referer = req.headers.referer
     if (req.path === '/invoices') {
       next()
       return
@@ -129,3 +133,9 @@ export function base64ToHex(str) {
 }
 
 const atob = a => Buffer.from(a, 'base64').toString('binary')
+
+async function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/
