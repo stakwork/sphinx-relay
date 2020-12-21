@@ -20,29 +20,39 @@ const jsonUtils = require("../utils/json");
 const sequelize_1 = require("sequelize");
 let queries = {};
 const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f';
+function getPendingAccountings() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const utxos = yield wallet_1.listUnspent(); // at least 1 confg
+        const accountings = yield models_1.models.Accounting.findAll({
+            where: {
+                onchain_address: {
+                    [sequelize_1.Op.in]: utxos.map(utxo => utxo.address)
+                },
+                status: constants_1.default.statuses.pending
+            }
+        });
+        const ret = [];
+        accountings.forEach(a => {
+            const utxo = utxos.find(u => u.address === a.onchainAddress);
+            if (utxo) {
+                ret.push({
+                    id: a.id,
+                    pubkey: a.pubkey,
+                    address: utxo.address,
+                    amount: utxo.amount_sat,
+                    confirmations: utxo.confirmations,
+                    sourceApp: a.sourceApp,
+                    date: a.sourceApp,
+                });
+            }
+        });
+        return ret;
+    });
+}
 function listUTXOs(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const utxos = yield wallet_1.listUnspent(); // at least 1 confg
-            const addys = utxos.map(utxo => utxo.address);
-            const accountings = yield models_1.models.Accounting.findAll({
-                where: {
-                    onchain_address: {
-                        [sequelize_1.Op.in]: addys
-                    },
-                    status: constants_1.default.statuses.pending
-                }
-            });
-            const ret = [];
-            accountings.forEach(a => {
-                const acc = Object.assign({}, a.dataValues);
-                const utxo = utxos.find(u => u.address === a.onchainAddress);
-                if (utxo) {
-                    acc.amount = utxo.amount_sat;
-                    acc.confirmations = utxo.confirmations;
-                    ret.push(acc);
-                }
-            });
+            const ret = yield getPendingAccountings();
             res_1.success(res, ret.map(acc => jsonUtils.accountingToJson(acc)));
         }
         catch (e) {
@@ -51,6 +61,23 @@ function listUTXOs(req, res) {
     });
 }
 exports.listUTXOs = listUTXOs;
+// function genChannel(acc: Accounting) {
+// }
+function pollUTXOs() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const accs = yield getPendingAccountings();
+        if (!accs)
+            return;
+        accs.forEach(acc => {
+            if (acc.confirmations < 1)
+                return;
+        });
+    });
+}
+function startWatchingUTXOs() {
+    setInterval(pollUTXOs, 600000); // every 10 minutes
+}
+exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> queryOnchainAddress');

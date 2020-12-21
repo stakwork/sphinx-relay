@@ -20,35 +20,69 @@ let queries: { [k: string]: Query } = {}
 
 const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
 
+interface Accounting {
+  id: number
+  pubkey: string
+  address: string
+  amount: number
+  confirmations: number
+  sourceApp: string
+  date: string
+}
+
+async function getPendingAccountings():Promise<Accounting[]> {
+  const utxos: UTXO[] = await listUnspent() // at least 1 confg
+  const accountings = await models.Accounting.findAll({
+    where: {
+      onchain_address: {
+        [Op.in]: utxos.map(utxo => utxo.address)
+      },
+      status: constants.statuses.pending
+    }
+  })
+
+  const ret: Accounting[] = []
+  accountings.forEach(a => {
+    const utxo = utxos.find(u => u.address === a.onchainAddress)
+    if (utxo) {
+      ret.push(<Accounting>{
+        id: a.id,
+        pubkey: a.pubkey,
+        address: utxo.address,
+        amount: utxo.amount_sat,
+        confirmations: utxo.confirmations,
+        sourceApp: a.sourceApp,
+        date: a.sourceApp,
+      })
+    }
+  })
+  return ret
+}
+
 export async function listUTXOs(req, res) {
   try {
-    const utxos: UTXO[] = await listUnspent() // at least 1 confg
-    const addys = utxos.map(utxo => utxo.address)
-
-    const accountings = await models.Accounting.findAll({
-      where: {
-        onchain_address: {
-          [Op.in]: addys
-        },
-        status: constants.statuses.pending
-      }
-    })
-
-    const ret: any[] = []
-    accountings.forEach(a => {
-      const acc = { ...a.dataValues }
-      const utxo = utxos.find(u => u.address === a.onchainAddress)
-      if (utxo) {
-        acc.amount = utxo.amount_sat
-        acc.confirmations = utxo.confirmations
-        ret.push(acc)
-      }
-    })
-
+    const ret: Accounting[] = await getPendingAccountings()
     success(res, ret.map(acc => jsonUtils.accountingToJson(acc)))
   } catch (e) {
     failure(res, e)
   }
+}
+
+// function genChannel(acc: Accounting) {
+
+// }
+
+async function pollUTXOs(){
+  const accs: Accounting[] = await getPendingAccountings()
+  if(!accs) return
+  accs.forEach(acc=>{
+    if(acc.confirmations<1) return
+
+  })
+}
+
+export function startWatchingUTXOs() {
+  setInterval(pollUTXOs, 600000) // every 10 minutes
 }
 
 export async function queryOnchainAddress(req, res) {
