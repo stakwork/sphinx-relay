@@ -42,6 +42,7 @@ export async function unlocker(req, res): Promise<boolean> {
       return false
     }
 
+    console.log('=> decMac',decMac)
     hexMac = base64ToHex(decMac)
 
   } catch (e) {
