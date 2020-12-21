@@ -42,6 +42,12 @@ export async function unlocker(req, res): Promise<boolean> {
       return false
     }
 
+    const isBase64 = b64regex.test(decMac)
+    if(!isBase64) {
+      failure(res, 'failed to decode macaroon')
+      return false
+    }
+
     console.log('=> decMac',decMac)
     hexMac = base64ToHex(decMac)
 
@@ -135,3 +141,5 @@ const atob = a => Buffer.from(a, 'base64').toString('binary')
 async function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/
