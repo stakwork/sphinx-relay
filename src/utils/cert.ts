@@ -110,7 +110,7 @@ async function downloadCert(id, apiKey) {
     return res.data
 }
 
-async function getCertificate(endpoint, port, save_ssl) {
+async function getCertificate(domain, port, save_ssl) {
     if (existsSync(__dirname + "/zerossl/tls.cert") && existsSync(__dirname + "/zerossl/tls.key")) {
         var certificate = readFileSync(__dirname + '/zerossl/tls.cert', 'utf-8').toString();
         var caBundle = readFileSync(__dirname + '/zerossl/ca.cert', 'utf-8').toString();
@@ -125,6 +125,8 @@ async function getCertificate(endpoint, port, save_ssl) {
     if (!apiKey) {
         throw new Error("=> [ssl] ZEROSSL_API_KEY is not set")
     }
+    var endpoint_tmp = domain.replace('https://', '')
+    var endpoint = endpoint_tmp.replace(':3001', '')
     var keys = forge.pki.rsa.generateKeyPair(2048)
     var csr = generateCsr(keys, endpoint)
     console.log("=> [ssl] Generated CSR")
