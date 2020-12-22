@@ -160,7 +160,8 @@ async function checkChannelsAndKeysend(rec: Accounting){
       const msg: { [k: string]: any } = {
         type: constants.message_types.keysend,
       }
-      const amount = rec.amount - (chan.local_chan_reserve_sat||0) - (chan.commit_fee||0)
+      const amount = rec.amount - parseInt(chan.local_chan_reserve_sat||0) - parseInt(chan.commit_fee||0)
+      console.log('[WATCH] amt to final keysend', amount)
       helpers.performKeysendMessage({
         sender: owner,
         destination_key: rec.pubkey,
