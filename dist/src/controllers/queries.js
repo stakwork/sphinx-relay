@@ -20,7 +20,8 @@ const jsonUtils = require("../utils/json");
 const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
 let queries = {};
-const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f';
+// const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
+const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b';
 function getPendingAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
         const utxos = yield wallet_1.listUnspent(); // at least 1 confg
