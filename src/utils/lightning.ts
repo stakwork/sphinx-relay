@@ -465,9 +465,13 @@ export interface OpenChannelArgs {
   sat_per_byte: number // 75?
 }
 export async function openChannel(args: OpenChannelArgs): Promise<{ [k: string]: any }> {
+  const opts = args||{}
+  if(args && args.node_pubkey) {
+    opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey)
+  }
   return new Promise((resolve, reject) => {
     const lightning = loadLightning()
-    lightning.openChannelSync(args, function (err, response) {
+    lightning.openChannelSync(opts, function (err, response) {
       if (err == null) {
         resolve(response)
       } else {

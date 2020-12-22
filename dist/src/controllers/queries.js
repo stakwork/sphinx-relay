@@ -147,7 +147,7 @@ function checkForConfirmedChannels() {
                 return; // this shouldnt happen
             if (!rec.fundingTxid)
                 return;
-            checkChannelsAndKeysend(rec);
+            yield checkChannelsAndKeysend(rec);
         }));
     });
 }
@@ -174,6 +174,7 @@ function checkChannelsAndKeysend(rec) {
                         console.log('[WATCH] complete! Updating accounting, id:', rec.id);
                         models_1.models.Accounting.update({
                             status: constants_1.default.statuses.confirmed,
+                            chanId: chan.chan_id
                         }, {
                             where: { id: rec.id }
                         });

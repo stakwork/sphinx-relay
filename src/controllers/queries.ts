@@ -141,7 +141,7 @@ async function checkForConfirmedChannels(){
     if (rec.amount <= 0) return // needs amount
     if (!rec.pubkey) return // this shouldnt happen
     if (!rec.fundingTxid) return
-    checkChannelsAndKeysend(rec)
+    await checkChannelsAndKeysend(rec)
   })
 }
 
@@ -167,6 +167,7 @@ async function checkChannelsAndKeysend(rec: Accounting){
           console.log('[WATCH] complete! Updating accounting, id:', rec.id)
           models.Accounting.update({
             status: constants.statuses.confirmed,
+            chanId: chan.chan_id
           }, {
             where: { id: rec.id }
           })

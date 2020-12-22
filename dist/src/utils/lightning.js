@@ -509,9 +509,13 @@ function listChannels(args) {
 exports.listChannels = listChannels;
 function openChannel(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const opts = args || {};
+        if (args && args.node_pubkey) {
+            opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey);
+        }
         return new Promise((resolve, reject) => {
             const lightning = loadLightning();
-            lightning.openChannelSync(args, function (err, response) {
+            lightning.openChannelSync(opts, function (err, response) {
                 if (err == null) {
                     resolve(response);
                 }
