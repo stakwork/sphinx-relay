@@ -167,11 +167,11 @@ function checkChannelsAndKeysend(rec) {
                 const msg = {
                     type: constants_1.default.message_types.keysend,
                 };
+                const amount = rec.amount - (chan.local_chan_reserve_sat || 0) - (chan.commit_fee || 0);
                 helpers.performKeysendMessage({
                     sender: owner,
                     destination_key: rec.pubkey,
-                    amount: rec.amount,
-                    msg,
+                    amount, msg,
                     success: function () {
                         console.log('[WATCH] complete! Updating accounting, id:', rec.id);
                         models_1.models.Accounting.update({
