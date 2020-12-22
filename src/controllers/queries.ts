@@ -95,13 +95,13 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
     console.log("[WATCH]=> CHANNEL OPENED!", r)
     await models.Accounting.update({
       status: constants.statuses.confirmed,
-      fudingTxid: r.funding_txid_str
-    },{
-      where: {id: acc.id}
+      fundingTxid: r.funding_txid_str
+    }, {
+      where: { id: acc.id }
     })
     console.log("[WATCH]=> ACCOUNTINGS UPDATED!")
   } catch (e) {
-    console.log('[ACCOUNTING] error creating channel',e)
+    console.log('[ACCOUNTING] error creating channel', e)
   }
 }
 
@@ -110,7 +110,7 @@ async function pollUTXOs() {
   const accs: Accounting[] = await getPendingAccountings()
   if (!accs) return
   console.log("[WATCH]=> accs", accs.length)
-  asyncForEach(accs, async (acc:Accounting)=>{
+  asyncForEach(accs, async (acc: Accounting) => {
     if (acc.confirmations <= 0) return // needs confs
     if (acc.amount <= 0) return // needs amount
     if (!acc.pubkey) return // this shouldnt happen
@@ -242,7 +242,7 @@ export const receiveQueryResponse = async (payload) => {
 }
 
 async function asyncForEach(array, callback) {
-	for (let index = 0; index < array.length; index++) {
-		await callback(array[index], index, array);
-	}
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
 }

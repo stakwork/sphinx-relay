@@ -91,7 +91,7 @@ function genChannelAndConfirmAccounting(acc) {
             console.log("[WATCH]=> CHANNEL OPENED!", r);
             yield models_1.models.Accounting.update({
                 status: constants_1.default.statuses.confirmed,
-                fudingTxid: r.funding_txid_str
+                fundingTxid: r.funding_txid_str
             }, {
                 where: { id: acc.id }
             });
