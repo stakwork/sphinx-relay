@@ -80,7 +80,7 @@ function getSuggestedSatPerByte() {
         try {
             const r = yield node_fetch_1.default('https://mempool.space/api/v1/fees/recommended');
             const j = yield r.json();
-            return Math.min(MAX_AMT, j.hourFee);
+            return Math.min(MAX_AMT, j.halfHourFee);
         }
         catch (e) {
             return MAX_AMT;
@@ -158,12 +158,12 @@ function checkChannelsAndKeysend(rec) {
             active_only: true,
             peer: rec.pubkey
         });
-        console.log('[WATCH] found active channel for pubkey:', rec.pubkey, chans);
+        console.log('[WATCH] chans for pubkey:', rec.pubkey, chans);
         if (!(chans && chans.channels))
             return;
         chans.channels.forEach(chan => {
             if (chan.channel_point.includes(rec.fundingTxid)) {
-                console.log('[WATCH] found channel to keysend:', chan);
+                console.log('[WATCH] found channel to keysend!', chan);
                 const msg = {
                     type: constants_1.default.message_types.keysend,
                 };

@@ -86,7 +86,7 @@ async function getSuggestedSatPerByte(): Promise<number> {
   try {
     const r = await fetch('https://mempool.space/api/v1/fees/recommended')
     const j = await r.json()
-    return Math.min(MAX_AMT, j.hourFee)
+    return Math.min(MAX_AMT, j.halfHourFee)
   } catch (e) {
     return MAX_AMT
   }
@@ -152,11 +152,11 @@ async function checkChannelsAndKeysend(rec: Accounting){
     active_only:true,
     peer: rec.pubkey
   })
-  console.log('[WATCH] found active channel for pubkey:', rec.pubkey, chans)
+  console.log('[WATCH] chans for pubkey:', rec.pubkey, chans)
   if(!(chans && chans.channels)) return
   chans.channels.forEach(chan=>{ // find by txid
     if(chan.channel_point.includes(rec.fundingTxid)) {
-      console.log('[WATCH] found channel to keysend:', chan)
+      console.log('[WATCH] found channel to keysend!', chan)
       const msg: { [k: string]: any } = {
         type: constants.message_types.keysend,
       }
