@@ -105,9 +105,11 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
       sat_per_byte
     })
     console.log("[WATCH]=> CHANNEL OPENED!", r)
+    const fundingTxidRev = Buffer.from(r.funding_txid_bytes).toString('hex')
+    const fundingTxid = (fundingTxidRev.match(/.{2}/g) as any).reverse().join("")
     await models.Accounting.update({
       status: constants.statuses.received,
-      fundingTxid: r.funding_txid_str,
+      fundingTxid: fundingTxid,
       amount: acc.amount
     }, {
       where: { id: acc.id }
@@ -137,7 +139,6 @@ async function checkForConfirmedChannels(){
   const received = await getReceivedAccountings()
   console.log('[WATCH] received accountings:', received)
   await asyncForEach(received, async (rec: Accounting) => {
-    if (rec.confirmations <= 0) return // needs confs
     if (rec.amount <= 0) return // needs amount
     if (!rec.pubkey) return // this shouldnt happen
     if (!rec.fundingTxid) return
@@ -147,12 +148,13 @@ async function checkForConfirmedChannels(){
 
 async function checkChannelsAndKeysend(rec: Accounting){
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
-  const channels = await lightning.listChannels({
+  const chans = await lightning.listChannels({
     active_only:true,
     peer: rec.pubkey
   })
-  console.log('[WATCH] found active channel for pubkey:', rec.pubkey, channels)
-  channels.forEach(chan=>{ // find by txid
+  console.log('[WATCH] found active channel for pubkey:', rec.pubkey, chans)
+  if(!(chans && chans.channels)) return
+  chans.channels.forEach(chan=>{ // find by txid
     if(chan.channel_point.includes(rec.fundingTxid)) {
       console.log('[WATCH] found channel to keysend:', chan)
       const msg: { [k: string]: any } = {
