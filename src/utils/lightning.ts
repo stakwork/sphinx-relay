@@ -436,10 +436,19 @@ async function getInfo(): Promise<{ [k: string]: any }> {
   })
 }
 
-async function listChannels(): Promise<{ [k: string]: any }> {
+interface ListChannelsArgs {
+  active_only?: boolean
+  inactive_only?: boolean
+  peer?: string // HEX!
+}
+async function listChannels(args?:ListChannelsArgs): Promise<{ [k: string]: any }> {
+  const opts:{[k:string]:any} = args || {}
+  if(args && args.peer) {
+    opts.peer = ByteBuffer.fromHex(args.peer)
+  }
   return new Promise((resolve, reject) => {
     const lightning = loadLightning()
-    lightning.listChannels({}, function (err, response) {
+    lightning.listChannels(opts, function (err, response) {
       if (err == null) {
         resolve(response)
       } else {

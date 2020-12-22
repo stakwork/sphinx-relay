@@ -8,6 +8,7 @@ import { listUnspent, UTXO } from '../utils/wallet'
 import * as jsonUtils from '../utils/json'
 import { Op } from 'sequelize'
 import fetch from 'node-fetch'
+import * as helpers from '../helpers'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -25,15 +26,25 @@ const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c
 interface Accounting {
   id: number
   pubkey: string
-  address: string
+  onchainAddress: string
   amount: number
   confirmations: number
   sourceApp: string
   date: string
+  fundingTxid: string
+}
+
+async function getReceivedAccountings(): Promise<Accounting[]> {
+  const accountings = await models.Accounting.findAll({
+    where: {
+      status: constants.statuses.received
+    }
+  })
+  return accountings.map(a => (a.dataValues || a))
 }
 
 async function getPendingAccountings(): Promise<Accounting[]> {
-  const utxos: UTXO[] = await listUnspent() // at least 1 confg
+  const utxos: UTXO[] = await listUnspent() 
   const accountings = await models.Accounting.findAll({
     where: {
       onchain_address: {
@@ -50,11 +61,11 @@ async function getPendingAccountings(): Promise<Accounting[]> {
       ret.push(<Accounting>{
         id: a.id,
         pubkey: a.pubkey,
-        address: utxo.address,
+        onchainAddress: utxo.address,
         amount: utxo.amount_sat,
         confirmations: utxo.confirmations,
         sourceApp: a.sourceApp,
-        date: a.sourceApp,
+        date: a.date,
       })
     }
   })
@@ -95,12 +106,13 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
     })
     console.log("[WATCH]=> CHANNEL OPENED!", r)
     await models.Accounting.update({
-      status: constants.statuses.confirmed,
-      fundingTxid: r.funding_txid_str
+      status: constants.statuses.received,
+      fundingTxid: r.funding_txid_str,
+      amount: acc.amount
     }, {
       where: { id: acc.id }
     })
-    console.log("[WATCH]=> ACCOUNTINGS UPDATED!")
+    console.log("[WATCH]=> ACCOUNTINGS UPDATED to received!", acc.id)
   } catch (e) {
     console.log('[ACCOUNTING] error creating channel', e)
   }
@@ -111,11 +123,59 @@ async function pollUTXOs() {
   const accs: Accounting[] = await getPendingAccountings()
   if (!accs) return
   console.log("[WATCH]=> accs", accs.length)
-  asyncForEach(accs, async (acc: Accounting) => {
+  await asyncForEach(accs, async (acc: Accounting) => {
     if (acc.confirmations <= 0) return // needs confs
     if (acc.amount <= 0) return // needs amount
     if (!acc.pubkey) return // this shouldnt happen
     await genChannelAndConfirmAccounting(acc)
+  })
+
+  await checkForConfirmedChannels()
+}
+
+async function checkForConfirmedChannels(){
+  const received = await getReceivedAccountings()
+  console.log('[WATCH] received accountings:', received)
+  await asyncForEach(received, async (rec: Accounting) => {
+    if (rec.confirmations <= 0) return // needs confs
+    if (rec.amount <= 0) return // needs amount
+    if (!rec.pubkey) return // this shouldnt happen
+    if (!rec.fundingTxid) return
+    checkChannelsAndKeysend(rec)
+  })
+}
+
+async function checkChannelsAndKeysend(rec: Accounting){
+  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const channels = await lightning.listChannels({
+    active_only:true,
+    peer: rec.pubkey
+  })
+  console.log('[WATCH] found active channel for pubkey:', rec.pubkey, channels)
+  channels.forEach(chan=>{ // find by txid
+    if(chan.channel_point.includes(rec.fundingTxid)) {
+      console.log('[WATCH] found channel to keysend:', chan)
+      const msg: { [k: string]: any } = {
+        type: constants.message_types.keysend,
+      }
+      helpers.performKeysendMessage({
+        sender: owner,
+        destination_key: rec.pubkey,
+        amount: rec.amount,
+        msg,
+        success: function(){
+          console.log('[WATCH] complete! Updating accounting, id:', rec.id)
+          models.Accounting.update({
+            status: constants.statuses.confirmed,
+          }, {
+            where: { id: rec.id }
+          })
+        },
+        failure: function(){
+          console.log('[WATCH] failed final keysend')
+        }
+      })
+    }
   })
 }
 

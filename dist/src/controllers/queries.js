@@ -19,12 +19,23 @@ const wallet_1 = require("../utils/wallet");
 const jsonUtils = require("../utils/json");
 const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
+const helpers = require("../helpers");
 let queries = {};
 // const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
 const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b';
+function getReceivedAccountings() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const accountings = yield models_1.models.Accounting.findAll({
+            where: {
+                status: constants_1.default.statuses.received
+            }
+        });
+        return accountings.map(a => (a.dataValues || a));
+    });
+}
 function getPendingAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
-        const utxos = yield wallet_1.listUnspent(); // at least 1 confg
+        const utxos = yield wallet_1.listUnspent();
         const accountings = yield models_1.models.Accounting.findAll({
             where: {
                 onchain_address: {
@@ -40,11 +51,11 @@ function getPendingAccountings() {
                 ret.push({
                     id: a.id,
                     pubkey: a.pubkey,
-                    address: utxo.address,
+                    onchainAddress: utxo.address,
                     amount: utxo.amount_sat,
                     confirmations: utxo.confirmations,
                     sourceApp: a.sourceApp,
-                    date: a.sourceApp,
+                    date: a.date,
                 });
             }
         });
@@ -91,12 +102,13 @@ function genChannelAndConfirmAccounting(acc) {
             });
             console.log("[WATCH]=> CHANNEL OPENED!", r);
             yield models_1.models.Accounting.update({
-                status: constants_1.default.statuses.confirmed,
-                fundingTxid: r.funding_txid_str
+                status: constants_1.default.statuses.received,
+                fundingTxid: r.funding_txid_str,
+                amount: acc.amount
             }, {
                 where: { id: acc.id }
             });
-            console.log("[WATCH]=> ACCOUNTINGS UPDATED!");
+            console.log("[WATCH]=> ACCOUNTINGS UPDATED to received!", acc.id);
         }
         catch (e) {
             console.log('[ACCOUNTING] error creating channel', e);
@@ -110,7 +122,7 @@ function pollUTXOs() {
         if (!accs)
             return;
         console.log("[WATCH]=> accs", accs.length);
-        asyncForEach(accs, (acc) => __awaiter(this, void 0, void 0, function* () {
+        yield asyncForEach(accs, (acc) => __awaiter(this, void 0, void 0, function* () {
             if (acc.confirmations <= 0)
                 return; // needs confs
             if (acc.amount <= 0)
@@ -119,6 +131,59 @@ function pollUTXOs() {
                 return; // this shouldnt happen
             yield genChannelAndConfirmAccounting(acc);
         }));
+        yield checkForConfirmedChannels();
+    });
+}
+function checkForConfirmedChannels() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const received = yield getReceivedAccountings();
+        console.log('[WATCH] received accountings:', received);
+        yield asyncForEach(received, (rec) => __awaiter(this, void 0, void 0, function* () {
+            if (rec.confirmations <= 0)
+                return; // needs confs
+            if (rec.amount <= 0)
+                return; // needs amount
+            if (!rec.pubkey)
+                return; // this shouldnt happen
+            if (!rec.fundingTxid)
+                return;
+            checkChannelsAndKeysend(rec);
+        }));
+    });
+}
+function checkChannelsAndKeysend(rec) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const channels = yield lightning.listChannels({
+            active_only: true,
+            peer: rec.pubkey
+        });
+        console.log('[WATCH] found active channel for pubkey:', rec.pubkey, channels);
+        channels.forEach(chan => {
+            if (chan.channel_point.includes(rec.fundingTxid)) {
+                console.log('[WATCH] found channel to keysend:', chan);
+                const msg = {
+                    type: constants_1.default.message_types.keysend,
+                };
+                helpers.performKeysendMessage({
+                    sender: owner,
+                    destination_key: rec.pubkey,
+                    amount: rec.amount,
+                    msg,
+                    success: function () {
+                        console.log('[WATCH] complete! Updating accounting, id:', rec.id);
+                        models_1.models.Accounting.update({
+                            status: constants_1.default.statuses.confirmed,
+                        }, {
+                            where: { id: rec.id }
+                        });
+                    },
+                    failure: function () {
+                        console.log('[WATCH] failed final keysend');
+                    }
+                });
+            }
+        });
     });
 }
 function startWatchingUTXOs() {
