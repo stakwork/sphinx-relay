@@ -82,6 +82,7 @@ async function getSuggestedSatPerByte(): Promise<number> {
 
 // https://mempool.space/api/v1/fees/recommended
 async function genChannelAndConfirmAccounting(acc: Accounting) {
+  console.log("[WATCH]=> genChannelAndConfirmAccounting")
   const sat_per_byte = await getSuggestedSatPerByte()
   console.log("[WATCH]=> sat_per_byte", sat_per_byte)
   try {
@@ -109,8 +110,10 @@ async function pollUTXOs() {
   const accs: Accounting[] = await getPendingAccountings()
   if (!accs) return
   console.log("[WATCH]=> accs", accs.length)
-  asyncForEach(accs, async acc=>{
-    if (acc.confirmations < 1) return
+  asyncForEach(accs, async (acc:Accounting)=>{
+    if (acc.confirmations <= 0) return // needs confs
+    if (acc.amount <= 0) return // needs amount
+    if (!acc.pubkey) return // this shouldnt happen
     await genChannelAndConfirmAccounting(acc)
   })
 }

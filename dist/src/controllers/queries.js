@@ -78,6 +78,7 @@ function getSuggestedSatPerByte() {
 // https://mempool.space/api/v1/fees/recommended
 function genChannelAndConfirmAccounting(acc) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("[WATCH]=> genChannelAndConfirmAccounting");
         const sat_per_byte = yield getSuggestedSatPerByte();
         console.log("[WATCH]=> sat_per_byte", sat_per_byte);
         try {
@@ -109,8 +110,12 @@ function pollUTXOs() {
             return;
         console.log("[WATCH]=> accs", accs.length);
         asyncForEach(accs, (acc) => __awaiter(this, void 0, void 0, function* () {
-            if (acc.confirmations < 1)
-                return;
+            if (acc.confirmations <= 0)
+                return; // needs confs
+            if (acc.amount <= 0)
+                return; // needs amount
+            if (!acc.pubkey)
+                return; // this shouldnt happen
             yield genChannelAndConfirmAccounting(acc);
         }));
     });
