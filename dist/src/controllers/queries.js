@@ -167,7 +167,8 @@ function checkChannelsAndKeysend(rec) {
                 const msg = {
                     type: constants_1.default.message_types.keysend,
                 };
-                const amount = rec.amount - parseInt(chan.local_chan_reserve_sat || 0) - parseInt(chan.commit_fee || 0);
+                const MINUS_AMT = 2500;
+                const amount = rec.amount - parseInt(chan.local_chan_reserve_sat || 0) - parseInt(chan.commit_fee || 0) - MINUS_AMT;
                 console.log('[WATCH] amt to final keysend', amount);
                 helpers.performKeysendMessage({
                     sender: owner,
