@@ -130,11 +130,11 @@ function genChannelAndConfirmAccounting(acc) {
 }
 function pollUTXOs() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("[WATCH]=> pollUTXOs");
+        // console.log("[WATCH]=> pollUTXOs")
         const accs = yield getPendingAccountings();
         if (!accs)
             return;
-        console.log("[WATCH]=> accs", accs.length);
+        // console.log("[WATCH]=> accs", accs.length)
         yield asyncForEach(accs, (acc) => __awaiter(this, void 0, void 0, function* () {
             if (acc.confirmations <= 0)
                 return; // needs confs
@@ -150,7 +150,7 @@ function pollUTXOs() {
 function checkForConfirmedChannels() {
     return __awaiter(this, void 0, void 0, function* () {
         const received = yield getReceivedAccountings();
-        console.log('[WATCH] received accountings:', received);
+        // console.log('[WATCH] received accountings:', received)
         yield asyncForEach(received, (rec) => __awaiter(this, void 0, void 0, function* () {
             if (rec.amount <= 0)
                 return; // needs amount

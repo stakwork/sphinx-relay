@@ -136,7 +136,6 @@ export const getMsgs = async (req, res) => {
 		clause.limit = limit 
 		clause.offset = offset
 	}
-	console.log('=> clause:',clause)
 	const messages = await models.Message.findAll(clause)
 	console.log('=> got msgs', (messages && messages.length))
 	const chatIds: number[] = []

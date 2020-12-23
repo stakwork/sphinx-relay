@@ -131,10 +131,10 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
 }
 
 async function pollUTXOs() {
-  console.log("[WATCH]=> pollUTXOs")
+  // console.log("[WATCH]=> pollUTXOs")
   const accs: Accounting[] = await getPendingAccountings()
   if (!accs) return
-  console.log("[WATCH]=> accs", accs.length)
+  // console.log("[WATCH]=> accs", accs.length)
   await asyncForEach(accs, async (acc: Accounting) => {
     if (acc.confirmations <= 0) return // needs confs
     if (acc.amount <= 0) return // needs amount
@@ -147,7 +147,7 @@ async function pollUTXOs() {
 
 async function checkForConfirmedChannels(){
   const received = await getReceivedAccountings()
-  console.log('[WATCH] received accountings:', received)
+  // console.log('[WATCH] received accountings:', received)
   await asyncForEach(received, async (rec: Accounting) => {
     if (rec.amount <= 0) return // needs amount
     if (!rec.pubkey) return // this shouldnt happen
