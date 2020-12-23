@@ -185,7 +185,7 @@ async function checkChannelsAndKeysend(rec: Accounting){
 }
 
 export function startWatchingUTXOs() {
-  setInterval(pollUTXOs, 600000) // every 10 minutes
+  setInterval(pollUTXOs, 60000) // every 10 minutes
 }
 
 export async function queryOnchainAddress(req, res) {

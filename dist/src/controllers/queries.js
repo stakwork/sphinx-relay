@@ -192,7 +192,7 @@ function checkChannelsAndKeysend(rec) {
     });
 }
 function startWatchingUTXOs() {
-    setInterval(pollUTXOs, 600000); // every 10 minutes
+    setInterval(pollUTXOs, 60000); // every 10 minutes
 }
 exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
