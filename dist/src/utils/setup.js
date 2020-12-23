@@ -17,7 +17,9 @@ const gitinfo_1 = require("../utils/gitinfo");
 const fs = require("fs");
 const nodeinfo_1 = require("./nodeinfo");
 const connect_1 = require("./connect");
+const config_1 = require("./config");
 const USER_VERSION = 7;
+const config = config_1.loadConfig();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
@@ -222,7 +224,11 @@ function printQR() {
     });
 }
 function connectionStringFile(str) {
-    fs.writeFile('connection_string.txt', str, function (err) {
+    let connectStringPath = 'connection_string.txt';
+    if ('connection_string_path' in config) {
+        connectStringPath = config.connection_string_path;
+    }
+    fs.writeFile(connectStringPath, str, function (err) {
         if (err)
             console.log('ERROR SAVING connection_string.txt.', err);
     });

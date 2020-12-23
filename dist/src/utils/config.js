@@ -22,6 +22,7 @@ function loadConfig() {
         media_host: ENV.MEDIA_HOST || config.media_host,
         tribes_host: ENV.TRIBES_HOST || config.tribes_host,
         public_url: ENV.PUBLIC_URL || config.public_url,
+        connection_string_path: ENV.CONNECTION_STRING_PATH || config.connection_string_path,
         ssl: {
             enabled: (ENV.SSL_ENABLED || (config.ssl && config.ssl.enabled)) ? true : false,
             save: (ENV.SSL_SAVE || (config.ssl && config.ssl.save)) ? true : false,

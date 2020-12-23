@@ -6,8 +6,10 @@ import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs';
 import { isClean } from './nodeinfo'
 import { getQR } from './connect'
+import { loadConfig } from './config'
 
 const USER_VERSION = 7
+const config = loadConfig()
 
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
@@ -227,7 +229,11 @@ async function printQR() {
 }
 
 function connectionStringFile(str: string) {
-  fs.writeFile('connection_string.txt', str, function (err) {
+  let connectStringPath = 'connection_string.txt'
+  if ('connection_string_path' in config) {
+    connectStringPath = config.connection_string_path
+  }
+  fs.writeFile(connectStringPath, str, function (err) {
     if (err) console.log('ERROR SAVING connection_string.txt.', err);
   });
 }
