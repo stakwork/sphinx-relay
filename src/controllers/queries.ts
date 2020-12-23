@@ -20,8 +20,18 @@ export interface Query {
 
 let queries: { [k: string]: Query } = {}
 
-// const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
-const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b'
+let hub_pubkey = ''
+
+const hub_url = 'https://hub.sphinx.chat/api/v1/'
+async function get_hub_pubkey(){
+  const r = await fetch(hub_url+'/routingnode')
+  const j = await r.json()
+  if(j && j.pubkey) {
+    console.log("=> GOT HUB PUBKEY", j.pubkey)
+    hub_pubkey = j.pubkey
+  }
+}
+get_hub_pubkey()
 
 interface Accounting {
   id: number
@@ -190,6 +200,8 @@ export function startWatchingUTXOs() {
 
 export async function queryOnchainAddress(req, res) {
   console.log('=> queryOnchainAddress')
+  if(!hub_pubkey) return console.log("=> NO ROUTING NODE PUBKEY SET")
+
   const uuid = short.generate()
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
   const app = req.params.app;

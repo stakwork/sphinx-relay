@@ -21,8 +21,19 @@ const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
 const helpers = require("../helpers");
 let queries = {};
-// const hub_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
-const hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b';
+let hub_pubkey = '';
+const hub_url = 'https://hub.sphinx.chat/api/v1/';
+function get_hub_pubkey() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const r = yield node_fetch_1.default(hub_url + '/routingnode');
+        const j = yield r.json();
+        if (j && j.pubkey) {
+            console.log("=> GOT HUB PUBKEY", j.pubkey);
+            hub_pubkey = j.pubkey;
+        }
+    });
+}
+get_hub_pubkey();
 function getReceivedAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
         const accountings = yield models_1.models.Accounting.findAll({
@@ -198,6 +209,8 @@ exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> queryOnchainAddress');
+        if (!hub_pubkey)
+            return console.log("=> NO ROUTING NODE PUBKEY SET");
         const uuid = short.generate();
         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const app = req.params.app;
