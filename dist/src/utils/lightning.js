@@ -487,11 +487,15 @@ function getInfo() {
     });
 }
 exports.getInfo = getInfo;
-function listChannels() {
+function listChannels(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const opts = args || {};
+        if (args && args.peer) {
+            opts.peer = ByteBuffer.fromHex(args.peer);
+        }
         return new Promise((resolve, reject) => {
             const lightning = loadLightning();
-            lightning.listChannels({}, function (err, response) {
+            lightning.listChannels(opts, function (err, response) {
                 if (err == null) {
                     resolve(response);
                 }
@@ -503,6 +507,26 @@ function listChannels() {
     });
 }
 exports.listChannels = listChannels;
+function openChannel(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const opts = args || {};
+        if (args && args.node_pubkey) {
+            opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey);
+        }
+        return new Promise((resolve, reject) => {
+            const lightning = loadLightning();
+            lightning.openChannelSync(opts, function (err, response) {
+                if (err == null) {
+                    resolve(response);
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    });
+}
+exports.openChannel = openChannel;
 function channelBalance() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {

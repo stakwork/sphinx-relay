@@ -436,10 +436,42 @@ async function getInfo(): Promise<{ [k: string]: any }> {
   })
 }
 
-async function listChannels(): Promise<{ [k: string]: any }> {
+interface ListChannelsArgs {
+  active_only?: boolean
+  inactive_only?: boolean
+  peer?: string // HEX!
+}
+async function listChannels(args?:ListChannelsArgs): Promise<{ [k: string]: any }> {
+  const opts:{[k:string]:any} = args || {}
+  if(args && args.peer) {
+    opts.peer = ByteBuffer.fromHex(args.peer)
+  }
   return new Promise((resolve, reject) => {
     const lightning = loadLightning()
-    lightning.listChannels({}, function (err, response) {
+    lightning.listChannels(opts, function (err, response) {
+      if (err == null) {
+        resolve(response)
+      } else {
+        reject(err)
+      }
+    });
+  })
+}
+
+export interface OpenChannelArgs {
+  node_pubkey: any // bytes
+  local_funding_amount: number
+  push_sat: number // 0
+  sat_per_byte: number // 75?
+}
+export async function openChannel(args: OpenChannelArgs): Promise<{ [k: string]: any }> {
+  const opts = args||{}
+  if(args && args.node_pubkey) {
+    opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey)
+  }
+  return new Promise((resolve, reject) => {
+    const lightning = loadLightning()
+    lightning.openChannelSync(opts, function (err, response) {
       if (err == null) {
         resolve(response)
       } else {

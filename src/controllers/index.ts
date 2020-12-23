@@ -32,6 +32,8 @@ export async function set(app) {
 
 	timers.reloadTimers()
 
+	queries.startWatchingUTXOs()
+
 	app.get('/chats', chats.getChats)
 	app.post('/group', chats.createGroupChat)
 	app.put('/chats/:id', chats.updateChat)

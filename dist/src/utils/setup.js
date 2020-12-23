@@ -46,6 +46,7 @@ function setVersion() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_accountings', 'funding_txid');
         addTableColumn('sphinx_chat_members', 'last_alias');
         addTableColumn('sphinx_chats', 'my_photo_url');
         addTableColumn('sphinx_chats', 'my_alias');
