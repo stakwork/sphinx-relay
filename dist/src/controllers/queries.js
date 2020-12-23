@@ -167,8 +167,8 @@ function checkChannelsAndKeysend(rec) {
                 const msg = {
                     type: constants_1.default.message_types.keysend,
                 };
-                const MINUS_AMT = 2500;
-                const amount = rec.amount - parseInt(chan.local_chan_reserve_sat || 0) - parseInt(chan.commit_fee || 0) - MINUS_AMT;
+                const MINUS_AMT = 2000;
+                const amount = rec.amount - parseInt(chan.local_chan_reserve_sat || 0) - parseInt(chan.remote_chan_reserve_sat || 0) - parseInt(chan.commit_fee || 0) - MINUS_AMT;
                 console.log('[WATCH] amt to final keysend', amount);
                 helpers.performKeysendMessage({
                     sender: owner,
@@ -192,7 +192,7 @@ function checkChannelsAndKeysend(rec) {
     });
 }
 function startWatchingUTXOs() {
-    setInterval(pollUTXOs, 60000); // every 10 minutes
+    setInterval(pollUTXOs, 600000); // every 10 minutes
 }
 exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
