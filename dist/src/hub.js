@@ -19,6 +19,13 @@ const nodeinfo_1 = require("./utils/nodeinfo");
 const lightning_1 = require("./utils/lightning");
 const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
+const https = require("https");
+const pingAgent = new https.Agent({
+    keepAlive: true
+});
+const checkInvitesAgent = new https.Agent({
+    keepAlive: true
+});
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
@@ -32,6 +39,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
         return; // skip if no invites
     }
     node_fetch_1.default(config.hub_api_url + '/invites/check', {
+        agent: checkInvitesAgent,
         method: 'POST',
         body: JSON.stringify({ invite_strings: inviteStrings }),
         headers: { 'Content-Type': 'application/json' }
@@ -86,17 +94,25 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
     const node = yield nodeinfo_1.nodeinfo();
     sendHubCall(Object.assign(Object.assign({}, params), { node }));
 });
-const sendHubCall = (params) => {
-    // console.log('[hub] sending ping')
-    node_fetch_1.default(config.hub_api_url + '/ping', {
-        method: 'POST',
-        body: JSON.stringify(params),
-        headers: { 'Content-Type': 'application/json' }
-    })
-        .catch(error => {
-        console.log('[hub warning]: cannot reach hub');
+function sendHubCall(params) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield node_fetch_1.default(config.hub_api_url + '/ping', {
+                agent: pingAgent,
+                method: 'POST',
+                body: JSON.stringify(params),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const j = yield r.json();
+            if (!(j && j.status && j.status === 'ok')) {
+                console.log('[hub] ping returned not ok');
+            }
+        }
+        catch (e) {
+            console.log('[hub warning]: cannot reach hub', e);
+        }
     });
-};
+}
 exports.sendHubCall = sendHubCall;
 const pingHubInterval = (ms) => {
     setInterval(pingHub, ms);

@@ -8,6 +8,14 @@ import { nodeinfo } from './utils/nodeinfo'
 import { loadLightning } from './utils/lightning'
 import constants from './constants'
 import {loadConfig} from './utils/config'
+import * as https from 'https'
+
+const pingAgent = new https.Agent({ 
+	keepAlive: true 
+})
+const checkInvitesAgent = new https.Agent({ 
+	keepAlive: true 
+})
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -26,60 +34,61 @@ const checkInviteHub = async (params = {}) => {
   }
 
   fetch(config.hub_api_url + '/invites/check', {
+    agent: checkInvitesAgent,
     method: 'POST',
     body: JSON.stringify({ invite_strings: inviteStrings }),
     headers: { 'Content-Type': 'application/json' }
   })
-    .then(res => res.json())
-    .then(json => {
-      if (json.object) {
-        json.object.invites.map(async object => {
-          const invite = object.invite
-          const pubkey = object.pubkey
-          const price = object.price
+  .then(res => res.json())
+  .then(json => {
+    if (json.object) {
+      json.object.invites.map(async object => {
+        const invite = object.invite
+        const pubkey = object.pubkey
+        const price = object.price
 
-          const dbInvite = await models.Invite.findOne({ where: { inviteString: invite.pin } })
-          const contact = await models.Contact.findOne({ where: { id: dbInvite.contactId } })
+        const dbInvite = await models.Invite.findOne({ where: { inviteString: invite.pin } })
+        const contact = await models.Contact.findOne({ where: { id: dbInvite.contactId } })
 
-          if (dbInvite.status != invite.invite_status) {
-            const updateObj: { [k: string]: any } = { status: invite.invite_status, price: price }
-            if (invite.invoice) updateObj.invoice = invite.invoice
+        if (dbInvite.status != invite.invite_status) {
+          const updateObj: { [k: string]: any } = { status: invite.invite_status, price: price }
+          if (invite.invoice) updateObj.invoice = invite.invoice
 
-            dbInvite.update(updateObj)
+          dbInvite.update(updateObj)
 
-            socket.sendJson({
-              type: 'invite',
-              response: jsonUtils.inviteToJson(dbInvite)
-            })
+          socket.sendJson({
+            type: 'invite',
+            response: jsonUtils.inviteToJson(dbInvite)
+          })
 
-            if (dbInvite.status == constants.invite_statuses.ready && contact) {
-              sendNotification(-1, contact.alias, 'invite')
-            }
+          if (dbInvite.status == constants.invite_statuses.ready && contact) {
+            sendNotification(-1, contact.alias, 'invite')
           }
+        }
 
-          if (pubkey && dbInvite.status == constants.invite_statuses.complete && contact) {
-            contact.update({ publicKey: pubkey, status: constants.contact_statuses.confirmed })
+        if (pubkey && dbInvite.status == constants.invite_statuses.complete && contact) {
+          contact.update({ publicKey: pubkey, status: constants.contact_statuses.confirmed })
 
-            var contactJson = jsonUtils.contactToJson(contact)
-            contactJson.invite = jsonUtils.inviteToJson(dbInvite)
+          var contactJson = jsonUtils.contactToJson(contact)
+          contactJson.invite = jsonUtils.inviteToJson(dbInvite)
 
-            socket.sendJson({
-              type: 'contact',
-              response: contactJson
-            })
+          socket.sendJson({
+            type: 'contact',
+            response: contactJson
+          })
 
-            helpers.sendContactKeys({
-              contactIds: [contact.id],
-              sender: owner,
-              type: constants.message_types.contact_key,
-            })
-          }
-        })
-      }
-    })
-    .catch(error => {
-      console.log('[hub error]', error)
-    })
+          helpers.sendContactKeys({
+            contactIds: [contact.id],
+            sender: owner,
+            type: constants.message_types.contact_key,
+          })
+        }
+      })
+    }
+  })
+  .catch(error => {
+    console.log('[hub error]', error)
+  })
 }
 
 const pingHub = async (params = {}) => {
@@ -91,16 +100,21 @@ const pingHub = async (params = {}) => {
   sendHubCall({ ...params, node })
 }
 
-const sendHubCall = (params) => {
-  // console.log('[hub] sending ping')
-  fetch(config.hub_api_url + '/ping', {
-    method: 'POST',
-    body: JSON.stringify(params),
-    headers: { 'Content-Type': 'application/json' }
-  })
-    .catch(error => {
-      console.log('[hub warning]: cannot reach hub',)
+async function sendHubCall(params) {
+  try {
+    const r = await fetch(config.hub_api_url + '/ping', {
+      agent: pingAgent,
+      method: 'POST',
+      body: JSON.stringify(params),
+      headers: { 'Content-Type': 'application/json' }
     })
+    const j = await r.json()
+    if(!(j && j.status && j.status==='ok')) {
+      console.log('[hub] ping returned not ok')
+    }
+  } catch(e) {
+    console.log('[hub warning]: cannot reach hub',e)
+  }
 }
 
 const pingHubInterval = (ms) => {
