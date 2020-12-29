@@ -23,6 +23,9 @@ const https = require("https");
 const pingAgent = new https.Agent({
     keepAlive: true
 });
+const checkInvitesAgent = new https.Agent({
+    keepAlive: true
+});
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
@@ -36,6 +39,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
         return; // skip if no invites
     }
     node_fetch_1.default(config.hub_api_url + '/invites/check', {
+        agent: checkInvitesAgent,
         method: 'POST',
         body: JSON.stringify({ invite_strings: inviteStrings }),
         headers: { 'Content-Type': 'application/json' }
