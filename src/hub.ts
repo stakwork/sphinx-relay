@@ -8,6 +8,11 @@ import { nodeinfo } from './utils/nodeinfo'
 import { loadLightning } from './utils/lightning'
 import constants from './constants'
 import {loadConfig} from './utils/config'
+import * as http from 'http'
+
+const pingAgent = new http.Agent({ 
+	keepAlive: true 
+})
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -92,11 +97,9 @@ const pingHub = async (params = {}) => {
 }
 
 async function sendHubCall(params) {
-  console.log('[hub] sending ping')
-  console.log("NOT!")
-  return
   try {
     const r = await fetch(config.hub_api_url + '/ping', {
+      agent: pingAgent,
       method: 'POST',
       body: JSON.stringify(params),
       headers: { 'Content-Type': 'application/json' }
@@ -105,7 +108,6 @@ async function sendHubCall(params) {
     if(!(j && j.status && j.status==='ok')) {
       console.log('[hub] ping returned not ok')
     }
-    console.log(j)
   } catch(e) {
     console.log('[hub warning]: cannot reach hub',)
   }

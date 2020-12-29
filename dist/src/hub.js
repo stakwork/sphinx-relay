@@ -19,6 +19,10 @@ const nodeinfo_1 = require("./utils/nodeinfo");
 const lightning_1 = require("./utils/lightning");
 const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
+const http = require("http");
+const pingAgent = new http.Agent({
+    keepAlive: true
+});
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
@@ -88,11 +92,9 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
 });
 function sendHubCall(params) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('[hub] sending ping');
-        console.log("NOT!");
-        return;
         try {
             const r = yield node_fetch_1.default(config.hub_api_url + '/ping', {
+                agent: pingAgent,
                 method: 'POST',
                 body: JSON.stringify(params),
                 headers: { 'Content-Type': 'application/json' }
@@ -101,7 +103,6 @@ function sendHubCall(params) {
             if (!(j && j.status && j.status === 'ok')) {
                 console.log('[hub] ping returned not ok');
             }
-            console.log(j);
         }
         catch (e) {
             console.log('[hub warning]: cannot reach hub');
