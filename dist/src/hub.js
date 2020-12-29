@@ -19,8 +19,8 @@ const nodeinfo_1 = require("./utils/nodeinfo");
 const lightning_1 = require("./utils/lightning");
 const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
-const http = require("http");
-const pingAgent = new http.Agent({
+const https = require("https");
+const pingAgent = new https.Agent({
     keepAlive: true
 });
 const env = process.env.NODE_ENV || 'development';

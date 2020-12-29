@@ -8,9 +8,9 @@ import { nodeinfo } from './utils/nodeinfo'
 import { loadLightning } from './utils/lightning'
 import constants from './constants'
 import {loadConfig} from './utils/config'
-import * as http from 'http'
+import * as https from 'https'
 
-const pingAgent = new http.Agent({ 
+const pingAgent = new https.Agent({ 
 	keepAlive: true 
 })
 
