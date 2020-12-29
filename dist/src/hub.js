@@ -105,7 +105,7 @@ function sendHubCall(params) {
             }
         }
         catch (e) {
-            console.log('[hub warning]: cannot reach hub');
+            console.log('[hub warning]: cannot reach hub', e);
         }
     });
 }

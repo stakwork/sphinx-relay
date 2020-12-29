@@ -109,7 +109,7 @@ async function sendHubCall(params) {
       console.log('[hub] ping returned not ok')
     }
   } catch(e) {
-    console.log('[hub warning]: cannot reach hub',)
+    console.log('[hub warning]: cannot reach hub',e)
   }
 }
 
