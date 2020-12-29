@@ -91,16 +91,19 @@ const pingHub = async (params = {}) => {
   sendHubCall({ ...params, node })
 }
 
-const sendHubCall = (params) => {
+async function sendHubCall(params) {
   // console.log('[hub] sending ping')
-  fetch(config.hub_api_url + '/ping', {
-    method: 'POST',
-    body: JSON.stringify(params),
-    headers: { 'Content-Type': 'application/json' }
-  })
-    .catch(error => {
-      console.log('[hub warning]: cannot reach hub',)
+  try {
+    const r = await fetch(config.hub_api_url + '/ping', {
+      method: 'POST',
+      body: JSON.stringify(params),
+      headers: { 'Content-Type': 'application/json' }
     })
+    const j = await r.json()
+    console.log(j)
+  } catch(e) {
+    console.log('[hub warning]: cannot reach hub',)
+  }
 }
 
 const pingHubInterval = (ms) => {

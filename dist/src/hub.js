@@ -86,17 +86,23 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
     const node = yield nodeinfo_1.nodeinfo();
     sendHubCall(Object.assign(Object.assign({}, params), { node }));
 });
-const sendHubCall = (params) => {
-    // console.log('[hub] sending ping')
-    node_fetch_1.default(config.hub_api_url + '/ping', {
-        method: 'POST',
-        body: JSON.stringify(params),
-        headers: { 'Content-Type': 'application/json' }
-    })
-        .catch(error => {
-        console.log('[hub warning]: cannot reach hub');
+function sendHubCall(params) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // console.log('[hub] sending ping')
+        try {
+            const r = yield node_fetch_1.default(config.hub_api_url + '/ping', {
+                method: 'POST',
+                body: JSON.stringify(params),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const j = yield r.json();
+            console.log(j);
+        }
+        catch (e) {
+            console.log('[hub warning]: cannot reach hub');
+        }
     });
-};
+}
 exports.sendHubCall = sendHubCall;
 const pingHubInterval = (ms) => {
     setInterval(pingHub, ms);
