@@ -88,7 +88,9 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
 });
 function sendHubCall(params) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('[hub] sending ping')
+        console.log('[hub] sending ping');
+        console.log("NOT!");
+        return;
         try {
             const r = yield node_fetch_1.default(config.hub_api_url + '/ping', {
                 method: 'POST',
@@ -96,6 +98,9 @@ function sendHubCall(params) {
                 headers: { 'Content-Type': 'application/json' }
             });
             const j = yield r.json();
+            if (!(j && j.status && j.status === 'ok')) {
+                console.log('[hub] ping returned not ok');
+            }
             console.log(j);
         }
         catch (e) {

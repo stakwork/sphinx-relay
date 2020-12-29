@@ -92,7 +92,9 @@ const pingHub = async (params = {}) => {
 }
 
 async function sendHubCall(params) {
-  // console.log('[hub] sending ping')
+  console.log('[hub] sending ping')
+  console.log("NOT!")
+  return
   try {
     const r = await fetch(config.hub_api_url + '/ping', {
       method: 'POST',
@@ -100,6 +102,9 @@ async function sendHubCall(params) {
       headers: { 'Content-Type': 'application/json' }
     })
     const j = await r.json()
+    if(!(j && j.status && j.status==='ok')) {
+      console.log('[hub] ping returned not ok')
+    }
     console.log(j)
   } catch(e) {
     console.log('[hub warning]: cannot reach hub',)
