@@ -41,8 +41,19 @@ exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, functio
     }
     return chat;
 });
-exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey }) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey }) => __awaiter(void 0, void 0, void 0, function* () {
     const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey || false);
+    if (contactPubKey) { // dont use ids here
+        exports.performKeysendMessage({
+            sender,
+            destination_key: contactPubKey,
+            amount: 3,
+            msg,
+            success,
+            failure
+        });
+        return;
+    }
     let yes = null;
     let no = null;
     let cids = contactIds || [];

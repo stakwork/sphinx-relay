@@ -253,9 +253,10 @@ export const receiveContactKey = async (payload) => {
 		console.log("DID NOT FIND SENDER")
 	}
 
-	if (msgIncludedContactKey && sender) {
+	if (msgIncludedContactKey) {
 		helpers.sendContactKeys({
-			contactIds: [sender.id],
+			contactPubKey: sender_contact_key,
+			contactIds: sender ? [sender.id] : [],
 			sender: owner,
 			type: constants.message_types.contact_key_confirmation,
 		})
