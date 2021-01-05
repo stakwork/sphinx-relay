@@ -10,6 +10,13 @@ import { Op } from 'sequelize'
 import fetch from 'node-fetch'
 import * as helpers from '../helpers'
 
+/*
+  make the keysend go over the just-created channel
+  add columns: txid for the onchain payment
+    commit_fee, local_reserve, remote_reserve, hardcoded AMT
+*/
+
+
 type QueryType = 'onchain_address'
 export interface Query {
   type: QueryType

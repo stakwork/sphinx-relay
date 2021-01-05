@@ -233,7 +233,7 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     else {
         console.log("DID NOT FIND SENDER");
     }
-    if (msgIncludedContactKey && sender) {
+    if (msgIncludedContactKey) {
         helpers.sendContactKeys({
             contactIds: [sender.id],
             sender: owner,

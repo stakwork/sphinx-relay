@@ -34,8 +34,20 @@ export const findOrCreateChat = async (params) => {
 	return chat
 }
 
-export const sendContactKeys = async ({ type, contactIds, sender, success, failure, dontActuallySendContactKey }:{type:number,contactIds:number[],sender:any,success?:Function,failure?:Function,dontActuallySendContactKey?:boolean}) => {
+export const sendContactKeys = async ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey }:{type:number,contactIds:number[],sender:any,success?:Function,failure?:Function,dontActuallySendContactKey?:boolean,contactPubKey?:string}) => {
 	const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey||false)
+
+	if(contactPubKey) { // dont use ids here
+		performKeysendMessage({
+			sender,
+			destination_key: contactPubKey,
+			amount: 3,
+			msg,
+			success,
+			failure
+		})
+		return
+	}
 
 	let yes: any = null
 	let no: any = null
