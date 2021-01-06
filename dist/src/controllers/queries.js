@@ -34,6 +34,7 @@ function getReceivedAccountings() {
 }
 function getPendingAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('[WATCH] getPendingAccountings');
         const utxos = yield wallet_1.listUnspent();
         const accountings = yield models_1.models.Accounting.findAll({
             where: {
@@ -43,10 +44,12 @@ function getPendingAccountings() {
                 status: constants_1.default.statuses.pending
             }
         });
+        console.log('[WATCH] gotPendingAccountings', accountings.length, accountings);
         const ret = [];
         accountings.forEach(a => {
             const utxo = utxos.find(u => u.address === a.onchainAddress);
             if (utxo) {
+                console.log('[WATCH] UTXO', utxo);
                 const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str;
                 ret.push({
                     id: a.id,

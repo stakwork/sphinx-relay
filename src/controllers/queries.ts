@@ -55,6 +55,7 @@ async function getReceivedAccountings(): Promise<Accounting[]> {
 }
 
 async function getPendingAccountings(): Promise<Accounting[]> {
+  console.log('[WATCH] getPendingAccountings')
   const utxos: UTXO[] = await listUnspent() 
   const accountings = await models.Accounting.findAll({
     where: {
@@ -65,10 +66,13 @@ async function getPendingAccountings(): Promise<Accounting[]> {
     }
   })
 
+  console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
+
   const ret: Accounting[] = []
   accountings.forEach(a => {
     const utxo = utxos.find(u => u.address === a.onchainAddress)
     if (utxo) {
+      console.log('[WATCH] UTXO', utxo)
       const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str
       ret.push(<Accounting>{
         id: a.id,
