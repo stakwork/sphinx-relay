@@ -25,12 +25,15 @@ export const loadWalletKit = () => {
   }
 }
 
-
+interface Outpoint {
+  txid_str: string
+}
 export interface UTXO {
   address: string
   address_type: number
   amount_sat: number
   confirmations: number
+  outpoint: Outpoint
 }
 
 export async function listUnspent():Promise<UTXO[]> {

@@ -57,6 +57,26 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Accounting.prototype, "fundingTxid", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Accounting.prototype, "onchainTxid", void 0);
+__decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Accounting.prototype, "commitFee", void 0);
+__decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Accounting.prototype, "localReserve", void 0);
+__decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Accounting.prototype, "remoteReserve", void 0);
+__decorate([
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Accounting.prototype, "extraAmount", void 0);
 Accounting = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_accountings', underscored: true })
 ], Accounting);
