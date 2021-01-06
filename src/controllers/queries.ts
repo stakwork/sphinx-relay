@@ -20,6 +20,8 @@ export interface Query {
 
 let queries: { [k: string]: Query } = {}
 
+const POLL_MINS = 1
+
 let hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b'
 
 // const hub_url = 'https://hub.sphinx.chat/api/v1/'
@@ -207,7 +209,7 @@ async function checkChannelsAndKeysend(rec: Accounting){
 }
 
 export function startWatchingUTXOs() {
-  setInterval(pollUTXOs, 600000) // every 10 minutes
+  setInterval(pollUTXOs, POLL_MINS * 60 * 1000) // every 1 minutes
 }
 
 export async function queryOnchainAddress(req, res) {

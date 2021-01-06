@@ -21,6 +21,7 @@ const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
 const helpers = require("../helpers");
 let queries = {};
+const POLL_MINS = 1;
 let hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b';
 function getReceivedAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -201,7 +202,7 @@ function checkChannelsAndKeysend(rec) {
     });
 }
 function startWatchingUTXOs() {
-    setInterval(pollUTXOs, 600000); // every 10 minutes
+    setInterval(pollUTXOs, POLL_MINS * 60 * 1000); // every 1 minutes
 }
 exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
