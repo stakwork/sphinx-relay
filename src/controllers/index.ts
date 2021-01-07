@@ -81,6 +81,8 @@ export async function set(app) {
 
 	app.post('/stream', feed.streamFeed)
 
+	app.get('/app_versions', details.getAppVersions)
+
 	app.post('/invoices', invoices.createInvoice)
 	app.get('/invoices', invoices.listInvoices)
 	app.put('/invoices', invoices.payInvoice)

@@ -21,6 +21,7 @@ const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
 const helpers = require("../helpers");
 let queries = {};
+const POLL_MINS = 10;
 let hub_pubkey = '';
 const hub_url = 'https://hub.sphinx.chat/api/v1/';
 function get_hub_pubkey() {
@@ -46,6 +47,7 @@ function getReceivedAccountings() {
 }
 function getPendingAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
+        // console.log('[WATCH] getPendingAccountings')
         const utxos = yield wallet_1.listUnspent();
         const accountings = yield models_1.models.Accounting.findAll({
             where: {
@@ -55,10 +57,13 @@ function getPendingAccountings() {
                 status: constants_1.default.statuses.pending
             }
         });
+        // console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
         const ret = [];
         accountings.forEach(a => {
             const utxo = utxos.find(u => u.address === a.onchainAddress);
             if (utxo) {
+                console.log('[WATCH] UTXO', utxo);
+                const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str;
                 ret.push({
                     id: a.id,
                     pubkey: a.pubkey,
@@ -67,6 +72,7 @@ function getPendingAccountings() {
                     confirmations: utxo.confirmations,
                     sourceApp: a.sourceApp,
                     date: a.date,
+                    onchainTxid: onchainTxid
                 });
             }
         });
@@ -117,6 +123,7 @@ function genChannelAndConfirmAccounting(acc) {
             yield models_1.models.Accounting.update({
                 status: constants_1.default.statuses.received,
                 fundingTxid: fundingTxid,
+                onchainTxid: acc.onchainTxid,
                 amount: acc.amount
             }, {
                 where: { id: acc.id }
@@ -178,8 +185,11 @@ function checkChannelsAndKeysend(rec) {
                 const msg = {
                     type: constants_1.default.message_types.keysend,
                 };
-                const MINUS_AMT = 2000;
-                const amount = rec.amount - parseInt(chan.local_chan_reserve_sat || 0) - parseInt(chan.remote_chan_reserve_sat || 0) - parseInt(chan.commit_fee || 0) - MINUS_AMT;
+                const extraAmount = 2000;
+                const localReserve = parseInt(chan.local_chan_reserve_sat || 0);
+                const remoteReserve = parseInt(chan.remote_chan_reserve_sat || 0);
+                const commitFee = parseInt(chan.commit_fee || 0);
+                const amount = rec.amount - localReserve - remoteReserve - commitFee - extraAmount;
                 console.log('[WATCH] amt to final keysend', amount);
                 helpers.performKeysendMessage({
                     sender: owner,
@@ -189,7 +199,8 @@ function checkChannelsAndKeysend(rec) {
                         console.log('[WATCH] complete! Updating accounting, id:', rec.id);
                         models_1.models.Accounting.update({
                             status: constants_1.default.statuses.confirmed,
-                            chanId: chan.chan_id
+                            chanId: chan.chan_id,
+                            extraAmount, localReserve, remoteReserve, commitFee
                         }, {
                             where: { id: rec.id }
                         });
@@ -203,7 +214,7 @@ function checkChannelsAndKeysend(rec) {
     });
 }
 function startWatchingUTXOs() {
-    setInterval(pollUTXOs, 600000); // every 10 minutes
+    setInterval(pollUTXOs, POLL_MINS * 60 * 1000); // every 1 minutes
 }
 exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {

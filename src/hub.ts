@@ -202,6 +202,19 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
     })
 }
 
+export async function getAppVersionsFromHub() {
+  try {
+    const r = await fetch(config.hub_api_url + '/app_versions', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    const j = await r.json()
+    return j
+  } catch(e) {
+    return null
+  }
+}
+
 type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject' | 'keysend' | 'boost'
 
 const sendNotification = async (chat, name, type: NotificationType, amount?: number) => {

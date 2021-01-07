@@ -203,6 +203,22 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
     });
 };
 exports.createInviteInHub = createInviteInHub;
+function getAppVersionsFromHub() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield node_fetch_1.default(config.hub_api_url + '/app_versions', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const j = yield r.json();
+            return j;
+        }
+        catch (e) {
+            return null;
+        }
+    });
+}
+exports.getAppVersionsFromHub = getAppVersionsFromHub;
 const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0, void 0, function* () {
     let message = `You have a new message from ${name}`;
     if (type === 'invite') {

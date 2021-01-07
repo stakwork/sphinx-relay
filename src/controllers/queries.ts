@@ -10,13 +10,6 @@ import { Op } from 'sequelize'
 import fetch from 'node-fetch'
 import * as helpers from '../helpers'
 
-/*
-  make the keysend go over the just-created channel
-  add columns: txid for the onchain payment
-    commit_fee, local_reserve, remote_reserve, hardcoded AMT
-*/
-
-
 type QueryType = 'onchain_address'
 export interface Query {
   type: QueryType
@@ -26,6 +19,8 @@ export interface Query {
 }
 
 let queries: { [k: string]: Query } = {}
+
+const POLL_MINS = 10
 
 let hub_pubkey = ''
 
@@ -49,6 +44,7 @@ interface Accounting {
   sourceApp: string
   date: string
   fundingTxid: string
+  onchainTxid: string
 }
 
 async function getReceivedAccountings(): Promise<Accounting[]> {
@@ -61,6 +57,7 @@ async function getReceivedAccountings(): Promise<Accounting[]> {
 }
 
 async function getPendingAccountings(): Promise<Accounting[]> {
+  // console.log('[WATCH] getPendingAccountings')
   const utxos: UTXO[] = await listUnspent() 
   const accountings = await models.Accounting.findAll({
     where: {
@@ -71,10 +68,13 @@ async function getPendingAccountings(): Promise<Accounting[]> {
     }
   })
 
+  // console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
   const ret: Accounting[] = []
   accountings.forEach(a => {
     const utxo = utxos.find(u => u.address === a.onchainAddress)
     if (utxo) {
+      console.log('[WATCH] UTXO', utxo)
+      const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str
       ret.push(<Accounting>{
         id: a.id,
         pubkey: a.pubkey,
@@ -83,6 +83,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
         confirmations: utxo.confirmations,
         sourceApp: a.sourceApp,
         date: a.date,
+        onchainTxid: onchainTxid
       })
     }
   })
@@ -127,6 +128,7 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
     await models.Accounting.update({
       status: constants.statuses.received,
       fundingTxid: fundingTxid,
+      onchainTxid: acc.onchainTxid,
       amount: acc.amount
     }, {
       where: { id: acc.id }
@@ -177,8 +179,11 @@ async function checkChannelsAndKeysend(rec: Accounting){
       const msg: { [k: string]: any } = {
         type: constants.message_types.keysend,
       }
-      const MINUS_AMT = 2000
-      const amount = rec.amount - parseInt(chan.local_chan_reserve_sat||0) - parseInt(chan.remote_chan_reserve_sat||0) - parseInt(chan.commit_fee||0) - MINUS_AMT
+      const extraAmount = 2000
+      const localReserve = parseInt(chan.local_chan_reserve_sat||0)
+      const remoteReserve = parseInt(chan.remote_chan_reserve_sat||0)
+      const commitFee = parseInt(chan.commit_fee||0)
+      const amount = rec.amount - localReserve - remoteReserve - commitFee - extraAmount
       console.log('[WATCH] amt to final keysend', amount)
       helpers.performKeysendMessage({
         sender: owner,
@@ -188,7 +193,8 @@ async function checkChannelsAndKeysend(rec: Accounting){
           console.log('[WATCH] complete! Updating accounting, id:', rec.id)
           models.Accounting.update({
             status: constants.statuses.confirmed,
-            chanId: chan.chan_id
+            chanId: chan.chan_id,
+            extraAmount, localReserve, remoteReserve, commitFee
           }, {
             where: { id: rec.id }
           })
@@ -202,7 +208,7 @@ async function checkChannelsAndKeysend(rec: Accounting){
 }
 
 export function startWatchingUTXOs() {
-  setInterval(pollUTXOs, 600000) // every 10 minutes
+  setInterval(pollUTXOs, POLL_MINS * 60 * 1000) // every 1 minutes
 }
 
 export async function queryOnchainAddress(req, res) {

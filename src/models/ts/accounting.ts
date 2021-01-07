@@ -38,4 +38,19 @@ export default class Accounting extends Model<Accounting> {
   @Column
   fundingTxid: string
 
+  @Column
+  onchainTxid: string
+
+  @Column(DataType.BIGINT)
+  commitFee: number
+
+  @Column(DataType.BIGINT)
+  localReserve: number
+
+  @Column(DataType.BIGINT)
+  remoteReserve: number
+
+  @Column(DataType.BIGINT)
+  extraAmount: number
+
 }
