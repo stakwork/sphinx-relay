@@ -16,7 +16,20 @@ const nodeinfo_1 = require("../utils/nodeinfo");
 const constants_1 = require("../constants");
 const models_1 = require("../models");
 const config_1 = require("../utils/config");
+const hub_1 = require("../hub");
 const config = config_1.loadConfig();
+function getAppVersions(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const vs = yield hub_1.getAppVersionsFromHub();
+        if (vs) {
+            res_1.success(res, vs);
+        }
+        else {
+            res_1.failure(res, 'Could not load app versions');
+        }
+    });
+}
+exports.getAppVersions = getAppVersions;
 exports.checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { pubkey, amount } = req.query;
     if (!(pubkey && pubkey.length === 66))

@@ -20,20 +20,20 @@ export interface Query {
 
 let queries: { [k: string]: Query } = {}
 
-const POLL_MINS = 1
+const POLL_MINS = 10
 
-let hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b'
+let hub_pubkey = ''
 
-// const hub_url = 'https://hub.sphinx.chat/api/v1/'
-// async function get_hub_pubkey(){
-//   const r = await fetch(hub_url+'/routingnode')
-//   const j = await r.json()
-//   if(j && j.pubkey) {
-//     console.log("=> GOT HUB PUBKEY", j.pubkey)
-//     hub_pubkey = j.pubkey
-//   }
-// }
-// get_hub_pubkey()
+const hub_url = 'https://hub.sphinx.chat/api/v1/'
+async function get_hub_pubkey(){
+  const r = await fetch(hub_url+'/routingnode')
+  const j = await r.json()
+  if(j && j.pubkey) {
+    console.log("=> GOT HUB PUBKEY", j.pubkey)
+    hub_pubkey = j.pubkey
+  }
+}
+get_hub_pubkey()
 
 interface Accounting {
   id: number
@@ -57,7 +57,7 @@ async function getReceivedAccountings(): Promise<Accounting[]> {
 }
 
 async function getPendingAccountings(): Promise<Accounting[]> {
-  console.log('[WATCH] getPendingAccountings')
+  // console.log('[WATCH] getPendingAccountings')
   const utxos: UTXO[] = await listUnspent() 
   const accountings = await models.Accounting.findAll({
     where: {
@@ -68,8 +68,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
     }
   })
 
-  console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
-
+  // console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
   const ret: Accounting[] = []
   accountings.forEach(a => {
     const utxo = utxos.find(u => u.address === a.onchainAddress)

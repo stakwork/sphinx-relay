@@ -78,6 +78,7 @@ function set(app) {
         app.post('/purchase', media.purchase);
         app.get('/signer/:challenge', media.signer);
         app.post('/stream', feed.streamFeed);
+        app.get('/app_versions', details.getAppVersions);
         app.post('/invoices', invoices.createInvoice);
         app.get('/invoices', invoices.listInvoices);
         app.put('/invoices', invoices.payInvoice);

@@ -21,8 +21,20 @@ const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
 const helpers = require("../helpers");
 let queries = {};
-const POLL_MINS = 1;
-let hub_pubkey = '02290714deafd0cb33d2be3b634fc977a98a9c9fa1dd6c53cf17d99b350c08c67b';
+const POLL_MINS = 10;
+let hub_pubkey = '';
+const hub_url = 'https://hub.sphinx.chat/api/v1/';
+function get_hub_pubkey() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const r = yield node_fetch_1.default(hub_url + '/routingnode');
+        const j = yield r.json();
+        if (j && j.pubkey) {
+            console.log("=> GOT HUB PUBKEY", j.pubkey);
+            hub_pubkey = j.pubkey;
+        }
+    });
+}
+get_hub_pubkey();
 function getReceivedAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
         const accountings = yield models_1.models.Accounting.findAll({
@@ -35,7 +47,7 @@ function getReceivedAccountings() {
 }
 function getPendingAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('[WATCH] getPendingAccountings');
+        // console.log('[WATCH] getPendingAccountings')
         const utxos = yield wallet_1.listUnspent();
         const accountings = yield models_1.models.Accounting.findAll({
             where: {
@@ -45,7 +57,7 @@ function getPendingAccountings() {
                 status: constants_1.default.statuses.pending
             }
         });
-        console.log('[WATCH] gotPendingAccountings', accountings.length, accountings);
+        // console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
         const ret = [];
         accountings.forEach(a => {
             const utxo = utxos.find(u => u.address === a.onchainAddress);
