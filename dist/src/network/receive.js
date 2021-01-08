@@ -59,7 +59,7 @@ const botMakerTypes = [
 ];
 function onReceive(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('===> onReceive', JSON.stringify(payload, null, 2));
+        // console.log('===> onReceive',JSON.stringify(payload,null,2))
         if (!(payload.type || payload.type === 0))
             return console.log('no payload.type');
         if (botTypes.includes(payload.type)) {
@@ -71,7 +71,6 @@ function onReceive(payload) {
             }
             return controllers_1.ACTIONS[payload.type](payload);
         }
-        console.log('==>1');
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};
@@ -79,23 +78,19 @@ function onReceive(payload) {
         let isTribeOwner = false;
         let chat;
         let owner;
-        console.log('==>2');
         if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             if (chat)
                 chat.update({ seen: false });
         }
-        console.log('==>3');
         if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
             owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
-        console.log('==>4');
         if (isTribeOwner)
             toAddIn.isTribeOwner = true;
-        console.log('==>5');
         if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
             const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
             // CHECK THEY ARE IN THE GROUP if message
@@ -107,7 +102,6 @@ function onReceive(payload) {
                 if (!senderMember)
                     doAction = false;
             }
-            console.log('==>6');
             // CHECK PRICES
             if (needsPricePerMessage) {
                 if (payload.message.amount < chat.pricePerMessage) {
@@ -123,12 +117,10 @@ function onReceive(payload) {
                     });
                 }
             }
-            console.log('==>7');
             // check price to join AND private chat
             if (payload.type === msgtypes.group_join) {
                 if (payload.message.amount < chat.priceToJoin) {
                     doAction = false;
-                    console.log("PRICE TO JOIN NOT MET");
                 }
                 if (chat.private && senderContactId) { // check if has been approved
                     const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
@@ -137,7 +129,6 @@ function onReceive(payload) {
                     }
                 }
             }
-            console.log('==>8');
             // check that the sender is the og poster
             if (payload.type === msgtypes.delete && senderContactId) {
                 doAction = false;
@@ -152,7 +143,6 @@ function onReceive(payload) {
                         doAction = true;
                 }
             }
-            console.log('==>9');
             // forward boost sats to recipient
             let realSatsContactId = null;
             let amtToForward = 0;
@@ -162,7 +152,6 @@ function onReceive(payload) {
                         uuid: payload.message.replyUuid,
                     }
                 });
-                console.log('==>10');
                 if (ogMsg && ogMsg.sender) { // even include "me"
                     const theAmtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
                     if (theAmtToForward > 0) {
@@ -174,7 +163,6 @@ function onReceive(payload) {
                     }
                 }
             }
-            console.log('==>11');
             // make sure alias is unique among chat members
             payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
             if (doAction)
@@ -207,7 +195,6 @@ function onReceive(payload) {
                 doAction = false; // skip this! we dont need it
             }
         }
-        console.log("DO ACTIONS???", doAction);
         if (doAction)
             doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
     });
@@ -345,7 +332,7 @@ function parseAndVerifyPayload(data) {
                 let v;
                 if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
-                    console.log("VERIFY", v, msg);
+                    // console.log("VERIFY",v)
                 }
                 if (v && v.valid) {
                     return payload;

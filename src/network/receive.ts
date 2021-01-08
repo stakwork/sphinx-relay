@@ -50,7 +50,7 @@ const botMakerTypes = [
 	constants.message_types.bot_cmd,
 ]
 async function onReceive(payload) {
-	console.log('===> onReceive',JSON.stringify(payload,null,2))
+	// console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if (!(payload.type || payload.type === 0)) return console.log('no payload.type')
 
 	if (botTypes.includes(payload.type)) {
@@ -61,7 +61,6 @@ async function onReceive(payload) {
 		}
 		return ACTIONS[payload.type](payload)
 	}
-	console.log('==>1')
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn: { [k: string]: any } = {}
@@ -69,21 +68,17 @@ async function onReceive(payload) {
 	let isTribeOwner = false
 	let chat
 	let owner
-	console.log('==>2')
 	if (payload.chat && payload.chat.uuid) {
 		isTribe = payload.chat.type === constants.chat_types.tribe
 		chat = await models.Chat.findOne({ where: { uuid: payload.chat.uuid } })
 		if (chat) chat.update({ seen: false })
 	}
-	console.log('==>3')
 	if (isTribe) {
 		const tribeOwnerPubKey = chat && chat.ownerPubkey
 		owner = await models.Contact.findOne({ where: { isOwner: true } })
 		isTribeOwner = owner.publicKey === tribeOwnerPubKey
 	}
-	console.log('==>4')
 	if (isTribeOwner) toAddIn.isTribeOwner = true
-	console.log('==>5')
 	if (isTribeOwner && typesToForward.includes(payload.type)) {
 		const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type)
 		// CHECK THEY ARE IN THE GROUP if message
@@ -94,7 +89,6 @@ async function onReceive(payload) {
 			const senderMember = await models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } })
 			if (!senderMember) doAction = false
 		}
-		console.log('==>6')
 		// CHECK PRICES
 		if (needsPricePerMessage) {
 			if (payload.message.amount < chat.pricePerMessage) {
@@ -110,12 +104,10 @@ async function onReceive(payload) {
 				})
 			}
 		}
-		console.log('==>7')
 		// check price to join AND private chat
 		if (payload.type === msgtypes.group_join) {
 			if (payload.message.amount < chat.priceToJoin) {
 				doAction = false
-				console.log("PRICE TO JOIN NOT MET")
 			}
 			if (chat.private && senderContactId) { // check if has been approved
 				const senderMember = await models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } })
@@ -124,7 +116,6 @@ async function onReceive(payload) {
 				}
 			}
 		}
-		console.log('==>8')
 		// check that the sender is the og poster
 		if (payload.type === msgtypes.delete && senderContactId) {
 			doAction = false
@@ -138,7 +129,6 @@ async function onReceive(payload) {
 				if (ogMsg) doAction = true
 			}
 		}
-		console.log('==>9')
 		// forward boost sats to recipient
 		let realSatsContactId = null
 		let amtToForward = 0
@@ -148,7 +138,6 @@ async function onReceive(payload) {
 					uuid: payload.message.replyUuid,
 				}
 			})
-			console.log('==>10')
 			if (ogMsg && ogMsg.sender) { // even include "me"
 				const theAmtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0)
 				if (theAmtToForward > 0) {
@@ -160,7 +149,6 @@ async function onReceive(payload) {
 				}
 			}
 		}
-		console.log('==>11')
 		// make sure alias is unique among chat members
 		payload = await uniqueifyAlias(payload, senderContact, chat, owner)
 		if (doAction) forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward)
@@ -191,7 +179,6 @@ async function onReceive(payload) {
 			doAction = false // skip this! we dont need it
 		}
 	}
-	console.log("DO ACTIONS???",doAction)
 	if (doAction) doTheAction({ ...payload, ...toAddIn })
 }
 
@@ -321,7 +308,7 @@ async function parseAndVerifyPayload(data) {
 			let v
 			if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
-				console.log("VERIFY",v,msg)
+				// console.log("VERIFY",v)
 			}
 			if (v && v.valid) {
 				return payload
