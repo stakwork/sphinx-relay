@@ -308,7 +308,7 @@ async function parseAndVerifyPayload(data) {
 			let v
 			if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
-				console.log("VERIFY",v)
+				console.log("VERIFY",v,msg)
 			}
 			if (v && v.valid) {
 				return payload
