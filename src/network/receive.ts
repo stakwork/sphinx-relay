@@ -108,7 +108,10 @@ async function onReceive(payload) {
 		}
 		// check price to join AND private chat
 		if (payload.type === msgtypes.group_join) {
-			if (payload.message.amount < chat.priceToJoin) doAction = false
+			if (payload.message.amount < chat.priceToJoin) {
+				doAction = false
+				console.log("PRICE TO JOIN NOT MET")
+			}
 			if (chat.private) { // check if has been approved
 				const senderMember = await models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } })
 				if (!(senderMember && senderMember.status === constants.chat_statuses.approved)) {
@@ -179,6 +182,7 @@ async function onReceive(payload) {
 			doAction = false // skip this! we dont need it
 		}
 	}
+	console.log("DO ACTIONS???",doAction)
 	if (doAction) doTheAction({ ...payload, ...toAddIn })
 }
 
@@ -395,7 +399,10 @@ export async function parseKeysendInvoice(i) {
 		if (threads) payload = await parseAndVerifyPayload(threads)
 	}
 	if (payload) {
+		console.log("THE PAYLOAD",payload)
 		const dat = payload
+		console.log("THE VALUE",value)
+		console.log("THE MESSAGE",dat.message)
 		if (value && dat && dat.message) {
 			dat.message.amount = value // ADD IN TRUE VALUE
 		}

@@ -120,8 +120,10 @@ function onReceive(payload) {
             }
             // check price to join AND private chat
             if (payload.type === msgtypes.group_join) {
-                if (payload.message.amount < chat.priceToJoin)
+                if (payload.message.amount < chat.priceToJoin) {
                     doAction = false;
+                    console.log("PRICE TO JOIN NOT MET");
+                }
                 if (chat.private) { // check if has been approved
                     const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
                     if (!(senderMember && senderMember.status === constants_1.default.chat_statuses.approved)) {
@@ -195,6 +197,7 @@ function onReceive(payload) {
                 doAction = false; // skip this! we dont need it
             }
         }
+        console.log("DO ACTIONS???", doAction);
         if (doAction)
             doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
     });
@@ -428,7 +431,10 @@ function parseKeysendInvoice(i) {
                 payload = yield parseAndVerifyPayload(threads);
         }
         if (payload) {
+            console.log("THE PAYLOAD", payload);
             const dat = payload;
+            console.log("THE VALUE", value);
+            console.log("THE MESSAGE", dat.message);
             if (value && dat && dat.message) {
                 dat.message.amount = value; // ADD IN TRUE VALUE
             }
