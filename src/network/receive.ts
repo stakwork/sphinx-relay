@@ -61,7 +61,6 @@ async function onReceive(payload) {
 		}
 		return ACTIONS[payload.type](payload)
 	}
-
 	// if tribe, owner must forward to MQTT
 	let doAction = true
 	const toAddIn: { [k: string]: any } = {}
@@ -69,7 +68,6 @@ async function onReceive(payload) {
 	let isTribeOwner = false
 	let chat
 	let owner
-
 	if (payload.chat && payload.chat.uuid) {
 		isTribe = payload.chat.type === constants.chat_types.tribe
 		chat = await models.Chat.findOne({ where: { uuid: payload.chat.uuid } })
@@ -85,9 +83,9 @@ async function onReceive(payload) {
 		const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type)
 		// CHECK THEY ARE IN THE GROUP if message
 		const senderContact = await models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } })
-		if (!senderContact) return // need sender contact!
-		const senderContactId = senderContact.id
-		if (needsPricePerMessage) {
+		// if (!senderContact) return console.log("=> no sender contact")
+		const senderContactId = senderContact && senderContact.id
+		if (needsPricePerMessage && senderContactId) {
 			const senderMember = await models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } })
 			if (!senderMember) doAction = false
 		}
@@ -96,7 +94,7 @@ async function onReceive(payload) {
 			if (payload.message.amount < chat.pricePerMessage) {
 				doAction = false
 			}
-			if (chat.escrowAmount) {
+			if (chat.escrowAmount && senderContactId) {
 				timers.addTimer({ // pay them back
 					amount: chat.escrowAmount,
 					millis: chat.escrowMillis,
@@ -108,8 +106,10 @@ async function onReceive(payload) {
 		}
 		// check price to join AND private chat
 		if (payload.type === msgtypes.group_join) {
-			if (payload.message.amount < chat.priceToJoin) doAction = false
-			if (chat.private) { // check if has been approved
+			if (payload.message.amount < chat.priceToJoin) {
+				doAction = false
+			}
+			if (chat.private && senderContactId) { // check if has been approved
 				const senderMember = await models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } })
 				if (!(senderMember && senderMember.status === constants.chat_statuses.approved)) {
 					doAction = false // dont let if private and not approved
@@ -117,7 +117,7 @@ async function onReceive(payload) {
 			}
 		}
 		// check that the sender is the og poster
-		if (payload.type === msgtypes.delete) {
+		if (payload.type === msgtypes.delete && senderContactId) {
 			doAction = false
 			if (payload.message.uuid) {
 				const ogMsg = await models.Message.findOne({
@@ -308,7 +308,7 @@ async function parseAndVerifyPayload(data) {
 			let v
 			if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
-				console.log("VERIFY",v)
+				// console.log("VERIFY",v)
 			}
 			if (v && v.valid) {
 				return payload

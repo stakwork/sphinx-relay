@@ -95,10 +95,9 @@ function onReceive(payload) {
             const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
             // CHECK THEY ARE IN THE GROUP if message
             const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-            if (!senderContact)
-                return; // need sender contact!
-            const senderContactId = senderContact.id;
-            if (needsPricePerMessage) {
+            // if (!senderContact) return console.log("=> no sender contact")
+            const senderContactId = senderContact && senderContact.id;
+            if (needsPricePerMessage && senderContactId) {
                 const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
                 if (!senderMember)
                     doAction = false;
@@ -108,7 +107,7 @@ function onReceive(payload) {
                 if (payload.message.amount < chat.pricePerMessage) {
                     doAction = false;
                 }
-                if (chat.escrowAmount) {
+                if (chat.escrowAmount && senderContactId) {
                     timers.addTimer({
                         amount: chat.escrowAmount,
                         millis: chat.escrowMillis,
@@ -120,9 +119,10 @@ function onReceive(payload) {
             }
             // check price to join AND private chat
             if (payload.type === msgtypes.group_join) {
-                if (payload.message.amount < chat.priceToJoin)
+                if (payload.message.amount < chat.priceToJoin) {
                     doAction = false;
-                if (chat.private) { // check if has been approved
+                }
+                if (chat.private && senderContactId) { // check if has been approved
                     const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
                     if (!(senderMember && senderMember.status === constants_1.default.chat_statuses.approved)) {
                         doAction = false; // dont let if private and not approved
@@ -130,7 +130,7 @@ function onReceive(payload) {
                 }
             }
             // check that the sender is the og poster
-            if (payload.type === msgtypes.delete) {
+            if (payload.type === msgtypes.delete && senderContactId) {
                 doAction = false;
                 if (payload.message.uuid) {
                     const ogMsg = yield models_1.models.Message.findOne({
@@ -332,7 +332,7 @@ function parseAndVerifyPayload(data) {
                 let v;
                 if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
-                    console.log("VERIFY", v);
+                    // console.log("VERIFY",v)
                 }
                 if (v && v.valid) {
                     return payload;
