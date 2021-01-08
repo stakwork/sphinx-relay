@@ -255,7 +255,7 @@ export const receiveContactKey = async (payload) => {
 
 	if (msgIncludedContactKey) {
 		helpers.sendContactKeys({
-			contactPubKey: sender_contact_key,
+			contactPubKey: sender_pub_key,
 			contactIds: sender ? [sender.id] : [],
 			sender: owner,
 			type: constants.message_types.contact_key_confirmation,

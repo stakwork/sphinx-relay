@@ -235,7 +235,7 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
     }
     if (msgIncludedContactKey) {
         helpers.sendContactKeys({
-            contactPubKey: sender_contact_key,
+            contactPubKey: sender_pub_key,
             contactIds: sender ? [sender.id] : [],
             sender: owner,
             type: constants_1.default.message_types.contact_key_confirmation,
