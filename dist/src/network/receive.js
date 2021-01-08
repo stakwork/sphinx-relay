@@ -71,6 +71,7 @@ function onReceive(payload) {
             }
             return controllers_1.ACTIONS[payload.type](payload);
         }
+        console.log('==>1');
         // if tribe, owner must forward to MQTT
         let doAction = true;
         const toAddIn = {};
@@ -78,37 +79,41 @@ function onReceive(payload) {
         let isTribeOwner = false;
         let chat;
         let owner;
+        console.log('==>2');
         if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
             if (chat)
                 chat.update({ seen: false });
         }
+        console.log('==>3');
         if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
             owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
+        console.log('==>4');
         if (isTribeOwner)
             toAddIn.isTribeOwner = true;
+        console.log('==>5');
         if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
             const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
             // CHECK THEY ARE IN THE GROUP if message
             const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-            if (!senderContact)
-                return; // need sender contact!
-            const senderContactId = senderContact.id;
-            if (needsPricePerMessage) {
+            // if (!senderContact) return console.log("=> no sender contact")
+            const senderContactId = senderContact && senderContact.id;
+            if (needsPricePerMessage && senderContactId) {
                 const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
                 if (!senderMember)
                     doAction = false;
             }
+            console.log('==>6');
             // CHECK PRICES
             if (needsPricePerMessage) {
                 if (payload.message.amount < chat.pricePerMessage) {
                     doAction = false;
                 }
-                if (chat.escrowAmount) {
+                if (chat.escrowAmount && senderContactId) {
                     timers.addTimer({
                         amount: chat.escrowAmount,
                         millis: chat.escrowMillis,
@@ -118,21 +123,23 @@ function onReceive(payload) {
                     });
                 }
             }
+            console.log('==>7');
             // check price to join AND private chat
             if (payload.type === msgtypes.group_join) {
                 if (payload.message.amount < chat.priceToJoin) {
                     doAction = false;
                     console.log("PRICE TO JOIN NOT MET");
                 }
-                if (chat.private) { // check if has been approved
+                if (chat.private && senderContactId) { // check if has been approved
                     const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
                     if (!(senderMember && senderMember.status === constants_1.default.chat_statuses.approved)) {
                         doAction = false; // dont let if private and not approved
                     }
                 }
             }
+            console.log('==>8');
             // check that the sender is the og poster
-            if (payload.type === msgtypes.delete) {
+            if (payload.type === msgtypes.delete && senderContactId) {
                 doAction = false;
                 if (payload.message.uuid) {
                     const ogMsg = yield models_1.models.Message.findOne({
@@ -145,6 +152,7 @@ function onReceive(payload) {
                         doAction = true;
                 }
             }
+            console.log('==>9');
             // forward boost sats to recipient
             let realSatsContactId = null;
             let amtToForward = 0;
@@ -154,6 +162,7 @@ function onReceive(payload) {
                         uuid: payload.message.replyUuid,
                     }
                 });
+                console.log('==>10');
                 if (ogMsg && ogMsg.sender) { // even include "me"
                     const theAmtToForward = payload.message.amount - (chat.pricePerMessage || 0) - (chat.escrowAmount || 0);
                     if (theAmtToForward > 0) {
@@ -165,6 +174,7 @@ function onReceive(payload) {
                     }
                 }
             }
+            console.log('==>11');
             // make sure alias is unique among chat members
             payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
             if (doAction)
