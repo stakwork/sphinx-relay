@@ -166,7 +166,7 @@ function listNonZeroPolicies() {
                         console.log('fee base msat', info[p].fee_base_msat);
                         const fee_base_msat = parseInt(info[p].fee_base_msat);
                         if (fee_base_msat > 0)
-                            ret.push({ node: p, fee_base_msat, chan_id });
+                            ret.push({ node: p, fee_base_msat, chan_id: chan.chan_id });
                     }
                 });
             }

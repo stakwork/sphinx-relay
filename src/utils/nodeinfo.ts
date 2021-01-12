@@ -159,7 +159,7 @@ async function listNonZeroPolicies(){
         if(info[p] && info[p].fee_base_msat) {
           console.log('fee base msat', info[p].fee_base_msat)
           const fee_base_msat = parseInt(info[p].fee_base_msat)
-          if(fee_base_msat>0) ret.push({node:p, fee_base_msat, chan_id})
+          if(fee_base_msat>0) ret.push({node:p, fee_base_msat, chan_id:chan.chan_id})
         }
       })
     } catch(e){}
