@@ -1,11 +1,14 @@
 
-import { loadLightning, getInfo } from '../utils/lightning'
+import * as LND from '../utils/lightning'
 import * as publicIp from 'public-ip'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import { models } from '../models'
 
 function nodeinfo() {
   return new Promise(async (resolve, reject) => {
+
+    const nzp = await listNonZeroPolicies()
+    console.log(nzp)
 
     let owner
     try {
@@ -21,7 +24,7 @@ function nodeinfo() {
     }
 
     try {
-      await getInfo()
+      await LND.getInfo()
     } catch (e) { // no LND
       const node = {
         pubkey: owner.publicKey,
@@ -45,7 +48,7 @@ function nodeinfo() {
 
     const latest_message = await latestMessage()
 
-    const lightning = loadLightning()
+    const lightning = LND.loadLightning()
     try {
       lightning.channelBalance({}, (err, channelBalance) => {
         if (err) console.log(err)
@@ -131,4 +134,37 @@ async function latestMessage(): Promise<any> {
   } else {
     return ''
   }
+}
+
+interface Policy {
+  chan_id: number,
+  node: string // "node1_policy" or "node2_policy"
+  fee_base_msat: number
+}
+const policies = ['node1_policy','node2_policy']
+async function listNonZeroPolicies(){
+  const ret: Policy[] = []
+
+  const chans = await LND.listChannels({})
+  if(!(chans && chans.channels)) return
+  
+  await asyncForEach(chans.channels, async chan=>{
+    const chan_id = parseInt(chan.chan_id)
+    try {
+      const info = await LND.getChanInfo(chan_id)
+      if(!info) return
+      policies.forEach(p=>{
+        if(info[p] && info[p].fee_base_msat) {
+          const fee_base_msat = parseInt(info[p].fee_base_msat)
+          if(fee_base_msat>0) ret.push({node:p, fee_base_msat, chan_id})
+        }
+      })
+    } catch(e){}
+  })
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+		await callback(array[index], index, array);
+	}
 }

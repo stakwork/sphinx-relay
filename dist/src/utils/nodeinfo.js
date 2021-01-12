@@ -9,12 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const lightning_1 = require("../utils/lightning");
+const LND = require("../utils/lightning");
 const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        const nzp = yield listNonZeroPolicies();
+        console.log(nzp);
         let owner;
         try {
             owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -29,7 +31,7 @@ function nodeinfo() {
             lastActive = new Date();
         }
         try {
-            yield lightning_1.getInfo();
+            yield LND.getInfo();
         }
         catch (e) { // no LND
             const node = {
@@ -49,7 +51,7 @@ function nodeinfo() {
         const tag = yield gitinfo_1.checkTag();
         const clean = yield isClean();
         const latest_message = yield latestMessage();
-        const lightning = lightning_1.loadLightning();
+        const lightning = LND.loadLightning();
         try {
             lightning.channelBalance({}, (err, channelBalance) => {
                 if (err)
@@ -141,6 +143,38 @@ function latestMessage() {
         }
         else {
             return '';
+        }
+    });
+}
+const policies = ['node1_policy', 'node2_policy'];
+function listNonZeroPolicies() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ret = [];
+        const chans = yield LND.listChannels({});
+        if (!(chans && chans.channels))
+            return;
+        yield asyncForEach(chans.channels, (chan) => __awaiter(this, void 0, void 0, function* () {
+            const chan_id = parseInt(chan.chan_id);
+            try {
+                const info = yield LND.getChanInfo(chan_id);
+                if (!info)
+                    return;
+                policies.forEach(p => {
+                    if (info[p] && info[p].fee_base_msat) {
+                        const fee_base_msat = parseInt(info[p].fee_base_msat);
+                        if (fee_base_msat > 0)
+                            ret.push({ node: p, fee_base_msat, chan_id });
+                    }
+                });
+            }
+            catch (e) { }
+        }));
+    });
+}
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
         }
     });
 }

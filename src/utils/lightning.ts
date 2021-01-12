@@ -494,6 +494,22 @@ async function channelBalance(): Promise<{ [k: string]: any }> {
   })
 }
 
+async function getChanInfo(chan_id: number): Promise<{ [k: string]: any }> {
+  return new Promise((resolve, reject) => {
+    if(!chan_id) {
+      return reject('no chan id')
+    }
+    const lightning = loadLightning()
+    lightning.getChanInfo({}, function (err, response) {
+      if (err == null) {
+        resolve(response)
+      } else {
+        reject(err)
+      }
+    });
+  })
+}
+
 function ascii_to_hexa(str) {
   var arr1 = <string[]>[];
   for (var n = 0, l = str.length; n < l; n++) {
@@ -528,6 +544,7 @@ export {
   listAllPaymentsFull,
   queryRoute,
   listChannels,
+  getChanInfo,
   channelBalance,
   unlockWallet,
 }
