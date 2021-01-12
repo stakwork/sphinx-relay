@@ -157,7 +157,7 @@ function listNonZeroPolicies() {
             const chan_id = parseInt(chan.chan_id);
             console.log('chan_id', chan_id);
             try {
-                const info = yield LND.getChanInfo(chan_id);
+                const info = yield LND.getChanInfo(chan.chan_id);
                 if (!info)
                     return;
                 console.log('info for ', chan_id);
