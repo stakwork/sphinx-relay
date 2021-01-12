@@ -8,7 +8,6 @@ function nodeinfo() {
   return new Promise(async (resolve, reject) => {
 
     const nzp = await listNonZeroPolicies()
-    console.log(nzp)
 
     let owner
     try {
@@ -97,6 +96,7 @@ function nodeinfo() {
                   latest_message,
                   last_active: lastActive,
                   wallet_locked: false,
+                  non_zero_policies: nzp
                 }
                 resolve(node)
               }
@@ -137,7 +137,7 @@ async function latestMessage(): Promise<any> {
 }
 
 interface Policy {
-  chan_id: number,
+  chan_id: string,
   node: string // "node1_policy" or "node2_policy"
   fee_base_msat: number
 }
@@ -149,15 +149,11 @@ async function listNonZeroPolicies(){
   if(!(chans && chans.channels)) return ret
   
   await asyncForEach(chans.channels, async chan=>{
-    const chan_id = parseInt(chan.chan_id)
-    console.log('chan_id',chan_id)
     try {
       const info = await LND.getChanInfo(chan.chan_id)
       if(!info) return
-      console.log('info for ', chan_id)
       policies.forEach(p=>{
         if(info[p] && info[p].fee_base_msat) {
-          console.log('fee base msat', info[p].fee_base_msat)
           const fee_base_msat = parseInt(info[p].fee_base_msat)
           if(fee_base_msat>0) ret.push({node:p, fee_base_msat, chan_id:chan.chan_id})
         }
