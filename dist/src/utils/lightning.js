@@ -550,7 +550,7 @@ function getChanInfo(chan_id) {
                 return reject('no chan id');
             }
             const lightning = loadLightning();
-            lightning.getChanInfo({}, function (err, response) {
+            lightning.getChanInfo({ chan_id }, function (err, response) {
                 if (err == null) {
                     resolve(response);
                 }

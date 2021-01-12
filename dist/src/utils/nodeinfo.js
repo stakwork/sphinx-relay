@@ -153,10 +153,9 @@ function listNonZeroPolicies() {
         const chans = yield LND.listChannels({});
         if (!(chans && chans.channels))
             return ret;
-        console.log('chans', chans.channels);
         yield asyncForEach(chans.channels, (chan) => __awaiter(this, void 0, void 0, function* () {
-            console.log('chan', chan);
             const chan_id = parseInt(chan.chan_id);
+            console.log('chan_id', chan_id);
             try {
                 const info = yield LND.getChanInfo(chan_id);
                 if (!info)
