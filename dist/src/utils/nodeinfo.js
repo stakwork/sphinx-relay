@@ -152,15 +152,17 @@ function listNonZeroPolicies() {
         const ret = [];
         const chans = yield LND.listChannels({});
         if (!(chans && chans.channels))
-            return;
+            return ret;
         yield asyncForEach(chans.channels, (chan) => __awaiter(this, void 0, void 0, function* () {
             const chan_id = parseInt(chan.chan_id);
             try {
                 const info = yield LND.getChanInfo(chan_id);
                 if (!info)
                     return;
+                console.log('info for ', chan_id);
                 policies.forEach(p => {
                     if (info[p] && info[p].fee_base_msat) {
+                        console.log('fee base msat', info[p].fee_base_msat);
                         const fee_base_msat = parseInt(info[p].fee_base_msat);
                         if (fee_base_msat > 0)
                             ret.push({ node: p, fee_base_msat, chan_id });
