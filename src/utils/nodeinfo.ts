@@ -147,8 +147,11 @@ async function listNonZeroPolicies(){
 
   const chans = await LND.listChannels({})
   if(!(chans && chans.channels)) return ret
+
+  console.log('chans', chans.channels)
   
   await asyncForEach(chans.channels, async chan=>{
+    console.log('chan',chan)
     const chan_id = parseInt(chan.chan_id)
     try {
       const info = await LND.getChanInfo(chan_id)
