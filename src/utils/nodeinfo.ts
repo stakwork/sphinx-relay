@@ -161,6 +161,7 @@ async function listNonZeroPolicies(){
       })
     } catch(e){}
   })
+  return ret
 }
 
 async function asyncForEach(array, callback) {

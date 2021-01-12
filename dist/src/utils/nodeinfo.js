@@ -169,6 +169,7 @@ function listNonZeroPolicies() {
             }
             catch (e) { }
         }));
+        return ret;
     });
 }
 function asyncForEach(array, callback) {
