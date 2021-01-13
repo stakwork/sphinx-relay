@@ -140,6 +140,7 @@ interface Policy {
   chan_id: string,
   node: string // "node1_policy" or "node2_policy"
   fee_base_msat: number
+  disabled: boolean
 }
 const policies = ['node1_policy','node2_policy']
 async function listNonZeroPolicies(){
@@ -153,9 +154,17 @@ async function listNonZeroPolicies(){
       const info = await LND.getChanInfo(chan.chan_id)
       if(!info) return
       policies.forEach(p=>{
-        if(info[p] && info[p].fee_base_msat) {
+        if(info[p]) {
           const fee_base_msat = parseInt(info[p].fee_base_msat)
-          if(fee_base_msat>0) ret.push({node:p, fee_base_msat, chan_id:chan.chan_id})
+          const disabled = info[p].disabled
+          if(fee_base_msat>0 || disabled) {
+            ret.push({
+              node:p, 
+              fee_base_msat, 
+              chan_id:chan.chan_id, 
+              disabled
+            })
+          }
         }
       })
     } catch(e){}
