@@ -159,10 +159,17 @@ function listNonZeroPolicies() {
                 if (!info)
                     return;
                 policies.forEach(p => {
-                    if (info[p] && info[p].fee_base_msat) {
+                    if (info[p]) {
                         const fee_base_msat = parseInt(info[p].fee_base_msat);
-                        if (fee_base_msat > 0)
-                            ret.push({ node: p, fee_base_msat, chan_id: chan.chan_id });
+                        const disabled = info[p].disabled;
+                        if (fee_base_msat > 0 || disabled) {
+                            ret.push({
+                                node: p,
+                                fee_base_msat,
+                                chan_id: chan.chan_id,
+                                disabled
+                            });
+                        }
                     }
                 });
             }
