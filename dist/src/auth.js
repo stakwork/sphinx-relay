@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.base64ToHex = exports.authModule = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
 const cryptoJS = require("crypto-js");

@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -269,7 +270,7 @@ function addGroupMembers(req, res) {
     });
 }
 exports.addGroupMembers = addGroupMembers;
-exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const chat = yield models_1.models.Chat.findOne({ where: { id } });
@@ -322,6 +323,7 @@ exports.deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     yield models_1.models.ChatMember.destroy({ where: { chatId: id } });
     res_1.success(res, { chat_id: id });
 });
+exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> receiveGroupJoin');

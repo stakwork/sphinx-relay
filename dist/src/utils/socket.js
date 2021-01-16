@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendJson = exports.send = exports.connect = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 // import * as WebSocket from 'ws'
@@ -53,7 +54,7 @@ function isValidToken(token) {
         return true;
     });
 }
-exports.send = (body) => {
+const send = (body) => {
     if (io)
         io.sockets.emit('message', body);
     // if(srvr){
@@ -62,7 +63,9 @@ exports.send = (body) => {
     //   })
     // }
 };
-exports.sendJson = (object) => {
+exports.send = send;
+const sendJson = (object) => {
     exports.send(JSON.stringify(object));
 };
+exports.sendJson = sendJson;
 //# sourceMappingURL=socket.js.map

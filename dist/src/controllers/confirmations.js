@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.receiveHeartbeatConfirmation = exports.healthcheck = exports.receiveHeartbeat = exports.tribeOwnerAutoConfirmation = exports.receiveConfirmation = exports.sendConfirmation = void 0;
 const lock_1 = require("../utils/lock");
 const models_1 = require("../models");
 const socket = require("../utils/socket");

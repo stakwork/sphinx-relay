@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getCertificate = void 0;
 const fs_1 = require("fs");
 const express = require("express");
 const qs = require('qs');

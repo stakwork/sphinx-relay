@@ -117,7 +117,7 @@ function connectionStringFile(str: string) {
   if ('connection_string_path' in config) {
     connectStringPath = config.connection_string_path
   }
-  fs.writeFile(connectStringPath, str, function (err) {
+  fs.writeFile(connectStringPath||'connection_string.txt', str, function (err) {
     if (err) console.log('ERROR SAVING connection_string.txt.', err);
   });
 }

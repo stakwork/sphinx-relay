@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.verifyAscii = exports.signAscii = exports.signBuffer = exports.signMessage = exports.loadSigner = void 0;
 const grpc = require("grpc");
 const lightning_1 = require("./lightning");
 const ByteBuffer = require("bytebuffer");
@@ -17,7 +18,7 @@ const config_1 = require("./config");
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 var signerClient = null;
-exports.loadSigner = () => {
+const loadSigner = () => {
     if (signerClient) {
         return signerClient;
     }
@@ -34,7 +35,8 @@ exports.loadSigner = () => {
         }
     }
 };
-exports.signMessage = (msg) => {
+exports.loadSigner = loadSigner;
+const signMessage = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();
         try {
@@ -57,7 +59,8 @@ exports.signMessage = (msg) => {
         }
     }));
 };
-exports.signBuffer = (msg) => {
+exports.signMessage = signMessage;
+const signBuffer = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();
         try {
@@ -77,6 +80,7 @@ exports.signBuffer = (msg) => {
         }
     }));
 };
+exports.signBuffer = signBuffer;
 function verifyMessage(msg, sig, pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let signer = yield exports.loadSigner();

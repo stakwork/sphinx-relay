@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.listPayments = exports.receivePayment = exports.sendPayment = void 0;
 const models_1 = require("../models");
 const hub_1 = require("../hub");
 const socket = require("../utils/socket");
@@ -21,7 +22,7 @@ const short = require("short-uuid");
 const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
-exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -112,7 +113,8 @@ exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         })
     });
 });
-exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendPayment = sendPayment;
+const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
@@ -152,7 +154,8 @@ exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function
     });
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
 });
-exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePayment = receivePayment;
+const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const MIN_VAL = constants_1.default.min_sat_amount;
@@ -198,4 +201,5 @@ exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function*
         res_1.failure(res, 'cant find payments');
     }
 });
+exports.listPayments = listPayments;
 //# sourceMappingURL=payment.js.map

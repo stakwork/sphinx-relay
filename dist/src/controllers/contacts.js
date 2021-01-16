@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -18,7 +19,7 @@ const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
-exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false }, raw: true });
     const invites = yield models_1.models.Invite.findAll({ raw: true });
     const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
@@ -51,7 +52,8 @@ exports.getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         subscriptions: subsResponse
     });
 });
-exports.generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getContacts = getContacts;
+const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query });
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     const pwd = password_1.default;
@@ -84,7 +86,8 @@ exports.generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function
         res_1.failure(res, {});
     }
 });
-exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.generateToken = generateToken;
+const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
@@ -118,7 +121,8 @@ exports.updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function
         dontActuallySendContactKey: !contactKeyChanged
     });
 });
-exports.exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.updateContact = updateContact;
+const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query });
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -129,7 +133,8 @@ exports.exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function*
         type: constants_1.default.message_types.contact_key,
     });
 });
-exports.createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.exchangeKeys = exchangeKeys;
+const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> createContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
@@ -152,7 +157,8 @@ exports.createContact = (req, res) => __awaiter(void 0, void 0, void 0, function
         type: constants_1.default.message_types.contact_key,
     });
 });
-exports.deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createContact = createContact;
+const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = parseInt(req.params.id || '0');
     if (!id || id === 1) {
         res_1.failure(res, 'Cannot delete self');
@@ -202,7 +208,8 @@ exports.deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function
     yield models_1.models.Subscription.destroy({ where: { contactId: id } });
     res_1.success(res, {});
 });
-exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.deleteContact = deleteContact;
+const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received contact key', JSON.stringify(payload));
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
@@ -242,7 +249,8 @@ exports.receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, funct
         });
     }
 });
-exports.receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveContactKey = receiveContactKey;
+const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`, JSON.stringify(payload));
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
@@ -266,6 +274,7 @@ exports.receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0
         });
     }
 });
+exports.receiveConfirmContactKey = receiveConfirmContactKey;
 const extractAttrs = body => {
     let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount"];
     let attrs = {};

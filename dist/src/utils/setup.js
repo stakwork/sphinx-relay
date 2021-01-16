@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
 const lightning_1 = require("./lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
@@ -127,7 +128,7 @@ function connectionStringFile(str) {
     if ('connection_string_path' in config) {
         connectStringPath = config.connection_string_path;
     }
-    fs.writeFile(connectStringPath, str, function (err) {
+    fs.writeFile(connectStringPath || 'connection_string.txt', str, function (err) {
         if (err)
             console.log('ERROR SAVING connection_string.txt.', err);
     });

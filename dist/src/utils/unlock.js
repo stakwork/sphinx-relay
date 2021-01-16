@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.tryToUnlockLND = void 0;
 const lightning_1 = require("./lightning");
 const config_1 = require("./config");
 const fs = require('fs');
