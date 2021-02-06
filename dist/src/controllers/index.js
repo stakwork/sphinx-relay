@@ -34,7 +34,7 @@ const feed = require("./feed");
 const tribes_1 = require("../utils/tribes");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = tribes_1.getTribeOwnersChatByUUID('XtV0ph923hUSIA1VmS3PmJA5R5gDpoJJsYOVCNOUwjZn_wl0GHhG0GIe8FsjrWJm3mdflsXV_sMTmLAN4dulKQUblsBP');
+        const r = yield tribes_1.getTribeOwnersChatByUUID('XtV0ph923hUSIA1VmS3PmJA5R5gDpoJJsYOVCNOUwjZn_wl0GHhG0GIe8FsjrWJm3mdflsXV_sMTmLAN4dulKQUblsBP');
         console.log('===>', r);
         builtInBots.init();
         if (models_1.models && models_1.models.Subscription) {

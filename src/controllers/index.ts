@@ -23,7 +23,7 @@ import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 export async function set(app) {
 
-	const r = getTribeOwnersChatByUUID('XtV0ph923hUSIA1VmS3PmJA5R5gDpoJJsYOVCNOUwjZn_wl0GHhG0GIe8FsjrWJm3mdflsXV_sMTmLAN4dulKQUblsBP')
+	const r = await getTribeOwnersChatByUUID('XtV0ph923hUSIA1VmS3PmJA5R5gDpoJJsYOVCNOUwjZn_wl0GHhG0GIe8FsjrWJm3mdflsXV_sMTmLAN4dulKQUblsBP')
 	console.log('===>',r)
 	builtInBots.init()
 
