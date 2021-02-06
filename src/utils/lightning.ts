@@ -262,6 +262,7 @@ const loadRouter = () => {
       var descriptor = grpc.load("proto/router.proto");
       var router: any = descriptor.routerrpc
       routerClient = new router.Router(config.node_ip + ':' + config.lnd_port, credentials);
+      console.log('routerClient',routerClient)
       return routerClient
     } catch (e) {
       throw e
