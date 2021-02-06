@@ -496,8 +496,8 @@ export async function verifier(msg, sig) {
 }
 
 export async function getMyPubKey() {
-  return new Promise((resolve, reject) => {
-    const lightning = loadLightning()
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning()
     var request = {}
     lightning.getInfo(request, function (err, response) {
       if (err) reject(err)

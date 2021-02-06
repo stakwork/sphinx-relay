@@ -51,6 +51,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], Bot.prototype, "updatedAt", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Bot.prototype, "tenant", void 0);
 Bot = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_bots', underscored: true })
 ], Bot);

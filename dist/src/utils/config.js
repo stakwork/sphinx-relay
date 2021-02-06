@@ -35,6 +35,10 @@ function loadConfig() {
         unlock: (ENV.unlock || config.unlock) ? true : false,
         lnd_pwd_path: ENV.LND_PWD_PATH || config.lnd_pwd_path,
         connect_ui: ENV.CONNECT_UI || config.connect_ui,
+        proxy_macaroons_dir: ENV.PROXY_MACAROONS_DIR || config.proxy_macaroons_dir,
+        proxy_tls_location: ENV.PROXY_TLS_LOCATION || config.proxy_tls_location,
+        proxy_lnd_ip: ENV.PROXY_LND_IP || config.proxy_lnd_ip,
+        proxy_lnd_port: ENV.PROXY_LND_PORT || config.proxy_lnd_port,
     };
 }
 exports.loadConfig = loadConfig;

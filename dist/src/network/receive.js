@@ -58,9 +58,13 @@ const botMakerTypes = [
     constants_1.default.message_types.bot_install,
     constants_1.default.message_types.bot_cmd,
 ];
-function onReceive(payload) {
+function onReceive(payload, dest) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('===> onReceive',JSON.stringify(payload,null,2))
+        if (dest) {
+            if (dest.length !== 66)
+                return console.log("INVALID DEST", dest);
+        }
+        console.log('===> onReceive', JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return console.log('no payload.type');
         if (botTypes.includes(payload.type)) {
@@ -285,7 +289,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield lightning_1.getInfo();
+            yield lightning_1.getInfo(false); // dont try proxy
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
@@ -302,7 +306,9 @@ function initTribesSubscriptions() {
                 // check topic is signed by sender?
                 const payload = yield parseAndVerifyPayload(msg);
                 payload.network_type = constants_1.default.network_types.mqtt;
-                onReceive(payload);
+                const arr = topic.split('/');
+                const dest = arr[0];
+                onReceive(payload, dest);
             }
             catch (e) { }
         }));
@@ -331,6 +337,7 @@ function parseAndVerifyPayload(data) {
             payload = JSON.parse(msg);
             if (payload && payload.sender && payload.sender.pub_key) {
                 let v;
+                console.log("=> SIG LEN", sig.length);
                 if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
                     // console.log("VERIFY",v)
@@ -387,6 +394,12 @@ function saveAnonymousKeysend(response, memo, sender_pubkey) {
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
+        const invoice = yield lightning_2.decodePayReq(i.payment_request);
+        if (!invoice)
+            return console.log("couldn't decode pay req");
+        if (!invoice.destination)
+            return console.log("cant get dest from pay req");
+        const dest = invoice.destination;
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
@@ -434,7 +447,7 @@ function parseKeysendInvoice(i) {
                 dat.message.amount = value; // ADD IN TRUE VALUE
             }
             dat.network_type = constants_1.default.network_types.lightning;
-            onReceive(dat);
+            onReceive(dat, dest);
         }
     });
 }

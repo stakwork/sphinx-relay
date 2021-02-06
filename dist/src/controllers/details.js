@@ -77,7 +77,7 @@ function getLogsSince(req, res) {
 }
 exports.getLogsSince = getLogsSince;
 const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = lightning_1.loadLightning();
+    const lightning = yield lightning_1.loadLightning();
     var request = {};
     lightning.getInfo(request, function (err, response) {
         res.status(200);
@@ -92,7 +92,7 @@ const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getInfo = getInfo;
 const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = lightning_1.loadLightning();
+    const lightning = yield lightning_1.loadLightning(true); // try proxy
     var request = {};
     lightning.listChannels(request, function (err, response) {
         res.status(200);
@@ -135,7 +135,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.getBalance = getBalance;
 const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = lightning_1.loadLightning();
+    const lightning = yield lightning_1.loadLightning(true); // try proxy
     lightning.listChannels({}, (err, channelList) => {
         const { channels } = channelList;
         const localBalances = channels.map(c => c.local_balance);

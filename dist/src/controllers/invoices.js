@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.receiveInvoice = exports.listInvoices = exports.createInvoice = exports.cancelInvoice = exports.payInvoice = void 0;
 const models_1 = require("../models");
-const lightning_1 = require("../utils/lightning");
+const LND = require("../utils/lightning");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const decodeUtils = require("../utils/decode");
@@ -28,7 +28,6 @@ function stripLightningPrefix(s) {
     return s;
 }
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = yield lightning_1.loadLightning();
     const payment_request = stripLightningPrefix(req.body.payment_request);
     if (!payment_request) {
         console.log('[pay invoice] "payment_request" is empty');
@@ -38,8 +37,8 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     console.log(`[pay invoice] ${payment_request}`);
-    var call = lightning.sendPayment({});
-    call.on('data', (response) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = LND.sendPayment(payment_request);
         console.log('[pay invoice data]', response);
         const message = yield models_1.models.Message.findOne({ where: { payment_request } });
         if (!message) { // invoice still paid
@@ -69,8 +68,10 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         console.log('[pay invoice] stored message', paidMessage);
         res_1.success(res, jsonUtils.messageToJson(paidMessage, chat));
-    }));
-    call.write({ payment_request });
+    }
+    catch (e) {
+        console.log("ERR paying invoice", e);
+    }
 });
 exports.payInvoice = payInvoice;
 function anonymousInvoice(res, payment_request) {
@@ -104,7 +105,7 @@ const cancelInvoice = (req, res) => {
 };
 exports.cancelInvoice = cancelInvoice;
 const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = yield lightning_1.loadLightning();
+    const lightning = yield LND.loadLightning(true); // try proxy
     const { amount, memo, remote_memo, chat_id, contact_id, expiry, } = req.body;
     var request = {
         value: amount,
@@ -190,7 +191,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createInvoice = createInvoice;
 const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = yield lightning_1.loadLightning();
+    const lightning = yield LND.loadLightning();
     lightning.listInvoices({}, (err, response) => {
         console.log({ err, response });
         if (err == null) {

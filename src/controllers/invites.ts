@@ -2,6 +2,7 @@ import { models } from '../models'
 import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
+// import * as proxy from '../utils/proxy'
 
 export const finishInvite = async (req, res) => {
 	const {

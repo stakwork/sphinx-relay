@@ -16,7 +16,7 @@ let client: any
 
 export async function connect(onMessage) {
   try {
-    const info = await LND.getInfo()
+    const info = await LND.getInfo(false) // dont try proxy
 
     async function reconnect() {
       client = null
@@ -64,7 +64,9 @@ async function updateTribeStats(myPubkey) {
       await putstats({ uuid: tribe.uuid, host: tribe.host, member_count, chatId: tribe.id })
     } catch (e) { }
   })
-  console.log(`[tribes] updated stats for ${myTribes.length} tribes`)
+  if (myTribes.length) {
+    console.log(`[tribes] updated stats for ${myTribes.length} tribes`)
+  }
 }
 
 export function subscribe(topic) {
@@ -178,6 +180,7 @@ export async function putstats({ uuid, host, member_count, chatId }) {
 }
 
 export async function genSignedTimestamp() {
+  // console.log('genSignedTimestamp')
   const now = moment().unix()
   const tsBytes = Buffer.from(now.toString(16), 'hex')
   const sig = await LND.signBuffer(tsBytes)

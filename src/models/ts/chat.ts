@@ -101,4 +101,7 @@ export default class Chat extends Model<Chat> {
   @Column
   myAlias: string
 
+  @Column
+  tenant: number
+
 }

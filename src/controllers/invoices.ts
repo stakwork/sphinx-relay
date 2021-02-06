@@ -1,5 +1,5 @@
 import { models } from '../models'
-import { loadLightning } from '../utils/lightning'
+import * as LND from '../utils/lightning'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as decodeUtils from '../utils/decode'
@@ -17,7 +17,7 @@ function stripLightningPrefix(s) {
 }
 
 export const payInvoice = async (req, res) => {
-  const lightning = await loadLightning()
+
   const payment_request = stripLightningPrefix(req.body.payment_request)
 
   if (!payment_request) {
@@ -29,9 +29,9 @@ export const payInvoice = async (req, res) => {
   }
   console.log(`[pay invoice] ${payment_request}`)
 
-  var call = lightning.sendPayment({})
+  try {
+    const response = LND.sendPayment(payment_request)
 
-  call.on('data', async response => {
     console.log('[pay invoice data]', response)
 
     const message = await models.Message.findOne({ where: { payment_request } })
@@ -66,11 +66,10 @@ export const payInvoice = async (req, res) => {
     })
     console.log('[pay invoice] stored message', paidMessage)
     success(res, jsonUtils.messageToJson(paidMessage, chat))
-  })
-
-  call.write({ payment_request })
+  } catch(e) {
+    console.log("ERR paying invoice", e)
+  }
 };
-
 
 async function anonymousInvoice(res, payment_request: string) {
   const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(payment_request)
@@ -102,7 +101,7 @@ export const cancelInvoice = (req, res) => {
 };
 
 export const createInvoice = async (req, res) => {
-  const lightning = await loadLightning()
+  const lightning = await LND.loadLightning(true) // try proxy
 
   const {
     amount,
@@ -201,7 +200,7 @@ export const createInvoice = async (req, res) => {
 };
 
 export const listInvoices = async (req, res) => {
-  const lightning = await loadLightning()
+  const lightning = await LND.loadLightning()
 
   lightning.listInvoices({}, (err, response) => {
     console.log({ err, response })

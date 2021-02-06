@@ -58,7 +58,7 @@ export async function getLogsSince(req, res) {
 }
 
 export const getInfo = async (req, res) => {
-	const lightning = loadLightning()
+	const lightning = await loadLightning()
 	var request = {}
 	lightning.getInfo(request, function (err, response) {
 		res.status(200);
@@ -72,7 +72,7 @@ export const getInfo = async (req, res) => {
 };
 
 export const getChannels = async (req, res) => {
-	const lightning = loadLightning()
+	const lightning = await loadLightning(true) // try proxy
 	var request = {}
 	lightning.listChannels(request, function (err, response) {
 		res.status(200);
@@ -119,7 +119,7 @@ export const getBalance = async (req, res) => {
 };
 
 export const getLocalRemoteBalance = async (req, res) => {
-	const lightning = loadLightning()
+	const lightning = await loadLightning(true) // try proxy
 	lightning.listChannels({}, (err, channelList) => {
 		const { channels } = channelList
 

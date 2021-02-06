@@ -2,7 +2,7 @@ import * as lndService from '../grpc'
 import { getInfo } from '../utils/lightning'
 import { ACTIONS } from '../controllers'
 import * as tribes from '../utils/tribes'
-import { SPHINX_CUSTOM_RECORD_KEY } from '../utils/lightning'
+import { SPHINX_CUSTOM_RECORD_KEY, decodePayReq } from '../utils/lightning'
 import * as signer from '../utils/signer'
 import { models } from '../models'
 import { sendMessage } from './send'
@@ -49,8 +49,11 @@ const botMakerTypes = [
 	constants.message_types.bot_install,
 	constants.message_types.bot_cmd,
 ]
-async function onReceive(payload) {
-	// console.log('===> onReceive',JSON.stringify(payload,null,2))
+async function onReceive(payload:{[k:string]:any}, dest:string) {
+	if (dest) {
+		if(dest.length!==66) return console.log("INVALID DEST", dest)
+	}
+	console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if (!(payload.type || payload.type === 0)) return console.log('no payload.type')
 
 	if (botTypes.includes(payload.type)) {
@@ -266,7 +269,7 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 
 export async function initGrpcSubscriptions() {
 	try {
-		await getInfo()
+		await getInfo(false) // dont try proxy
 		await lndService.subscribeInvoices(parseKeysendInvoice)
 	} catch (e) {
 		throw e
@@ -280,7 +283,10 @@ export async function initTribesSubscriptions() {
 			// check topic is signed by sender?
 			const payload = await parseAndVerifyPayload(msg)
 			payload.network_type = constants.network_types.mqtt
-			onReceive(payload)
+
+			const arr = topic.split('/')
+			const dest = arr[0]
+			onReceive(payload, dest)
 		} catch (e) { }
 	})
 }
@@ -306,6 +312,7 @@ async function parseAndVerifyPayload(data) {
 		payload = JSON.parse(msg)
 		if (payload && payload.sender && payload.sender.pub_key) {
 			let v
+			console.log("=> SIG LEN", sig.length)
 			if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
 				// console.log("VERIFY",v)
@@ -356,6 +363,12 @@ async function saveAnonymousKeysend(response, memo, sender_pubkey) {
 
 export async function parseKeysendInvoice(i) {
 	const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
+
+	const invoice:any = await decodePayReq(i.payment_request)
+	if(!invoice) return console.log("couldn't decode pay req")
+	if(!invoice.destination) return console.log("cant get dest from pay req")
+	const dest = invoice.destination
+
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
 	const data = buf && buf.toString()
 	const value = i && i.value && parseInt(i.value)
@@ -400,7 +413,7 @@ export async function parseKeysendInvoice(i) {
 			dat.message.amount = value // ADD IN TRUE VALUE
 		}
 		dat.network_type = constants.network_types.lightning
-		onReceive(dat)
+		onReceive(dat, dest)
 	}
 }
 

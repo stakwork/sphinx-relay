@@ -5,7 +5,7 @@ import * as socket from './utils/socket'
 import * as jsonUtils from './utils/json'
 import * as helpers from './helpers'
 import { nodeinfo } from './utils/nodeinfo'
-import { loadLightning } from './utils/lightning'
+import * as LND from './utils/lightning'
 import constants from './constants'
 import {loadConfig} from './utils/config'
 import * as https from 'https'
@@ -173,15 +173,12 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
 }
 
 async function payInviteInvoice(invoice, onSuccess, onFailure) {
-  const lightning = await loadLightning()
-  var call = lightning.sendPayment({})
-  call.on('data', async response => {
-    onSuccess(response)
-  })
-  call.on('error', async err => {
-    onFailure(err)
-  })
-  call.write({ payment_request: invoice })
+  try {
+    const res = LND.sendPayment(invoice)
+    onSuccess(res)
+  } catch(e) {
+    onFailure(e)
+  }
 }
 
 const createInviteInHub = (params, onSuccess, onFailure) => {

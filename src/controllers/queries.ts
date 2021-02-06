@@ -29,7 +29,7 @@ async function get_hub_pubkey(){
   const r = await fetch(hub_url+'/routingnode')
   const j = await r.json()
   if(j && j.pubkey) {
-    console.log("=> GOT HUB PUBKEY", j.pubkey)
+    // console.log("=> GOT HUB PUBKEY", j.pubkey)
     hub_pubkey = j.pubkey
   }
 }

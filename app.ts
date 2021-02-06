@@ -10,7 +10,7 @@ import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
-import { authModule, unlocker } from './src/auth'
+import { ownerMiddleware, unlocker } from './src/auth'
 import * as grpc from './src/grpc'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
@@ -69,9 +69,7 @@ function setupApp() {
 			allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token']
 		}))
 		app.use(cookieParser())
-		if (env != 'development') {
-			app.use(authModule);
-		}
+		app.use(ownerMiddleware);
 		app.use('/static', express.static('public'));
 		app.get('/app', (req, res) => res.send('INDEX'))
 		if (config.connect_ui) {

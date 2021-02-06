@@ -91,6 +91,7 @@ export const getMessages = async (req, res) => {
 }
 
 export const getAllMessages = async (req, res) => {
+	
 	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
 	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 

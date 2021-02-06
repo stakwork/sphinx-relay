@@ -12,6 +12,9 @@ export default class Contact extends Model<Contact> {
   id: number
 
   @Column
+  routeHint: string
+
+  @Column
   publicKey: string
 
   @Column
@@ -68,5 +71,8 @@ export default class Contact extends Model<Contact> {
 
   @Column(DataType.BIGINT)
   tipAmount: number
+
+  @Column
+  tenant: number
 
 }

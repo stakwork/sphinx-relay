@@ -1,6 +1,27 @@
 import { sequelize } from '../models'
 
+async function addTenant(tableName){
+  addTableColumn(tableName, 'tenant', 'BIGINT')
+  try {
+    await sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`)
+  } catch (e) { console.log(e) }
+}
+
 export default async function migrate() {
+
+  addTenant('sphinx_chat_members')
+  addTenant('sphinx_chats')
+  addTenant('sphinx_bots')
+  addTenant('sphinx_contacts')
+  addTenant('sphinx_messages')
+  addTenant('sphinx_bot_members')
+  addTenant('sphinx_chat_bots')
+  addTenant('sphinx_invites')
+  addTenant('sphinx_media_keys')
+  addTenant('sphinx_subscriptions')
+  addTenant('sphinx_timers')
+
+  addTableColumn('sphinx_contacts', 'route_hint')
 
   try {
     await sequelize.query(`

@@ -14,8 +14,9 @@ const ERR_CODE_STREAM_REMOVED = 2
 const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
 export function subscribeInvoices(parseKeysendInvoice) {
+	console.log('subscribeInvoices')
 	return new Promise(async (resolve, reject) => {
-		const lightning = await loadLightning()
+		const lightning = await loadLightning(true) // try proxy
 
 		var call = lightning.subscribeInvoices()
 		call.on('data', async function (response) {
@@ -101,7 +102,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			// The server is unavailable, trying to reconnect.
 			if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
 				i = 0
-				reconnectToLND(Math.random());
+				// waitAndReconnect()
 			} else {
 				resolve(status);
 			}
@@ -111,7 +112,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			console.error('[LND] Error', now, err.code)
 			if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
 				i = 0
-				reconnectToLND(Math.random());
+				// waitAndReconnect()
 			} else {
 				reject(err)
 			}
@@ -121,7 +122,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			console.log(`Closed stream ${now}`);
 			// The server has closed the stream.
 			i = 0
-			reconnectToLND(Math.random())
+			waitAndReconnect()
 		})
 		setTimeout(() => {
 			resolve(null)
@@ -129,9 +130,14 @@ export function subscribeInvoices(parseKeysendInvoice) {
 	})
 }
 
+function waitAndReconnect(){
+	setTimeout(()=> reconnectToLND(Math.random()), 2000)
+}
+
 var i = 0
 var ctx = 0
 export async function reconnectToLND(innerCtx: number, callback?: Function) {
+	console.log("reconnectToLND")
 	ctx = innerCtx
 	i++
 	const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
@@ -146,6 +152,7 @@ export async function reconnectToLND(innerCtx: number, callback?: Function) {
 			await tryToUnlockLND()
 		}
 		setTimeout(async () => { // retry each 2 secs
+			console.log('?', ctx===innerCtx)
 			if (ctx === innerCtx) { // if another retry fires, then this will not run
 				await reconnectToLND(innerCtx, callback)
 			}

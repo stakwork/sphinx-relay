@@ -37,7 +37,7 @@ function set(app) {
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
         }
-        media.cycleMediaToken();
+        // media.cycleMediaToken()
         timers.reloadTimers();
         queries.startWatchingUTXOs();
         app.get('/chats', chats.getChats);

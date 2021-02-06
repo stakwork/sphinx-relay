@@ -10,8 +10,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
+function addTenant(tableName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn(tableName, 'tenant', 'BIGINT');
+        try {
+            yield models_1.sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    });
+}
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTenant('sphinx_chat_members');
+        addTenant('sphinx_chats');
+        addTenant('sphinx_bots');
+        addTenant('sphinx_contacts');
+        addTenant('sphinx_messages');
+        addTenant('sphinx_bot_members');
+        addTenant('sphinx_chat_bots');
+        addTenant('sphinx_invites');
+        addTenant('sphinx_media_keys');
+        addTenant('sphinx_subscriptions');
+        addTenant('sphinx_timers');
+        addTableColumn('sphinx_contacts', 'route_hint');
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_accountings (

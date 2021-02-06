@@ -17,7 +17,7 @@ const socket = require("./utils/socket");
 const jsonUtils = require("./utils/json");
 const helpers = require("./helpers");
 const nodeinfo_1 = require("./utils/nodeinfo");
-const lightning_1 = require("./utils/lightning");
+const LND = require("./utils/lightning");
 const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
 const https = require("https");
@@ -173,15 +173,13 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
 exports.payInviteInHub = payInviteInHub;
 function payInviteInvoice(invoice, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
-        const lightning = yield lightning_1.loadLightning();
-        var call = lightning.sendPayment({});
-        call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
-            onSuccess(response);
-        }));
-        call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
-            onFailure(err);
-        }));
-        call.write({ payment_request: invoice });
+        try {
+            const res = LND.sendPayment(invoice);
+            onSuccess(res);
+        }
+        catch (e) {
+            onFailure(e);
+        }
     });
 }
 exports.payInviteInvoice = payInviteInvoice;

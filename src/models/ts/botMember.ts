@@ -33,4 +33,7 @@ export default class BotMember extends Model<BotMember> {
   @Column
   updatedAt: Date
 
+  @Column
+  tenant: number
+
 }

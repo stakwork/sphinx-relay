@@ -64,6 +64,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], ChatBot.prototype, "updatedAt", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], ChatBot.prototype, "tenant", void 0);
 ChatBot = __decorate([
     sequelize_typescript_1.Table({
         tableName: 'sphinx_chat_bots', underscored: true, indexes: [

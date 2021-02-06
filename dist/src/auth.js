@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.base64ToHex = exports.authModule = exports.unlocker = void 0;
+exports.base64ToHex = exports.authModule = exports.ownerMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
 const cryptoJS = require("crypto-js");
@@ -70,6 +70,41 @@ function unlocker(req, res) {
     });
 }
 exports.unlocker = unlocker;
+function ownerMiddleware(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (req.path == '/app' ||
+            req.path == '/' ||
+            req.path == '/unlock' ||
+            req.path == '/info' ||
+            req.path == '/action' ||
+            req.path == '/contacts/tokens' ||
+            req.path == '/latest' ||
+            req.path.startsWith('/static') ||
+            req.path == '/contacts/set_dev' ||
+            req.path == '/connect') {
+            next();
+            return;
+        }
+        if (process.env.HOSTING_PROVIDER === 'true') {
+            if (req.path === '/invoices') {
+                next();
+                return;
+            }
+        }
+        const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
+        const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
+        const owner = yield models_1.models.Contact.findOne({ where: { authToken: hashedToken } });
+        if (!owner) {
+            res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
+            res.end('Invalid credentials');
+        }
+        else {
+            req.owner = owner.dataValues;
+            next();
+        }
+    });
+}
+exports.ownerMiddleware = ownerMiddleware;
 function authModule(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         if (req.path == '/app' ||
@@ -81,8 +116,7 @@ function authModule(req, res, next) {
             req.path == '/latest' ||
             req.path.startsWith('/static') ||
             req.path == '/contacts/set_dev' ||
-            req.path == '/connect' ||
-            req.path == '/utxos') {
+            req.path == '/connect') {
             next();
             return;
         }

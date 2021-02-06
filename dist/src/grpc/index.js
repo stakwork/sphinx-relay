@@ -24,8 +24,9 @@ const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
+    console.log('subscribeInvoices');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        const lightning = yield lightning_1.loadLightning();
+        const lightning = yield lightning_1.loadLightning(true); // try proxy
         var call = lightning.subscribeInvoices();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
@@ -105,7 +106,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             // The server is unavailable, trying to reconnect.
             if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
-                reconnectToLND(Math.random());
+                // waitAndReconnect()
             }
             else {
                 resolve(status);
@@ -116,7 +117,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             console.error('[LND] Error', now, err.code);
             if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
-                reconnectToLND(Math.random());
+                // waitAndReconnect()
             }
             else {
                 reject(err);
@@ -127,7 +128,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             console.log(`Closed stream ${now}`);
             // The server has closed the stream.
             i = 0;
-            reconnectToLND(Math.random());
+            waitAndReconnect();
         });
         setTimeout(() => {
             resolve(null);
@@ -135,10 +136,14 @@ function subscribeInvoices(parseKeysendInvoice) {
     }));
 }
 exports.subscribeInvoices = subscribeInvoices;
+function waitAndReconnect() {
+    setTimeout(() => reconnectToLND(Math.random()), 2000);
+}
 var i = 0;
 var ctx = 0;
 function reconnectToLND(innerCtx, callback) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("reconnectToLND");
         ctx = innerCtx;
         i++;
         const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
@@ -155,6 +160,7 @@ function reconnectToLND(innerCtx, callback) {
                 yield unlock_1.tryToUnlockLND();
             }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                console.log('?', ctx === innerCtx);
                 if (ctx === innerCtx) { // if another retry fires, then this will not run
                     yield reconnectToLND(innerCtx, callback);
                 }

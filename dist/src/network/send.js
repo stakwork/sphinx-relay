@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.newmsg = exports.signAndSend = exports.sendMessage = void 0;
 const models_1 = require("../models");
 const LND = require("../utils/lightning");
-const signer = require("../utils/signer");
 const msg_1 = require("../utils/msg");
 const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
@@ -133,7 +132,7 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
             }
             let data = JSON.stringify(opts.data || {});
             opts.amt = opts.amt || 0;
-            const sig = yield signer.signAscii(data);
+            const sig = yield LND.signAscii(data);
             data = data + sig;
             // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
             try {

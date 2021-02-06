@@ -35,4 +35,7 @@ export default class Invite extends Model<Invite> {
   @Column
   updatedAt: Date
 
+  @Column
+  tenant: number
+
 }

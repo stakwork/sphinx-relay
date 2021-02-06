@@ -469,8 +469,8 @@ function verifier(msg, sig) {
 exports.verifier = verifier;
 function getMyPubKey() {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            const lightning = lightning_2.loadLightning();
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield lightning_2.loadLightning();
             var request = {};
             lightning.getInfo(request, function (err, response) {
                 if (err)
@@ -480,7 +480,7 @@ function getMyPubKey() {
                 else
                     resolve(response.identity_pubkey);
             });
-        });
+        }));
     });
 }
 exports.getMyPubKey = getMyPubKey;

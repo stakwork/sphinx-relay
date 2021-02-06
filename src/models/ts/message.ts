@@ -98,4 +98,7 @@ export default class Message extends Model<Message> {
 
   @Column(DataType.INTEGER)
   network_type: number
+
+  @Column
+  tenant: number
 }

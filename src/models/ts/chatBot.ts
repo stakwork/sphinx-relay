@@ -48,4 +48,7 @@ export default class ChatBot extends Model<ChatBot> {
 
   @Column
   updatedAt: Date
+
+  @Column
+  tenant: number
 }

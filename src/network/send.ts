@@ -1,6 +1,5 @@
 import { models } from '../models'
 import * as LND from '../utils/lightning'
-import * as signer from '../utils/signer'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
 import * as tribes from '../utils/tribes'
 import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
@@ -126,7 +125,7 @@ export function signAndSend(opts, mqttTopic?: string, replayingHistory?: boolean
 		let data = JSON.stringify(opts.data || {})
 		opts.amt = opts.amt || 0
 
-		const sig = await signer.signAscii(data)
+		const sig = await LND.signAscii(data)
 		data = data + sig
 
 		// console.log("-> ACTUALLY SEND: topic:", mqttTopic)

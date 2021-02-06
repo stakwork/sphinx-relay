@@ -20,7 +20,11 @@
       "enabled": false,
       "save": true,
       "port": "80"
-    }
+    },
+    "proxy_macaroons_dir": "/Users/evanfeenstra/code/sphinx-proxy/macaroons",
+    "proxy_tls_location": "/Users/evanfeenstra/code/sphinx-proxy/cert/tls.cert",
+    "proxy_lnd_ip": "127.0.0.1",
+    "proxy_lnd_port": "11111"
   },
   "production": {
     "senza_url": "https://staging.senza.us/api/v2/",

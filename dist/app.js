@@ -77,9 +77,7 @@ function setupApp() {
             allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token']
         }));
         app.use(cookieParser());
-        if (env != 'development') {
-            app.use(auth_1.authModule);
-        }
+        app.use(auth_1.ownerMiddleware);
         app.use('/static', express.static('public'));
         app.get('/app', (req, res) => res.send('INDEX'));
         if (config.connect_ui) {

@@ -24,7 +24,7 @@ let client;
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const info = yield LND.getInfo();
+            const info = yield LND.getInfo(false); // dont try proxy
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
                     client = null;
@@ -79,7 +79,9 @@ function updateTribeStats(myPubkey) {
             }
             catch (e) { }
         }));
-        console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
+        if (myTribes.length) {
+            console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
+        }
     });
 }
 function subscribe(topic) {
@@ -214,6 +216,7 @@ function putstats({ uuid, host, member_count, chatId }) {
 exports.putstats = putstats;
 function genSignedTimestamp() {
     return __awaiter(this, void 0, void 0, function* () {
+        // console.log('genSignedTimestamp')
         const now = moment().unix();
         const tsBytes = Buffer.from(now.toString(16), 'hex');
         const sig = yield LND.signBuffer(tsBytes);

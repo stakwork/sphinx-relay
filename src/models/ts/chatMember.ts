@@ -31,4 +31,7 @@ export default class ChatMember extends Model<ChatMember> {
   @Column
   lastAlias: string
 
+  @Column
+  tenant: number
+
 }

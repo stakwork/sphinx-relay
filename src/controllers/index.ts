@@ -28,7 +28,7 @@ export async function set(app) {
 		subcriptions.initializeCronJobs()
 	}
 
-	media.cycleMediaToken()
+	// media.cycleMediaToken()
 
 	timers.reloadTimers()
 

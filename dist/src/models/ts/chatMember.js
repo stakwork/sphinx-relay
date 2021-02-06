@@ -44,6 +44,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], ChatMember.prototype, "lastAlias", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], ChatMember.prototype, "tenant", void 0);
 ChatMember = __decorate([
     sequelize_typescript_1.Table({
         tableName: 'sphinx_chat_members', underscored: true, indexes: [
