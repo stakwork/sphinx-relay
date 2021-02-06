@@ -4,7 +4,7 @@ import * as zbase32 from './zbase32'
 import * as LND from './lightning'
 import * as mqtt from 'mqtt'
 import fetch from 'node-fetch'
-import { models } from '../models'
+import { models, sequelize } from '../models'
 import { makeBotsJSON, declare_bot } from './tribeBots'
 import {loadConfig} from './config'
 
@@ -13,6 +13,17 @@ export { declare_bot }
 const config = loadConfig()
 
 let client: any
+
+export async function getTribeOwnersChatByUUID(uuid: string) {
+  try {
+    const r = await sequelize.query(`SELECT *
+      INNER JOIN sphinx_contacts
+      ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
+      AND sphinx_chats.tenant = sphinx_contacts.tenant
+      AND sphinx_chats.uuid = '${uuid}'`)
+    console.log('==>', r)
+  } catch (e) { console.log(e) }
+}
 
 export async function connect(onMessage) {
   try {

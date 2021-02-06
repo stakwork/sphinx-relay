@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.connect = exports.declare_bot = void 0;
+exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.connect = exports.getTribeOwnersChatByUUID = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("./lightning");
@@ -21,6 +21,22 @@ Object.defineProperty(exports, "declare_bot", { enumerable: true, get: function 
 const config_1 = require("./config");
 const config = config_1.loadConfig();
 let client;
+function getTribeOwnersChatByUUID(uuid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield models_1.sequelize.query(`SELECT *
+      INNER JOIN sphinx_contacts
+      ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
+      AND sphinx_chats.tenant = sphinx_contacts.tenant
+      AND sphinx_chats.uuid = '${uuid}'`);
+            console.log('==>', r);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    });
+}
+exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

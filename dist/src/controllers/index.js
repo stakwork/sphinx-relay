@@ -31,8 +31,10 @@ const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
 const feed = require("./feed");
+const tribes_1 = require("../utils/tribes");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
+        tribes_1.getTribeOwnersChatByUUID('XtV0ph923hUSIA1VmS3PmJA5R5gDpoJJsYOVCNOUwjZn_wl0GHhG0GIe8FsjrWJm3mdflsXV_sMTmLAN4dulKQUblsBP');
         builtInBots.init();
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
