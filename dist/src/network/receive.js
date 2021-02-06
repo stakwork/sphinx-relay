@@ -395,6 +395,7 @@ function saveAnonymousKeysend(response, memo, sender_pubkey) {
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
+        console.log('parseKeysendInvoice payreq', i.payment_request, i);
         const invoice = yield lightning_2.decodePayReq(i.payment_request);
         if (!invoice)
             return console.log("couldn't decode pay req");

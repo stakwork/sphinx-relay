@@ -366,6 +366,7 @@ async function saveAnonymousKeysend(response, memo, sender_pubkey) {
 export async function parseKeysendInvoice(i) {
 	const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
 
+	console.log('parseKeysendInvoice payreq', i.payment_request, i)
 	const invoice:any = await decodePayReq(i.payment_request)
 	if(!invoice) return console.log("couldn't decode pay req")
 	if(!invoice.destination) return console.log("cant get dest from pay req")
