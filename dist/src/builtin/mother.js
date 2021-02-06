@@ -14,8 +14,6 @@ exports.init = void 0;
 const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
 const bots_1 = require("../controllers/bots");
-const WelcomeBot = require("./welcome");
-const LoopBot = require("./loop");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const constants_1 = require("../constants");
@@ -84,12 +82,12 @@ function init() {
                         pricePerUse: 0,
                     };
                     yield models_1.models.ChatBot.create(chatBot);
-                    if (botName === 'welcome') {
-                        WelcomeBot.init();
-                    }
-                    if (botName === 'loopout') {
-                        LoopBot.init();
-                    }
+                    // if (botName === 'welcome') {
+                    //   WelcomeBot.init()
+                    // }
+                    // if (botName === 'loopout') {
+                    //   LoopBot.init()
+                    // }
                     const theName = builtInBotNames[botName] || 'Bot';
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('MotherBot')

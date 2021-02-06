@@ -20,23 +20,24 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     let date = new Date();
     date.setMilliseconds(0);
     if (chat_id) {
-        chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+        chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant: owner_id } });
         // console.log('findOrCreateChat: chat_id exists')
     }
     else {
         console.log("chat does not exists, create new");
         const owner = yield models_1.models.Contact.findOne({ where: { id: owner_id } });
-        const recipient = yield models_1.models.Contact.findOne({ where: { id: recipient_id } });
+        const recipient = yield models_1.models.Contact.findOne({ where: { id: recipient_id, tenant: owner_id } });
         const uuid = md5([owner.publicKey, recipient.publicKey].sort().join("-"));
         // find by uuid
-        chat = yield models_1.models.Chat.findOne({ where: { uuid } });
+        chat = yield models_1.models.Chat.findOne({ where: { uuid, tenant: owner_id } });
         if (!chat) { // no chat! create new
             chat = yield models_1.models.Chat.create({
                 uuid: uuid,
                 contactIds: JSON.stringify([parseInt(owner_id), parseInt(recipient_id)]),
                 createdAt: date,
                 updatedAt: date,
-                type: constants_1.default.chat_types.conversation
+                type: constants_1.default.chat_types.conversation,
+                tenant: owner_id,
             });
         }
     }
@@ -110,16 +111,16 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure,
     }
 });
 exports.performKeysendMessage = performKeysendMessage;
-function findOrCreateContactByPubkey(senderPubKey) {
+function findOrCreateContactByPubkey(senderPubKey, owner) {
     return __awaiter(this, void 0, void 0, function* () {
-        let sender = yield models_1.models.Contact.findOne({ where: { publicKey: senderPubKey } });
+        let sender = yield models_1.models.Contact.findOne({ where: { publicKey: senderPubKey, tenant: owner.id } });
         if (!sender) {
             sender = yield models_1.models.Contact.create({
                 publicKey: senderPubKey,
                 alias: "Unknown",
-                status: 1
+                status: 1,
+                tenant: owner.id
             });
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             exports.sendContactKeys({
                 contactIds: [sender.id],
                 sender: owner,
@@ -182,26 +183,29 @@ function parseReceiveParams(payload) {
         const purchaser_id = dat.message.purchaser;
         const network_type = dat.network_type || 0;
         const isTribeOwner = dat.isTribeOwner ? true : false;
+        const dest = dat.dest;
         const isConversation = !chat_type || (chat_type && chat_type == constants_1.default.chat_types.conversation);
         let sender;
         let chat;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
+        if (!owner)
+            console.log('=> parseReceiveParams cannot find owner');
         if (isConversation) {
-            sender = yield findOrCreateContactByPubkey(sender_pub_key);
+            sender = yield findOrCreateContactByPubkey(sender_pub_key, owner.dataValues);
             chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)]);
             if (sender.fromGroup) { // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });
             }
         }
         else { // group
-            sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
+            sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant: owner.id } });
             // inject a "sender" with an alias
             if (!sender && chat_type == constants_1.default.chat_types.tribe) {
                 sender = { id: 0, alias: sender_alias };
             }
-            chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+            chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant: owner.id } });
         }
-        return { owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url, network_type, message_status };
+        return { dest, owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url, network_type, message_status };
     });
 }
 exports.parseReceiveParams = parseReceiveParams;

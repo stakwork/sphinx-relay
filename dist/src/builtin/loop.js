@@ -33,6 +33,10 @@ function init() {
             return;
         if (arr[0] !== '/loopout')
             return;
+        // check installed
+        const bot = yield getBot(message.channel.id);
+        if (!bot)
+            return;
         const messageAmount = Number(message.amount) || 0;
         if (arr.length === 3) { // loop
             const addy = arr[1];
@@ -106,7 +110,6 @@ function init() {
             // }
             try {
                 let chan;
-                const bot = yield getBot(message.channel.id);
                 if (bot && bot.meta)
                     chan = bot.meta;
                 if (!chan) {
@@ -211,14 +214,13 @@ function getBot(tribeUUID) {
         });
         if (!chat)
             return;
-        const chatBot = yield models_1.models.ChatBot.findOne({
+        return yield models_1.models.ChatBot.findOne({
             where: {
                 chatId: chat.id,
                 botPrefix: '/loopout',
                 botType: constants_1.default.bot_types.builtin
             }
         });
-        return chatBot;
     });
 }
 const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">

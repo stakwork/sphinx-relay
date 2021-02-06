@@ -13,13 +13,16 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 
 export const getMessages = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+	
 	const dateToReturn = req.query.date;
 
 	if (!dateToReturn) {
 		return getAllMessages(req, res)
 	}
 	console.log(dateToReturn)
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 	// const chatId = req.query.chat_id
 
 	let newMessagesWhere = {
@@ -27,7 +30,8 @@ export const getMessages = async (req, res) => {
 		[Op.or]: [
 			{ receiver: owner.id },
 			{ receiver: null }
-		]
+		],
+		tenant
 	}
 
 	let confirmedMessagesWhere = {
@@ -37,7 +41,8 @@ export const getMessages = async (req, res) => {
 				constants.statuses.received,
 			]
 		},
-		sender: owner.id
+		sender: owner.id,
+		tenant
 	}
 
 	let deletedMessagesWhere = {
@@ -47,6 +52,7 @@ export const getMessages = async (req, res) => {
 				constants.statuses.deleted
 			]
 		},
+		tenant
 	}
 
 	// if (chatId) {
@@ -69,7 +75,7 @@ export const getMessages = async (req, res) => {
 		if (!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
 	})
 
-	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : []
+	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: { deleted: false, id: chatIds, tenant } }) : []
 	const chatsById = indexBy(chats, 'id')
 
 	res.json({
@@ -91,13 +97,15 @@ export const getMessages = async (req, res) => {
 }
 
 export const getAllMessages = async (req, res) => {
-	
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+
 	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
 	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 
 	console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
 
-	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset })
+	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset, where:{tenant} })
 	console.log('=> got msgs', (messages && messages.length))
 	const chatIds: number[] = []
 	messages.forEach((m) => {
@@ -106,7 +114,7 @@ export const getAllMessages = async (req, res) => {
 		}
 	})
 
-	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : []
+	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: { deleted: false, id: chatIds, tenant } }) : []
 	console.log('=> found all chats', (chats && chats.length))
 	const chatsById = indexBy(chats, 'id')
 	console.log('=> indexed chats')
@@ -119,6 +127,9 @@ export const getAllMessages = async (req, res) => {
 };
 
 export const getMsgs = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+
 	const limit = (req.query.limit && parseInt(req.query.limit))
 	const offset = (req.query.offset && parseInt(req.query.offset))
 	const dateToReturn = req.query.date;
@@ -131,6 +142,7 @@ export const getMsgs = async (req, res) => {
 		order: [['id', 'asc']], 
 		where: {
 			updated_at: { [Op.gte]: dateToReturn },
+			tenant
 		}
 	}
 	if(limit) {
@@ -146,7 +158,7 @@ export const getMsgs = async (req, res) => {
 		}
 	})
 
-	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : []
+	let chats = chatIds.length > 0 ? await models.Chat.findAll({ where: { deleted: false, id: chatIds, tenant } }) : []
 	const chatsById = indexBy(chats, 'id')
 	success(res, {
 		new_messages: messages.map(
@@ -156,23 +168,26 @@ export const getMsgs = async (req, res) => {
 };
 
 export async function deleteMessage(req, res) {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+
 	const id = parseInt(req.params.id)
 
-	const message = await models.Message.findOne({ where: { id } })
+	const message = await models.Message.findOne({ where: { id, tenant } })
 	const uuid = message.uuid
 	await message.update({ status: constants.statuses.deleted })
 
 	const chat_id = message.chatId
 	let chat
 	if (chat_id) {
-		chat = await models.Chat.findOne({ where: { id: chat_id } })
+		chat = await models.Chat.findOne({ where: { id: chat_id, tenant } })
 	}
 	success(res, jsonUtils.messageToJson(message, chat))
 
 	if (!chat) return
 	const isTribe = chat.type === constants.chat_types.tribe
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 	const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey
 
 	if (isTribeOwner) {
@@ -187,6 +202,8 @@ export async function deleteMessage(req, res) {
 }
 
 export const sendMessage = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 	// try {
 	// 	schemas.message.validateSync(req.body)
 	// } catch(e) {
@@ -210,7 +227,7 @@ export const sendMessage = async (req, res) => {
 	var date = new Date()
 	date.setMilliseconds(0)
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 	const chat = await helpers.findOrCreateChat({
 		chat_id,
 		owner_id: owner.id,
@@ -225,6 +242,7 @@ export const sendMessage = async (req, res) => {
 		const ogMsg = await models.Message.findOne({
 			where: {
 				uuid: reply_uuid,
+				tenant,
 			}
 		})
 		if (ogMsg && ogMsg.sender) {
@@ -254,7 +272,8 @@ export const sendMessage = async (req, res) => {
 		updatedAt: date,
 		network_type: (!isTribe || hasRealAmount || realSatsContactId) ?
 			constants.network_types.lightning :
-			constants.network_types.mqtt
+			constants.network_types.mqtt,
+		tenant
 	}
 	if (reply_uuid) msg.replyUuid = reply_uuid
 	// console.log(msg)
@@ -293,6 +312,7 @@ export const receiveMessage = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
+	const tenant = owner.id
 	const text = content || ''
 
 	var date = new Date();
@@ -311,6 +331,7 @@ export const receiveMessage = async (payload) => {
 		updatedAt: date,
 		status: message_status || constants.statuses.received,
 		network_type: network_type,
+		tenant,
 	}
 	const isTribe = chat_type === constants.chat_types.tribe
 	if (isTribe) {
@@ -337,6 +358,7 @@ export const receiveBoost = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
+	const tenant = owner.id
 	const text = content
 
 	var date = new Date();
@@ -354,7 +376,8 @@ export const receiveBoost = async (payload) => {
 		createdAt: date,
 		updatedAt: date,
 		status: constants.statuses.received,
-		network_type
+		network_type,
+		tenant
 	}
 	const isTribe = chat_type === constants.chat_types.tribe
 	if (isTribe) {
@@ -388,6 +411,7 @@ export const receiveRepayment = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
+	const tenant = owner.id
 
 	var date = new Date();
 	date.setMilliseconds(0)
@@ -402,7 +426,8 @@ export const receiveRepayment = async (payload) => {
 		createdAt: date,
 		updatedAt: date,
 		status: constants.statuses.received,
-		network_type
+		network_type,
+		tenant
 	})
 
 	socket.sendJson({
@@ -417,10 +442,11 @@ export const receiveDeleteMessage = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
+	const tenant = owner.id
 
 	const isTribe = chat_type === constants.chat_types.tribe
 	// in tribe this is already validated on admin's node
-	let where: { [k: string]: any } = { uuid: msg_uuid }
+	let where: { [k: string]: any } = { uuid: msg_uuid, tenant }
 	if (!isTribe) {
 		where.sender = sender.id // validate sender
 	}
@@ -435,9 +461,11 @@ export const receiveDeleteMessage = async (payload) => {
 }
 
 export const readMessages = async (req, res) => {
-	const chat_id = req.params.chat_id;
+	if(!req.owner) return
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const chat_id = req.params.chat_id;
+	const owner = req.owner
+	const tenant:number = owner.id
 
 	await models.Message.update({ seen: true }, {
 		where: {
@@ -448,10 +476,11 @@ export const readMessages = async (req, res) => {
 			[Op.or]: [
 				{ seen: false },
 				{ seen: null }
-			]
+			],
+			tenant
 		}
 	});
-	const chat = await models.Chat.findOne({ where: { id: chat_id } })
+	const chat = await models.Chat.findOne({ where: { id: chat_id, tenant } })
 	if (chat) {
 		await chat.update({ seen: true });
 		success(res, {})
@@ -466,7 +495,10 @@ export const readMessages = async (req, res) => {
 }
 
 export const clearMessages = (req, res) => {
-	models.Message.destroy({ where: {}, truncate: true })
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+
+	models.Message.destroy({ where: {tenant}, truncate: true })
 
 	success(res, {})
 }

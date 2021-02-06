@@ -26,6 +26,10 @@ export function init() {
     if (arr.length < 2) return
     if (arr[0] !== '/loopout') return
 
+    // check installed
+    const bot = await getBot(message.channel.id)
+    if(!bot) return
+
     const messageAmount = Number(message.amount) || 0
 
     if (arr.length === 3) { // loop
@@ -102,7 +106,6 @@ export function init() {
       // }
       try {
         let chan
-        const bot = await getBot(message.channel.id)
         if (bot && bot.meta) chan = bot.meta
         if (!chan) {
           const embed = new Sphinx.MessageEmbed()
@@ -207,14 +210,13 @@ async function getBot(tribeUUID: string) {
     }
   })
   if (!chat) return
-  const chatBot = await models.ChatBot.findOne({
+  return await models.ChatBot.findOne({
     where: {
       chatId: chat.id,
       botPrefix: '/loopout',
       botType: constants.bot_types.builtin
     }
   })
-  return chatBot
 }
 
 const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">

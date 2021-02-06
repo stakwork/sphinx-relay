@@ -2,8 +2,6 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/api'
 import { installBotAsTribeAdmin } from '../controllers/bots'
-import * as WelcomeBot from './welcome'
-import * as LoopBot from './loop'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import constants from '../constants'
@@ -80,12 +78,12 @@ export function init() {
             pricePerUse: 0,
           }
           await models.ChatBot.create(chatBot)
-          if (botName === 'welcome') {
-            WelcomeBot.init()
-          }
-          if (botName === 'loopout') {
-            LoopBot.init()
-          }
+          // if (botName === 'welcome') {
+          //   WelcomeBot.init()
+          // }
+          // if (botName === 'loopout') {
+          //   LoopBot.init()
+          // }
           const theName = builtInBotNames[botName] || 'Bot'
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('MotherBot')

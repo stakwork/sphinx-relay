@@ -512,7 +512,6 @@ async function getInfo(tryProxy?:boolean): Promise<{ [k: string]: any }> {
       if (err == null) {
         resolve(response)
       } else {
-        console.log("GET INFO ERR",err)
         reject(err)
       }
     });

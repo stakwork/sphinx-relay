@@ -578,7 +578,6 @@ function getInfo(tryProxy) {
                     resolve(response);
                 }
                 else {
-                    console.log("GET INFO ERR", err);
                     reject(err);
                 }
             });

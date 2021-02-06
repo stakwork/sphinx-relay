@@ -61,9 +61,10 @@ const botMakerTypes = [
 function onReceive(payload, dest) {
     return __awaiter(this, void 0, void 0, function* () {
         if (dest) {
-            if (dest.length !== 66)
+            if (typeof dest !== 'string' || dest.length !== 66)
                 return console.log("INVALID DEST", dest);
         }
+        payload.dest = dest; // add "dest" into payload
         console.log('===> onReceive', JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return console.log('no payload.type');
@@ -289,7 +290,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield lightning_1.getInfo(false); // dont try proxy
+            yield lightning_1.getInfo(true); // try proxy
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

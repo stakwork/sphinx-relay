@@ -51,8 +51,10 @@ const botMakerTypes = [
 ]
 async function onReceive(payload:{[k:string]:any}, dest:string) {
 	if (dest) {
-		if(dest.length!==66) return console.log("INVALID DEST", dest)
+		if(typeof dest!=='string' || dest.length!==66) return console.log("INVALID DEST", dest)
 	}
+	payload.dest = dest // add "dest" into payload
+
 	console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if (!(payload.type || payload.type === 0)) return console.log('no payload.type')
 
@@ -269,7 +271,7 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 
 export async function initGrpcSubscriptions() {
 	try {
-		await getInfo(false) // dont try proxy
+		await getInfo(true) // try proxy
 		await lndService.subscribeInvoices(parseKeysendInvoice)
 	} catch (e) {
 		throw e

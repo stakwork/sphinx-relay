@@ -42,6 +42,8 @@ function init() {
                         chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin
                     }
                 });
+                if (!chatBot)
+                    return;
                 let meta = 'Welcome to the tribe!';
                 if (chatBot && chatBot.meta) {
                     meta = chatBot.meta;
