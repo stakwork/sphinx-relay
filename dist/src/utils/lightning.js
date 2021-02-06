@@ -249,7 +249,7 @@ const keysend = (opts) => {
                 // new sendPayment (with optional route hints)
                 options.fee_limit_sat = FEE_LIMIT_SAT;
                 options.timeout_seconds = 16;
-                const router = loadRouter();
+                const router = yield loadRouter();
                 const call = router.sendPaymentV2(options);
                 call.on('data', function (payment) {
                     const state = payment.status || payment.state;
@@ -288,8 +288,7 @@ const loadRouter = () => {
             var credentials = loadCredentials('router.macaroon');
             var descriptor = grpc.load("proto/router.proto");
             var router = descriptor.routerrpc;
-            routerClient = new router.Router(config.node_ip + ':' + config.lnd_port, credentials);
-            console.log('routerClient', routerClient);
+            routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials);
             return routerClient;
         }
         catch (e) {
