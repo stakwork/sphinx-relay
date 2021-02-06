@@ -16,7 +16,7 @@ let client: any
 
 export async function getTribeOwnersChatByUUID(uuid: string) {
   try {
-    const r = await sequelize.query(`SELECT *
+    const r = await sequelize.query(`SELECT * from sphinx_chats
       INNER JOIN sphinx_contacts
       ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
       AND sphinx_chats.tenant = sphinx_contacts.tenant
