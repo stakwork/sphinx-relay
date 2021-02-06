@@ -22,12 +22,12 @@ const send_1 = require("./send");
 // import { Op } from 'sequelize'
 const constants_1 = require("../constants");
 const msgtypes = constants_1.default.message_types;
-function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
+function modifyPayloadAndSaveMediaKey(payload, chat, sender, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         if (payload.type !== msgtypes.attachment)
             return payload;
         try {
-            const ret = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender);
+            const ret = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant);
             return fillmsg(payload, ret); // key is re-encrypted later
         }
         catch (e) {
@@ -38,8 +38,9 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
 }
 exports.modifyPayloadAndSaveMediaKey = modifyPayloadAndSaveMediaKey;
 // "purchase" type
-function purchaseFromOriginalSender(payload, chat, purchaser) {
+function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
     return __awaiter(this, void 0, void 0, function* () {
+        const tenant = owner.id;
         if (payload.type !== msgtypes.purchase)
             return;
         const mt = payload.message && payload.message.mediaToken;
@@ -47,12 +48,12 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
         const muid = mt && mt.split('.').length && mt.split('.')[1];
         if (!muid)
             return;
-        const mediaKey = yield models_1.models.MediaKey.findOne({ where: { originalMuid: muid } });
+        const mediaKey = yield models_1.models.MediaKey.findOne({ where: { originalMuid: muid, tenant } });
         const terms = ldat_1.parseLDAT(mt);
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
             return; // not enough sats
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        // const owner = await models.Contact.findOne({ where: { isOwner: true } })
         if (mediaKey) { // ALREADY BEEN PURHCASED! simply send
             // send back the new mediaToken and key
             const mediaTerms = {
@@ -90,7 +91,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
             });
         }
         else {
-            const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } });
+            const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt, tenant } });
             if (!ogmsg)
                 return;
             // purchase it from creator (send "purchase")
@@ -110,8 +111,9 @@ function purchaseFromOriginalSender(payload, chat, purchaser) {
     });
 }
 exports.purchaseFromOriginalSender = purchaseFromOriginalSender;
-function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
+function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
     return __awaiter(this, void 0, void 0, function* () {
+        const tenant = owner.id;
         if (payload.type !== msgtypes.purchase_accept)
             return;
         const mt = payload.message && payload.message.mediaToken;
@@ -122,14 +124,15 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         const muid = mt && mt.split('.').length && mt.split('.')[1];
         if (!muid)
             return;
-        const existingMediaKey = yield models_1.models.MediaKey.findOne({ where: { muid } });
+        const existingMediaKey = yield models_1.models.MediaKey.findOne({ where: { muid, tenant } });
         if (existingMediaKey)
             return; // no need, its already been sent
         // const host = mt.split('.')[0]
         const terms = ldat_1.parseLDAT(mt);
         const ogPurchaser = yield models_1.models.Contact.findOne({
             where: {
-                id: purchaserID
+                id: purchaserID,
+                tenant
             }
         });
         if (!ogPurchaser)
@@ -139,9 +142,9 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
         //   mediaToken: {[Op.like]: `${host}.${muid}%`},
         //   type: msgtypes.purchase,
         // }})
-        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, amt);
+        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, amt);
         // send it to the purchaser
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        // const owner = await models.Contact.findOne({ where: { isOwner: true } })
         send_1.sendMessage({
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }), { role: constants_1.default.chat_roles.reader }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaser.id] }),
@@ -162,7 +165,7 @@ function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     });
 }
-function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, injectedAmount) {
+function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, injectedAmount) {
     return __awaiter(this, void 0, void 0, function* () {
         const mt = payload.message && payload.message.mediaToken;
         const key = payload.message && payload.message.mediaKey;
@@ -219,6 +222,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, inj
                 createdAt: date,
                 originalMuid: ogmuid,
                 mediaType: typ,
+                tenant
             });
             return { mediaTerms, mediaKey: encKey };
         }

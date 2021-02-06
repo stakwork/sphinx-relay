@@ -26,6 +26,7 @@ const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const constants_1 = require("../constants");
 const jsonUtils = require("../utils/json");
+const proxy_1 = require("../utils/proxy");
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -83,16 +84,16 @@ function onReceive(payload, dest) {
         let isTribe = false;
         let isTribeOwner = false;
         let chat;
-        let owner;
+        let owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
+        const tenant = owner.id;
         if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
-            chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+            chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid, tenant } });
             if (chat)
                 chat.update({ seen: false });
         }
         if (isTribe) {
             const tribeOwnerPubKey = chat && chat.ownerPubkey;
-            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
         if (isTribeOwner)
@@ -100,11 +101,11 @@ function onReceive(payload, dest) {
         if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
             const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
             // CHECK THEY ARE IN THE GROUP if message
-            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
+            const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key, tenant } });
             // if (!senderContact) return console.log("=> no sender contact")
             const senderContactId = senderContact && senderContact.id;
             if (needsPricePerMessage && senderContactId) {
-                const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
+                const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id, tenant } });
                 if (!senderMember)
                     doAction = false;
             }
@@ -120,6 +121,7 @@ function onReceive(payload, dest) {
                         receiver: senderContactId,
                         msgId: payload.message.id,
                         chatId: chat.id,
+                        tenant
                     });
                 }
             }
@@ -129,7 +131,7 @@ function onReceive(payload, dest) {
                     doAction = false;
                 }
                 if (chat.private && senderContactId) { // check if has been approved
-                    const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id } });
+                    const senderMember = yield models_1.models.ChatMember.findOne({ where: { contactId: senderContactId, chatId: chat.id, tenant } });
                     if (!(senderMember && senderMember.status === constants_1.default.chat_statuses.approved)) {
                         doAction = false; // dont let if private and not approved
                     }
@@ -143,6 +145,7 @@ function onReceive(payload, dest) {
                         where: {
                             uuid: payload.message.uuid,
                             sender: senderContactId,
+                            tenant
                         }
                     });
                     if (ogMsg)
@@ -156,6 +159,7 @@ function onReceive(payload, dest) {
                 const ogMsg = yield models_1.models.Message.findOne({
                     where: {
                         uuid: payload.message.replyUuid,
+                        tenant
                     }
                 });
                 if (ogMsg && ogMsg.sender) { // even include "me"
@@ -172,7 +176,7 @@ function onReceive(payload, dest) {
             // make sure alias is unique among chat members
             payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
             if (doAction)
-                forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward);
+                forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner);
             else
                 console.log('=> insufficient payment for this action');
         }
@@ -184,11 +188,12 @@ function onReceive(payload, dest) {
                 where: {
                     mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
                     type: msgtypes.attachment, sender: 1,
+                    tenant,
                 }
             });
             if (!myAttachmentMessage) { // someone else's attachment
-                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-                modify_1.purchaseFromOriginalSender(payload, chat, senderContact);
+                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key, tenant } });
+                modify_1.purchaseFromOriginalSender(payload, chat, senderContact, owner);
                 doAction = false;
             }
         }
@@ -196,16 +201,16 @@ function onReceive(payload, dest) {
             const purchaserID = payload.message && payload.message.purchaser;
             const iAmPurchaser = purchaserID && purchaserID === 1;
             if (!iAmPurchaser) {
-                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key } });
-                modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact);
+                const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key, tenant } });
+                modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact, owner);
                 doAction = false; // skip this! we dont need it
             }
         }
         if (doAction)
-            doTheAction(Object.assign(Object.assign({}, payload), toAddIn));
+            doTheAction(Object.assign(Object.assign({}, payload), toAddIn), owner);
     });
 }
-function doTheAction(data) {
+function doTheAction(data, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         let payload = data;
         if (payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
@@ -213,9 +218,9 @@ function doTheAction(data) {
             const ogContent = data.message && data.message.content;
             // const ogMediaKey = data.message && data.message.mediaKey
             /* decrypt and re-encrypt with phone's pubkey for storage */
-            const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid } });
+            const chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid, tenant: owner.id } });
             const pld = yield msg_1.decryptMessage(data, chat);
-            const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            const me = owner;
             payload = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
             if (ogContent)
                 payload.message.remoteContent = JSON.stringify({ 'chat': ogContent }); // this is the key
@@ -239,7 +244,7 @@ function uniqueifyAlias(payload, sender, chat, owner) {
         const owner_alias = chat.myAlias || owner.alias;
         const sender_alias = payload.sender && payload.sender.alias;
         let final_sender_alias = sender_alias;
-        const chatMembers = yield models_1.models.ChatMember.findAll({ where: { chatId: chat.id } });
+        const chatMembers = yield models_1.models.ChatMember.findAll({ where: { chatId: chat.id, tenant: owner.id } });
         if (!(chatMembers && chatMembers.length))
             return payload;
         asyncForEach(chatMembers, (cm) => {
@@ -252,26 +257,26 @@ function uniqueifyAlias(payload, sender, chat, owner) {
         });
         if (sender_alias !== final_sender_alias) {
             yield models_1.models.ChatMember.update(// this syntax is necessary when no unique ID on the Model
-            { lastAlias: final_sender_alias }, { where: { chatId: chat.id, contactId: senderContactId } });
+            { lastAlias: final_sender_alias }, { where: { chatId: chat.id, contactId: senderContactId, tenant: owner.id } });
         }
         payload.sender.alias = final_sender_alias;
         return payload;
     });
 }
-function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId) {
+function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('forwardMessageToTribe')
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid } });
+        const tenant = owner.id;
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: ogpayload.chat.uuid, tenant } });
         if (!chat)
             return;
         let payload;
         if (sender && typesToModify.includes(ogpayload.type)) {
-            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender);
+            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, tenant);
         }
         else {
             payload = ogpayload;
         }
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const type = payload.type;
         const message = payload.message;
         send_1.sendMessage({
@@ -395,13 +400,19 @@ function saveAnonymousKeysend(response, memo, sender_pubkey) {
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
-        console.log('parseKeysendInvoice payreq', i.payment_request, i);
-        const invoice = yield lightning_2.decodePayReq(i.payment_request);
-        if (!invoice)
-            return console.log("couldn't decode pay req");
-        if (!invoice.destination)
-            return console.log("cant get dest from pay req");
-        const dest = invoice.destination;
+        let dest = '';
+        if (proxy_1.isProxy()) {
+            const invoice = yield lightning_2.decodePayReq(i.payment_request);
+            if (!invoice)
+                return console.log("couldn't decode pay req");
+            if (!invoice.destination)
+                return console.log("cant get dest from pay req");
+            dest = invoice.destination;
+        }
+        else {
+            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            dest = owner.publicKey;
+        }
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);

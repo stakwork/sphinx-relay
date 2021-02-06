@@ -12,22 +12,22 @@ export async function removeTimerByMsgId(msgId) {
     clearTimer(t)
     models.Timer.destroy({ where: { msgId } })
 }
-export async function removeTimersByContactId(contactId) {
-    const ts = await models.Timer.findAll({ where: { receiver: contactId } })
+export async function removeTimersByContactId(contactId, tenant) {
+    const ts = await models.Timer.findAll({ where: { receiver: contactId, tenant } })
     ts.forEach(t => clearTimer(t))
-    models.Timer.destroy({ where: { receiver: contactId } })
+    models.Timer.destroy({ where: { receiver: contactId, tenant } })
 }
-export async function removeTimersByContactIdChatId(contactId, chatId) {
-    const ts = await models.Timer.findAll({ where: { receiver: contactId, chatId } })
+export async function removeTimersByContactIdChatId(contactId, chatId, tenant) {
+    const ts = await models.Timer.findAll({ where: { receiver: contactId, chatId, tenant } })
     ts.forEach(t => clearTimer(t))
-    models.Timer.destroy({ where: { receiver: contactId, chatId } })
+    models.Timer.destroy({ where: { receiver: contactId, chatId, tenant } })
 }
 
-export async function addTimer({ amount, millis, receiver, msgId, chatId }) {
+export async function addTimer({ amount, millis, receiver, msgId, chatId, tenant }) {
     const now = new Date().valueOf()
     const when = now + millis
     const t = await models.Timer.create({
-        amount, millis: when, receiver, msgId, chatId,
+        amount, millis: when, receiver, msgId, chatId, tenant
     })
     setTimer(makeName(t), when, async () => {
         payBack(t)
@@ -59,8 +59,8 @@ export async function reloadTimers() {
     })
 }
 export async function payBack(t) {
-    const chat = await models.Chat.findOne({ where: { id: t.chatId } })
-    const owner = await models.Contact.findOne({ where: { isOwner: true } })
+    const chat = await models.Chat.findOne({ where: { id: t.chatId, tenant:t.tenant } })
+    const owner = await models.Contact.findOne({ where: { isOwner: true, tenant:t.tenant } })
     if (!chat) {
         models.Timer.destroy({ where: { id: t.id } })
         return

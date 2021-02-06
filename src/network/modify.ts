@@ -12,10 +12,10 @@ import constants from '../constants'
 
 const msgtypes = constants.message_types
 
-export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
+export async function modifyPayloadAndSaveMediaKey(payload, chat, sender, tenant) {
   if (payload.type !== msgtypes.attachment) return payload
   try {
-    const ret = await downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender)
+    const ret = await downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant)
     return fillmsg(payload, ret) // key is re-encrypted later
   } catch (e) {
     console.log("[modify] error", e)
@@ -24,7 +24,8 @@ export async function modifyPayloadAndSaveMediaKey(payload, chat, sender) {
 }
 
 // "purchase" type
-export async function purchaseFromOriginalSender(payload, chat, purchaser) {
+export async function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
+  const tenant = owner.id
   if (payload.type !== msgtypes.purchase) return
 
   const mt = payload.message && payload.message.mediaToken
@@ -32,13 +33,13 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser) {
   const muid = mt && mt.split('.').length && mt.split('.')[1]
   if (!muid) return
 
-  const mediaKey = await models.MediaKey.findOne({ where: { originalMuid: muid } })
+  const mediaKey = await models.MediaKey.findOne({ where: { originalMuid: muid, tenant } })
 
   const terms = parseLDAT(mt)
   let price = terms.meta && terms.meta.amt
   if (amount < price) return // not enough sats
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  // const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
   if (mediaKey) { // ALREADY BEEN PURHCASED! simply send
     // send back the new mediaToken and key
@@ -76,7 +77,7 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser) {
       failure: () => { }
     })
   } else {
-    const ogmsg = await models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt } })
+    const ogmsg = await models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt, tenant } })
     if (!ogmsg) return
     // purchase it from creator (send "purchase")
     const msg = { mediaToken: mt, purchaser: purchaser.id }
@@ -98,7 +99,8 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser) {
   }
 }
 
-export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
+export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
+  const tenant = owner.id
   if (payload.type !== msgtypes.purchase_accept) return
 
   const mt = payload.message && payload.message.mediaToken
@@ -108,7 +110,7 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
   const muid = mt && mt.split('.').length && mt.split('.')[1]
   if (!muid) return
 
-  const existingMediaKey = await models.MediaKey.findOne({ where: { muid } })
+  const existingMediaKey = await models.MediaKey.findOne({ where: { muid, tenant } })
   if (existingMediaKey) return // no need, its already been sent
 
   // const host = mt.split('.')[0]
@@ -116,7 +118,8 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
   const terms = parseLDAT(mt)
   const ogPurchaser = await models.Contact.findOne({
     where: {
-      id: purchaserID
+      id: purchaserID,
+      tenant
     }
   })
 
@@ -129,10 +132,10 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender) {
   //   type: msgtypes.purchase,
   // }})
 
-  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, amt)
+  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, amt)
 
   // send it to the purchaser
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  // const owner = await models.Contact.findOne({ where: { isOwner: true } })
   sendMessage({
     sender: {
       ...owner.dataValues,
@@ -168,7 +171,7 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, injectedAmount?: number) {
+export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, injectedAmount?: number) {
   const mt = payload.message && payload.message.mediaToken
   const key = payload.message && payload.message.mediaKey
   const typ = payload.message && payload.message.mediaType
@@ -237,6 +240,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
       createdAt: date,
       originalMuid: ogmuid,
       mediaType: typ,
+      tenant
     })
     return { mediaTerms, mediaKey: encKey }
   } catch (e) {

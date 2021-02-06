@@ -37,13 +37,16 @@ export async function updateChat(req, res) {
 }
 
 export async function kickChatMember(req, res) {
+	if(!req.owner) return
+	const tenant:number = req.tenant.id
+
 	const chatId = parseInt(req.params['chat_id'])
 	const contactId = parseInt(req.params['contact_id'])
 	if (!chatId || !contactId) {
 		return failure(res, "missing param")
 	}
 	// remove chat.contactIds
-	let chat = await models.Chat.findOne({ where: { id: chatId } })
+	let chat = await models.Chat.findOne({ where: { id: chatId, tenant } })
 	const contactIds = JSON.parse(chat.contactIds || '[]')
 	const newContactIds = contactIds.filter(cid => cid !== contactId)
 	await chat.update({ contactIds: JSON.stringify(newContactIds) })
@@ -51,11 +54,11 @@ export async function kickChatMember(req, res) {
 	// remove from ChatMembers
 	await models.ChatMember.destroy({
 		where: {
-			chatId, contactId,
+			chatId, contactId, tenant
 		}
 	})
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 	network.sendMessage({
 		chat: { ...chat.dataValues, contactIds: [contactId] }, // send only to the guy u kicked
 		sender: owner,
@@ -64,7 +67,7 @@ export async function kickChatMember(req, res) {
 	})
 
 	// delete all timers for this member
-	timers.removeTimersByContactIdChatId(contactId, chatId)
+	timers.removeTimersByContactIdChatId(contactId, chatId, tenant)
 
 	success(res, jsonUtils.chatToJson(chat))
 }
