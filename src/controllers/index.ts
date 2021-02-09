@@ -19,12 +19,9 @@ import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
 import * as feed from './feed'
-import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 export async function set(app) {
 
-	const r = await getTribeOwnersChatByUUID('XtV0ph923hUSIA1VmS3PmJA5R5gDpoJJsYOVCNOUwjZn_wl0GHhG0GIe8FsjrWJm3mdflsXV_sMTmLAN4dulKQUblsBP')
-	console.log('===>',r)
 	builtInBots.init()
 
 	if (models && models.Subscription) {

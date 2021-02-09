@@ -193,11 +193,11 @@ export async function putstats({ uuid, host, member_count, chatId }) {
   }
 }
 
-export async function genSignedTimestamp() {
+export async function genSignedTimestamp(ownerPubkey?:string) {
   // console.log('genSignedTimestamp')
   const now = moment().unix()
   const tsBytes = Buffer.from(now.toString(16), 'hex')
-  const sig = await LND.signBuffer(tsBytes)
+  const sig = await LND.signBuffer(tsBytes, ownerPubkey)
   const sigBytes = zbase32.decode(sig)
   const totalLength = tsBytes.length + sigBytes.length
   const buf = Buffer.concat([tsBytes, sigBytes], totalLength)

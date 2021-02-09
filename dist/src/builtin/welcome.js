@@ -14,6 +14,7 @@ const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
+const tribes_1 = require("../utils/tribes");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 function init() {
@@ -34,12 +35,12 @@ function init() {
         const cmd = arr[1];
         if (isGroupJoin) {
             try {
-                const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
+                const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                 if (!chat)
                     return;
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
-                        chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin
+                        chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin, tenant: chat.tenant
                     }
                 });
                 if (!chatBot)
@@ -67,12 +68,12 @@ function init() {
                 if (arr.length < 3)
                     return;
                 console.log("setmsg", arr[2]);
-                const chat = yield models_1.models.Chat.findOne({ where: { uuid: message.channel.id } });
+                const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                 if (!chat)
                     return;
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
-                        chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin
+                        chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin, tenant: chat.tenant,
                     }
                 });
                 if (!chatBot)

@@ -33,10 +33,10 @@ const loadCredentials = (macName?: string) => {
   return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
 }
 
-async function loadLightning(tryProxy?:boolean, childPubKey?:string) {
+async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   // only if specified AND available
   if (tryProxy && isProxy()) {
-    const pl = await loadProxyLightning(childPubKey)
+    const pl = await loadProxyLightning(ownerPubkey)
     return pl
   }
   if (lightningClient) {
@@ -447,10 +447,10 @@ const signMessage = (msg) => {
   })
 }
 
-const signBuffer = (msg) => {
+const signBuffer = (msg, ownerPubkey?:string) => {
   log('signBuffer')
   return new Promise(async (resolve, reject) => {
-    let lightning = await loadLightning(true) // try proxy
+    let lightning = await loadLightning(true, ownerPubkey) // try proxy
     try {
       const options = { msg }
       lightning.signMessage(options, function (err, sig) {

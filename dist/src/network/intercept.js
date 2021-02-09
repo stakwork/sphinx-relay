@@ -20,8 +20,13 @@ default show or not
 restrictions (be able to toggle, or dont show chat)
 */
 // return bool whether to skip forwarding to tribe
-function isBotMsg(msg, sentByMe) {
+function isBotMsg(msg, sentByMe, sender) {
     return __awaiter(this, void 0, void 0, function* () {
+        const tenant = sender.id;
+        if (!tenant) {
+            console.log('no tenant in isBotMsg');
+            return false;
+        }
         const txt = msg.message && msg.message.content;
         const msgType = msg.type;
         if (msgType === constants_1.default.message_types.bot_res) {
@@ -44,7 +49,7 @@ function isBotMsg(msg, sentByMe) {
             return didEmit;
         const botsInTribe = yield models_1.models.ChatBot.findAll({
             where: {
-                chatId: chat.id
+                chatId: chat.id, tenant
             }
         });
         // console.log('=> botsInTribe', botsInTribe)
@@ -59,7 +64,7 @@ function isBotMsg(msg, sentByMe) {
                         const isMsgAndHasText = msgType === constants_1.default.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `);
                         const isNotMsg = msgType !== constants_1.default.message_types.message;
                         if (isMsgAndHasText || isNotMsg) {
-                            didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
+                            didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                         }
                     }
                 }
@@ -68,7 +73,7 @@ function isBotMsg(msg, sentByMe) {
             else { // no message types defined, do all?
                 if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
                     // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
-                    didEmit = yield emitMessageToBot(msg, botInTribe.dataValues);
+                    didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                 }
             }
         }));
@@ -76,9 +81,14 @@ function isBotMsg(msg, sentByMe) {
     });
 }
 exports.isBotMsg = isBotMsg;
-function emitMessageToBot(msg, botInTribe) {
+function emitMessageToBot(msg, botInTribe, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
+        const tenant = sender.id;
+        if (!tenant) {
+            console.log('=> no tenant in emitMessageToBot');
+            return false;
+        }
         switch (botInTribe.botType) {
             case constants_1.default.bot_types.builtin:
                 builtin_1.builtinBotEmit(msg);
@@ -86,12 +96,12 @@ function emitMessageToBot(msg, botInTribe) {
             case constants_1.default.bot_types.local:
                 const bot = yield models_1.models.Bot.findOne({
                     where: {
-                        uuid: botInTribe.botUuid
+                        uuid: botInTribe.botUuid, tenant
                     }
                 });
                 return bots_1.postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
             case constants_1.default.bot_types.remote:
-                return bots_1.keysendBotCmd(msg, botInTribe);
+                return bots_1.keysendBotCmd(msg, botInTribe, sender);
             default:
                 return false;
         }

@@ -2,11 +2,48 @@ import * as fs from 'fs'
 import * as grpc from 'grpc'
 import { loadConfig } from './config'
 import {loadCredentials} from './lightning'
+import { models } from '../models'
+import fetch from 'node-fetch'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost'
+
+export function isProxy(): boolean {
+  return (config.proxy_lnd_port && config.proxy_macaroons_dir && config.proxy_tls_location) ? true : false
+}
+
+const NEW_USER_NUM = 40
+// isOwner users with no authToken
+export async function generateNewUsers(){
+  const newusers = await models.Contact.findAll({where:{isOwner:true,authToken:null}})
+  if(newusers.length<NEW_USER_NUM) {
+    console.log('gen new users')
+    const arr = new Array(NEW_USER_NUM-newusers.length)
+    const rootpk = await getProxyRootPubkey()
+    await asyncForEach(arr, async ()=>{
+      await generateNewUser(rootpk)
+    })
+  }
+}
+
+const adminURL = 'http://localhost:5555/'
+export async function generateNewUser(rootpk: string){
+  const r = await fetch(adminURL + 'generate', {
+    method:'POST',
+    headers:{'x-admin-token':config.proxy_admin_token}
+  })
+  const j = await r.json()
+  const contact = {
+    publicKey: j.pubkey,
+    routeHint: `${rootpk}:${j.channel}`,
+    isOwner: true,
+    authToken: null
+  }
+  const created = await models.Contact.create(contact)
+  console.log(created)
+}
 
 export function loadProxyCredentials(macPrefix: string) {
   var lndCert = fs.readFileSync(config.proxy_tls_location);
@@ -22,21 +59,11 @@ export function loadProxyCredentials(macPrefix: string) {
   return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
 }
 
-
-export function isProxy(): boolean {
-  return (config.proxy_lnd_port && config.proxy_macaroons_dir && config.proxy_tls_location) ? true : false
-}
-
-// var proxyLightningClient = <any>null;
-
-export async function loadProxyLightning(childPubKey?:string) {
-  // if (proxyLightningClient) {
-  //   return proxyLightningClient
-  // }
+export async function loadProxyLightning(ownerPubkey?:string) {
   try {
     let macname
-    if(childPubKey && childPubKey.length===66) {
-      macname = childPubKey
+    if(ownerPubkey && ownerPubkey.length===66) {
+      macname = ownerPubkey
     } else {
       macname = await getProxyRootPubkey()
     }
@@ -72,4 +99,10 @@ function getProxyRootPubkey(): Promise<string> {
       }
     });
   })
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+		await callback(array[index], index, array);
+	}
 }

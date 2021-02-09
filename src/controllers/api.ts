@@ -6,6 +6,7 @@ import * as jsonUtils from '../utils/json'
 import * as socket from '../utils/socket'
 import { success, failure } from '../utils/res'
 import constants from '../constants'
+import {getTribeOwnersChatByUUID} from '../utils/tribes'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -57,35 +58,30 @@ export async function processAction(req, res) {
     }
 
     try {
-        const r = await finalAction(a, bot_id)
+        const r = await finalAction(a)
         success(res, r)
     } catch (e) {
         failure(res, e)
     }
 }
 
-export async function finalAction(a: Action, bot_id: string) {
-    const { action, pubkey, amount, content, bot_name, chat_uuid } = a
+export async function finalAction(a: Action) {
+    const { bot_id, action, pubkey, amount, content, bot_name, chat_uuid } = a
 
-    const owner = await models.Contact.findOne({ where: { isOwner: true } })
+    // not for tribe admin, for bot maker
+    const myBot = await models.Bot.findOne({
+        where: {
+            id: bot_id
+        }
+    })
 
-    let theChat
-    if (chat_uuid) {
-        theChat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
-    }
-    const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey)
     console.log("=> ACTION HIT", a.action, a.bot_name)
-    if (chat_uuid && !iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-        const myBot = await models.Bot.findOne({
-            where: {
-                id: bot_id
-            }
-        })
-        if (!myBot) return console.log('no bot')
+    if (myBot) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid        
+        const owner = await models.Contact.findOne({where:{id: myBot.tenant}})
         // THIS is a bot member cmd res (i am bot maker)
         const botMember = await models.BotMember.findOne({
             where: {
-                tribeUuid: chat_uuid, botId: bot_id
+                tribeUuid: chat_uuid, botId: bot_id, tenant:owner.id
             }
         })
         if (!botMember) return console.log('no botMember')
@@ -108,7 +104,7 @@ export async function finalAction(a: Action, bot_id: string) {
         } catch (e) {
             console.log('=> couldnt mqtt publish')
         }
-        return
+        return // done
     }
 
     if (action === 'keysend') {
@@ -132,8 +128,11 @@ export async function finalAction(a: Action, bot_id: string) {
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
         if (!content) throw 'no content'
+        if (!chat_uuid) throw 'no chat_uuid'
+        const theChat = await getTribeOwnersChatByUUID(chat_uuid)
         if (!theChat) throw 'no chat'
         if (theChat.type !== constants.chat_types.tribe) throw 'not a tribe'
+        const owner = await models.Contact.findOne({where:{id:theChat.tenant}})
 
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
         const encryptedText = rsa.encrypt(theChat.groupKey, content)

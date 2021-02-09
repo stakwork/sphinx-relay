@@ -38,5 +38,6 @@ export function loadConfig() {
     proxy_tls_location: ENV.PROXY_TLS_LOCATION || config.proxy_tls_location,
     proxy_lnd_ip: ENV.PROXY_LND_IP || config.proxy_lnd_ip,
     proxy_lnd_port: ENV.PROXY_LND_PORT || config.proxy_lnd_port,
+    proxy_admin_token: ENV.PROXY_ADMIN_TOKEN || config.proxy_admin_token,
   }
 }

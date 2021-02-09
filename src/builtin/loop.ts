@@ -4,6 +4,7 @@ import { models } from '../models'
 import constants from '../constants'
 import { spawn } from 'child_process'
 import {loadConfig} from '../utils/config'
+import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 const config = loadConfig()
 
@@ -204,17 +205,14 @@ export function init() {
 }
 
 async function getBot(tribeUUID: string) {
-  const chat = await models.Chat.findOne({
-    where: {
-      uuid: tribeUUID
-    }
-  })
+  const chat = await getTribeOwnersChatByUUID(tribeUUID)
   if (!chat) return
   return await models.ChatBot.findOne({
     where: {
       chatId: chat.id,
       botPrefix: '/loopout',
-      botType: constants.bot_types.builtin
+      botType: constants.bot_types.builtin,
+      tenant:chat.tenant
     }
   })
 }

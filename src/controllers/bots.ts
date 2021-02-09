@@ -12,8 +12,10 @@ import { Msg } from '../network/interfaces'
 import constants from '../constants'
 
 export const getBots = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   try {
-    const bots = await models.Bot.findAll()
+    const bots = await models.Bot.findAll({where:{tenant}})
     success(res, {
       bots: bots.map(b => jsonUtils.botToJson(b))
     })
@@ -23,22 +25,24 @@ export const getBots = async (req, res) => {
 }
 
 export const createBot = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const { name, webhook, price_per_use, img, description, tags, } = req.body
 
-  const uuid = await tribes.genSignedTimestamp()
+  const uuid = await tribes.genSignedTimestamp(req.owner.publicKey)
   const newBot = {
     name, uuid, webhook,
     id: crypto.randomBytes(12).toString('hex').toUpperCase(),
     secret: crypto.randomBytes(16).toString('hex').toUpperCase(),
-    pricePerUse: price_per_use || 0
+    pricePerUse: price_per_use || 0,
+    tenant
   }
   try {
-    const owner = await models.Contact.findOne({ where: { isOwner: true } })
     const theBot = await models.Bot.create(newBot)
     // post to tribes.sphinx.chat
     tribes.declare_bot({
       uuid,
-      owner_pubkey: owner.publicKey,
+      owner_pubkey: req.owner.publicKey,
       price_per_use,
       name: name,
       description: description || '',
@@ -54,10 +58,12 @@ export const createBot = async (req, res) => {
 }
 
 export const deleteBot = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const id = req.params.id
   if (!id) return
   try {
-    models.Bot.destroy({ where: { id } })
+    models.Bot.destroy({ where: { id, tenant } })
     success(res, true)
   } catch (e) {
     console.log('ERROR deleteBot', e)
@@ -68,10 +74,12 @@ export const deleteBot = async (req, res) => {
 export async function installBotAsTribeAdmin(chat, bot_json) {
   const chatId = chat && chat.id
   const chat_uuid = chat && chat.uuid
-  if (!chatId || !chat_uuid) return console.log('no chat id in installBot')
+  const tenant = chat.tenant
+  if (!chatId || !chat_uuid || !tenant) return console.log('no chat id in installBot')
 
   console.log("=> chat to install bot into", chat.name)
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = await models.Contact.findOne({ where: { id: tenant } })
+  if(!owner) return console.log('cant find owner in installBotAsTribeAdmin')
   const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey)
   if (!isTribeOwner) return console.log('=> only tribe owner can install bots')
 
@@ -89,13 +97,14 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
     botType: botType,
     botUuid: uuid,
     botMakerPubkey: owner_pubkey,
-    pricePerUse: price_per_use
+    pricePerUse: price_per_use,
+    tenant
   }
   if (isLocal) {
     // "install" my local bot and send "INSTALL" event
     const myBot = await models.Bot.findOne({
       where: {
-        uuid: bot_json.uuid
+        uuid: bot_json.uuid, tenant
       }
     })
     if (myBot) {
@@ -115,7 +124,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
   } else {
     // keysend to bot maker
     console.log("installBot INSTALL REMOTE BOT NOW", chatBot)
-    const succeeded = await keysendBotInstall(chatBot, chat_uuid)
+    const succeeded = await keysendBotInstall(chatBot, chat_uuid, owner)
     if (succeeded) {
       try { // could fail
         await models.ChatBot.create(chatBot)
@@ -124,28 +133,28 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
   }
 }
 
-export async function keysendBotInstall(b, chat_uuid: string): Promise<boolean> {
+export async function keysendBotInstall(b, chat_uuid: string, owner): Promise<boolean> {
   return await botKeysend(
     constants.message_types.bot_install,
     b.botUuid, b.botMakerPubkey, b.pricePerUse,
-    chat_uuid
+    chat_uuid, owner,
   )
 }
 
-export async function keysendBotCmd(msg, b): Promise<boolean> {
+export async function keysendBotCmd(msg, b, owner): Promise<boolean> {
   const amount = msg.message.amount || 0
   const amt = Math.max(amount, b.pricePerUse)
   return await botKeysend(
     constants.message_types.bot_cmd,
     b.botUuid, b.botMakerPubkey, amt,
     msg.chat.uuid,
+    owner,
     msg.message.content,
     (msg.sender && msg.sender.role)
   )
 }
 
-export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid: string, content?: string, sender_role?: number): Promise<boolean> {
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid: string, owner, content?: string, sender_role?: number): Promise<boolean> {
   const dest = botmaker_pubkey
   const amt = Math.max(amount || constants.min_sat_amount)
   const opts = {
@@ -325,8 +334,8 @@ export async function receiveBotRes(payload) {
     // received the entire action?
     const bot_id = payload.bot_id
     finalAction(<Action>{
-      action, bot_name, chat_uuid, content, amount,
-    }, bot_id)
+      bot_id, action, bot_name, chat_uuid, content, amount,
+    })
 
   } else {
     const theChat = await models.Chat.findOne({

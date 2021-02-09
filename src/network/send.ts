@@ -50,7 +50,7 @@ export async function sendMessage(params) {
 			// decrypt message.content and message.mediaKey w groupKey
 			msg = await decryptMessage(msg, chat)
 			// console.log("SEND.TS isBotMsg")
-			const isBotMsg = await intercept.isBotMsg(msg, true)
+			const isBotMsg = await intercept.isBotMsg(msg, true, sender)
 			if (isBotMsg === true) {
 				// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
 			}

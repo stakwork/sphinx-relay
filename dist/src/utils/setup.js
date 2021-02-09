@@ -20,6 +20,7 @@ const nodeinfo_1 = require("./nodeinfo");
 const connect_1 = require("./connect");
 const config_1 = require("./config");
 const migrate_1 = require("./migrate");
+const proxy_1 = require("../utils/proxy");
 const USER_VERSION = 7;
 const config = config_1.loadConfig();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -58,11 +59,15 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                 try {
                     const one = yield models_1.models.Contact.findOne({ where: { id: 1 } });
                     if (!one) {
+                        let authToken = null;
+                        // dont allow "signup" on root contact of proxy node
+                        if (proxy_1.isProxy())
+                            authToken = '_';
                         const contact = yield models_1.models.Contact.create({
                             id: 1,
                             publicKey: info.identity_pubkey,
                             isOwner: true,
-                            authToken: null
+                            authToken
                         });
                         console.log('[db] created node owner contact, id:', contact.id);
                     }

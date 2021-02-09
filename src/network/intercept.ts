@@ -11,7 +11,12 @@ restrictions (be able to toggle, or dont show chat)
 */
 
 // return bool whether to skip forwarding to tribe
-export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
+export async function isBotMsg(msg: Msg, sentByMe: boolean, sender): Promise<boolean> {
+  const tenant:number = sender.id
+  if(!tenant) {
+    console.log('no tenant in isBotMsg')
+    return false 
+  }
   const txt = msg.message && msg.message.content
 
   const msgType = msg.type
@@ -36,7 +41,7 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
 
   const botsInTribe = await models.ChatBot.findAll({
     where: {
-      chatId: chat.id
+      chatId: chat.id, tenant
     }
   })
   // console.log('=> botsInTribe', botsInTribe)
@@ -52,14 +57,14 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
           const isMsgAndHasText = msgType === constants.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `)
           const isNotMsg = msgType !== constants.message_types.message
           if (isMsgAndHasText || isNotMsg) {
-            didEmit = await emitMessageToBot(msg, botInTribe.dataValues)
+            didEmit = await emitMessageToBot(msg, botInTribe.dataValues, sender)
           }
         }
       } catch (e) { }
     } else { // no message types defined, do all?
       if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
         // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
-        didEmit = await emitMessageToBot(msg, botInTribe.dataValues)
+        didEmit = await emitMessageToBot(msg, botInTribe.dataValues, sender)
       }
     }
   })
@@ -67,8 +72,13 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean): Promise<boolean> {
   return didEmit
 }
 
-async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
+async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
   // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
+  const tenant:number = sender.id
+  if(!tenant) {
+    console.log('=> no tenant in emitMessageToBot')
+    return false
+  }
   switch (botInTribe.botType) {
     case constants.bot_types.builtin:
       builtinBotEmit(msg)
@@ -76,12 +86,12 @@ async function emitMessageToBot(msg, botInTribe): Promise<boolean> {
     case constants.bot_types.local:
       const bot = await models.Bot.findOne({
         where: {
-          uuid: botInTribe.botUuid
+          uuid: botInTribe.botUuid, tenant
         }
       })
       return postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE)
     case constants.bot_types.remote:
-      return keysendBotCmd(msg, botInTribe)
+      return keysendBotCmd(msg, botInTribe, sender)
     default:
       return false
   }

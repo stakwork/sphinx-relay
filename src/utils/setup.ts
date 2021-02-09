@@ -8,6 +8,7 @@ import { isClean } from './nodeinfo'
 import { getQR } from './connect'
 import { loadConfig } from './config'
 import migrate from './migrate'
+import {isProxy} from '../utils/proxy'
 
 const USER_VERSION = 7
 const config = loadConfig()
@@ -44,11 +45,14 @@ const setupOwnerContact = async () => {
         try {
           const one = await models.Contact.findOne({ where: { id: 1 } })
           if (!one) {
+            let authToken:string|null = null
+            // dont allow "signup" on root contact of proxy node
+            if(isProxy()) authToken = '_'
             const contact = await models.Contact.create({
               id: 1,
               publicKey: info.identity_pubkey,
               isOwner: true,
-              authToken: null
+              authToken
             })
             console.log('[db] created node owner contact, id:', contact.id)
           }

@@ -233,12 +233,12 @@ function putstats({ uuid, host, member_count, chatId }) {
     });
 }
 exports.putstats = putstats;
-function genSignedTimestamp() {
+function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('genSignedTimestamp')
         const now = moment().unix();
         const tsBytes = Buffer.from(now.toString(16), 'hex');
-        const sig = yield LND.signBuffer(tsBytes);
+        const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
         const sigBytes = zbase32.decode(sig);
         const totalLength = tsBytes.length + sigBytes.length;
         const buf = Buffer.concat([tsBytes, sigBytes], totalLength);

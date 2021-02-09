@@ -18,6 +18,7 @@ const jsonUtils = require("../utils/json");
 const socket = require("../utils/socket");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
+const tribes_1 = require("../utils/tribes");
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> processAction', req.body);
@@ -55,7 +56,7 @@ function processAction(req, res) {
             chat_uuid: chat_uuid || '',
         };
         try {
-            const r = yield finalAction(a, bot_id);
+            const r = yield finalAction(a);
             res_1.success(res, r);
         }
         catch (e) {
@@ -64,28 +65,22 @@ function processAction(req, res) {
     });
 }
 exports.processAction = processAction;
-function finalAction(a, bot_id) {
+function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { action, pubkey, amount, content, bot_name, chat_uuid } = a;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        let theChat;
-        if (chat_uuid) {
-            theChat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
-        }
-        const iAmTribeAdmin = owner.publicKey === (theChat && theChat.ownerPubkey);
+        const { bot_id, action, pubkey, amount, content, bot_name, chat_uuid } = a;
+        // not for tribe admin, for bot maker
+        const myBot = yield models_1.models.Bot.findOne({
+            where: {
+                id: bot_id
+            }
+        });
         console.log("=> ACTION HIT", a.action, a.bot_name);
-        if (chat_uuid && !iAmTribeAdmin) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-            const myBot = yield models_1.models.Bot.findOne({
-                where: {
-                    id: bot_id
-                }
-            });
-            if (!myBot)
-                return console.log('no bot');
+        if (myBot) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid        
+            const owner = yield models_1.models.Contact.findOne({ where: { id: myBot.tenant } });
             // THIS is a bot member cmd res (i am bot maker)
             const botMember = yield models_1.models.BotMember.findOne({
                 where: {
-                    tribeUuid: chat_uuid, botId: bot_id
+                    tribeUuid: chat_uuid, botId: bot_id, tenant: owner.id
                 }
             });
             if (!botMember)
@@ -110,7 +105,7 @@ function finalAction(a, bot_id) {
             catch (e) {
                 console.log('=> couldnt mqtt publish');
             }
-            return;
+            return; // done
         }
         if (action === 'keysend') {
             console.log('=> BOT KEYSEND');
@@ -135,10 +130,14 @@ function finalAction(a, bot_id) {
             console.log('=> BOT BROADCAST');
             if (!content)
                 throw 'no content';
+            if (!chat_uuid)
+                throw 'no chat_uuid';
+            const theChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
             if (!theChat)
                 throw 'no chat';
             if (theChat.type !== constants_1.default.chat_types.tribe)
                 throw 'not a tribe';
+            const owner = yield models_1.models.Contact.findOne({ where: { id: theChat.tenant } });
             const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
             const encryptedText = rsa.encrypt(theChat.groupKey, content);
             const textMap = { 'chat': encryptedText };

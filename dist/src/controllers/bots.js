@@ -22,8 +22,11 @@ const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     try {
-        const bots = yield models_1.models.Bot.findAll();
+        const bots = yield models_1.models.Bot.findAll({ where: { tenant } });
         res_1.success(res, {
             bots: bots.map(b => jsonUtils.botToJson(b))
         });
@@ -34,21 +37,24 @@ const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getBots = getBots;
 const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const { name, webhook, price_per_use, img, description, tags, } = req.body;
-    const uuid = yield tribes.genSignedTimestamp();
+    const uuid = yield tribes.genSignedTimestamp(req.owner.publicKey);
     const newBot = {
         name, uuid, webhook,
         id: crypto.randomBytes(12).toString('hex').toUpperCase(),
         secret: crypto.randomBytes(16).toString('hex').toUpperCase(),
-        pricePerUse: price_per_use || 0
+        pricePerUse: price_per_use || 0,
+        tenant
     };
     try {
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const theBot = yield models_1.models.Bot.create(newBot);
         // post to tribes.sphinx.chat
         tribes.declare_bot({
             uuid,
-            owner_pubkey: owner.publicKey,
+            owner_pubkey: req.owner.publicKey,
             price_per_use,
             name: name,
             description: description || '',
@@ -65,11 +71,14 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.createBot = createBot;
 const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const id = req.params.id;
     if (!id)
         return;
     try {
-        models_1.models.Bot.destroy({ where: { id } });
+        models_1.models.Bot.destroy({ where: { id, tenant } });
         res_1.success(res, true);
     }
     catch (e) {
@@ -82,10 +91,13 @@ function installBotAsTribeAdmin(chat, bot_json) {
     return __awaiter(this, void 0, void 0, function* () {
         const chatId = chat && chat.id;
         const chat_uuid = chat && chat.uuid;
-        if (!chatId || !chat_uuid)
+        const tenant = chat.tenant;
+        if (!chatId || !chat_uuid || !tenant)
             return console.log('no chat id in installBot');
         console.log("=> chat to install bot into", chat.name);
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
+        if (!owner)
+            return console.log('cant find owner in installBotAsTribeAdmin');
         const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey);
         if (!isTribeOwner)
             return console.log('=> only tribe owner can install bots');
@@ -102,13 +114,14 @@ function installBotAsTribeAdmin(chat, bot_json) {
             botType: botType,
             botUuid: uuid,
             botMakerPubkey: owner_pubkey,
-            pricePerUse: price_per_use
+            pricePerUse: price_per_use,
+            tenant
         };
         if (isLocal) {
             // "install" my local bot and send "INSTALL" event
             const myBot = yield models_1.models.Bot.findOne({
                 where: {
-                    uuid: bot_json.uuid
+                    uuid: bot_json.uuid, tenant
                 }
             });
             if (myBot) {
@@ -129,7 +142,7 @@ function installBotAsTribeAdmin(chat, bot_json) {
         else {
             // keysend to bot maker
             console.log("installBot INSTALL REMOTE BOT NOW", chatBot);
-            const succeeded = yield keysendBotInstall(chatBot, chat_uuid);
+            const succeeded = yield keysendBotInstall(chatBot, chat_uuid, owner);
             if (succeeded) {
                 try { // could fail
                     yield models_1.models.ChatBot.create(chatBot);
@@ -140,23 +153,22 @@ function installBotAsTribeAdmin(chat, bot_json) {
     });
 }
 exports.installBotAsTribeAdmin = installBotAsTribeAdmin;
-function keysendBotInstall(b, chat_uuid) {
+function keysendBotInstall(b, chat_uuid, owner) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants_1.default.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid);
+        return yield botKeysend(constants_1.default.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid, owner);
     });
 }
 exports.keysendBotInstall = keysendBotInstall;
-function keysendBotCmd(msg, b) {
+function keysendBotCmd(msg, b, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         const amount = msg.message.amount || 0;
         const amt = Math.max(amount, b.pricePerUse);
-        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, msg.message.content, (msg.sender && msg.sender.role));
+        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, owner, msg.message.content, (msg.sender && msg.sender.role));
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
-function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, content, sender_role) {
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owner, content, sender_role) {
     return __awaiter(this, void 0, void 0, function* () {
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const dest = botmaker_pubkey;
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
@@ -337,8 +349,8 @@ function receiveBotRes(payload) {
             // received the entire action?
             const bot_id = payload.bot_id;
             api_1.finalAction({
-                action, bot_name, chat_uuid, content, amount,
-            }, bot_id);
+                bot_id, action, bot_name, chat_uuid, content, amount,
+            });
         }
         else {
             const theChat = yield models_1.models.Chat.findOne({

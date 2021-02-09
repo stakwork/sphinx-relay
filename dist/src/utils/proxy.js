@@ -9,15 +9,56 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadProxyLightning = exports.isProxy = exports.loadProxyCredentials = void 0;
+exports.loadProxyLightning = exports.loadProxyCredentials = exports.generateNewUser = exports.generateNewUsers = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const config_1 = require("./config");
 const lightning_1 = require("./lightning");
+const models_1 = require("../models");
+const node_fetch_1 = require("node-fetch");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost';
+function isProxy() {
+    return (config.proxy_lnd_port && config.proxy_macaroons_dir && config.proxy_tls_location) ? true : false;
+}
+exports.isProxy = isProxy;
+const NEW_USER_NUM = 40;
+// isOwner users with no authToken
+function generateNewUsers() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const newusers = yield models_1.models.Contact.findAll({ where: { isOwner: true, authToken: null } });
+        if (newusers.length < NEW_USER_NUM) {
+            console.log('gen new users');
+            const arr = new Array(NEW_USER_NUM - newusers.length);
+            const rootpk = yield getProxyRootPubkey();
+            yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {
+                yield generateNewUser(rootpk);
+            }));
+        }
+    });
+}
+exports.generateNewUsers = generateNewUsers;
+const adminURL = 'http://localhost:5555/';
+function generateNewUser(rootpk) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const r = yield node_fetch_1.default(adminURL + 'generate', {
+            method: 'POST',
+            headers: { 'x-admin-token': config.proxy_admin_token }
+        });
+        const j = yield r.json();
+        const contact = {
+            publicKey: j.pubkey,
+            routeHint: `${rootpk}:${j.channel}`,
+            isOwner: true,
+            authToken: null
+        };
+        const created = yield models_1.models.Contact.create(contact);
+        console.log(created);
+    });
+}
+exports.generateNewUser = generateNewUser;
 function loadProxyCredentials(macPrefix) {
     var lndCert = fs.readFileSync(config.proxy_tls_location);
     var sslCreds = grpc.credentials.createSsl(lndCert);
@@ -31,20 +72,12 @@ function loadProxyCredentials(macPrefix) {
     return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
 }
 exports.loadProxyCredentials = loadProxyCredentials;
-function isProxy() {
-    return (config.proxy_lnd_port && config.proxy_macaroons_dir && config.proxy_tls_location) ? true : false;
-}
-exports.isProxy = isProxy;
-// var proxyLightningClient = <any>null;
-function loadProxyLightning(childPubKey) {
+function loadProxyLightning(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        // if (proxyLightningClient) {
-        //   return proxyLightningClient
-        // }
         try {
             let macname;
-            if (childPubKey && childPubKey.length === 66) {
-                macname = childPubKey;
+            if (ownerPubkey && ownerPubkey.length === 66) {
+                macname = ownerPubkey;
             }
             else {
                 macname = yield getProxyRootPubkey();
@@ -82,6 +115,13 @@ function getProxyRootPubkey() {
                 reject("CANT GET ROOT KEY");
             }
         });
+    });
+}
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
     });
 }
 //# sourceMappingURL=proxy.js.map

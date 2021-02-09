@@ -18,6 +18,7 @@ const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
+const tribes_1 = require("../utils/tribes");
 const msg_types = Sphinx.MSG_TYPE;
 const config = config_1.loadConfig();
 const builtinBots = [
@@ -53,16 +54,12 @@ function init() {
                 const botName = arr[2];
                 if (builtinBots.includes(botName)) {
                     console.log("INSTALL", botName);
-                    const chat = yield models_1.models.Chat.findOne({
-                        where: {
-                            uuid: message.channel.id
-                        }
-                    });
+                    const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                     if (!chat)
                         return;
                     const existing = yield models_1.models.ChatBot.findOne({
                         where: {
-                            chatId: chat.id, botPrefix: '/' + botName,
+                            chatId: chat.id, botPrefix: '/' + botName, tenant: chat.tenant
                         }
                     });
                     if (existing) {
@@ -80,6 +77,7 @@ function init() {
                         botType: constants_1.default.bot_types.builtin,
                         msgTypes: JSON.stringify(msgTypes),
                         pricePerUse: 0,
+                        tenant: chat.tenant,
                     };
                     yield models_1.models.ChatBot.create(chatBot);
                     // if (botName === 'welcome') {
@@ -98,11 +96,7 @@ function init() {
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
                         console.log('=> FOUND BOT', bot.unique_name);
-                        const chat = yield models_1.models.Chat.findOne({
-                            where: {
-                                uuid: message.channel.id
-                            }
-                        });
+                        const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                         if (!chat)
                             return;
                         bots_1.installBotAsTribeAdmin(chat.dataValues, bot);

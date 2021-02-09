@@ -6,6 +6,7 @@ import { models } from '../models'
 import fetch from 'node-fetch'
 import constants from '../constants'
 import {loadConfig} from '../utils/config'
+import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -50,15 +51,11 @@ export function init() {
 
         if (builtinBots.includes(botName)) {
           console.log("INSTALL", botName)
-          const chat = await models.Chat.findOne({
-            where: {
-              uuid: message.channel.id
-            }
-          })
+          const chat = await getTribeOwnersChatByUUID(message.channel.id)
           if (!chat) return
           const existing = await models.ChatBot.findOne({
             where: {
-              chatId: chat.id, botPrefix: '/' + botName,
+              chatId: chat.id, botPrefix: '/' + botName, tenant:chat.tenant
             }
           })
           if (existing) {
@@ -76,6 +73,7 @@ export function init() {
             botType: constants.bot_types.builtin,
             msgTypes: JSON.stringify(msgTypes),
             pricePerUse: 0,
+            tenant: chat.tenant,
           }
           await models.ChatBot.create(chatBot)
           // if (botName === 'welcome') {
@@ -93,11 +91,7 @@ export function init() {
           const bot = await getBotByName(botName)
           if (bot && bot.uuid) {
             console.log('=> FOUND BOT', bot.unique_name)
-            const chat = await models.Chat.findOne({
-              where: {
-                uuid: message.channel.id
-              }
-            })
+            const chat = await getTribeOwnersChatByUUID(message.channel.id)
             if (!chat) return
             installBotAsTribeAdmin(chat.dataValues, bot)
           } else {

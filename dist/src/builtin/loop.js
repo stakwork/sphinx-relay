@@ -16,6 +16,7 @@ const models_1 = require("../models");
 const constants_1 = require("../constants");
 const child_process_1 = require("child_process");
 const config_1 = require("../utils/config");
+const tribes_1 = require("../utils/tribes");
 const config = config_1.loadConfig();
 var validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
@@ -207,18 +208,15 @@ function init() {
 exports.init = init;
 function getBot(tribeUUID) {
     return __awaiter(this, void 0, void 0, function* () {
-        const chat = yield models_1.models.Chat.findOne({
-            where: {
-                uuid: tribeUUID
-            }
-        });
+        const chat = yield tribes_1.getTribeOwnersChatByUUID(tribeUUID);
         if (!chat)
             return;
         return yield models_1.models.ChatBot.findOne({
             where: {
                 chatId: chat.id,
                 botPrefix: '/loopout',
-                botType: constants_1.default.bot_types.builtin
+                botType: constants_1.default.bot_types.builtin,
+                tenant: chat.tenant
             }
         });
     });

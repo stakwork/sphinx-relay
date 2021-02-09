@@ -1,12 +1,5 @@
 import { sequelize } from '../models'
 
-async function addTenant(tableName){
-  addTableColumn(tableName, 'tenant', 'BIGINT')
-  try {
-    await sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`)
-  } catch (e) { console.log(e) }
-}
-
 export default async function migrate() {
 
   addTenant('sphinx_chat_members')
@@ -151,7 +144,13 @@ export default async function migrate() {
   //   amount DECIMAL
   // )`)
   //   } catch(e){}
+}
 
+async function addTenant(tableName){
+  addTableColumn(tableName, 'tenant', 'BIGINT')
+  try {
+    await sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`)
+  } catch (e) { console.log(e) }
 }
 
 async function addTableColumn(table: string, column: string, type = 'TEXT') {
