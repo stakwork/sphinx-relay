@@ -15,7 +15,7 @@ const crypto = require("crypto");
 // import * as WebSocket from 'ws'
 const socketio = require("socket.io");
 // { ownerID: [client1, client2] }
-// const CLIENTS = new Map();
+const CLIENTS = {};
 let io;
 // let srvr: any
 function connect(server) {
@@ -31,29 +31,43 @@ function connect(server) {
             res.end();
         }
     });
-    io.use((socket, next) => __awaiter(this, void 0, void 0, function* () {
-        let userToken = socket.handshake.headers['x-user-token'];
-        const isValid = yield isValidToken(userToken);
-        if (isValid) {
+    io.use((client, next) => __awaiter(this, void 0, void 0, function* () {
+        let userToken = client.handshake.headers['x-user-token'];
+        const owner = yield getOwnerFromToken(userToken);
+        if (owner) {
+            client.ownerID = owner.id;
+            addClient(owner.id, client);
             return next();
         }
         return next(new Error('authentication error'));
     }));
-    io.on('connection', client => {
-        console.log("=> [socket.io] connected!", JSON.stringify(client));
+    io.on('connection', (client) => {
+        console.log("=> [socket.io] connected!", client.id, client.ownerID);
+        client.on('disconnect', (reason) => {
+            console.log('=> [socket.io] disconnect', reason);
+        });
     });
 }
 exports.connect = connect;
-function isValidToken(token) {
+function addClient(id, client) {
+    const existing = CLIENTS[id];
+    if (existing && Array.isArray(existing)) {
+        CLIENTS[id].push(client);
+    }
+    if (!existing) {
+        CLIENTS[id] = [client];
+    }
+}
+function getOwnerFromToken(token) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!token)
-            return false;
-        const user = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            return null;
         const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-        if (user.authToken == null || user.authToken != hashedToken) {
-            return false; // failed
+        const owner = yield models_1.models.Contact.findOne({ where: { authToken: hashedToken, isOwner: true } });
+        if (owner && owner.id) {
+            return owner.dataValues; // failed
         }
-        return true;
+        return null;
     });
 }
 const send = (body) => {
