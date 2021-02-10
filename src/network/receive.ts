@@ -373,7 +373,7 @@ async function saveAnonymousKeysend(response, memo, sender_pubkey, tenant) {
 	socket.sendJson({
 		type: 'keysend',
 		response: jsonUtils.messageToJson(msg, null)
-	})
+	}, tenant)
 }
 
 export async function parseKeysendInvoice(i) {

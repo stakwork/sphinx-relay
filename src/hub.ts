@@ -58,7 +58,7 @@ const checkInviteHub = async (params = {}) => {
           socket.sendJson({
             type: 'invite',
             response: jsonUtils.inviteToJson(dbInvite)
-          })
+          }, owner.id)
 
           if (dbInvite.status == constants.invite_statuses.ready && contact) {
             sendNotification(-1, contact.alias, 'invite', owner)
@@ -74,7 +74,7 @@ const checkInviteHub = async (params = {}) => {
           socket.sendJson({
             type: 'contact',
             response: contactJson
-          })
+          }, owner.id)
 
           helpers.sendContactKeys({
             contactIds: [contact.id],

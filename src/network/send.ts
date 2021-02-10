@@ -98,7 +98,7 @@ export async function sendMessage(params) {
 		}
 
 		try {
-			const r = await signAndSend(opts, sender.publicKey, mqttTopic)
+			const r = await signAndSend(opts, sender, mqttTopic)
 			yes = r
 		} catch (e) {
 			console.log("KEYSEND ERROR", e)
@@ -113,8 +113,10 @@ export async function sendMessage(params) {
 	}
 }
 
-export function signAndSend(opts, ownerPubkey?:string, mqttTopic?: string, replayingHistory?: boolean) {
+export function signAndSend(opts, owner:{[k:string]:any}, mqttTopic?: string, replayingHistory?: boolean) {
 	// console.log('sign and send!',opts)
+	const ownerPubkey = owner.publicKey
+	const ownerID = owner.id
 	return new Promise(async function (resolve, reject) {
 		if (!opts || typeof opts !== 'object') {
 			return reject('object plz')
@@ -133,7 +135,7 @@ export function signAndSend(opts, ownerPubkey?:string, mqttTopic?: string, repla
 			if (mqttTopic) {
 				await tribes.publish(mqttTopic, data, function () {
 					if (!replayingHistory) {
-						if (mqttTopic) checkIfAutoConfirm(opts.data)
+						if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)
 					}
 				})
 			} else {
@@ -146,12 +148,12 @@ export function signAndSend(opts, ownerPubkey?:string, mqttTopic?: string, repla
 	})
 }
 
-function checkIfAutoConfirm(data) {
+function checkIfAutoConfirm(data, tenant) {
 	if (typesToForward.includes(data.type)) {
 		if (data.type === constants.message_types.delete) {
 			return // dont auto confirm delete msg
 		}
-		tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid)
+		tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid, tenant)
 	}
 }
 

@@ -126,7 +126,7 @@ function receiveGroupKick(payload) {
                 chat: jsonUtils.chatToJson(chat),
                 message: jsonUtils.messageToJson(message, null)
             }
-        });
+        }, tenant);
     });
 }
 exports.receiveGroupKick = receiveGroupKick;
@@ -431,7 +431,7 @@ function receiveGroupJoin(payload) {
                 chat: jsonUtils.chatToJson(theChat),
                 message: jsonUtils.messageToJson(message, null)
             }
-        });
+        }, tenant);
     });
 }
 exports.receiveGroupJoin = receiveGroupJoin;
@@ -493,7 +493,7 @@ function receiveGroupLeave(payload) {
                 chat: jsonUtils.chatToJson(chat),
                 message: jsonUtils.messageToJson(message, null)
             }
-        });
+        }, tenant);
     });
 }
 exports.receiveGroupLeave = receiveGroupLeave;
@@ -569,7 +569,7 @@ function receiveGroupCreateOrInvite(payload) {
         socket.sendJson({
             type: 'group_create',
             response: jsonUtils.messageToJson({ newContacts }, chat)
-        });
+        }, tenant);
         hub_1.sendNotification(chat, chat_name, 'group', owner);
         if (payload.type === constants_1.default.message_types.group_invite) {
             network.sendMessage({

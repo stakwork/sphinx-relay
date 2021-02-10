@@ -100,7 +100,7 @@ function finalAction(a) {
                 },
             };
             try {
-                yield network.signAndSend({ dest, data }, owner.publicKey, topic);
+                yield network.signAndSend({ dest, data }, owner, topic);
             }
             catch (e) {
                 console.log('=> couldnt mqtt publish');
@@ -137,6 +137,7 @@ function finalAction(a) {
             if (theChat.type !== constants_1.default.chat_types.tribe)
                 throw 'not a tribe';
             const owner = yield models_1.models.Contact.findOne({ where: { id: theChat.tenant } });
+            const tenant = owner.id;
             const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
             const encryptedText = rsa.encrypt(theChat.groupKey, content);
             const textMap = { 'chat': encryptedText };
@@ -157,12 +158,13 @@ function finalAction(a) {
                 createdAt: date,
                 updatedAt: date,
                 senderAlias: alias,
+                tenant
             };
             const message = yield models_1.models.Message.create(msg);
             socket.sendJson({
                 type: 'message',
                 response: jsonUtils.messageToJson(message, theChat, owner)
-            });
+            }, tenant);
             yield network.sendMessage({
                 chat: theChat,
                 sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }),

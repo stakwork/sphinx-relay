@@ -249,7 +249,7 @@ export const receiveContactKey = async (payload) => {
 		socket.sendJson({
 			type: 'contact',
 			response: jsonUtils.contactToJson(sender)
-		})
+		}, tenant)
 	} else {
 		console.log("DID NOT FIND SENDER")
 	}
@@ -289,7 +289,7 @@ export const receiveConfirmContactKey = async (payload) => {
 		socket.sendJson({
 			type: 'contact',
 			response: jsonUtils.contactToJson(sender)
-		})
+		}, tenant)
 	}
 }
 

@@ -236,7 +236,7 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
         socket.sendJson({
             type: 'contact',
             response: jsonUtils.contactToJson(sender)
-        });
+        }, tenant);
     }
     else {
         console.log("DID NOT FIND SENDER");
@@ -274,7 +274,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
         socket.sendJson({
             type: 'contact',
             response: jsonUtils.contactToJson(sender)
-        });
+        }, tenant);
     }
 });
 exports.receiveConfirmContactKey = receiveConfirmContactKey;

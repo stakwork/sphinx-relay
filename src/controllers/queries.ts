@@ -240,7 +240,7 @@ export async function queryOnchainAddress(req, res) {
     }
   }
   try {
-    await network.signAndSend(opts, owner.publicKey)
+    await network.signAndSend(opts, owner)
   } catch (e) {
     failure(res, e)
     return
@@ -316,7 +316,7 @@ export const receiveQuery = async (payload) => {
     }
   }
   try {
-    await network.signAndSend(opts)
+    await network.signAndSend(opts, owner) 
   } catch (e) {
     console.log("FAILED TO SEND QUERY_RESPONSE")
     return

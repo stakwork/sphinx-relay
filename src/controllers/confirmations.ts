@@ -61,7 +61,7 @@ export async function receiveConfirmation(payload) {
 				socket.sendJson({
 					type: 'confirmation',
 					response: jsonUtils.messageToJson(message, chat, sender)
-				})
+				}, tenant)
 			}
 			done()
 		})
@@ -88,14 +88,14 @@ export async function receiveConfirmation(payload) {
 		socket.sendJson({
 			type: 'confirmation',
 			response: jsonUtils.messageToJson(message, chat, sender)
-		})
+		}, tenant)
 	}
 }
 
-export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
+export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
 	if (!msg_id || !chat_uuid) return
-	const message = await models.Message.findOne({ where: { id: msg_id } })
-	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+	const message = await models.Message.findOne({ where: { id: msg_id, tenant } })
+	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant } })
 
 	if (message) {
 		let statusMap = {}
@@ -111,7 +111,7 @@ export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
 		socket.sendJson({
 			type: 'confirmation',
 			response: jsonUtils.messageToJson(message, chat, null)
-		})
+		}, tenant)
 	}
 }
 
@@ -139,7 +139,7 @@ export async function receiveHeartbeat(payload) {
 		}
 	}
 	try {
-		await network.signAndSend(opts, owner.publicKey)
+		await network.signAndSend(opts, owner)
 		return true
 	} catch (e) {
 		return false
@@ -171,7 +171,7 @@ export async function healthcheck(req, res) {
 		}
 	}
 	try {
-		await network.signAndSend(opts, owner.publicKey)
+		await network.signAndSend(opts, owner)
 	} catch (e) {
 		failure200(res, e)
 		return

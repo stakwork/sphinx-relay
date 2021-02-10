@@ -3,7 +3,7 @@ import * as socket from '../utils/socket'
 import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import * as decodeUtils from '../utils/decode'
-import { loadLightning } from '../utils/lightning'
+import { loadLightning, decodePayReq } from '../utils/lightning'
 import * as network from '../network'
 import * as moment from 'moment'
 import constants from '../constants'
@@ -42,7 +42,11 @@ export function subscribeInvoices(parseKeysendInvoice) {
 
 				const invoice = await models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } })
 				if (invoice == null) {
-					// console.log("ERROR: Invoice " + response['payment_request'] + " not found");
+					const invoice:any = await decodePayReq(response['payment_request'])
+					if(!invoice) return console.log("subscribeInvoices: couldn't decode pay req")
+					if(!invoice.destination) return console.log("subscribeInvoices: cant get dest from pay req")
+					const owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:invoice.destination } })
+					const tenant:number = owner.id
 					const payReq = response['payment_request']
 					const amount = response['amt_paid_sat']
 					if (process.env.HOSTING_PROVIDER === 'true') {
@@ -51,7 +55,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 					socket.sendJson({
 						type: 'invoice_payment',
 						response: { invoice: payReq }
-					})
+					}, tenant)
 					await models.Message.create({
 						chatId: 0,
 						type: constants.message_types.payment,
@@ -63,7 +67,8 @@ export function subscribeInvoices(parseKeysendInvoice) {
 						messageContent: response['memo'],
 						status: constants.statuses.confirmed,
 						createdAt: new Date(settleDate),
-						updatedAt: new Date(settleDate)
+						updatedAt: new Date(settleDate),
+						tenant
 					})
 					return
 				}
@@ -96,7 +101,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 				socket.sendJson({
 					type: 'payment',
 					response: jsonUtils.messageToJson(message, chat, sender)
-				})
+				}, tenant)
 
 				sendNotification(chat, sender.alias, 'message', owner)
 			}

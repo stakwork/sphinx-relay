@@ -248,7 +248,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     socket.sendJson({
         type: 'invoice',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });

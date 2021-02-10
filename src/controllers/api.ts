@@ -100,7 +100,7 @@ export async function finalAction(a: Action) {
             }, // for verify sig
         }
         try {
-            await network.signAndSend({ dest, data }, owner.publicKey, topic)
+            await network.signAndSend({ dest, data }, owner, topic)
         } catch (e) {
             console.log('=> couldnt mqtt publish')
         }
@@ -133,6 +133,7 @@ export async function finalAction(a: Action) {
         if (!theChat) throw 'no chat'
         if (theChat.type !== constants.chat_types.tribe) throw 'not a tribe'
         const owner = await models.Contact.findOne({where:{id:theChat.tenant}})
+        const tenant:number = owner.id
 
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
         const encryptedText = rsa.encrypt(theChat.groupKey, content)
@@ -154,12 +155,13 @@ export async function finalAction(a: Action) {
             createdAt: date,
             updatedAt: date,
             senderAlias: alias,
+            tenant
         }
         const message = await models.Message.create(msg)
         socket.sendJson({
             type: 'message',
             response: jsonUtils.messageToJson(message, theChat, owner)
-        })
+        }, tenant)
         await network.sendMessage({
             chat: theChat,
             sender: { ...owner.dataValues, alias, id: botContactId, role: constants.chat_roles.reader },

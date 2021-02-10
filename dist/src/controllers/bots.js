@@ -187,7 +187,7 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
             }
         };
         try {
-            yield network.signAndSend(opts, owner.publicKey);
+            yield network.signAndSend(opts, owner);
             return true;
         }
         catch (e) {
@@ -391,7 +391,7 @@ function receiveBotRes(payload) {
             socket.sendJson({
                 type: 'message',
                 response: jsonUtils.messageToJson(message, theChat, owner)
-            });
+            }, tenant);
         }
     });
 }

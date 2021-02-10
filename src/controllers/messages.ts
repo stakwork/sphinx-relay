@@ -345,7 +345,7 @@ export const receiveMessage = async (payload) => {
 	socket.sendJson({
 		type: 'message',
 		response: jsonUtils.messageToJson(message, chat, sender)
-	})
+	}, tenant)
 
 	sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 
@@ -391,7 +391,7 @@ export const receiveBoost = async (payload) => {
 	socket.sendJson({
 		type: 'boost',
 		response: jsonUtils.messageToJson(message, chat, sender)
-	})
+	}, tenant)
 
 	sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 
@@ -433,7 +433,7 @@ export const receiveRepayment = async (payload) => {
 	socket.sendJson({
 		type: 'repayment',
 		response: jsonUtils.messageToJson(message, null, sender)
-	})
+	}, tenant)
 }
 
 export const receiveDeleteMessage = async (payload) => {
@@ -457,7 +457,7 @@ export const receiveDeleteMessage = async (payload) => {
 	socket.sendJson({
 		type: 'delete',
 		response: jsonUtils.messageToJson(message, chat, sender)
-	})
+	}, tenant)
 }
 
 export const readMessages = async (req, res) => {
@@ -488,7 +488,7 @@ export const readMessages = async (req, res) => {
 		socket.sendJson({
 			type: 'chat_seen',
 			response: jsonUtils.chatToJson(chat)
-		})
+		}, tenant)
 	} else {
 		failure(res, 'no chat')
 	}

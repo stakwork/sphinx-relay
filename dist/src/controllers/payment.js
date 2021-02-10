@@ -153,7 +153,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     socket.sendJson({
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
 });
 exports.receivePayment = receivePayment;

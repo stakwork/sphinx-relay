@@ -173,7 +173,7 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, ch
     }
   }
   try {
-    await network.signAndSend(opts, owner.publicKey)
+    await network.signAndSend(opts, owner)
     return true
   } catch (e) {
     return false
@@ -375,6 +375,6 @@ export async function receiveBotRes(payload) {
     socket.sendJson({
       type: 'message',
       response: jsonUtils.messageToJson(message, theChat, owner)
-    })
+    }, tenant)
   }
 }

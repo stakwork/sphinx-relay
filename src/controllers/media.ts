@@ -247,7 +247,7 @@ export const receivePurchase = async (payload) => {
   socket.sendJson({
     type: 'purchase',
     response: jsonUtils.messageToJson(message, chat, sender)
-  })
+  }, tenant)
 
   const isTribe = chat_type === constants.chat_types.tribe
 
@@ -313,7 +313,7 @@ export const receivePurchase = async (payload) => {
         socket.sendJson({
           type: 'purchase_deny',
           response: jsonUtils.messageToJson(denyMsg, chat, sender)
-        })
+        }, tenant)
       },
       failure: error => console.log('=> couldnt send purcahse deny', error),
     })
@@ -348,7 +348,7 @@ export const receivePurchase = async (payload) => {
       socket.sendJson({
         type: 'purchase_accept',
         response: jsonUtils.messageToJson(acceptMsg, chat, sender)
-      })
+      }, tenant)
     },
     failure: error => console.log('=> couldnt send purchase accept', error),
   })
@@ -399,7 +399,7 @@ export const receivePurchaseAccept = async (payload) => {
   socket.sendJson({
     type: 'purchase_accept',
     response: jsonUtils.messageToJson(msg, chat, sender)
-  })
+  }, tenant)
 }
 
 export const receivePurchaseDeny = async (payload) => {
@@ -429,7 +429,7 @@ export const receivePurchaseDeny = async (payload) => {
   socket.sendJson({
     type: 'purchase_deny',
     response: jsonUtils.messageToJson(msg, chat, sender)
-  })
+  }, tenant)
 }
 
 export const receiveAttachment = async (payload) => {
@@ -473,7 +473,7 @@ export const receiveAttachment = async (payload) => {
   socket.sendJson({
     type: 'attachment',
     response: jsonUtils.messageToJson(message, chat, sender)
-  })
+  }, tenant)
 
   sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 

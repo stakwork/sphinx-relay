@@ -50,7 +50,13 @@ function subscribeInvoices(parseKeysendInvoice) {
                     let settleDate = parseInt(response['settle_date'] + '000');
                     const invoice = yield models_1.models.Message.findOne({ where: { type: constants_1.default.message_types.invoice, payment_request: response['payment_request'] } });
                     if (invoice == null) {
-                        // console.log("ERROR: Invoice " + response['payment_request'] + " not found");
+                        const invoice = yield lightning_1.decodePayReq(response['payment_request']);
+                        if (!invoice)
+                            return console.log("subscribeInvoices: couldn't decode pay req");
+                        if (!invoice.destination)
+                            return console.log("subscribeInvoices: cant get dest from pay req");
+                        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: invoice.destination } });
+                        const tenant = owner.id;
                         const payReq = response['payment_request'];
                         const amount = response['amt_paid_sat'];
                         if (process.env.HOSTING_PROVIDER === 'true') {
@@ -59,7 +65,7 @@ function subscribeInvoices(parseKeysendInvoice) {
                         socket.sendJson({
                             type: 'invoice_payment',
                             response: { invoice: payReq }
-                        });
+                        }, tenant);
                         yield models_1.models.Message.create({
                             chatId: 0,
                             type: constants_1.default.message_types.payment,
@@ -71,7 +77,8 @@ function subscribeInvoices(parseKeysendInvoice) {
                             messageContent: response['memo'],
                             status: constants_1.default.statuses.confirmed,
                             createdAt: new Date(settleDate),
-                            updatedAt: new Date(settleDate)
+                            updatedAt: new Date(settleDate),
+                            tenant
                         });
                         return;
                     }
@@ -100,7 +107,7 @@ function subscribeInvoices(parseKeysendInvoice) {
                     socket.sendJson({
                         type: 'payment',
                         response: jsonUtils.messageToJson(message, chat, sender)
-                    });
+                    }, tenant);
                     hub_1.sendNotification(chat, sender.alias, 'message', owner);
                 }
             });

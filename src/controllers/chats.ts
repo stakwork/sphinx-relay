@@ -112,7 +112,7 @@ export async function receiveGroupKick(payload) {
 			chat: jsonUtils.chatToJson(chat),
 			message: jsonUtils.messageToJson(message, null)
 		}
-	})
+	}, tenant)
 }
 
 export async function getChats(req, res) {
@@ -435,7 +435,7 @@ export async function receiveGroupJoin(payload) {
 			chat: jsonUtils.chatToJson(theChat),
 			message: jsonUtils.messageToJson(message, null)
 		}
-	})
+	}, tenant)
 }
 
 export async function receiveGroupLeave(payload) {
@@ -497,7 +497,7 @@ export async function receiveGroupLeave(payload) {
 			chat: jsonUtils.chatToJson(chat),
 			message: jsonUtils.messageToJson(message, null)
 		}
-	})
+	}, tenant)
 }
 
 async function validateTribeOwner(chat_uuid: string, pubkey: string) {
@@ -579,7 +579,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 	socket.sendJson({
 		type: 'group_create',
 		response: jsonUtils.messageToJson({ newContacts }, chat)
-	})
+	}, tenant)
 
 	sendNotification(chat, chat_name, 'group', owner)
 

@@ -72,7 +72,7 @@ function receiveConfirmation(payload) {
                         socket.sendJson({
                             type: 'confirmation',
                             response: jsonUtils.messageToJson(message, chat, sender)
-                        });
+                        }, tenant);
                     }
                     done();
                 });
@@ -99,17 +99,17 @@ function receiveConfirmation(payload) {
             socket.sendJson({
                 type: 'confirmation',
                 response: jsonUtils.messageToJson(message, chat, sender)
-            });
+            }, tenant);
         }
     });
 }
 exports.receiveConfirmation = receiveConfirmation;
-function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
+function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!msg_id || !chat_uuid)
             return;
-        const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        const message = yield models_1.models.Message.findOne({ where: { id: msg_id, tenant } });
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant } });
         if (message) {
             let statusMap = {};
             try {
@@ -124,7 +124,7 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
             socket.sendJson({
                 type: 'confirmation',
                 response: jsonUtils.messageToJson(message, chat, null)
-            });
+            }, tenant);
         }
     });
 }
@@ -153,7 +153,7 @@ function receiveHeartbeat(payload) {
             }
         };
         try {
-            yield network.signAndSend(opts, owner.publicKey);
+            yield network.signAndSend(opts, owner);
             return true;
         }
         catch (e) {
@@ -186,7 +186,7 @@ function healthcheck(req, res) {
             }
         };
         try {
-            yield network.signAndSend(opts, owner.publicKey);
+            yield network.signAndSend(opts, owner);
         }
         catch (e) {
             res_1.failure200(res, e);

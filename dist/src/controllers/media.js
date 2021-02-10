@@ -224,7 +224,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     socket.sendJson({
         type: 'purchase',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     // if sats forwarded from tribe owner, for the >1 time
     // dont need to send back token, because admin already has it
@@ -286,7 +286,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
                 socket.sendJson({
                     type: 'purchase_deny',
                     response: jsonUtils.messageToJson(denyMsg, chat, sender)
-                });
+                }, tenant);
             }),
             failure: error => console.log('=> couldnt send purcahse deny', error),
         });
@@ -321,7 +321,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             socket.sendJson({
                 type: 'purchase_accept',
                 response: jsonUtils.messageToJson(acceptMsg, chat, sender)
-            });
+            }, tenant);
         }),
         failure: error => console.log('=> couldnt send purchase accept', error),
     });
@@ -369,7 +369,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
     socket.sendJson({
         type: 'purchase_accept',
         response: jsonUtils.messageToJson(msg, chat, sender)
-    });
+    }, tenant);
 });
 exports.receivePurchaseAccept = receivePurchaseAccept;
 const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -399,7 +399,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
     socket.sendJson({
         type: 'purchase_deny',
         response: jsonUtils.messageToJson(msg, chat, sender)
-    });
+    }, tenant);
 });
 exports.receivePurchaseDeny = receivePurchaseDeny;
 const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -442,7 +442,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     socket.sendJson({
         type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });

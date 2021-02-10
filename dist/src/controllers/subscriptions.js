@@ -54,8 +54,10 @@ function startCronJob(sub) {
                     delete jobs[subscription.id];
                     return this.stop();
                 }
+                const tenant = subscription.tenant;
+                const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
                 // SEND PAYMENT!!!
-                sendSubscriptionPayment(subscription, false);
+                sendSubscriptionPayment(subscription, false, owner);
             });
         }, null, true);
     });
@@ -109,16 +111,16 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
     }
     return text;
 }
-function sendSubscriptionPayment(sub, isFirstMessage) {
+function sendSubscriptionPayment(sub, isFirstMessage, owner) {
     return __awaiter(this, void 0, void 0, function* () {
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const tenant = owner.id;
         var date = new Date();
         date.setMilliseconds(0);
-        const subscription = yield models_1.models.Subscription.findOne({ where: { id: sub.id } });
+        const subscription = yield models_1.models.Subscription.findOne({ where: { id: sub.id, tenant } });
         if (!subscription) {
             return;
         }
-        const chat = yield models_1.models.Chat.findOne({ where: { id: subscription.chatId } });
+        const chat = yield models_1.models.Chat.findOne({ where: { id: subscription.chatId, tenant } });
         if (!subscription) {
             console.log("=> no sub for this payment!!!");
             return;
@@ -162,11 +164,12 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
                     createdAt: date,
                     updatedAt: date,
                     subscriptionId: subscription.id,
+                    tenant
                 });
                 socket.sendJson({
                     type: 'direct_payment',
                     response: jsonUtils.messageToJson(message, chat)
-                });
+                }, tenant);
             }),
             failure: (err) => __awaiter(this, void 0, void 0, function* () {
                 console.log("SEND PAY ERROR");
@@ -184,11 +187,12 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
                     createdAt: date,
                     updatedAt: date,
                     subscriptionId: sub.id,
+                    tenant
                 });
                 socket.sendJson({
                     type: 'direct_payment',
                     response: jsonUtils.messageToJson(message, chat)
-                });
+                }, tenant);
             })
         });
     });
@@ -317,14 +321,17 @@ exports.getSubscriptionsForContact = getSubscriptionsForContact;
 // create new sub
 function createSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const date = new Date();
         date.setMilliseconds(0);
-        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, total_paid: 0, createdAt: date, ended: false, paused: false }));
+        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, total_paid: 0, createdAt: date, ended: false, paused: false, tenant }));
         if (!s.cron) {
             return res_1.failure(res, 'Invalid interval');
         }
         try {
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            const owner = req.owner;
             const chat = yield helpers.findOrCreateChat({
                 chat_id: req.body.chat_id,
                 owner_id: owner.id,
@@ -337,7 +344,7 @@ function createSubscription(req, res) {
             const sub = yield models_1.models.Subscription.create(s);
             startCronJob(sub);
             const isFirstMessage = true;
-            sendSubscriptionPayment(sub, isFirstMessage);
+            sendSubscriptionPayment(sub, isFirstMessage, owner);
             res_1.success(res, jsonUtils.subscriptionToJson(sub, chat));
         }
         catch (e) {
@@ -350,11 +357,14 @@ exports.createSubscription = createSubscription;
 ;
 function editSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         console.log('=> editSubscription');
         const date = new Date();
         date.setMilliseconds(0);
         const id = parseInt(req.params.id);
-        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, createdAt: date, ended: false, paused: false }));
+        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, createdAt: date, ended: false, paused: false, tenant }));
         try {
             if (!id || !s.chatId || !s.cron) {
                 return res_1.failure(res, 'Invalid data');

@@ -204,7 +204,7 @@ function receiveMemberRequest(payload) {
                 chat: jsonUtils.chatToJson(theChat),
                 message: jsonUtils.messageToJson(message, theChat)
             }
-        });
+        }, tenant);
     });
 }
 exports.receiveMemberRequest = receiveMemberRequest;
@@ -358,7 +358,7 @@ function receiveMemberApprove(payload) {
                 message: jsonUtils.messageToJson(message, chat),
                 chat: jsonUtils.chatToJson(chat),
             }
-        });
+        }, tenant);
         const amount = chat.priceToJoin || 0;
         const theChat = chat.dataValues || chat;
         const theOwner = owner.dataValues || owner;
@@ -409,7 +409,7 @@ function receiveMemberReject(payload) {
                 message: jsonUtils.messageToJson(message, chat),
                 chat: jsonUtils.chatToJson(chat),
             }
-        });
+        }, tenant);
         hub_1.sendNotification(chat, chat_name, 'reject', owner);
     });
 }
@@ -442,7 +442,7 @@ function receiveTribeDelete(payload) {
                 message: jsonUtils.messageToJson(message, chat),
                 chat: jsonUtils.chatToJson(chat),
             }
-        });
+        }, tenant);
     });
 }
 exports.receiveTribeDelete = receiveTribeDelete;
@@ -501,7 +501,7 @@ function replayChatHistory(chat, contact, owner) {
                 yield network.signAndSend({
                     data,
                     dest: contact.publicKey,
-                }, owner.publicKey, mqttTopic, replayingHistory);
+                }, owner, mqttTopic, replayingHistory);
             }));
         }
         catch (e) {

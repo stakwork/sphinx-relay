@@ -100,7 +100,7 @@ function sendMessage(params) {
                 amt: Math.max((amount || 0), constants_1.default.min_sat_amount)
             };
             try {
-                const r = yield signAndSend(opts, sender.publicKey, mqttTopic);
+                const r = yield signAndSend(opts, sender, mqttTopic);
                 yes = r;
             }
             catch (e) {
@@ -120,8 +120,10 @@ function sendMessage(params) {
     });
 }
 exports.sendMessage = sendMessage;
-function signAndSend(opts, ownerPubkey, mqttTopic, replayingHistory) {
+function signAndSend(opts, owner, mqttTopic, replayingHistory) {
     // console.log('sign and send!',opts)
+    const ownerPubkey = owner.publicKey;
+    const ownerID = owner.id;
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!opts || typeof opts !== 'object') {
@@ -140,7 +142,7 @@ function signAndSend(opts, ownerPubkey, mqttTopic, replayingHistory) {
                     yield tribes.publish(mqttTopic, data, function () {
                         if (!replayingHistory) {
                             if (mqttTopic)
-                                checkIfAutoConfirm(opts.data);
+                                checkIfAutoConfirm(opts.data, ownerID);
                         }
                     });
                 }
@@ -156,12 +158,12 @@ function signAndSend(opts, ownerPubkey, mqttTopic, replayingHistory) {
     });
 }
 exports.signAndSend = signAndSend;
-function checkIfAutoConfirm(data) {
+function checkIfAutoConfirm(data, tenant) {
     if (receive_1.typesToForward.includes(data.type)) {
         if (data.type === constants_1.default.message_types.delete) {
             return; // dont auto confirm delete msg
         }
-        confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid);
+        confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid, tenant);
     }
 }
 function newmsg(type, chat, sender, message, isForwarded, includeStatus) {

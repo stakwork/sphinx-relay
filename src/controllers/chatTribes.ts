@@ -198,7 +198,7 @@ export async function receiveMemberRequest(payload) {
 			chat: jsonUtils.chatToJson(theChat),
 			message: jsonUtils.messageToJson(message, theChat)
 		}
-	})
+	}, tenant)
 }
 
 export async function editTribe(req, res) {
@@ -357,7 +357,7 @@ export async function receiveMemberApprove(payload) {
 			message: jsonUtils.messageToJson(message, chat),
 			chat: jsonUtils.chatToJson(chat),
 		}
-	})
+	}, tenant)
 
 	const amount = chat.priceToJoin || 0
 	const theChat = chat.dataValues || chat
@@ -411,7 +411,7 @@ export async function receiveMemberReject(payload) {
 			message: jsonUtils.messageToJson(message, chat),
 			chat: jsonUtils.chatToJson(chat),
 		}
-	})
+	}, tenant)
 
 	sendNotification(chat, chat_name, 'reject', owner)
 }
@@ -443,7 +443,7 @@ export async function receiveTribeDelete(payload) {
 			message: jsonUtils.messageToJson(message, chat),
 			chat: jsonUtils.chatToJson(chat),
 		}
-	})
+	}, tenant)
 }
 
 export async function replayChatHistory(chat, contact, owner) {
@@ -514,7 +514,7 @@ export async function replayChatHistory(chat, contact, owner) {
 			await network.signAndSend({
 				data,
 				dest: contact.publicKey,
-			}, owner.publicKey, mqttTopic, replayingHistory)
+			}, owner, mqttTopic, replayingHistory)
 		})
 	} catch (e) {
 		console.log('replayChatHistory ERROR', e)

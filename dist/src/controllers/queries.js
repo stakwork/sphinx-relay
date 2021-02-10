@@ -246,7 +246,7 @@ function queryOnchainAddress(req, res) {
             }
         };
         try {
-            yield network.signAndSend(opts, owner.publicKey);
+            yield network.signAndSend(opts, owner);
         }
         catch (e) {
             res_1.failure(res, e);
@@ -323,7 +323,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         }
     };
     try {
-        yield network.signAndSend(opts);
+        yield network.signAndSend(opts, owner);
     }
     catch (e) {
         console.log("FAILED TO SEND QUERY_RESPONSE");

@@ -318,7 +318,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     socket.sendJson({
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
@@ -362,7 +362,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     socket.sendJson({
         type: 'boost',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
     if (msg.replyUuid) {
         const ogMsg = yield models_1.models.Message.findOne({
@@ -400,7 +400,7 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
     socket.sendJson({
         type: 'repayment',
         response: jsonUtils.messageToJson(message, null, sender)
-    });
+    }, tenant);
 });
 exports.receiveRepayment = receiveRepayment;
 const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -423,7 +423,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     socket.sendJson({
         type: 'delete',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
 });
 exports.receiveDeleteMessage = receiveDeleteMessage;
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -453,7 +453,7 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         socket.sendJson({
             type: 'chat_seen',
             response: jsonUtils.chatToJson(chat)
-        });
+        }, tenant);
     }
     else {
         res_1.failure(res, 'no chat');

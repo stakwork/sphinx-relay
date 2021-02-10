@@ -164,7 +164,7 @@ export const receivePayment = async (payload) => {
   socket.sendJson({
     type: 'direct_payment',
     response: jsonUtils.messageToJson(message, chat, sender)
-  })
+  }, tenant)
 
   sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 }

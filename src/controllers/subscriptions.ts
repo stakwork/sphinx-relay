@@ -43,8 +43,11 @@ async function startCronJob(sub) {
       delete jobs[subscription.id]
       return this.stop()
     }
+
+    const tenant = subscription.tenant
+    const owner = await models.Contact.findOne({where:{id:tenant}})
     // SEND PAYMENT!!!
-    sendSubscriptionPayment(subscription, false)
+    sendSubscriptionPayment(subscription, false, owner)
   }, null, true);
 }
 
@@ -98,17 +101,17 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
   return text
 }
 
-async function sendSubscriptionPayment(sub, isFirstMessage) {
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
+  const tenant:number = owner.id
 
   var date = new Date();
   date.setMilliseconds(0)
 
-  const subscription = await models.Subscription.findOne({ where: { id: sub.id } })
+  const subscription = await models.Subscription.findOne({ where: { id: sub.id, tenant } })
   if (!subscription) {
     return
   }
-  const chat = await models.Chat.findOne({ where: { id: subscription.chatId } })
+  const chat = await models.Chat.findOne({ where: { id: subscription.chatId, tenant } })
   if (!subscription) {
     console.log("=> no sub for this payment!!!")
     return
@@ -155,11 +158,12 @@ async function sendSubscriptionPayment(sub, isFirstMessage) {
         createdAt: date,
         updatedAt: date,
         subscriptionId: subscription.id,
+        tenant
       })
       socket.sendJson({
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat)
-      })
+      }, tenant)
     },
     failure: async (err) => {
       console.log("SEND PAY ERROR")
@@ -177,11 +181,12 @@ async function sendSubscriptionPayment(sub, isFirstMessage) {
         createdAt: date,
         updatedAt: date,
         subscriptionId: sub.id,
+        tenant
       })
       socket.sendJson({
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat)
-      })
+      }, tenant)
     }
   })
 }
@@ -284,6 +289,9 @@ export const getSubscriptionsForContact = async (req, res) => {
 
 // create new sub
 export async function createSubscription(req, res) {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
+
   const date = new Date()
   date.setMilliseconds(0)
   const s = jsonToSubscription({
@@ -292,13 +300,14 @@ export async function createSubscription(req, res) {
     total_paid: 0,
     createdAt: date,
     ended: false,
-    paused: false
+    paused: false,
+    tenant
   })
   if (!s.cron) {
     return failure(res, 'Invalid interval')
   }
   try {
-    const owner = await models.Contact.findOne({ where: { isOwner: true } })
+    const owner = req.owner
     const chat = await helpers.findOrCreateChat({
       chat_id: req.body.chat_id,
       owner_id: owner.id,
@@ -311,7 +320,7 @@ export async function createSubscription(req, res) {
     const sub = await models.Subscription.create(s)
     startCronJob(sub)
     const isFirstMessage = true
-    sendSubscriptionPayment(sub, isFirstMessage)
+    sendSubscriptionPayment(sub, isFirstMessage, owner)
     success(res, jsonUtils.subscriptionToJson(sub, chat))
   } catch (e) {
     console.log('ERROR createSubscription', e)
@@ -320,6 +329,9 @@ export async function createSubscription(req, res) {
 };
 
 export async function editSubscription(req, res) {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
+
   console.log('=> editSubscription')
   const date = new Date()
   date.setMilliseconds(0)
@@ -329,7 +341,8 @@ export async function editSubscription(req, res) {
     count: 0,
     createdAt: date,
     ended: false,
-    paused: false
+    paused: false,
+    tenant
   })
   try {
     if (!id || !s.chatId || !s.cron) {

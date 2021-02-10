@@ -62,7 +62,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     socket.sendJson({
                         type: 'invite',
                         response: jsonUtils.inviteToJson(dbInvite)
-                    });
+                    }, owner.id);
                     if (dbInvite.status == constants_1.default.invite_statuses.ready && contact) {
                         sendNotification(-1, contact.alias, 'invite', owner);
                     }
@@ -74,7 +74,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     socket.sendJson({
                         type: 'contact',
                         response: contactJson
-                    });
+                    }, owner.id);
                     helpers.sendContactKeys({
                         contactIds: [contact.id],
                         sender: owner,
