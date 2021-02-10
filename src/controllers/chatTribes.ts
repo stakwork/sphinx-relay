@@ -119,9 +119,9 @@ export async function joinTribe(req, res) {
 
 export async function receiveMemberRequest(payload) {
 	console.log('=> receiveMemberRequest')
-	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
+	const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
+	const tenant:number = owner.id
 
-	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return console.log('no chat')
 
 	const isTribe = chat_type === constants.chat_types.tribe
@@ -134,7 +134,7 @@ export async function receiveMemberRequest(payload) {
 	const member = chat_members[sender_pub_key]
 	const senderAlias = (member && member.alias) || sender_alias || 'Unknown'
 
-	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } })
 	if (sender) {
 		theSender = sender // might already include??
 	} else {
@@ -145,7 +145,8 @@ export async function receiveMemberRequest(payload) {
 				alias: sender_alias || senderAlias,
 				status: 1,
 				fromGroup: true,
-				photoUrl: sender_photo_url
+				photoUrl: sender_photo_url,
+				tenant
 			})
 			theSender = createdContact
 		}
@@ -169,6 +170,7 @@ export async function receiveMemberRequest(payload) {
 			status: constants.chat_statuses.pending,
 			lastActive: date,
 			lastAlias: senderAlias,
+			tenant
 		})
 	} catch (e) { }
 
@@ -179,7 +181,8 @@ export async function receiveMemberRequest(payload) {
 		messageContent: '', remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
-		network_type
+		network_type,
+		tenant
 	}
 	if (isTribe) {
 		msg.senderAlias = senderAlias
@@ -187,7 +190,7 @@ export async function receiveMemberRequest(payload) {
 	}
 	const message = await models.Message.create(msg)
 
-	const theChat = await addPendingContactIdsToChat(chat)
+	const theChat = await addPendingContactIdsToChat(chat, tenant)
 	socket.sendJson({
 		type: 'member_request',
 		response: {
@@ -271,6 +274,9 @@ export async function editTribe(req, res) {
 }
 
 export async function approveOrRejectMember(req, res) {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+
 	console.log('=> approve or reject tribe member')
 	const msgId = parseInt(req.params['messageId'])
 	const contactId = parseInt(req.params['contactId'])
@@ -306,7 +312,7 @@ export async function approveOrRejectMember(req, res) {
 	// update ChatMember status
 	await member.update({ status: memberStatus })
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 	const chatToSend = chat.dataValues || chat
 
 	network.sendMessage({ // send to the requester
@@ -317,7 +323,7 @@ export async function approveOrRejectMember(req, res) {
 		type: msgType,
 	})
 
-	const theChat = await addPendingContactIdsToChat(chat)
+	const theChat = await addPendingContactIdsToChat(chat, tenant)
 	success(res, {
 		chat: jsonUtils.chatToJson(theChat),
 		message: jsonUtils.messageToJson(msg, theChat)
@@ -330,6 +336,8 @@ export async function receiveMemberApprove(payload) {
 	if (!chat) return console.log('no chat')
 	await chat.update({ status: constants.chat_statuses.approved })
 
+	const tenant:number = owner.id
+
 	let date = new Date()
 	date.setMilliseconds(0)
 	const msg: { [k: string]: any } = {
@@ -339,7 +347,8 @@ export async function receiveMemberApprove(payload) {
 		messageContent: '', remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
-		network_type
+		network_type,
+		tenant
 	}
 	const message = await models.Message.create(msg)
 	socket.sendJson({
@@ -372,15 +381,17 @@ export async function receiveMemberApprove(payload) {
 		type: constants.message_types.group_join,
 	})
 
-	sendNotification(chat, chat_name, 'group')
+	sendNotification(chat, chat_name, 'group', theOwner)
 }
 
 export async function receiveMemberReject(payload) {
 	console.log('=> receiveMemberReject')
-	const { chat, sender, chat_name, network_type } = await helpers.parseReceiveParams(payload)
+	const { owner, chat, sender, chat_name, network_type } = await helpers.parseReceiveParams(payload)
 	if (!chat) return console.log('no chat')
 	await chat.update({ status: constants.chat_statuses.rejected })
-	// dang.. nothing really to do here?
+
+	const tenant:number = owner.id
+
 	let date = new Date()
 	date.setMilliseconds(0)
 	const msg: { [k: string]: any } = {
@@ -390,7 +401,8 @@ export async function receiveMemberReject(payload) {
 		messageContent: '', remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
-		network_type
+		network_type,
+		tenant
 	}
 	const message = await models.Message.create(msg)
 	socket.sendJson({
@@ -401,14 +413,15 @@ export async function receiveMemberReject(payload) {
 		}
 	})
 
-	sendNotification(chat, chat_name, 'reject')
+	sendNotification(chat, chat_name, 'reject', owner)
 }
 
 
 export async function receiveTribeDelete(payload) {
 	console.log('=> receiveTribeDelete')
-	const { chat, sender, network_type } = await helpers.parseReceiveParams(payload)
+	const { owner, chat, sender, network_type } = await helpers.parseReceiveParams(payload)
 	if (!chat) return console.log('no chat')
+	const tenant:number = owner.id
 	// await chat.update({status: constants.chat_statuses.rejected})
 	// update on tribes server too
 	let date = new Date()
@@ -420,7 +433,8 @@ export async function receiveTribeDelete(payload) {
 		messageContent: '', remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
-		network_type
+		network_type,
+		tenant
 	}
 	const message = await models.Message.create(msg)
 	socket.sendJson({
@@ -432,23 +446,24 @@ export async function receiveTribeDelete(payload) {
 	})
 }
 
-export async function replayChatHistory(chat, contact) {
+export async function replayChatHistory(chat, contact, owner) {
+	const tenant:number = owner.id
 	console.log('-> replayHistory')
 	if (!(chat && chat.id && contact && contact.id)) {
 		return console.log('[tribes] cant replay history')
 	}
 	try {
 		const msgs = await models.Message.findAll({
-			where: { chatId: chat.id, type: { [Op.in]: network.typesToReplay } },
+			where: { tenant, chatId: chat.id, type: { [Op.in]: network.typesToReplay } },
 			order: [['id', 'desc']],
 			limit: 40
 		})
 		msgs.reverse()
-		const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
 		asyncForEach(msgs, async m => {
 			if (!network.typesToReplay.includes(m.type)) return // only for message for now
 			const sender = {
-				...owner.dataValues,
+				...owner,
 				...m.senderAlias && { alias: m.senderAlias },
 				role: constants.chat_roles.reader,
 				...m.senderPic && { photoUrl: m.senderPic }
@@ -468,7 +483,7 @@ export async function replayChatHistory(chat, contact) {
 					if (muid) {
 						const mediaKey = await models.MediaKey.findOne({
 							where: {
-								muid, chatId: chat.id,
+								muid, chatId: chat.id, tenant
 							}
 						})
 						// console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
@@ -499,7 +514,7 @@ export async function replayChatHistory(chat, contact) {
 			await network.signAndSend({
 				data,
 				dest: contact.publicKey,
-			}, mqttTopic, replayingHistory)
+			}, owner.publicKey, mqttTopic, replayingHistory)
 		})
 	} catch (e) {
 		console.log('replayChatHistory ERROR', e)
@@ -540,11 +555,12 @@ export async function createTribeChatParams(owner, contactIds, name, img, price_
 	}
 }
 
-export async function addPendingContactIdsToChat(achat) {
+export async function addPendingContactIdsToChat(achat, tenant) {
 	const members = await models.ChatMember.findAll({
 		where: {
 			chatId: achat.id,
-			status: constants.chat_statuses.pending // only pending
+			status: constants.chat_statuses.pending, // only pending
+			tenant
 		}
 	})
 	if (!members) return achat

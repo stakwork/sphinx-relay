@@ -312,7 +312,7 @@ export const receiveMessage = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
-	const tenant = owner.id
+	const tenant:number = owner.id
 	const text = content || ''
 
 	var date = new Date();
@@ -347,7 +347,7 @@ export const receiveMessage = async (payload) => {
 		response: jsonUtils.messageToJson(message, chat, sender)
 	})
 
-	sendNotification(chat, msg.senderAlias || sender.alias, 'message')
+	sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 
 	sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
@@ -358,7 +358,7 @@ export const receiveBoost = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
-	const tenant = owner.id
+	const tenant:number = owner.id
 	const text = content
 
 	var date = new Date();
@@ -400,7 +400,7 @@ export const receiveBoost = async (payload) => {
 			where: { uuid: msg.replyUuid }
 		})
 		if (ogMsg && ogMsg.sender === 1) {
-			sendNotification(chat, msg.senderAlias || sender.alias, 'boost')
+			sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner)
 		}
 	}
 }
@@ -484,7 +484,7 @@ export const readMessages = async (req, res) => {
 	if (chat) {
 		await chat.update({ seen: true });
 		success(res, {})
-		sendNotification(chat, '', 'badge')
+		sendNotification(chat, '', 'badge', owner)
 		socket.sendJson({
 			type: 'chat_seen',
 			response: jsonUtils.chatToJson(chat)

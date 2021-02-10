@@ -93,7 +93,7 @@ export const performKeysendMessage = async ({ destination_key, amount, msg, succ
 		amt: Math.max(amount, 3)
 	}
 	try {
-		const r = await network.signAndSend(opts)
+		const r = await network.signAndSend(opts, sender.publicKey)
 		// console.log("=> keysend to new contact")
 		if (success) success(r)
 	} catch (e) {
@@ -120,8 +120,8 @@ export async function findOrCreateContactByPubkey(senderPubKey, owner) {
 	return sender
 }
 
-export async function findOrCreateChatByUUID(chat_uuid, contactIds) {
-	let chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+export async function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
+	let chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant } })
 	if (!chat) {
 		var date = new Date();
 		date.setMilliseconds(0)
@@ -172,12 +172,16 @@ export async function parseReceiveParams(payload) {
 	const isConversation = !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
 	let sender
 	let chat
-	const owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:dest } })
+	let owner = dat.owner
+	if(!owner) {
+		const ownerRecord = await models.Contact.findOne({ where: { isOwner: true, publicKey:dest } })
+		owner = ownerRecord.dataValues
+	}
 	if(!owner) console.log('=> parseReceiveParams cannot find owner')
 	if (isConversation) {
 		sender = await findOrCreateContactByPubkey(sender_pub_key, owner.dataValues)
 		chat = await findOrCreateChatByUUID(
-			chat_uuid, [parseInt(owner.id), parseInt(sender.id)]
+			chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id
 		)
 		if (sender.fromGroup) { // if a private msg received, update the contact
 			await sender.update({ fromGroup: false })

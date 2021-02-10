@@ -59,12 +59,19 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 	console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if (!(payload.type || payload.type === 0)) return console.log('no payload.type')
 
+	let owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:dest } })
+	if(!owner) return console.log("=> RECEIVE: owner not found")
+	const tenant:number = owner.id
+
+	const ownerDataValues = owner||owner.dataValues
+
 	if (botTypes.includes(payload.type)) {
 		// if is admin on tribe? or is bot maker?
 		console.log("=> got bot msg type!!!!")
 		if (botMakerTypes.includes(payload.type)) {
 			if (!payload.bot_uuid) return console.log('bot maker type: no bot uuid')
 		}
+		payload.owner = ownerDataValues
 		return ACTIONS[payload.type](payload)
 	}
 	// if tribe, owner must forward to MQTT
@@ -73,8 +80,7 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 	let isTribe = false
 	let isTribeOwner = false
 	let chat
-	let owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:dest } })
-	const tenant:number = owner.id
+
 	if (payload.chat && payload.chat.uuid) {
 		isTribe = payload.chat.type === constants.chat_types.tribe
 		chat = await models.Chat.findOne({ where: { uuid: payload.chat.uuid, tenant } })
@@ -189,7 +195,7 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 			doAction = false // skip this! we dont need it
 		}
 	}
-	if (doAction) doTheAction({ ...payload, ...toAddIn }, owner)
+	if (doAction) doTheAction({ ...payload, ...toAddIn }, ownerDataValues)
 }
 
 async function doTheAction(data, owner) {
@@ -207,6 +213,7 @@ async function doTheAction(data, owner) {
 		//if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
 	}
 	if (ACTIONS[payload.type]) {
+		payload.owner = owner
 		ACTIONS[payload.type](payload)
 	} else {
 		console.log('Incorrect payload type:', payload.type)
@@ -338,10 +345,10 @@ async function parseAndVerifyPayload(data) {
 	}
 }
 
-async function saveAnonymousKeysend(response, memo, sender_pubkey) {
+async function saveAnonymousKeysend(response, memo, sender_pubkey, tenant) {
 	let sender = 0
 	if (sender_pubkey) {
-		const theSender = await models.Contact.findOne({ where: { publicKey: sender_pubkey } })
+		const theSender = await models.Contact.findOne({ where: { publicKey: sender_pubkey, tenant } })
 		if (theSender && theSender.id) {
 			sender = theSender.id
 		}
@@ -360,7 +367,8 @@ async function saveAnonymousKeysend(response, memo, sender_pubkey) {
 		status: constants.statuses.confirmed,
 		createdAt: new Date(settleDate),
 		updatedAt: new Date(settleDate),
-		network_type: constants.network_types.lightning
+		network_type: constants.network_types.lightning,
+		tenant
 	})
 	socket.sendJson({
 		type: 'keysend',
@@ -372,14 +380,20 @@ export async function parseKeysendInvoice(i) {
 	const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
 
 	let dest = ''
+	let owner
 	if(isProxy()) {
 		const invoice:any = await decodePayReq(i.payment_request)
 		if(!invoice) return console.log("couldn't decode pay req")
 		if(!invoice.destination) return console.log("cant get dest from pay req")
 		dest = invoice.destination
+		owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:dest } })
 	} else {
-		const owner = await models.Contact.findOne({ where: { isOwner:true } })
+		owner = await models.Contact.findOne({ where: { isOwner:true } })
 		dest = owner.publicKey
+	}
+	if(!owner) {
+		console.log('=> parseKeysendInvoice ERROR: cant find owner')
+		return
 	}
 	
 	const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY]
@@ -405,9 +419,9 @@ export async function parseKeysendInvoice(i) {
 	}
 	if (isKeysendType) {
 		if (!memo) {
-			sendNotification(-1, '', 'keysend', value || 0)
+			sendNotification(-1, '', 'keysend', owner, value || 0)
 		}
-		saveAnonymousKeysend(i, memo, sender_pubkey)
+		saveAnonymousKeysend(i, memo, sender_pubkey, owner.id)
 		return
 	}
 

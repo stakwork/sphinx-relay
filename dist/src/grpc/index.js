@@ -75,8 +75,11 @@ function subscribeInvoices(parseKeysendInvoice) {
                         });
                         return;
                     }
+                    // invoice is defined
+                    const tenant = invoice.tenant;
+                    const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
                     models_1.models.Message.update({ status: constants_1.default.statuses.confirmed }, { where: { id: invoice.id } });
-                    const chat = yield models_1.models.Chat.findOne({ where: { id: invoice.chatId } });
+                    const chat = yield models_1.models.Chat.findOne({ where: { id: invoice.chatId, tenant } });
                     const contactIds = JSON.parse(chat.contactIds);
                     const senderId = contactIds.find(id => id != invoice.sender);
                     const message = yield models_1.models.Message.create({
@@ -90,14 +93,15 @@ function subscribeInvoices(parseKeysendInvoice) {
                         messageContent: response['memo'],
                         status: constants_1.default.statuses.confirmed,
                         createdAt: new Date(settleDate),
-                        updatedAt: new Date(settleDate)
+                        updatedAt: new Date(settleDate),
+                        tenant
                     });
-                    const sender = yield models_1.models.Contact.findOne({ where: { id: senderId } });
+                    const sender = yield models_1.models.Contact.findOne({ where: { id: senderId, tenant } });
                     socket.sendJson({
                         type: 'payment',
                         response: jsonUtils.messageToJson(message, chat, sender)
                     });
-                    hub_1.sendNotification(chat, sender.alias, 'message');
+                    hub_1.sendNotification(chat, sender.alias, 'message', owner);
                 }
             });
         });

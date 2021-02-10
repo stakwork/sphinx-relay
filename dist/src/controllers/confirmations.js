@@ -48,15 +48,16 @@ function receiveConfirmation(payload) {
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;
         const sender_pub_key = dat.sender.pub_key;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        const owner = dat.owner;
+        const tenant = owner.id;
+        const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } });
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant } });
         // new confirmation logic
         if (msg_id) {
             lock_1.default.acquire('confirmation', function (done) {
                 return __awaiter(this, void 0, void 0, function* () {
                     // console.log("update status map")
-                    const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
+                    const message = yield models_1.models.Message.findOne({ where: { id: msg_id, tenant } });
                     if (message) {
                         let statusMap = {};
                         try {
@@ -89,6 +90,7 @@ function receiveConfirmation(payload) {
                         constants_1.default.message_types.attachment,
                     ],
                     status: constants_1.default.statuses.pending,
+                    tenant
                 },
                 order: [['createdAt', 'desc']]
             });
@@ -133,11 +135,12 @@ function receiveHeartbeat(payload) {
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         const receivedAmount = dat.message.amount;
+        const owner = dat.owner;
+        // const tenant:number = owner.id
         if (!(sender_pub_key && sender_pub_key.length === 66))
             return console.log('no sender');
         if (!receivedAmount)
             return console.log('no amount');
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const amount = Math.round(receivedAmount / 2);
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
@@ -150,7 +153,7 @@ function receiveHeartbeat(payload) {
             }
         };
         try {
-            yield network.signAndSend(opts);
+            yield network.signAndSend(opts, owner.publicKey);
             return true;
         }
         catch (e) {
@@ -162,11 +165,14 @@ exports.receiveHeartbeat = receiveHeartbeat;
 let heartbeats = {};
 function healthcheck(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        // const tenant:number = req.owner.id
         const pubkey = req.query.pubkey;
         if (!(pubkey && pubkey.length === 66)) {
             return res_1.failure200(res, 'missing pubkey');
         }
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = req.owner;
         const amt = 10;
         const opts = {
             amt,
@@ -180,7 +186,7 @@ function healthcheck(req, res) {
             }
         };
         try {
-            yield network.signAndSend(opts);
+            yield network.signAndSend(opts, owner.publicKey);
         }
         catch (e) {
             res_1.failure200(res, e);

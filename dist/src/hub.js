@@ -33,7 +33,6 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
     if (env != "production") {
         return;
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     //console.log('[hub] checking invites ping')
     const inviteStrings = yield models_1.models.Invite.findAll({ where: { status: { [sequelize_1.Op.notIn]: [constants_1.default.invite_statuses.complete, constants_1.default.invite_statuses.expired] } } }).map(invite => invite.inviteString);
     if (inviteStrings.length === 0) {
@@ -54,6 +53,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                 const price = object.price;
                 const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite.pin } });
                 const contact = yield models_1.models.Contact.findOne({ where: { id: dbInvite.contactId } });
+                const owner = yield models_1.models.Contact.findOne({ where: { id: dbInvite.tenant } });
                 if (dbInvite.status != invite.invite_status) {
                     const updateObj = { status: invite.invite_status, price: price };
                     if (invite.invoice)
@@ -64,7 +64,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                         response: jsonUtils.inviteToJson(dbInvite)
                     });
                     if (dbInvite.status == constants_1.default.invite_statuses.ready && contact) {
-                        sendNotification(-1, contact.alias, 'invite');
+                        sendNotification(-1, contact.alias, 'invite', owner);
                     }
                 }
                 if (pubkey && dbInvite.status == constants_1.default.invite_statuses.complete && contact) {
@@ -218,7 +218,9 @@ function getAppVersionsFromHub() {
     });
 }
 exports.getAppVersionsFromHub = getAppVersionsFromHub;
-const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0, void 0, function* () {
+const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!owner)
+        return console.log('=> sendNotification error: no owner');
     let message = `You have a new message from ${name}`;
     if (type === 'invite') {
         message = `Your invite to ${name} is ready`;
@@ -243,7 +245,7 @@ const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0,
             message += ` in ${chat.name}`;
         }
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    // const owner = await models.Contact.findOne({ where: { isOwner: true } })
     if (!owner.deviceId) {
         console.log('[send notification] skipping. owner.deviceId not set.');
         return;
@@ -286,7 +288,8 @@ function finalNotification(ownerID, params) {
             where: {
                 sender: { [sequelize_1.Op.ne]: ownerID },
                 seen: false,
-                chatId: { [sequelize_1.Op.ne]: 0 } // no anon keysends
+                chatId: { [sequelize_1.Op.ne]: 0 },
+                tenant: ownerID
             }
         });
         params.notification.badge = unseenMessages;

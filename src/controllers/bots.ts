@@ -173,7 +173,7 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, ch
     }
   }
   try {
-    await network.signAndSend(opts)
+    await network.signAndSend(opts, owner.publicKey)
     return true
   } catch (e) {
     return false
@@ -187,14 +187,14 @@ export async function receiveBotInstall(payload) {
   const sender_pub_key = dat.sender && dat.sender.pub_key
   const bot_uuid = dat.bot_uuid
   const chat_uuid = dat.chat && dat.chat.uuid
+  const owner = dat.owner
+  const tenant:number = owner.id
 
   if (!chat_uuid || !sender_pub_key) return console.log('no chat uuid or sender pub key')
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
-
   const bot = await models.Bot.findOne({
     where: {
-      uuid: bot_uuid
+      uuid: bot_uuid, tenant
     }
   })
   if (!bot) return
@@ -206,6 +206,7 @@ export async function receiveBotInstall(payload) {
       memberPubkey: sender_pub_key,
       tribeUuid: chat_uuid,
       msgCount: 0,
+      tenant
     }
     console.log("CREATE bot MEMBER", botMember)
     await models.BotMember.create(botMember)
@@ -228,12 +229,14 @@ export async function receiveBotCmd(payload) {
   // const sender_pub_key = dat.sender.pub_key
   const bot_uuid = dat.bot_uuid
   const chat_uuid = dat.chat && dat.chat.uuid
+  const owner = dat.owner
+  const tenant:number = owner.id
   if (!chat_uuid) return console.log('no chat uuid')
   // const amount = dat.message.amount - check price_per_use
 
   const bot = await models.Bot.findOne({
     where: {
-      uuid: bot_uuid
+      uuid: bot_uuid, tenant
     }
   })
   if (!bot) return
@@ -242,6 +245,7 @@ export async function receiveBotCmd(payload) {
     where: {
       botId: bot.id,
       tribeUuid: chat_uuid,
+      tenant
     }
   })
   if (!botMember) return
@@ -318,14 +322,16 @@ export async function receiveBotRes(payload) {
   const sender_pic = dat.sender_photo_url
   const date_string = dat.message.date
   const network_type = dat.network_type || 0
+  const owner = dat.owner
+  const tenant:number = owner.id
 
   if (!chat_uuid) return console.log('=> receiveBotRes Error no chat_uuid')
 
-  const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+  const chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant } })
   if (!chat) return console.log('=> receiveBotRes Error no chat')
 
   const tribeOwnerPubKey = chat && chat.ownerPubkey
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
   const isTribeOwner = owner.publicKey === tribeOwnerPubKey
 
   if (isTribeOwner) {
@@ -340,7 +346,7 @@ export async function receiveBotRes(payload) {
   } else {
     const theChat = await models.Chat.findOne({
       where: {
-        uuid: chat_uuid
+        uuid: chat_uuid, tenant
       }
     })
     if (!chat) return console.log('=> receiveBotRes as sub error no chat')
@@ -348,7 +354,7 @@ export async function receiveBotRes(payload) {
     date.setMilliseconds(0)
     if (date_string) date = new Date(date_string)
 
-    const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+    const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } })
     const msg: { [k: string]: any } = {
       chatId: chat.id,
       uuid: msg_uuid,
@@ -362,7 +368,8 @@ export async function receiveBotRes(payload) {
       updatedAt: date,
       senderAlias: sender_alias || 'Bot',
       senderPic: sender_pic,
-      network_type
+      network_type,
+      tenant
     }
     const message = await models.Message.create(msg)
     socket.sendJson({

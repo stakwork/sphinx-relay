@@ -187,7 +187,7 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
             }
         };
         try {
-            yield network.signAndSend(opts);
+            yield network.signAndSend(opts, owner.publicKey);
             return true;
         }
         catch (e) {
@@ -203,12 +203,13 @@ function receiveBotInstall(payload) {
         const sender_pub_key = dat.sender && dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
         const chat_uuid = dat.chat && dat.chat.uuid;
+        const owner = dat.owner;
+        const tenant = owner.id;
         if (!chat_uuid || !sender_pub_key)
             return console.log('no chat uuid or sender pub key');
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const bot = yield models_1.models.Bot.findOne({
             where: {
-                uuid: bot_uuid
+                uuid: bot_uuid, tenant
             }
         });
         if (!bot)
@@ -220,6 +221,7 @@ function receiveBotInstall(payload) {
                 memberPubkey: sender_pub_key,
                 tribeUuid: chat_uuid,
                 msgCount: 0,
+                tenant
             };
             console.log("CREATE bot MEMBER", botMember);
             yield models_1.models.BotMember.create(botMember);
@@ -241,12 +243,14 @@ function receiveBotCmd(payload) {
         // const sender_pub_key = dat.sender.pub_key
         const bot_uuid = dat.bot_uuid;
         const chat_uuid = dat.chat && dat.chat.uuid;
+        const owner = dat.owner;
+        const tenant = owner.id;
         if (!chat_uuid)
             return console.log('no chat uuid');
         // const amount = dat.message.amount - check price_per_use
         const bot = yield models_1.models.Bot.findOne({
             where: {
-                uuid: bot_uuid
+                uuid: bot_uuid, tenant
             }
         });
         if (!bot)
@@ -255,6 +259,7 @@ function receiveBotCmd(payload) {
             where: {
                 botId: bot.id,
                 tribeUuid: chat_uuid,
+                tenant
             }
         });
         if (!botMember)
@@ -335,13 +340,14 @@ function receiveBotRes(payload) {
         const sender_pic = dat.sender_photo_url;
         const date_string = dat.message.date;
         const network_type = dat.network_type || 0;
+        const owner = dat.owner;
+        const tenant = owner.id;
         if (!chat_uuid)
             return console.log('=> receiveBotRes Error no chat_uuid');
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant } });
         if (!chat)
             return console.log('=> receiveBotRes Error no chat');
         const tribeOwnerPubKey = chat && chat.ownerPubkey;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
         const isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         if (isTribeOwner) {
             console.log("=> is tribeOwner, do finalAction!");
@@ -355,7 +361,7 @@ function receiveBotRes(payload) {
         else {
             const theChat = yield models_1.models.Chat.findOne({
                 where: {
-                    uuid: chat_uuid
+                    uuid: chat_uuid, tenant
                 }
             });
             if (!chat)
@@ -364,7 +370,7 @@ function receiveBotRes(payload) {
             date.setMilliseconds(0);
             if (date_string)
                 date = new Date(date_string);
-            const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
+            const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } });
             const msg = {
                 chatId: chat.id,
                 uuid: msg_uuid,
@@ -378,7 +384,8 @@ function receiveBotRes(payload) {
                 updatedAt: date,
                 senderAlias: sender_alias || 'Bot',
                 senderPic: sender_pic,
-                network_type
+                network_type,
+                tenant
             };
             const message = yield models_1.models.Message.create(msg);
             socket.sendJson({

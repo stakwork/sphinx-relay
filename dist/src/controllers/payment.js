@@ -122,6 +122,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
@@ -132,7 +133,8 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         date: date,
         createdAt: date,
         updatedAt: date,
-        network_type
+        network_type,
+        tenant
     };
     if (content)
         msg.messageContent = content;
@@ -152,7 +154,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -213,7 +213,7 @@ function sendPayment(payment_request) {
     });
 }
 exports.sendPayment = sendPayment;
-const keysend = (opts) => {
+const keysend = (opts, ownerPubkey) => {
     log('keysend');
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -237,7 +237,7 @@ const keysend = (opts) => {
             // sphinx-proxy sendPaymentSync
             if (proxy_1.isProxy()) {
                 options.fee_limit = { fixed: FEE_LIMIT_SAT };
-                let lightning = yield loadLightning(true); // try proxy
+                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
                 lightning.sendPaymentSync(options, (err, response) => {
                     if (err)
                         reject(err);
@@ -297,7 +297,7 @@ const loadRouter = () => {
     }
 };
 const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
-function keysendMessage(opts) {
+function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         log('keysendMessage');
         return new Promise(function (resolve, reject) {
@@ -307,7 +307,7 @@ function keysendMessage(opts) {
                 }
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
-                        const res = yield keysend(opts);
+                        const res = yield keysend(opts, ownerPubkey);
                         resolve(res);
                     }
                     catch (e) {
@@ -355,10 +355,10 @@ function asyncForEach(array, callback) {
         }
     });
 }
-function signAscii(ascii) {
+function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const sig = yield signMessage(ascii_to_hexa(ascii));
+            const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
             return sig;
         }
         catch (e) {
@@ -478,10 +478,10 @@ function listAllPaymentsFull() {
     }));
 }
 exports.listAllPaymentsFull = listAllPaymentsFull;
-const signMessage = (msg) => {
+const signMessage = (msg, ownerPubkey) => {
     log('signMessage');
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let lightning = yield loadLightning(true); // try proxy
+        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {
             const options = { msg: ByteBuffer.fromHex(msg) };
             lightning.signMessage(options, function (err, sig) {

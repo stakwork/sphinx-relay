@@ -24,8 +24,6 @@ const checkInviteHub = async (params = {}) => {
   if (env != "production") {
     return
   }
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
-
   //console.log('[hub] checking invites ping')
 
   const inviteStrings = await models.Invite.findAll({ where: { status: { [Op.notIn]: [constants.invite_statuses.complete, constants.invite_statuses.expired] } } }).map(invite => invite.inviteString)
@@ -49,6 +47,7 @@ const checkInviteHub = async (params = {}) => {
 
         const dbInvite = await models.Invite.findOne({ where: { inviteString: invite.pin } })
         const contact = await models.Contact.findOne({ where: { id: dbInvite.contactId } })
+        const owner = await models.Contact.findOne({ where: { id: dbInvite.tenant } })
 
         if (dbInvite.status != invite.invite_status) {
           const updateObj: { [k: string]: any } = { status: invite.invite_status, price: price }
@@ -62,7 +61,7 @@ const checkInviteHub = async (params = {}) => {
           })
 
           if (dbInvite.status == constants.invite_statuses.ready && contact) {
-            sendNotification(-1, contact.alias, 'invite')
+            sendNotification(-1, contact.alias, 'invite', owner)
           }
         }
 
@@ -214,7 +213,9 @@ export async function getAppVersionsFromHub() {
 
 type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject' | 'keysend' | 'boost'
 
-const sendNotification = async (chat, name, type: NotificationType, amount?: number) => {
+const sendNotification = async (chat, name, type: NotificationType, owner, amount?: number) => {
+
+  if(!owner) return console.log('=> sendNotification error: no owner')
 
   let message = `You have a new message from ${name}`
   if (type === 'invite') {
@@ -243,7 +244,7 @@ const sendNotification = async (chat, name, type: NotificationType, amount?: num
     }
   }
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  // const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
   if (!owner.deviceId) {
     console.log('[send notification] skipping. owner.deviceId not set.')
@@ -285,7 +286,8 @@ async function finalNotification(ownerID: number, params: { [k: string]: any }) 
     where: {
       sender: { [Op.ne]: ownerID },
       seen: false,
-      chatId: { [Op.ne]: 0 } // no anon keysends
+      chatId: { [Op.ne]: 0 } ,// no anon keysends
+      tenant: ownerID
     }
   })
   params.notification.badge = unseenMessages

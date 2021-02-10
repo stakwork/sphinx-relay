@@ -99,7 +99,7 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure,
         amt: Math.max(amount, 3)
     };
     try {
-        const r = yield network.signAndSend(opts);
+        const r = yield network.signAndSend(opts, sender.publicKey);
         // console.log("=> keysend to new contact")
         if (success)
             success(r);
@@ -131,9 +131,9 @@ function findOrCreateContactByPubkey(senderPubKey, owner) {
     });
 }
 exports.findOrCreateContactByPubkey = findOrCreateContactByPubkey;
-function findOrCreateChatByUUID(chat_uuid, contactIds) {
+function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        let chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        let chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant } });
         if (!chat) {
             var date = new Date();
             date.setMilliseconds(0);
@@ -187,12 +187,16 @@ function parseReceiveParams(payload) {
         const isConversation = !chat_type || (chat_type && chat_type == constants_1.default.chat_types.conversation);
         let sender;
         let chat;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
+        let owner = dat.owner;
+        if (!owner) {
+            const ownerRecord = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
+            owner = ownerRecord.dataValues;
+        }
         if (!owner)
             console.log('=> parseReceiveParams cannot find owner');
         if (isConversation) {
             sender = yield findOrCreateContactByPubkey(sender_pub_key, owner.dataValues);
-            chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)]);
+            chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id);
             if (sender.fromGroup) { // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });
             }

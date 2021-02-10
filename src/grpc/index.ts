@@ -67,9 +67,12 @@ export function subscribeInvoices(parseKeysendInvoice) {
 					})
 					return
 				}
+				// invoice is defined
+				const tenant:number = invoice.tenant
+				const owner = await models.Contact.findOne({where:{id:tenant}})
 				models.Message.update({ status: constants.statuses.confirmed }, { where: { id: invoice.id } })
 
-				const chat = await models.Chat.findOne({ where: { id: invoice.chatId } })
+				const chat = await models.Chat.findOne({ where: { id: invoice.chatId, tenant } })
 				const contactIds = JSON.parse(chat.contactIds)
 				const senderId = contactIds.find(id => id != invoice.sender)
 
@@ -84,17 +87,18 @@ export function subscribeInvoices(parseKeysendInvoice) {
 					messageContent: response['memo'],
 					status: constants.statuses.confirmed,
 					createdAt: new Date(settleDate),
-					updatedAt: new Date(settleDate)
+					updatedAt: new Date(settleDate),
+					tenant
 				})
 
-				const sender = await models.Contact.findOne({ where: { id: senderId } })
+				const sender = await models.Contact.findOne({ where: { id: senderId, tenant } })
 
 				socket.sendJson({
 					type: 'payment',
 					response: jsonUtils.messageToJson(message, chat, sender)
 				})
 
-				sendNotification(chat, sender.alias, 'message')
+				sendNotification(chat, sender.alias, 'message', owner)
 			}
 		});
 		call.on('status', function (status) {

@@ -207,6 +207,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!owner || !sender || !chat) {
         return console.log('=> group chat not found!');
     }
+    const tenant = owner.id;
     const message = yield models_1.models.Message.create({
         chatId: chat.id,
         uuid: msg_uuid,
@@ -217,7 +218,8 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         date: date,
         createdAt: date,
         updatedAt: date,
-        network_type
+        network_type,
+        tenant
     });
     socket.sendJson({
         type: 'purchase',
@@ -234,7 +236,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         return console.log('no muid');
     }
     const ogMessage = yield models_1.models.Message.findOne({
-        where: { mediaToken }
+        where: { mediaToken, tenant }
     });
     if (!ogMessage) {
         return console.log('no original message');
@@ -242,7 +244,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     // find mediaKey for who sent
     const mediaKey = yield models_1.models.MediaKey.findOne({
         where: {
-            muid, receiver: isTribe ? 0 : sender.id,
+            muid, receiver: isTribe ? 0 : sender.id, tenant
         }
     });
     // console.log('mediaKey found!',mediaKey.dataValues)
@@ -278,7 +280,8 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
                     sender: owner.id,
                     type: constants_1.default.message_types.purchase_deny,
                     mediaToken: mediaToken,
-                    date: date, createdAt: date, updatedAt: date
+                    date: date, createdAt: date, updatedAt: date,
+                    tenant
                 });
                 socket.sendJson({
                     type: 'purchase_deny',
@@ -312,7 +315,8 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
                 sender: owner.id,
                 type: constants_1.default.message_types.purchase_accept,
                 mediaToken: theMediaToken,
-                date: date, createdAt: date, updatedAt: date
+                date: date, createdAt: date, updatedAt: date,
+                tenant
             });
             socket.sendJson({
                 type: 'purchase_accept',
@@ -331,6 +335,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const termsArray = mediaToken.split('.');
     // const host = termsArray[0]
     const muid = termsArray[1];
@@ -358,7 +363,8 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
         date: date,
         createdAt: date,
         updatedAt: date,
-        network_type
+        network_type,
+        tenant
     });
     socket.sendJson({
         type: 'purchase_accept',
@@ -374,6 +380,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const msg = yield models_1.models.Message.create({
         chatId: chat.id,
         sender: sender.id,
@@ -386,7 +393,8 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
         date: date,
         createdAt: date,
         updatedAt: date,
-        network_type
+        network_type,
+        tenant
     });
     socket.sendJson({
         type: 'purchase_deny',
@@ -402,6 +410,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
@@ -410,7 +419,8 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         date: date,
         createdAt: date,
         updatedAt: date,
-        network_type
+        network_type,
+        tenant
     };
     if (content)
         msg.messageContent = content;
@@ -433,7 +443,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveAttachment = receiveAttachment;

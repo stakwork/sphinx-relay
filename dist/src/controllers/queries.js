@@ -220,11 +220,14 @@ function startWatchingUTXOs() {
 exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        // const tenant:number = req.owner.id
         console.log('=> queryOnchainAddress');
         if (!hub_pubkey)
             return console.log("=> NO ROUTING NODE PUBKEY SET");
         const uuid = short.generate();
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = req.owner;
         const app = req.params.app;
         const query = {
             type: 'onchain_address',
@@ -243,7 +246,7 @@ function queryOnchainAddress(req, res) {
             }
         };
         try {
-            yield network.signAndSend(opts);
+            yield network.signAndSend(opts, owner.publicKey);
         }
         catch (e) {
             res_1.failure(res, e);
@@ -272,7 +275,8 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
     const content = dat.message.content;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = dat.owner;
+    // const tenant:number = owner.id
     if (!sender_pub_key || !content || !owner) {
         return console.log('=> wrong query format');
     }

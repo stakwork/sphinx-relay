@@ -4,6 +4,9 @@ import * as crypto from 'crypto'
 // import * as WebSocket from 'ws'
 const socketio = require("socket.io");
 
+// { ownerID: [client1, client2] }
+// const CLIENTS = new Map();
+
 let io: any
 // let srvr: any
 
@@ -30,7 +33,7 @@ export function connect(server) {
     return next(new Error('authentication error'));
   });
   io.on('connection', client => {
-    console.log("=> [socket.io] connected!")
+    console.log("=> [socket.io] connected!", JSON.stringify(client))
   });
 }
 

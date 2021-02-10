@@ -74,8 +74,9 @@ export async function kickChatMember(req, res) {
 
 export async function receiveGroupKick(payload) {
 	console.log('=> receiveGroupKick')
-	const { chat, sender, date_string, network_type } = await helpers.parseReceiveParams(payload)
+	const { owner, chat, sender, date_string, network_type } = await helpers.parseReceiveParams(payload)
 	if (!chat) return
+	const tenant:number = owner.id
 
 	// const owner = await models.Contact.findOne({where:{isOwner:true}})
 	// await chat.update({
@@ -99,7 +100,8 @@ export async function receiveGroupKick(payload) {
 		messageContent: '', remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
-		network_type
+		network_type,
+		tenant
 	}
 	const message = await models.Message.create(msg)
 
@@ -331,9 +333,9 @@ export const deleteChat = async (req, res) => {
 
 export async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
-	const { sender_pub_key, sender_alias, chat_uuid, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
+	const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
+	const tenant:number = owner.id
 
-	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
 	if (!chat) return
 
 	const isTribe = chat_type === constants.chat_types.tribe
@@ -347,7 +349,7 @@ export async function receiveGroupJoin(payload) {
 	const senderAlias = (member && member.alias) || sender_alias || 'Unknown'
 
 	if (!isTribe || isTribeOwner) {
-		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
+		const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } })
 		const contactIds = JSON.parse(chat.contactIds || '[]')
 		if (sender) {
 			theSender = sender // might already include??
@@ -366,7 +368,8 @@ export async function receiveGroupJoin(payload) {
 					alias: senderAlias,
 					status: 1,
 					fromGroup: true,
-					photoUrl: sender_photo_url
+					photoUrl: sender_photo_url,
+					tenant
 				})
 				theSender = createdContact
 				contactIds.push(createdContact.id)
@@ -393,11 +396,12 @@ export async function receiveGroupJoin(payload) {
 					lastActive: date,
 					status: constants.chat_statuses.approved,
 					lastAlias: senderAlias,
+					tenant
 				})
 			} catch (e) {
 				console.log('=> groupJoin could not upsert ChatMember')
 			}
-			replayChatHistory(chat, theSender)
+			replayChatHistory(chat, theSender, owner)
 			tribes.putstats({
 				chatId: chat.id,
 				uuid: chat.uuid,
@@ -414,7 +418,8 @@ export async function receiveGroupJoin(payload) {
 		messageContent: '', remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
-		network_type
+		network_type,
+		tenant
 	}
 	if (isTribe) {
 		msg.senderAlias = sender_alias
@@ -422,7 +427,7 @@ export async function receiveGroupJoin(payload) {
 	}
 	const message = await models.Message.create(msg)
 
-	const theChat = await addPendingContactIdsToChat(chat)
+	const theChat = await addPendingContactIdsToChat(chat, tenant)
 	socket.sendJson({
 		type: 'group_join',
 		response: {
@@ -435,9 +440,8 @@ export async function receiveGroupJoin(payload) {
 
 export async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
-	const { sender_pub_key, chat_uuid, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
-
-	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+	const { chat, owner, sender_pub_key, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
+	const tenant:number = owner.id
 	if (!chat) return
 
 	const isTribe = chat_type === constants.chat_types.tribe
@@ -445,8 +449,8 @@ export async function receiveGroupLeave(payload) {
 	let sender
 	// EITHER private chat OR tribeOwner
 	if (!isTribe || isTribeOwner) {
-		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-		if (!sender) return
+		sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } })
+		if (!sender) return console.log('=> receiveGroupLeave cant find sender')
 
 		const oldContactIds = JSON.parse(chat.contactIds || '[]')
 		const contactIds = oldContactIds.filter(cid => cid !== sender.id)
@@ -455,7 +459,7 @@ export async function receiveGroupLeave(payload) {
 		if (isTribeOwner) {
 			if (chat_type === constants.chat_types.tribe) {
 				try {
-					await models.ChatMember.destroy({ where: { chatId: chat.id, contactId: sender.id } })
+					await models.ChatMember.destroy({ where: { chatId: chat.id, contactId: sender.id, tenant } })
 				} catch (e) { }
 				tribes.putstats({
 					chatId: chat.id,
@@ -477,7 +481,8 @@ export async function receiveGroupLeave(payload) {
 		messageContent: '', remoteMessageContent: '',
 		status: constants.statuses.confirmed,
 		date: date, createdAt: date, updatedAt: date,
-		network_type
+		network_type,
+		tenant
 	}
 	if (isTribe) {
 		msg.senderAlias = sender_alias
@@ -503,8 +508,8 @@ async function validateTribeOwner(chat_uuid: string, pubkey: string) {
 	return false
 }
 export async function receiveGroupCreateOrInvite(payload) {
-	const { sender_pub_key, chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = await helpers.parseReceiveParams(payload)
-
+	const { owner, sender_pub_key, chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = await helpers.parseReceiveParams(payload)
+	const tenant:number = owner.id
 	// maybe this just needs to move to adding tribe owner ChatMember?
 	const isTribe = chat_type === constants.chat_types.tribe
 	if (isTribe) { // must be sent by tribe owner?????
@@ -515,7 +520,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 	const contacts: any[] = []
 	const newContacts: any[] = []
 	for (let [pubkey, member] of Object.entries(chat_members)) {
-		const contact = await models.Contact.findOne({ where: { publicKey: pubkey } })
+		const contact = await models.Contact.findOne({ where: { publicKey: pubkey, tenant } })
 		let addContact = false
 		if (chat_type === constants.chat_types.group && member && member.key) {
 			addContact = true
@@ -532,6 +537,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 					alias: member.alias || 'Unknown',
 					status: 1,
 					fromGroup: true,
+					tenant
 				})
 				contacts.push({ ...createdContact.dataValues, role: member.role })
 				newContacts.push(createdContact.dataValues)
@@ -540,7 +546,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 			}
 		}
 	}
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+
 	const contactIds = contacts.map(c => c.id)
 	if (!contactIds.includes(owner.id)) contactIds.push(owner.id)
 	// make chat
@@ -555,6 +561,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 		type: chat_type || constants.chat_types.group,
 		...chat_host && { host: chat_host },
 		...chat_key && { groupKey: chat_key },
+		tenant
 	})
 
 	if (isTribe) { // IF TRIBE, ADD TO XREF
@@ -574,10 +581,9 @@ export async function receiveGroupCreateOrInvite(payload) {
 		response: jsonUtils.messageToJson({ newContacts }, chat)
 	})
 
-	sendNotification(chat, chat_name, 'group')
+	sendNotification(chat, chat_name, 'group', owner)
 
 	if (payload.type === constants.message_types.group_invite) {
-		const owner = await models.Contact.findOne({ where: { isOwner: true } })
 		network.sendMessage({
 			chat: {
 				...chat.dataValues, members: {

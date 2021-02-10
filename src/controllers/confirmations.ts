@@ -36,16 +36,17 @@ export async function receiveConfirmation(payload) {
 	const chat_uuid = dat.chat.uuid
 	const msg_id = dat.message.id
 	const sender_pub_key = dat.sender.pub_key
+	const owner = dat.owner
+	const tenant:number = owner.id
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
-	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key } })
-	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid } })
+	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } })
+	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant } })
 
 	// new confirmation logic
 	if (msg_id) {
 		lock.acquire('confirmation', async function (done) {
 			// console.log("update status map")
-			const message = await models.Message.findOne({ where: { id: msg_id } })
+			const message = await models.Message.findOne({ where: { id: msg_id, tenant } })
 			if (message) {
 				let statusMap = {}
 				try {
@@ -76,6 +77,7 @@ export async function receiveConfirmation(payload) {
 					constants.message_types.attachment,
 				],
 				status: constants.statuses.pending,
+				tenant
 			},
 			order: [['createdAt', 'desc']]
 		})
@@ -119,11 +121,11 @@ export async function receiveHeartbeat(payload) {
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
 	const receivedAmount = dat.message.amount
+	const owner = dat.owner
+	// const tenant:number = owner.id
 
 	if (!(sender_pub_key && sender_pub_key.length === 66)) return console.log('no sender')
 	if (!receivedAmount) return console.log('no amount')
-
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
 	const amount = Math.round(receivedAmount / 2)
 	const amt = Math.max(amount || constants.min_sat_amount)
@@ -137,7 +139,7 @@ export async function receiveHeartbeat(payload) {
 		}
 	}
 	try {
-		await network.signAndSend(opts)
+		await network.signAndSend(opts, owner.publicKey)
 		return true
 	} catch (e) {
 		return false
@@ -146,12 +148,15 @@ export async function receiveHeartbeat(payload) {
 
 let heartbeats: { [k: string]: boolean } = {}
 export async function healthcheck(req, res) {
+	if(!req.owner) return
+	// const tenant:number = req.owner.id
+
 	const pubkey: string = req.query.pubkey
 	if (!(pubkey && pubkey.length === 66)) {
 		return failure200(res, 'missing pubkey')
 	}
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 
 	const amt = 10
 	const opts = {
@@ -166,7 +171,7 @@ export async function healthcheck(req, res) {
 		}
 	}
 	try {
-		await network.signAndSend(opts)
+		await network.signAndSend(opts, owner.publicKey)
 	} catch (e) {
 		failure200(res, e)
 		return

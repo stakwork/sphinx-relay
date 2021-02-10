@@ -197,7 +197,7 @@ async function sendPayment(payment_request:string) {
   })
 }
 
-const keysend = (opts) => {
+const keysend = (opts, ownerPubkey?:string) => {
   log('keysend')
   return new Promise(async function (resolve, reject) {
     const FEE_LIMIT_SAT = 10
@@ -219,7 +219,7 @@ const keysend = (opts) => {
     // sphinx-proxy sendPaymentSync
     if(isProxy()) {
       options.fee_limit = { fixed: FEE_LIMIT_SAT }
-      let lightning = await loadLightning(true) // try proxy
+      let lightning = await loadLightning(true, ownerPubkey) // try proxy
       lightning.sendPaymentSync(options, (err, response) => {
         if(err) reject(err)
         else resolve(response)
@@ -270,7 +270,7 @@ const loadRouter = () => {
 }
 
 const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
-async function keysendMessage(opts) {
+async function keysendMessage(opts, ownerPubkey?:string) {
   log('keysendMessage')
   return new Promise(async function (resolve, reject) {
     if (!opts.data || typeof opts.data !== 'string') {
@@ -279,7 +279,7 @@ async function keysendMessage(opts) {
 
     if (opts.data.length < MAX_MSG_LENGTH) {
       try {
-        const res = await keysend(opts)
+        const res = await keysend(opts, ownerPubkey)
         resolve(res)
       } catch (e) {
         reject(e)
@@ -324,9 +324,9 @@ async function asyncForEach(array, callback) {
   }
 }
 
-async function signAscii(ascii) {
+async function signAscii(ascii, ownerPubkey?:string) {
   try {
-    const sig = await signMessage(ascii_to_hexa(ascii))
+    const sig = await signMessage(ascii_to_hexa(ascii), ownerPubkey)
     return sig
   } catch (e) {
     throw e
@@ -428,10 +428,10 @@ function listAllPaymentsFull() {
   })
 }
 
-const signMessage = (msg) => {
+const signMessage = (msg, ownerPubkey?:string) => {
   log('signMessage')
   return new Promise(async (resolve, reject) => {
-    let lightning = await loadLightning(true) // try proxy
+    let lightning = await loadLightning(true, ownerPubkey) // try proxy
     try {
       const options = { msg: ByteBuffer.fromHex(msg) }
       lightning.signMessage(options, function (err, sig) {

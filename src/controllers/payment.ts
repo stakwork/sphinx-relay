@@ -133,6 +133,7 @@ export const receivePayment = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant:number = owner.id
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -144,7 +145,8 @@ export const receivePayment = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   }
   if (content) msg.messageContent = content
   if (mediaType) msg.mediaType = mediaType
@@ -164,7 +166,7 @@ export const receivePayment = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 }
 
 export const listPayments = async (req, res) => {

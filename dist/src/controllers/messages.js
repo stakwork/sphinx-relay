@@ -319,7 +319,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveMessage = receiveMessage;
@@ -369,7 +369,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             where: { uuid: msg.replyUuid }
         });
         if (ogMsg && ogMsg.sender === 1) {
-            hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost');
+            hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner);
         }
     }
 });
@@ -449,7 +449,7 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (chat) {
         yield chat.update({ seen: true });
         res_1.success(res, {});
-        hub_1.sendNotification(chat, '', 'badge');
+        hub_1.sendNotification(chat, '', 'badge', owner);
         socket.sendJson({
             type: 'chat_seen',
             response: jsonUtils.chatToJson(chat)

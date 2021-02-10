@@ -100,7 +100,7 @@ function sendMessage(params) {
                 amt: Math.max((amount || 0), constants_1.default.min_sat_amount)
             };
             try {
-                const r = yield signAndSend(opts, mqttTopic);
+                const r = yield signAndSend(opts, sender.publicKey, mqttTopic);
                 yes = r;
             }
             catch (e) {
@@ -120,7 +120,7 @@ function sendMessage(params) {
     });
 }
 exports.sendMessage = sendMessage;
-function signAndSend(opts, mqttTopic, replayingHistory) {
+function signAndSend(opts, ownerPubkey, mqttTopic, replayingHistory) {
     // console.log('sign and send!',opts)
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -132,7 +132,7 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
             }
             let data = JSON.stringify(opts.data || {});
             opts.amt = opts.amt || 0;
-            const sig = yield LND.signAscii(data);
+            const sig = yield LND.signAscii(data, ownerPubkey);
             data = data + sig;
             // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
             try {
@@ -145,7 +145,7 @@ function signAndSend(opts, mqttTopic, replayingHistory) {
                     });
                 }
                 else {
-                    yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }));
+                    yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }), ownerPubkey);
                 }
                 resolve(true);
             }

@@ -228,6 +228,7 @@ export const receiveInvoice = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant:number = owner.id
 
   const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request)
 
@@ -248,6 +249,7 @@ export const receiveInvoice = async (payload) => {
     createdAt: date,
     updatedAt: date,
     network_type: network_type,
+    tenant
   }
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {
@@ -262,7 +264,7 @@ export const receiveInvoice = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }

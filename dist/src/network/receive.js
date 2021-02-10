@@ -69,6 +69,11 @@ function onReceive(payload, dest) {
         console.log('===> onReceive', JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return console.log('no payload.type');
+        let owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
+        if (!owner)
+            return console.log("=> RECEIVE: owner not found");
+        const tenant = owner.id;
+        const ownerDataValues = owner || owner.dataValues;
         if (botTypes.includes(payload.type)) {
             // if is admin on tribe? or is bot maker?
             console.log("=> got bot msg type!!!!");
@@ -76,6 +81,7 @@ function onReceive(payload, dest) {
                 if (!payload.bot_uuid)
                     return console.log('bot maker type: no bot uuid');
             }
+            payload.owner = ownerDataValues;
             return controllers_1.ACTIONS[payload.type](payload);
         }
         // if tribe, owner must forward to MQTT
@@ -84,8 +90,6 @@ function onReceive(payload, dest) {
         let isTribe = false;
         let isTribeOwner = false;
         let chat;
-        let owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
-        const tenant = owner.id;
         if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
             chat = yield models_1.models.Chat.findOne({ where: { uuid: payload.chat.uuid, tenant } });
@@ -207,7 +211,7 @@ function onReceive(payload, dest) {
             }
         }
         if (doAction)
-            doTheAction(Object.assign(Object.assign({}, payload), toAddIn), owner);
+            doTheAction(Object.assign(Object.assign({}, payload), toAddIn), ownerDataValues);
     });
 }
 function doTheAction(data, owner) {
@@ -227,6 +231,7 @@ function doTheAction(data, owner) {
             //if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
         }
         if (controllers_1.ACTIONS[payload.type]) {
+            payload.owner = owner;
             controllers_1.ACTIONS[payload.type](payload);
         }
         else {
@@ -366,11 +371,11 @@ function parseAndVerifyPayload(data) {
         }
     });
 }
-function saveAnonymousKeysend(response, memo, sender_pubkey) {
+function saveAnonymousKeysend(response, memo, sender_pubkey, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         let sender = 0;
         if (sender_pubkey) {
-            const theSender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pubkey } });
+            const theSender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pubkey, tenant } });
             if (theSender && theSender.id) {
                 sender = theSender.id;
             }
@@ -389,7 +394,8 @@ function saveAnonymousKeysend(response, memo, sender_pubkey) {
             status: constants_1.default.statuses.confirmed,
             createdAt: new Date(settleDate),
             updatedAt: new Date(settleDate),
-            network_type: constants_1.default.network_types.lightning
+            network_type: constants_1.default.network_types.lightning,
+            tenant
         });
         socket.sendJson({
             type: 'keysend',
@@ -401,6 +407,7 @@ function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
         let dest = '';
+        let owner;
         if (proxy_1.isProxy()) {
             const invoice = yield lightning_2.decodePayReq(i.payment_request);
             if (!invoice)
@@ -408,10 +415,15 @@ function parseKeysendInvoice(i) {
             if (!invoice.destination)
                 return console.log("cant get dest from pay req");
             dest = invoice.destination;
+            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
         }
         else {
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             dest = owner.publicKey;
+        }
+        if (!owner) {
+            console.log('=> parseKeysendInvoice ERROR: cant find owner');
+            return;
         }
         const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
@@ -437,9 +449,9 @@ function parseKeysendInvoice(i) {
         }
         if (isKeysendType) {
             if (!memo) {
-                hub_1.sendNotification(-1, '', 'keysend', value || 0);
+                hub_1.sendNotification(-1, '', 'keysend', owner, value || 0);
             }
-            saveAnonymousKeysend(i, memo, sender_pubkey);
+            saveAnonymousKeysend(i, memo, sender_pubkey, owner.id);
             return;
         }
         let payload;

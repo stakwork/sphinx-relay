@@ -98,7 +98,7 @@ export async function sendMessage(params) {
 		}
 
 		try {
-			const r = await signAndSend(opts, mqttTopic)
+			const r = await signAndSend(opts, sender.publicKey, mqttTopic)
 			yes = r
 		} catch (e) {
 			console.log("KEYSEND ERROR", e)
@@ -113,7 +113,7 @@ export async function sendMessage(params) {
 	}
 }
 
-export function signAndSend(opts, mqttTopic?: string, replayingHistory?: boolean) {
+export function signAndSend(opts, ownerPubkey?:string, mqttTopic?: string, replayingHistory?: boolean) {
 	// console.log('sign and send!',opts)
 	return new Promise(async function (resolve, reject) {
 		if (!opts || typeof opts !== 'object') {
@@ -125,7 +125,7 @@ export function signAndSend(opts, mqttTopic?: string, replayingHistory?: boolean
 		let data = JSON.stringify(opts.data || {})
 		opts.amt = opts.amt || 0
 
-		const sig = await LND.signAscii(data)
+		const sig = await LND.signAscii(data, ownerPubkey)
 		data = data + sig
 
 		// console.log("-> ACTUALLY SEND: topic:", mqttTopic)
@@ -137,7 +137,7 @@ export function signAndSend(opts, mqttTopic?: string, replayingHistory?: boolean
 					}
 				})
 			} else {
-				await LND.keysendMessage({ ...opts, data })
+				await LND.keysendMessage({ ...opts, data }, ownerPubkey)
 			}
 			resolve(true)
 		} catch (e) {

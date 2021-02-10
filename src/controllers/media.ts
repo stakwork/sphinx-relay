@@ -229,6 +229,7 @@ export const receivePurchase = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
+  const tenant:number = owner.id
 
   const message = await models.Message.create({
     chatId: chat.id,
@@ -240,7 +241,8 @@ export const receivePurchase = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   })
   socket.sendJson({
     type: 'purchase',
@@ -261,7 +263,7 @@ export const receivePurchase = async (payload) => {
   }
 
   const ogMessage = await models.Message.findOne({
-    where: { mediaToken }
+    where: { mediaToken, tenant }
   })
   if (!ogMessage) {
     return console.log('no original message')
@@ -270,7 +272,7 @@ export const receivePurchase = async (payload) => {
   // find mediaKey for who sent
   const mediaKey = await models.MediaKey.findOne({
     where: {
-      muid, receiver: isTribe ? 0 : sender.id,
+      muid, receiver: isTribe ? 0 : sender.id, tenant
     }
   })
   // console.log('mediaKey found!',mediaKey.dataValues)
@@ -305,7 +307,8 @@ export const receivePurchase = async (payload) => {
           sender: owner.id,
           type: constants.message_types.purchase_deny,
           mediaToken: mediaToken,
-          date: date, createdAt: date, updatedAt: date
+          date: date, createdAt: date, updatedAt: date,
+          tenant
         })
         socket.sendJson({
           type: 'purchase_deny',
@@ -339,7 +342,8 @@ export const receivePurchase = async (payload) => {
         sender: owner.id,
         type: constants.message_types.purchase_accept,
         mediaToken: theMediaToken,
-        date: date, createdAt: date, updatedAt: date
+        date: date, createdAt: date, updatedAt: date,
+        tenant
       })
       socket.sendJson({
         type: 'purchase_accept',
@@ -359,6 +363,7 @@ export const receivePurchaseAccept = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant:number = owner.id
 
   const termsArray = mediaToken.split('.')
   // const host = termsArray[0]
@@ -388,7 +393,8 @@ export const receivePurchaseAccept = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   })
   socket.sendJson({
     type: 'purchase_accept',
@@ -404,6 +410,7 @@ export const receivePurchaseDeny = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant:number = owner.id
   const msg = await models.Message.create({
     chatId: chat.id,
     sender: sender.id,
@@ -416,7 +423,8 @@ export const receivePurchaseDeny = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   })
   socket.sendJson({
     type: 'purchase_deny',
@@ -434,6 +442,7 @@ export const receiveAttachment = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant:number = owner.id
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -443,7 +452,8 @@ export const receiveAttachment = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   }
   if (content) msg.messageContent = content
   if (mediaToken) msg.mediaToken = mediaToken
@@ -465,7 +475,7 @@ export const receiveAttachment = async (payload) => {
     response: jsonUtils.messageToJson(message, chat, sender)
   })
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }

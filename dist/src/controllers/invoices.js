@@ -217,6 +217,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request);
     const msg = {
         chatId: chat.id,
@@ -235,6 +236,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         createdAt: date,
         updatedAt: date,
         network_type: network_type,
+        tenant
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -247,7 +249,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'invoice',
         response: jsonUtils.messageToJson(message, chat, sender)
     });
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveInvoice = receiveInvoice;

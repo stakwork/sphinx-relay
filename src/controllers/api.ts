@@ -100,7 +100,7 @@ export async function finalAction(a: Action) {
             }, // for verify sig
         }
         try {
-            await network.signAndSend({ dest, data }, topic)
+            await network.signAndSend({ dest, data }, owner.publicKey, topic)
         } catch (e) {
             console.log('=> couldnt mqtt publish')
         }
@@ -108,22 +108,22 @@ export async function finalAction(a: Action) {
     }
 
     if (action === 'keysend') {
-        console.log('=> BOT KEYSEND')
-        if (!(pubkey && pubkey.length === 66 && amount)) {
-            throw 'wrong params'
-        }
-        const destkey = pubkey
-        const opts = {
-            dest: destkey,
-            data: {},
-            amt: Math.max((amount || 0), constants.min_sat_amount)
-        }
-        try {
-            await network.signAndSend(opts)
-            return ({ success: true })
-        } catch (e) {
-            throw e
-        }
+        return console.log('=> BOT KEYSEND to', pubkey)
+        // if (!(pubkey && pubkey.length === 66 && amount)) {
+        //     throw 'wrong params'
+        // }
+        // const destkey = pubkey
+        // const opts = {
+        //     dest: destkey,
+        //     data: {},
+        //     amt: Math.max((amount || 0), constants.min_sat_amount)
+        // }
+        // try {
+        //     await network.signAndSend(opts, ownerPubkey)
+        //     return ({ success: true })
+        // } catch (e) {
+        //     throw e
+        // }
 
     } else if (action === 'broadcast') {
         console.log('=> BOT BROADCAST')
