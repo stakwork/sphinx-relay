@@ -115,10 +115,10 @@ const getRoute = async (pub_key, amt, callback) => {
   )
 }
 
-const queryRoute = async (pub_key, amt) => {
+const queryRoute = async (pub_key, amt, ownerPubkey?:string) => {
   log('queryRoute')
   return new Promise(async function (resolve, reject) {
-    let lightning = await loadLightning(true) // try proxy
+    let lightning = await loadLightning(true, ownerPubkey) // try proxy
     lightning.queryRoutes(
       { pub_key, amt },
       (err, response) => {
@@ -175,10 +175,10 @@ export async function newAddress(type: NewAddressType = NESTED_PUBKEY_HASH): Pro
 }
 
 // for payingn invoice and invite invoice
-async function sendPayment(payment_request:string) {
+async function sendPayment(payment_request:string, ownerPubkey?:string) {
   log('sendPayment')
   return new Promise(async (resolve,reject)=>{
-    let lightning = await loadLightning(true) // try proxy
+    let lightning = await loadLightning(true, ownerPubkey) // try proxy
     if(isProxy()) {
       lightning.sendPaymentSync({payment_request}, (err, response) => {
         if(err) reject(err)
@@ -523,7 +523,7 @@ interface ListChannelsArgs {
   inactive_only?: boolean
   peer?: string // HEX!
 }
-async function listChannels(args?:ListChannelsArgs): Promise<{ [k: string]: any }> {
+async function listChannels(args?:ListChannelsArgs, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('listChannels')
   const opts:{[k:string]:any} = args || {}
   if(args && args.peer) {
@@ -565,7 +565,7 @@ export async function openChannel(args: OpenChannelArgs): Promise<{ [k: string]:
   })
 }
 
-async function channelBalance(): Promise<{ [k: string]: any }> {
+async function channelBalance(ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('channelBalance')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true) // try proxy

@@ -200,9 +200,12 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 // pause sub
 function pauseSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id } });
+            const sub = yield models_1.models.Subscription.findOne({ where: { id, tenant } });
             if (sub) {
                 sub.update({ paused: true });
                 if (jobs[id])
@@ -224,9 +227,12 @@ exports.pauseSubscription = pauseSubscription;
 // restart sub
 function restartSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id } });
+            const sub = yield models_1.models.Subscription.findOne({ where: { id, tenant } });
             if (sub) {
                 sub.update({ paused: false });
                 if (jobs[id])
@@ -259,8 +265,11 @@ function getRawSubs(opts = {}) {
 }
 // all subs
 const getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     try {
-        const subs = yield getRawSubs();
+        const subs = yield getRawSubs({ where: { tenant } });
         res_1.success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)));
     }
     catch (e) {
@@ -272,8 +281,11 @@ exports.getAllSubscriptions = getAllSubscriptions;
 // one sub by id
 function getSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id: req.params.id } });
+            const sub = yield models_1.models.Subscription.findOne({ where: { id: req.params.id, tenant } });
             res_1.success(res, jsonUtils.subscriptionToJson(sub, null));
         }
         catch (e) {
@@ -287,6 +299,9 @@ exports.getSubscription = getSubscription;
 // delete sub by id
 function deleteSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const id = req.params.id;
         if (!id)
             return;
@@ -295,7 +310,7 @@ function deleteSubscription(req, res) {
                 jobs[id].stop();
                 delete jobs[id];
             }
-            models_1.models.Subscription.destroy({ where: { id } });
+            models_1.models.Subscription.destroy({ where: { id, tenant } });
             res_1.success(res, true);
         }
         catch (e) {
@@ -308,8 +323,11 @@ exports.deleteSubscription = deleteSubscription;
 ;
 // all subs for contact id
 const getSubscriptionsForContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     try {
-        const subs = yield getRawSubs({ where: { contactId: req.params.contactId } });
+        const subs = yield getRawSubs({ where: { contactId: req.params.contactId, tenant } });
         res_1.success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)));
     }
     catch (e) {

@@ -23,9 +23,12 @@ const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
         feed_1.anonymousKeysend(owner, destination_key, amount || '', text || '', function (body) {
             res_1.success(res, body);
@@ -54,6 +57,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         createdAt: date,
         updatedAt: date,
         network_type: constants_1.default.network_types.lightning,
+        tenant
     };
     if (text)
         msg.messageContent = text;
@@ -158,6 +162,9 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const MIN_VAL = constants_1.default.min_sat_amount;
@@ -191,6 +198,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed }
                     }
                 ],
+                tenant
             },
             order: [['createdAt', 'desc']],
             limit,

@@ -108,9 +108,13 @@ function set(app) {
         });
         app.get('/latest', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
+                if (!req.owner)
+                    return;
+                const tenant = req.owner.id;
                 const lasts = yield models_1.models.Message.findAll({
                     limit: 1,
-                    order: [['createdAt', 'DESC']]
+                    order: [['createdAt', 'DESC']],
+                    where: { tenant }
                 });
                 const last = lasts && lasts[0];
                 if (!last) {

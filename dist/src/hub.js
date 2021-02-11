@@ -171,10 +171,10 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
     });
 };
 exports.payInviteInHub = payInviteInHub;
-function payInviteInvoice(invoice, onSuccess, onFailure) {
+function payInviteInvoice(invoice, pubkey, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const res = LND.sendPayment(invoice);
+            const res = LND.sendPayment(invoice, pubkey);
             onSuccess(res);
         }
         catch (e) {

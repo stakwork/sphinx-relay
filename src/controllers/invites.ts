@@ -5,6 +5,7 @@ import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 // import * as proxy from '../utils/proxy'
 
 export const finishInvite = async (req, res) => {
+
 	const {
 		invite_string
 	} = req.body
@@ -29,9 +30,11 @@ export const finishInvite = async (req, res) => {
 }
 
 export const payInvite = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 
 	const invite_string = req.params['invite_string']
-	const dbInvite = await models.Invite.findOne({ where: { inviteString: invite_string } })
+	const dbInvite = await models.Invite.findOne({ where: { inviteString: invite_string, tenant } })
 
 	const onSuccess = async (response) => {
 		// const invite = response.object
@@ -59,16 +62,18 @@ export const payInvite = async (req, res) => {
 	}
 
 	// payInviteInHub(invite_string, params, onSuccess, onFailure)
-	payInviteInvoice(dbInvite.invoice, onSuccess, onFailure)
+	payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure)
 }
 
 export const createInvite = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 	const {
 		nickname,
 		welcome_message
 	} = req.body
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 
 	const params = {
 		invite: {
@@ -87,13 +92,15 @@ export const createInvite = async (req, res) => {
 
 		const contact = await models.Contact.create({
 			alias: nickname,
-			status: 0
+			status: 0,
+			tenant
 		})
 		const invite = await models.Invite.create({
 			welcomeMessage: inviteCreated.message,
 			contactId: contact.id,
 			status: inviteCreated.invite_status,
 			inviteString: inviteCreated.pin,
+			tenant,
 			// invoice: inviteCreated.invoice,
 		})
 		let contactJson = jsonUtils.contactToJson(contact)

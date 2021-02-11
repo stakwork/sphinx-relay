@@ -36,8 +36,11 @@ const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.finishInvite = finishInvite;
 const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const invite_string = req.params['invite_string'];
-    const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite_string } });
+    const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite_string, tenant } });
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
         // const invite = response.object
         // console.log("response", invite)
@@ -63,12 +66,15 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.end();
     };
     // payInviteInHub(invite_string, params, onSuccess, onFailure)
-    hub_1.payInviteInvoice(dbInvite.invoice, onSuccess, onFailure);
+    hub_1.payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure);
 });
 exports.payInvite = payInvite;
 const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const { nickname, welcome_message } = req.body;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     const params = {
         invite: {
             nickname: owner.alias,
@@ -83,13 +89,15 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const inviteCreated = response.object;
         const contact = yield models_1.models.Contact.create({
             alias: nickname,
-            status: 0
+            status: 0,
+            tenant
         });
         const invite = yield models_1.models.Invite.create({
             welcomeMessage: inviteCreated.message,
             contactId: contact.id,
             status: inviteCreated.invite_status,
             inviteString: inviteCreated.pin,
+            tenant,
         });
         let contactJson = jsonUtils.contactToJson(contact);
         if (invite) {

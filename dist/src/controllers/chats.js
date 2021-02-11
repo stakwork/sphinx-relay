@@ -24,12 +24,15 @@ const chatTribes_1 = require("./chatTribes");
 const constants_1 = require("../constants");
 function updateChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         console.log('=> updateChat');
         const id = parseInt(req.params.id);
         if (!id) {
             return res_1.failure(res, 'missing id');
         }
-        const chat = yield models_1.models.Chat.findOne({ where: { id } });
+        const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
         if (!chat) {
             return res_1.failure(res, 'chat not found');
         }
@@ -132,7 +135,10 @@ function receiveGroupKick(payload) {
 exports.receiveGroupKick = receiveGroupKick;
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
+        const chats = yield models_1.models.Chat.findAll({ where: { deleted: false, tenant }, raw: true });
         const c = chats.map(chat => jsonUtils.chatToJson(chat));
         res_1.success(res, c);
     });
@@ -140,12 +146,15 @@ function getChats(req, res) {
 exports.getChats = getChats;
 function mute(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const chatId = req.params['chat_id'];
         const mute = req.params['mute_unmute'];
         if (!["mute", "unmute"].includes(mute)) {
             return res_1.failure(res, "invalid option for mute");
         }
-        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
+        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
         if (!chat) {
             return res_1.failure(res, 'chat not found');
         }
@@ -158,15 +167,18 @@ exports.mute = mute;
 // or can u add contacts as members?
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const { name, is_tribe, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
         const contact_ids = req.body.contact_ids || [];
         const members = {}; //{pubkey:{key,alias}, ...}
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = req.owner;
         members[owner.publicKey] = {
             key: owner.contactKey, alias: owner.alias
         };
         yield asyncForEach(contact_ids, (cid) => __awaiter(this, void 0, void 0, function* () {
-            const contact = yield models_1.models.Contact.findOne({ where: { id: cid } });
+            const contact = yield models_1.models.Contact.findOne({ where: { id: cid, tenant } });
             members[contact.publicKey] = {
                 key: contact.contactKey,
                 alias: contact.alias || ''
@@ -226,7 +238,8 @@ function createGroupChat(req, res) {
                             contactId: owner.id,
                             chatId: chat.id,
                             role: constants_1.default.chat_roles.owner,
-                            status: constants_1.default.chat_statuses.approved
+                            status: constants_1.default.chat_statuses.approved,
+                            tenant
                         });
                     }
                     res_1.success(res, jsonUtils.chatToJson(chat));
@@ -239,28 +252,31 @@ exports.createGroupChat = createGroupChat;
 // only owner can do for tribe?
 function addGroupMembers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const { contact_ids, } = req.body;
         const { id } = req.params;
         const members = {}; //{pubkey:{key,alias}, ...}
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        let chat = yield models_1.models.Chat.findOne({ where: { id } });
+        const owner = req.owner;
+        let chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
         const contactIds = JSON.parse(chat.contactIds || '[]');
         // for all members (existing and new)
         members[owner.publicKey] = { key: owner.contactKey, alias: owner.alias };
         if (chat.type === constants_1.default.chat_types.tribe) {
-            const me = yield models_1.models.ChatMember.findOne({ where: { contactId: owner.id, chatId: chat.id } });
+            const me = yield models_1.models.ChatMember.findOne({ where: { contactId: owner.id, chatId: chat.id, tenant } });
             if (me)
                 members[owner.publicKey].role = me.role;
         }
         const allContactIds = contactIds.concat(contact_ids);
         yield asyncForEach(allContactIds, (cid) => __awaiter(this, void 0, void 0, function* () {
-            const contact = yield models_1.models.Contact.findOne({ where: { id: cid } });
+            const contact = yield models_1.models.Contact.findOne({ where: { id: cid, tenant } });
             if (contact) {
                 members[contact.publicKey] = {
                     key: contact.contactKey,
                     alias: contact.alias
                 };
-                const member = yield models_1.models.ChatMember.findOne({ where: { contactId: owner.id, chatId: chat.id } });
+                const member = yield models_1.models.ChatMember.findOne({ where: { contactId: owner.id, chatId: chat.id, tenant } });
                 if (member)
                     members[contact.publicKey].role = member.role;
             }
@@ -276,9 +292,12 @@ function addGroupMembers(req, res) {
 }
 exports.addGroupMembers = addGroupMembers;
 const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const { id } = req.params;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const chat = yield models_1.models.Chat.findOne({ where: { id } });
+    const owner = req.owner;
+    const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
     if (!chat) {
         return res_1.failure(res, "you are not in this group");
     }
@@ -324,8 +343,8 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         contactIds: '[]',
         name: ''
     });
-    yield models_1.models.Message.destroy({ where: { chatId: id } });
-    yield models_1.models.ChatMember.destroy({ where: { chatId: id } });
+    yield models_1.models.Message.destroy({ where: { chatId: id, tenant } });
+    yield models_1.models.ChatMember.destroy({ where: { chatId: id, tenant } });
     res_1.success(res, { chat_id: id });
 });
 exports.deleteChat = deleteChat;

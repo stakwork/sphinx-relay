@@ -128,11 +128,11 @@ const getRoute = (pub_key, amt, callback) => __awaiter(void 0, void 0, void 0, f
     lightning.queryRoutes({ pub_key, amt }, (err, response) => callback(err, response));
 });
 exports.getRoute = getRoute;
-const queryRoute = (pub_key, amt) => __awaiter(void 0, void 0, void 0, function* () {
+const queryRoute = (pub_key, amt, ownerPubkey) => __awaiter(void 0, void 0, void 0, function* () {
     log('queryRoute');
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            let lightning = yield loadLightning(true); // try proxy
+            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
             lightning.queryRoutes({ pub_key, amt }, (err, response) => {
                 if (err) {
                     reject(err);
@@ -186,11 +186,11 @@ function newAddress(type = exports.NESTED_PUBKEY_HASH) {
 }
 exports.newAddress = newAddress;
 // for payingn invoice and invite invoice
-function sendPayment(payment_request) {
+function sendPayment(payment_request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         log('sendPayment');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            let lightning = yield loadLightning(true); // try proxy
+            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
             if (proxy_1.isProxy()) {
                 lightning.sendPaymentSync({ payment_request }, (err, response) => {
                     if (err)
@@ -585,7 +585,7 @@ function getInfo(tryProxy) {
     });
 }
 exports.getInfo = getInfo;
-function listChannels(args) {
+function listChannels(args, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         log('listChannels');
         const opts = args || {};
@@ -627,7 +627,7 @@ function openChannel(args) {
     });
 }
 exports.openChannel = openChannel;
-function channelBalance() {
+function channelBalance(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         log('channelBalance');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {

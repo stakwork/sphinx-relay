@@ -171,9 +171,9 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
     })
 }
 
-async function payInviteInvoice(invoice, onSuccess, onFailure) {
+async function payInviteInvoice(invoice, pubkey:string, onSuccess, onFailure) {
   try {
-    const res = LND.sendPayment(invoice)
+    const res = LND.sendPayment(invoice, pubkey)
     onSuccess(res)
   } catch(e) {
     onFailure(e)

@@ -24,10 +24,13 @@ const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         console.log('=> joinTribe');
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias, my_alias, my_photo_url } = req.body;
         const is_private = req.body.private;
-        const existing = yield models_1.models.Chat.findOne({ where: { uuid } });
+        const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
         if (existing) {
             console.log('[tribes] u are already in this tribe');
             return res_1.failure(res, 'cant find tribe');
@@ -38,9 +41,9 @@ function joinTribe(req, res) {
         }
         const ownerPubKey = owner_pubkey;
         // verify signature here?
-        const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: ownerPubKey } });
+        const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: ownerPubKey, tenant } });
         let theTribeOwner;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = req.owner;
         const contactIds = [owner.id];
         if (tribeOwner) {
             theTribeOwner = tribeOwner; // might already include??
@@ -54,6 +57,7 @@ function joinTribe(req, res) {
                 alias: owner_alias || 'Unknown',
                 status: 1,
                 fromGroup: true,
+                tenant
             });
             theTribeOwner = createdContact;
             contactIds.push(createdContact.id);
@@ -77,6 +81,7 @@ function joinTribe(req, res) {
             private: is_private || false,
             status: chatStatus,
             priceToJoin: amount || 0,
+            tenant
         };
         if (my_alias)
             chatParams.myAlias = my_alias;
@@ -116,7 +121,8 @@ function joinTribe(req, res) {
                         chatId: chat.id,
                         role: constants_1.default.chat_roles.owner,
                         lastActive: date,
-                        status: constants_1.default.chat_statuses.approved
+                        status: constants_1.default.chat_statuses.approved,
+                        tenant
                     });
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
@@ -210,15 +216,18 @@ function receiveMemberRequest(payload) {
 exports.receiveMemberRequest = receiveMemberRequest;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        const tenant = req.owner.id;
         const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
         const { id } = req.params;
         if (!id)
             return res_1.failure(res, 'group id is required');
-        const chat = yield models_1.models.Chat.findOne({ where: { id } });
+        const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
         if (!chat) {
             return res_1.failure(res, 'cant find chat');
         }
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = req.owner;
         let okToUpdate = true;
         if (owner.publicKey === chat.ownerPubkey) {
             try {

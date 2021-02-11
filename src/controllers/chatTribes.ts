@@ -12,11 +12,14 @@ import { Op } from 'sequelize'
 import constants from '../constants'
 
 export async function joinTribe(req, res) {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+
 	console.log('=> joinTribe')
 	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias, my_alias, my_photo_url } = req.body
 	const is_private = req.body.private
 
-	const existing = await models.Chat.findOne({ where: { uuid } })
+	const existing = await models.Chat.findOne({ where: { uuid, tenant } })
 	if (existing) {
 		console.log('[tribes] u are already in this tribe')
 		return failure(res, 'cant find tribe')
@@ -30,10 +33,10 @@ export async function joinTribe(req, res) {
 	const ownerPubKey = owner_pubkey
 	// verify signature here?
 
-	const tribeOwner = await models.Contact.findOne({ where: { publicKey: ownerPubKey } })
+	const tribeOwner = await models.Contact.findOne({ where: { publicKey: ownerPubKey, tenant } })
 
 	let theTribeOwner
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 
 	const contactIds = [owner.id]
 	if (tribeOwner) {
@@ -46,6 +49,7 @@ export async function joinTribe(req, res) {
 			alias: owner_alias || 'Unknown',
 			status: 1,
 			fromGroup: true,
+			tenant
 		})
 		theTribeOwner = createdContact
 		contactIds.push(createdContact.id)
@@ -70,6 +74,7 @@ export async function joinTribe(req, res) {
 		private: is_private || false,
 		status: chatStatus,
 		priceToJoin: amount || 0,
+		tenant
 	}
 	if (my_alias) chatParams.myAlias = my_alias
 	if (my_photo_url) chatParams.myPhotoUrl = my_photo_url
@@ -110,7 +115,8 @@ export async function joinTribe(req, res) {
 				chatId: chat.id,
 				role: constants.chat_roles.owner,
 				lastActive: date,
-				status: constants.chat_statuses.approved
+				status: constants.chat_statuses.approved,
+				tenant
 			})
 			success(res, jsonUtils.chatToJson(chat))
 		}
@@ -202,6 +208,8 @@ export async function receiveMemberRequest(payload) {
 }
 
 export async function editTribe(req, res) {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 	const {
 		name,
 		price_per_message,
@@ -219,12 +227,12 @@ export async function editTribe(req, res) {
 
 	if (!id) return failure(res, 'group id is required')
 
-	const chat = await models.Chat.findOne({ where: { id } })
+	const chat = await models.Chat.findOne({ where: { id, tenant } })
 	if (!chat) {
 		return failure(res, 'cant find chat')
 	}
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 
 	let okToUpdate = true
 	if (owner.publicKey === chat.ownerPubkey) {

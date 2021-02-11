@@ -20,13 +20,17 @@ const password_1 = require("../utils/password");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false }, raw: true });
-    const invites = yield models_1.models.Invite.findAll({ raw: true });
-    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
-    const subscriptions = yield models_1.models.Subscription.findAll({ raw: true });
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
+    const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false, tenant }, raw: true });
+    const invites = yield models_1.models.Invite.findAll({ raw: true, where: { tenant } });
+    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false, tenant }, raw: true });
+    const subscriptions = yield models_1.models.Subscription.findAll({ raw: true, where: { tenant } });
     const pendingMembers = yield models_1.models.ChatMember.findAll({
         where: {
-            status: constants_1.default.chat_statuses.pending
+            status: constants_1.default.chat_statuses.pending,
+            tenant
         }
     });
     const contactsResponse = contacts.map(contact => {
@@ -88,9 +92,12 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
-    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
+    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id, tenant } });
     if (!contact) {
         return res_1.failure(res, 'no contact found');
     }
@@ -109,7 +116,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
     // send updated owner info to others!
-    const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
+    const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false, tenant } })
         .filter(c => c.id !== 1 && c.publicKey).map(c => c.id);
     if (contactIds.length == 0)
         return;
@@ -123,9 +130,12 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.updateContact = updateContact;
 const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query });
-    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id, tenant } });
+    const owner = req.owner;
     res_1.success(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
         contactIds: [contact.id],
@@ -135,10 +145,13 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.exchangeKeys = exchangeKeys;
 const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     console.log('=> createContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'] } }));
+    const owner = req.owner;
+    const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'], tenant } }));
     if (existing) {
         const updateObj = { fromGroup: false };
         if (attrs['alias'])
@@ -148,6 +161,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     if (attrs['public_key'].length > 66)
         attrs['public_key'] = attrs['public_key'].substring(0, 66);
+    attrs.tenant = tenant;
     const createdContact = yield models_1.models.Contact.create(attrs);
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(contact));
@@ -159,20 +173,23 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createContact = createContact;
 const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const id = parseInt(req.params.id || '0');
     if (!id || id === 1) {
         res_1.failure(res, 'Cannot delete self');
         return;
     }
-    const contact = yield models_1.models.Contact.findOne({ where: { id } });
+    const contact = yield models_1.models.Contact.findOne({ where: { id, tenant } });
     if (!contact)
         return;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const tribesImAdminOf = yield models_1.models.Chat.findAll({ where: { ownerPubkey: owner.publicKey } });
+    const owner = req.owner;
+    const tribesImAdminOf = yield models_1.models.Chat.findAll({ where: { ownerPubkey: owner.publicKey, tenant } });
     const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t => t.id);
     let okToDelete = true;
     if (tribesIdArray && tribesIdArray.length) {
-        const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { contactId: id, chatId: { [sequelize_1.Op.in]: tribesIdArray } } });
+        const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { contactId: id, chatId: { [sequelize_1.Op.in]: tribesIdArray }, tenant } });
         if (thisContactMembers && thisContactMembers.length) {
             // IS A MEMBER! dont delete, instead just set from_group=true
             okToDelete = false;
@@ -189,7 +206,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
     // find and destroy chat & messages
-    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false } });
+    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false, tenant } });
     chats.map((chat) => __awaiter(void 0, void 0, void 0, function* () {
         if (chat.type === constants_1.default.chat_types.conversation) {
             const contactIds = JSON.parse(chat.contactIds);
@@ -200,12 +217,12 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     contactIds: '[]',
                     name: ''
                 });
-                yield models_1.models.Message.destroy({ where: { chatId: chat.id } });
+                yield models_1.models.Message.destroy({ where: { chatId: chat.id, tenant } });
             }
         }
     }));
-    yield models_1.models.Invite.destroy({ where: { contactId: id } });
-    yield models_1.models.Subscription.destroy({ where: { contactId: id } });
+    yield models_1.models.Invite.destroy({ where: { contactId: id, tenant } });
+    yield models_1.models.Subscription.destroy({ where: { contactId: id, tenant } });
     res_1.success(res, {});
 });
 exports.deleteContact = deleteContact;
@@ -278,7 +295,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.receiveConfirmContactKey = receiveConfirmContactKey;
-const extractAttrs = body => {
+function extractAttrs(body) {
     let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount"];
     let attrs = {};
     Object.keys(body).forEach(key => {
@@ -287,5 +304,5 @@ const extractAttrs = body => {
         }
     });
     return attrs;
-};
+}
 //# sourceMappingURL=contacts.js.map

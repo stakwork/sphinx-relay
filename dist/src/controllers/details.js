@@ -32,11 +32,14 @@ function getAppVersions(req, res) {
 }
 exports.getAppVersions = getAppVersions;
 const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
     const { pubkey, amount } = req.query;
     if (!(pubkey && pubkey.length === 66))
         return res_1.failure(res, 'wrong pubkey');
+    const owner = req.owner;
     try {
-        const r = yield lightning_1.queryRoute(pubkey, parseInt(amount) || constants_1.default.min_sat_amount);
+        const r = yield lightning_1.queryRoute(pubkey, parseInt(amount) || constants_1.default.min_sat_amount, owner.publicKey);
         res_1.success(res, r);
     }
     catch (e) {
@@ -77,7 +80,9 @@ function getLogsSince(req, res) {
 }
 exports.getLogsSince = getLogsSince;
 const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = yield lightning_1.loadLightning();
+    if (!req.owner)
+        return;
+    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey);
     var request = {};
     lightning.getInfo(request, function (err, response) {
         res.status(200);
@@ -92,7 +97,9 @@ const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getInfo = getInfo;
 const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = yield lightning_1.loadLightning(true); // try proxy
+    if (!req.owner)
+        return;
+    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
     var request = {};
     lightning.listChannels(request, function (err, response) {
         res.status(200);
@@ -107,14 +114,17 @@ const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getChannels = getChannels;
 const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     var date = new Date();
     date.setMilliseconds(0);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
     owner.update({ lastActive: date });
     res.status(200);
     try {
-        const response = yield lightning_1.channelBalance();
-        const channelList = yield lightning_1.listChannels();
+        const response = yield lightning_1.channelBalance(owner.publicKey);
+        const channelList = yield lightning_1.listChannels({}, owner.publicKey);
         const { channels } = channelList;
         const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
         res.json({
@@ -135,7 +145,9 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.getBalance = getBalance;
 const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const lightning = yield lightning_1.loadLightning(true); // try proxy
+    if (!req.owner)
+        return;
+    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
     lightning.listChannels({}, (err, channelList) => {
         const { channels } = channelList;
         const localBalances = channels.map(c => c.local_balance);

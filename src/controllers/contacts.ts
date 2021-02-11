@@ -9,13 +9,17 @@ import { Op } from 'sequelize'
 import constants from '../constants'
 
 export const getContacts = async (req, res) => {
-	const contacts = await models.Contact.findAll({ where: { deleted: false }, raw: true })
-	const invites = await models.Invite.findAll({ raw: true })
-	const chats = await models.Chat.findAll({ where: { deleted: false }, raw: true })
-	const subscriptions = await models.Subscription.findAll({ raw: true })
+	if(!req.owner) return
+	const tenant:number = req.owner.id
+
+	const contacts = await models.Contact.findAll({ where: { deleted: false, tenant }, raw: true })
+	const invites = await models.Invite.findAll({ raw: true, where:{tenant} })
+	const chats = await models.Chat.findAll({ where: { deleted: false, tenant }, raw: true })
+	const subscriptions = await models.Subscription.findAll({ raw: true, where:{tenant} })
 	const pendingMembers = await models.ChatMember.findAll({
 		where: {
-			status: constants.chat_statuses.pending
+			status: constants.chat_statuses.pending,
+			tenant
 		}
 	})
 
@@ -83,11 +87,13 @@ export const generateToken = async (req, res) => {
 }
 
 export const updateContact = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 	console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query })
 
 	let attrs = extractAttrs(req.body)
 
-	const contact = await models.Contact.findOne({ where: { id: req.params.id } })
+	const contact = await models.Contact.findOne({ where: { id: req.params.id, tenant } })
 	if (!contact) {
 		return failure(res, 'no contact found')
 	}
@@ -109,7 +115,7 @@ export const updateContact = async (req, res) => {
 	}
 
 	// send updated owner info to others!
-	const contactIds = await models.Contact.findAll({ where: { deleted: false } })
+	const contactIds = await models.Contact.findAll({ where: { deleted: false, tenant } })
 		.filter(c => c.id !== 1 && c.publicKey).map(c => c.id)
 	if (contactIds.length == 0) return
 
@@ -123,10 +129,12 @@ export const updateContact = async (req, res) => {
 }
 
 export const exchangeKeys = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 	console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query })
 
-	const contact = await models.Contact.findOne({ where: { id: req.params.id } })
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const contact = await models.Contact.findOne({ where: { id: req.params.id, tenant } })
+	const owner = req.owner
 
 	success(res, jsonUtils.contactToJson(contact))
 
@@ -138,13 +146,15 @@ export const exchangeKeys = async (req, res) => {
 }
 
 export const createContact = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 	console.log('=> createContact called', { body: req.body, params: req.params, query: req.query })
 
 	let attrs = extractAttrs(req.body)
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = req.owner
 
-	const existing = attrs['public_key'] && await models.Contact.findOne({ where: { publicKey: attrs['public_key'] } })
+	const existing = attrs['public_key'] && await models.Contact.findOne({ where: { publicKey: attrs['public_key'], tenant } })
 	if (existing) {
 		const updateObj: { [k: string]: any } = { fromGroup: false }
 		if (attrs['alias']) updateObj.alias = attrs['alias']
@@ -153,6 +163,7 @@ export const createContact = async (req, res) => {
 	}
 
 	if (attrs['public_key'].length > 66) attrs['public_key'] = attrs['public_key'].substring(0, 66)
+	attrs.tenant = tenant
 	const createdContact = await models.Contact.create(attrs)
 	const contact = await createdContact.update(jsonUtils.jsonToContact(attrs))
 
@@ -166,21 +177,23 @@ export const createContact = async (req, res) => {
 }
 
 export const deleteContact = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 	const id = parseInt(req.params.id || '0')
 	if (!id || id === 1) {
 		failure(res, 'Cannot delete self')
 		return
 	}
 
-	const contact = await models.Contact.findOne({ where: { id } })
+	const contact = await models.Contact.findOne({ where: { id, tenant } })
 	if (!contact) return
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
-	const tribesImAdminOf = await models.Chat.findAll({ where: { ownerPubkey: owner.publicKey } })
+	const owner = req.owner
+	const tribesImAdminOf = await models.Chat.findAll({ where: { ownerPubkey: owner.publicKey, tenant } })
 	const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t => t.id)
 	let okToDelete = true
 	if (tribesIdArray && tribesIdArray.length) {
-		const thisContactMembers = await models.ChatMember.findAll({ where: { contactId: id, chatId: { [Op.in]: tribesIdArray } } })
+		const thisContactMembers = await models.ChatMember.findAll({ where: { contactId: id, chatId: { [Op.in]: tribesIdArray }, tenant } })
 		if (thisContactMembers && thisContactMembers.length) {
 			// IS A MEMBER! dont delete, instead just set from_group=true
 			okToDelete = false
@@ -199,7 +212,7 @@ export const deleteContact = async (req, res) => {
 	}
 
 	// find and destroy chat & messages
-	const chats = await models.Chat.findAll({ where: { deleted: false } })
+	const chats = await models.Chat.findAll({ where: { deleted: false, tenant } })
 	chats.map(async chat => {
 		if (chat.type === constants.chat_types.conversation) {
 			const contactIds = JSON.parse(chat.contactIds)
@@ -210,12 +223,12 @@ export const deleteContact = async (req, res) => {
 					contactIds: '[]',
 					name: ''
 				})
-				await models.Message.destroy({ where: { chatId: chat.id } })
+				await models.Message.destroy({ where: { chatId: chat.id, tenant } })
 			}
 		}
 	})
-	await models.Invite.destroy({ where: { contactId: id } })
-	await models.Subscription.destroy({ where: { contactId: id } })
+	await models.Invite.destroy({ where: { contactId: id, tenant } })
+	await models.Subscription.destroy({ where: { contactId: id, tenant } })
 
 	success(res, {})
 }
@@ -293,7 +306,7 @@ export const receiveConfirmContactKey = async (payload) => {
 	}
 }
 
-const extractAttrs = body => {
+function extractAttrs (body): {[k:string]:any}  {
 	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount"]
 	let attrs = {}
 	Object.keys(body).forEach(key => {

@@ -193,9 +193,11 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 
 // pause sub
 export async function pauseSubscription(req, res) {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const id = parseInt(req.params.id)
   try {
-    const sub = await models.Subscription.findOne({ where: { id } })
+    const sub = await models.Subscription.findOne({ where: { id, tenant } })
     if (sub) {
       sub.update({ paused: true })
       if (jobs[id]) jobs[id].stop()
@@ -211,9 +213,11 @@ export async function pauseSubscription(req, res) {
 
 // restart sub
 export async function restartSubscription(req, res) {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const id = parseInt(req.params.id)
   try {
-    const sub = await models.Subscription.findOne({ where: { id } })
+    const sub = await models.Subscription.findOne({ where: { id, tenant } })
     if (sub) {
       sub.update({ paused: false })
       if (jobs[id]) jobs[id].start()
@@ -239,8 +243,10 @@ async function getRawSubs(opts = {}) {
 
 // all subs
 export const getAllSubscriptions = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   try {
-    const subs = await getRawSubs()
+    const subs = await getRawSubs({where:{tenant}})
     success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)))
   } catch (e) {
     console.log('ERROR getAllSubscriptions', e)
@@ -250,8 +256,10 @@ export const getAllSubscriptions = async (req, res) => {
 
 // one sub by id
 export async function getSubscription(req, res) {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   try {
-    const sub = await models.Subscription.findOne({ where: { id: req.params.id } })
+    const sub = await models.Subscription.findOne({ where: { id: req.params.id, tenant } })
     success(res, jsonUtils.subscriptionToJson(sub, null))
   } catch (e) {
     console.log('ERROR getSubscription', e)
@@ -261,6 +269,8 @@ export async function getSubscription(req, res) {
 
 // delete sub by id
 export async function deleteSubscription(req, res) {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const id = req.params.id
   if (!id) return
   try {
@@ -268,7 +278,7 @@ export async function deleteSubscription(req, res) {
       jobs[id].stop()
       delete jobs[id]
     }
-    models.Subscription.destroy({ where: { id } })
+    models.Subscription.destroy({ where: { id, tenant } })
     success(res, true)
   } catch (e) {
     console.log('ERROR deleteSubscription', e)
@@ -278,8 +288,10 @@ export async function deleteSubscription(req, res) {
 
 // all subs for contact id
 export const getSubscriptionsForContact = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   try {
-    const subs = await getRawSubs({ where: { contactId: req.params.contactId } })
+    const subs = await getRawSubs({ where: { contactId: req.params.contactId, tenant } })
     success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)))
   } catch (e) {
     console.log('ERROR getSubscriptionsForContact', e)

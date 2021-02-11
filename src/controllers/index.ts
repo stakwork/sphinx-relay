@@ -115,9 +115,12 @@ export async function set(app) {
 	})
 
 	app.get('/latest', async function (req, res) {
+		if(!req.owner) return
+		const tenant:number = req.owner.id
 		const lasts = await models.Message.findAll({
 			limit: 1,
-			order: [['createdAt', 'DESC']]
+			order: [['createdAt', 'DESC']],
+			where: {tenant}
 		})
 		const last = lasts && lasts[0]
 		if (!last) {

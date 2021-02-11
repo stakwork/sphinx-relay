@@ -45,7 +45,7 @@ function connect(server) {
         addClient(client.ownerID, client);
         client.on('disconnect', (reason) => {
             removeClientById(client.ownerID, client.id);
-            console.log('=> [socket.io] disconnect', reason);
+            // console.log('=> [socket.io] disconnect', reason)
         });
     });
 }

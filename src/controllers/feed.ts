@@ -19,6 +19,8 @@ export interface Destination {
 }
 
 export const streamFeed = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const {
     destinations,
     amount,
@@ -52,7 +54,7 @@ export const streamFeed = async (req, res) => {
         sats_per_minute: amount || 0,
         speed: meta.speed || '1'
       }
-      const chat = await models.Chat.findOne({ where: { id: chat_id } })
+      const chat = await models.Chat.findOne({ where: { id: chat_id, tenant } })
       if (!chat) {
         return failure(res, 'no chat')
       }
@@ -60,7 +62,7 @@ export const streamFeed = async (req, res) => {
     }
   }
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
 
   if (amount && typeof amount === 'number') {
     await asyncForEach(destinations, async (d: Destination) => {
@@ -76,7 +78,6 @@ export const streamFeed = async (req, res) => {
 
   success(res, {})
 }
-
 
 export async function anonymousKeysend(owner, destination_key: string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
   const msg: { [k: string]: any } = {

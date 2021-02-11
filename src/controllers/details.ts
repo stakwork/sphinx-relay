@@ -19,11 +19,14 @@ export async function getAppVersions(req, res){
 }
 
 export const checkRoute = async (req, res) => {
+	if(!req.owner) return
+
 	const { pubkey, amount } = req.query
 	if (!(pubkey && pubkey.length === 66)) return failure(res, 'wrong pubkey')
 
+	const owner = req.owner
 	try {
-		const r = await queryRoute(pubkey, parseInt(amount) || constants.min_sat_amount)
+		const r = await queryRoute(pubkey, parseInt(amount) || constants.min_sat_amount, owner.publicKey)
 		success(res, r)
 	} catch (e) {
 		failure(res, e)
@@ -58,7 +61,9 @@ export async function getLogsSince(req, res) {
 }
 
 export const getInfo = async (req, res) => {
-	const lightning = await loadLightning()
+	if(!req.owner) return
+
+	const lightning = await loadLightning(true, req.owner.publicKey)
 	var request = {}
 	lightning.getInfo(request, function (err, response) {
 		res.status(200);
@@ -72,7 +77,9 @@ export const getInfo = async (req, res) => {
 };
 
 export const getChannels = async (req, res) => {
-	const lightning = await loadLightning(true) // try proxy
+	if(!req.owner) return
+	
+	const lightning = await loadLightning(true, req.owner.publicKey) // try proxy
 	var request = {}
 	lightning.listChannels(request, function (err, response) {
 		res.status(200);
@@ -91,16 +98,18 @@ interface BalanceRes {
 	reserve: number
 }
 export const getBalance = async (req, res) => {
+	if(!req.owner) return
+	const tenant:number = req.owner.id
 
 	var date = new Date()
 	date.setMilliseconds(0)
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const owner = await models.Contact.findOne({ where: { id: tenant } })
 	owner.update({ lastActive: date })
 
 	res.status(200);
 	try {
-		const response = await channelBalance()
-		const channelList = await listChannels()
+		const response = await channelBalance(owner.publicKey)
+		const channelList = await listChannels({}, owner.publicKey)
 		const { channels } = channelList
 		const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0)
 		res.json({
@@ -119,7 +128,8 @@ export const getBalance = async (req, res) => {
 };
 
 export const getLocalRemoteBalance = async (req, res) => {
-	const lightning = await loadLightning(true) // try proxy
+	if(!req.owner) return
+	const lightning = await loadLightning(true, req.owner.publicKey) // try proxy
 	lightning.listChannels({}, (err, channelList) => {
 		const { channels } = channelList
 

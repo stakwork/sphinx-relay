@@ -48,6 +48,9 @@ purchase_accept should update the original attachment message with the terms and
 purchase_deny returns the sats
 */
 const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     // try {
     //   schemas.attachment.validateSync(req.body)
     // } catch(e) {
@@ -56,7 +59,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, // IF AMOUNT>0 THEN do NOT sign or send receipt
     reply_uuid, } = req.body;
     console.log('[send attachment]', req.body);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     const chat = yield helpers.findOrCreateChat({
         chat_id,
         owner_id: owner.id,
@@ -95,13 +98,14 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         mediaType: mediaType,
         date,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        tenant
     };
     if (reply_uuid)
         mm.replyUuid = reply_uuid;
     const message = yield models_1.models.Message.create(mm);
     console.log('saved attachment msg from me', message.id);
-    saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType);
+    saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant);
     const mediaTerms = {
         muid, ttl: TTL,
         meta: Object.assign({}, amt && { amt }),
@@ -131,7 +135,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     });
 });
 exports.sendAttachmentMessage = sendAttachmentMessage;
-function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
+function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) {
     if (typeof mediaKeyMap !== 'object') {
         console.log('wrong type for mediaKeyMap');
         return;
@@ -145,13 +149,17 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
                 muid, chatId, key, messageId,
                 receiver: receiverID,
                 createdAt: date,
-                mediaType
+                mediaType,
+                tenant
             });
         }
     }
 }
 exports.saveMediaKeys = saveMediaKeys;
 const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const { chat_id, contact_id, amount, media_token, } = req.body;
     var date = new Date();
     date.setMilliseconds(0);
@@ -161,7 +169,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     catch (e) {
         return resUtils.failure(res, e.message);
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     const chat = yield helpers.findOrCreateChat({
         chat_id,
         owner_id: owner.id,
@@ -177,7 +185,8 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         date: date,
         createdAt: date,
         updatedAt: date,
-        network_type: constants_1.default.network_types.lightning
+        network_type: constants_1.default.network_types.lightning,
+        tenant
     });
     const msg = {
         mediaToken: media_token, id: message.id, uuid: message.uuid,
@@ -449,10 +458,13 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
 exports.receiveAttachment = receiveAttachment;
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return;
+        // const tenant:number = req.owner.id
         if (!req.params.challenge)
             return resUtils.failure(res, "no challenge");
         try {
-            const sig = yield lightning_1.signBuffer(Buffer.from(req.params.challenge, 'base64'));
+            const sig = yield lightning_1.signBuffer(Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey);
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
             resUtils.success(res, {

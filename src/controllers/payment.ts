@@ -12,6 +12,8 @@ import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 
 export const sendPayment = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const {
     amount,
     chat_id,
@@ -29,7 +31,7 @@ export const sendPayment = async (req, res) => {
 
   console.log('[send payment]', req.body)
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
 
   if (destination_key && !contact_id && !chat_id) {
     anonymousKeysend(owner, destination_key, amount || '', text || '',
@@ -65,6 +67,7 @@ export const sendPayment = async (req, res) => {
     createdAt: date,
     updatedAt: date,
     network_type: constants.network_types.lightning,
+    tenant
   }
   if (text) msg.messageContent = text
   if (remote_text) msg.remoteMessageContent = remote_text
@@ -170,6 +173,8 @@ export const receivePayment = async (payload) => {
 }
 
 export const listPayments = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 
@@ -204,6 +209,7 @@ export const listPayments = async (req, res) => {
             status: { [Op.not]: constants.statuses.failed }
           }
         ],
+        tenant
       },
       order: [['createdAt', 'desc']],
       limit,

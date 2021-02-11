@@ -39,6 +39,8 @@ purchase_deny returns the sats
 */
 
 export const sendAttachmentMessage = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   // try {
   //   schemas.attachment.validateSync(req.body)
   // } catch(e) {
@@ -63,7 +65,7 @@ export const sendAttachmentMessage = async (req, res) => {
 
   console.log('[send attachment]', req.body)
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
   const chat = await helpers.findOrCreateChat({
     chat_id,
     owner_id: owner.id,
@@ -105,14 +107,15 @@ export const sendAttachmentMessage = async (req, res) => {
     mediaType: mediaType,
     date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    tenant
   }
   if (reply_uuid) mm.replyUuid = reply_uuid
   const message = await models.Message.create(mm)
 
   console.log('saved attachment msg from me', message.id)
 
-  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType)
+  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant)
 
   const mediaTerms: { [k: string]: any } = {
     muid, ttl: TTL,
@@ -142,7 +145,7 @@ export const sendAttachmentMessage = async (req, res) => {
   })
 }
 
-export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
+export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) {
   if (typeof mediaKeyMap !== 'object') {
     console.log('wrong type for mediaKeyMap')
     return
@@ -156,13 +159,16 @@ export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
         muid, chatId, key, messageId,
         receiver: receiverID,
         createdAt: date,
-        mediaType
+        mediaType,
+        tenant
       })
     }
   }
 }
 
 export const purchase = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
   const {
     chat_id,
     contact_id,
@@ -178,7 +184,7 @@ export const purchase = async (req, res) => {
     return resUtils.failure(res, e.message)
   }
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
   const chat = await helpers.findOrCreateChat({
     chat_id,
     owner_id: owner.id,
@@ -195,7 +201,8 @@ export const purchase = async (req, res) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type: constants.network_types.lightning
+    network_type: constants.network_types.lightning,
+    tenant
   })
 
   const msg = {
@@ -481,10 +488,12 @@ export const receiveAttachment = async (payload) => {
 }
 
 export async function signer(req, res) {
+  if(!req.owner) return
+	// const tenant:number = req.owner.id
   if (!req.params.challenge) return resUtils.failure(res, "no challenge")
   try {
     const sig = await signBuffer(
-      Buffer.from(req.params.challenge, 'base64')
+      Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey
     )
     const sigBytes = zbase32.decode(sig)
     const sigBase64 = urlBase64FromBytes(sigBytes)

@@ -15,6 +15,9 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return;
+    const tenant = req.owner.id;
     const { destinations, amount, chat_id, text, update_meta, } = req.body;
     if (!(destinations && destinations.length)) {
         return res_1.failure(res, 'no destinations');
@@ -35,14 +38,14 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 sats_per_minute: amount || 0,
                 speed: meta.speed || '1'
             };
-            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
             if (!chat) {
                 return res_1.failure(res, 'no chat');
             }
             yield chat.update({ meta: JSON.stringify(cm) });
         }
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     if (amount && typeof amount === 'number') {
         yield asyncForEach(destinations, (d) => __awaiter(void 0, void 0, void 0, function* () {
             if (d.type === 'node') {

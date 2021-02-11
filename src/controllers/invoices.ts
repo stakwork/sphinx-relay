@@ -17,6 +17,8 @@ function stripLightningPrefix(s) {
 }
 
 export const payInvoice = async (req, res) => {
+  if(!req.owner) return
+	const tenant:number = req.owner.id
 
   const payment_request = stripLightningPrefix(req.body.payment_request)
 
@@ -30,13 +32,13 @@ export const payInvoice = async (req, res) => {
   console.log(`[pay invoice] ${payment_request}`)
 
   try {
-    const response = LND.sendPayment(payment_request)
+    const response = LND.sendPayment(payment_request, req.owner.publicKey)
 
     console.log('[pay invoice data]', response)
 
-    const message = await models.Message.findOne({ where: { payment_request } })
+    const message = await models.Message.findOne({ where: { payment_request, tenant } })
     if (!message) { // invoice still paid
-      anonymousInvoice(res, payment_request)
+      anonymousInvoice(res, payment_request, tenant)
       return
     }
 
@@ -46,7 +48,7 @@ export const payInvoice = async (req, res) => {
     var date = new Date();
     date.setMilliseconds(0)
 
-    const chat = await models.Chat.findOne({ where: { id: message.chatId } })
+    const chat = await models.Chat.findOne({ where: { id: message.chatId, tenant } })
     const contactIds = JSON.parse(chat.contactIds)
     const senderId = contactIds.find(id => id != message.sender)
 
@@ -62,7 +64,8 @@ export const payInvoice = async (req, res) => {
       messageContent: null,
       status: constants.statuses.confirmed,
       createdAt: date,
-      updatedAt: date
+      updatedAt: date,
+      tenant
     })
     console.log('[pay invoice] stored message', paidMessage)
     success(res, jsonUtils.messageToJson(paidMessage, chat))
@@ -71,7 +74,7 @@ export const payInvoice = async (req, res) => {
   }
 };
 
-async function anonymousInvoice(res, payment_request: string) {
+async function anonymousInvoice(res, payment_request: string, tenant:number) {
   const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(payment_request)
   var date = new Date();
   date.setMilliseconds(0)
@@ -86,7 +89,8 @@ async function anonymousInvoice(res, payment_request: string) {
     messageContent: memo,
     status: constants.statuses.confirmed,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    tenant
   })
   return success(res, {
     success: true,
@@ -101,7 +105,9 @@ export const cancelInvoice = (req, res) => {
 };
 
 export const createInvoice = async (req, res) => {
-  const lightning = await LND.loadLightning(true) // try proxy
+  if(!req.owner) return
+	const tenant:number = req.owner.id
+  const lightning = await LND.loadLightning(true, req.owner.publicKey) // try proxy
 
   const {
     amount,
@@ -123,7 +129,7 @@ export const createInvoice = async (req, res) => {
     res.json({ err: "no amount specified", });
     res.end();
   } else {
-    lightning.addInvoice(request, function (err, response) {
+    lightning.addInvoice(request, async function (err, response) {
       console.log({ err, response })
 
       if (err == null) {
@@ -136,11 +142,12 @@ export const createInvoice = async (req, res) => {
           return // end here
         }
 
-        lightning.decodePayReq({ pay_req: payment_request }, async (error, invoice) => {
+        const lightning2 = await LND.loadLightning(false)
+        lightning2.decodePayReq({ pay_req: payment_request }, async (error, invoice) => {
           if (res) {
             console.log('decoded pay req', { invoice })
 
-            const owner = await models.Contact.findOne({ where: { isOwner: true } })
+            const owner = req.owner
 
             const chat = await helpers.findOrCreateChat({
               chat_id,
@@ -171,7 +178,8 @@ export const createInvoice = async (req, res) => {
                 remoteMessageContent: remote_memo,
                 status: constants.statuses.pending,
                 createdAt: new Date(timestamp),
-                updatedAt: new Date(timestamp)
+                updatedAt: new Date(timestamp),
+                tenant
               })
               success(res, jsonUtils.messageToJson(message, chat))
 
@@ -200,6 +208,8 @@ export const createInvoice = async (req, res) => {
 };
 
 export const listInvoices = async (req, res) => {
+  if(!req.owner) return
+
   const lightning = await LND.loadLightning()
 
   lightning.listInvoices({}, (err, response) => {
