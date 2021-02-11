@@ -103,6 +103,37 @@ export async function ownerMiddleware(req, res, next) {
   }
 }
 
+function decryptMacaroon(password: string, macaroon: string) {
+  try {
+    const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64)
+    const decryptResult = atob(decrypted)
+    return decryptResult
+  } catch (e) {
+    console.error('cipher mismatch, macaroon decryption failed')
+    console.error(e)
+    return ''
+  }
+}
+
+export function base64ToHex(str) {
+  const raw = atob(str)
+  let result = ''
+  for (let i = 0; i < raw.length; i++) {
+    const hex = raw.charCodeAt(i).toString(16)
+    result += (hex.length === 2 ? hex : '0' + hex)
+  }
+  return result.toUpperCase()
+}
+
+const atob = a => Buffer.from(a, 'base64').toString('binary')
+
+async function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/
+
+/* deprecated */
 export async function authModule(req, res, next) {
   if (
     req.path == '/app' ||
@@ -145,33 +176,3 @@ export async function authModule(req, res, next) {
     }
   }
 }
-
-function decryptMacaroon(password: string, macaroon: string) {
-  try {
-    const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64)
-    const decryptResult = atob(decrypted)
-    return decryptResult
-  } catch (e) {
-    console.error('cipher mismatch, macaroon decryption failed')
-    console.error(e)
-    return ''
-  }
-}
-
-export function base64ToHex(str) {
-  const raw = atob(str)
-  let result = ''
-  for (let i = 0; i < raw.length; i++) {
-    const hex = raw.charCodeAt(i).toString(16)
-    result += (hex.length === 2 ? hex : '0' + hex)
-  }
-  return result.toUpperCase()
-}
-
-const atob = a => Buffer.from(a, 'base64').toString('binary')
-
-async function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/

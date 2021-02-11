@@ -15,6 +15,8 @@ export default async function migrate() {
   addTenant('sphinx_timers')
 
   addTableColumn('sphinx_contacts', 'route_hint')
+  addTableColumn('sphinx_chat_bots', 'bot_maker_route_hint')
+  addTableColumn('sphinx_accountings', 'route_hint')
 
   try {
     await sequelize.query(`

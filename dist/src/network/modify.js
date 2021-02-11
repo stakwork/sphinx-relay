@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.downloadAndUploadAndSaveReturningTermsAndKey = exports.sendFinalMemeIfFirstPurchaser = exports.purchaseFromOriginalSender = exports.modifyPayloadAndSaveMediaKey = void 0;
 const node_fetch_1 = require("node-fetch");
 const ldat_1 = require("../utils/ldat");
 const rsa = require("../crypto/rsa");
@@ -53,7 +52,6 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
             return; // not enough sats
-        // const owner = await models.Contact.findOne({ where: { isOwner: true } })
         if (mediaKey) { // ALREADY BEEN PURHCASED! simply send
             // send back the new mediaToken and key
             const mediaTerms = {
@@ -144,7 +142,6 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         // }})
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, amt);
         // send it to the purchaser
-        // const owner = await models.Contact.findOne({ where: { isOwner: true } })
         send_1.sendMessage({
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }), { role: constants_1.default.chat_roles.reader }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaser.id] }),

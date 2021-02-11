@@ -21,6 +21,7 @@ export interface Action {
     amount?: number
     pubkey?: string
     content?: string
+    route_hint?: string
 }
 
 export async function processAction(req, res) {
@@ -66,7 +67,7 @@ export async function processAction(req, res) {
 }
 
 export async function finalAction(a: Action) {
-    const { bot_id, action, pubkey, amount, content, bot_name, chat_uuid } = a
+    const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid } = a
 
     // not for tribe admin, for bot maker
     const myBot = await models.Bot.findOne({
@@ -96,11 +97,12 @@ export async function finalAction(a: Action) {
             chat: { uuid: chat_uuid },
             sender: {
                 pub_key: String(owner.publicKey),
-                alias: bot_name, role: 0
+                alias: bot_name, role: 0,
+                route_hint
             }, // for verify sig
         }
         try {
-            await network.signAndSend({ dest, data }, owner, topic)
+            await network.signAndSend({ dest, data, route_hint }, owner, topic)
         } catch (e) {
             console.log('=> couldnt mqtt publish')
         }

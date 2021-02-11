@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
 const models_1 = require("../models");
 const sequelize_1 = require("sequelize");
 const underscore_1 = require("underscore");
@@ -23,7 +22,7 @@ const confirmations_1 = require("./confirmations");
 const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
-const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -94,8 +93,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     res.status(200);
     res.end();
 });
-exports.getMessages = getMessages;
-const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -119,8 +117,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         confirmed_messages: []
     });
 });
-exports.getAllMessages = getAllMessages;
-const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -156,7 +153,6 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         new_messages: messages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
     });
 });
-exports.getMsgs = getMsgs;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -189,7 +185,7 @@ function deleteMessage(req, res) {
     });
 }
 exports.deleteMessage = deleteMessage;
-const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -278,8 +274,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // final send
     network.sendMessage(sendMessageParams);
 });
-exports.sendMessage = sendMessage;
-const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received message', { payload })
     const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, message_status } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
@@ -322,8 +317,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
-exports.receiveMessage = receiveMessage;
-const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id } = yield helpers.parseReceiveParams(payload);
     console.log('=> received boost ' + amount + ' sats on network:', network_type);
     if (!owner || !sender || !chat) {
@@ -366,15 +360,14 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
     if (msg.replyUuid) {
         const ogMsg = yield models_1.models.Message.findOne({
-            where: { uuid: msg.replyUuid }
+            where: { uuid: msg.replyUuid, tenant }
         });
         if (ogMsg && ogMsg.sender === 1) {
             hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner);
         }
     }
 });
-exports.receiveBoost = receiveBoost;
-const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, date_string, amount, network_type } = yield helpers.parseReceiveParams(payload);
     console.log('=> received repayment ' + amount + ' sats');
     if (!owner || !sender || !chat) {
@@ -402,8 +395,7 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
         response: jsonUtils.messageToJson(message, null, sender)
     }, tenant);
 });
-exports.receiveRepayment = receiveRepayment;
-const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received delete message');
     const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
@@ -425,8 +417,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
         response: jsonUtils.messageToJson(message, chat, sender)
     }, tenant);
 });
-exports.receiveDeleteMessage = receiveDeleteMessage;
-const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const chat_id = req.params.chat_id;
@@ -459,13 +450,11 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res_1.failure(res, 'no chat');
     }
 });
-exports.readMessages = readMessages;
-const clearMessages = (req, res) => {
+exports.clearMessages = (req, res) => {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
     models_1.models.Message.destroy({ where: { tenant }, truncate: true });
     res_1.success(res, {});
 };
-exports.clearMessages = clearMessages;
 //# sourceMappingURL=messages.js.map

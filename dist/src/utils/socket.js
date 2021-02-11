@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendJson = exports.send = exports.connect = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 // import * as WebSocket from 'ws'
@@ -82,7 +81,7 @@ function getOwnerFromToken(token) {
         return null;
     });
 }
-const send = (body, tenant) => {
+exports.send = (body, tenant) => {
     if (!io)
         return; // io.sockets.emit('message', body)
     const clients = CLIENTS[tenant];
@@ -90,9 +89,7 @@ const send = (body, tenant) => {
         return;
     clients.forEach(c => c.emit('message', body));
 };
-exports.send = send;
-const sendJson = (object, tenant) => {
+exports.sendJson = (object, tenant) => {
     exports.send(JSON.stringify(object), tenant);
 };
-exports.sendJson = sendJson;
 //# sourceMappingURL=socket.js.map

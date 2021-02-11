@@ -60,7 +60,7 @@ export async function reloadTimers() {
 }
 export async function payBack(t) {
     const chat = await models.Chat.findOne({ where: { id: t.chatId, tenant:t.tenant } })
-    const owner = await models.Contact.findOne({ where: { isOwner: true, tenant:t.tenant } })
+    const owner = await models.Contact.findOne({ where: { id:t.tenant } })
     if (!chat) {
         models.Timer.destroy({ where: { id: t.id } })
         return

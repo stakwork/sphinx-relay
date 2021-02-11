@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getInfo = exports.getLogsSince = exports.checkRoute = exports.getAppVersions = void 0;
 const lightning_1 = require("../utils/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
@@ -31,7 +30,7 @@ function getAppVersions(req, res) {
     });
 }
 exports.getAppVersions = getAppVersions;
-const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const { pubkey, amount } = req.query;
@@ -46,7 +45,6 @@ const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res_1.failure(res, e);
     }
 });
-exports.checkRoute = checkRoute;
 const defaultLogFiles = [
     '/var/log/supervisor/relay.log',
     '/home/lnd/.pm2/logs/app-error.log',
@@ -79,7 +77,7 @@ function getLogsSince(req, res) {
     });
 }
 exports.getLogsSince = getLogsSince;
-const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey);
@@ -95,8 +93,7 @@ const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.end();
     });
 });
-exports.getInfo = getInfo;
-const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
@@ -112,8 +109,7 @@ const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.end();
     });
 });
-exports.getChannels = getChannels;
-const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -128,8 +124,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const { channels } = channelList;
         const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
         res.json({
-            success: true,
-            response: {
+            success: true, response: {
                 reserve,
                 full_balance: parseInt(response.balance),
                 balance: parseInt(response.balance) - reserve,
@@ -143,8 +138,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     res.end();
 });
-exports.getBalance = getBalance;
-const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
@@ -164,8 +158,7 @@ const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, fu
         res.end();
     });
 });
-exports.getLocalRemoteBalance = getLocalRemoteBalance;
-const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var ipOfSource = req.connection.remoteAddress;
     if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
         res.status(401);
@@ -177,7 +170,6 @@ const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     res.json(node);
     res.end();
 });
-exports.getNodeInfo = getNodeInfo;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

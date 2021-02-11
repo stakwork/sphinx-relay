@@ -47,6 +47,10 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
+], ChatBot.prototype, "botMakerRouteHint", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
 ], ChatBot.prototype, "msgTypes", void 0);
 __decorate([
     sequelize_typescript_1.Column,

@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.newmsg = exports.signAndSend = exports.sendMessage = void 0;
 const models_1 = require("../models");
 const LND = require("../utils/lightning");
 const msg_1 = require("../utils/msg");
@@ -22,6 +21,9 @@ function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, realSatsContactId } = params;
         if (!chat || !sender)
+            return;
+        const tenant = sender.id;
+        if (!tenant)
             return;
         const isTribe = chat.type === constants_1.default.chat_types.tribe;
         let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
@@ -66,7 +68,7 @@ function sendMessage(params) {
             }
             else {
                 // if tribe, send to owner only
-                const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: chat.ownerPubkey } });
+                const tribeOwner = yield models_1.models.Contact.findOne({ where: { publicKey: chat.ownerPubkey, tenant } });
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
             }
         }
@@ -97,7 +99,8 @@ function sendMessage(params) {
             const opts = {
                 dest: destkey,
                 data: m,
-                amt: Math.max((amount || 0), constants_1.default.min_sat_amount)
+                amt: Math.max((amount || 0), constants_1.default.min_sat_amount),
+                route_hint: contact.routeHint || ''
             };
             try {
                 const r = yield signAndSend(opts, sender, mqttTopic);
@@ -185,7 +188,7 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, chat.name && { name: chat.name }), (chat.type || chat.type === 0) && { type: chat.type }), chat.members && { members: chat.members }), (includeGroupKey && chat.groupKey) && { groupKey: chat.groupKey }), (includeGroupKey && chat.host) && { host: chat.host }),
         message: message,
-        sender: Object.assign({ pub_key: sender.publicKey, alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }, includePhotoUrl && { photo_url: photoUrlToInclude })
+        sender: Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, sender.routeHint && { route_hint: sender.routeHint }), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), includePhotoUrl && { photo_url: photoUrlToInclude })
     };
 }
 exports.newmsg = newmsg;

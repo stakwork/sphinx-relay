@@ -35,6 +35,9 @@ export default class ChatBot extends Model<ChatBot> {
   botMakerPubkey: string
 
   @Column
+  botMakerRouteHint: string
+
+  @Column
   msgTypes: string
 
   @Column

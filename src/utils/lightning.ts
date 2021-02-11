@@ -215,7 +215,14 @@ const keysend = (opts, ownerPubkey?:string) => {
       dest_features: [9],
     }
     // add in route hints
-    if(opts.route_hints) options.route_hints = opts.route_hints
+    if(opts.route_hint && opts.route_hint.includes(':')) {
+      const arr = opts.route_hint.split(':')
+      const node_id = arr[0]
+      const chan_id = arr[1]
+      options.route_hints = [{
+        hop_hints: [{ node_id, chan_id }]
+      }]
+    }
     // sphinx-proxy sendPaymentSync
     if(isProxy()) {
       options.fee_limit = { fixed: FEE_LIMIT_SAT }

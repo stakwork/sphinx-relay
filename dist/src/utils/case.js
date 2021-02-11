@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toCamel = exports.toSnake = void 0;
 const changeCase = require("change-case");
 const dateKeys = ['date', 'createdAt', 'updatedAt', 'created_at', 'updated_at'];
 const boolKeys = ['fromGroup', 'isOwner', 'deleted'];

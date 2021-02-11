@@ -244,8 +244,6 @@ const sendNotification = async (chat, name, type: NotificationType, owner, amoun
     }
   }
 
-  // const owner = await models.Contact.findOne({ where: { isOwner: true } })
-
   if (!owner.deviceId) {
     console.log('[send notification] skipping. owner.deviceId not set.')
     return

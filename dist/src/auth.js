@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.base64ToHex = exports.authModule = exports.ownerMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
 const cryptoJS = require("crypto-js");
@@ -105,6 +104,36 @@ function ownerMiddleware(req, res, next) {
     });
 }
 exports.ownerMiddleware = ownerMiddleware;
+function decryptMacaroon(password, macaroon) {
+    try {
+        const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);
+        const decryptResult = atob(decrypted);
+        return decryptResult;
+    }
+    catch (e) {
+        console.error('cipher mismatch, macaroon decryption failed');
+        console.error(e);
+        return '';
+    }
+}
+function base64ToHex(str) {
+    const raw = atob(str);
+    let result = '';
+    for (let i = 0; i < raw.length; i++) {
+        const hex = raw.charCodeAt(i).toString(16);
+        result += (hex.length === 2 ? hex : '0' + hex);
+    }
+    return result.toUpperCase();
+}
+exports.base64ToHex = base64ToHex;
+const atob = a => Buffer.from(a, 'base64').toString('binary');
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    });
+}
+const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
+/* deprecated */
 function authModule(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         if (req.path == '/app' ||
@@ -147,33 +176,4 @@ function authModule(req, res, next) {
     });
 }
 exports.authModule = authModule;
-function decryptMacaroon(password, macaroon) {
-    try {
-        const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);
-        const decryptResult = atob(decrypted);
-        return decryptResult;
-    }
-    catch (e) {
-        console.error('cipher mismatch, macaroon decryption failed');
-        console.error(e);
-        return '';
-    }
-}
-function base64ToHex(str) {
-    const raw = atob(str);
-    let result = '';
-    for (let i = 0; i < raw.length; i++) {
-        const hex = raw.charCodeAt(i).toString(16);
-        result += (hex.length === 2 ? hex : '0' + hex);
-    }
-    return result.toUpperCase();
-}
-exports.base64ToHex = base64ToHex;
-const atob = a => Buffer.from(a, 'base64').toString('binary');
-function sleep(ms) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    });
-}
-const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
 //# sourceMappingURL=auth.js.map

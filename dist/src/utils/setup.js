@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
 const lightning_1 = require("./lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
@@ -48,7 +47,7 @@ function setVersion() {
     });
 }
 const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
     if (!owner) {
         const lightning = yield lightning_1.loadLightning();
         lightning.getInfo({}, (err, info) => __awaiter(void 0, void 0, void 0, function* () {
@@ -57,7 +56,7 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
             }
             else {
                 try {
-                    const one = yield models_1.models.Contact.findOne({ where: { id: 1 } });
+                    const one = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
                     if (!one) {
                         let authToken = null;
                         // dont allow "signup" on root contact of proxy node

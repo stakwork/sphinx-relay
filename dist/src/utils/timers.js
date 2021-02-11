@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.payBack = exports.reloadTimers = exports.setTimer = exports.addTimer = exports.removeTimersByContactIdChatId = exports.removeTimersByContactId = exports.removeTimerByMsgId = void 0;
 const models_1 = require("../models");
 const network = require("../network");
 const constants_1 = require("../constants");
@@ -89,7 +88,7 @@ exports.reloadTimers = reloadTimers;
 function payBack(t) {
     return __awaiter(this, void 0, void 0, function* () {
         const chat = yield models_1.models.Chat.findOne({ where: { id: t.chatId, tenant: t.tenant } });
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, tenant: t.tenant } });
+        const owner = yield models_1.models.Contact.findOne({ where: { id: t.tenant } });
         if (!chat) {
             models_1.models.Timer.destroy({ where: { id: t.id } });
             return;

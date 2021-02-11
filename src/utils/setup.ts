@@ -35,7 +35,7 @@ async function setVersion() {
 }
 
 const setupOwnerContact = async () => {
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = await models.Contact.findOne({ where: { isOwner: true, id:1 } })
   if (!owner) {
     const lightning = await loadLightning()
     lightning.getInfo({}, async (err, info) => {
@@ -43,7 +43,7 @@ const setupOwnerContact = async () => {
         console.log('[db] error creating node owner due to lnd failure', err)
       } else {
         try {
-          const one = await models.Contact.findOne({ where: { id: 1 } })
+          const one = await models.Contact.findOne({ where: { isOwner:true, id: 1 } })
           if (!one) {
             let authToken:string|null = null
             // dont allow "signup" on root contact of proxy node

@@ -12,6 +12,8 @@ type NetworkType = undefined | 'mqtt' | 'lightning'
 export async function sendMessage(params) {
 	const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, realSatsContactId } = params
 	if (!chat || !sender) return
+	const tenant:number = sender.id
+	if (!tenant) return
 
 	const isTribe = chat.type === constants.chat_types.tribe
 	let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
@@ -58,7 +60,7 @@ export async function sendMessage(params) {
 			tribes.putActivity(chat.uuid, chat.host)
 		} else {
 			// if tribe, send to owner only
-			const tribeOwner = await models.Contact.findOne({ where: { publicKey: chat.ownerPubkey } })
+			const tribeOwner = await models.Contact.findOne({ where: { publicKey: chat.ownerPubkey, tenant } })
 			contactIds = tribeOwner ? [tribeOwner.id] : []
 		}
 	}
@@ -94,7 +96,8 @@ export async function sendMessage(params) {
 		const opts = {
 			dest: destkey,
 			data: m,
-			amt: Math.max((amount || 0), constants.min_sat_amount)
+			amt: Math.max((amount || 0), constants.min_sat_amount),
+			route_hint: contact.routeHint || ''
 		}
 
 		try {
@@ -185,6 +188,7 @@ export function newmsg(type, chat, sender, message, isForwarded: boolean, includ
 		message: message,
 		sender: {
 			pub_key: sender.publicKey,
+			...sender.routeHint && {route_hint: sender.routeHint},
 			alias: includeAlias ? aliasToInclude : '',
 			role: sender.role || constants.chat_roles.reader,
 			...includePhotoUrl && { photo_url: photoUrlToInclude },

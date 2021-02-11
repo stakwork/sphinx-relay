@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.init = void 0;
 // import * as SphinxBot from '../../../sphinx-bot'
 const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");

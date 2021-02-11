@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.models = exports.sequelize = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const path = require("path");
 const chat_1 = require("./ts/chat");

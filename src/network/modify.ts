@@ -39,8 +39,6 @@ export async function purchaseFromOriginalSender(payload, chat, purchaser, owner
   let price = terms.meta && terms.meta.amt
   if (amount < price) return // not enough sats
 
-  // const owner = await models.Contact.findOne({ where: { isOwner: true } })
-
   if (mediaKey) { // ALREADY BEEN PURHCASED! simply send
     // send back the new mediaToken and key
     const mediaTerms: { [k: string]: any } = {
@@ -135,7 +133,6 @@ export async function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner
   const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, amt)
 
   // send it to the purchaser
-  // const owner = await models.Contact.findOne({ where: { isOwner: true } })
   sendMessage({
     sender: {
       ...owner.dataValues,

@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.finalAction = exports.processAction = void 0;
 const network = require("../network");
 const models_1 = require("../models");
 const short = require("short-uuid");
@@ -67,7 +66,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { bot_id, action, pubkey, amount, content, bot_name, chat_uuid } = a;
+        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid } = a;
         // not for tribe admin, for bot maker
         const myBot = yield models_1.models.Bot.findOne({
             where: {
@@ -96,11 +95,12 @@ function finalAction(a) {
                 chat: { uuid: chat_uuid },
                 sender: {
                     pub_key: String(owner.publicKey),
-                    alias: bot_name, role: 0
+                    alias: bot_name, role: 0,
+                    route_hint
                 },
             };
             try {
-                yield network.signAndSend({ dest, data }, owner, topic);
+                yield network.signAndSend({ dest, data, route_hint }, owner, topic);
             }
             catch (e) {
                 console.log('=> couldnt mqtt publish');

@@ -290,11 +290,11 @@ export async function approveOrRejectMember(req, res) {
 	const contactId = parseInt(req.params['contactId'])
 	const status = req.params['status']
 
-	const msg = await models.Message.findOne({ where: { id: msgId } })
+	const msg = await models.Message.findOne({ where: { id: msgId, tenant } })
 	if (!msg) return failure(res, 'no message')
 	const chatId = msg.chatId
 
-	const chat = await models.Chat.findOne({ where: { id: chatId } })
+	const chat = await models.Chat.findOne({ where: { id: chatId, tenant } })
 	if (!chat) return failure(res, 'no chat')
 
 	if (!msgId || !contactId || !(status === 'approved' || status === 'rejected')) {
@@ -474,7 +474,7 @@ export async function replayChatHistory(chat, contact, owner) {
 				...owner,
 				...m.senderAlias && { alias: m.senderAlias },
 				role: constants.chat_roles.reader,
-				...m.senderPic && { photoUrl: m.senderPic }
+				...m.senderPic && { photoUrl: m.senderPic },
 			}
 			let content = ''
 			try { content = JSON.parse(m.remoteMessageContent) } catch (e) { }
@@ -522,6 +522,7 @@ export async function replayChatHistory(chat, contact, owner) {
 			await network.signAndSend({
 				data,
 				dest: contact.publicKey,
+				route_hint: contact.routeHint,
 			}, owner, mqttTopic, replayingHistory)
 		})
 	} catch (e) {

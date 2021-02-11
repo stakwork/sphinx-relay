@@ -9,12 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkey = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
 const network = require("./network");
 const constants_1 = require("./constants");
-const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
+exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     let chat;
     let date = new Date();
@@ -43,8 +42,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     }
     return chat;
 });
-exports.findOrCreateChat = findOrCreateChat;
-const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey }) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey, routeHint }) => __awaiter(void 0, void 0, void 0, function* () {
     const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey || false);
     if (contactPubKey) { // dont use ids here
         exports.performKeysendMessage({
@@ -52,6 +50,7 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
             destination_key: contactPubKey,
             amount: 3,
             msg,
+            route_hint: routeHint,
             success,
             failure
         });
@@ -69,12 +68,14 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
         if (!(contact && contact.publicKey))
             return;
         destination_key = contact.publicKey;
+        const route_hint = contact.routeHint;
         console.log("=> KEY EXCHANGE", msg);
         yield exports.performKeysendMessage({
             sender,
             destination_key,
             amount: 3,
             msg,
+            route_hint,
             success: (data) => {
                 yes = data;
             },
@@ -91,12 +92,12 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
         success(yes);
     }
 });
-exports.sendContactKeys = sendContactKeys;
-const performKeysendMessage = ({ destination_key, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+exports.performKeysendMessage = ({ destination_key, route_hint, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
         data: msg || {},
-        amt: Math.max(amount, 3)
+        amt: Math.max(amount, 3),
+        route_hint
     };
     try {
         const r = yield network.signAndSend(opts, sender);
@@ -110,13 +111,13 @@ const performKeysendMessage = ({ destination_key, amount, msg, success, failure,
             failure(e);
     }
 });
-exports.performKeysendMessage = performKeysendMessage;
-function findOrCreateContactByPubkey(senderPubKey, owner) {
+function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         let sender = yield models_1.models.Contact.findOne({ where: { publicKey: senderPubKey, tenant: owner.id } });
         if (!sender) {
             sender = yield models_1.models.Contact.create({
                 publicKey: senderPubKey,
+                routeHint: senderRouteHint || '',
                 alias: "Unknown",
                 status: 1,
                 tenant: owner.id
@@ -130,7 +131,7 @@ function findOrCreateContactByPubkey(senderPubKey, owner) {
         return sender;
     });
 }
-exports.findOrCreateContactByPubkey = findOrCreateContactByPubkey;
+exports.findOrCreateContactByPubkeyAndRouteHint = findOrCreateContactByPubkeyAndRouteHint;
 function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         let chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant } });
@@ -159,6 +160,7 @@ function parseReceiveParams(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
+        const sender_route_hint = dat.sender.route_hint;
         const sender_alias = dat.sender.alias;
         const sender_photo_url = dat.sender.photo_url || '';
         const chat_uuid = dat.chat.uuid;
@@ -195,7 +197,7 @@ function parseReceiveParams(payload) {
         if (!owner)
             console.log('=> parseReceiveParams cannot find owner');
         if (isConversation) {
-            sender = yield findOrCreateContactByPubkey(sender_pub_key, owner.dataValues);
+            sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, owner.dataValues);
             chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id);
             if (sender.fromGroup) { // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });
@@ -209,7 +211,7 @@ function parseReceiveParams(payload) {
             }
             chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant: owner.id } });
         }
-        return { dest, owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url, network_type, message_status };
+        return { dest, owner, sender, chat, sender_pub_key, sender_route_hint, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url, network_type, message_status };
     });
 }
 exports.parseReceiveParams = parseReceiveParams;
@@ -224,7 +226,7 @@ function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {
         type: type,
-        sender: Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, !dontActuallySendContactKey && { contact_key: sender.contactKey }), sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
+        sender: Object.assign(Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, sender.routeHint && { route_hint: sender.routeHint }), !dontActuallySendContactKey && { contact_key: sender.contactKey }), sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
     };
 }
 //# sourceMappingURL=helpers.js.map

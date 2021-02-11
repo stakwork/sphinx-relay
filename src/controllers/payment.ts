@@ -19,6 +19,7 @@ export const sendPayment = async (req, res) => {
     chat_id,
     contact_id,
     destination_key,
+    route_hint,
     media_type,
     muid,
     text,
@@ -34,7 +35,7 @@ export const sendPayment = async (req, res) => {
   const owner = req.owner
 
   if (destination_key && !contact_id && !chat_id) {
-    anonymousKeysend(owner, destination_key, amount || '', text || '',
+    anonymousKeysend(owner, destination_key, route_hint, amount || '', text || '',
       function (body) {
         success(res, body)
       },

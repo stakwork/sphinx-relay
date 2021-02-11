@@ -9,6 +9,7 @@ import * as jsonUtils from '../utils/json'
 import { Op } from 'sequelize'
 import fetch from 'node-fetch'
 import * as helpers from '../helpers'
+import { isProxy } from '../utils/proxy'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -45,6 +46,7 @@ interface Accounting {
   date: string
   fundingTxid: string
   onchainTxid: string
+  routeHint: string
 }
 
 async function getReceivedAccountings(): Promise<Accounting[]> {
@@ -140,6 +142,7 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
 }
 
 async function pollUTXOs() {
+  if(isProxy()) return // not on proxy for now???
   // console.log("[WATCH]=> pollUTXOs")
   const accs: Accounting[] = await getPendingAccountings()
   if (!accs) return
@@ -188,6 +191,7 @@ async function checkChannelsAndKeysend(rec: Accounting){
       helpers.performKeysendMessage({
         sender: owner,
         destination_key: rec.pubkey,
+        route_hint: rec.routeHint,
         amount, msg,
         success: function(){
           console.log('[WATCH] complete! Updating accounting, id:', rec.id)
@@ -236,7 +240,10 @@ export async function queryOnchainAddress(req, res) {
       message: {
         content: JSON.stringify(query)
       },
-      sender: { pub_key: owner.publicKey }
+      sender: { 
+        pub_key: owner.publicKey, 
+        ...owner.routeHint && {route_hint:owner.routeHint} 
+      }
     }
   }
   try {
@@ -269,6 +276,7 @@ export const receiveQuery = async (payload) => {
   const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
   const owner = dat.owner
+  const sender_route_hint = dat.sender.route_hint
   // const tenant:number = owner.id
 
   if (!sender_pub_key || !content || !owner) {
@@ -294,6 +302,7 @@ export const receiveQuery = async (payload) => {
         sourceApp: q.app,
         status: constants.statuses.pending,
         error: '',
+        routeHint: sender_route_hint
       }
       await models.Accounting.create(acc)
       result = addy
@@ -307,6 +316,7 @@ export const receiveQuery = async (payload) => {
   const opts = {
     amt: constants.min_sat_amount,
     dest: sender_pub_key,
+    route_hint: sender_route_hint,
     data: <network.Msg>{
       type: constants.message_types.query_response,
       message: {

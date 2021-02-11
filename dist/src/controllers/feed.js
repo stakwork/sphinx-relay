@@ -9,12 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.anonymousKeysend = exports.streamFeed = void 0;
 const models_1 = require("../models");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
-const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -56,14 +55,13 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 if (d.address === owner.publicKey)
                     return; // dont send to self
                 const amt = Math.max(Math.round((d.split / 100) * amount), 1);
-                yield anonymousKeysend(owner, d.address, amt, text, function () { }, function () { });
+                yield anonymousKeysend(owner, d.address, d.routeHint, amt, text, function () { }, function () { });
             }
         }));
     }
     res_1.success(res, {});
 });
-exports.streamFeed = streamFeed;
-function anonymousKeysend(owner, destination_key, amount, text, onSuccess, onFailure) {
+function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
         const msg = {
             type: constants_1.default.message_types.keysend,
@@ -73,6 +71,7 @@ function anonymousKeysend(owner, destination_key, amount, text, onSuccess, onFai
         return helpers.performKeysendMessage({
             sender: owner,
             destination_key,
+            route_hint,
             amount,
             msg,
             success: () => {

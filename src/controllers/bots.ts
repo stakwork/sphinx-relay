@@ -83,7 +83,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
   const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey)
   if (!isTribeOwner) return console.log('=> only tribe owner can install bots')
 
-  const { uuid, owner_pubkey, unique_name, price_per_use } = bot_json
+  const { uuid, owner_pubkey, unique_name, price_per_use, owner_route_hint } = bot_json
 
   const isLocal = owner_pubkey === owner.publicKey
   let botType = constants.bot_types.remote
@@ -97,6 +97,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
     botType: botType,
     botUuid: uuid,
     botMakerPubkey: owner_pubkey,
+    botMakerRouteHint: owner_route_hint||'',
     pricePerUse: price_per_use,
     tenant
   }
@@ -137,7 +138,7 @@ export async function keysendBotInstall(b, chat_uuid: string, owner): Promise<bo
   return await botKeysend(
     constants.message_types.bot_install,
     b.botUuid, b.botMakerPubkey, b.pricePerUse,
-    chat_uuid, owner,
+    chat_uuid, owner, '', undefined, b.botMakerRouteHint
   )
 }
 
@@ -150,16 +151,18 @@ export async function keysendBotCmd(msg, b, owner): Promise<boolean> {
     msg.chat.uuid,
     owner,
     msg.message.content,
-    (msg.sender && msg.sender.role)
+    (msg.sender && msg.sender.role),
+    b.botMakerRouteHint
   )
 }
 
-export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid: string, owner, content?: string, sender_role?: number): Promise<boolean> {
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid: string, owner, content?: string, sender_role?: number, botmaker_route_hint?:string): Promise<boolean> {
   const dest = botmaker_pubkey
   const amt = Math.max(amount || constants.min_sat_amount)
   const opts = {
     amt,
     dest,
+    route_hint: botmaker_route_hint,
     data: <network.Msg>{
       type: msg_type,
       bot_uuid,
@@ -168,7 +171,8 @@ export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, ch
       sender: {
         pub_key: owner.publicKey,
         alias: owner.alias,
-        role: sender_role || constants.chat_roles.reader
+        role: sender_role || constants.chat_roles.reader,
+        route_hint: owner.routeHint || ''
       }
     }
   }

@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isBotMsg = void 0;
 const models_1 = require("../models");
 const builtin_1 = require("../builtin");
 const bots_1 = require("../controllers/bots");
@@ -36,7 +35,7 @@ function isBotMsg(msg, sentByMe, sender) {
         if (!uuid)
             return false;
         const chat = yield models_1.models.Chat.findOne({
-            where: { uuid }
+            where: { uuid, tenant }
         });
         if (!chat)
             return false;

@@ -120,6 +120,7 @@ export async function receiveHeartbeat(payload) {
 
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
+	const sender_route_hint = dat.sender.route_hint
 	const receivedAmount = dat.message.amount
 	const owner = dat.owner
 	// const tenant:number = owner.id
@@ -132,6 +133,7 @@ export async function receiveHeartbeat(payload) {
 	const opts = {
 		amt,
 		dest: sender_pub_key,
+		route_hint: sender_route_hint || '',
 		data: <network.Msg>{
 			type: constants.message_types.heartbeat_confirmation,
 			message: { amount: amt },
@@ -155,6 +157,7 @@ export async function healthcheck(req, res) {
 	if (!(pubkey && pubkey.length === 66)) {
 		return failure200(res, 'missing pubkey')
 	}
+	const routeHint: string = req.query.route_hint
 
 	const owner = req.owner
 
@@ -162,6 +165,7 @@ export async function healthcheck(req, res) {
 	const opts = {
 		amt,
 		dest: pubkey,
+		route_hint: routeHint||'',
 		data: <network.Msg>{
 			type: constants.message_types.heartbeat,
 			message: {

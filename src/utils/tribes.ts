@@ -7,6 +7,7 @@ import fetch from 'node-fetch'
 import { models, sequelize } from '../models'
 import { makeBotsJSON, declare_bot } from './tribeBots'
 import {loadConfig} from './config'
+import { isProxy } from './proxy'
 
 export { declare_bot }
 
@@ -66,6 +67,7 @@ export async function connect(onMessage) {
 }
 
 async function updateTribeStats(myPubkey) {
+  if(isProxy()) return // skip on proxy for now?
   const myTribes = await models.Chat.findAll({
     where: {
       ownerPubkey: myPubkey

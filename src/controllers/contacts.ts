@@ -53,7 +53,8 @@ export const getContacts = async (req, res) => {
 export const generateToken = async (req, res) => {
 	console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query })
 
-	const owner = await models.Contact.findOne({ where: { isOwner: true } })
+	const pubkey = req.body['pubkey']
+	const owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:pubkey } })
 
 	const pwd = password
 	if (process.env.USE_PASSWORD === 'true') {
@@ -238,6 +239,7 @@ export const receiveContactKey = async (payload) => {
 
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
+	const sender_route_hint = dat.sender.route_hint
 	const sender_contact_key = dat.sender.contact_key
 	const sender_alias = dat.sender.alias || 'Unknown'
 	const sender_photo_url = dat.sender.photo_url
@@ -270,6 +272,7 @@ export const receiveContactKey = async (payload) => {
 	if (msgIncludedContactKey) {
 		helpers.sendContactKeys({
 			contactPubKey: sender_pub_key,
+			routeHint: sender_route_hint,
 			contactIds: sender ? [sender.id] : [],
 			sender: owner,
 			type: constants.message_types.contact_key_confirmation,
@@ -307,7 +310,7 @@ export const receiveConfirmContactKey = async (payload) => {
 }
 
 function extractAttrs (body): {[k:string]:any}  {
-	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount"]
+	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount", "route_hint"]
 	let attrs = {}
 	Object.keys(body).forEach(key => {
 		if (fields_to_update.includes(key)) {

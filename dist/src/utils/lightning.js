@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decodePayReq = exports.sendPayment = exports.unlockWallet = exports.channelBalance = exports.getChanInfo = exports.listChannels = exports.queryRoute = exports.listAllPaymentsFull = exports.listAllInvoices = exports.getInfo = exports.listAllPayments = exports.listInvoices = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = exports.signBuffer = exports.signAscii = exports.verifyBytes = exports.verifyAscii = exports.verifyMessage = exports.signMessage = exports.keysendMessage = exports.keysend = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.openChannel = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -232,8 +231,14 @@ const keysend = (opts, ownerPubkey) => {
                 dest_features: [9],
             };
             // add in route hints
-            if (opts.route_hints)
-                options.route_hints = opts.route_hints;
+            if (opts.route_hint && opts.route_hint.includes(':')) {
+                const arr = opts.route_hint.split(':');
+                const node_id = arr[0];
+                const chan_id = arr[1];
+                options.route_hints = [{
+                        hop_hints: [{ node_id, chan_id }]
+                    }];
+            }
             // sphinx-proxy sendPaymentSync
             if (proxy_1.isProxy()) {
                 options.fee_limit = { fixed: FEE_LIMIT_SAT };

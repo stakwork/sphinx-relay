@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editSubscription = exports.createSubscription = exports.getSubscriptionsForContact = exports.deleteSubscription = exports.getSubscription = exports.getAllSubscriptions = exports.restartSubscription = exports.pauseSubscription = exports.initializeCronJobs = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const cron_1 = require("cron");
@@ -25,7 +24,7 @@ const constants_1 = require("../constants");
 // store all current running jobs in memory
 let jobs = {};
 // init jobs from DB
-const initializeCronJobs = () => __awaiter(void 0, void 0, void 0, function* () {
+exports.initializeCronJobs = () => __awaiter(void 0, void 0, void 0, function* () {
     yield helpers.sleep(1000);
     const subs = yield getRawSubs({ where: { ended: false } });
     subs.length && subs.forEach(sub => {
@@ -33,7 +32,6 @@ const initializeCronJobs = () => __awaiter(void 0, void 0, void 0, function* () 
         startCronJob(sub);
     });
 });
-exports.initializeCronJobs = initializeCronJobs;
 function startCronJob(sub) {
     return __awaiter(this, void 0, void 0, function* () {
         jobs[sub.id] = new cron_1.CronJob(sub.cron, function () {
@@ -264,7 +262,7 @@ function getRawSubs(opts = {}) {
     });
 }
 // all subs
-const getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -277,7 +275,6 @@ const getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, func
         res_1.failure(res, e);
     }
 });
-exports.getAllSubscriptions = getAllSubscriptions;
 // one sub by id
 function getSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -322,7 +319,7 @@ function deleteSubscription(req, res) {
 exports.deleteSubscription = deleteSubscription;
 ;
 // all subs for contact id
-const getSubscriptionsForContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getSubscriptionsForContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -335,7 +332,6 @@ const getSubscriptionsForContact = (req, res) => __awaiter(void 0, void 0, void 
         res_1.failure(res, e);
     }
 });
-exports.getSubscriptionsForContact = getSubscriptionsForContact;
 // create new sub
 function createSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -413,7 +409,7 @@ function editSubscription(req, res) {
             else {
                 startCronJob(sub); // restart
             }
-            const chat = yield models_1.models.Chat.findOne({ where: { id: s.chatId } });
+            const chat = yield models_1.models.Chat.findOne({ where: { id: s.chatId, tenant } });
             res_1.success(res, jsonUtils.subscriptionToJson(sub, chat));
         }
         catch (e) {

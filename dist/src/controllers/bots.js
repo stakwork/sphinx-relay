@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
 const tribes = require("../utils/tribes");
 const crypto = require("crypto");
 const models_1 = require("../models");
@@ -21,7 +20,7 @@ const socket = require("../utils/socket");
 const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
-const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -35,8 +34,7 @@ const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res_1.failure(res, 'no bots');
     }
 });
-exports.getBots = getBots;
-const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -69,8 +67,7 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res_1.failure(res, 'bot creation failed');
     }
 });
-exports.createBot = createBot;
-const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -86,7 +83,6 @@ const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res_1.failure(res, e);
     }
 });
-exports.deleteBot = deleteBot;
 function installBotAsTribeAdmin(chat, bot_json) {
     return __awaiter(this, void 0, void 0, function* () {
         const chatId = chat && chat.id;
@@ -101,7 +97,7 @@ function installBotAsTribeAdmin(chat, bot_json) {
         const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey);
         if (!isTribeOwner)
             return console.log('=> only tribe owner can install bots');
-        const { uuid, owner_pubkey, unique_name, price_per_use } = bot_json;
+        const { uuid, owner_pubkey, unique_name, price_per_use, owner_route_hint } = bot_json;
         const isLocal = owner_pubkey === owner.publicKey;
         let botType = constants_1.default.bot_types.remote;
         if (isLocal) {
@@ -114,6 +110,7 @@ function installBotAsTribeAdmin(chat, bot_json) {
             botType: botType,
             botUuid: uuid,
             botMakerPubkey: owner_pubkey,
+            botMakerRouteHint: owner_route_hint || '',
             pricePerUse: price_per_use,
             tenant
         };
@@ -155,7 +152,7 @@ function installBotAsTribeAdmin(chat, bot_json) {
 exports.installBotAsTribeAdmin = installBotAsTribeAdmin;
 function keysendBotInstall(b, chat_uuid, owner) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants_1.default.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid, owner);
+        return yield botKeysend(constants_1.default.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid, owner, '', undefined, b.botMakerRouteHint);
     });
 }
 exports.keysendBotInstall = keysendBotInstall;
@@ -163,17 +160,18 @@ function keysendBotCmd(msg, b, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         const amount = msg.message.amount || 0;
         const amt = Math.max(amount, b.pricePerUse);
-        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, owner, msg.message.content, (msg.sender && msg.sender.role));
+        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, owner, msg.message.content, (msg.sender && msg.sender.role), b.botMakerRouteHint);
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
-function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owner, content, sender_role) {
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owner, content, sender_role, botmaker_route_hint) {
     return __awaiter(this, void 0, void 0, function* () {
         const dest = botmaker_pubkey;
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
             amt,
             dest,
+            route_hint: botmaker_route_hint,
             data: {
                 type: msg_type,
                 bot_uuid,
@@ -182,7 +180,8 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
                 sender: {
                     pub_key: owner.publicKey,
                     alias: owner.alias,
-                    role: sender_role || constants_1.default.chat_roles.reader
+                    role: sender_role || constants_1.default.chat_roles.reader,
+                    route_hint: owner.routeHint || ''
                 }
             }
         };

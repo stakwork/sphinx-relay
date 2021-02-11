@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addPendingContactIdsToChat = exports.createTribeChatParams = exports.replayChatHistory = exports.receiveTribeDelete = exports.receiveMemberReject = exports.receiveMemberApprove = exports.approveOrRejectMember = exports.editTribe = exports.receiveMemberRequest = exports.joinTribe = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -296,11 +295,11 @@ function approveOrRejectMember(req, res) {
         const msgId = parseInt(req.params['messageId']);
         const contactId = parseInt(req.params['contactId']);
         const status = req.params['status'];
-        const msg = yield models_1.models.Message.findOne({ where: { id: msgId } });
+        const msg = yield models_1.models.Message.findOne({ where: { id: msgId, tenant } });
         if (!msg)
             return res_1.failure(res, 'no message');
         const chatId = msg.chatId;
-        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
+        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
         if (!chat)
             return res_1.failure(res, 'no chat');
         if (!msgId || !contactId || !(status === 'approved' || status === 'rejected')) {
@@ -510,6 +509,7 @@ function replayChatHistory(chat, contact, owner) {
                 yield network.signAndSend({
                     data,
                     dest: contact.publicKey,
+                    route_hint: contact.routeHint,
                 }, owner, mqttTopic, replayingHistory);
             }));
         }

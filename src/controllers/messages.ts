@@ -397,7 +397,7 @@ export const receiveBoost = async (payload) => {
 
 	if (msg.replyUuid) {
 		const ogMsg = await models.Message.findOne({
-			where: { uuid: msg.replyUuid }
+			where: { uuid: msg.replyUuid, tenant }
 		})
 		if (ogMsg && ogMsg.sender === 1) {
 			sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner)

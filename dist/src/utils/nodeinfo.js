@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isClean = exports.nodeinfo = void 0;
 const LND = require("../utils/lightning");
 const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
@@ -17,9 +16,38 @@ const models_1 = require("../models");
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const nzp = yield listNonZeroPolicies();
+        let owner_pubkey;
+        try {
+            const tryProxy = false;
+            const info = yield LND.getInfo(tryProxy);
+            if (info.identity_pubkey)
+                owner_pubkey = info.identity_pubkey;
+        }
+        catch (e) { // no LND
+            let owner;
+            try {
+                owner = yield models_1.models.Contact.findOne({ where: { id: 1 } });
+            }
+            catch (e) {
+                return; // just skip in SQLITE not open yet
+            }
+            if (!owner)
+                return;
+            let lastActive = owner.lastActive;
+            if (!lastActive) {
+                lastActive = new Date();
+            }
+            const node = {
+                pubkey: owner.publicKey,
+                wallet_locked: true,
+                last_active: lastActive
+            };
+            resolve(node);
+            return;
+        }
         let owner;
         try {
-            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: owner_pubkey } });
         }
         catch (e) {
             return; // just skip in SQLITE not open yet
@@ -29,19 +57,6 @@ function nodeinfo() {
         let lastActive = owner.lastActive;
         if (!lastActive) {
             lastActive = new Date();
-        }
-        try {
-            const tryProxy = false;
-            yield LND.getInfo(tryProxy);
-        }
-        catch (e) { // no LND
-            const node = {
-                pubkey: owner.publicKey,
-                wallet_locked: true,
-                last_active: lastActive
-            };
-            resolve(node);
-            return;
         }
         let public_ip = "";
         try {
@@ -116,8 +131,8 @@ function nodeinfo() {
 exports.nodeinfo = nodeinfo;
 function isClean() {
     return __awaiter(this, void 0, void 0, function* () {
-        // has owner but with no auth token
-        const cleanOwner = yield models_1.models.Contact.findOne({ where: { isOwner: true, authToken: null } });
+        // has owner but with no auth token (id=1?)
+        const cleanOwner = yield models_1.models.Contact.findOne({ where: { id: 1, isOwner: true, authToken: null } });
         const msgs = yield models_1.models.Message.count();
         const allContacts = yield models_1.models.Contact.count();
         const noMsgs = msgs === 0;

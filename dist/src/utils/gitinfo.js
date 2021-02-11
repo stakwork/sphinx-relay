@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkTag = exports.checkCommitHash = void 0;
 const child_process_1 = require("child_process");
 let commitHash;
 function checkCommitHash() {

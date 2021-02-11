@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.accountingToJson = exports.botToJson = exports.subscriptionToJson = exports.chatToJson = exports.jsonToContact = exports.inviteToJson = exports.contactToJson = exports.messageToJson = void 0;
 const case_1 = require("../utils/case");
 const cronUtils = require("./cron");
 function chatToJson(c) {

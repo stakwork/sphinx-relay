@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToForward = void 0;
 const lndService = require("../grpc");
 const lightning_1 = require("../utils/lightning");
 const controllers_1 = require("../controllers");
@@ -351,7 +350,7 @@ function parseAndVerifyPayload(data) {
                 console.log("=> SIG LEN", sig.length);
                 if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
-                    // console.log("VERIFY",v)
+                    console.log("VERIFY", v);
                 }
                 if (v && v.valid) {
                     return payload;
@@ -417,7 +416,7 @@ function parseKeysendInvoice(i) {
             dest = invoice.destination;
             owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
         }
-        else {
+        else { // non-proxy, only one "owner"
             owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
             dest = owner.publicKey;
         }

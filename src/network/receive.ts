@@ -329,7 +329,7 @@ async function parseAndVerifyPayload(data) {
 			console.log("=> SIG LEN", sig.length)
 			if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
-				// console.log("VERIFY",v)
+				console.log("VERIFY",v)
 			}
 			if (v && v.valid) {
 				return payload
@@ -387,7 +387,7 @@ export async function parseKeysendInvoice(i) {
 		if(!invoice.destination) return console.log("cant get dest from pay req")
 		dest = invoice.destination
 		owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:dest } })
-	} else {
+	} else { // non-proxy, only one "owner"
 		owner = await models.Contact.findOne({ where: { isOwner:true } })
 		dest = owner.publicKey
 	}

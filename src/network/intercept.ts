@@ -27,7 +27,7 @@ export async function isBotMsg(msg: Msg, sentByMe: boolean, sender): Promise<boo
   if (!uuid) return false
 
   const chat = await models.Chat.findOne({
-    where: { uuid }
+    where: { uuid, tenant }
   })
   if (!chat) return false
 

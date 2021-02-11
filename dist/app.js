@@ -68,6 +68,7 @@ function finishSetup() {
 }
 function setupApp() {
     return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c;
         const app = express();
         app.use(helmet());
         app.use(bodyParser.json());
@@ -87,7 +88,7 @@ function setupApp() {
         if ('ssl' in config && config.ssl.enabled) {
             try {
                 var certData = yield cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save);
-                var credentials = { key: certData === null || certData === void 0 ? void 0 : certData.privateKey.toString(), ca: certData === null || certData === void 0 ? void 0 : certData.caBundle, cert: certData === null || certData === void 0 ? void 0 : certData.certificate };
+                var credentials = { key: (_a = certData) === null || _a === void 0 ? void 0 : _a.privateKey.toString(), ca: (_b = certData) === null || _b === void 0 ? void 0 : _b.caBundle, cert: (_c = certData) === null || _c === void 0 ? void 0 : _c.certificate };
                 server = require("https").createServer(credentials, app);
             }
             catch (e) {

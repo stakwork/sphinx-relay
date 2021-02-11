@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setInMemoryMacaroon = exports.getMacaroon = void 0;
 const fs = require("fs");
 const config_1 = require("./config");
 const config = config_1.loadConfig();

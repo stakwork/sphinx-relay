@@ -14,6 +14,7 @@ export interface ChatMeta {
 type DestinationType = 'wallet' | 'node'
 export interface Destination {
   address: string
+  routeHint: string,
   split: number
   type: DestinationType
 }
@@ -71,7 +72,7 @@ export const streamFeed = async (req, res) => {
         if (d.address.length !== 66) return
         if (d.address === owner.publicKey) return // dont send to self
         const amt = Math.max(Math.round((d.split / 100) * amount), 1)
-        await anonymousKeysend(owner, d.address, amt, text, function () { }, function () { })
+        await anonymousKeysend(owner, d.address, d.routeHint, amt, text, function () { }, function () { })
       }
     })
   }
@@ -79,7 +80,7 @@ export const streamFeed = async (req, res) => {
   success(res, {})
 }
 
-export async function anonymousKeysend(owner, destination_key: string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
+export async function anonymousKeysend(owner, destination_key: string, route_hint:string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
   const msg: { [k: string]: any } = {
     type: constants.message_types.keysend,
   }
@@ -88,6 +89,7 @@ export async function anonymousKeysend(owner, destination_key: string, amount: n
   return helpers.performKeysendMessage({
     sender: owner,
     destination_key,
+    route_hint,
     amount,
     msg,
     success: () => {

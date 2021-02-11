@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.payInviteInvoice = exports.payInviteInHub = exports.finishInviteInHub = exports.createInviteInHub = exports.sendNotification = exports.sendHubCall = exports.checkInvitesHubInterval = exports.pingHubInterval = exports.getAppVersionsFromHub = exports.sendInvoice = void 0;
 const models_1 = require("./models");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
@@ -245,7 +244,6 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
             message += ` in ${chat.name}`;
         }
     }
-    // const owner = await models.Contact.findOne({ where: { isOwner: true } })
     if (!owner.deviceId) {
         console.log('[send notification] skipping. owner.deviceId not set.');
         return;

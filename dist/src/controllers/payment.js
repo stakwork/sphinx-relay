@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listPayments = exports.receivePayment = exports.sendPayment = void 0;
 const models_1 = require("../models");
 const hub_1 = require("../hub");
 const socket = require("../utils/socket");
@@ -22,15 +21,15 @@ const short = require("short-uuid");
 const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
-const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
-    const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
+    const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
     const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
-        feed_1.anonymousKeysend(owner, destination_key, amount || '', text || '', function (body) {
+        feed_1.anonymousKeysend(owner, destination_key, route_hint, amount || '', text || '', function (body) {
             res_1.success(res, body);
         }, function (error) {
             res.status(200);
@@ -117,8 +116,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         })
     });
 });
-exports.sendPayment = sendPayment;
-const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
@@ -160,8 +158,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }, tenant);
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
 });
-exports.receivePayment = receivePayment;
-const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -211,5 +208,4 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res_1.failure(res, 'cant find payments');
     }
 });
-exports.listPayments = listPayments;
 //# sourceMappingURL=payment.js.map

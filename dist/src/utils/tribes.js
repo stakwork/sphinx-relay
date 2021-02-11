@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.connect = exports.getTribeOwnersChatByUUID = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("./lightning");
@@ -17,8 +16,9 @@ const mqtt = require("mqtt");
 const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
 const tribeBots_1 = require("./tribeBots");
-Object.defineProperty(exports, "declare_bot", { enumerable: true, get: function () { return tribeBots_1.declare_bot; } });
+exports.declare_bot = tribeBots_1.declare_bot;
 const config_1 = require("./config");
+const proxy_1 = require("./proxy");
 const config = config_1.loadConfig();
 let client;
 function getTribeOwnersChatByUUID(uuid) {
@@ -85,6 +85,8 @@ function connect(onMessage) {
 exports.connect = connect;
 function updateTribeStats(myPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (proxy_1.isProxy())
+            return; // skip on proxy for now?
         const myTribes = yield models_1.models.Chat.findAll({
             where: {
                 ownerPubkey: myPubkey

@@ -35,7 +35,7 @@ export const findOrCreateChat = async (params) => {
 	return chat
 }
 
-export const sendContactKeys = async ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey }:{type:number,contactIds:number[],sender:any,success?:Function,failure?:Function,dontActuallySendContactKey?:boolean,contactPubKey?:string}) => {
+export const sendContactKeys = async ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey, routeHint }:{type:number,contactIds:number[],sender:any,success?:Function,failure?:Function,dontActuallySendContactKey?:boolean,contactPubKey?:string,routeHint?:string}) => {
 	const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey||false)
 
 	if(contactPubKey) { // dont use ids here
@@ -44,6 +44,7 @@ export const sendContactKeys = async ({ type, contactIds, sender, success, failu
 			destination_key: contactPubKey,
 			amount: 3,
 			msg,
+			route_hint: routeHint,
 			success,
 			failure
 		})
@@ -62,6 +63,7 @@ export const sendContactKeys = async ({ type, contactIds, sender, success, failu
 		const contact = await models.Contact.findOne({ where: { id: contactId } })
 		if(!(contact && contact.publicKey)) return
 		destination_key = contact.publicKey
+		const route_hint = contact.routeHint
 
 		console.log("=> KEY EXCHANGE", msg)
 		await performKeysendMessage({
@@ -69,6 +71,7 @@ export const sendContactKeys = async ({ type, contactIds, sender, success, failu
 			destination_key,
 			amount: 3,
 			msg,
+			route_hint,
 			success: (data) => {
 				yes = data
 			},
@@ -86,11 +89,12 @@ export const sendContactKeys = async ({ type, contactIds, sender, success, failu
 	}
 }
 
-export const performKeysendMessage = async ({ destination_key, amount, msg, success, failure, sender }) => {
+export const performKeysendMessage = async ({ destination_key, route_hint, amount, msg, success, failure, sender }) => {
 	const opts = {
 		dest: destination_key,
 		data: msg || {},
-		amt: Math.max(amount, 3)
+		amt: Math.max(amount, 3),
+		route_hint
 	}
 	try {
 		const r = await network.signAndSend(opts, sender)
@@ -102,11 +106,12 @@ export const performKeysendMessage = async ({ destination_key, amount, msg, succ
 	}
 }
 
-export async function findOrCreateContactByPubkey(senderPubKey, owner) {
+export async function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, owner) {
 	let sender = await models.Contact.findOne({ where: { publicKey: senderPubKey, tenant:owner.id } })
 	if (!sender) {
 		sender = await models.Contact.create({
 			publicKey: senderPubKey,
+			routeHint: senderRouteHint||'',
 			alias: "Unknown",
 			status: 1,
 			tenant: owner.id
@@ -143,6 +148,7 @@ export async function sleep(ms) {
 export async function parseReceiveParams(payload) {
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
+	const sender_route_hint = dat.sender.route_hint
 	const sender_alias = dat.sender.alias
 	const sender_photo_url = dat.sender.photo_url || ''
 	const chat_uuid = dat.chat.uuid
@@ -179,7 +185,7 @@ export async function parseReceiveParams(payload) {
 	}
 	if(!owner) console.log('=> parseReceiveParams cannot find owner')
 	if (isConversation) {
-		sender = await findOrCreateContactByPubkey(sender_pub_key, owner.dataValues)
+		sender = await findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, owner.dataValues)
 		chat = await findOrCreateChatByUUID(
 			chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id
 		)
@@ -194,7 +200,7 @@ export async function parseReceiveParams(payload) {
 		}
 		chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant:owner.id } })
 	}
-	return { dest, owner, sender, chat, sender_pub_key, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url, network_type, message_status }
+	return { dest, owner, sender, chat, sender_pub_key, sender_route_hint, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url, network_type, message_status }
 }
 
 async function asyncForEach(array, callback) {
@@ -209,6 +215,7 @@ function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
 		type: type,
 		sender: {
 			pub_key: sender.publicKey,
+			...sender.routeHint && {route_hint: sender.routeHint},
 			...!dontActuallySendContactKey && {contact_key: sender.contactKey},
 			...sender.alias && { alias: sender.alias },
 			...includePhotoUrl && { photo_url: sender.photoUrl }

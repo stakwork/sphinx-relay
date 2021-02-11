@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveHeartbeatConfirmation = exports.healthcheck = exports.receiveHeartbeat = exports.tribeOwnerAutoConfirmation = exports.receiveConfirmation = exports.sendConfirmation = void 0;
 const lock_1 = require("../utils/lock");
 const models_1 = require("../models");
 const socket = require("../utils/socket");
@@ -134,6 +133,7 @@ function receiveHeartbeat(payload) {
         console.log('=> received heartbeat');
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
+        const sender_route_hint = dat.sender.route_hint;
         const receivedAmount = dat.message.amount;
         const owner = dat.owner;
         // const tenant:number = owner.id
@@ -146,6 +146,7 @@ function receiveHeartbeat(payload) {
         const opts = {
             amt,
             dest: sender_pub_key,
+            route_hint: sender_route_hint || '',
             data: {
                 type: constants_1.default.message_types.heartbeat_confirmation,
                 message: { amount: amt },
@@ -172,11 +173,13 @@ function healthcheck(req, res) {
         if (!(pubkey && pubkey.length === 66)) {
             return res_1.failure200(res, 'missing pubkey');
         }
+        const routeHint = req.query.route_hint;
         const owner = req.owner;
         const amt = 10;
         const opts = {
             amt,
             dest: pubkey,
+            route_hint: routeHint || '',
             data: {
                 type: constants_1.default.message_types.heartbeat,
                 message: {

@@ -382,7 +382,7 @@ export async function editSubscription(req, res) {
     } else {
       startCronJob(sub) // restart
     }
-    const chat = await models.Chat.findOne({ where: { id: s.chatId } })
+    const chat = await models.Chat.findOne({ where: { id: s.chatId, tenant } })
     success(res, jsonUtils.subscriptionToJson(sub, chat))
   } catch (e) {
     console.log('ERROR createSubscription', e)
