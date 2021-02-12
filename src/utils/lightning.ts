@@ -481,10 +481,10 @@ async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
     throw e
   }
 }
-function verifyMessage(msg, sig): Promise<{ [k: string]: any }> {
+function verifyMessage(msg, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('verifyMessage')
   return new Promise(async (resolve, reject) => {
-    let lightning = await loadLightning(true) // try proxy
+    let lightning = await loadLightning(true, ownerPubkey) // try proxy
     try {
       const options = {
         msg: ByteBuffer.fromHex(msg),
@@ -502,9 +502,9 @@ function verifyMessage(msg, sig): Promise<{ [k: string]: any }> {
     }
   })
 }
-async function verifyAscii(ascii, sig): Promise<{ [k: string]: any }> {
+async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   try {
-    const r = await verifyMessage(ascii_to_hexa(ascii), sig)
+    const r = await verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey)
     return r
   } catch (e) {
     throw e

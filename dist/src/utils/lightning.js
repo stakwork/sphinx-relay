@@ -538,10 +538,10 @@ function verifyBytes(msg, sig) {
     });
 }
 exports.verifyBytes = verifyBytes;
-function verifyMessage(msg, sig) {
+function verifyMessage(msg, sig, ownerPubkey) {
     log('verifyMessage');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        let lightning = yield loadLightning(true); // try proxy
+        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
@@ -562,10 +562,10 @@ function verifyMessage(msg, sig) {
     }));
 }
 exports.verifyMessage = verifyMessage;
-function verifyAscii(ascii, sig) {
+function verifyAscii(ascii, sig, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield verifyMessage(ascii_to_hexa(ascii), sig);
+            const r = yield verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey);
             return r;
         }
         catch (e) {

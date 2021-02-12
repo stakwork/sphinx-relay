@@ -1,5 +1,5 @@
 import * as lndService from '../grpc'
-import { getInfo } from '../utils/lightning'
+import * as lightning from '../utils/lightning'
 import { ACTIONS } from '../controllers'
 import * as tribes from '../utils/tribes'
 import { SPHINX_CUSTOM_RECORD_KEY, decodePayReq } from '../utils/lightning'
@@ -283,7 +283,7 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 
 export async function initGrpcSubscriptions() {
 	try {
-		await getInfo(true) // try proxy
+		await lightning.getInfo(true) // try proxy
 		await lndService.subscribeInvoices(parseKeysendInvoice)
 	} catch (e) {
 		throw e
@@ -327,9 +327,13 @@ async function parseAndVerifyPayload(data) {
 		if (payload && payload.sender && payload.sender.pub_key) {
 			let v
 			console.log("=> SIG LEN", sig.length)
-			if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
+			if (sig.length === 96 && payload.sender.pub_key) { 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
 				console.log("VERIFY",v)
+			}
+			if (sig.length === 104) {
+				v = await lightning.verifyAscii(msg, sig)
+				console.log("VERIFY2",v)
 			}
 			if (v && v.valid) {
 				console.log("V VALID")

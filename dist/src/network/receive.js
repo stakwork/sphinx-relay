@@ -11,10 +11,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToForward = void 0;
 const lndService = require("../grpc");
-const lightning_1 = require("../utils/lightning");
+const lightning = require("../utils/lightning");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
-const lightning_2 = require("../utils/lightning");
+const lightning_1 = require("../utils/lightning");
 const signer = require("../utils/signer");
 const models_1 = require("../models");
 const send_1 = require("./send");
@@ -300,7 +300,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield lightning_1.getInfo(true); // try proxy
+            yield lightning.getInfo(true); // try proxy
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
@@ -349,9 +349,13 @@ function parseAndVerifyPayload(data) {
             if (payload && payload.sender && payload.sender.pub_key) {
                 let v;
                 console.log("=> SIG LEN", sig.length);
-                if (sig.length === 96 && payload.sender.pub_key) { // => RM THIS 
+                if (sig.length === 96 && payload.sender.pub_key) {
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
                     console.log("VERIFY", v);
+                }
+                if (sig.length === 104) {
+                    v = yield lightning.verifyAscii(msg, sig);
+                    console.log("VERIFY2", v);
                 }
                 if (v && v.valid) {
                     console.log("V VALID");
@@ -413,7 +417,7 @@ function parseKeysendInvoice(i) {
         let dest = '';
         let owner;
         if (proxy_1.isProxy()) {
-            const invoice = yield lightning_2.decodePayReq(i.payment_request);
+            const invoice = yield lightning_1.decodePayReq(i.payment_request);
             if (!invoice)
                 return console.log("couldn't decode pay req");
             if (!invoice.destination)
@@ -429,7 +433,7 @@ function parseKeysendInvoice(i) {
             console.log('=> parseKeysendInvoice ERROR: cant find owner');
             return;
         }
-        const buf = recs && recs[lightning_2.SPHINX_CUSTOM_RECORD_KEY];
+        const buf = recs && recs[lightning_1.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
         // "keysend" type is NOT encrypted
