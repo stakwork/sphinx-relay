@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.purchase = exports.message = exports.attachment = void 0;
 const yup = require("yup");
 /*
 These schemas validate payloads coming from app,

@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.connect = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("../utils/password");
 const config_1 = require("./config");

@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.connect = exports.getTribeOwnersChatByUUID = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("./lightning");
@@ -16,7 +17,7 @@ const mqtt = require("mqtt");
 const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
 const tribeBots_1 = require("./tribeBots");
-exports.declare_bot = tribeBots_1.declare_bot;
+Object.defineProperty(exports, "declare_bot", { enumerable: true, get: function () { return tribeBots_1.declare_bot; } });
 const config_1 = require("./config");
 const proxy_1 = require("./proxy");
 const config = config_1.loadConfig();
@@ -83,6 +84,7 @@ function connect(onMessage) {
     });
 }
 exports.connect = connect;
+// for proxy, need to get all isOwner contacts and their owned chats
 function updateTribeStats(myPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         if (proxy_1.isProxy())
@@ -120,7 +122,7 @@ function publish(topic, msg, cb) {
         });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, owner_route_hint }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield node_fetch_1.default('https://' + host + '/tribes', {
@@ -136,7 +138,8 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     unlisted: unlisted || false,
                     private: is_private || false,
                     app_url: app_url || '',
-                    feed_url: feed_url || ''
+                    feed_url: feed_url || '',
+                    owner_route_hint: owner_route_hint || ''
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -149,7 +152,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, deleted }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, deleted, owner_route_hint }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp();
@@ -167,7 +170,8 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     private: is_private || false,
                     deleted: deleted || false,
                     app_url: app_url || '',
-                    feed_url: feed_url || ''
+                    feed_url: feed_url || '',
+                    owner_route_hint: owner_route_hint || ''
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });

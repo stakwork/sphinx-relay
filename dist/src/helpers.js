@@ -9,11 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
 const network = require("./network");
 const constants_1 = require("./constants");
-exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
+const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     let chat;
     let date = new Date();
@@ -42,7 +43,8 @@ exports.findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, functio
     }
     return chat;
 });
-exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey, routeHint }) => __awaiter(void 0, void 0, void 0, function* () {
+exports.findOrCreateChat = findOrCreateChat;
+const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey, routeHint }) => __awaiter(void 0, void 0, void 0, function* () {
     const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey || false);
     if (contactPubKey) { // dont use ids here
         exports.performKeysendMessage({
@@ -92,7 +94,8 @@ exports.sendContactKeys = ({ type, contactIds, sender, success, failure, dontAct
         success(yes);
     }
 });
-exports.performKeysendMessage = ({ destination_key, route_hint, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendContactKeys = sendContactKeys;
+const performKeysendMessage = ({ destination_key, route_hint, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
         data: msg || {},
@@ -111,6 +114,7 @@ exports.performKeysendMessage = ({ destination_key, route_hint, amount, msg, suc
             failure(e);
     }
 });
+exports.performKeysendMessage = performKeysendMessage;
 function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         let sender = yield models_1.models.Contact.findOne({ where: { publicKey: senderPubKey, tenant: owner.id } });

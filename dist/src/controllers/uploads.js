@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.uploadFile = exports.avatarUpload = void 0;
 const models_1 = require("../models");
 const path = require("path");
 const config_1 = require("../utils/config");
@@ -40,7 +41,7 @@ function hasProtocol(ip) {
         return true;
     return false;
 }
-exports.uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { contact_id, chat_id } = req.body;
     const { file } = req;
     const ip = String(process.env.NODE_IP);
@@ -70,4 +71,5 @@ exports.uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     });
     res.end();
 });
+exports.uploadFile = uploadFile;
 //# sourceMappingURL=uploads.js.map

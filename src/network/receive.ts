@@ -332,14 +332,18 @@ async function parseAndVerifyPayload(data) {
 				console.log("VERIFY",v)
 			}
 			if (v && v.valid) {
+				console.log("V VALID")
 				return payload
 			} else {
+				console.log("V 338")
 				return payload // => RM THIS
 			}
 		} else {
+			console.log("V 342")
 			return payload // => RM THIS
 		}
 	} catch (e) {
+		console.log("V 346")
 		if (payload) return payload // => RM THIS
 		return null
 	}

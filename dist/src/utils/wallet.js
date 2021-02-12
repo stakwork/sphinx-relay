@@ -9,13 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.listUnspent = exports.loadWalletKit = void 0;
 const grpc = require("grpc");
 const lightning_1 = require("./lightning");
 const config_1 = require("./config");
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 let walletClient;
-exports.loadWalletKit = () => {
+const loadWalletKit = () => {
     if (walletClient) {
         return walletClient;
     }
@@ -32,6 +33,7 @@ exports.loadWalletKit = () => {
         }
     }
 };
+exports.loadWalletKit = loadWalletKit;
 function listUnspent() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {

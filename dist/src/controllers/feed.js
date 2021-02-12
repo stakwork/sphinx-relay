@@ -9,11 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.anonymousKeysend = exports.streamFeed = void 0;
 const models_1 = require("../models");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
-exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -61,6 +62,7 @@ exports.streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     res_1.success(res, {});
 });
+exports.streamFeed = streamFeed;
 function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
         const msg = {

@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMediaInfo = exports.getMediaToken = exports.cycleMediaToken = exports.getMyPubKey = exports.verifier = exports.signer = exports.receiveAttachment = exports.receivePurchaseDeny = exports.receivePurchaseAccept = exports.receivePurchase = exports.purchase = exports.saveMediaKeys = exports.sendAttachmentMessage = void 0;
 const models_1 = require("../models");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
@@ -46,7 +47,7 @@ purchase_accept should update the original attachment message with the terms and
 
 purchase_deny returns the sats
 */
-exports.sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -133,6 +134,7 @@ exports.sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, 
         failure: error => resUtils.failure(res, error.message),
     });
 });
+exports.sendAttachmentMessage = sendAttachmentMessage;
 function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) {
     if (typeof mediaKeyMap !== 'object') {
         console.log('wrong type for mediaKeyMap');
@@ -154,7 +156,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) 
     }
 }
 exports.saveMediaKeys = saveMediaKeys;
-exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -204,8 +206,9 @@ exports.purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         failure: error => resUtils.failure(res, error.message),
     });
 });
+exports.purchase = purchase;
 /* RECEIVERS */
-exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
@@ -332,7 +335,8 @@ exports.receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, functio
         failure: error => console.log('=> couldnt send purchase accept', error),
     });
 });
-exports.receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePurchase = receivePurchase;
+const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> receivePurchaseAccept');
     var date = new Date();
     date.setMilliseconds(0);
@@ -376,7 +380,8 @@ exports.receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, f
         response: jsonUtils.messageToJson(msg, chat, sender)
     }, tenant);
 });
-exports.receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePurchaseAccept = receivePurchaseAccept;
+const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> receivePurchaseDeny');
     var date = new Date();
     date.setMilliseconds(0);
@@ -405,7 +410,8 @@ exports.receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, fun
         response: jsonUtils.messageToJson(msg, chat, sender)
     }, tenant);
 });
-exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receivePurchaseDeny = receivePurchaseDeny;
+const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received attachment', { payload })
     var date = new Date();
     date.setMilliseconds(0);
@@ -449,6 +455,7 @@ exports.receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, funct
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
+exports.receiveAttachment = receiveAttachment;
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)

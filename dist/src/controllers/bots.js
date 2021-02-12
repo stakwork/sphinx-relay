@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
 const tribes = require("../utils/tribes");
 const crypto = require("crypto");
 const models_1 = require("../models");
@@ -20,7 +21,7 @@ const socket = require("../utils/socket");
 const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
-exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -34,7 +35,8 @@ exports.getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res_1.failure(res, 'no bots');
     }
 });
-exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getBots = getBots;
+const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -60,6 +62,7 @@ exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             img: img || '',
             unlisted: false,
             deleted: false,
+            owner_route_hint: req.owner.routeHint || ''
         });
         res_1.success(res, jsonUtils.botToJson(theBot));
     }
@@ -67,7 +70,8 @@ exports.createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res_1.failure(res, 'bot creation failed');
     }
 });
-exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createBot = createBot;
+const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -83,6 +87,7 @@ exports.deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res_1.failure(res, e);
     }
 });
+exports.deleteBot = deleteBot;
 function installBotAsTribeAdmin(chat, bot_json) {
     return __awaiter(this, void 0, void 0, function* () {
         const chatId = chat && chat.id;

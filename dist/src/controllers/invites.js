@@ -9,12 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.createInvite = exports.payInvite = exports.finishInvite = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
 const hub_1 = require("../hub");
 // import * as proxy from '../utils/proxy'
-exports.finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { invite_string } = req.body;
     const params = {
         invite: {
@@ -33,7 +34,8 @@ exports.finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     hub_1.finishInviteInHub(params, onSuccess, onFailure);
 });
-exports.payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.finishInvite = finishInvite;
+const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -66,7 +68,8 @@ exports.payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // payInviteInHub(invite_string, params, onSuccess, onFailure)
     hub_1.payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure);
 });
-exports.createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.payInvite = payInvite;
+const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -111,4 +114,5 @@ exports.createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function*
     };
     hub_1.createInviteInHub(params, onSuccess, onFailure);
 });
+exports.createInvite = createInvite;
 //# sourceMappingURL=invites.js.map

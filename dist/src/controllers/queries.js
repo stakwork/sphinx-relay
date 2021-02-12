@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.receiveQueryResponse = exports.receiveQuery = exports.queryOnchainAddress = exports.startWatchingUTXOs = exports.listUTXOs = void 0;
 const res_1 = require("../utils/res");
 const models_1 = require("../models");
 const network = require("../network");
@@ -274,7 +275,7 @@ function queryOnchainAddress(req, res) {
     });
 }
 exports.queryOnchainAddress = queryOnchainAddress;
-exports.receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
     const content = dat.message.content;
@@ -336,7 +337,8 @@ exports.receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
 });
-exports.receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.receiveQuery = receiveQuery;
+const receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> receiveQueryResponse');
     const dat = payload.content || payload;
     // const sender_pub_key = dat.sender.pub_key
@@ -349,6 +351,7 @@ exports.receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, fu
         console.log("=> ERROR receiveQueryResponse,", e);
     }
 });
+exports.receiveQueryResponse = receiveQueryResponse;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

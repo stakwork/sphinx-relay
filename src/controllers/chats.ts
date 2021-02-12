@@ -206,6 +206,7 @@ export async function createGroupChat(req, res) {
 					is_private: req.body.private || false,
 					app_url,
 					feed_url,
+					owner_route_hint: owner.routeHint || ''
 				})
 			} catch (e) {
 				okToCreate = false

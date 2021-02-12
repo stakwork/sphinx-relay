@@ -50,6 +50,7 @@ export const createBot = async (req, res) => {
       img: img || '',
       unlisted: false,
       deleted: false,
+      owner_route_hint: req.owner.routeHint || ''
     })
     success(res, jsonUtils.botToJson(theBot))
   } catch (e) {

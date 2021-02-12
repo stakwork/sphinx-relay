@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.testRSA = exports.genKeys = exports.decrypt = exports.encrypt = void 0;
 const crypto = require("crypto");
 const BLOCK_SIZE = 256;
 const MAX_CHUNK_SIZE = BLOCK_SIZE - 11; // 11 is the PCKS1 padding

@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.addPendingContactIdsToChat = exports.createTribeChatParams = exports.replayChatHistory = exports.receiveTribeDelete = exports.receiveMemberReject = exports.receiveMemberApprove = exports.approveOrRejectMember = exports.editTribe = exports.receiveMemberRequest = exports.joinTribe = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -27,7 +28,7 @@ function joinTribe(req, res) {
             return;
         const tenant = req.owner.id;
         console.log('=> joinTribe');
-        const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias, my_alias, my_photo_url } = req.body;
+        const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url } = req.body;
         const is_private = req.body.private;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
         if (existing) {
@@ -56,7 +57,8 @@ function joinTribe(req, res) {
                 alias: owner_alias || 'Unknown',
                 status: 1,
                 fromGroup: true,
-                tenant
+                tenant,
+                routeHint: owner_route_hint || '',
             });
             theTribeOwner = createdContact;
             contactIds.push(createdContact.id);
@@ -247,6 +249,7 @@ function editTribe(req, res) {
                     app_url,
                     feed_url,
                     deleted: false,
+                    owner_route_hint: owner.routeHint || ''
                 });
             }
             catch (e) {

@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.receiveInvoice = exports.listInvoices = exports.createInvoice = exports.cancelInvoice = exports.payInvoice = void 0;
 const models_1 = require("../models");
 const LND = require("../utils/lightning");
 const socket = require("../utils/socket");
@@ -26,7 +27,7 @@ function stripLightningPrefix(s) {
         return s.substring(10);
     return s;
 }
-exports.payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -76,6 +77,7 @@ exports.payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.log("ERR paying invoice", e);
     }
 });
+exports.payInvoice = payInvoice;
 function anonymousInvoice(res, payment_request, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(payment_request);
@@ -101,12 +103,13 @@ function anonymousInvoice(res, payment_request, tenant) {
         });
     });
 }
-exports.cancelInvoice = (req, res) => {
+const cancelInvoice = (req, res) => {
     res.status(200);
     res.json({ success: false });
     res.end();
 };
-exports.createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.cancelInvoice = cancelInvoice;
+const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const tenant = req.owner.id;
@@ -198,7 +201,8 @@ exports.createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function
         });
     }
 });
-exports.listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createInvoice = createInvoice;
+const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
     const lightning = yield LND.loadLightning();
@@ -214,7 +218,8 @@ exports.listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
     });
 });
-exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+exports.listInvoices = listInvoices;
+const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('received invoice', payload);
     const total_spent = 1;
     const dat = payload.content || payload;
@@ -261,6 +266,7 @@ exports.receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function
     hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
+exports.receiveInvoice = receiveInvoice;
 // lnd invoice stuff
 function decodePaymentRequest(paymentRequest) {
     var decodedPaymentRequest = decodeUtils.decode(paymentRequest);

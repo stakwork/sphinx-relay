@@ -16,7 +16,7 @@ export async function joinTribe(req, res) {
 	const tenant:number = req.owner.id
 
 	console.log('=> joinTribe')
-	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_alias, my_alias, my_photo_url } = req.body
+	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url } = req.body
 	const is_private = req.body.private
 
 	const existing = await models.Chat.findOne({ where: { uuid, tenant } })
@@ -49,7 +49,8 @@ export async function joinTribe(req, res) {
 			alias: owner_alias || 'Unknown',
 			status: 1,
 			fromGroup: true,
-			tenant
+			tenant,
+			routeHint: owner_route_hint || '',
 		})
 		theTribeOwner = createdContact
 		contactIds.push(createdContact.id)
@@ -254,6 +255,7 @@ export async function editTribe(req, res) {
 				app_url,
 				feed_url,
 				deleted: false,
+				owner_route_hint: owner.routeHint || ''
 			})
 		} catch (e) {
 			okToUpdate = false

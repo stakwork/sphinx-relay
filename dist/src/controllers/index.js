@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ACTIONS = exports.set = void 0;
 const models_1 = require("../models");
 const chats = require("./chats");
 const chatTribes = require("./chatTribes");

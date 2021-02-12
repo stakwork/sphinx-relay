@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToForward = void 0;
 const lndService = require("../grpc");
 const lightning_1 = require("../utils/lightning");
 const controllers_1 = require("../controllers");
@@ -353,17 +354,21 @@ function parseAndVerifyPayload(data) {
                     console.log("VERIFY", v);
                 }
                 if (v && v.valid) {
+                    console.log("V VALID");
                     return payload;
                 }
                 else {
+                    console.log("V 338");
                     return payload; // => RM THIS
                 }
             }
             else {
+                console.log("V 342");
                 return payload; // => RM THIS
             }
         }
         catch (e) {
+            console.log("V 346");
             if (payload)
                 return payload; // => RM THIS
             return null;

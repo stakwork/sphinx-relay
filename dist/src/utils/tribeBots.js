@@ -9,10 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.makeBotsJSON = exports.declare_bot = void 0;
 const models_1 = require("../models");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
-function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
+function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint }) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = tribes_1.getHost();
         try {
@@ -24,6 +25,7 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
                     price_per_use: price_per_use || 0,
                     unlisted: unlisted || false,
                     deleted: deleted || false,
+                    owner_route_hint: owner_route_hint || ''
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
