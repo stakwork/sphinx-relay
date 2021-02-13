@@ -45,7 +45,7 @@ async function startCronJob(sub) {
     }
 
     const tenant = subscription.tenant
-    const owner = await models.Contact.findOne({where:{id:tenant}})
+    const owner = await models.Contact.findOne({ where: { id: tenant } })
     // SEND PAYMENT!!!
     sendSubscriptionPayment(subscription, false, owner)
   }, null, true);
@@ -102,7 +102,7 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
 }
 
 async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   var date = new Date();
   date.setMilliseconds(0)
@@ -193,8 +193,8 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 
 // pause sub
 export async function pauseSubscription(req, res) {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
   try {
     const sub = await models.Subscription.findOne({ where: { id, tenant } })
@@ -213,8 +213,8 @@ export async function pauseSubscription(req, res) {
 
 // restart sub
 export async function restartSubscription(req, res) {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
   try {
     const sub = await models.Subscription.findOne({ where: { id, tenant } })
@@ -243,10 +243,10 @@ async function getRawSubs(opts = {}) {
 
 // all subs
 export const getAllSubscriptions = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   try {
-    const subs = await getRawSubs({where:{tenant}})
+    const subs = await getRawSubs({ where: { tenant } })
     success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)))
   } catch (e) {
     console.log('ERROR getAllSubscriptions', e)
@@ -256,8 +256,8 @@ export const getAllSubscriptions = async (req, res) => {
 
 // one sub by id
 export async function getSubscription(req, res) {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   try {
     const sub = await models.Subscription.findOne({ where: { id: req.params.id, tenant } })
     success(res, jsonUtils.subscriptionToJson(sub, null))
@@ -269,8 +269,8 @@ export async function getSubscription(req, res) {
 
 // delete sub by id
 export async function deleteSubscription(req, res) {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const id = req.params.id
   if (!id) return
   try {
@@ -288,8 +288,8 @@ export async function deleteSubscription(req, res) {
 
 // all subs for contact id
 export const getSubscriptionsForContact = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   try {
     const subs = await getRawSubs({ where: { contactId: req.params.contactId, tenant } })
     success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)))
@@ -301,8 +301,8 @@ export const getSubscriptionsForContact = async (req, res) => {
 
 // create new sub
 export async function createSubscription(req, res) {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
 
   const date = new Date()
   date.setMilliseconds(0)
@@ -341,8 +341,8 @@ export async function createSubscription(req, res) {
 };
 
 export async function editSubscription(req, res) {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
 
   console.log('=> editSubscription')
   const date = new Date()

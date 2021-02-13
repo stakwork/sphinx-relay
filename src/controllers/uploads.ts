@@ -1,6 +1,6 @@
 import { models } from '../models'
 import * as path from 'path'
-import {loadConfig} from '../utils/config'
+import { loadConfig } from '../utils/config'
 
 const config = loadConfig()
 

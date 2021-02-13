@@ -12,8 +12,8 @@ import { replayChatHistory, createTribeChatParams, addPendingContactIdsToChat } 
 import constants from '../constants'
 
 export async function updateChat(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	console.log('=> updateChat')
 	const id = parseInt(req.params.id)
 	if (!id) {
@@ -39,8 +39,8 @@ export async function updateChat(req, res) {
 }
 
 export async function kickChatMember(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.tenant.id
+	if (!req.owner) return
+	const tenant: number = req.tenant.id
 
 	const chatId = parseInt(req.params['chat_id'])
 	const contactId = parseInt(req.params['contact_id'])
@@ -78,7 +78,7 @@ export async function receiveGroupKick(payload) {
 	console.log('=> receiveGroupKick')
 	const { owner, chat, sender, date_string, network_type } = await helpers.parseReceiveParams(payload)
 	if (!chat) return
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	// const owner = await models.Contact.findOne({where:{isOwner:true}})
 	// await chat.update({
@@ -118,16 +118,16 @@ export async function receiveGroupKick(payload) {
 }
 
 export async function getChats(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	const chats = await models.Chat.findAll({ where: { deleted: false, tenant }, raw: true })
 	const c = chats.map(chat => jsonUtils.chatToJson(chat));
 	success(res, c)
 }
 
 export async function mute(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const chatId = req.params['chat_id']
 	const mute = req.params['mute_unmute']
@@ -150,8 +150,8 @@ export async function mute(req, res) {
 // just add self here if tribes
 // or can u add contacts as members?
 export async function createGroupChat(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const {
 		name,
@@ -248,8 +248,8 @@ export async function createGroupChat(req, res) {
 
 // only owner can do for tribe?
 export async function addGroupMembers(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const {
 		contact_ids,
@@ -291,8 +291,8 @@ export async function addGroupMembers(req, res) {
 }
 
 export const deleteChat = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const { id } = req.params
 
@@ -352,7 +352,7 @@ export const deleteChat = async (req, res) => {
 export async function receiveGroupJoin(payload) {
 	console.log('=> receiveGroupJoin')
 	const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	if (!chat) return
 
@@ -459,7 +459,7 @@ export async function receiveGroupJoin(payload) {
 export async function receiveGroupLeave(payload) {
 	console.log('=> receiveGroupLeave')
 	const { chat, owner, sender_pub_key, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 	if (!chat) return
 
 	const isTribe = chat_type === constants.chat_types.tribe
@@ -527,7 +527,7 @@ async function validateTribeOwner(chat_uuid: string, pubkey: string) {
 }
 export async function receiveGroupCreateOrInvite(payload) {
 	const { owner, sender_pub_key, chat_members, chat_name, chat_uuid, chat_type, chat_host, chat_key } = await helpers.parseReceiveParams(payload)
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 	// maybe this just needs to move to adding tribe owner ChatMember?
 	const isTribe = chat_type === constants.chat_types.tribe
 	if (isTribe) { // must be sent by tribe owner?????

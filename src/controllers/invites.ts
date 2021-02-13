@@ -30,8 +30,8 @@ export const finishInvite = async (req, res) => {
 }
 
 export const payInvite = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const invite_string = req.params['invite_string']
 	const dbInvite = await models.Invite.findOne({ where: { inviteString: invite_string, tenant } })
@@ -66,8 +66,8 @@ export const payInvite = async (req, res) => {
 }
 
 export const createInvite = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	const {
 		nickname,
 		welcome_message

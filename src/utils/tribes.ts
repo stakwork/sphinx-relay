@@ -6,7 +6,7 @@ import * as mqtt from 'mqtt'
 import fetch from 'node-fetch'
 import { models, sequelize } from '../models'
 import { makeBotsJSON, declare_bot } from './tribeBots'
-import {loadConfig} from './config'
+import { loadConfig } from './config'
 import { isProxy } from './proxy'
 
 export { declare_bot }
@@ -22,11 +22,27 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
       ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
       AND sphinx_chats.tenant = sphinx_contacts.tenant
       AND sphinx_chats.uuid = '${uuid}'`, {
-        model: models.Chat,
-        mapToModel: true // pass true here if you have any mapped fields
-      })
+      model: models.Chat,
+      mapToModel: true // pass true here if you have any mapped fields
+    })
     return r && r[0] && r[0].dataValues
   } catch (e) { console.log(e) }
+}
+
+async function subscribeTopics(client: mqtt.MqttClient, identity_pubkey: string) {
+  if (isProxy()) {
+    const allOwners = await models.Contact.findAll({ where: { isOwner: true } })
+    if (allOwners && allOwners.length) {
+      allOwners.forEach(c => {
+        if (c.id === 1) return
+        if (c.publicKey && c.publicKey.length === 66) {
+          client.subscribe(`${c.publicKey}/#`)
+        }
+      })
+    }
+  } else { // just me
+    client.subscribe(`${identity_pubkey}/#`)
+  }
 }
 
 export async function connect(onMessage) {
@@ -44,7 +60,7 @@ export async function connect(onMessage) {
       })
       client.on('connect', async function () {
         console.log("[tribes] connected!")
-        client.subscribe(`${info.identity_pubkey}/#`)
+        subscribeTopics(client, info.identity_pubkey)
         updateTribeStats(info.identity_pubkey)
         const rndToken = await genSignedTimestamp()
         console.log('=> random sig', rndToken)
@@ -68,7 +84,7 @@ export async function connect(onMessage) {
 
 // for proxy, need to get all isOwner contacts and their owned chats
 async function updateTribeStats(myPubkey) {
-  if(isProxy()) return // skip on proxy for now?
+  if (isProxy()) return // skip on proxy for now?
   const myTribes = await models.Chat.findAll({
     where: {
       ownerPubkey: myPubkey
@@ -198,7 +214,7 @@ export async function putstats({ uuid, host, member_count, chatId }) {
   }
 }
 
-export async function genSignedTimestamp(ownerPubkey?:string) {
+export async function genSignedTimestamp(ownerPubkey?: string) {
   // console.log('genSignedTimestamp')
   const now = moment().unix()
   const tsBytes = Buffer.from(now.toString(16), 'hex')

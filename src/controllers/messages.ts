@@ -13,9 +13,9 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 
 export const getMessages = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
-	
+	if (!req.owner) return
+	const tenant: number = req.owner.id
+
 	const dateToReturn = req.query.date;
 
 	if (!dateToReturn) {
@@ -97,15 +97,15 @@ export const getMessages = async (req, res) => {
 }
 
 export const getAllMessages = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
 	const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 
 	console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
 
-	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset, where:{tenant} })
+	const messages = await models.Message.findAll({ order: [['id', 'asc']], limit, offset, where: { tenant } })
 	console.log('=> got msgs', (messages && messages.length))
 	const chatIds: number[] = []
 	messages.forEach((m) => {
@@ -127,8 +127,8 @@ export const getAllMessages = async (req, res) => {
 };
 
 export const getMsgs = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const limit = (req.query.limit && parseInt(req.query.limit))
 	const offset = (req.query.offset && parseInt(req.query.offset))
@@ -138,15 +138,15 @@ export const getMsgs = async (req, res) => {
 	}
 	console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`)
 
-	const clause:{[k:string]:any} = {
-		order: [['id', 'asc']], 
+	const clause: { [k: string]: any } = {
+		order: [['id', 'asc']],
 		where: {
 			updated_at: { [Op.gte]: dateToReturn },
 			tenant
 		}
 	}
-	if(limit) {
-		clause.limit = limit 
+	if (limit) {
+		clause.limit = limit
 		clause.offset = offset
 	}
 	const messages = await models.Message.findAll(clause)
@@ -168,8 +168,8 @@ export const getMsgs = async (req, res) => {
 };
 
 export async function deleteMessage(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const id = parseInt(req.params.id)
 
@@ -202,8 +202,8 @@ export async function deleteMessage(req, res) {
 }
 
 export const sendMessage = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	// try {
 	// 	schemas.message.validateSync(req.body)
 	// } catch(e) {
@@ -312,7 +312,7 @@ export const receiveMessage = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 	const text = content || ''
 
 	var date = new Date();
@@ -358,7 +358,7 @@ export const receiveBoost = async (payload) => {
 	if (!owner || !sender || !chat) {
 		return console.log('=> no group chat!')
 	}
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 	const text = content
 
 	var date = new Date();
@@ -461,11 +461,11 @@ export const receiveDeleteMessage = async (payload) => {
 }
 
 export const readMessages = async (req, res) => {
-	if(!req.owner) return
+	if (!req.owner) return
 
 	const chat_id = req.params.chat_id;
 	const owner = req.owner
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	await models.Message.update({ seen: true }, {
 		where: {
@@ -495,10 +495,10 @@ export const readMessages = async (req, res) => {
 }
 
 export const clearMessages = (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
-	models.Message.destroy({ where: {tenant}, truncate: true })
+	models.Message.destroy({ where: { tenant }, truncate: true })
 
 	success(res, {})
 }

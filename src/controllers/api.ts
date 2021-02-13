@@ -6,7 +6,7 @@ import * as jsonUtils from '../utils/json'
 import * as socket from '../utils/socket'
 import { success, failure } from '../utils/res'
 import constants from '../constants'
-import {getTribeOwnersChatByUUID} from '../utils/tribes'
+import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -78,11 +78,11 @@ export async function finalAction(a: Action) {
 
     console.log("=> ACTION HIT", a.action, a.bot_name)
     if (myBot) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid        
-        const owner = await models.Contact.findOne({where:{id: myBot.tenant}})
+        const owner = await models.Contact.findOne({ where: { id: myBot.tenant } })
         // THIS is a bot member cmd res (i am bot maker)
         const botMember = await models.BotMember.findOne({
             where: {
-                tribeUuid: chat_uuid, botId: bot_id, tenant:owner.id
+                tribeUuid: chat_uuid, botId: bot_id, tenant: owner.id
             }
         })
         if (!botMember) return console.log('no botMember')
@@ -134,8 +134,8 @@ export async function finalAction(a: Action) {
         const theChat = await getTribeOwnersChatByUUID(chat_uuid)
         if (!theChat) throw 'no chat'
         if (theChat.type !== constants.chat_types.tribe) throw 'not a tribe'
-        const owner = await models.Contact.findOne({where:{id:theChat.tenant}})
-        const tenant:number = owner.id
+        const owner = await models.Contact.findOne({ where: { id: theChat.tenant } })
+        const tenant: number = owner.id
 
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
         const encryptedText = rsa.encrypt(theChat.groupKey, content)

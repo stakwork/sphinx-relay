@@ -12,10 +12,10 @@ import { Msg } from '../network/interfaces'
 import constants from '../constants'
 
 export const getBots = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   try {
-    const bots = await models.Bot.findAll({where:{tenant}})
+    const bots = await models.Bot.findAll({ where: { tenant } })
     success(res, {
       bots: bots.map(b => jsonUtils.botToJson(b))
     })
@@ -25,8 +25,8 @@ export const getBots = async (req, res) => {
 }
 
 export const createBot = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const { name, webhook, price_per_use, img, description, tags, } = req.body
 
   const uuid = await tribes.genSignedTimestamp(req.owner.publicKey)
@@ -59,8 +59,8 @@ export const createBot = async (req, res) => {
 }
 
 export const deleteBot = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const id = req.params.id
   if (!id) return
   try {
@@ -80,7 +80,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
 
   console.log("=> chat to install bot into", chat.name)
   const owner = await models.Contact.findOne({ where: { id: tenant } })
-  if(!owner) return console.log('cant find owner in installBotAsTribeAdmin')
+  if (!owner) return console.log('cant find owner in installBotAsTribeAdmin')
   const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey)
   if (!isTribeOwner) return console.log('=> only tribe owner can install bots')
 
@@ -98,7 +98,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
     botType: botType,
     botUuid: uuid,
     botMakerPubkey: owner_pubkey,
-    botMakerRouteHint: owner_route_hint||'',
+    botMakerRouteHint: owner_route_hint || '',
     pricePerUse: price_per_use,
     tenant
   }
@@ -157,7 +157,7 @@ export async function keysendBotCmd(msg, b, owner): Promise<boolean> {
   )
 }
 
-export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid: string, owner, content?: string, sender_role?: number, botmaker_route_hint?:string): Promise<boolean> {
+export async function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid: string, owner, content?: string, sender_role?: number, botmaker_route_hint?: string): Promise<boolean> {
   const dest = botmaker_pubkey
   const amt = Math.max(amount || constants.min_sat_amount)
   const opts = {
@@ -193,7 +193,7 @@ export async function receiveBotInstall(payload) {
   const bot_uuid = dat.bot_uuid
   const chat_uuid = dat.chat && dat.chat.uuid
   const owner = dat.owner
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   if (!chat_uuid || !sender_pub_key) return console.log('no chat uuid or sender pub key')
 
@@ -235,7 +235,7 @@ export async function receiveBotCmd(payload) {
   const bot_uuid = dat.bot_uuid
   const chat_uuid = dat.chat && dat.chat.uuid
   const owner = dat.owner
-  const tenant:number = owner.id
+  const tenant: number = owner.id
   if (!chat_uuid) return console.log('no chat uuid')
   // const amount = dat.message.amount - check price_per_use
 
@@ -328,7 +328,7 @@ export async function receiveBotRes(payload) {
   const date_string = dat.message.date
   const network_type = dat.network_type || 0
   const owner = dat.owner
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   if (!chat_uuid) return console.log('=> receiveBotRes Error no chat_uuid')
 

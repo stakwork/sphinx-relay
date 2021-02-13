@@ -12,8 +12,8 @@ import { Op } from 'sequelize'
 import constants from '../constants'
 
 export async function joinTribe(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	console.log('=> joinTribe')
 	const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url } = req.body
@@ -127,7 +127,7 @@ export async function joinTribe(req, res) {
 export async function receiveMemberRequest(payload) {
 	console.log('=> receiveMemberRequest')
 	const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	if (!chat) return console.log('no chat')
 
@@ -209,8 +209,8 @@ export async function receiveMemberRequest(payload) {
 }
 
 export async function editTribe(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	const {
 		name,
 		price_per_message,
@@ -284,8 +284,8 @@ export async function editTribe(req, res) {
 }
 
 export async function approveOrRejectMember(req, res) {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	console.log('=> approve or reject tribe member')
 	const msgId = parseInt(req.params['messageId'])
@@ -346,7 +346,7 @@ export async function receiveMemberApprove(payload) {
 	if (!chat) return console.log('no chat')
 	await chat.update({ status: constants.chat_statuses.approved })
 
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	let date = new Date()
 	date.setMilliseconds(0)
@@ -400,7 +400,7 @@ export async function receiveMemberReject(payload) {
 	if (!chat) return console.log('no chat')
 	await chat.update({ status: constants.chat_statuses.rejected })
 
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	let date = new Date()
 	date.setMilliseconds(0)
@@ -431,7 +431,7 @@ export async function receiveTribeDelete(payload) {
 	console.log('=> receiveTribeDelete')
 	const { owner, chat, sender, network_type } = await helpers.parseReceiveParams(payload)
 	if (!chat) return console.log('no chat')
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 	// await chat.update({status: constants.chat_statuses.rejected})
 	// update on tribes server too
 	let date = new Date()
@@ -457,7 +457,7 @@ export async function receiveTribeDelete(payload) {
 }
 
 export async function replayChatHistory(chat, contact, owner) {
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 	console.log('-> replayHistory')
 	if (!(chat && chat.id && contact && contact.id)) {
 		return console.log('[tribes] cant replay history')

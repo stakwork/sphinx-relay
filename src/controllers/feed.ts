@@ -20,8 +20,8 @@ export interface Destination {
 }
 
 export const streamFeed = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const {
     destinations,
     amount,
@@ -80,7 +80,7 @@ export const streamFeed = async (req, res) => {
   success(res, {})
 }
 
-export async function anonymousKeysend(owner, destination_key: string, route_hint:string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
+export async function anonymousKeysend(owner, destination_key: string, route_hint: string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
   const msg: { [k: string]: any } = {
     type: constants.message_types.keysend,
   }

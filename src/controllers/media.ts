@@ -16,7 +16,7 @@ import * as network from '../network'
 import * as meme from '../utils/meme'
 import * as short from 'short-uuid'
 import constants from '../constants'
-import {loadConfig} from '../utils/config'
+import { loadConfig } from '../utils/config'
 
 const config = loadConfig()
 
@@ -39,8 +39,8 @@ purchase_deny returns the sats
 */
 
 export const sendAttachmentMessage = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   // try {
   //   schemas.attachment.validateSync(req.body)
   // } catch(e) {
@@ -167,8 +167,8 @@ export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, t
 }
 
 export const purchase = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const {
     chat_id,
     contact_id,
@@ -236,7 +236,7 @@ export const receivePurchase = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   const message = await models.Message.create({
     chatId: chat.id,
@@ -370,7 +370,7 @@ export const receivePurchaseAccept = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   const termsArray = mediaToken.split('.')
   // const host = termsArray[0]
@@ -417,7 +417,7 @@ export const receivePurchaseDeny = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
-  const tenant:number = owner.id
+  const tenant: number = owner.id
   const msg = await models.Message.create({
     chatId: chat.id,
     sender: sender.id,
@@ -449,7 +449,7 @@ export const receiveAttachment = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -488,8 +488,8 @@ export const receiveAttachment = async (payload) => {
 }
 
 export async function signer(req, res) {
-  if(!req.owner) return
-	// const tenant:number = req.owner.id
+  if (!req.owner) return
+  // const tenant:number = req.owner.id
   if (!req.params.challenge) return resUtils.failure(res, "no challenge")
   try {
     const sig = await signBuffer(

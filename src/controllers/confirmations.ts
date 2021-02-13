@@ -11,15 +11,15 @@ import { success, failure200 } from '../utils/res'
  UNLESS tribe admin: 
    then send only to the og sender
 */
-export function sendConfirmation({ chat, sender, msg_id, receiver }:{chat:any, sender:any, msg_id:number, receiver?:any}) {
+export function sendConfirmation({ chat, sender, msg_id, receiver }: { chat: any, sender: any, msg_id: number, receiver?: any }) {
 	if (!msg_id || !chat || !sender) return
 
 	let theChat = chat
 	const isTribe = chat.type === constants.chat_types.tribe
 	const isTribeOwner = isTribe && (sender && sender.publicKey) === (chat && chat.ownerPubkey)
-	if(isTribe && !isTribeOwner) return // DONT SEND IF NORMAL MEMBER
-	if(isTribeOwner && (receiver && receiver.id)) {
-		theChat = { ...(chat.dataValues||chat), contactIds:[receiver.id] }
+	if (isTribe && !isTribeOwner) return // DONT SEND IF NORMAL MEMBER
+	if (isTribeOwner && (receiver && receiver.id)) {
+		theChat = { ...(chat.dataValues || chat), contactIds: [receiver.id] }
 	}
 	network.sendMessage({
 		chat: theChat,
@@ -37,7 +37,7 @@ export async function receiveConfirmation(payload) {
 	const msg_id = dat.message.id
 	const sender_pub_key = dat.sender.pub_key
 	const owner = dat.owner
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } })
 	const chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant } })
@@ -150,7 +150,7 @@ export async function receiveHeartbeat(payload) {
 
 let heartbeats: { [k: string]: boolean } = {}
 export async function healthcheck(req, res) {
-	if(!req.owner) return
+	if (!req.owner) return
 	// const tenant:number = req.owner.id
 
 	const pubkey: string = req.query.pubkey
@@ -165,7 +165,7 @@ export async function healthcheck(req, res) {
 	const opts = {
 		amt,
 		dest: pubkey,
-		route_hint: routeHint||'',
+		route_hint: routeHint || '',
 		data: <network.Msg>{
 			type: constants.message_types.heartbeat,
 			message: {

@@ -4,14 +4,14 @@ import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo';
 import constants from '../constants'
 import { models } from '../models'
-import {loadConfig} from '../utils/config'
+import { loadConfig } from '../utils/config'
 import { getAppVersionsFromHub } from '../hub'
 
 const config = loadConfig()
 
-export async function getAppVersions(req, res){
+export async function getAppVersions(req, res) {
 	const vs = await getAppVersionsFromHub()
-	if(vs) {
+	if (vs) {
 		success(res, vs)
 	} else {
 		failure(res, 'Could not load app versions')
@@ -19,7 +19,7 @@ export async function getAppVersions(req, res){
 }
 
 export const checkRoute = async (req, res) => {
-	if(!req.owner) return
+	if (!req.owner) return
 
 	const { pubkey, amount } = req.query
 	if (!(pubkey && pubkey.length === 66)) return failure(res, 'wrong pubkey')
@@ -61,7 +61,7 @@ export async function getLogsSince(req, res) {
 }
 
 export const getInfo = async (req, res) => {
-	if(!req.owner) return
+	if (!req.owner) return
 
 	const lightning = await loadLightning(true, req.owner.publicKey)
 	var request = {}
@@ -77,8 +77,8 @@ export const getInfo = async (req, res) => {
 };
 
 export const getChannels = async (req, res) => {
-	if(!req.owner) return
-	
+	if (!req.owner) return
+
 	const lightning = await loadLightning(true, req.owner.publicKey) // try proxy
 	var request = {}
 	lightning.listChannels(request, function (err, response) {
@@ -98,8 +98,8 @@ interface BalanceRes {
 	reserve: number
 }
 export const getBalance = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	var date = new Date()
 	date.setMilliseconds(0)
@@ -128,7 +128,7 @@ export const getBalance = async (req, res) => {
 };
 
 export const getLocalRemoteBalance = async (req, res) => {
-	if(!req.owner) return
+	if (!req.owner) return
 	const lightning = await loadLightning(true, req.owner.publicKey) // try proxy
 	lightning.listChannels({}, (err, channelList) => {
 		const { channels } = channelList

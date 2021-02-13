@@ -17,8 +17,8 @@ function stripLightningPrefix(s) {
 }
 
 export const payInvoice = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
 
   const payment_request = stripLightningPrefix(req.body.payment_request)
 
@@ -69,12 +69,12 @@ export const payInvoice = async (req, res) => {
     })
     console.log('[pay invoice] stored message', paidMessage)
     success(res, jsonUtils.messageToJson(paidMessage, chat))
-  } catch(e) {
+  } catch (e) {
     console.log("ERR paying invoice", e)
   }
 };
 
-async function anonymousInvoice(res, payment_request: string, tenant:number) {
+async function anonymousInvoice(res, payment_request: string, tenant: number) {
   const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(payment_request)
   var date = new Date();
   date.setMilliseconds(0)
@@ -105,8 +105,8 @@ export const cancelInvoice = (req, res) => {
 };
 
 export const createInvoice = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const lightning = await LND.loadLightning(true, req.owner.publicKey) // try proxy
 
   const {
@@ -208,7 +208,7 @@ export const createInvoice = async (req, res) => {
 };
 
 export const listInvoices = async (req, res) => {
-  if(!req.owner) return
+  if (!req.owner) return
 
   const lightning = await LND.loadLightning()
 
@@ -238,7 +238,7 @@ export const receiveInvoice = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request)
 

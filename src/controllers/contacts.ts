@@ -9,13 +9,13 @@ import { Op } from 'sequelize'
 import constants from '../constants'
 
 export const getContacts = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 
 	const contacts = await models.Contact.findAll({ where: { deleted: false, tenant }, raw: true })
-	const invites = await models.Invite.findAll({ raw: true, where:{tenant} })
+	const invites = await models.Invite.findAll({ raw: true, where: { tenant } })
 	const chats = await models.Chat.findAll({ where: { deleted: false, tenant }, raw: true })
-	const subscriptions = await models.Subscription.findAll({ raw: true, where:{tenant} })
+	const subscriptions = await models.Subscription.findAll({ raw: true, where: { tenant } })
 	const pendingMembers = await models.ChatMember.findAll({
 		where: {
 			status: constants.chat_statuses.pending,
@@ -54,7 +54,7 @@ export const generateToken = async (req, res) => {
 	console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query })
 
 	const pubkey = req.body['pubkey']
-	const owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:pubkey } })
+	const owner = await models.Contact.findOne({ where: { isOwner: true, publicKey: pubkey } })
 
 	const pwd = password
 	if (process.env.USE_PASSWORD === 'true') {
@@ -68,13 +68,13 @@ export const generateToken = async (req, res) => {
 
 	if (owner) {
 		const token = req.body['token']
-		if(!token) {
+		if (!token) {
 			return failure(res, {})
 		}
 		const hash = crypto.createHash('sha256').update(token).digest('base64');
 
 		if (owner.authToken) {
-			if (owner.authToken!==hash) {
+			if (owner.authToken !== hash) {
 				return failure(res, {})
 			}
 		} else {
@@ -88,8 +88,8 @@ export const generateToken = async (req, res) => {
 }
 
 export const updateContact = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query })
 
 	let attrs = extractAttrs(req.body)
@@ -130,8 +130,8 @@ export const updateContact = async (req, res) => {
 }
 
 export const exchangeKeys = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query })
 
 	const contact = await models.Contact.findOne({ where: { id: req.params.id, tenant } })
@@ -147,8 +147,8 @@ export const exchangeKeys = async (req, res) => {
 }
 
 export const createContact = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	console.log('=> createContact called', { body: req.body, params: req.params, query: req.query })
 
 	let attrs = extractAttrs(req.body)
@@ -178,8 +178,8 @@ export const createContact = async (req, res) => {
 }
 
 export const deleteContact = async (req, res) => {
-	if(!req.owner) return
-	const tenant:number = req.owner.id
+	if (!req.owner) return
+	const tenant: number = req.owner.id
 	const id = parseInt(req.params.id || '0')
 	if (!id || id === 1) {
 		failure(res, 'Cannot delete self')
@@ -244,7 +244,7 @@ export const receiveContactKey = async (payload) => {
 	const sender_alias = dat.sender.alias || 'Unknown'
 	const sender_photo_url = dat.sender.photo_url
 	const owner = payload.owner
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	if (!sender_pub_key) {
 		return console.log("no pubkey!")
@@ -252,7 +252,7 @@ export const receiveContactKey = async (payload) => {
 
 	const sender = await models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants.contact_statuses.confirmed, tenant } })
 	let msgIncludedContactKey = false // ???????
-	if(sender_contact_key) {
+	if (sender_contact_key) {
 		msgIncludedContactKey = true
 	}
 	if (sender_contact_key && sender) {
@@ -289,7 +289,7 @@ export const receiveConfirmContactKey = async (payload) => {
 	const sender_alias = dat.sender.alias || 'Unknown'
 	const sender_photo_url = dat.sender.photo_url
 	const owner = dat.owner
-	const tenant:number = owner.id
+	const tenant: number = owner.id
 
 	if (!sender_pub_key) {
 		return console.log("no pubkey!")
@@ -309,7 +309,7 @@ export const receiveConfirmContactKey = async (payload) => {
 	}
 }
 
-function extractAttrs (body): {[k:string]:any}  {
+function extractAttrs(body): { [k: string]: any } {
 	let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount", "route_hint"]
 	let attrs = {}
 	Object.keys(body).forEach(key => {

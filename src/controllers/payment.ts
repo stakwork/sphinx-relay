@@ -12,8 +12,8 @@ import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 
 export const sendPayment = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const {
     amount,
     chat_id,
@@ -137,7 +137,7 @@ export const receivePayment = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
-  const tenant:number = owner.id
+  const tenant: number = owner.id
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -174,8 +174,8 @@ export const receivePayment = async (payload) => {
 }
 
 export const listPayments = async (req, res) => {
-  if(!req.owner) return
-	const tenant:number = req.owner.id
+  if (!req.owner) return
+  const tenant: number = req.owner.id
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 

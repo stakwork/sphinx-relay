@@ -41,6 +41,25 @@ function getTribeOwnersChatByUUID(uuid) {
     });
 }
 exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
+function subscribeTopics(client, identity_pubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (proxy_1.isProxy()) {
+            const allOwners = yield models_1.models.Contact.findAll({ where: { isOwner: true } });
+            if (allOwners && allOwners.length) {
+                allOwners.forEach(c => {
+                    if (c.id === 1)
+                        return;
+                    if (c.publicKey && c.publicKey.length === 66) {
+                        client.subscribe(`${c.publicKey}/#`);
+                    }
+                });
+            }
+        }
+        else { // just me
+            client.subscribe(`${identity_pubkey}/#`);
+        }
+    });
+}
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -58,7 +77,7 @@ function connect(onMessage) {
                     client.on('connect', function () {
                         return __awaiter(this, void 0, void 0, function* () {
                             console.log("[tribes] connected!");
-                            client.subscribe(`${info.identity_pubkey}/#`);
+                            subscribeTopics(client, info.identity_pubkey);
                             updateTribeStats(info.identity_pubkey);
                             const rndToken = yield genSignedTimestamp();
                             console.log('=> random sig', rndToken);
