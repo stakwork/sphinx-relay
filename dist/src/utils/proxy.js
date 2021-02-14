@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadProxyLightning = exports.loadProxyCredentials = exports.generateNewUser = exports.generateNewUsers = exports.isProxy = void 0;
+exports.loadProxyLightning = exports.loadProxyCredentials = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const config_1 = require("./config");
@@ -24,10 +24,18 @@ function isProxy() {
     return (config.proxy_lnd_port && config.proxy_macaroons_dir && config.proxy_tls_location) ? true : false;
 }
 exports.isProxy = isProxy;
-const NEW_USER_NUM = 40;
+function genUsersInterval(ms) {
+    if (!isProxy())
+        return;
+    setInterval(generateNewUsers, ms);
+}
+exports.genUsersInterval = genUsersInterval;
+const NEW_USER_NUM = 10;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!isProxy())
+            return;
         const newusers = yield models_1.models.Contact.findAll({ where: { isOwner: true, authToken: null } });
         if (newusers.length < NEW_USER_NUM) {
             console.log('gen new users');

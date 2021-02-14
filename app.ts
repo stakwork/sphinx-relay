@@ -5,6 +5,7 @@ import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
 import logger from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
+import { genUsersInterval } from './src/utils/proxy'
 import { setupDatabase, setupDone, setupOwnerContact } from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
@@ -32,6 +33,7 @@ async function start() {
 	// // IF NOT UNLOCK, go ahead and start this now
 	if (config.hub_api_url && !config.unlock) {
 		pingHubInterval(15000)
+		genUsersInterval(15000)
 	}
 }
 start()

@@ -21,6 +21,7 @@ const LND = require("./utils/lightning");
 const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
 const https = require("https");
+const proxy_1 = require("./utils/proxy");
 const pingAgent = new https.Agent({
     keepAlive: true
 });
@@ -94,7 +95,19 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
     }
     const node = yield nodeinfo_1.nodeinfo();
     sendHubCall(Object.assign(Object.assign({}, params), { node }));
+    if (proxy_1.isProxy()) { // send all "clean" nodes
+        pingHubWithCleanProxies(node);
+    }
 });
+function pingHubWithCleanProxies(node) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const cleans = yield models_1.models.Contact.findAll({ where: { isOwner: true, authToken: null } });
+        asyncForEach(cleans, (c) => __awaiter(this, void 0, void 0, function* () {
+            const p = yield nodeinfo_1.proxynodeinfo(c.publicKey); // channel
+            sendHubCall(Object.assign(Object.assign({}, node), p));
+        }));
+    });
+}
 function sendHubCall(params) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -327,5 +340,12 @@ function debounce(func, id, delay) {
         // setTimeout(()=> tribeCounts[id]=0, 15)
         tribeCounts[id] = 0;
     }, delay);
+}
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
 }
 //# sourceMappingURL=hub.js.map

@@ -16,6 +16,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const logger_1 = require("./src/utils/logger");
 const hub_1 = require("./src/hub");
+const proxy_1 = require("./src/utils/proxy");
 const setup_1 = require("./src/utils/setup");
 const controllers = require("./src/controllers");
 const connect = require("./src/utils/connect");
@@ -40,6 +41,7 @@ function start() {
         // // IF NOT UNLOCK, go ahead and start this now
         if (config.hub_api_url && !config.unlock) {
             hub_1.pingHubInterval(15000);
+            proxy_1.genUsersInterval(15000);
         }
     });
 }

@@ -14,9 +14,15 @@ export function isProxy(): boolean {
   return (config.proxy_lnd_port && config.proxy_macaroons_dir && config.proxy_tls_location) ? true : false
 }
 
-const NEW_USER_NUM = 40
+export function genUsersInterval(ms) {
+  if(!isProxy()) return
+  setInterval(generateNewUsers, ms)
+}
+
+const NEW_USER_NUM = 10
 // isOwner users with no authToken
 export async function generateNewUsers(){
+  if(!isProxy()) return
   const newusers = await models.Contact.findAll({where:{isOwner:true,authToken:null}})
   if(newusers.length<NEW_USER_NUM) {
     console.log('gen new users')

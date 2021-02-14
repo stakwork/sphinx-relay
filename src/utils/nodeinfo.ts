@@ -4,7 +4,24 @@ import * as publicIp from 'public-ip'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import { models } from '../models'
 
-function nodeinfo() {
+export function proxynodeinfo(pk:string):Promise<Object> {
+  return new Promise(async (resolve, reject)=> {
+    const lightning = await LND.loadLightning(true, pk) // dont try proxy
+    lightning.listChannels({}, (err, channelList) => {
+      if (err) console.log(err)
+      if (!channelList) return
+      const { channels } = channelList
+      resolve({
+        pubkey: pk,
+        number_channels: channels.length,
+        open_channel_data: channels,
+        clean: true
+      })
+    })
+  })
+}
+
+export function nodeinfo() {
   return new Promise(async (resolve, reject) => {
 
     const nzp = await listNonZeroPolicies()
@@ -120,8 +137,6 @@ function nodeinfo() {
     }
   })
 }
-
-export { nodeinfo }
 
 export async function isClean() {
   // has owner but with no auth token (id=1?)

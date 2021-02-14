@@ -9,11 +9,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isClean = exports.nodeinfo = void 0;
+exports.isClean = exports.nodeinfo = exports.proxynodeinfo = void 0;
 const LND = require("../utils/lightning");
 const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
+function proxynodeinfo(pk) {
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        const lightning = yield LND.loadLightning(true, pk); // dont try proxy
+        lightning.listChannels({}, (err, channelList) => {
+            if (err)
+                console.log(err);
+            if (!channelList)
+                return;
+            const { channels } = channelList;
+            resolve({
+                pubkey: pk,
+                number_channels: channels.length,
+                open_channel_data: channels,
+                clean: true
+            });
+        });
+    }));
+}
+exports.proxynodeinfo = proxynodeinfo;
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const nzp = yield listNonZeroPolicies();

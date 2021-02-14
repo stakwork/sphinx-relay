@@ -4,11 +4,12 @@ import { Op } from 'sequelize'
 import * as socket from './utils/socket'
 import * as jsonUtils from './utils/json'
 import * as helpers from './helpers'
-import { nodeinfo } from './utils/nodeinfo'
+import { nodeinfo, proxynodeinfo } from './utils/nodeinfo'
 import * as LND from './utils/lightning'
 import constants from './constants'
 import {loadConfig} from './utils/config'
 import * as https from 'https'
+import { isProxy } from './utils/proxy'
 
 const pingAgent = new https.Agent({ 
 	keepAlive: true 
@@ -97,6 +98,19 @@ const pingHub = async (params = {}) => {
 
   const node = await nodeinfo()
   sendHubCall({ ...params, node })
+
+  if(isProxy()) { // send all "clean" nodes
+    pingHubWithCleanProxies(node)
+  }
+
+}
+
+async function pingHubWithCleanProxies(node){
+  const cleans = await models.Contact.findAll({where:{isOwner:true,authToken:null}})
+  asyncForEach(cleans, async c=>{
+    const p = await proxynodeinfo(c.publicKey) // channel
+    sendHubCall({...node, ...p})
+  })
 }
 
 async function sendHubCall(params) {
@@ -335,4 +349,10 @@ function debounce(func, id, delay) {
     // setTimeout(()=> tribeCounts[id]=0, 15)
     tribeCounts[id] = 0
   }, delay)
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+		await callback(array[index], index, array);
+	}
 }
