@@ -16,10 +16,12 @@ export function isProxy(): boolean {
 
 export function genUsersInterval(ms) {
   if(!isProxy()) return
-  setInterval(generateNewUsers, ms)
+  setTimeout(()=>{ // so it starts a bit later than pingHub
+    setInterval(generateNewUsers, ms)
+  }, 2000) 
 }
 
-const NEW_USER_NUM = 10
+const NEW_USER_NUM = 2
 // isOwner users with no authToken
 export async function generateNewUsers(){
   if(!isProxy()) return
@@ -34,21 +36,25 @@ export async function generateNewUsers(){
   }
 }
 
-const adminURL = 'http://localhost:5555/'
+const adminURL = config.proxy_admin_url ? (config.proxy_admin_url+'/') : 'http://localhost:5555/'
 export async function generateNewUser(rootpk: string){
-  const r = await fetch(adminURL + 'generate', {
-    method:'POST',
-    headers:{'x-admin-token':config.proxy_admin_token}
-  })
-  const j = await r.json()
-  const contact = {
-    publicKey: j.pubkey,
-    routeHint: `${rootpk}:${j.channel}`,
-    isOwner: true,
-    authToken: null
+  try {
+    const r = await fetch(adminURL + 'generate', {
+      method:'POST',
+      headers:{'x-admin-token':config.proxy_admin_token}
+    })
+    const j = await r.json()
+    const contact = {
+      publicKey: j.pubkey,
+      routeHint: `${rootpk}:${j.channel}`,
+      isOwner: true,
+      authToken: null
+    }
+    const created = await models.Contact.create(contact)
+    console.log("=> CREATED OWNER:", created.dataValues)
+  } catch(e) {
+    console.log('=> could not gen new user', e)
   }
-  const created = await models.Contact.create(contact)
-  console.log(created)
 }
 
 export function loadProxyCredentials(macPrefix: string) {

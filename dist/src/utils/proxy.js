@@ -27,10 +27,12 @@ exports.isProxy = isProxy;
 function genUsersInterval(ms) {
     if (!isProxy())
         return;
-    setInterval(generateNewUsers, ms);
+    setTimeout(() => {
+        setInterval(generateNewUsers, ms);
+    }, 2000);
 }
 exports.genUsersInterval = genUsersInterval;
-const NEW_USER_NUM = 10;
+const NEW_USER_NUM = 2;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -48,22 +50,27 @@ function generateNewUsers() {
     });
 }
 exports.generateNewUsers = generateNewUsers;
-const adminURL = 'http://localhost:5555/';
+const adminURL = config.proxy_admin_url ? (config.proxy_admin_url + '/') : 'http://localhost:5555/';
 function generateNewUser(rootpk) {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = yield node_fetch_1.default(adminURL + 'generate', {
-            method: 'POST',
-            headers: { 'x-admin-token': config.proxy_admin_token }
-        });
-        const j = yield r.json();
-        const contact = {
-            publicKey: j.pubkey,
-            routeHint: `${rootpk}:${j.channel}`,
-            isOwner: true,
-            authToken: null
-        };
-        const created = yield models_1.models.Contact.create(contact);
-        console.log(created);
+        try {
+            const r = yield node_fetch_1.default(adminURL + 'generate', {
+                method: 'POST',
+                headers: { 'x-admin-token': config.proxy_admin_token }
+            });
+            const j = yield r.json();
+            const contact = {
+                publicKey: j.pubkey,
+                routeHint: `${rootpk}:${j.channel}`,
+                isOwner: true,
+                authToken: null
+            };
+            const created = yield models_1.models.Contact.create(contact);
+            console.log("=> CREATED OWNER:", created.dataValues);
+        }
+        catch (e) {
+            console.log('=> could not gen new user', e);
+        }
     });
 }
 exports.generateNewUser = generateNewUser;

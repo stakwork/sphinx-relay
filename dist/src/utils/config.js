@@ -40,6 +40,7 @@ function loadConfig() {
         proxy_lnd_ip: ENV.PROXY_LND_IP || config.proxy_lnd_ip,
         proxy_lnd_port: ENV.PROXY_LND_PORT || config.proxy_lnd_port,
         proxy_admin_token: ENV.PROXY_ADMIN_TOKEN || config.proxy_admin_token,
+        proxy_admin_url: ENV.PROXY_ADMIN_URL || config.proxy_admin_url,
     };
 }
 exports.loadConfig = loadConfig;
