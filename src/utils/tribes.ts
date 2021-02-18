@@ -32,14 +32,13 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
 async function subscribeTopics(client: mqtt.MqttClient, identity_pubkey: string) {
   if (isProxy()) {
     const allOwners = await models.Contact.findAll({ where: { isOwner: true } })
-    if (allOwners && allOwners.length) {
-      allOwners.forEach(c => {
-        if (c.id === 1) return
-        if (c.publicKey && c.publicKey.length === 66) {
-          client.subscribe(`${c.publicKey}/#`)
-        }
-      })
-    }
+    if (!(allOwners && allOwners.length)) return
+    allOwners.forEach(c => {
+      if (c.id === 1) return
+      if (c.publicKey && c.publicKey.length === 66) {
+        client.subscribe(`${c.publicKey}/#`)
+      }
+    })
   } else { // just me
     client.subscribe(`${identity_pubkey}/#`)
   }

@@ -19,6 +19,7 @@ const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
+const tribes = require("../utils/tribes");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
@@ -61,6 +62,9 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query });
     const pubkey = req.body['pubkey'];
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: pubkey } });
+    if (!owner) {
+        return res_1.failure(res, {});
+    }
     const pwd = password_1.default;
     if (process.env.USE_PASSWORD === 'true') {
         if (pwd !== req.query.pwd) {
@@ -71,25 +75,22 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             console.log("PASSWORD ACCEPTED!");
         }
     }
-    if (owner) {
-        const token = req.body['token'];
-        if (!token) {
+    const token = req.body['token'];
+    if (!token) {
+        return res_1.failure(res, {});
+    }
+    const hash = crypto.createHash('sha256').update(token).digest('base64');
+    if (owner.authToken) {
+        if (owner.authToken !== hash) {
             return res_1.failure(res, {});
         }
-        const hash = crypto.createHash('sha256').update(token).digest('base64');
-        if (owner.authToken) {
-            if (owner.authToken !== hash) {
-                return res_1.failure(res, {});
-            }
-        }
-        else {
-            owner.update({ authToken: hash });
-        }
-        res_1.success(res, {});
     }
     else {
-        res_1.failure(res, {});
+        // done!
+        tribes.subscribe(`${pubkey}/#`); // add MQTT subsription
+        owner.update({ authToken: hash });
     }
+    res_1.success(res, {});
 });
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

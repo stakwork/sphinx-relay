@@ -7,6 +7,7 @@ import { success, failure } from '../utils/res'
 import password from '../utils/password'
 import { Op } from 'sequelize'
 import constants from '../constants'
+import * as tribes from '../utils/tribes'
 
 export const getContacts = async (req, res) => {
 	if (!req.owner) return
@@ -55,6 +56,9 @@ export const generateToken = async (req, res) => {
 
 	const pubkey = req.body['pubkey']
 	const owner = await models.Contact.findOne({ where: { isOwner: true, publicKey: pubkey } })
+	if(!owner) {
+		return failure(res, {})
+	}
 
 	const pwd = password
 	if (process.env.USE_PASSWORD === 'true') {
@@ -66,25 +70,23 @@ export const generateToken = async (req, res) => {
 		}
 	}
 
-	if (owner) {
-		const token = req.body['token']
-		if (!token) {
+	const token = req.body['token']
+	if (!token) {
+		return failure(res, {})
+	}
+	const hash = crypto.createHash('sha256').update(token).digest('base64');
+
+	if (owner.authToken) {
+		if (owner.authToken !== hash) {
 			return failure(res, {})
 		}
-		const hash = crypto.createHash('sha256').update(token).digest('base64');
-
-		if (owner.authToken) {
-			if (owner.authToken !== hash) {
-				return failure(res, {})
-			}
-		} else {
-			owner.update({ authToken: hash })
-		}
-
-		success(res, {})
 	} else {
-		failure(res, {})
+		// done!
+		tribes.subscribe(`${pubkey}/#`) // add MQTT subsription
+		owner.update({ authToken: hash })
 	}
+
+	success(res, {})
 }
 
 export const updateContact = async (req, res) => {
