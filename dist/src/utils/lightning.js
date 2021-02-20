@@ -193,10 +193,17 @@ function sendPayment(payment_request, ownerPubkey) {
             let lightning = yield loadLightning(true, ownerPubkey); // try proxy
             if (proxy_1.isProxy()) {
                 lightning.sendPaymentSync({ payment_request }, (err, response) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
-                        resolve(response);
+                    }
+                    else {
+                        if (response.payment_error) {
+                            reject(response.payment_error);
+                        }
+                        else {
+                            resolve(response);
+                        }
+                    }
                 });
             }
             else {
@@ -245,10 +252,17 @@ const keysend = (opts, ownerPubkey) => {
                 options.fee_limit = { fixed: FEE_LIMIT_SAT };
                 let lightning = yield loadLightning(true, ownerPubkey); // try proxy
                 lightning.sendPaymentSync(options, (err, response) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
-                        resolve(response);
+                    }
+                    else {
+                        if (response.payment_error) {
+                            reject(response.payment_error);
+                        }
+                        else {
+                            resolve(response);
+                        }
+                    }
                 });
             }
             else {

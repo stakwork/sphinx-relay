@@ -181,8 +181,16 @@ async function sendPayment(payment_request:string, ownerPubkey?:string) {
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
     if(isProxy()) {
       lightning.sendPaymentSync({payment_request}, (err, response) => {
-        if(err) reject(err)
-        else resolve(response)
+        if(err) {
+          reject(err)
+        }
+        else {
+          if(response.payment_error) {
+            reject(response.payment_error)
+          } else {
+            resolve(response)
+          }
+        }
       })
     } else {
       var call = lightning.sendPayment({})
@@ -228,8 +236,16 @@ const keysend = (opts, ownerPubkey?:string) => {
       options.fee_limit = { fixed: FEE_LIMIT_SAT }
       let lightning = await loadLightning(true, ownerPubkey) // try proxy
       lightning.sendPaymentSync(options, (err, response) => {
-        if(err) reject(err)
-        else resolve(response)
+        if(err) {
+          reject(err)
+        }
+        else {
+          if(response.payment_error) {
+            reject(response.payment_error)
+          } else {
+            resolve(response)
+          }
+        }
       })
     } else {
       // new sendPayment (with optional route hints)

@@ -55,9 +55,12 @@ export const generateToken = async (req, res) => {
 	console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query })
 
 	const pubkey = req.body['pubkey']
+	if(!pubkey) {
+		return failure(res, 'no pubkey')
+	}
 	const owner = await models.Contact.findOne({ where: { isOwner: true, publicKey: pubkey } })
 	if(!owner) {
-		return failure(res, {})
+		return failure(res, 'no owner')
 	}
 
 	const pwd = password

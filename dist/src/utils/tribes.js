@@ -21,7 +21,7 @@ Object.defineProperty(exports, "declare_bot", { enumerable: true, get: function 
 const config_1 = require("./config");
 const proxy_1 = require("./proxy");
 const config = config_1.loadConfig();
-let client;
+let clients = {};
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -41,65 +41,104 @@ function getTribeOwnersChatByUUID(uuid) {
     });
 }
 exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
-function subscribeTopics(client, identity_pubkey) {
+function initializeClient(pubkey, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (proxy_1.isProxy()) {
-            const allOwners = yield models_1.models.Contact.findAll({ where: { isOwner: true } });
-            if (!(allOwners && allOwners.length))
-                return;
-            allOwners.forEach(c => {
-                if (c.id === 1)
-                    return;
-                if (c.publicKey && c.publicKey.length === 66) {
-                    client.subscribe(`${c.publicKey}/#`);
-                }
-            });
-        }
-        else { // just me
-            client.subscribe(`${identity_pubkey}/#`);
-        }
-    });
-}
-function connect(onMessage) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const info = yield LND.getInfo(false); // dont try proxy
+        return new Promise((resolve, reject) => {
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    client = null;
-                    const pwd = yield genSignedTimestamp();
-                    console.log('[tribes] try to connect:', `tls://${config.tribes_host}:8883`);
-                    client = mqtt.connect(`tls://${config.tribes_host}:8883`, {
-                        username: info.identity_pubkey,
+                    const pwd = yield genSignedTimestamp(pubkey);
+                    const cl = mqtt.connect(mqttURL(), {
+                        username: pubkey,
                         password: pwd,
                         reconnectPeriod: 0,
                     });
-                    client.on('connect', function () {
+                    clients[pubkey] = cl;
+                    console.log('[tribes] try to connect:', mqttURL());
+                    cl.on('connect', function () {
                         return __awaiter(this, void 0, void 0, function* () {
                             console.log("[tribes] connected!");
-                            subscribeTopics(client, info.identity_pubkey);
-                            updateTribeStats(info.identity_pubkey);
-                            const rndToken = yield genSignedTimestamp();
-                            console.log('=> random sig', rndToken);
+                            cl.subscribe(pubkey + '/#');
+                            resolve(cl);
                         });
                     });
-                    client.on('close', function (e) {
+                    cl.on('close', function (e) {
                         setTimeout(() => reconnect(), 2000);
                     });
-                    client.on('error', function (e) {
+                    cl.on('error', function (e) {
                         console.log('[tribes] error: ', e.message || e);
                     });
-                    client.on('message', function (topic, message) {
+                    cl.on('message', function (topic, message) {
                         if (onMessage)
                             onMessage(topic, message);
                     });
                 });
             }
             reconnect();
+        });
+    });
+}
+function lazyClient(pubkey, onMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (clients[pubkey])
+            return clients[pubkey];
+        const cl = yield initializeClient(pubkey, onMessage);
+        return cl;
+    });
+}
+function subscribeTopics(onMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            if (proxy_1.isProxy()) {
+                const allOwners = yield models_1.models.Contact.findAll({ where: { isOwner: true } });
+                if (!(allOwners && allOwners.length))
+                    return;
+                allOwners.forEach((c) => __awaiter(this, void 0, void 0, function* () {
+                    if (c.id === 1)
+                        return;
+                    if (c.publicKey && c.publicKey.length === 66) {
+                        const opts = {
+                            qos: 0
+                        };
+                        const client = yield lazyClient(c.publicKey, onMessage);
+                        client.subscribe(`${c.publicKey}/#`, opts, function (err) {
+                            if (err)
+                                console.log("[tribes] subscribe error", err);
+                        });
+                    }
+                }));
+            }
+            else { // just me
+                const info = yield LND.getInfo(false);
+                const client = yield lazyClient(info.identity_pubkey, onMessage);
+                client.subscribe(`${info.identity_pubkey}/#`);
+                updateTribeStats(info.identity_pubkey);
+            }
         }
         catch (e) {
             console.log("TRIBES ERROR", e);
         }
+    });
+}
+// if host includes colon, remove it
+function mqttURL() {
+    let host = config.tribes_host;
+    if (host.includes(':')) {
+        const arr = host.split(':');
+        host = arr[0];
+    }
+    let port = '8883';
+    let protocol = 'tls';
+    if (config.tribes_mqtt_port) {
+        port = config.tribes_mqtt_port;
+    }
+    if (config.tribes_protocol) {
+        protocol = config.tribes_protocol;
+    }
+    return `${protocol}://${host}:${port}`;
+}
+function connect(onMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        subscribeTopics(onMessage);
     });
 }
 exports.connect = connect;
@@ -127,18 +166,33 @@ function updateTribeStats(myPubkey) {
     });
 }
 function subscribe(topic) {
-    if (client)
-        client.subscribe(topic);
+    return __awaiter(this, void 0, void 0, function* () {
+        const pubkey = topic.split('/')[0];
+        if (pubkey.length !== 66)
+            return;
+        const client = yield lazyClient(pubkey);
+        if (client)
+            client.subscribe(topic);
+    });
 }
 exports.subscribe = subscribe;
 function publish(topic, msg, cb) {
-    if (client)
-        client.publish(topic, msg, null, function (err) {
-            if (err)
-                console.log(err);
-            else if (cb)
-                cb();
-        });
+    return __awaiter(this, void 0, void 0, function* () {
+        const pubkey = topic.split('/')[0];
+        if (pubkey.length !== 66)
+            return;
+        const client = yield lazyClient(pubkey);
+        const opts = {
+            qos: 0
+        };
+        if (client)
+            client.publish(topic, msg, opts, function (err) {
+                if (err)
+                    console.log(err);
+                else if (cb)
+                    cb();
+            });
+    });
 }
 exports.publish = publish;
 function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, owner_route_hint }) {

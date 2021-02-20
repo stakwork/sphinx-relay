@@ -66,6 +66,8 @@ function generateNewUser(rootpk) {
                 authToken: null
             };
             const created = yield models_1.models.Contact.create(contact);
+            // set tenant to self!
+            created.update({ tenant: created.id });
             console.log("=> CREATED OWNER:", created.dataValues);
         }
         catch (e) {
@@ -95,7 +97,11 @@ function loadProxyLightning(ownerPubkey) {
                 macname = ownerPubkey;
             }
             else {
-                macname = yield getProxyRootPubkey();
+                try {
+                    macname = yield getProxyRootPubkey();
+                }
+                catch (e) {
+                }
             }
             var credentials = loadProxyCredentials(macname);
             var lnrpcDescriptor = grpc.load("proto/rpc_proxy.proto");

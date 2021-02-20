@@ -12,9 +12,14 @@ import Bot from './ts/bot'
 import ChatBot from './ts/chatBot'
 import BotMember from './ts/botMember'
 import Accounting from './ts/accounting'
+import * as minimist from 'minimist';
+
+const argv = minimist(process.argv.slice(2));
+
+const configFile = argv.db ? argv.db : path.join(__dirname, '../../config/config.json')
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/config.json'))[env]
+const config = require(configFile)[env]
 
 const sequelize = new Sequelize({
   ...config,

@@ -51,6 +51,8 @@ export async function generateNewUser(rootpk: string){
       authToken: null
     }
     const created = await models.Contact.create(contact)
+    // set tenant to self!
+    created.update({tenant:created.id})
     console.log("=> CREATED OWNER:", created.dataValues)
   } catch(e) {
     console.log('=> could not gen new user', e)
@@ -77,7 +79,11 @@ export async function loadProxyLightning(ownerPubkey?:string) {
     if(ownerPubkey && ownerPubkey.length===66) {
       macname = ownerPubkey
     } else {
-      macname = await getProxyRootPubkey()
+      try {
+        macname = await getProxyRootPubkey()
+      } catch(e) {
+
+      }
     }
     var credentials = loadProxyCredentials(macname)
     var lnrpcDescriptor = grpc.load("proto/rpc_proxy.proto");

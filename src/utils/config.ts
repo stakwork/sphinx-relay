@@ -1,7 +1,12 @@
 import * as path from 'path'
+import * as minimist from 'minimist';
+
+const argv = minimist(process.argv.slice(2));
+
+const configFile = argv.config ? argv.config : path.join(__dirname, '../../config/app.json')
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = require(configFile)[env]
 const ENV = process.env
 
 export function loadConfig() {
@@ -21,6 +26,8 @@ export function loadConfig() {
     hub_check_invite_url: ENV.HUB_CHECK_INVITE_URL || config.hub_check_invite_url,
     media_host: ENV.MEDIA_HOST || config.media_host,
     tribes_host: ENV.TRIBES_HOST || config.tribes_host,
+    tribes_mqtt_port: ENV.TRIBES_MQTT_PORT || config.tribes_mqtt_port,
+    tribes_protocol: ENV.TRIBES_PROTOCOL || config.tribes_protocol,
     public_url: ENV.PUBLIC_URL || config.public_url,
     connection_string_path: ENV.CONNECTION_STRING_PATH || config.connection_string_path,
     ssl: {

@@ -61,9 +61,12 @@ exports.getContacts = getContacts;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query });
     const pubkey = req.body['pubkey'];
+    if (!pubkey) {
+        return res_1.failure(res, 'no pubkey');
+    }
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: pubkey } });
     if (!owner) {
-        return res_1.failure(res, {});
+        return res_1.failure(res, 'no owner');
     }
     const pwd = password_1.default;
     if (process.env.USE_PASSWORD === 'true') {
