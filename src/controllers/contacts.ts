@@ -89,7 +89,7 @@ export const generateToken = async (req, res) => {
 		owner.update({ authToken: hash })
 	}
 
-	success(res, {})
+	success(res, {id: (owner && owner.id) || 0})
 }
 
 export const updateContact = async (req, res) => {

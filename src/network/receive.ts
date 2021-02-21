@@ -390,16 +390,21 @@ export async function parseKeysendInvoice(i) {
 	let dest = ''
 	let owner
 	if(isProxy()) {
-		const invoice:any = await decodePayReq(i.payment_request)
-		if(!invoice) return console.log("couldn't decode pay req")
-		if(!invoice.destination) return console.log("cant get dest from pay req")
-		dest = invoice.destination
-		owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:dest } })
+		try {
+			const invoice:any = await decodePayReq(i.payment_request)
+			if(!invoice) return console.log("couldn't decode pay req")
+			if(!invoice.destination) return console.log("cant get dest from pay req")
+			dest = invoice.destination
+			console.log("RECEIVED DEST", dest)
+			owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:dest } })
+		} catch(e) {
+			console.log("FAILURE TO DECODE PAY REQ", e)
+		}
 	} else { // non-proxy, only one "owner"
 		owner = await models.Contact.findOne({ where: { isOwner:true } })
 		dest = owner.publicKey
 	}
-	if(!owner) {
+	if(!owner || !dest) {
 		console.log('=> parseKeysendInvoice ERROR: cant find owner')
 		return
 	}

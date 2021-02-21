@@ -92,6 +92,12 @@ function ownerMiddleware(req, res, next) {
             }
         }
         const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
+        if (!token) {
+            console.log("NOT TOEKN!!!!!");
+            res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
+            res.end('Invalid credentials');
+            return;
+        }
         const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
         const owner = yield models_1.models.Contact.findOne({ where: { authToken: hashedToken, isOwner: true } });
         if (!owner) {

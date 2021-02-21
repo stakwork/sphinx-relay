@@ -93,7 +93,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         tribes.subscribe(`${pubkey}/#`); // add MQTT subsription
         owner.update({ authToken: hash });
     }
-    res_1.success(res, {});
+    res_1.success(res, { id: (owner && owner.id) || 0 });
 });
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
