@@ -60,14 +60,20 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                     const one = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
                     if (!one) {
                         let authToken = null;
+                        let tenant = null;
                         // dont allow "signup" on root contact of proxy node
-                        if (proxy_1.isProxy())
+                        if (proxy_1.isProxy()) {
                             authToken = '_';
+                        }
+                        else {
+                            tenant = 1; // add tenant here
+                        }
                         const contact = yield models_1.models.Contact.create({
                             id: 1,
                             publicKey: info.identity_pubkey,
                             isOwner: true,
-                            authToken
+                            authToken,
+                            tenant
                         });
                         console.log('[db] created node owner contact, id:', contact.id);
                     }

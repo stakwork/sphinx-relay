@@ -102,7 +102,7 @@ export const performKeysendMessage = async ({ destination_key, route_hint, amoun
 		// console.log("=> keysend to new contact")
 		if (success) success(r)
 	} catch (e) {
-		console.log("MESSAGE ERROR to", destination_key, e)
+		console.log("KEYSEND MESSAGE ERROR to", destination_key, e)
 		if (failure) failure(e)
 	}
 }
