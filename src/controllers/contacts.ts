@@ -122,7 +122,7 @@ export const updateContact = async (req, res) => {
 
 	// send updated owner info to others!
 	const contactIds = await models.Contact.findAll({ where: { deleted: false, tenant } })
-		.filter(c => c.id !== 1 && c.publicKey).map(c => c.id)
+		.filter(c => c.id !== tenant && c.publicKey).map(c => c.id)
 	if (contactIds.length == 0) return
 
 	console.log("=> send contact_key to", contactIds)
@@ -186,7 +186,7 @@ export const deleteContact = async (req, res) => {
 	if (!req.owner) return
 	const tenant: number = req.owner.id
 	const id = parseInt(req.params.id || '0')
-	if (!id || id === 1) {
+	if (!id || id === tenant) {
 		failure(res, 'Cannot delete self')
 		return
 	}

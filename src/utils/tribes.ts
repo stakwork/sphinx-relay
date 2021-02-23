@@ -72,7 +72,7 @@ async function subscribeTopics(onMessage) {
       const allOwners = await models.Contact.findAll({ where: { isOwner: true } })
       if (!(allOwners && allOwners.length)) return
       allOwners.forEach(async c=> {
-        if (c.id === 1) return
+        if (c.id === 1) return // the proxy non user
         if (c.publicKey && c.publicKey.length === 66) {
           const opts: IClientSubscribeOptions = {
             qos: 0

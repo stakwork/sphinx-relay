@@ -502,7 +502,7 @@ export async function replayChatHistory(chat, contact, owner) {
 					}
 				}
 			}
-			const isForwarded = m.sender !== 1
+			const isForwarded = m.sender !== tenant
 			const includeStatus = true
 			let msg = network.newmsg(m.type, chat, sender, {
 				content, // replaced with the remoteMessageContent (u are owner) {}

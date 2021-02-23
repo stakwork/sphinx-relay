@@ -203,7 +203,7 @@ function onReceive(payload, dest) {
         }
         if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
             const purchaserID = payload.message && payload.message.purchaser;
-            const iAmPurchaser = purchaserID && purchaserID === 1;
+            const iAmPurchaser = purchaserID && purchaserID === tenant;
             if (!iAmPurchaser) {
                 const senderContact = yield models_1.models.Contact.findOne({ where: { publicKey: payload.sender.pub_key, tenant } });
                 modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact, owner);

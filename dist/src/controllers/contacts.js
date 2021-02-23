@@ -122,7 +122,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     // send updated owner info to others!
     const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false, tenant } })
-        .filter(c => c.id !== 1 && c.publicKey).map(c => c.id);
+        .filter(c => c.id !== tenant && c.publicKey).map(c => c.id);
     if (contactIds.length == 0)
         return;
     console.log("=> send contact_key to", contactIds);
@@ -182,7 +182,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     const tenant = req.owner.id;
     const id = parseInt(req.params.id || '0');
-    if (!id || id === 1) {
+    if (!id || id === tenant) {
         res_1.failure(res, 'Cannot delete self');
         return;
     }

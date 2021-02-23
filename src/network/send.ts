@@ -34,7 +34,7 @@ export async function sendMessage(params) {
 
 	let contactIds = (typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds) || []
 	if (contactIds.length === 1) {
-		if (contactIds[0] === 1) {
+		if (contactIds[0] === tenant) {
 			if (success) success(true)
 			return // if no contacts thats fine (like create public tribe)
 		}
@@ -69,7 +69,7 @@ export async function sendMessage(params) {
 	let no: any = null
 	console.log('=> sending to', contactIds.length, 'contacts')
 	await asyncForEach(contactIds, async contactId => {
-		if (contactId == 1) { // dont send to self
+		if (contactId === tenant) { // dont send to self
 			return
 		}
 

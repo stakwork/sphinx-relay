@@ -143,7 +143,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) 
     var date = new Date();
     date.setMilliseconds(0);
     for (let [contactId, key] of Object.entries(mediaKeyMap)) {
-        if (parseInt(contactId) !== 1) {
+        if (parseInt(contactId) !== tenant) {
             const receiverID = parseInt(contactId) || 0; // 0 is for a tribe
             models_1.models.MediaKey.create({
                 muid, chatId, key, messageId,

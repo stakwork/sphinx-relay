@@ -188,7 +188,7 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 	}
 	if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
 		const purchaserID = payload.message && payload.message.purchaser
-		const iAmPurchaser = purchaserID && purchaserID === 1
+		const iAmPurchaser = purchaserID && purchaserID === tenant
 		if (!iAmPurchaser) {
 			const senderContact = await models.Contact.findOne({ where: { publicKey: payload.sender.pub_key, tenant } })
 			sendFinalMemeIfFirstPurchaser(payload, chat, senderContact, owner)

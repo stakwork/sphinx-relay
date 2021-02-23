@@ -94,7 +94,7 @@ function subscribeTopics(onMessage) {
                     return;
                 allOwners.forEach((c) => __awaiter(this, void 0, void 0, function* () {
                     if (c.id === 1)
-                        return;
+                        return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
                         const opts = {
                             qos: 0

@@ -501,7 +501,7 @@ function replayChatHistory(chat, contact, owner) {
                         }
                     }
                 }
-                const isForwarded = m.sender !== 1;
+                const isForwarded = m.sender !== tenant;
                 const includeStatus = true;
                 let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, status: m.status, amount: m.amount }, mediaKeyMap && { mediaKey: mediaKeyMap }), newMediaTerms && { mediaToken: newMediaTerms }), m.mediaType && { mediaType: m.mediaType }), dateString && { date: dateString }), isForwarded, includeStatus);
                 msg = yield msg_1.decryptMessage(msg, chat);

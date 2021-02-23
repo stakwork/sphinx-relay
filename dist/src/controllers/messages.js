@@ -368,7 +368,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         const ogMsg = yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid, tenant }
         });
-        if (ogMsg && ogMsg.sender === 1) {
+        if (ogMsg && ogMsg.sender === tenant) {
             hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner);
         }
     }

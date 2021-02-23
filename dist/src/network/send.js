@@ -41,7 +41,7 @@ function sendMessage(params) {
         }
         let contactIds = (typeof chat.contactIds === 'string' ? JSON.parse(chat.contactIds) : chat.contactIds) || [];
         if (contactIds.length === 1) {
-            if (contactIds[0] === 1) {
+            if (contactIds[0] === tenant) {
                 if (success)
                     success(true);
                 return; // if no contacts thats fine (like create public tribe)
@@ -77,7 +77,7 @@ function sendMessage(params) {
         let no = null;
         console.log('=> sending to', contactIds.length, 'contacts');
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
-            if (contactId == 1) { // dont send to self
+            if (contactId === tenant) { // dont send to self
                 return;
             }
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
