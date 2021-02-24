@@ -3,13 +3,13 @@
 
 **how to spin up a local sphinx simnet stack**
 
-- sphinx-tribes
+- sphinx-tribes (local auth plugin setup)
 - sphinx-auth
 - sphinx-meme
 - btcd
-- 4x LND (alice, bob, casey, proxy)
-- sphinx-proxy
-- 4x relay
+- 4x simnet LND (alice, bob, casey, proxy)
+- sphinx-proxy (bitcoin.simnet)
+- 4x relay (alice, bob, casey, proxy)
 
 **alice** 
 node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/configs/alice.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/configs/alice-db.json"
