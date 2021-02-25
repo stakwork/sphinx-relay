@@ -154,7 +154,8 @@ async function updateTribeStats(myPubkey) {
   if (isProxy()) return // skip on proxy for now?
   const myTribes = await models.Chat.findAll({
     where: {
-      ownerPubkey: myPubkey
+      ownerPubkey: myPubkey,
+      deleted: false
     }
   })
   await asyncForEach(myTribes, async (tribe) => {

@@ -256,7 +256,7 @@ async function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtTo
 
 	let payload
 	if (sender && typesToModify.includes(ogpayload.type)) {
-		payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, tenant)
+		payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, owner)
 	} else {
 		payload = ogpayload
 	}

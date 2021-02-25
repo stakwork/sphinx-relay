@@ -69,7 +69,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const myMediaToken = yield ldat_1.tokenFromTerms({
             meta: { dim: dimensions }, host: '',
             muid, ttl: null,
-            pubkey: owner.publicKey
+            pubkey: owner.publicKey,
+            ownerPubkey: owner.publicKey,
         });
         msg.mediaToken = myMediaToken;
         msg.mediaType = media_type || '';

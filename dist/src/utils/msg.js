@@ -90,7 +90,7 @@ function addInMediaKey(full, contactId, isTribe) {
     return fillmsg(full, { mediaKey });
 }
 // add the token if its free, but if a price just the base64(host).muid
-function finishTermsAndReceipt(full, destkey) {
+function finishTermsAndReceipt(full, destkey, senderPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         const m = full && full.message;
         if (!(m && m.mediaTerms))
@@ -104,7 +104,8 @@ function finishTermsAndReceipt(full, destkey) {
             muid: t.muid,
             ttl: t.skipSigning ? 0 : t.ttl,
             pubkey: t.skipSigning ? '' : destkey,
-            meta
+            meta,
+            ownerPubkey: senderPubkey
         });
         const fullmsg = fillmsg(full, { mediaToken });
         delete fullmsg.message.mediaTerms;
@@ -150,6 +151,7 @@ function personalizeMessage(m, contact, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         const contactId = contact.id;
         const destkey = contact.publicKey;
+        const senderPubkey = m.sender.pub_key;
         const cloned = JSON.parse(JSON.stringify(m));
         const chat = cloned && cloned.chat;
         const isTribe = chat.type && chat.type === constants_1.default.chat_types.tribe;
@@ -157,7 +159,7 @@ function personalizeMessage(m, contact, isTribeOwner) {
         const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey);
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
         const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId, isTribe);
-        const msgWithMediaToken = yield finishTermsAndReceipt(msgWithMediaKey, destkey);
+        const msgWithMediaToken = yield finishTermsAndReceipt(msgWithMediaKey, destkey, senderPubkey);
         const encMsg = yield encryptTribeBroadcast(msgWithMediaToken, contact, isTribeOwner);
         return encMsg;
     });

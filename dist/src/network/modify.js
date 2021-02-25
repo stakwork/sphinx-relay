@@ -22,12 +22,12 @@ const send_1 = require("./send");
 // import { Op } from 'sequelize'
 const constants_1 = require("../constants");
 const msgtypes = constants_1.default.message_types;
-function modifyPayloadAndSaveMediaKey(payload, chat, sender, tenant) {
+function modifyPayloadAndSaveMediaKey(payload, chat, sender, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         if (payload.type !== msgtypes.attachment)
             return payload;
         try {
-            const ret = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant);
+            const ret = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner);
             return fillmsg(payload, ret); // key is re-encrypted later
         }
         catch (e) {
@@ -163,20 +163,23 @@ function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     });
 }
-function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, injectedAmount) {
+function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner, injectedAmount) {
     return __awaiter(this, void 0, void 0, function* () {
         const mt = payload.message && payload.message.mediaToken;
         const key = payload.message && payload.message.mediaKey;
         const typ = payload.message && payload.message.mediaType;
         if (!mt || !key)
             return payload; // save anyway??????????
+        const tenant = owner.id;
+        const ownerPubkey = owner.publicKey;
         const ogmuid = mt && mt.split('.').length && mt.split('.')[1];
         const terms = ldat_1.parseLDAT(mt);
         if (!terms.host)
             return payload;
+        const token = yield meme.lazyToken(ownerPubkey, terms.host);
         try {
             const r = yield node_fetch_1.default(`https://${terms.host}/file/${mt}`, {
-                headers: { 'Authorization': `Bearer ${meme.mediaToken}` }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             const buf = yield r.buffer();
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
@@ -193,7 +196,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, ten
             const formHeaders = form.getHeaders();
             const resp = yield node_fetch_1.default(`https://${terms.host}/file`, {
                 method: 'POST',
-                headers: Object.assign(Object.assign({}, formHeaders), { 'Authorization': `Bearer ${meme.mediaToken}` }),
+                headers: Object.assign(Object.assign({}, formHeaders), { 'Authorization': `Bearer ${token}` }),
                 body: form
             });
             let json = yield resp.json();

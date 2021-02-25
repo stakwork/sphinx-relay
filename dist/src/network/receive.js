@@ -277,7 +277,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
             return;
         let payload;
         if (sender && typesToModify.includes(ogpayload.type)) {
-            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, tenant);
+            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, owner);
         }
         else {
             payload = ogpayload;

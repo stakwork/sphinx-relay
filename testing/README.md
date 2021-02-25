@@ -5,7 +5,7 @@
 
 - sphinx-tribes (local auth plugin setup)
 - sphinx-auth
-- sphinx-meme
+- sphinx-meme (host=localhost:5000)
 - btcd
 - 4x simnet LND (alice, bob, casey, proxy)
 - sphinx-proxy (bitcoin.simnet)

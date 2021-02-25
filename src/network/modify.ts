@@ -12,10 +12,10 @@ import constants from '../constants'
 
 const msgtypes = constants.message_types
 
-export async function modifyPayloadAndSaveMediaKey(payload, chat, sender, tenant) {
+export async function modifyPayloadAndSaveMediaKey(payload, chat, sender, owner) {
   if (payload.type !== msgtypes.attachment) return payload
   try {
-    const ret = await downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant)
+    const ret = await downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner)
     return fillmsg(payload, ret) // key is re-encrypted later
   } catch (e) {
     console.log("[modify] error", e)
@@ -168,20 +168,24 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, injectedAmount?: number) {
+export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner, injectedAmount?: number) {
   const mt = payload.message && payload.message.mediaToken
   const key = payload.message && payload.message.mediaKey
   const typ = payload.message && payload.message.mediaType
   if (!mt || !key) return payload // save anyway??????????
+
+  const tenant = owner.id
+  const ownerPubkey = owner.publicKey
 
   const ogmuid = mt && mt.split('.').length && mt.split('.')[1]
 
   const terms = parseLDAT(mt)
   if (!terms.host) return payload
 
+  const token = await meme.lazyToken(ownerPubkey, terms.host)
   try {
     const r = await fetch(`https://${terms.host}/file/${mt}`, {
-      headers: { 'Authorization': `Bearer ${meme.mediaToken}` }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
     const buf = await r.buffer()
 
@@ -206,7 +210,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat
       method: 'POST',
       headers: {
         ...formHeaders, // THIS IS REQUIRED!!!
-        'Authorization': `Bearer ${meme.mediaToken}`,
+        'Authorization': `Bearer ${token}`,
       },
       body: form
     })

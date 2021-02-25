@@ -6,17 +6,15 @@ import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import { signBuffer, verifyMessage } from '../utils/lightning'
 import * as rp from 'request-promise'
-import { loadLightning } from '../utils/lightning'
-import { parseLDAT, tokenFromTerms, urlBase64FromBytes, testLDAT } from '../utils/ldat'
-import { CronJob } from 'cron'
+import { parseLDAT, tokenFromTerms, urlBase64FromBytes } from '../utils/ldat'
+import * as meme from '../utils/meme'
 import * as zbase32 from '../utils/zbase32'
 import * as schemas from './schemas'
 import { sendConfirmation } from './confirmations'
 import * as network from '../network'
-import * as meme from '../utils/meme'
 import * as short from 'short-uuid'
 import constants from '../constants'
-import { loadConfig } from '../utils/config'
+import { loadConfig } from "../utils/config";
 
 const config = loadConfig()
 
@@ -83,7 +81,8 @@ export const sendAttachmentMessage = async (req, res) => {
   const myMediaToken = await tokenFromTerms({
     muid, ttl: TTL, host: '',
     pubkey: owner.publicKey,
-    meta: { ...amt && { amt }, ttl }
+    meta: { ...amt && { amt }, ttl },
+    ownerPubkey: owner.publicKey
   })
 
   const date = new Date();
@@ -290,7 +289,7 @@ export const receivePurchase = async (payload) => {
   let TTL = terms.meta && terms.meta.ttl
   let price = terms.meta && terms.meta.amt
   if (!TTL || !price) {
-    const media = await getMediaInfo(muid)
+    const media = await getMediaInfo(muid, owner.publicKey)
     console.log("GOT MEDIA", media)
     if (media) {
       TTL = media.ttl && parseInt(media.ttl)
@@ -330,6 +329,7 @@ export const receivePurchase = async (payload) => {
     muid, ttl: TTL, host: '',
     meta: { amt: amount },
     pubkey: sender.publicKey,
+    ownerPubkey: owner.publicKey,
   })
   const msgToSend: { [k: string]: any } = {
     mediaToken: theMediaToken,
@@ -514,77 +514,10 @@ export async function verifier(msg, sig) {
   }
 }
 
-export async function getMyPubKey() {
-  return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning()
-    var request = {}
-    lightning.getInfo(request, function (err, response) {
-      if (err) reject(err)
-      if (!response.identity_pubkey) reject('no pub key')
-      else resolve(response.identity_pubkey)
-    });
-  })
-}
-
-export async function cycleMediaToken() {
+export async function getMediaInfo(muid, pubkey:string) {
   try {
-    if (process.env.TEST_LDAT) testLDAT()
-
-    const mt = await getMediaToken(null)
-    if (mt) {
-      console.log('=> [meme] authed!')
-      meme.setMediaToken(mt)
-    }
-
-    new CronJob('1 * * * *', function () { // every hour
-      getMediaToken(true)
-    })
-  } catch (e) {
-    console.log(e.message)
-  }
-}
-
-const mediaURL = 'http://' + config.media_host + '/'
-
-export async function getMediaToken(force) {
-  if (!force && meme.mediaToken) return meme.mediaToken
-  await helpers.sleep(3000)
-  try {
-    const res = await rp.get(mediaURL + 'ask')
-    const r = JSON.parse(res)
-    if (!(r && r.challenge && r.id)) {
-      throw new Error('no challenge')
-    }
-    const sig = await signBuffer(
-      Buffer.from(r.challenge, 'base64')
-    )
-
-    if (!sig) throw new Error('no signature')
-    const pubkey = await getMyPubKey()
-    if (!pubkey) {
-      throw new Error('no pub key!')
-    }
-
-    const sigBytes = zbase32.decode(sig)
-    const sigBase64 = urlBase64FromBytes(sigBytes)
-
-    const bod = await rp.post(mediaURL + 'verify', {
-      form: { id: r.id, sig: sigBase64, pubkey }
-    })
-    const body = JSON.parse(bod)
-    if (!(body && body.token)) {
-      throw new Error('no token')
-    }
-    meme.setMediaToken(body.token)
-    return body.token
-  } catch (e) {
-    throw e
-  }
-}
-
-export async function getMediaInfo(muid) {
-  try {
-    const token = await getMediaToken(null)
+    const token = await meme.lazyToken(pubkey, config.media_host)
+    const mediaURL = 'http://' + config.media_host + '/'
     const res = await rp.get(mediaURL + 'mymedia/' + muid, {
       headers: {
         'Authorization': `Bearer ${token}`,

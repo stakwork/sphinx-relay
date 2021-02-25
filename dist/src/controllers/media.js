@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMediaInfo = exports.getMediaToken = exports.cycleMediaToken = exports.getMyPubKey = exports.verifier = exports.signer = exports.receiveAttachment = exports.receivePurchaseDeny = exports.receivePurchaseAccept = exports.receivePurchase = exports.purchase = exports.saveMediaKeys = exports.sendAttachmentMessage = void 0;
+exports.getMediaInfo = exports.verifier = exports.signer = exports.receiveAttachment = exports.receivePurchaseDeny = exports.receivePurchaseAccept = exports.receivePurchase = exports.purchase = exports.saveMediaKeys = exports.sendAttachmentMessage = void 0;
 const models_1 = require("../models");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
@@ -18,14 +18,12 @@ const helpers = require("../helpers");
 const hub_1 = require("../hub");
 const lightning_1 = require("../utils/lightning");
 const rp = require("request-promise");
-const lightning_2 = require("../utils/lightning");
 const ldat_1 = require("../utils/ldat");
-const cron_1 = require("cron");
+const meme = require("../utils/meme");
 const zbase32 = require("../utils/zbase32");
 const schemas = require("./schemas");
 const confirmations_1 = require("./confirmations");
 const network = require("../network");
-const meme = require("../utils/meme");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
@@ -76,7 +74,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     const myMediaToken = yield ldat_1.tokenFromTerms({
         muid, ttl: TTL, host: '',
         pubkey: owner.publicKey,
-        meta: Object.assign(Object.assign({}, amt && { amt }), { ttl })
+        meta: Object.assign(Object.assign({}, amt && { amt }), { ttl }),
+        ownerPubkey: owner.publicKey
     });
     const date = new Date();
     date.setMilliseconds(0);
@@ -264,7 +263,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     let TTL = terms.meta && terms.meta.ttl;
     let price = terms.meta && terms.meta.amt;
     if (!TTL || !price) {
-        const media = yield getMediaInfo(muid);
+        const media = yield getMediaInfo(muid, owner.publicKey);
         console.log("GOT MEDIA", media);
         if (media) {
             TTL = media.ttl && parseInt(media.ttl);
@@ -304,6 +303,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         muid, ttl: TTL, host: '',
         meta: { amt: amount },
         pubkey: sender.publicKey,
+        ownerPubkey: owner.publicKey,
     });
     const msgToSend = {
         mediaToken: theMediaToken,
@@ -489,84 +489,11 @@ function verifier(msg, sig) {
     });
 }
 exports.verifier = verifier;
-function getMyPubKey() {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield lightning_2.loadLightning();
-            var request = {};
-            lightning.getInfo(request, function (err, response) {
-                if (err)
-                    reject(err);
-                if (!response.identity_pubkey)
-                    reject('no pub key');
-                else
-                    resolve(response.identity_pubkey);
-            });
-        }));
-    });
-}
-exports.getMyPubKey = getMyPubKey;
-function cycleMediaToken() {
+function getMediaInfo(muid, pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            if (process.env.TEST_LDAT)
-                ldat_1.testLDAT();
-            const mt = yield getMediaToken(null);
-            if (mt) {
-                console.log('=> [meme] authed!');
-                meme.setMediaToken(mt);
-            }
-            new cron_1.CronJob('1 * * * *', function () {
-                getMediaToken(true);
-            });
-        }
-        catch (e) {
-            console.log(e.message);
-        }
-    });
-}
-exports.cycleMediaToken = cycleMediaToken;
-const mediaURL = 'http://' + config.media_host + '/';
-function getMediaToken(force) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!force && meme.mediaToken)
-            return meme.mediaToken;
-        yield helpers.sleep(3000);
-        try {
-            const res = yield rp.get(mediaURL + 'ask');
-            const r = JSON.parse(res);
-            if (!(r && r.challenge && r.id)) {
-                throw new Error('no challenge');
-            }
-            const sig = yield lightning_1.signBuffer(Buffer.from(r.challenge, 'base64'));
-            if (!sig)
-                throw new Error('no signature');
-            const pubkey = yield getMyPubKey();
-            if (!pubkey) {
-                throw new Error('no pub key!');
-            }
-            const sigBytes = zbase32.decode(sig);
-            const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
-            const bod = yield rp.post(mediaURL + 'verify', {
-                form: { id: r.id, sig: sigBase64, pubkey }
-            });
-            const body = JSON.parse(bod);
-            if (!(body && body.token)) {
-                throw new Error('no token');
-            }
-            meme.setMediaToken(body.token);
-            return body.token;
-        }
-        catch (e) {
-            throw e;
-        }
-    });
-}
-exports.getMediaToken = getMediaToken;
-function getMediaInfo(muid) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const token = yield getMediaToken(null);
+            const token = yield meme.lazyToken(pubkey, config.media_host);
+            const mediaURL = 'http://' + config.media_host + '/';
             const res = yield rp.get(mediaURL + 'mymedia/' + muid, {
                 headers: {
                     'Authorization': `Bearer ${token}`,

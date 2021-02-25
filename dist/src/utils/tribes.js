@@ -190,7 +190,8 @@ function updateTribeStats(myPubkey) {
             return; // skip on proxy for now?
         const myTribes = yield models_1.models.Chat.findAll({
             where: {
-                ownerPubkey: myPubkey
+                ownerPubkey: myPubkey,
+                deleted: false
             }
         });
         yield asyncForEach(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {

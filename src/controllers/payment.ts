@@ -78,7 +78,8 @@ export const sendPayment = async (req, res) => {
     const myMediaToken = await tokenFromTerms({
       meta: { dim: dimensions }, host: '',
       muid, ttl: null, // default one year
-      pubkey: owner.publicKey
+      pubkey: owner.publicKey,
+      ownerPubkey: owner.publicKey,
     })
     msg.mediaToken = myMediaToken
     msg.mediaType = media_type || ''
