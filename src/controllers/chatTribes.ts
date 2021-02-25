@@ -119,6 +119,7 @@ export async function joinTribe(req, res) {
 				status: constants.chat_statuses.approved,
 				tenant
 			})
+			tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage)
 			success(res, jsonUtils.chatToJson(chat))
 		}
 	})

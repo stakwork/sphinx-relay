@@ -249,7 +249,7 @@ const keysend = (opts, ownerPubkey) => {
             }
             // sphinx-proxy sendPaymentSync
             if (proxy_1.isProxy()) {
-                console.log("SEND sendPaymentSync", options);
+                // console.log("SEND sendPaymentSync", options)
                 options.fee_limit = { fixed: FEE_LIMIT_SAT };
                 let lightning = yield loadLightning(true, ownerPubkey); // try proxy
                 lightning.sendPaymentSync(options, (err, response) => {
@@ -267,7 +267,7 @@ const keysend = (opts, ownerPubkey) => {
                 });
             }
             else {
-                console.log("SEND sendPaymentV2", options);
+                // console.log("SEND sendPaymentV2", options)
                 // new sendPayment (with optional route hints)
                 options.fee_limit_sat = FEE_LIMIT_SAT;
                 options.timeout_seconds = 16;

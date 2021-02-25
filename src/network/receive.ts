@@ -56,7 +56,7 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 	}
 	payload.dest = dest // add "dest" into payload
 
-	console.log('===> onReceive',JSON.stringify(payload,null,2))
+	// console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if (!(payload.type || payload.type === 0)) return console.log('no payload.type')
 
 	let owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:dest } })
@@ -290,19 +290,21 @@ export async function initGrpcSubscriptions() {
 	}
 }
 
-export async function initTribesSubscriptions() {
-	tribes.connect(async (topic, message) => { // onMessage callback
-		try {
-			const msg = message.toString()
-			// check topic is signed by sender?
-			const payload = await parseAndVerifyPayload(msg)
-			payload.network_type = constants.network_types.mqtt
+export async function receiveMqttMessage(topic, message){
+	try {
+		const msg = message.toString()
+		// check topic is signed by sender?
+		const payload = await parseAndVerifyPayload(msg)
+		payload.network_type = constants.network_types.mqtt
 
-			const arr = topic.split('/')
-			const dest = arr[0]
-			onReceive(payload, dest)
-		} catch (e) { }
-	})
+		const arr = topic.split('/')
+		const dest = arr[0]
+		onReceive(payload, dest)
+	} catch (e) { }
+}
+
+export async function initTribesSubscriptions() {
+	tribes.connect(receiveMqttMessage)
 }
 
 function parsePayload(data) {
@@ -326,28 +328,22 @@ async function parseAndVerifyPayload(data) {
 		payload = JSON.parse(msg)
 		if (payload && payload.sender && payload.sender.pub_key) {
 			let v
-			console.log("=> SIG LEN", sig.length)
+			// console.log("=> SIG LEN", sig.length)
 			if (sig.length === 96 && payload.sender.pub_key) { 
 				v = await signer.verifyAscii(msg, sig, payload.sender.pub_key)
-				console.log("VERIFY",v)
 			}
 			if (sig.length === 104) {
 				v = await lightning.verifyAscii(msg, sig)
-				console.log("VERIFY2",v)
 			}
 			if (v && v.valid) {
-				console.log("V VALID")
 				return payload
 			} else {
-				console.log("V 338")
 				return payload // => RM THIS
 			}
 		} else {
-			console.log("V 342")
 			return payload // => RM THIS
 		}
 	} catch (e) {
-		console.log("V 346")
 		if (payload) return payload // => RM THIS
 		return null
 	}
@@ -395,7 +391,7 @@ export async function parseKeysendInvoice(i) {
 			if(!invoice) return console.log("couldn't decode pay req")
 			if(!invoice.destination) return console.log("cant get dest from pay req")
 			dest = invoice.destination
-			console.log("RECEIVED DEST", dest)
+			// console.log("=> RECEIVED DEST", dest)
 			owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:dest } })
 		} catch(e) {
 			console.log("FAILURE TO DECODE PAY REQ", e)

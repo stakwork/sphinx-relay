@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.connect = exports.getTribeOwnersChatByUUID = exports.declare_bot = void 0;
+exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.getTribeOwnersChatByUUID = exports.connect = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("./lightning");
@@ -20,8 +20,18 @@ const tribeBots_1 = require("./tribeBots");
 Object.defineProperty(exports, "declare_bot", { enumerable: true, get: function () { return tribeBots_1.declare_bot; } });
 const config_1 = require("./config");
 const proxy_1 = require("./proxy");
+const sequelize_1 = require("sequelize");
 const config = config_1.loadConfig();
+// {pubkey: {host: Client} }
 let clients = {};
+const optz = { qos: 0 };
+// this runs at relay startup
+function connect(onMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        subscribeTopics(onMessage);
+    });
+}
+exports.connect = connect;
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -41,19 +51,19 @@ function getTribeOwnersChatByUUID(uuid) {
     });
 }
 exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
-function initializeClient(pubkey, onMessage) {
+function initializeClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
                     const pwd = yield genSignedTimestamp(pubkey);
-                    const cl = mqtt.connect(mqttURL(), {
+                    const url = mqttURL(host);
+                    const cl = mqtt.connect(url, {
                         username: pubkey,
                         password: pwd,
                         reconnectPeriod: 0,
                     });
-                    clients[pubkey] = cl;
-                    console.log('[tribes] try to connect:', mqttURL());
+                    console.log('[tribes] try to connect:', url);
                     cl.on('connect', function () {
                         return __awaiter(this, void 0, void 0, function* () {
                             console.log("[tribes] connected!");
@@ -77,41 +87,44 @@ function initializeClient(pubkey, onMessage) {
         });
     });
 }
-function lazyClient(pubkey, onMessage) {
+function lazyClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (clients[pubkey])
-            return clients[pubkey];
-        const cl = yield initializeClient(pubkey, onMessage);
+        if (clients[pubkey] && clients[pubkey][host])
+            return clients[pubkey][host];
+        const cl = yield initializeClient(pubkey, host, onMessage);
+        if (!clients[pubkey])
+            clients[pubkey] = {};
+        clients[pubkey][host] = cl; // ADD TO MAIN STATE
         return cl;
     });
 }
 function subscribeTopics(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        const host = getHost();
         try {
             if (proxy_1.isProxy()) {
                 const allOwners = yield models_1.models.Contact.findAll({ where: { isOwner: true } });
                 if (!(allOwners && allOwners.length))
                     return;
-                allOwners.forEach((c) => __awaiter(this, void 0, void 0, function* () {
+                asyncForEach(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
                     if (c.id === 1)
                         return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
-                        const opts = {
-                            qos: 0
-                        };
-                        const client = yield lazyClient(c.publicKey, onMessage);
-                        client.subscribe(`${c.publicKey}/#`, opts, function (err) {
+                        const client = yield lazyClient(c.publicKey, host, onMessage);
+                        client.subscribe(`${c.publicKey}/#`, optz, function (err) {
                             if (err)
                                 console.log("[tribes] subscribe error", err);
                         });
+                        yield subExtraHostsForTenant(c.id, c.publicKey, onMessage); // 1 is the tenant id on non-proxy
                     }
                 }));
             }
             else { // just me
                 const info = yield LND.getInfo(false);
-                const client = yield lazyClient(info.identity_pubkey, onMessage);
+                const client = yield lazyClient(info.identity_pubkey, host, onMessage);
                 client.subscribe(`${info.identity_pubkey}/#`);
                 updateTribeStats(info.identity_pubkey);
+                subExtraHostsForTenant(1, info.identity_pubkey, onMessage); // 1 is the tenant id on non-proxy
             }
         }
         catch (e) {
@@ -119,9 +132,43 @@ function subscribeTopics(onMessage) {
         }
     });
 }
+function subExtraHostsForTenant(tenant, pubkey, onMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const host = getHost();
+        const externalTribes = yield models_1.models.Chat.findAll({
+            where: {
+                tenant,
+                host: { [sequelize_1.Op.ne]: host } // not the host from config
+            }
+        });
+        if (!(externalTribes && externalTribes.length))
+            return;
+        const usedHosts = [];
+        externalTribes.forEach((et) => __awaiter(this, void 0, void 0, function* () {
+            if (usedHosts.includes(et.host))
+                return;
+            usedHosts.push(et.host); // dont do it twice
+            const client = yield lazyClient(pubkey, host, onMessage);
+            client.subscribe(`${pubkey}/#`, optz, function (err) {
+                if (err)
+                    console.log("[tribes] subscribe error 2", err);
+            });
+        }));
+    });
+}
+function addExtraHost(pubkey, host, onMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (getHost() === host)
+            return; // not for default host
+        if (clients[pubkey] && clients[pubkey][host])
+            return; // already exists
+        const client = yield lazyClient(pubkey, host, onMessage);
+        client.subscribe(`${pubkey}/#`, optz);
+    });
+}
+exports.addExtraHost = addExtraHost;
 // if host includes colon, remove it
-function mqttURL() {
-    let host = config.tribes_host;
+function mqttURL(host) {
     if (host.includes(':')) {
         const arr = host.split(':');
         host = arr[0];
@@ -136,12 +183,6 @@ function mqttURL() {
     }
     return `${protocol}://${host}:${port}`;
 }
-function connect(onMessage) {
-    return __awaiter(this, void 0, void 0, function* () {
-        subscribeTopics(onMessage);
-    });
-}
-exports.connect = connect;
 // for proxy, need to get all isOwner contacts and their owned chats
 function updateTribeStats(myPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -170,7 +211,8 @@ function subscribe(topic) {
         const pubkey = topic.split('/')[0];
         if (pubkey.length !== 66)
             return;
-        const client = yield lazyClient(pubkey);
+        const host = getHost();
+        const client = yield lazyClient(pubkey, host);
         if (client)
             client.subscribe(topic);
     });
@@ -181,12 +223,10 @@ function publish(topic, msg, cb) {
         const pubkey = topic.split('/')[0];
         if (pubkey.length !== 66)
             return;
-        const client = yield lazyClient(pubkey);
-        const opts = {
-            qos: 0
-        };
+        const host = getHost();
+        const client = yield lazyClient(pubkey, host);
         if (client)
-            client.publish(topic, msg, opts, function (err) {
+            client.publish(topic, msg, optz, function (err) {
                 if (err)
                     console.log(err);
                 else if (cb)

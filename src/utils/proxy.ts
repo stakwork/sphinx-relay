@@ -22,18 +22,29 @@ export function genUsersInterval(ms) {
 }
 
 const NEW_USER_NUM = 2
+const SATS_PER_USER = 10000
 // isOwner users with no authToken
 export async function generateNewUsers(){
   if(!isProxy()) return
   const newusers = await models.Contact.findAll({where:{isOwner:true,authToken:null}})
-  if(newusers.length<NEW_USER_NUM) {
-    console.log('gen new users')
-    const arr = new Array(NEW_USER_NUM-newusers.length)
-    const rootpk = await getProxyRootPubkey()
-    await asyncForEach(arr, async ()=>{
-      await generateNewUser(rootpk)
-    })
-  }
+  if(newusers.length>=NEW_USER_NUM) return // we already have the mimimum
+  const n1 = NEW_USER_NUM-newusers.length
+
+  const virtualBal = await getProxyTotalBalance()
+  const realBal = await getProxyLNDBalance()
+
+  let availableBalance = realBal - virtualBal
+  if(availableBalance<SATS_PER_USER) availableBalance=1
+  const n2 = Math.floor(availableBalance/SATS_PER_USER)
+  const n = Math.min(n1,n2)
+
+  if(!n) return
+  console.log('=> gen new users:', n)
+  const arr = new Array(n)
+  const rootpk = await getProxyRootPubkey()
+  await asyncForEach(arr, async ()=>{
+    await generateNewUser(rootpk)
+  })
 }
 
 const adminURL = config.proxy_admin_url ? (config.proxy_admin_url+'/') : 'http://localhost:5555/'
@@ -56,6 +67,19 @@ export async function generateNewUser(rootpk: string){
     console.log("=> CREATED OWNER:", created.dataValues)
   } catch(e) {
     console.log('=> could not gen new user', e)
+  }
+}
+
+export async function getProxyTotalBalance(){
+  try {
+    const r = await fetch(adminURL + 'balances', {
+      method:'GET',
+      headers:{'x-admin-token':config.proxy_admin_token}
+    })
+    const j = await r.json()
+    return j.total || 0
+  } catch(e) {
+    return 0
   }
 }
 
@@ -118,6 +142,33 @@ function getProxyRootPubkey(): Promise<string> {
     });
   })
 }
+
+function getProxyLNDBalance(): Promise<number> {
+  return new Promise((resolve,reject)=>{
+    // normal client, to get pubkey of LND
+    var credentials = loadCredentials()
+    var lnrpcDescriptor = grpc.load("proto/rpc.proto");
+    var lnrpc: any = lnrpcDescriptor.lnrpc
+    var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+    lc.channelBalance({}, function (err, response) {
+      if (err == null) {
+        lc.listChannels({}, function (err, channelList) {
+          if (err == null) {
+            const { channels } = channelList
+            const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0)
+            const balance = parseInt(response.balance) - reserve
+            resolve(balance)
+          } else {
+            reject(err)
+          }
+        });
+      } else {
+        reject(err)
+      }
+    });
+  })
+}
+
 
 async function asyncForEach(array, callback) {
 	for (let index = 0; index < array.length; index++) {

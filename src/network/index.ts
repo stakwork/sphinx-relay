@@ -1,7 +1,7 @@
 import { sendMessage, signAndSend, newmsg } from './send'
 import {
     initGrpcSubscriptions, initTribesSubscriptions, parseKeysendInvoice,
-    typesToReplay, typesToForward,
+    typesToReplay, typesToForward, receiveMqttMessage
 } from './receive'
 import { Msg } from './interfaces'
 
@@ -15,6 +15,7 @@ export {
     initTribesSubscriptions,
     parseKeysendInvoice,
     typesToReplay, typesToForward,
+    receiveMqttMessage,
     Msg,
 }
 

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToForward = void 0;
+exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToForward = void 0;
 const lndService = require("../grpc");
 const lightning = require("../utils/lightning");
 const controllers_1 = require("../controllers");
@@ -66,7 +66,7 @@ function onReceive(payload, dest) {
                 return console.log("INVALID DEST", dest);
         }
         payload.dest = dest; // add "dest" into payload
-        console.log('===> onReceive', JSON.stringify(payload, null, 2));
+        // console.log('===> onReceive',JSON.stringify(payload,null,2))
         if (!(payload.type || payload.type === 0))
             return console.log('no payload.type');
         let owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
@@ -309,20 +309,24 @@ function initGrpcSubscriptions() {
     });
 }
 exports.initGrpcSubscriptions = initGrpcSubscriptions;
+function receiveMqttMessage(topic, message) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const msg = message.toString();
+            // check topic is signed by sender?
+            const payload = yield parseAndVerifyPayload(msg);
+            payload.network_type = constants_1.default.network_types.mqtt;
+            const arr = topic.split('/');
+            const dest = arr[0];
+            onReceive(payload, dest);
+        }
+        catch (e) { }
+    });
+}
+exports.receiveMqttMessage = receiveMqttMessage;
 function initTribesSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
-        tribes.connect((topic, message) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const msg = message.toString();
-                // check topic is signed by sender?
-                const payload = yield parseAndVerifyPayload(msg);
-                payload.network_type = constants_1.default.network_types.mqtt;
-                const arr = topic.split('/');
-                const dest = arr[0];
-                onReceive(payload, dest);
-            }
-            catch (e) { }
-        }));
+        tribes.connect(receiveMqttMessage);
     });
 }
 exports.initTribesSubscriptions = initTribesSubscriptions;
@@ -348,31 +352,25 @@ function parseAndVerifyPayload(data) {
             payload = JSON.parse(msg);
             if (payload && payload.sender && payload.sender.pub_key) {
                 let v;
-                console.log("=> SIG LEN", sig.length);
+                // console.log("=> SIG LEN", sig.length)
                 if (sig.length === 96 && payload.sender.pub_key) {
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
-                    console.log("VERIFY", v);
                 }
                 if (sig.length === 104) {
                     v = yield lightning.verifyAscii(msg, sig);
-                    console.log("VERIFY2", v);
                 }
                 if (v && v.valid) {
-                    console.log("V VALID");
                     return payload;
                 }
                 else {
-                    console.log("V 338");
                     return payload; // => RM THIS
                 }
             }
             else {
-                console.log("V 342");
                 return payload; // => RM THIS
             }
         }
         catch (e) {
-            console.log("V 346");
             if (payload)
                 return payload; // => RM THIS
             return null;
@@ -424,7 +422,7 @@ function parseKeysendInvoice(i) {
                 if (!invoice.destination)
                     return console.log("cant get dest from pay req");
                 dest = invoice.destination;
-                console.log("RECEIVED DEST", dest);
+                // console.log("=> RECEIVED DEST", dest)
                 owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
             }
             catch (e) {

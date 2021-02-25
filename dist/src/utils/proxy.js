@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadProxyLightning = exports.loadProxyCredentials = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
+exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const config_1 = require("./config");
@@ -33,20 +33,31 @@ function genUsersInterval(ms) {
 }
 exports.genUsersInterval = genUsersInterval;
 const NEW_USER_NUM = 2;
+const SATS_PER_USER = 10000;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
         if (!isProxy())
             return;
         const newusers = yield models_1.models.Contact.findAll({ where: { isOwner: true, authToken: null } });
-        if (newusers.length < NEW_USER_NUM) {
-            console.log('gen new users');
-            const arr = new Array(NEW_USER_NUM - newusers.length);
-            const rootpk = yield getProxyRootPubkey();
-            yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {
-                yield generateNewUser(rootpk);
-            }));
-        }
+        if (newusers.length >= NEW_USER_NUM)
+            return; // we already have the mimimum
+        const n1 = NEW_USER_NUM - newusers.length;
+        const virtualBal = yield getProxyTotalBalance();
+        const realBal = yield getProxyLNDBalance();
+        let availableBalance = realBal - virtualBal;
+        if (availableBalance < SATS_PER_USER)
+            availableBalance = 1;
+        const n2 = Math.floor(availableBalance / SATS_PER_USER);
+        const n = Math.min(n1, n2);
+        if (!n)
+            return;
+        console.log('=> gen new users:', n);
+        const arr = new Array(n);
+        const rootpk = yield getProxyRootPubkey();
+        yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {
+            yield generateNewUser(rootpk);
+        }));
     });
 }
 exports.generateNewUsers = generateNewUsers;
@@ -76,6 +87,22 @@ function generateNewUser(rootpk) {
     });
 }
 exports.generateNewUser = generateNewUser;
+function getProxyTotalBalance() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield node_fetch_1.default(adminURL + 'balances', {
+                method: 'GET',
+                headers: { 'x-admin-token': config.proxy_admin_token }
+            });
+            const j = yield r.json();
+            return j.total || 0;
+        }
+        catch (e) {
+            return 0;
+        }
+    });
+}
+exports.getProxyTotalBalance = getProxyTotalBalance;
 function loadProxyCredentials(macPrefix) {
     var lndCert = fs.readFileSync(config.proxy_tls_location);
     var sslCreds = grpc.credentials.createSsl(lndCert);
@@ -134,6 +161,33 @@ function getProxyRootPubkey() {
             }
             else {
                 reject("CANT GET ROOT KEY");
+            }
+        });
+    });
+}
+function getProxyLNDBalance() {
+    return new Promise((resolve, reject) => {
+        // normal client, to get pubkey of LND
+        var credentials = lightning_1.loadCredentials();
+        var lnrpcDescriptor = grpc.load("proto/rpc.proto");
+        var lnrpc = lnrpcDescriptor.lnrpc;
+        var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+        lc.channelBalance({}, function (err, response) {
+            if (err == null) {
+                lc.listChannels({}, function (err, channelList) {
+                    if (err == null) {
+                        const { channels } = channelList;
+                        const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
+                        const balance = parseInt(response.balance) - reserve;
+                        resolve(balance);
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
+            }
+            else {
+                reject(err);
             }
         });
     });

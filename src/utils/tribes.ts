@@ -9,12 +9,21 @@ import { models, sequelize } from '../models'
 import { makeBotsJSON, declare_bot } from './tribeBots'
 import { loadConfig } from './config'
 import { isProxy } from './proxy'
+import { Op } from 'sequelize'
 
 export { declare_bot }
 
 const config = loadConfig()
 
-let clients: {[k:string]: mqtt.Client} = {}
+// {pubkey: {host: Client} }
+let clients: {[k:string]: {[k:string]:mqtt.Client}} = {}
+
+const optz: IClientSubscribeOptions = {qos: 0}
+
+// this runs at relay startup
+export async function connect(onMessage:Function) {
+  subscribeTopics(onMessage)
+}
 
 export async function getTribeOwnersChatByUUID(uuid: string) {
   try {
@@ -30,17 +39,17 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
   } catch (e) { console.log(e) }
 }
 
-async function initializeClient(pubkey, onMessage): Promise<mqtt.Client> {
+async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
   return new Promise((resolve,reject)=>{
     async function reconnect() {
       const pwd = await genSignedTimestamp(pubkey)
-      const cl = mqtt.connect(mqttURL(), {
+      const url = mqttURL(host)
+      const cl = mqtt.connect(url, {
         username: pubkey,
         password: pwd,
         reconnectPeriod: 0, // dont auto reconnect
       })
-      clients[pubkey] = cl
-      console.log('[tribes] try to connect:', mqttURL())
+      console.log('[tribes] try to connect:', url)
       cl.on('connect', async function () {
         console.log("[tribes] connected!")
         cl.subscribe(pubkey+'/#')
@@ -60,43 +69,71 @@ async function initializeClient(pubkey, onMessage): Promise<mqtt.Client> {
   })
 }
 
-async function lazyClient(pubkey:string, onMessage?:Function) {
-  if(clients[pubkey]) return clients[pubkey]
-  const cl = await initializeClient(pubkey, onMessage)
+async function lazyClient(pubkey:string, host:string, onMessage?:Function): Promise<mqtt.Client> {
+  if(clients[pubkey] && clients[pubkey][host]) return clients[pubkey][host]
+  const cl = await initializeClient(pubkey, host, onMessage)
+  if(!clients[pubkey]) clients[pubkey] = {}
+  clients[pubkey][host] = cl // ADD TO MAIN STATE
   return cl
 }
 
-async function subscribeTopics(onMessage) {
+async function subscribeTopics(onMessage:Function) {
+  const host = getHost()
   try {
     if (isProxy()) {
       const allOwners = await models.Contact.findAll({ where: { isOwner: true } })
       if (!(allOwners && allOwners.length)) return
-      allOwners.forEach(async c=> {
+      asyncForEach(allOwners, async c=> {
         if (c.id === 1) return // the proxy non user
         if (c.publicKey && c.publicKey.length === 66) {
-          const opts: IClientSubscribeOptions = {
-            qos: 0
-          }
-          const client = await lazyClient(c.publicKey, onMessage)
-          client.subscribe(`${c.publicKey}/#`, opts, function(err){
+          const client = await lazyClient(c.publicKey, host, onMessage)
+          client.subscribe(`${c.publicKey}/#`, optz, function(err){
             if(err) console.log("[tribes] subscribe error", err)
           })
+          await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
         }
       })
     } else { // just me
       const info = await LND.getInfo(false)
-      const client = await lazyClient(info.identity_pubkey, onMessage)
+      const client = await lazyClient(info.identity_pubkey, host, onMessage)
       client.subscribe(`${info.identity_pubkey}/#`)
       updateTribeStats(info.identity_pubkey)
+      subExtraHostsForTenant(1, info.identity_pubkey, onMessage) // 1 is the tenant id on non-proxy
     }
   } catch(e) {
     console.log("TRIBES ERROR", e)
   }
 }
 
+async function subExtraHostsForTenant(tenant:number, pubkey:string, onMessage:Function){
+  const host = getHost()
+  const externalTribes = await models.Chat.findAll({
+    where: {
+      tenant,
+      host: {[Op.ne]: host} // not the host from config
+    }
+  })
+  if(!(externalTribes && externalTribes.length)) return
+  const usedHosts: string[] = []
+  externalTribes.forEach(async et=>{
+    if(usedHosts.includes(et.host)) return
+    usedHosts.push(et.host) // dont do it twice
+    const client = await lazyClient(pubkey, host, onMessage)
+    client.subscribe(`${pubkey}/#`, optz, function(err){
+      if(err) console.log("[tribes] subscribe error 2", err)
+    })
+  })
+}
+
+export async function addExtraHost(pubkey:string, host:string, onMessage:Function){
+  if(getHost()===host) return // not for default host
+  if(clients[pubkey] && clients[pubkey][host]) return // already exists
+  const client = await lazyClient(pubkey, host, onMessage)
+  client.subscribe(`${pubkey}/#`, optz)
+}
+
 // if host includes colon, remove it
-function mqttURL(){
-  let host = config.tribes_host
+function mqttURL(host){
   if(host.includes(':')) {
     const arr = host.split(':')
     host = arr[0]
@@ -110,10 +147,6 @@ function mqttURL(){
     protocol = config.tribes_protocol
   }
   return `${protocol}://${host}:${port}`
-}
-
-export async function connect(onMessage) {
-  subscribeTopics(onMessage)
 }
 
 // for proxy, need to get all isOwner contacts and their owned chats
@@ -139,18 +172,17 @@ async function updateTribeStats(myPubkey) {
 export async function subscribe(topic) {
   const pubkey = topic.split('/')[0]
   if(pubkey.length!==66) return
-  const client = await lazyClient(pubkey)
+  const host = getHost()
+  const client = await lazyClient(pubkey, host)
   if (client) client.subscribe(topic)
 }
 
 export async function publish(topic, msg, cb) {
   const pubkey = topic.split('/')[0]
   if(pubkey.length!==66) return
-  const client = await lazyClient(pubkey)
-  const opts: IClientSubscribeOptions = {
-    qos: 0
-  }
-  if (client) client.publish(topic, msg, opts, function (err) {
+  const host = getHost()
+  const client = await lazyClient(pubkey, host)
+  if (client) client.publish(topic, msg, optz, function (err) {
     if (err) console.log(err)
     else if (cb) cb()
   })

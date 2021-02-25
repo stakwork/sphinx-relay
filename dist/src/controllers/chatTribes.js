@@ -125,6 +125,7 @@ function joinTribe(req, res) {
                         status: constants_1.default.chat_statuses.approved,
                         tenant
                     });
+                    tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
             }
