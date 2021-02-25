@@ -103,6 +103,7 @@ function sendMessage(params) {
                 amt: Math.max((amount || 0), constants_1.default.min_sat_amount),
                 route_hint: contact.routeHint || ''
             };
+            // console.log("==> SENDER",sender)
             try {
                 const r = yield signAndSend(opts, sender, mqttTopic);
                 yes = r;

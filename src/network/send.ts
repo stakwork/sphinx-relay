@@ -100,6 +100,7 @@ export async function sendMessage(params) {
 			route_hint: contact.routeHint || ''
 		}
 
+		// console.log("==> SENDER",sender)
 		try {
 			const r = await signAndSend(opts, sender, mqttTopic)
 			yes = r

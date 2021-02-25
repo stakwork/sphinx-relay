@@ -240,7 +240,6 @@ export const deleteContact = async (req, res) => {
 }
 
 export const receiveContactKey = async (payload) => {
-	console.log('=> received contact key', JSON.stringify(payload))
 
 	const dat = payload.content || payload
 	const sender_pub_key = dat.sender.pub_key
@@ -250,6 +249,8 @@ export const receiveContactKey = async (payload) => {
 	const sender_photo_url = dat.sender.photo_url
 	const owner = payload.owner
 	const tenant: number = owner.id
+
+	console.log('=> received contact key from',  sender_pub_key)
 
 	if (!sender_pub_key) {
 		return console.log("no pubkey!")

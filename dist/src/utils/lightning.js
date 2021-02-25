@@ -350,7 +350,7 @@ function keysendMessage(opts, ownerPubkey) {
                     const isLastThread = i === n - 1;
                     const amt = isLastThread ? opts.amt : constants_1.default.min_sat_amount;
                     try {
-                        res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }));
+                        res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
                         success = true;
                         yield helpers_1.sleep(432);
                     }

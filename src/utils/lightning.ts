@@ -327,7 +327,7 @@ async function keysendMessage(opts, ownerPubkey?:string) {
         res = await keysend({
           ...opts, amt, // split the amt too
           data: `${ts}_${i}_${n}_${m}`
-        })
+        }, ownerPubkey)
         success = true
         await sleep(432)
       } catch (e) {

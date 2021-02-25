@@ -232,7 +232,6 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.deleteContact = deleteContact;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('=> received contact key', JSON.stringify(payload));
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_route_hint = dat.sender.route_hint;
@@ -241,6 +240,7 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     const sender_photo_url = dat.sender.photo_url;
     const owner = payload.owner;
     const tenant = owner.id;
+    console.log('=> received contact key from', sender_pub_key);
     if (!sender_pub_key) {
         return console.log("no pubkey!");
     }
