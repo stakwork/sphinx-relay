@@ -187,7 +187,7 @@ function createGroupChat(req, res) {
         let chatParams = null;
         let okToCreate = true;
         if (is_tribe) {
-            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url);
+            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url, tenant);
             if (chatParams.uuid) {
                 // publish to tribe server
                 try {
@@ -211,6 +211,7 @@ function createGroupChat(req, res) {
                     });
                 }
                 catch (e) {
+                    console.log("=> couldnt create tribe", e);
                     okToCreate = false;
                 }
             }
@@ -312,7 +313,7 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             message: {},
             type: constants_1.default.message_types.tribe_delete,
             success: function () {
-                tribes.delete_tribe(chat.uuid);
+                tribes.delete_tribe(chat.uuid, owner.publicKey);
             },
             failure: function () {
                 res_1.failure(res, 'failed to send tribe_delete message');
@@ -425,6 +426,7 @@ function receiveGroupJoin(payload) {
                     uuid: chat.uuid,
                     host: chat.host,
                     member_count: contactIds.length,
+                    owner_pubkey: owner.publicKey
                 });
             }
         }
@@ -483,6 +485,7 @@ function receiveGroupLeave(payload) {
                         uuid: chat.uuid,
                         host: chat.host,
                         member_count: contactIds.length,
+                        owner_pubkey: owner.publicKey
                     });
                 }
             }

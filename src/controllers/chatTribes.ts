@@ -256,7 +256,8 @@ export async function editTribe(req, res) {
 				app_url,
 				feed_url,
 				deleted: false,
-				owner_route_hint: owner.routeHint || ''
+				owner_route_hint: owner.routeHint || '',
+				owner_pubkey: owner.publicKey
 			})
 		} catch (e) {
 			okToUpdate = false
@@ -533,7 +534,7 @@ export async function replayChatHistory(chat, contact, owner) {
 	}
 }
 
-export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url): Promise<{ [k: string]: any }> {
+export async function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, tenant): Promise<{ [k: string]: any }> {
 	let date = new Date()
 	date.setMilliseconds(0)
 	if (!(owner && contactIds && Array.isArray(contactIds))) {
@@ -542,7 +543,7 @@ export async function createTribeChatParams(owner, contactIds, name, img, price_
 
 	// make ts sig here w LNd pubkey - that is UUID
 	const keys: { [k: string]: string } = await rsa.genKeys()
-	const groupUUID = await tribes.genSignedTimestamp()
+	const groupUUID = await tribes.genSignedTimestamp(owner.publicKey)
 	const theContactIds = contactIds.includes(owner.id) ? contactIds : [owner.id].concat(contactIds)
 	return {
 		uuid: groupUUID,
@@ -564,6 +565,7 @@ export async function createTribeChatParams(owner, contactIds, name, img, price_
 		private: is_private || false,
 		appUrl: app_url || '',
 		feedUrl: feed_url || '',
+		tenant
 	}
 }
 

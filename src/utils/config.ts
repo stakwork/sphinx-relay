@@ -27,7 +27,7 @@ export function loadConfig() {
     media_host: ENV.MEDIA_HOST || config.media_host,
     tribes_host: ENV.TRIBES_HOST || config.tribes_host,
     tribes_mqtt_port: ENV.TRIBES_MQTT_PORT || config.tribes_mqtt_port,
-    tribes_protocol: ENV.TRIBES_PROTOCOL || config.tribes_protocol,
+    tribes_insecure: ENV.TRIBES_INSECURE || config.tribes_insecure,
     public_url: ENV.PUBLIC_URL || config.public_url,
     connection_string_path: ENV.CONNECTION_STRING_PATH || config.connection_string_path,
     ssl: {

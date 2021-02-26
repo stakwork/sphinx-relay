@@ -57,7 +57,7 @@ export async function sendMessage(params) {
 				// return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
 			}
 			// post last_active to tribes server
-			tribes.putActivity(chat.uuid, chat.host)
+			tribes.putActivity(chat.uuid, chat.host, sender.publicKey)
 		} else {
 			// if tribe, send to owner only
 			const tribeOwner = await models.Contact.findOne({ where: { publicKey: chat.ownerPubkey, tenant } })
@@ -101,6 +101,7 @@ export async function sendMessage(params) {
 		}
 
 		// console.log("==> SENDER",sender)
+		console.log("==> OK SIGN AND SEND", opts)
 		try {
 			const r = await signAndSend(opts, sender, mqttTopic)
 			yes = r
@@ -137,7 +138,7 @@ export function signAndSend(opts, owner:{[k:string]:any}, mqttTopic?: string, re
 		// console.log("-> ACTUALLY SEND: topic:", mqttTopic)
 		try {
 			if (mqttTopic) {
-				await tribes.publish(mqttTopic, data, function () {
+				await tribes.publish(mqttTopic, data, ownerPubkey, function (err) {
 					if (!replayingHistory) {
 						if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)
 					}

@@ -302,6 +302,7 @@ export const sendMessage = async (req, res) => {
 		sendMessageParams.amount = amtToStore
 	}
 	// final send
+	// console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
 	network.sendMessage(sendMessageParams)
 }
 

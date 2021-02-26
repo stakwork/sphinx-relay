@@ -186,7 +186,7 @@ export async function createGroupChat(req, res) {
 	let chatParams: any = null
 	let okToCreate = true
 	if (is_tribe) {
-		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url)
+		chatParams = await createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url, tenant)
 		if (chatParams.uuid) {
 			// publish to tribe server
 			try {
@@ -209,6 +209,7 @@ export async function createGroupChat(req, res) {
 					owner_route_hint: owner.routeHint || ''
 				})
 			} catch (e) {
+				console.log("=> couldnt create tribe", e)
 				okToCreate = false
 			}
 		}
@@ -312,7 +313,7 @@ export const deleteChat = async (req, res) => {
 			message: {},
 			type: constants.message_types.tribe_delete,
 			success: function () {
-				tribes.delete_tribe(chat.uuid)
+				tribes.delete_tribe(chat.uuid, owner.publicKey)
 			},
 			failure: function () {
 				failure(res, 'failed to send tribe_delete message')
@@ -425,6 +426,7 @@ export async function receiveGroupJoin(payload) {
 				uuid: chat.uuid,
 				host: chat.host,
 				member_count: contactIds.length,
+				owner_pubkey: owner.publicKey
 			})
 		}
 	}
@@ -484,6 +486,7 @@ export async function receiveGroupLeave(payload) {
 					uuid: chat.uuid,
 					host: chat.host,
 					member_count: contactIds.length,
+					owner_pubkey: owner.publicKey
 				})
 			}
 		}

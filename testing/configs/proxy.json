@@ -15,7 +15,7 @@
     "media_host": "localhost:5000",
     "tribes_host": "localhost:5002",
     "tribes_mqtt_port": "1883",
-    "tribes_protocol": "tcp",
+    "tribes_insecure": true,
     "public_url": "",
     "connection_string_path": "connection_string.txt",
     "ssl": {

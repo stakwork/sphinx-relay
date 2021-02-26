@@ -28,7 +28,7 @@ const optz = { qos: 0 };
 // this runs at relay startup
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        subscribeTopics(onMessage);
+        initAndSubscribeTopics(onMessage);
     });
 }
 exports.connect = connect;
@@ -67,19 +67,26 @@ function initializeClient(pubkey, host, onMessage) {
                     cl.on('connect', function () {
                         return __awaiter(this, void 0, void 0, function* () {
                             console.log("[tribes] connected!");
-                            cl.subscribe(pubkey + '/#');
-                            resolve(cl);
+                            cl.on('close', function (e) {
+                                setTimeout(() => reconnect(), 2000);
+                            });
+                            cl.on('error', function (e) {
+                                console.log('[tribes] error: ', e.message || e);
+                            });
+                            cl.on('message', function (topic, message) {
+                                // console.log("============>>>>> GOT A MSG", topic, message)
+                                if (onMessage)
+                                    onMessage(topic, message);
+                            });
+                            cl.subscribe(`${pubkey}/#`, function (err) {
+                                if (err)
+                                    console.log('[tribes] error subscribing', err);
+                                else {
+                                    console.log('[tribes] subscribed!', `${pubkey}/#`);
+                                    resolve(cl);
+                                }
+                            });
                         });
-                    });
-                    cl.on('close', function (e) {
-                        setTimeout(() => reconnect(), 2000);
-                    });
-                    cl.on('error', function (e) {
-                        console.log('[tribes] error: ', e.message || e);
-                    });
-                    cl.on('message', function (topic, message) {
-                        if (onMessage)
-                            onMessage(topic, message);
                     });
                 });
             }
@@ -89,8 +96,9 @@ function initializeClient(pubkey, host, onMessage) {
 }
 function lazyClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (clients[pubkey] && clients[pubkey][host])
+        if (clients[pubkey] && clients[pubkey][host]) {
             return clients[pubkey][host];
+        }
         const cl = yield initializeClient(pubkey, host, onMessage);
         if (!clients[pubkey])
             clients[pubkey] = {};
@@ -98,7 +106,7 @@ function lazyClient(pubkey, host, onMessage) {
         return cl;
     });
 }
-function subscribeTopics(onMessage) {
+function initAndSubscribeTopics(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = getHost();
         try {
@@ -110,19 +118,14 @@ function subscribeTopics(onMessage) {
                     if (c.id === 1)
                         return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
-                        const client = yield lazyClient(c.publicKey, host, onMessage);
-                        client.subscribe(`${c.publicKey}/#`, optz, function (err) {
-                            if (err)
-                                console.log("[tribes] subscribe error", err);
-                        });
+                        yield lazyClient(c.publicKey, host, onMessage);
                         yield subExtraHostsForTenant(c.id, c.publicKey, onMessage); // 1 is the tenant id on non-proxy
                     }
                 }));
             }
             else { // just me
                 const info = yield LND.getInfo(false);
-                const client = yield lazyClient(info.identity_pubkey, host, onMessage);
-                client.subscribe(`${info.identity_pubkey}/#`);
+                yield lazyClient(info.identity_pubkey, host, onMessage);
                 updateTribeStats(info.identity_pubkey);
                 subExtraHostsForTenant(1, info.identity_pubkey, onMessage); // 1 is the tenant id on non-proxy
             }
@@ -156,8 +159,21 @@ function subExtraHostsForTenant(tenant, pubkey, onMessage) {
         }));
     });
 }
+function printClients() {
+    const ret = {};
+    Object.entries(clients).forEach(entry => {
+        const pk = entry[0];
+        const obj = entry[1];
+        ret[pk] = {};
+        Object.keys(obj).forEach(host => {
+            ret[pk][host] = true;
+        });
+    });
+    return JSON.stringify(ret);
+}
 function addExtraHost(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("ADD EXTRA HOST", printClients(), host);
         if (getHost() === host)
             return; // not for default host
         if (clients[pubkey] && clients[pubkey][host])
@@ -178,8 +194,8 @@ function mqttURL(host) {
     if (config.tribes_mqtt_port) {
         port = config.tribes_mqtt_port;
     }
-    if (config.tribes_protocol) {
-        protocol = config.tribes_protocol;
+    if (config.tribes_insecure) {
+        protocol = "tcp";
     }
     return `${protocol}://${host}:${port}`;
 }
@@ -198,7 +214,7 @@ function updateTribeStats(myPubkey) {
             try {
                 const contactIds = JSON.parse(tribe.contactIds);
                 const member_count = (contactIds && contactIds.length) || 0;
-                yield putstats({ uuid: tribe.uuid, host: tribe.host, member_count, chatId: tribe.id });
+                yield putstats({ uuid: tribe.uuid, host: tribe.host, member_count, chatId: tribe.id, owner_pubkey: myPubkey });
             }
             catch (e) { }
         }));
@@ -219,17 +235,16 @@ function subscribe(topic) {
     });
 }
 exports.subscribe = subscribe;
-function publish(topic, msg, cb) {
+function publish(topic, msg, ownerPubkey, cb) {
     return __awaiter(this, void 0, void 0, function* () {
-        const pubkey = topic.split('/')[0];
-        if (pubkey.length !== 66)
+        if (ownerPubkey.length !== 66)
             return;
         const host = getHost();
-        const client = yield lazyClient(pubkey, host);
+        const client = yield lazyClient(ownerPubkey, host);
         if (client)
             client.publish(topic, msg, optz, function (err) {
                 if (err)
-                    console.log(err);
+                    console.log('[tribes] error publishing', err);
                 else if (cb)
                     cb();
             });
@@ -239,7 +254,10 @@ exports.publish = publish;
 function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, owner_route_hint }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield node_fetch_1.default('https://' + host + '/tribes', {
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            yield node_fetch_1.default(protocol + '://' + host + '/tribes', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid, group_key,
@@ -266,11 +284,14 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, deleted, owner_route_hint }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, deleted, owner_route_hint, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const token = yield genSignedTimestamp();
-            yield node_fetch_1.default('https://' + host + '/tribe?token=' + token, {
+            const token = yield genSignedTimestamp(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            yield node_fetch_1.default(protocol + '://' + host + '/tribe?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid,
@@ -298,12 +319,15 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     });
 }
 exports.edit = edit;
-function delete_tribe(uuid) {
+function delete_tribe(uuid, owner_pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = getHost();
         try {
-            const token = yield genSignedTimestamp();
-            yield node_fetch_1.default(`https://${host}/tribe/${uuid}?token=${token}`, {
+            const token = yield genSignedTimestamp(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            yield node_fetch_1.default(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
                 method: 'DELETE',
             });
             // const j = await r.json()
@@ -315,11 +339,14 @@ function delete_tribe(uuid) {
     });
 }
 exports.delete_tribe = delete_tribe;
-function putActivity(uuid, host) {
+function putActivity(uuid, host, owner_pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const token = yield genSignedTimestamp();
-            yield node_fetch_1.default(`https://${host}/tribeactivity/${uuid}?token=` + token, {
+            const token = yield genSignedTimestamp(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            yield node_fetch_1.default(`${protocol}://${host}/tribeactivity/${uuid}?token=` + token, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -331,14 +358,17 @@ function putActivity(uuid, host) {
     });
 }
 exports.putActivity = putActivity;
-function putstats({ uuid, host, member_count, chatId }) {
+function putstats({ uuid, host, member_count, chatId, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!uuid)
             return;
         const bots = yield tribeBots_1.makeBotsJSON(chatId);
         try {
-            const token = yield genSignedTimestamp();
-            yield node_fetch_1.default('https://' + host + '/tribestats?token=' + token, {
+            const token = yield genSignedTimestamp(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            yield node_fetch_1.default(protocol + '://' + host + '/tribestats?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid, member_count, bots: JSON.stringify(bots || [])

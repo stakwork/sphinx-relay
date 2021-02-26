@@ -22,7 +22,7 @@ const optz: IClientSubscribeOptions = {qos: 0}
 
 // this runs at relay startup
 export async function connect(onMessage:Function) {
-  subscribeTopics(onMessage)
+  initAndSubscribeTopics(onMessage)
 }
 
 export async function getTribeOwnersChatByUUID(uuid: string) {
@@ -52,17 +52,23 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
       console.log('[tribes] try to connect:', url)
       cl.on('connect', async function () {
         console.log("[tribes] connected!")
-        cl.subscribe(pubkey+'/#')
-        resolve(cl)
-      })
-      cl.on('close', function (e) {
-        setTimeout(() => reconnect(), 2000)
-      })
-      cl.on('error', function (e) {
-        console.log('[tribes] error: ', e.message || e)
-      })
-      cl.on('message', function (topic, message) {
-        if (onMessage) onMessage(topic, message)
+        cl.on('close', function (e) {
+          setTimeout(() => reconnect(), 2000)
+        })
+        cl.on('error', function (e) {
+          console.log('[tribes] error: ', e.message || e)
+        })
+        cl.on('message', function (topic, message) {
+          // console.log("============>>>>> GOT A MSG", topic, message)
+          if (onMessage) onMessage(topic, message)
+        })
+        cl.subscribe(`${pubkey}/#`, function(err){
+          if(err) console.log('[tribes] error subscribing', err)
+          else {
+            console.log('[tribes] subscribed!', `${pubkey}/#`)
+            resolve(cl)
+          }
+        })
       })
     }
     reconnect()
@@ -70,14 +76,16 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
 }
 
 async function lazyClient(pubkey:string, host:string, onMessage?:Function): Promise<mqtt.Client> {
-  if(clients[pubkey] && clients[pubkey][host]) return clients[pubkey][host]
+  if(clients[pubkey] && clients[pubkey][host]) {
+    return clients[pubkey][host]
+  }
   const cl = await initializeClient(pubkey, host, onMessage)
   if(!clients[pubkey]) clients[pubkey] = {}
   clients[pubkey][host] = cl // ADD TO MAIN STATE
   return cl
 }
 
-async function subscribeTopics(onMessage:Function) {
+async function initAndSubscribeTopics(onMessage:Function) {
   const host = getHost()
   try {
     if (isProxy()) {
@@ -86,17 +94,13 @@ async function subscribeTopics(onMessage:Function) {
       asyncForEach(allOwners, async c=> {
         if (c.id === 1) return // the proxy non user
         if (c.publicKey && c.publicKey.length === 66) {
-          const client = await lazyClient(c.publicKey, host, onMessage)
-          client.subscribe(`${c.publicKey}/#`, optz, function(err){
-            if(err) console.log("[tribes] subscribe error", err)
-          })
+          await lazyClient(c.publicKey, host, onMessage)
           await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
         }
       })
     } else { // just me
       const info = await LND.getInfo(false)
-      const client = await lazyClient(info.identity_pubkey, host, onMessage)
-      client.subscribe(`${info.identity_pubkey}/#`)
+      await lazyClient(info.identity_pubkey, host, onMessage)
       updateTribeStats(info.identity_pubkey)
       subExtraHostsForTenant(1, info.identity_pubkey, onMessage) // 1 is the tenant id on non-proxy
     }
@@ -125,7 +129,21 @@ async function subExtraHostsForTenant(tenant:number, pubkey:string, onMessage:Fu
   })
 }
 
+function printClients(){
+  const ret = {}
+  Object.entries(clients).forEach(entry=>{
+    const pk = entry[0]
+    const obj = entry[1]
+    ret[pk] = {}
+    Object.keys(obj).forEach(host=>{
+      ret[pk][host] = true
+    })
+  })
+  return JSON.stringify(ret)
+}
+
 export async function addExtraHost(pubkey:string, host:string, onMessage:Function){
+  console.log("ADD EXTRA HOST", printClients(), host)
   if(getHost()===host) return // not for default host
   if(clients[pubkey] && clients[pubkey][host]) return // already exists
   const client = await lazyClient(pubkey, host, onMessage)
@@ -143,8 +161,8 @@ function mqttURL(host){
   if(config.tribes_mqtt_port) {
     port = config.tribes_mqtt_port
   }
-  if(config.tribes_protocol) {
-    protocol = config.tribes_protocol
+  if(config.tribes_insecure) {
+    protocol = "tcp"
   }
   return `${protocol}://${host}:${port}`
 }
@@ -162,7 +180,7 @@ async function updateTribeStats(myPubkey) {
     try {
       const contactIds = JSON.parse(tribe.contactIds)
       const member_count = (contactIds && contactIds.length) || 0
-      await putstats({ uuid: tribe.uuid, host: tribe.host, member_count, chatId: tribe.id })
+      await putstats({ uuid: tribe.uuid, host: tribe.host, member_count, chatId: tribe.id, owner_pubkey:myPubkey })
     } catch (e) { }
   })
   if (myTribes.length) {
@@ -178,20 +196,21 @@ export async function subscribe(topic) {
   if (client) client.subscribe(topic)
 }
 
-export async function publish(topic, msg, cb) {
-  const pubkey = topic.split('/')[0]
-  if(pubkey.length!==66) return
+export async function publish(topic, msg, ownerPubkey, cb) {
+  if(ownerPubkey.length!==66) return
   const host = getHost()
-  const client = await lazyClient(pubkey, host)
+  const client = await lazyClient(ownerPubkey, host)
   if (client) client.publish(topic, msg, optz, function (err) {
-    if (err) console.log(err)
+    if (err) console.log('[tribes] error publishing', err)
     else if (cb) cb()
   })
 }
 
 export async function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, owner_route_hint }) {
   try {
-    await fetch('https://' + host + '/tribes', {
+    let protocol = 'https'
+    if(config.tribes_insecure) protocol='http'
+    await fetch(protocol + '://' + host + '/tribes', {
       method: 'POST',
       body: JSON.stringify({
         uuid, group_key,
@@ -216,10 +235,12 @@ export async function declare({ uuid, name, description, tags, img, group_key, h
   }
 }
 
-export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, deleted, owner_route_hint }) {
+export async function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, deleted, owner_route_hint, owner_pubkey }) {
   try {
-    const token = await genSignedTimestamp()
-    await fetch('https://' + host + '/tribe?token=' + token, {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if(config.tribes_insecure) protocol='http'
+    await fetch(protocol + '://' + host + '/tribe?token=' + token, {
       method: 'PUT',
       body: JSON.stringify({
         uuid,
@@ -245,11 +266,13 @@ export async function edit({ uuid, host, name, description, tags, img, price_per
   }
 }
 
-export async function delete_tribe(uuid) {
+export async function delete_tribe(uuid, owner_pubkey) {
   const host = getHost()
   try {
-    const token = await genSignedTimestamp()
-    await fetch(`https://${host}/tribe/${uuid}?token=${token}`, {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if(config.tribes_insecure) protocol='http'
+    await fetch(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
       method: 'DELETE',
     })
     // const j = await r.json()
@@ -259,10 +282,12 @@ export async function delete_tribe(uuid) {
   }
 }
 
-export async function putActivity(uuid: string, host: string) {
+export async function putActivity(uuid: string, host: string, owner_pubkey:string) {
   try {
-    const token = await genSignedTimestamp()
-    await fetch(`https://${host}/tribeactivity/${uuid}?token=` + token, {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if(config.tribes_insecure) protocol='http'
+    await fetch(`${protocol}://${host}/tribeactivity/${uuid}?token=` + token, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' }
     })
@@ -272,12 +297,14 @@ export async function putActivity(uuid: string, host: string) {
   }
 }
 
-export async function putstats({ uuid, host, member_count, chatId }) {
+export async function putstats({ uuid, host, member_count, chatId, owner_pubkey }) {
   if (!uuid) return
   const bots = await makeBotsJSON(chatId)
   try {
-    const token = await genSignedTimestamp()
-    await fetch('https://' + host + '/tribestats?token=' + token, {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if(config.tribes_insecure) protocol='http'
+    await fetch(protocol + '://' + host + '/tribestats?token=' + token, {
       method: 'PUT',
       body: JSON.stringify({
         uuid, member_count, bots: JSON.stringify(bots || [])
@@ -290,7 +317,7 @@ export async function putstats({ uuid, host, member_count, chatId }) {
   }
 }
 
-export async function genSignedTimestamp(ownerPubkey?: string) {
+export async function genSignedTimestamp(ownerPubkey: string) {
   // console.log('genSignedTimestamp')
   const now = moment().unix()
   const tsBytes = Buffer.from(now.toString(16), 'hex')

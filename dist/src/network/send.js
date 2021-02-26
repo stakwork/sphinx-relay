@@ -65,7 +65,7 @@ function sendMessage(params) {
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
                 // post last_active to tribes server
-                tribes.putActivity(chat.uuid, chat.host);
+                tribes.putActivity(chat.uuid, chat.host, sender.publicKey);
             }
             else {
                 // if tribe, send to owner only
@@ -104,6 +104,7 @@ function sendMessage(params) {
                 route_hint: contact.routeHint || ''
             };
             // console.log("==> SENDER",sender)
+            console.log("==> OK SIGN AND SEND", opts);
             try {
                 const r = yield signAndSend(opts, sender, mqttTopic);
                 yes = r;
@@ -144,7 +145,7 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
             // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
             try {
                 if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data, function () {
+                    yield tribes.publish(mqttTopic, data, ownerPubkey, function (err) {
                         if (!replayingHistory) {
                             if (mqttTopic)
                                 checkIfAutoConfirm(opts.data, ownerID);

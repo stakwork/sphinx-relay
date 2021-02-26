@@ -32,3 +32,7 @@ npx ava test-01-checkSelf.js --verbose --serial --timeout=2m
 npx ava test-02-contactTest.js --verbose --serial --timeout=2m
 
 npx ava test-03-imageTest.js --verbose --serial --timeout=2m
+
+npx ava test-04-joinTribe.js --verbose --serial --timeout=2m
+
+npx ava test-05-tribeImages.js --verbose --serial --timeout=2m
