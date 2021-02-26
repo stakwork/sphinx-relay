@@ -1,6 +1,8 @@
 {
-    "development": {
-        "dialect": "sqlite",
-        "storage": "/Users/Shared/sphinx-proxy.db"
+  "development": {
+    "dialect": "postgres",
+    "dialectOptions": {
+        "connectionString": "postgres://localhost"
     }
+  }
 }

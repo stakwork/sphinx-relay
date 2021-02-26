@@ -26,12 +26,13 @@ const config = config_1.loadConfig();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
+    console.log('=> [db] sync now');
     try {
         yield models_1.sequelize.sync();
         console.log("=> [db] done syncing");
     }
     catch (e) {
-        // console.log("db sync failed", e)
+        console.log("[db] sync failed", e);
     }
     yield migrate_1.default();
     console.log('=> [db] setup done');
@@ -43,7 +44,7 @@ function setVersion() {
             yield models_1.sequelize.query(`PRAGMA user_version = ${USER_VERSION}`);
         }
         catch (e) {
-            console.log('=> setVersion failed', e);
+            console.log('=> setVersion failed');
         }
     });
 }

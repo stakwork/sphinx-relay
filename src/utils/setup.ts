@@ -16,11 +16,12 @@ const config = loadConfig()
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
   await setVersion()
+  console.log('=> [db] sync now')
   try {
     await sequelize.sync()
     console.log("=> [db] done syncing")
   } catch (e) {
-    // console.log("db sync failed", e)
+    console.log("[db] sync failed", e)
   }
   await migrate()
   console.log('=> [db] setup done')
@@ -30,7 +31,7 @@ async function setVersion() {
   try {
     await sequelize.query(`PRAGMA user_version = ${USER_VERSION}`)
   } catch (e) {
-    console.log('=> setVersion failed', e)
+    console.log('=> setVersion failed')
   }
 }
 
