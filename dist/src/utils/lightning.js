@@ -610,7 +610,7 @@ function verifyAscii(ascii, sig, ownerPubkey) {
 exports.verifyAscii = verifyAscii;
 function getInfo(tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('getInfo');
+        // log('getInfo')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(tryProxy === false ? false : true); // try proxy
             lightning.getInfo({}, function (err, response) {

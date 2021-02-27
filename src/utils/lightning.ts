@@ -548,7 +548,7 @@ async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: strin
 }
 
 async function getInfo(tryProxy?:boolean): Promise<{ [k: string]: any }> {
-  log('getInfo')
+  // log('getInfo')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(tryProxy===false?false:true) // try proxy
     lightning.getInfo({}, function (err, response) {
