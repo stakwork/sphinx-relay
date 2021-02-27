@@ -623,7 +623,7 @@ async function channelBalance(ownerPubkey?:string): Promise<{ [k: string]: any }
 }
 
 async function getChanInfo(chan_id: number, tryProxy?:boolean): Promise<{ [k: string]: any }> {
-  log('getChanInfo')
+  // log('getChanInfo')
   return new Promise(async (resolve, reject) => {
     if(!chan_id) {
       return reject('no chan id')

@@ -686,7 +686,7 @@ function channelBalance(ownerPubkey) {
 exports.channelBalance = channelBalance;
 function getChanInfo(chan_id, tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('getChanInfo');
+        // log('getChanInfo')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             if (!chan_id) {
                 return reject('no chan id');
