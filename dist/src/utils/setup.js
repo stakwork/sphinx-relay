@@ -44,7 +44,7 @@ function setVersion() {
             yield models_1.sequelize.query(`PRAGMA user_version = ${USER_VERSION}`);
         }
         catch (e) {
-            console.log('=> setVersion failed');
+            console.log('=> [db] setVersion failed');
         }
     });
 }

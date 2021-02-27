@@ -122,18 +122,36 @@ const setLock = (value) => {
     }, 1000 * 60 * 2);
 };
 exports.setLock = setLock;
-const getRoute = (pub_key, amt, callback) => __awaiter(void 0, void 0, void 0, function* () {
+const getRoute = (pub_key, amt, route_hint, callback) => __awaiter(void 0, void 0, void 0, function* () {
     log('getRoute');
     let lightning = yield loadLightning(true); // try proxy
-    lightning.queryRoutes({ pub_key, amt }, (err, response) => callback(err, response));
+    const options = { pub_key, amt };
+    if (route_hint && route_hint.includes(':')) {
+        const arr = route_hint.split(':');
+        const node_id = arr[0];
+        const chan_id = arr[1];
+        options.route_hints = [{
+                hop_hints: [{ node_id, chan_id }]
+            }];
+    }
+    lightning.queryRoutes(options, (err, response) => callback(err, response));
 });
 exports.getRoute = getRoute;
-const queryRoute = (pub_key, amt, ownerPubkey) => __awaiter(void 0, void 0, void 0, function* () {
+const queryRoute = (pub_key, amt, route_hint, ownerPubkey) => __awaiter(void 0, void 0, void 0, function* () {
     log('queryRoute');
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             let lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            lightning.queryRoutes({ pub_key, amt }, (err, response) => {
+            const options = { pub_key, amt };
+            if (route_hint && route_hint.includes(':')) {
+                const arr = route_hint.split(':');
+                const node_id = arr[0];
+                const chan_id = arr[1];
+                options.route_hints = [{
+                        hop_hints: [{ node_id, chan_id }]
+                    }];
+            }
+            lightning.queryRoutes(options, (err, response) => {
                 if (err) {
                     reject(err);
                     return;

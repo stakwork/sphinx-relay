@@ -106,21 +106,39 @@ const setLock = (value) => {
   }, 1000 * 60 * 2)
 }
 
-const getRoute = async (pub_key, amt, callback) => {
+const getRoute = async (pub_key, amt, route_hint, callback) => {
   log('getRoute')
   let lightning = await loadLightning(true) // try proxy
+  const options:{[k:string]:any} = { pub_key, amt }
+  if(route_hint && route_hint.includes(':')) {
+    const arr = route_hint.split(':')
+    const node_id = arr[0]
+    const chan_id = arr[1]
+    options.route_hints = [{
+      hop_hints: [{ node_id, chan_id }]
+    }]
+  }
   lightning.queryRoutes(
-    { pub_key, amt },
+    options,
     (err, response) => callback(err, response)
   )
 }
 
-const queryRoute = async (pub_key, amt, ownerPubkey?:string) => {
+const queryRoute = async (pub_key, amt, route_hint, ownerPubkey?:string) => {
   log('queryRoute')
   return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
+    const options:{[k:string]:any} = { pub_key, amt }
+    if(route_hint && route_hint.includes(':')) {
+      const arr = route_hint.split(':')
+      const node_id = arr[0]
+      const chan_id = arr[1]
+      options.route_hints = [{
+        hop_hints: [{ node_id, chan_id }]
+      }]
+    }
     lightning.queryRoutes(
-      { pub_key, amt },
+      options,
       (err, response) => {
         if (err) {
           reject(err)

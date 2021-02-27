@@ -21,12 +21,13 @@ export async function getAppVersions(req, res) {
 export const checkRoute = async (req, res) => {
 	if (!req.owner) return
 
-	const { pubkey, amount } = req.query
+	const { pubkey, amount, route_hint } = req.query
 	if (!(pubkey && pubkey.length === 66)) return failure(res, 'wrong pubkey')
 
 	const owner = req.owner
 	try {
-		const r = await queryRoute(pubkey, parseInt(amount) || constants.min_sat_amount, owner.publicKey)
+		const amt = parseInt(amount) || constants.min_sat_amount
+		const r = await queryRoute(pubkey, amt, route_hint || '', owner.publicKey)
 		success(res, r)
 	} catch (e) {
 		failure(res, e)

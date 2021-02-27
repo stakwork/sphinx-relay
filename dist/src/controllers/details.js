@@ -34,12 +34,13 @@ exports.getAppVersions = getAppVersions;
 const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
-    const { pubkey, amount } = req.query;
+    const { pubkey, amount, route_hint } = req.query;
     if (!(pubkey && pubkey.length === 66))
         return res_1.failure(res, 'wrong pubkey');
     const owner = req.owner;
     try {
-        const r = yield lightning_1.queryRoute(pubkey, parseInt(amount) || constants_1.default.min_sat_amount, owner.publicKey);
+        const amt = parseInt(amount) || constants_1.default.min_sat_amount;
+        const r = yield lightning_1.queryRoute(pubkey, amt, route_hint || '', owner.publicKey);
         res_1.success(res, r);
     }
     catch (e) {
