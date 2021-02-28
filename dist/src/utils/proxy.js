@@ -33,7 +33,7 @@ function genUsersInterval(ms) {
 }
 exports.genUsersInterval = genUsersInterval;
 const NEW_USER_NUM = 2;
-const SATS_PER_USER = 10000;
+const SATS_PER_USER = 5000;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -87,6 +87,7 @@ function generateNewUser(rootpk) {
     });
 }
 exports.generateNewUser = generateNewUser;
+// "total" is in msats
 function getProxyTotalBalance() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -95,7 +96,7 @@ function getProxyTotalBalance() {
                 headers: { 'x-admin-token': config.proxy_admin_token }
             });
             const j = yield r.json();
-            return j.total || 0;
+            return j.total ? Math.floor(j.total / 1000) : 0;
         }
         catch (e) {
             return 0;

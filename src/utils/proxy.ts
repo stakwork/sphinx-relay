@@ -22,7 +22,7 @@ export function genUsersInterval(ms) {
 }
 
 const NEW_USER_NUM = 2
-const SATS_PER_USER = 10000
+const SATS_PER_USER = 5000
 // isOwner users with no authToken
 export async function generateNewUsers(){
   if(!isProxy()) return
@@ -70,6 +70,7 @@ export async function generateNewUser(rootpk: string){
   }
 }
 
+// "total" is in msats
 export async function getProxyTotalBalance(){
   try {
     const r = await fetch(adminURL + 'balances', {
@@ -77,7 +78,7 @@ export async function getProxyTotalBalance(){
       headers:{'x-admin-token':config.proxy_admin_token}
     })
     const j = await r.json()
-    return j.total || 0
+    return j.total ? Math.floor(j.total/1000) : 0
   } catch(e) {
     return 0
   }
