@@ -113,7 +113,7 @@ function massPingHubFromProxies(rn) {
         yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
             const proxyNodeInfo = yield nodeinfo_1.proxynodeinfo(o.publicKey);
             const clean = o.authToken === null || o.authToken === '';
-            nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet }));
+            nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet, ip: rn.ip, public_ip: rn.public_ip }));
         }));
         sendHubCall({ nodes }, true);
     });
