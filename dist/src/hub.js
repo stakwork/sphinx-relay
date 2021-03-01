@@ -121,7 +121,7 @@ function massPingHubFromProxies(rn) {
 function sendHubCall(body, mass) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log("=> PING BODY", body);
+            // console.log("=> PING BODY", body)
             const r = yield node_fetch_1.default(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
                 agent: pingAgent,
                 method: 'POST',
@@ -129,7 +129,7 @@ function sendHubCall(body, mass) {
                 headers: { 'Content-Type': 'application/json' }
             });
             const j = yield r.json();
-            console.log("=> PING RESPONSE", j);
+            // console.log("=> PING RESPONSE", j)
             if (!(j && j.status && j.status === 'ok')) {
                 console.log('[hub] ping returned not ok');
             }

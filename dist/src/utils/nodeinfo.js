@@ -35,6 +35,7 @@ function proxynodeinfo(pk) {
                 largest_local_balance: largestLocalBalance,
                 largest_remote_balance: largestRemoteBalance,
                 total_local_balance: totalLocalBalance,
+                node_type: 'virtual'
             });
         });
     }));
