@@ -46,6 +46,8 @@ function loadConfig() {
         proxy_lnd_port: ENV.PROXY_LND_PORT || config.proxy_lnd_port,
         proxy_admin_token: ENV.PROXY_ADMIN_TOKEN || config.proxy_admin_token,
         proxy_admin_url: ENV.PROXY_ADMIN_URL || config.proxy_admin_url,
+        proxy_new_nodes: ENV.PROXY_NEW_NODES || config.proxy_new_nodes,
+        proxy_initial_sats: ENV.PROXY_INITIAL_SATS || config.proxy_initial_sats
     };
 }
 exports.loadConfig = loadConfig;

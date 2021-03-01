@@ -51,6 +51,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
             json.object.invites.map((object) => __awaiter(void 0, void 0, void 0, function* () {
                 const invite = object.invite;
                 const pubkey = object.pubkey;
+                const routeHint = object.route_hint;
                 const price = object.price;
                 const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite.pin } });
                 const contact = yield models_1.models.Contact.findOne({ where: { id: dbInvite.contactId } });
@@ -69,7 +70,10 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     }
                 }
                 if (pubkey && dbInvite.status == constants_1.default.invite_statuses.complete && contact) {
-                    contact.update({ publicKey: pubkey, status: constants_1.default.contact_statuses.confirmed });
+                    const updateObj = { publicKey: pubkey, status: constants_1.default.contact_statuses.confirmed };
+                    if (routeHint)
+                        updateObj.routeHint = routeHint;
+                    contact.update(updateObj);
                     var contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
@@ -96,25 +100,28 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
     const node = yield nodeinfo_1.nodeinfo();
     sendHubCall(Object.assign(Object.assign({}, params), { node }));
     if (proxy_1.isProxy()) { // send all "clean" nodes
-        pingHubWithCleanProxies(node);
+        massPingHubFromProxies(node);
     }
 });
-function pingHubWithCleanProxies(node) {
+function massPingHubFromProxies(rn) {
     return __awaiter(this, void 0, void 0, function* () {
-        const cleans = yield models_1.models.Contact.findAll({ where: { isOwner: true, authToken: null } });
-        asyncForEach(cleans, (c) => __awaiter(this, void 0, void 0, function* () {
-            const p = yield nodeinfo_1.proxynodeinfo(c.publicKey); // channel
-            sendHubCall(Object.assign(Object.assign({}, node), p));
+        const owners = yield models_1.models.Contact.findAll({ where: { isOwner: true } });
+        const nodes = [];
+        yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
+            const proxyNodeInfo = yield nodeinfo_1.proxynodeinfo(o.publicKey);
+            const clean = o.authToken === null || o.authToken === '';
+            nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet }));
         }));
+        sendHubCall({ nodes }, true);
     });
 }
-function sendHubCall(params) {
+function sendHubCall(body, mass) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(config.hub_api_url + '/ping', {
+            const r = yield node_fetch_1.default(config.hub_api_url + mass ? '/mass_ping' : '/ping', {
                 agent: pingAgent,
                 method: 'POST',
-                body: JSON.stringify(params),
+                body: JSON.stringify(body),
                 headers: { 'Content-Type': 'application/json' }
             });
             const j = yield r.json();

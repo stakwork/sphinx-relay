@@ -11,11 +11,18 @@ export function proxynodeinfo(pk:string):Promise<Object> {
       if (err) console.log(err)
       if (!channelList) return
       const { channels } = channelList
+      const localBalances = channels.map(c => c.local_balance)
+      const remoteBalances = channels.map(c => c.remote_balance)
+      const largestLocalBalance = Math.max(...localBalances)
+      const largestRemoteBalance = Math.max(...remoteBalances)
+      const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0)
       resolve({
         pubkey: pk,
         number_channels: channels.length,
         open_channel_data: channels,
-        clean: true
+        largest_local_balance: largestLocalBalance,
+        largest_remote_balance: largestRemoteBalance,
+        total_local_balance: totalLocalBalance,
       })
     })
   })
@@ -104,6 +111,7 @@ export function nodeinfo() {
                 relay_commit: commitHash,
                 public_ip: public_ip,
                 pubkey: owner.publicKey,
+                route_hint: owner.routeHint,
                 number_channels: channels.length,
                 number_active_channels: info.num_active_channels,
                 number_pending_channels: info.num_pending_channels,

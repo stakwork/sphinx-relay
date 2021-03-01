@@ -79,6 +79,7 @@ export const createInvite = async (req, res) => {
 		invite: {
 			nickname: owner.alias,
 			pubkey: owner.publicKey,
+			route_hint: owner.routeHint,
 			contact_nickname: nickname,
 			message: welcome_message,
 			pin: crypto.randomBytes(20).toString('hex')

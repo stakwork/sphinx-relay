@@ -44,6 +44,7 @@ const checkInviteHub = async (params = {}) => {
       json.object.invites.map(async object => {
         const invite = object.invite
         const pubkey = object.pubkey
+        const routeHint = object.route_hint
         const price = object.price
 
         const dbInvite = await models.Invite.findOne({ where: { inviteString: invite.pin } })
@@ -67,7 +68,9 @@ const checkInviteHub = async (params = {}) => {
         }
 
         if (pubkey && dbInvite.status == constants.invite_statuses.complete && contact) {
-          contact.update({ publicKey: pubkey, status: constants.contact_statuses.confirmed })
+          const updateObj:{[k:string]:any} = { publicKey: pubkey, status: constants.contact_statuses.confirmed }
+          if(routeHint) updateObj.routeHint = routeHint
+          contact.update(updateObj)
 
           var contactJson = jsonUtils.contactToJson(contact)
           contactJson.invite = jsonUtils.inviteToJson(dbInvite)
@@ -100,25 +103,36 @@ const pingHub = async (params = {}) => {
   sendHubCall({ ...params, node })
 
   if(isProxy()) { // send all "clean" nodes
-    pingHubWithCleanProxies(node)
+    massPingHubFromProxies(node)
   }
 
 }
 
-async function pingHubWithCleanProxies(node){
-  const cleans = await models.Contact.findAll({where:{isOwner:true,authToken:null}})
-  asyncForEach(cleans, async c=>{
-    const p = await proxynodeinfo(c.publicKey) // channel
-    sendHubCall({...node, ...p})
+async function massPingHubFromProxies(rn){ // real node
+  const owners = await models.Contact.findAll({where:{isOwner:true}})
+  const nodes:{[k:string]:any}[] = []
+  await asyncForEach(owners, async o=>{
+    const proxyNodeInfo = await proxynodeinfo(o.publicKey)
+    const clean = o.authToken===null || o.authToken===''
+    nodes.push({
+      ...proxyNodeInfo, clean,
+      last_active: o.lastActive,
+      route_hint: o.routeHint,
+      relay_commit: rn.relay_commit,
+      lnd_version: rn.lnd_version,
+      relay_version: rn.relay_version,
+      testnet: rn.testnet,
+    })
   })
+  sendHubCall({nodes}, true)
 }
 
-async function sendHubCall(params) {
+async function sendHubCall(body, mass?:boolean) {
   try {
-    const r = await fetch(config.hub_api_url + '/ping', {
+    const r = await fetch(config.hub_api_url + mass ? '/mass_ping' : '/ping', {
       agent: pingAgent,
       method: 'POST',
-      body: JSON.stringify(params),
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
     const j = await r.json()

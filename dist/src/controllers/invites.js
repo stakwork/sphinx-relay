@@ -79,6 +79,7 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         invite: {
             nickname: owner.alias,
             pubkey: owner.publicKey,
+            route_hint: owner.routeHint,
             contact_nickname: nickname,
             message: welcome_message,
             pin: crypto.randomBytes(20).toString('hex')
