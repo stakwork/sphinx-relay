@@ -132,6 +132,7 @@ async function massPingHubFromProxies(rn){ // real node
 
 async function sendHubCall(body, mass?:boolean) {
   try {
+    console.log("=> PING BODY", body)
     const r = await fetch(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
       agent: pingAgent,
       method: 'POST',
@@ -139,6 +140,7 @@ async function sendHubCall(body, mass?:boolean) {
       headers: { 'Content-Type': 'application/json' }
     })
     const j = await r.json()
+    console.log("=> PING RESPONSE", j)
     if(!(j && j.status && j.status==='ok')) {
       console.log('[hub] ping returned not ok')
     }
