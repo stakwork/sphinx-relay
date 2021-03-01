@@ -131,7 +131,7 @@ function sendHubCall(body, mass) {
             const j = yield r.json();
             // console.log("=> PING RESPONSE", j)
             if (!(j && j.status && j.status === 'ok')) {
-                console.log('[hub] ping returned not ok');
+                console.log('[hub] ping returned not ok', j);
             }
         }
         catch (e) {

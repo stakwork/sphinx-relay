@@ -142,7 +142,7 @@ async function sendHubCall(body, mass?:boolean) {
     const j = await r.json()
     // console.log("=> PING RESPONSE", j)
     if(!(j && j.status && j.status==='ok')) {
-      console.log('[hub] ping returned not ok')
+      console.log('[hub] ping returned not ok', j)
     }
   } catch(e) {
     console.log('[hub warning]: cannot reach hub',e)
