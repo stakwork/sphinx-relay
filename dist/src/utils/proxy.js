@@ -44,6 +44,8 @@ function generateNewUsers() {
             return; // we already have the mimimum
         const n1 = NEW_USER_NUM - newusers.length;
         const virtualBal = yield getProxyTotalBalance();
+        if (!virtualBal)
+            return; // skip
         const realBal = yield getProxyLNDBalance();
         let availableBalance = realBal - virtualBal;
         if (availableBalance < SATS_PER_USER)
