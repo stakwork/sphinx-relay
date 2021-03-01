@@ -118,7 +118,7 @@ function massPingHubFromProxies(rn) {
 function sendHubCall(body, mass) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(config.hub_api_url + mass ? '/mass_ping' : '/ping', {
+            const r = yield node_fetch_1.default(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
                 agent: pingAgent,
                 method: 'POST',
                 body: JSON.stringify(body),

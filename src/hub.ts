@@ -129,7 +129,7 @@ async function massPingHubFromProxies(rn){ // real node
 
 async function sendHubCall(body, mass?:boolean) {
   try {
-    const r = await fetch(config.hub_api_url + mass ? '/mass_ping' : '/ping', {
+    const r = await fetch(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
       agent: pingAgent,
       method: 'POST',
       body: JSON.stringify(body),
