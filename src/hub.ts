@@ -127,6 +127,7 @@ async function massPingHubFromProxies(rn){ // real node
       testnet: rn.testnet,
       ip: rn.ip,
       public_ip: rn.public_ip,
+      node_alias: rn.node_alias,
     })
   })
   sendHubCall({nodes}, true)
