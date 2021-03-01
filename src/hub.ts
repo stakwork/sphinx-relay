@@ -109,7 +109,10 @@ const pingHub = async (params = {}) => {
 }
 
 async function massPingHubFromProxies(rn){ // real node
-  const owners = await models.Contact.findAll({where:{isOwner:true}})
+  const owners = await models.Contact.findAll({where:{
+    isOwner:true,
+    id:{[Op.ne]: 1}
+  }})
   const nodes:{[k:string]:any}[] = []
   await asyncForEach(owners, async o=>{
     const proxyNodeInfo = await proxynodeinfo(o.publicKey)

@@ -105,7 +105,10 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
 });
 function massPingHubFromProxies(rn) {
     return __awaiter(this, void 0, void 0, function* () {
-        const owners = yield models_1.models.Contact.findAll({ where: { isOwner: true } });
+        const owners = yield models_1.models.Contact.findAll({ where: {
+                isOwner: true,
+                id: { [sequelize_1.Op.ne]: 1 }
+            } });
         const nodes = [];
         yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
             const proxyNodeInfo = yield nodeinfo_1.proxynodeinfo(o.publicKey);
