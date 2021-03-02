@@ -53,6 +53,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
       cl.on('connect', async function () {
         console.log("[tribes] connected!")
         cl.on('close', function (e) {
+          console.log('[tribes] CLOSE', e)
           setTimeout(() => reconnect(), 2000)
         })
         cl.on('error', function (e) {

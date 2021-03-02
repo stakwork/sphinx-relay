@@ -104,7 +104,7 @@ function sendMessage(params) {
                 route_hint: contact.routeHint || ''
             };
             // console.log("==> SENDER",sender)
-            console.log("==> OK SIGN AND SEND", opts);
+            // console.log("==> OK SIGN AND SEND", opts)
             try {
                 const r = yield signAndSend(opts, sender, mqttTopic);
                 yes = r;

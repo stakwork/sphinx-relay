@@ -68,6 +68,7 @@ function initializeClient(pubkey, host, onMessage) {
                         return __awaiter(this, void 0, void 0, function* () {
                             console.log("[tribes] connected!");
                             cl.on('close', function (e) {
+                                console.log('[tribes] CLOSE', e);
                                 setTimeout(() => reconnect(), 2000);
                             });
                             cl.on('error', function (e) {

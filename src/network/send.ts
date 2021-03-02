@@ -101,7 +101,7 @@ export async function sendMessage(params) {
 		}
 
 		// console.log("==> SENDER",sender)
-		console.log("==> OK SIGN AND SEND", opts)
+		// console.log("==> OK SIGN AND SEND", opts)
 		try {
 			const r = await signAndSend(opts, sender, mqttTopic)
 			yes = r
