@@ -172,8 +172,9 @@ function deleteMessage(req, res) {
             chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
         }
         res_1.success(res, jsonUtils.messageToJson(message, chat));
-        if (!chat)
-            return;
+        if (!chat) {
+            return res_1.failure(res, 'no Chat');
+        }
         const isTribe = chat.type === constants_1.default.chat_types.tribe;
         const owner = req.owner;
         const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
@@ -212,6 +213,9 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     });
     let realSatsContactId;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
+    if (!chat) {
+        return res_1.failure(res, 'no Chat');
+    }
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
     if (reply_uuid && boost && amount) {

@@ -184,7 +184,9 @@ export async function deleteMessage(req, res) {
 	}
 	success(res, jsonUtils.messageToJson(message, chat))
 
-	if (!chat) return
+	if (!chat) {
+		return failure(res, 'no Chat')
+	}
 	const isTribe = chat.type === constants.chat_types.tribe
 
 	const owner = req.owner
@@ -236,6 +238,9 @@ export const sendMessage = async (req, res) => {
 
 	let realSatsContactId
 	// IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
+	if(!chat) {
+		return failure(res, 'no Chat')
+	}
 	const isTribe = chat.type === constants.chat_types.tribe
 	const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey
 	if (reply_uuid && boost && amount) {

@@ -85,7 +85,7 @@ export async function anonymousKeysend(owner, destination_key: string, route_hin
     type: constants.message_types.keysend,
   }
   if (text) msg.message = { content: text }
-
+  
   return helpers.performKeysendMessage({
     sender: owner,
     destination_key,
