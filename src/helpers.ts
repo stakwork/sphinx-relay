@@ -8,7 +8,7 @@ export const findOrCreateChat = async (params) => {
 	let chat
 	let date = new Date();
 	date.setMilliseconds(0)
-	console.log("findOrCreateChat", chat_id, typeof chat_id)
+	console.log("findOrCreateChat", chat_id, typeof chat_id, owner_id, typeof owner_id)
 	if (chat_id) {
 		chat = await models.Chat.findOne({ where: { id: chat_id, tenant:owner_id } })
 		// console.log('findOrCreateChat: chat_id exists')
