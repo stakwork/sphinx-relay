@@ -1,3 +1,5 @@
+// parse BIGINTs to number
+require('pg').defaults.parseInt8 = true
 import { Sequelize } from 'sequelize-typescript';
 import * as path from 'path'
 import Chat from './ts/chat'

@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.models = exports.sequelize = void 0;
+// parse BIGINTs to number
+require('pg').defaults.parseInt8 = true;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const path = require("path");
 const chat_1 = require("./ts/chat");
