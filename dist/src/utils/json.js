@@ -24,7 +24,7 @@ function messageToJson(msg, chat, contact) {
     if (message.statusMap && typeof message.statusMap === 'string') {
         statusMap = JSON.parse(message.statusMap);
     }
-    return case_1.toSnake(Object.assign(Object.assign({}, message), { amount: message.amount ? parseInt(message.amount) : 0, amountMsat: message.amountMsat ? parseInt(message.amountMsat) : 0, statusMap, chat: chat ? chatToJson(chat) : null, contact: contact ? contactToJson(contact) : null }));
+    return case_1.toSnake(Object.assign(Object.assign({}, message), { type: message.type ? parseInt(message.type) : 0, amount: message.amount ? parseInt(message.amount) : 0, amountMsat: message.amountMsat ? parseInt(message.amountMsat) : 0, statusMap, chat: chat ? chatToJson(chat) : null, contact: contact ? contactToJson(contact) : null }));
 }
 exports.messageToJson = messageToJson;
 function contactToJson(contact) {

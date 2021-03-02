@@ -56,7 +56,7 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 	}
 	payload.dest = dest // add "dest" into payload
 
-	console.log('===> onReceive',JSON.stringify(payload,null,2))
+	// console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if (!(payload.type || payload.type === 0)) return console.log('no payload.type')
 
 	let owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:dest } })
@@ -199,6 +199,7 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 }
 
 async function doTheAction(data, owner) {
+	// console.log("=> doTheAction", data, owner)
 	let payload = data
 	if (payload.isTribeOwner) { // this is only for storing locally, my own messages as tribe owner
 		// actual encryption for tribe happens in personalizeMessage
@@ -214,6 +215,7 @@ async function doTheAction(data, owner) {
 	}
 	if (ACTIONS[payload.type]) {
 		payload.owner = owner
+		// console.log("ACTIONS!", ACTIONS[payload.type])
 		ACTIONS[payload.type](payload)
 	} else {
 		console.log('Incorrect payload type:', payload.type)
