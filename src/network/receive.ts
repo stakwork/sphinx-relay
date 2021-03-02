@@ -56,7 +56,7 @@ async function onReceive(payload:{[k:string]:any}, dest:string) {
 	}
 	payload.dest = dest // add "dest" into payload
 
-	// console.log('===> onReceive',JSON.stringify(payload,null,2))
+	console.log('===> onReceive',JSON.stringify(payload,null,2))
 	if (!(payload.type || payload.type === 0)) return console.log('no payload.type')
 
 	let owner = await models.Contact.findOne({ where: { isOwner: true, publicKey:dest } })
