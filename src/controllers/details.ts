@@ -110,10 +110,10 @@ export const getBalance = async (req, res) => {
 	res.status(200);
 	try {
 		const response = await channelBalance(owner.publicKey)
-		console.log("=> balance response", response)
+		// console.log("=> balance response", response)
 		const channelList = await listChannels({}, owner.publicKey)
 		const { channels } = channelList
-		console.log("=> balance channels", channels)
+		// console.log("=> balance channels", channels)
 		const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0)
 		res.json({
 			success: true, response: <BalanceRes>{
