@@ -240,7 +240,7 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     const sender_photo_url = dat.sender.photo_url;
     const owner = payload.owner;
     const tenant = owner.id;
-    console.log('=> received contact key from', sender_pub_key);
+    console.log('=> received contact key from', sender_pub_key, tenant);
     if (!sender_pub_key) {
         return console.log("no pubkey!");
     }

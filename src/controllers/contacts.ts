@@ -250,7 +250,7 @@ export const receiveContactKey = async (payload) => {
 	const owner = payload.owner
 	const tenant: number = owner.id
 
-	console.log('=> received contact key from',  sender_pub_key)
+	console.log('=> received contact key from',  sender_pub_key, tenant)
 
 	if (!sender_pub_key) {
 		return console.log("no pubkey!")
