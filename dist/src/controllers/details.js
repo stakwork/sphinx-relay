@@ -125,8 +125,10 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     res.status(200);
     try {
         const response = yield lightning_1.channelBalance(owner.publicKey);
+        console.log("=> balance response", response);
         const channelList = yield lightning_1.listChannels({}, owner.publicKey);
         const { channels } = channelList;
+        console.log("=> balance channels", channels);
         const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
         res.json({
             success: true,

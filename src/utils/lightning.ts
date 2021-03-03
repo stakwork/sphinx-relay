@@ -611,7 +611,7 @@ export async function openChannel(args: OpenChannelArgs): Promise<{ [k: string]:
 async function channelBalance(ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('channelBalance')
   return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true) // try proxy
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
     lightning.channelBalance({}, function (err, response) {
       if (err == null) {
         resolve(response)

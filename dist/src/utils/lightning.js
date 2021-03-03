@@ -671,7 +671,7 @@ function channelBalance(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         log('channelBalance');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning(true); // try proxy
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             lightning.channelBalance({}, function (err, response) {
                 if (err == null) {
                     resolve(response);
