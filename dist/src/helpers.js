@@ -32,6 +32,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
         // find by uuid
         chat = yield models_1.models.Chat.findOne({ where: { uuid, tenant: owner_id } });
         if (!chat) { // no chat! create new
+            console.log("=> no chat! create new");
             chat = yield models_1.models.Chat.create({
                 uuid: uuid,
                 contactIds: JSON.stringify([parseInt(owner_id), parseInt(recipient_id)]),
@@ -149,7 +150,8 @@ function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
                 contactIds: JSON.stringify(contactIds || []),
                 createdAt: date,
                 updatedAt: date,
-                type: 0 // conversation
+                type: 0,
+                tenant
             });
         }
         return chat;

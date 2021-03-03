@@ -22,6 +22,7 @@ export const findOrCreateChat = async (params) => {
 		chat = await models.Chat.findOne({ where: { uuid, tenant:owner_id } })
 
 		if (!chat) { // no chat! create new
+			console.log("=> no chat! create new")
 			chat = await models.Chat.create({
 				uuid: uuid,
 				contactIds: JSON.stringify([parseInt(owner_id), parseInt(recipient_id)]),
@@ -136,7 +137,8 @@ export async function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
 			contactIds: JSON.stringify(contactIds || []),
 			createdAt: date,
 			updatedAt: date,
-			type: 0 // conversation
+			type: 0, // conversation
+			tenant
 		})
 	}
 	return chat
