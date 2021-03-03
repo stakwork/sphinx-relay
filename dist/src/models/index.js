@@ -22,7 +22,7 @@ const argv = minimist(process.argv.slice(2));
 const configFile = argv.db ? argv.db : path.join(__dirname, '../../config/config.json');
 const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env];
-const sequelize = new sequelize_typescript_1.Sequelize(Object.assign(Object.assign({}, config), { logging: console.log, models: [chat_1.default, contact_1.default, invite_1.default, message_1.default, subscription_1.default, mediaKey_1.default, chatMember_1.default, timer_1.default, bot_1.default, chatBot_1.default, botMember_1.default, accounting_1.default] }));
+const sequelize = new sequelize_typescript_1.Sequelize(Object.assign(Object.assign({}, config), { logging: process.env.SQL_LOG === 'true' ? console.log : false, models: [chat_1.default, contact_1.default, invite_1.default, message_1.default, subscription_1.default, mediaKey_1.default, chatMember_1.default, timer_1.default, bot_1.default, chatBot_1.default, botMember_1.default, accounting_1.default] }));
 exports.sequelize = sequelize;
 const models = sequelize.models;
 exports.models = models;

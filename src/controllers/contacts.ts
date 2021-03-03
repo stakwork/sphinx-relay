@@ -262,11 +262,14 @@ export const receiveContactKey = async (payload) => {
 		msgIncludedContactKey = true
 	}
 	if (sender_contact_key && sender) {
-		const objToUpdate: { [k: string]: any } = { contactKey: sender_contact_key }
+		const objToUpdate: { [k: string]: any } = { }
+		if (sender_contact_key) objToUpdate.contactKey = sender_contact_key
 		if (sender_alias) objToUpdate.alias = sender_alias
 		if (sender_photo_url) objToUpdate.photoUrl = sender_photo_url
-		await sender.update(objToUpdate)
-
+		if(Object.keys(objToUpdate).length) {
+			await sender.update(objToUpdate)
+		}
+		
 		socket.sendJson({
 			type: 'contact',
 			response: jsonUtils.contactToJson(sender)

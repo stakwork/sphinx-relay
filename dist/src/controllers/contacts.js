@@ -250,12 +250,16 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
         msgIncludedContactKey = true;
     }
     if (sender_contact_key && sender) {
-        const objToUpdate = { contactKey: sender_contact_key };
+        const objToUpdate = {};
+        if (sender_contact_key)
+            objToUpdate.contactKey = sender_contact_key;
         if (sender_alias)
             objToUpdate.alias = sender_alias;
         if (sender_photo_url)
             objToUpdate.photoUrl = sender_photo_url;
-        yield sender.update(objToUpdate);
+        if (Object.keys(objToUpdate).length) {
+            yield sender.update(objToUpdate);
+        }
         socket.sendJson({
             type: 'contact',
             response: jsonUtils.contactToJson(sender)
