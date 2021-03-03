@@ -41,7 +41,7 @@ __decorate([
     __metadata("design:type", Number)
 ], MediaKey.prototype, "receiver", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], MediaKey.prototype, "key", void 0);
 __decorate([

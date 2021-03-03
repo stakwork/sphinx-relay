@@ -103,3 +103,7 @@ export default class Message extends Model<Message> {
   tenant: number
 }
 
+/*
+ALTER TABLE sphinx_media_keys ALTER COLUMN key TYPE text;
+
+*/

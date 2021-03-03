@@ -573,7 +573,7 @@ async function listChannels(args?:ListChannelsArgs, ownerPubkey?:string): Promis
     opts.peer = ByteBuffer.fromHex(args.peer)
   }
   return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true) // try proxy
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
     lightning.listChannels(opts, function (err, response) {
       if (err == null) {
         resolve(response)

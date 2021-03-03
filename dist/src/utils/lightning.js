@@ -633,7 +633,7 @@ function listChannels(args, ownerPubkey) {
             opts.peer = ByteBuffer.fromHex(args.peer);
         }
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning(true); // try proxy
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             lightning.listChannels(opts, function (err, response) {
                 if (err == null) {
                     resolve(response);
