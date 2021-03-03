@@ -249,7 +249,7 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     if (sender_contact_key) {
         msgIncludedContactKey = true;
     }
-    if (sender_contact_key && sender) {
+    if (sender) {
         const objToUpdate = {};
         if (sender_contact_key)
             objToUpdate.contactKey = sender_contact_key;

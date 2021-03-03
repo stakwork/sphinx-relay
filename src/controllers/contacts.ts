@@ -261,7 +261,7 @@ export const receiveContactKey = async (payload) => {
 	if (sender_contact_key) {
 		msgIncludedContactKey = true
 	}
-	if (sender_contact_key && sender) {
+	if (sender) {
 		const objToUpdate: { [k: string]: any } = { }
 		if (sender_contact_key) objToUpdate.contactKey = sender_contact_key
 		if (sender_alias) objToUpdate.alias = sender_alias
