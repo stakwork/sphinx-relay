@@ -45,10 +45,10 @@ export default class Chat extends Model<Chat> {
   })
   deleted: boolean
 
-  @Column
+  @Column(DataType.TEXT)
   groupKey: string
 
-  @Column
+  @Column(DataType.TEXT)
   groupPrivateKey: string
 
   @Column

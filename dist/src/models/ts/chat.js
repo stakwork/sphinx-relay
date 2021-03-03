@@ -66,11 +66,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Chat.prototype, "deleted", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Chat.prototype, "groupKey", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Chat.prototype, "groupPrivateKey", void 0);
 __decorate([
