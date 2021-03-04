@@ -36,6 +36,7 @@ function init() {
         if (isGroupJoin) {
             try {
                 const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                console.log("=> WelcomeBot chat", chat && chat.dataValues);
                 if (!chat)
                     return;
                 const chatBot = yield models_1.models.ChatBot.findOne({

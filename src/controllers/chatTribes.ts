@@ -616,7 +616,7 @@ export async function replayChatHistory(chat, contact, owner) {
       const data = await personalizeMessage(msg, contact, true);
       const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
       const replayingHistory = true;
-      // console.log("-> HISTORY DATA:",data)
+      console.log("-> HISTORY DATA:",data)
       await network.signAndSend(
         {
           data,

@@ -21,6 +21,7 @@ export async function isBotMsg(
     console.log("no tenant in isBotMsg");
     return false;
   }
+  console.log('=> isBotMsg', msg)
   const txt = msg.message && msg.message.content;
 
   const msgType = msg.type;

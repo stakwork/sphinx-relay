@@ -27,6 +27,7 @@ export function init() {
     if (isGroupJoin) {
       try {
         const chat = await getTribeOwnersChatByUUID(message.channel.id)
+        console.log("=> WelcomeBot chat", chat&&chat.dataValues)
         if (!chat) return
         const chatBot = await models.ChatBot.findOne({
           where: {
