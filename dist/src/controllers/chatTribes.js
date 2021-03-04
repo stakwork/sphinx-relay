@@ -501,10 +501,12 @@ function replayChatHistory(chat, contact, owner) {
                 limit: 40,
             });
             msgs.reverse();
+            console.log("=> replayChatHistory OWNER", owner);
             asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
                 if (!network.typesToReplay.includes(m.type))
                     return; // only for message for now
                 const sender = Object.assign(Object.assign(Object.assign(Object.assign({}, owner), (m.senderAlias && { alias: m.senderAlias })), { role: constants_1.default.chat_roles.reader }), (m.senderPic && { photoUrl: m.senderPic }));
+                console.log('=> relayChatHistory SENDER', sender);
                 let content = "";
                 try {
                     content = JSON.parse(m.remoteMessageContent);

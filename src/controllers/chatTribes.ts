@@ -554,6 +554,8 @@ export async function replayChatHistory(chat, contact, owner) {
     });
     msgs.reverse();
 
+    console.log("=> replayChatHistory OWNER", owner)
+
     asyncForEach(msgs, async (m) => {
       if (!network.typesToReplay.includes(m.type)) return; // only for message for now
       const sender = {
@@ -562,6 +564,7 @@ export async function replayChatHistory(chat, contact, owner) {
         role: constants.chat_roles.reader,
         ...(m.senderPic && { photoUrl: m.senderPic }),
       };
+      console.log('=> relayChatHistory SENDER', sender)
       let content = "";
       try {
         content = JSON.parse(m.remoteMessageContent);
