@@ -519,7 +519,7 @@ function listAllPaymentsFull() {
 }
 exports.listAllPaymentsFull = listAllPaymentsFull;
 const signMessage = (msg, ownerPubkey) => {
-    log('signMessage');
+    // log('signMessage')
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {

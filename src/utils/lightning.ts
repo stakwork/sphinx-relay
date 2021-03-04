@@ -472,7 +472,7 @@ function listAllPaymentsFull() {
 }
 
 const signMessage = (msg, ownerPubkey?:string) => {
-  log('signMessage')
+  // log('signMessage')
   return new Promise(async (resolve, reject) => {
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
     try {
