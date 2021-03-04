@@ -25,7 +25,7 @@ const config = require(configFile)[env]
 
 const sequelize = new Sequelize({
   ...config,
-  logging: console.log,//process.env.SQL_LOG === 'true' ? console.log : false,
+  logging: process.env.SQL_LOG === 'true' ? console.log : false,
   models: [Chat, Contact, Invite, Message, Subscription, MediaKey, ChatMember, Timer, Bot, ChatBot, BotMember, Accounting]
 })
 const models = sequelize.models
