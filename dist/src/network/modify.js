@@ -45,26 +45,31 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
             return;
         const mt = payload.message && payload.message.mediaToken;
         const amount = payload.message.amount;
-        const muid = mt && mt.split('.').length && mt.split('.')[1];
+        const muid = mt && mt.split(".").length && mt.split(".")[1];
         if (!muid)
             return;
-        const mediaKey = yield models_1.models.MediaKey.findOne({ where: { originalMuid: muid, tenant } });
+        const mediaKey = yield models_1.models.MediaKey.findOne({
+            where: { originalMuid: muid, tenant },
+        });
         const terms = ldat_1.parseLDAT(mt);
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
             return; // not enough sats
-        if (mediaKey) { // ALREADY BEEN PURHCASED! simply send
+        if (mediaKey) {
+            // ALREADY BEEN PURHCASED! simply send
             // send back the new mediaToken and key
             const mediaTerms = {
-                muid: mediaKey.muid, ttl: 31536000, host: '',
-                meta: Object.assign({}, amount && { amt: amount }),
+                muid: mediaKey.muid,
+                ttl: 31536000,
+                host: "",
+                meta: Object.assign({}, (amount && { amt: amount })),
             };
             // send full new key and token
             const msg = {
                 mediaTerms,
                 mediaKey: mediaKey.key,
                 originalMuid: mediaKey.originalMuid,
-                mediaType: mediaKey.mediaType
+                mediaType: mediaKey.mediaType,
             };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
@@ -72,7 +77,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
                 type: constants_1.default.message_types.purchase_accept,
                 message: msg,
                 success: () => { },
-                failure: () => { }
+                failure: () => { },
             });
             // PAY THE OG POSTER HERE!!!
             send_1.sendMessage({
@@ -86,18 +91,20 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
                     skipPaymentProcessing: true,
                 },
                 success: () => { },
-                failure: () => { }
+                failure: () => { },
             });
         }
         else {
-            const ogmsg = yield models_1.models.Message.findOne({ where: { chatId: chat.id, mediaToken: mt, tenant } });
+            const ogmsg = yield models_1.models.Message.findOne({
+                where: { chatId: chat.id, mediaToken: mt, tenant },
+            });
             if (!ogmsg)
                 return;
             // purchase it from creator (send "purchase")
             const msg = { mediaToken: mt, purchaser: purchaser.id };
             send_1.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
-                sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), purchaser && purchaser.alias && { alias: purchaser.alias }), { role: constants_1.default.chat_roles.reader }),
+                sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), (purchaser && purchaser.alias && { alias: purchaser.alias })), { role: constants_1.default.chat_roles.reader }),
                 type: constants_1.default.message_types.purchase,
                 realSatsContactId: ogmsg.sender,
                 message: msg,
@@ -120,10 +127,12 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         const purchaserID = payload.message && payload.message.purchaser;
         if (!mt)
             return;
-        const muid = mt && mt.split('.').length && mt.split('.')[1];
+        const muid = mt && mt.split(".").length && mt.split(".")[1];
         if (!muid)
             return;
-        const existingMediaKey = yield models_1.models.MediaKey.findOne({ where: { muid, tenant } });
+        const existingMediaKey = yield models_1.models.MediaKey.findOne({
+            where: { muid, tenant },
+        });
         if (existingMediaKey)
             return; // no need, its already been sent
         // const host = mt.split('.')[0]
@@ -131,8 +140,8 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         const ogPurchaser = yield models_1.models.Contact.findOne({
             where: {
                 id: purchaserID,
-                tenant
-            }
+                tenant,
+            },
         });
         if (!ogPurchaser)
             return;
@@ -144,7 +153,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, amt);
         // send it to the purchaser
         send_1.sendMessage({
-            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), sender && sender.alias && { alias: sender.alias }), { role: constants_1.default.chat_roles.reader }),
+            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), (sender && sender.alias && { alias: sender.alias })), { role: constants_1.default.chat_roles.reader }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaser.id] }),
             type: msgtypes.purchase_accept,
             message: Object.assign(Object.assign({}, termsAndKey), { mediaType: typ, originalMuid: muid }),
@@ -160,7 +169,7 @@ function fillmsg(full, props) {
 }
 function sleep(ms) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     });
 }
 function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner, injectedAmount) {
@@ -172,42 +181,44 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
             return payload; // save anyway??????????
         const tenant = owner.id;
         const ownerPubkey = owner.publicKey;
-        const ogmuid = mt && mt.split('.').length && mt.split('.')[1];
+        const ogmuid = mt && mt.split(".").length && mt.split(".")[1];
         const terms = ldat_1.parseLDAT(mt);
         if (!terms.host)
             return payload;
         const token = yield meme.lazyToken(ownerPubkey, terms.host);
         try {
             const r = yield node_fetch_1.default(`https://${terms.host}/file/${mt}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
             });
             const buf = yield r.buffer();
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
-            const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), decMediaKey);
-            const newKey = crypto.randomBytes(20).toString('hex');
+            const imgBuf = RNCryptor.Decrypt(buf.toString("base64"), decMediaKey);
+            const newKey = crypto.randomBytes(20).toString("hex");
             const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey);
-            var encImgBuffer = Buffer.from(encImgBase64, 'base64');
+            var encImgBuffer = Buffer.from(encImgBase64, "base64");
             const form = new FormData();
-            form.append('file', encImgBuffer, {
-                contentType: typ || 'image/jpg',
-                filename: 'Image.jpg',
+            form.append("file", encImgBuffer, {
+                contentType: typ || "image/jpg",
+                filename: "Image.jpg",
                 knownLength: encImgBuffer.length,
             });
             const formHeaders = form.getHeaders();
             const resp = yield node_fetch_1.default(`https://${terms.host}/file`, {
-                method: 'POST',
-                headers: Object.assign(Object.assign({}, formHeaders), { 'Authorization': `Bearer ${token}` }),
-                body: form
+                method: "POST",
+                headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
+                body: form,
             });
             let json = yield resp.json();
             if (!json.muid)
-                throw new Error('no muid');
+                throw new Error("no muid");
             // PUT NEW TERMS, to finish in personalizeMessage
             const amt = (terms.meta && terms.meta.amt) || injectedAmount;
             const ttl = terms.meta && terms.meta.ttl;
             const mediaTerms = {
-                muid: json.muid, ttl: ttl || 31536000, host: '',
-                meta: Object.assign({}, amt && { amt }),
+                muid: json.muid,
+                ttl: ttl || 31536000,
+                host: "",
+                meta: Object.assign({}, (amt && { amt })),
             };
             const encKey = rsa.encrypt(chat.groupKey, newKey.slice());
             var date = new Date();
@@ -223,7 +234,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
                 createdAt: date,
                 originalMuid: ogmuid,
                 mediaType: typ,
-                tenant
+                tenant,
             });
             return { mediaTerms, mediaKey: encKey };
         }

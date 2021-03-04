@@ -24,7 +24,7 @@ function isBotMsg(msg, sentByMe, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = sender.id;
         if (!tenant) {
-            console.log('no tenant in isBotMsg');
+            console.log("no tenant in isBotMsg");
             return false;
         }
         const txt = msg.message && msg.message.content;
@@ -36,12 +36,12 @@ function isBotMsg(msg, sentByMe, sender) {
         if (!uuid)
             return false;
         const chat = yield models_1.models.Chat.findOne({
-            where: { uuid, tenant }
+            where: { uuid, tenant },
         });
         if (!chat)
             return false;
         let didEmit = false;
-        if (txt && txt.startsWith('/bot ')) {
+        if (txt && txt.startsWith("/bot ")) {
             builtin_1.builtinBotEmit(msg);
             didEmit = true;
         }
@@ -49,8 +49,9 @@ function isBotMsg(msg, sentByMe, sender) {
             return didEmit;
         const botsInTribe = yield models_1.models.ChatBot.findAll({
             where: {
-                chatId: chat.id, tenant
-            }
+                chatId: chat.id,
+                tenant,
+            },
         });
         // console.log('=> botsInTribe', botsInTribe)
         if (!(botsInTribe && botsInTribe.length))
@@ -61,7 +62,9 @@ function isBotMsg(msg, sentByMe, sender) {
                 try {
                     const msgTypes = JSON.parse(botInTribe.msgTypes);
                     if (msgTypes.includes(msgType)) {
-                        const isMsgAndHasText = msgType === constants_1.default.message_types.message && txt && txt.startsWith(`${botInTribe.botPrefix} `);
+                        const isMsgAndHasText = msgType === constants_1.default.message_types.message &&
+                            txt &&
+                            txt.startsWith(`${botInTribe.botPrefix} `);
                         const isNotMsg = msgType !== constants_1.default.message_types.message;
                         if (isMsgAndHasText || isNotMsg) {
                             didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
@@ -70,7 +73,8 @@ function isBotMsg(msg, sentByMe, sender) {
                 }
                 catch (e) { }
             }
-            else { // no message types defined, do all?
+            else {
+                // no message types defined, do all?
                 if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
                     // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
                     didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
@@ -86,7 +90,7 @@ function emitMessageToBot(msg, botInTribe, sender) {
         // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
         const tenant = sender.id;
         if (!tenant) {
-            console.log('=> no tenant in emitMessageToBot');
+            console.log("=> no tenant in emitMessageToBot");
             return false;
         }
         switch (botInTribe.botType) {
@@ -96,8 +100,9 @@ function emitMessageToBot(msg, botInTribe, sender) {
             case constants_1.default.bot_types.local:
                 const bot = yield models_1.models.Bot.findOne({
                     where: {
-                        uuid: botInTribe.botUuid, tenant
-                    }
+                        uuid: botInTribe.botUuid,
+                        tenant,
+                    },
                 });
                 return bots_1.postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
             case constants_1.default.bot_types.remote:

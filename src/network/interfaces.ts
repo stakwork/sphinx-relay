@@ -1,17 +1,16 @@
-
 export interface Msg {
-  type: number,
+  type: number;
   message: {
-    content: string,
-    amount: number,
-  },
+    content: string;
+    amount: number;
+  };
   chat: {
-    uuid: string
-  },
+    uuid: string;
+  };
   sender: {
-    pub_key: string,
-    alias: string,
-    role: number,
-    route_hint?: string
-  }
+    pub_key: string;
+    alias: string;
+    role: number;
+    route_hint?: string;
+  };
 }
