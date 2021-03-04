@@ -26,7 +26,7 @@ __decorate([
     __metadata("design:type", String)
 ], Invite.prototype, "inviteString", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Invite.prototype, "invoice", void 0);
 __decorate([

@@ -146,7 +146,6 @@ Message = __decorate([
 ], Message);
 exports.default = Message;
 /*
-ALTER TABLE sphinx_media_keys ALTER COLUMN key TYPE text;
-
+ALTER TABLE sphinx_invites ALTER COLUMN invoice TYPE text;
 */ 
 //# sourceMappingURL=message.js.map

@@ -104,6 +104,5 @@ export default class Message extends Model<Message> {
 }
 
 /*
-ALTER TABLE sphinx_media_keys ALTER COLUMN key TYPE text;
-
+ALTER TABLE sphinx_invites ALTER COLUMN invoice TYPE text;
 */
