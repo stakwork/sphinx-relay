@@ -29,6 +29,8 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', api_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
+        if (!message.content)
+            return;
         const arr = message.content.split(' ');
         if (arr.length < 2)
             return;

@@ -23,6 +23,7 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
+    if (!message.content) return
     const arr = message.content.split(' ')
     if (arr.length < 2) return
     if (arr[0] !== '/loopout') return
