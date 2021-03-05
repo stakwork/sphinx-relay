@@ -8,6 +8,7 @@ import password from '../utils/password'
 import { Op } from 'sequelize'
 import constants from '../constants'
 import * as tribes from '../utils/tribes'
+import * as network from '../network'
 
 export const getContacts = async (req, res) => {
 	if (!req.owner) return
@@ -85,7 +86,7 @@ export const generateToken = async (req, res) => {
 		}
 	} else {
 		// done!
-		tribes.subscribe(`${pubkey}/#`) // add MQTT subsription
+		tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
 		owner.update({ authToken: hash })
 	}
 

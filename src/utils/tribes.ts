@@ -35,6 +35,7 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
       model: models.Chat,
       mapToModel: true // pass true here if you have any mapped fields
     })
+    console.log('=> getTribeOwnersChatByUUID r:', r)
     return r && r[0] && r[0].dataValues
   } catch (e) { console.log(e) }
 }
@@ -189,12 +190,14 @@ async function updateTribeStats(myPubkey) {
   }
 }
 
-export async function subscribe(topic) {
+export async function subscribe(topic, onMessage:Function) {
   const pubkey = topic.split('/')[0]
   if(pubkey.length!==66) return
   const host = getHost()
-  const client = await lazyClient(pubkey, host)
-  if (client) client.subscribe(topic)
+  const client = await lazyClient(pubkey, host, onMessage)
+  if (client) client.subscribe(topic, function(){
+    console.log('[tribes] added sub', host, topic)
+  })
 }
 
 export async function publish(topic, msg, ownerPubkey, cb) {

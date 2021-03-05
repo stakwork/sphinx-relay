@@ -43,6 +43,7 @@ function getTribeOwnersChatByUUID(uuid) {
                 model: models_1.models.Chat,
                 mapToModel: true // pass true here if you have any mapped fields
             });
+            console.log('=> getTribeOwnersChatByUUID r:', r);
             return r && r[0] && r[0].dataValues;
         }
         catch (e) {
@@ -224,15 +225,17 @@ function updateTribeStats(myPubkey) {
         }
     });
 }
-function subscribe(topic) {
+function subscribe(topic, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         const pubkey = topic.split('/')[0];
         if (pubkey.length !== 66)
             return;
         const host = getHost();
-        const client = yield lazyClient(pubkey, host);
+        const client = yield lazyClient(pubkey, host, onMessage);
         if (client)
-            client.subscribe(topic);
+            client.subscribe(topic, function () {
+                console.log('[tribes] added sub', host, topic);
+            });
     });
 }
 exports.subscribe = subscribe;

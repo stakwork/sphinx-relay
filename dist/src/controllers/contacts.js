@@ -20,6 +20,7 @@ const password_1 = require("../utils/password");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
 const tribes = require("../utils/tribes");
+const network = require("../network");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return;
@@ -90,7 +91,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     else {
         // done!
-        tribes.subscribe(`${pubkey}/#`); // add MQTT subsription
+        tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         owner.update({ authToken: hash });
     }
     res_1.success(res, { id: (owner && owner.id) || 0 });
