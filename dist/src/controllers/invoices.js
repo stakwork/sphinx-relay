@@ -28,10 +28,12 @@ function stripLightningPrefix(s) {
     return s;
 }
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("====================> PAY INVOICE");
     if (!req.owner)
         return;
     const tenant = req.owner.id;
     const payment_request = stripLightningPrefix(req.body.payment_request);
+    console.log("====================> PAY INVOICE2");
     if (!payment_request) {
         console.log('[pay invoice] "payment_request" is empty');
         res.status(400);
@@ -41,6 +43,7 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     console.log(`[pay invoice] ${payment_request}`);
     try {
+        console.log("====================> PAY INVOICE3");
         const response = LND.sendPayment(payment_request, req.owner.publicKey);
         console.log('[pay invoice data]', response);
         const message = yield models_1.models.Message.findOne({ where: { payment_request, tenant } });
