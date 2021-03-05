@@ -82,15 +82,21 @@ export async function ownerMiddleware(req, res, next) {
     next()
     return
   }
+
+  const token = req.headers['x-user-token'] || req.cookies['x-user-token']
+
   if (process.env.HOSTING_PROVIDER === 'true') {
-    console.log("=> IS HOSTING PROVIDER?")
+    if(token) { // add owner in anyway
+      const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
+      const owner = await models.Contact.findOne({ where: { authToken: hashedToken, isOwner:true } })
+      if(owner) req.owner = owner.dataValues
+    }
     if (req.path === '/invoices') {
       next()
       return
     }
   }
   
-  const token = req.headers['x-user-token'] || req.cookies['x-user-token']
   if(!token) {
     res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
     res.end('Invalid credentials');
