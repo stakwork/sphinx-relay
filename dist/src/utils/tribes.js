@@ -35,7 +35,8 @@ exports.connect = connect;
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield models_1.sequelize.query(`SELECT * from sphinx_chats
+            const r = yield models_1.sequelize.query(`
+      SELECT sphinx_chats.* FROM sphinx_chats
       INNER JOIN sphinx_contacts
       ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
       AND sphinx_chats.tenant = sphinx_contacts.tenant

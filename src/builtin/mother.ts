@@ -54,7 +54,7 @@ export function init() {
         if (builtinBots.includes(botName)) {
           console.log("INSTALL", botName)
           const chat = await getTribeOwnersChatByUUID(message.channel.id)
-          if (!chat) return
+          if (!(chat && chat.id)) return console.log('=> motherbot no chat')
           const existing = await models.ChatBot.findOne({
             where: {
               chatId: chat.id, botPrefix: '/' + botName, tenant:chat.tenant
@@ -94,7 +94,7 @@ export function init() {
           if (bot && bot.uuid) {
             console.log('=> FOUND BOT', bot.unique_name)
             const chat = await getTribeOwnersChatByUUID(message.channel.id)
-            if (!chat) return
+            if (!(chat && chat.id)) return console.log('=> motherbot no chat')
             installBotAsTribeAdmin(chat.dataValues, bot)
           } else {
             const embed = new Sphinx.MessageEmbed()

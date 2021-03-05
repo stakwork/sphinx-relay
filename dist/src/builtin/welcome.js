@@ -37,8 +37,8 @@ function init() {
             try {
                 const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                 console.log("=> WelcomeBot chat", chat && chat.dataValues);
-                if (!chat)
-                    return;
+                if (!(chat && chat.id))
+                    return console.log("=> welcomebot no chat");
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
                         chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin, tenant: chat.tenant
@@ -70,8 +70,8 @@ function init() {
                     return;
                 console.log("setmsg", arr[2]);
                 const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
-                if (!chat)
-                    return;
+                if (!(chat && chat.id))
+                    return console.log("=> welcomebot no chat");
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
                         chatId: chat.id, botPrefix: '/welcome', botType: constants_1.default.bot_types.builtin, tenant: chat.tenant,

@@ -133,7 +133,7 @@ function finalAction(a) {
             if (!chat_uuid)
                 throw 'no chat_uuid';
             const theChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
-            if (!theChat)
+            if (!(theChat && theChat.id))
                 throw 'no chat';
             if (theChat.type !== constants_1.default.chat_types.tribe)
                 throw 'not a tribe';

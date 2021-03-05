@@ -28,7 +28,7 @@ export function init() {
       try {
         const chat = await getTribeOwnersChatByUUID(message.channel.id)
         console.log("=> WelcomeBot chat", chat&&chat.dataValues)
-        if (!chat) return
+        if (!(chat && chat.id)) return console.log("=> welcomebot no chat")
         const chatBot = await models.ChatBot.findOne({
           where: {
             chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin, tenant:chat.tenant
@@ -59,7 +59,7 @@ export function init() {
         if (arr.length < 3) return
         console.log("setmsg", arr[2])
         const chat = await getTribeOwnersChatByUUID(message.channel.id)
-        if (!chat) return
+        if (!(chat && chat.id)) return console.log("=> welcomebot no chat")
         const chatBot = await models.ChatBot.findOne({
           where: {
             chatId: chat.id, botPrefix: '/welcome', botType: constants.bot_types.builtin, tenant:chat.tenant,

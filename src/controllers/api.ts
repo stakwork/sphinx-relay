@@ -132,7 +132,7 @@ export async function finalAction(a: Action) {
         if (!content) throw 'no content'
         if (!chat_uuid) throw 'no chat_uuid'
         const theChat = await getTribeOwnersChatByUUID(chat_uuid)
-        if (!theChat) throw 'no chat'
+        if (!(theChat && theChat.id)) throw 'no chat'
         if (theChat.type !== constants.chat_types.tribe) throw 'not a tribe'
         const owner = await models.Contact.findOne({ where: { id: theChat.tenant } })
         const tenant: number = owner.id

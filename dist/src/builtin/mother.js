@@ -57,8 +57,8 @@ function init() {
                 if (builtinBots.includes(botName)) {
                     console.log("INSTALL", botName);
                     const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
-                    if (!chat)
-                        return;
+                    if (!(chat && chat.id))
+                        return console.log('=> motherbot no chat');
                     const existing = yield models_1.models.ChatBot.findOne({
                         where: {
                             chatId: chat.id, botPrefix: '/' + botName, tenant: chat.tenant
@@ -99,8 +99,8 @@ function init() {
                     if (bot && bot.uuid) {
                         console.log('=> FOUND BOT', bot.unique_name);
                         const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
-                        if (!chat)
-                            return;
+                        if (!(chat && chat.id))
+                            return console.log('=> motherbot no chat');
                         bots_1.installBotAsTribeAdmin(chat.dataValues, bot);
                     }
                     else {
