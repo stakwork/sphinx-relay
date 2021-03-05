@@ -117,8 +117,16 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { amount, memo, remote_memo, chat_id, contact_id, expiry, } = req.body;
     var request = {
         value: amount,
-        memo: remote_memo || memo
+        memo: remote_memo || memo,
     };
+    if (req.owner.routeHint && req.owner.routeHint.includes(':')) {
+        const arr = req.owner.routeHint.split(':');
+        const node_id = arr[0];
+        const chan_id = arr[1];
+        request.route_hints = [{
+                hop_hints: [{ node_id, chan_id }]
+            }];
+    }
     if (expiry)
         request.expiry = expiry;
     if (amount == null) {

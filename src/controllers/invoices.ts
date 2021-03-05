@@ -120,7 +120,15 @@ export const createInvoice = async (req, res) => {
 
   var request: { [k: string]: any } = {
     value: amount,
-    memo: remote_memo || memo
+    memo: remote_memo || memo,
+  }
+  if(req.owner.routeHint && req.owner.routeHint.includes(':')) {
+    const arr = req.owner.routeHint.split(':')
+    const node_id = arr[0]
+    const chan_id = arr[1]
+    request.route_hints = [{
+      hop_hints: [{ node_id, chan_id }]
+    }]
   }
   if (expiry) request.expiry = expiry
 
