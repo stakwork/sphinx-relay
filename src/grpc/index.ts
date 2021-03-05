@@ -20,6 +20,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 
 		var call = lightning.subscribeInvoices()
 		call.on('data', async function (response) {
+			console.log("AN INVOICES WAS RECIEVED!!!=======================>",response)
 			if (response['state'] !== 'SETTLED') {
 				return
 			}
