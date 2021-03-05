@@ -227,7 +227,12 @@ function sendPayment(payment_request, ownerPubkey) {
             else {
                 var call = lightning.sendPayment({});
                 call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
-                    resolve(response);
+                    if (response.payment_error) {
+                        reject(response.payment_error);
+                    }
+                    else {
+                        resolve(response);
+                    }
                 }));
                 call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
                     reject(err);

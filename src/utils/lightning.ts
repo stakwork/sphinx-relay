@@ -213,7 +213,11 @@ async function sendPayment(payment_request:string, ownerPubkey?:string) {
     } else {
       var call = lightning.sendPayment({})
       call.on('data', async response => {
-        resolve(response)
+        if(response.payment_error) {
+          reject(response.payment_error)
+        } else {
+          resolve(response)
+        }
       })
       call.on('error', async err => {
         reject(err)
