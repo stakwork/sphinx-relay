@@ -17,8 +17,8 @@ function stripLightningPrefix(s) {
 }
 
 export const payInvoice = async (req, res) => {
-  console.log("====================> PAY INVOICE")
-  if (!req.owner) return
+  console.log("====================> PAY INVOICE", req.owner)
+  if (!req.owner) return console.log("no owner")
   const tenant: number = req.owner.id
 
   const payment_request = stripLightningPrefix(req.body.payment_request)

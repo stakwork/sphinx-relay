@@ -28,9 +28,9 @@ function stripLightningPrefix(s) {
     return s;
 }
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("====================> PAY INVOICE");
+    console.log("====================> PAY INVOICE", req.owner);
     if (!req.owner)
-        return;
+        return console.log("no owner");
     const tenant = req.owner.id;
     const payment_request = stripLightningPrefix(req.body.payment_request);
     console.log("====================> PAY INVOICE2");

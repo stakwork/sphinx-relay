@@ -83,6 +83,7 @@ export async function ownerMiddleware(req, res, next) {
     return
   }
   if (process.env.HOSTING_PROVIDER === 'true') {
+    console.log("=> IS HOSTING PROVIDER?")
     if (req.path === '/invoices') {
       next()
       return
