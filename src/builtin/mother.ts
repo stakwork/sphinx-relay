@@ -29,12 +29,14 @@ const builtInBotNames = {
 }
 
 export function init() {
+  console.log("MOTHERBOT INIT")
 
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
 
+    console.log("MOTHERBOT GOT A MESSAGE",message)
     const arr = (message.content && message.content.split(' ')) || []
     if (arr.length < 2) return
     if (arr[0] !== '/bot') return
