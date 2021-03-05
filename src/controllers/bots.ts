@@ -12,7 +12,7 @@ import { Msg } from '../network/interfaces'
 import constants from '../constants'
 
 export const getBots = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
     const bots = await models.Bot.findAll({ where: { tenant } })
@@ -25,7 +25,7 @@ export const getBots = async (req, res) => {
 }
 
 export const createBot = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { name, webhook, price_per_use, img, description, tags, } = req.body
 
@@ -59,7 +59,7 @@ export const createBot = async (req, res) => {
 }
 
 export const deleteBot = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id
   if (!id) return

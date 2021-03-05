@@ -225,7 +225,7 @@ exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         // const tenant:number = req.owner.id
         console.log('=> queryOnchainAddress');
         if (!hub_pubkey)

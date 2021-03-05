@@ -19,6 +19,7 @@ import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
 import * as feed from './feed'
+import { failure } from '../utils/res'
 
 export async function set(app) {
 
@@ -115,7 +116,7 @@ export async function set(app) {
 	})
 
 	app.get('/latest', async function (req, res) {
-		if (!req.owner) return
+		if (!req.owner) return failure(res, 'no owner')
 		const tenant: number = req.owner.id
 		const lasts = await models.Message.findAll({
 			limit: 1,

@@ -16,7 +16,7 @@ const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { destinations, amount, chat_id, text, update_meta, } = req.body;
     if (!(destinations && destinations.length)) {

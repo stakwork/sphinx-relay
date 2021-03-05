@@ -27,6 +27,7 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
+const res_1 = require("../utils/res");
 const config = config_1.loadConfig();
 /*
 
@@ -47,7 +48,7 @@ purchase_deny returns the sats
 */
 const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     // try {
     //   schemas.attachment.validateSync(req.body)
@@ -157,7 +158,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) 
 exports.saveMediaKeys = saveMediaKeys;
 const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { chat_id, contact_id, amount, media_token, } = req.body;
     var date = new Date();
@@ -459,7 +460,7 @@ exports.receiveAttachment = receiveAttachment;
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         // const tenant:number = req.owner.id
         if (!req.params.challenge)
             return resUtils.failure(res, "no challenge");

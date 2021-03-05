@@ -5,7 +5,7 @@ import * as jsonUtils from '../utils/json'
 import * as decodeUtils from '../utils/decode'
 import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
-import { success } from '../utils/res'
+import { success, failure } from '../utils/res'
 import { sendConfirmation } from './confirmations'
 import * as network from '../network'
 import * as short from 'short-uuid'
@@ -17,12 +17,10 @@ function stripLightningPrefix(s) {
 }
 
 export const payInvoice = async (req, res) => {
-  console.log("====================> PAY INVOICE", req.owner)
-  if (!req.owner) return console.log("no owner")
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   const payment_request = stripLightningPrefix(req.body.payment_request)
-  console.log("====================> PAY INVOICE2")
 
   if (!payment_request) {
     console.log('[pay invoice] "payment_request" is empty')
@@ -34,9 +32,8 @@ export const payInvoice = async (req, res) => {
   console.log(`[pay invoice] ${payment_request}`)
 
   try {
-    console.log("====================> PAY INVOICE3")
 
-    const response = LND.sendPayment(payment_request, req.owner.publicKey)
+    const response = await LND.sendPayment(payment_request, req.owner.publicKey)
 
     console.log('[pay invoice data]', response)
 
@@ -75,6 +72,7 @@ export const payInvoice = async (req, res) => {
     success(res, jsonUtils.messageToJson(paidMessage, chat))
   } catch (e) {
     console.log("ERR paying invoice", e)
+    return failure(res, 'could not pay invoice')
   }
 };
 
@@ -109,7 +107,7 @@ export const cancelInvoice = (req, res) => {
 };
 
 export const createInvoice = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const lightning = await LND.loadLightning(true, req.owner.publicKey) // try proxy
 
@@ -220,7 +218,7 @@ export const createInvoice = async (req, res) => {
 };
 
 export const listInvoices = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
 
   const lightning = await LND.loadLightning()
 

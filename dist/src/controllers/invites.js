@@ -15,6 +15,7 @@ const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
 const hub_1 = require("../hub");
 // import * as proxy from '../utils/proxy'
+const res_1 = require("../utils/res");
 const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { invite_string } = req.body;
     const params = {
@@ -37,7 +38,7 @@ const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.finishInvite = finishInvite;
 const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const invite_string = req.params['invite_string'];
     const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite_string, tenant } });
@@ -71,7 +72,7 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.payInvite = payInvite;
 const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { nickname, welcome_message } = req.body;
     const owner = req.owner;

@@ -201,7 +201,7 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 function pauseSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
@@ -228,7 +228,7 @@ exports.pauseSubscription = pauseSubscription;
 function restartSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
@@ -266,7 +266,7 @@ function getRawSubs(opts = {}) {
 // all subs
 const getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const subs = yield getRawSubs({ where: { tenant } });
@@ -282,7 +282,7 @@ exports.getAllSubscriptions = getAllSubscriptions;
 function getSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         try {
             const sub = yield models_1.models.Subscription.findOne({ where: { id: req.params.id, tenant } });
@@ -300,7 +300,7 @@ exports.getSubscription = getSubscription;
 function deleteSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const id = req.params.id;
         if (!id)
@@ -324,7 +324,7 @@ exports.deleteSubscription = deleteSubscription;
 // all subs for contact id
 const getSubscriptionsForContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const subs = yield getRawSubs({ where: { contactId: req.params.contactId, tenant } });
@@ -340,7 +340,7 @@ exports.getSubscriptionsForContact = getSubscriptionsForContact;
 function createSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const date = new Date();
         date.setMilliseconds(0);
@@ -376,7 +376,7 @@ exports.createSubscription = createSubscription;
 function editSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         console.log('=> editSubscription');
         const date = new Date();

@@ -193,7 +193,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 
 // pause sub
 export async function pauseSubscription(req, res) {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
   try {
@@ -213,7 +213,7 @@ export async function pauseSubscription(req, res) {
 
 // restart sub
 export async function restartSubscription(req, res) {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
   try {
@@ -243,7 +243,7 @@ async function getRawSubs(opts = {}) {
 
 // all subs
 export const getAllSubscriptions = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
     const subs = await getRawSubs({ where: { tenant } })
@@ -256,7 +256,7 @@ export const getAllSubscriptions = async (req, res) => {
 
 // one sub by id
 export async function getSubscription(req, res) {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
     const sub = await models.Subscription.findOne({ where: { id: req.params.id, tenant } })
@@ -269,7 +269,7 @@ export async function getSubscription(req, res) {
 
 // delete sub by id
 export async function deleteSubscription(req, res) {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id
   if (!id) return
@@ -288,7 +288,7 @@ export async function deleteSubscription(req, res) {
 
 // all subs for contact id
 export const getSubscriptionsForContact = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
     const subs = await getRawSubs({ where: { contactId: req.params.contactId, tenant } })
@@ -301,7 +301,7 @@ export const getSubscriptionsForContact = async (req, res) => {
 
 // create new sub
 export async function createSubscription(req, res) {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   const date = new Date()
@@ -341,7 +341,7 @@ export async function createSubscription(req, res) {
 };
 
 export async function editSubscription(req, res) {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   console.log('=> editSubscription')

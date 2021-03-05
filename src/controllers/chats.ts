@@ -12,7 +12,7 @@ import { replayChatHistory, createTribeChatParams, addPendingContactIdsToChat } 
 import constants from '../constants'
 
 export async function updateChat(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	console.log('=> updateChat')
 	const id = parseInt(req.params.id)
@@ -39,7 +39,7 @@ export async function updateChat(req, res) {
 }
 
 export async function kickChatMember(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.tenant.id
 
 	const chatId = parseInt(req.params['chat_id'])
@@ -118,7 +118,7 @@ export async function receiveGroupKick(payload) {
 }
 
 export async function getChats(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	const chats = await models.Chat.findAll({ where: { deleted: false, tenant }, raw: true })
 	const c = chats.map(chat => jsonUtils.chatToJson(chat));
@@ -126,7 +126,7 @@ export async function getChats(req, res) {
 }
 
 export async function mute(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const chatId = req.params['chat_id']
@@ -150,7 +150,7 @@ export async function mute(req, res) {
 // just add self here if tribes
 // or can u add contacts as members?
 export async function createGroupChat(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const {
@@ -249,7 +249,7 @@ export async function createGroupChat(req, res) {
 
 // only owner can do for tribe?
 export async function addGroupMembers(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const {
@@ -292,7 +292,7 @@ export async function addGroupMembers(req, res) {
 }
 
 export const deleteChat = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const { id } = req.params

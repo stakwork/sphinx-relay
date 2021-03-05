@@ -4,7 +4,7 @@ import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as network from '../network'
 import constants from '../constants'
-import { success, failure200 } from '../utils/res'
+import { success, failure200, failure } from '../utils/res'
 
 /* 
  if in tribe: dont send
@@ -150,7 +150,7 @@ export async function receiveHeartbeat(payload) {
 
 let heartbeats: { [k: string]: boolean } = {}
 export async function healthcheck(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	// const tenant:number = req.owner.id
 
 	const pubkey: string = req.query.pubkey

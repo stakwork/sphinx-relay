@@ -33,7 +33,7 @@ function getAppVersions(req, res) {
 exports.getAppVersions = getAppVersions;
 const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const { pubkey, amount, route_hint } = req.query;
     if (!(pubkey && pubkey.length === 66))
         return res_1.failure(res, 'wrong pubkey');
@@ -82,7 +82,7 @@ function getLogsSince(req, res) {
 exports.getLogsSince = getLogsSince;
 const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey);
     var request = {};
     lightning.getInfo(request, function (err, response) {
@@ -99,7 +99,7 @@ const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getInfo = getInfo;
 const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
     var request = {};
     lightning.listChannels(request, function (err, response) {
@@ -116,7 +116,7 @@ const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getChannels = getChannels;
 const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     var date = new Date();
     date.setMilliseconds(0);
@@ -149,7 +149,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getBalance = getBalance;
 const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
     lightning.listChannels({}, (err, channelList) => {
         const { channels } = channelList;

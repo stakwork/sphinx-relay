@@ -12,7 +12,7 @@ import { Op } from "sequelize";
 import constants from "../constants";
 
 export async function joinTribe(req, res) {
-  if (!req.owner) return;
+  if (!req.owner) return failure(res, 'no owner');
   const tenant: number = req.owner.id;
 
   console.log("=> joinTribe");
@@ -245,7 +245,7 @@ export async function receiveMemberRequest(payload) {
 }
 
 export async function editTribe(req, res) {
-  if (!req.owner) return;
+  if (!req.owner) return failure(res, 'no owner');
   const tenant: number = req.owner.id;
   const {
     name,
@@ -323,7 +323,7 @@ export async function editTribe(req, res) {
 }
 
 export async function approveOrRejectMember(req, res) {
-  if (!req.owner) return;
+  if (!req.owner) return failure(res, 'no owner');
   const tenant: number = req.owner.id;
 
   console.log("=> approve or reject tribe member");

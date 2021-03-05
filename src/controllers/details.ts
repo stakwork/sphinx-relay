@@ -19,7 +19,7 @@ export async function getAppVersions(req, res) {
 }
 
 export const checkRoute = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 
 	const { pubkey, amount, route_hint } = req.query
 	if (!(pubkey && pubkey.length === 66)) return failure(res, 'wrong pubkey')
@@ -62,7 +62,7 @@ export async function getLogsSince(req, res) {
 }
 
 export const getInfo = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 
 	const lightning = await loadLightning(true, req.owner.publicKey)
 	var request = {}
@@ -78,7 +78,7 @@ export const getInfo = async (req, res) => {
 };
 
 export const getChannels = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 
 	const lightning = await loadLightning(true, req.owner.publicKey) // try proxy
 	var request = {}
@@ -99,7 +99,7 @@ interface BalanceRes {
 	reserve: number
 }
 export const getBalance = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	var date = new Date()
@@ -131,7 +131,7 @@ export const getBalance = async (req, res) => {
 };
 
 export const getLocalRemoteBalance = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const lightning = await loadLightning(true, req.owner.publicKey) // try proxy
 	lightning.listChannels({}, (err, channelList) => {
 		const { channels } = channelList

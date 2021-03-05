@@ -11,7 +11,7 @@ import * as tribes from '../utils/tribes'
 import * as network from '../network'
 
 export const getContacts = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const contacts = await models.Contact.findAll({ where: { deleted: false, tenant }, raw: true })
@@ -94,7 +94,7 @@ export const generateToken = async (req, res) => {
 }
 
 export const updateContact = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query })
 
@@ -136,7 +136,7 @@ export const updateContact = async (req, res) => {
 }
 
 export const exchangeKeys = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query })
 
@@ -153,7 +153,7 @@ export const exchangeKeys = async (req, res) => {
 }
 
 export const createContact = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	console.log('=> createContact called', { body: req.body, params: req.params, query: req.query })
 
@@ -184,7 +184,7 @@ export const createContact = async (req, res) => {
 }
 
 export const deleteContact = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	const id = parseInt(req.params.id || '0')
 	if (!id || id === tenant) {

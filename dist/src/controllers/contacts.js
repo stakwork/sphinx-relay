@@ -23,7 +23,7 @@ const tribes = require("../utils/tribes");
 const network = require("../network");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false, tenant }, raw: true });
     const invites = yield models_1.models.Invite.findAll({ raw: true, where: { tenant } });
@@ -99,7 +99,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
@@ -137,7 +137,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.updateContact = updateContact;
 const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query });
     const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id, tenant } });
@@ -152,7 +152,7 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.exchangeKeys = exchangeKeys;
 const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     console.log('=> createContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
@@ -180,7 +180,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createContact = createContact;
 const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const id = parseInt(req.params.id || '0');
     if (!id || id === tenant) {

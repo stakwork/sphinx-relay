@@ -28,12 +28,10 @@ function stripLightningPrefix(s) {
     return s;
 }
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("====================> PAY INVOICE", req.owner);
     if (!req.owner)
-        return console.log("no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const payment_request = stripLightningPrefix(req.body.payment_request);
-    console.log("====================> PAY INVOICE2");
     if (!payment_request) {
         console.log('[pay invoice] "payment_request" is empty');
         res.status(400);
@@ -43,8 +41,7 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     console.log(`[pay invoice] ${payment_request}`);
     try {
-        console.log("====================> PAY INVOICE3");
-        const response = LND.sendPayment(payment_request, req.owner.publicKey);
+        const response = yield LND.sendPayment(payment_request, req.owner.publicKey);
         console.log('[pay invoice data]', response);
         const message = yield models_1.models.Message.findOne({ where: { payment_request, tenant } });
         if (!message) { // invoice still paid
@@ -78,6 +75,7 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (e) {
         console.log("ERR paying invoice", e);
+        return res_1.failure(res, 'could not pay invoice');
     }
 });
 exports.payInvoice = payInvoice;
@@ -114,7 +112,7 @@ const cancelInvoice = (req, res) => {
 exports.cancelInvoice = cancelInvoice;
 const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const lightning = yield LND.loadLightning(true, req.owner.publicKey); // try proxy
     const { amount, memo, remote_memo, chat_id, contact_id, expiry, } = req.body;
@@ -215,7 +213,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createInvoice = createInvoice;
 const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const lightning = yield LND.loadLightning();
     lightning.listInvoices({}, (err, response) => {
         console.log({ err, response });

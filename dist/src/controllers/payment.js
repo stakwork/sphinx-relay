@@ -24,7 +24,7 @@ const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
@@ -164,7 +164,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;

@@ -25,7 +25,7 @@ const short = require("short-uuid");
 const constants_1 = require("../constants");
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
@@ -97,7 +97,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getMessages = getMessages;
 const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
@@ -122,7 +122,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getAllMessages = getAllMessages;
 const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit));
     const offset = (req.query.offset && parseInt(req.query.offset));
@@ -160,7 +160,7 @@ exports.getMsgs = getMsgs;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         const message = yield models_1.models.Message.findOne({ where: { id, tenant } });
@@ -192,7 +192,7 @@ function deleteMessage(req, res) {
 exports.deleteMessage = deleteMessage;
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     // try {
     // 	schemas.message.validateSync(req.body)
@@ -433,7 +433,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
 exports.receiveDeleteMessage = receiveDeleteMessage;
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const chat_id = req.params.chat_id;
     const owner = req.owner;
     const tenant = owner.id;
@@ -467,7 +467,7 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.readMessages = readMessages;
 const clearMessages = (req, res) => {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     models_1.models.Message.destroy({ where: { tenant }, truncate: true });
     res_1.success(res, {});

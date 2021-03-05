@@ -31,6 +31,7 @@ const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
 const feed = require("./feed");
+const res_1 = require("../utils/res");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -109,7 +110,7 @@ function set(app) {
         app.get('/latest', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!req.owner)
-                    return;
+                    return res_1.failure(res, 'no owner');
                 const tenant = req.owner.id;
                 const lasts = yield models_1.models.Message.findAll({
                     limit: 1,

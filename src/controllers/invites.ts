@@ -3,6 +3,7 @@ import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 // import * as proxy from '../utils/proxy'
+import { failure } from '../utils/res'
 
 export const finishInvite = async (req, res) => {
 
@@ -30,7 +31,7 @@ export const finishInvite = async (req, res) => {
 }
 
 export const payInvite = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const invite_string = req.params['invite_string']
@@ -66,7 +67,7 @@ export const payInvite = async (req, res) => {
 }
 
 export const createInvite = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	const {
 		nickname,

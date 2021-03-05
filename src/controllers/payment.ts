@@ -12,7 +12,7 @@ import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 
 export const sendPayment = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
     amount,
@@ -175,7 +175,7 @@ export const receivePayment = async (payload) => {
 }
 
 export const listPayments = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0

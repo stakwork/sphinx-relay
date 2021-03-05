@@ -25,7 +25,7 @@ const constants_1 = require("../constants");
 function updateChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         console.log('=> updateChat');
         const id = parseInt(req.params.id);
@@ -58,7 +58,7 @@ exports.updateChat = updateChat;
 function kickChatMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.tenant.id;
         const chatId = parseInt(req.params['chat_id']);
         const contactId = parseInt(req.params['contact_id']);
@@ -136,7 +136,7 @@ exports.receiveGroupKick = receiveGroupKick;
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const chats = yield models_1.models.Chat.findAll({ where: { deleted: false, tenant }, raw: true });
         const c = chats.map(chat => jsonUtils.chatToJson(chat));
@@ -147,7 +147,7 @@ exports.getChats = getChats;
 function mute(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const chatId = req.params['chat_id'];
         const mute = req.params['mute_unmute'];
@@ -168,7 +168,7 @@ exports.mute = mute;
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const { name, is_tribe, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
         const contact_ids = req.body.contact_ids || [];
@@ -255,7 +255,7 @@ exports.createGroupChat = createGroupChat;
 function addGroupMembers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const { contact_ids, } = req.body;
         const { id } = req.params;
@@ -295,7 +295,7 @@ function addGroupMembers(req, res) {
 exports.addGroupMembers = addGroupMembers;
 const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { id } = req.params;
     const owner = req.owner;

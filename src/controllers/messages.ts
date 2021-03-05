@@ -13,7 +13,7 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 
 export const getMessages = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const dateToReturn = req.query.date;
@@ -97,7 +97,7 @@ export const getMessages = async (req, res) => {
 }
 
 export const getAllMessages = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
@@ -127,7 +127,7 @@ export const getAllMessages = async (req, res) => {
 };
 
 export const getMsgs = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const limit = (req.query.limit && parseInt(req.query.limit))
@@ -168,7 +168,7 @@ export const getMsgs = async (req, res) => {
 };
 
 export async function deleteMessage(req, res) {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	const id = parseInt(req.params.id)
@@ -204,7 +204,7 @@ export async function deleteMessage(req, res) {
 }
 
 export const sendMessage = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 	// try {
 	// 	schemas.message.validateSync(req.body)
@@ -467,7 +467,7 @@ export const receiveDeleteMessage = async (payload) => {
 }
 
 export const readMessages = async (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 
 	const chat_id = req.params.chat_id;
 	const owner = req.owner
@@ -501,7 +501,7 @@ export const readMessages = async (req, res) => {
 }
 
 export const clearMessages = (req, res) => {
-	if (!req.owner) return
+	if (!req.owner) return failure(res, 'no owner')
 	const tenant: number = req.owner.id
 
 	models.Message.destroy({ where: { tenant }, truncate: true })

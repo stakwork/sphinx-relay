@@ -25,7 +25,7 @@ const constants_1 = require("../constants");
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         console.log("=> joinTribe");
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url, } = req.body;
@@ -229,7 +229,7 @@ exports.receiveMemberRequest = receiveMemberRequest;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
         const { id } = req.params;
@@ -304,7 +304,7 @@ exports.editTribe = editTribe;
 function approveOrRejectMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         console.log("=> approve or reject tribe member");
         const msgId = parseInt(req.params["messageId"]);

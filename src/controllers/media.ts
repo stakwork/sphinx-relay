@@ -15,6 +15,7 @@ import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { loadConfig } from "../utils/config";
+import { failure } from '../utils/res'
 
 const config = loadConfig()
 
@@ -37,7 +38,7 @@ purchase_deny returns the sats
 */
 
 export const sendAttachmentMessage = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   // try {
   //   schemas.attachment.validateSync(req.body)
@@ -166,7 +167,7 @@ export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, t
 }
 
 export const purchase = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
     chat_id,
@@ -488,7 +489,7 @@ export const receiveAttachment = async (payload) => {
 }
 
 export async function signer(req, res) {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
   if (!req.params.challenge) return resUtils.failure(res, "no challenge")
   try {

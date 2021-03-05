@@ -23,7 +23,7 @@ const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const bots = yield models_1.models.Bot.findAll({ where: { tenant } });
@@ -38,7 +38,7 @@ const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getBots = getBots;
 const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { name, webhook, price_per_use, img, description, tags, } = req.body;
     const uuid = yield tribes.genSignedTimestamp(req.owner.publicKey);
@@ -73,7 +73,7 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.createBot = createBot;
 const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return;
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const id = req.params.id;
     if (!id)

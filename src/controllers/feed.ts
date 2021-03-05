@@ -20,7 +20,7 @@ export interface Destination {
 }
 
 export const streamFeed = async (req, res) => {
-  if (!req.owner) return
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
     destinations,

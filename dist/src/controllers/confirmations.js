@@ -168,7 +168,7 @@ let heartbeats = {};
 function healthcheck(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return;
+            return res_1.failure(res, 'no owner');
         // const tenant:number = req.owner.id
         const pubkey = req.query.pubkey;
         if (!(pubkey && pubkey.length === 66)) {
