@@ -68,12 +68,15 @@ exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid } = a;
+        let myBot;
         // not for tribe admin, for bot maker
-        const myBot = yield models_1.models.Bot.findOne({
-            where: {
-                id: bot_id
-            }
-        });
+        if (bot_id) {
+            myBot = yield models_1.models.Bot.findOne({
+                where: {
+                    id: bot_id
+                }
+            });
+        }
         console.log("=> ACTION HIT", a.action, a.bot_name);
         if (myBot) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid        
             const owner = yield models_1.models.Contact.findOne({ where: { id: myBot.tenant } });

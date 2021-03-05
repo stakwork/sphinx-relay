@@ -69,12 +69,15 @@ export async function processAction(req, res) {
 export async function finalAction(a: Action) {
     const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid } = a
 
+    let myBot
     // not for tribe admin, for bot maker
-    const myBot = await models.Bot.findOne({
-        where: {
-            id: bot_id
-        }
-    })
+    if(bot_id) {
+        myBot = await models.Bot.findOne({
+            where: {
+                id: bot_id
+            }
+        })
+    }
 
     console.log("=> ACTION HIT", a.action, a.bot_name)
     if (myBot) { // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid        
