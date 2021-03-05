@@ -149,7 +149,7 @@ export default async function migrate() {
 }
 
 async function addTenant(tableName){
-  addTableColumn(tableName, 'tenant', 'BIGINT')
+  await addTableColumn(tableName, 'tenant', 'BIGINT')
   try {
     await sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`)
   } catch (e) { console.log(e) }

@@ -142,7 +142,7 @@ function migrate() {
 exports.default = migrate;
 function addTenant(tableName) {
     return __awaiter(this, void 0, void 0, function* () {
-        addTableColumn(tableName, 'tenant', 'BIGINT');
+        yield addTableColumn(tableName, 'tenant', 'BIGINT');
         try {
             yield models_1.sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`);
         }
