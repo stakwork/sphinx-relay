@@ -33,7 +33,7 @@ export function init() {
   client.login("_", finalAction);
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    console.log("MOTHERBOT GOT A MESSAGE", message);
+    // console.log("MOTHERBOT GOT A MESSAGE", message);
     const arr = (message.content && message.content.split(" ")) || [];
     if (arr.length < 2) return;
     if (arr[0] !== "/bot") return;
@@ -48,7 +48,7 @@ export function init() {
         const botName = arr[2];
 
         if (builtinBots.includes(botName)) {
-          console.log("INSTALL", botName);
+          console.log("mombot INSTALL", botName);
           const chat = await getTribeOwnersChatByUUID(message.channel.id);
           if (!(chat && chat.id)) return console.log("=> motherbot no chat");
           const existing = await models.ChatBot.findOne({

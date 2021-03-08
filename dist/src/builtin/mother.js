@@ -37,7 +37,7 @@ function init() {
     const client = new Sphinx.Client();
     client.login("_", api_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        console.log("MOTHERBOT GOT A MESSAGE", message);
+        // console.log("MOTHERBOT GOT A MESSAGE", message);
         const arr = (message.content && message.content.split(" ")) || [];
         if (arr.length < 2)
             return;
@@ -53,7 +53,7 @@ function init() {
                     return;
                 const botName = arr[2];
                 if (builtinBots.includes(botName)) {
-                    console.log("INSTALL", botName);
+                    console.log("mombot INSTALL", botName);
                     const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                     if (!(chat && chat.id))
                         return console.log("=> motherbot no chat");
