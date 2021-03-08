@@ -406,6 +406,7 @@ export async function receiveGroupJoin(payload) {
 				status: constants.chat_statuses.pending,
 				lastActive: date,
 				lastAlias: senderAlias,
+				tenant
 			})
 			try {
 				models.ChatMember.upsert({

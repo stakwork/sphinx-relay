@@ -44,7 +44,7 @@ function getTribeOwnersChatByUUID(uuid) {
                 model: models_1.models.Chat,
                 mapToModel: true // pass true here if you have any mapped fields
             });
-            console.log('=> getTribeOwnersChatByUUID r:', r);
+            // console.log('=> getTribeOwnersChatByUUID r:', r)
             return r && r[0] && r[0].dataValues;
         }
         catch (e) {
