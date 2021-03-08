@@ -98,6 +98,10 @@ export async function sendMessage(params) {
     if (!contact) {
       return; // skip if u simply dont have the contact
     }
+    if (tenant===-1) { // this is a bot sent from me!
+      if (contact.isOwner) return // dont MQTT to myself!
+    }
+
     console.log("CONTACT", contactId, contact.publicKey)
     const destkey = contact.publicKey;
     if (destkey === skipPubKey) {
