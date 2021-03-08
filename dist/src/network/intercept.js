@@ -27,7 +27,7 @@ function isBotMsg(msg, sentByMe, sender) {
             console.log("no tenant in isBotMsg");
             return false;
         }
-        console.log('=> isBotMsg', msg);
+        // console.log('=> isBotMsg', msg)
         const txt = msg.message && msg.message.content;
         const msgType = msg.type;
         if (msgType === constants_1.default.message_types.bot_res) {

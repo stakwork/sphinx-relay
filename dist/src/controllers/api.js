@@ -78,7 +78,7 @@ function finalAction(a) {
                 },
             });
         }
-        console.log("=> ACTION HIT", a.action, a.bot_name);
+        console.log("=> ACTION HIT", a);
         if (myBot) {
             // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
             const owner = yield models_1.models.Contact.findOne({ where: { id: myBot.tenant } });
@@ -139,14 +139,14 @@ function finalAction(a) {
         else if (action === "broadcast") {
             console.log("=> BOT BROADCAST");
             if (!content)
-                throw "no content";
+                return console.log("no content");
             if (!chat_uuid)
-                throw "no chat_uuid";
+                return console.log("no chat_uuid");
             const theChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
             if (!(theChat && theChat.id))
-                throw "no chat";
+                return console.log("no chat");
             if (theChat.type !== constants_1.default.chat_types.tribe)
-                throw "not a tribe";
+                return console.log("not a tribe");
             const owner = yield models_1.models.Contact.findOne({
                 where: { id: theChat.tenant },
             });
@@ -185,13 +185,13 @@ function finalAction(a) {
                 type: constants_1.default.message_types.bot_res,
                 success: () => ({ success: true }),
                 failure: (e) => {
-                    throw e;
+                    return console.log(e);
                 },
                 isForwarded: true,
             });
         }
         else {
-            throw "no action";
+            return console.log('no action');
         }
     });
 }

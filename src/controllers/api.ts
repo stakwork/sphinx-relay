@@ -98,7 +98,7 @@ export async function finalAction(a: Action) {
     });
   }
 
-  console.log("=> ACTION HIT", a.action, a.bot_name);
+  console.log("=> ACTION HIT", a);
   if (myBot) {
     // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
     const owner = await models.Contact.findOne({ where: { id: myBot.tenant } });
@@ -156,11 +156,11 @@ export async function finalAction(a: Action) {
     // }
   } else if (action === "broadcast") {
     console.log("=> BOT BROADCAST");
-    if (!content) throw "no content";
-    if (!chat_uuid) throw "no chat_uuid";
+    if (!content) return console.log("no content");
+    if (!chat_uuid) return console.log("no chat_uuid");
     const theChat = await getTribeOwnersChatByUUID(chat_uuid);
-    if (!(theChat && theChat.id)) throw "no chat";
-    if (theChat.type !== constants.chat_types.tribe) throw "not a tribe";
+    if (!(theChat && theChat.id)) return console.log("no chat");
+    if (theChat.type !== constants.chat_types.tribe) return console.log("not a tribe");
     const owner = await models.Contact.findOne({
       where: { id: theChat.tenant },
     });
@@ -209,11 +209,11 @@ export async function finalAction(a: Action) {
       type: constants.message_types.bot_res,
       success: () => ({ success: true }),
       failure: (e) => {
-        throw e;
+        return console.log(e)
       },
       isForwarded: true,
     });
   } else {
-    throw "no action";
+    return console.log('no action')
   }
 }

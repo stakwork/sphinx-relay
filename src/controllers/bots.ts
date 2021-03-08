@@ -340,7 +340,7 @@ export async function receiveBotRes(payload) {
   const isTribeOwner = owner.publicKey === tribeOwnerPubKey
 
   if (isTribeOwner) {
-    console.log("=> is tribeOwner, do finalAction!")
+    // console.log("=> is tribeOwner, do finalAction!")
     // IF IS TRIBE ADMIN forward to the tribe
     // received the entire action?
     const bot_id = payload.bot_id
