@@ -81,6 +81,7 @@ function sendMessage(params) {
         let no = null;
         console.log("=> sending to", contactIds.length, "contacts");
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
+            console.log("TENANT", tenant);
             if (contactId === tenant) {
                 // dont send to self
                 return;
@@ -89,6 +90,7 @@ function sendMessage(params) {
             if (!contact) {
                 return; // skip if u simply dont have the contact
             }
+            console.log("CONTACT", contactId, contact.publicKey);
             const destkey = contact.publicKey;
             if (destkey === skipPubKey) {
                 return; // skip (for tribe owner broadcasting, not back to the sender)
