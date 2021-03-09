@@ -46,7 +46,9 @@ export function init() {
         const resEmbed = new Sphinx.MessageEmbed()
           .setAuthor("WelcomeBot")
           .setDescription(meta);
-        message.channel.send({ embed: resEmbed });
+        setTimeout(()=>{
+          message.channel.send({ embed: resEmbed });
+        }, 2500)
         return;
       } catch (e) {
         console.log("WELCOME BOT ERROR", e);

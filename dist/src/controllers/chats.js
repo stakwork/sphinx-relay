@@ -380,7 +380,7 @@ exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("=> receiveGroupJoin");
-        const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
+        const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, sender_route_hint, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
             return;
@@ -418,6 +418,7 @@ function receiveGroupJoin(payload) {
                         fromGroup: true,
                         photoUrl: sender_photo_url,
                         tenant,
+                        routeHint: sender_route_hint || ''
                     });
                     theSender = createdContact;
                     contactIds.push(createdContact.id);

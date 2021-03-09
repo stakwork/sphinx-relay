@@ -130,9 +130,7 @@ function joinTribe(req, res) {
                         tenant,
                     });
                     console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
-                    setTimeout(() => {
-                        tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
-                    }, 1500);
+                    tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
             },
@@ -143,7 +141,7 @@ exports.joinTribe = joinTribe;
 function receiveMemberRequest(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("=> receiveMemberRequest");
-        const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
+        const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url, sender_route_hint, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
             return console.log("no chat");
@@ -171,6 +169,7 @@ function receiveMemberRequest(payload) {
                     fromGroup: true,
                     photoUrl: sender_photo_url,
                     tenant,
+                    routeHint: sender_route_hint || '',
                 });
                 theSender = createdContact;
             }

@@ -136,9 +136,7 @@ export async function joinTribe(req, res) {
         tenant,
       });
       console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
-      setTimeout(()=>{ // delay so you dont get WelcomeBot message twice
-        tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
-      }, 1500)
+      tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
       success(res, jsonUtils.chatToJson(chat));
     },
   });
@@ -156,6 +154,7 @@ export async function receiveMemberRequest(payload) {
     isTribeOwner,
     network_type,
     sender_photo_url,
+    sender_route_hint,
   } = await helpers.parseReceiveParams(payload);
   const tenant: number = owner.id;
 
@@ -186,6 +185,7 @@ export async function receiveMemberRequest(payload) {
         fromGroup: true,
         photoUrl: sender_photo_url,
         tenant,
+        routeHint: sender_route_hint||'',
       });
       theSender = createdContact;
     }

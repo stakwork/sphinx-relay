@@ -414,6 +414,7 @@ export async function receiveGroupJoin(payload) {
     date_string,
     network_type,
     sender_photo_url,
+    sender_route_hint,
   } = await helpers.parseReceiveParams(payload);
   const tenant: number = owner.id;
 
@@ -453,6 +454,7 @@ export async function receiveGroupJoin(payload) {
           fromGroup: true,
           photoUrl: sender_photo_url,
           tenant,
+          routeHint: sender_route_hint||''
         });
         theSender = createdContact;
         contactIds.push(createdContact.id);
