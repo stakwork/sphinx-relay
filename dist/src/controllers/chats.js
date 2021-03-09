@@ -451,7 +451,9 @@ function receiveGroupJoin(payload) {
                 catch (e) {
                     console.log("=> groupJoin could not upsert ChatMember");
                 }
-                chatTribes_1.replayChatHistory(chat, theSender, owner);
+                setTimeout(() => {
+                    chatTribes_1.replayChatHistory(chat, theSender, owner);
+                }, 2000);
                 tribes.putstats({
                     chatId: chat.id,
                     uuid: chat.uuid,
