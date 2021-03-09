@@ -88,16 +88,16 @@ export async function sendMessage(params) {
   let no: any = null;
   console.log("=> sending to", contactIds.length, "contacts");
   await asyncForEach(contactIds, async (contactId) => {
-    // console.log("=> TENANT", tenant)
+    console.log("=> TENANT", tenant)
     if (contactId === tenant) {
       // dont send to self
-      // console.log('=> dont send to self')
+      console.log('=> dont send to self')
       return;
     }
 
     const contact = await models.Contact.findOne({ where: { id: contactId } });
     if (!contact) {
-      // console.log('=> sendMessage no contact')
+      console.log('=> sendMessage no contact')
       return; // skip if u simply dont have the contact
     }
     // if (tenant === -1) {
@@ -108,13 +108,13 @@ export async function sendMessage(params) {
     //   }
     // }
 
-    // console.log("=> CONTACT", contactId, contact.publicKey)
+    console.log("=> CONTACT", contactId, contact.publicKey)
     const destkey = contact.publicKey;
     if (destkey === skipPubKey) {
-      // console.log('=> skipPubKey', skipPubKey)
+      console.log('=> skipPubKey', skipPubKey)
       return; // skip (for tribe owner broadcasting, not back to the sender)
     }
-    // console.log('-> sending to ', contact.id, destkey)
+    console.log('-> sending to ', contact.id, destkey)
 
     let mqttTopic = networkType === "mqtt" ? `${destkey}/${chatUUID}` : "";
 
@@ -137,7 +137,7 @@ export async function sendMessage(params) {
     };
 
     // console.log("==> SENDER",sender)
-    // console.log("==> OK SIGN AND SEND", opts);
+    console.log("==> OK SIGN AND SEND", opts);
     try {
       const r = await signAndSend(opts, sender, mqttTopic);
       yes = r;
