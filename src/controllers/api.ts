@@ -98,7 +98,7 @@ export async function finalAction(a: Action) {
     });
   }
 
-  console.log("=> ACTION HIT", a);
+  // console.log("=> ACTION HIT", a);
   if (myBot) {
     // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
     const owner = await models.Contact.findOne({ where: { id: myBot.tenant } });

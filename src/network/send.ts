@@ -38,7 +38,7 @@ export async function sendMessage(params) {
   }
   let msg = newmsg(type, chat, theSender, message, isForwarded);
 
-  // console.log("=> MSG TO SEND",msg)
+  console.log("=> MSG TO SEND",msg)
 
   // console.log(type,message)
   if (!(sender && sender.publicKey)) {
@@ -91,20 +91,26 @@ export async function sendMessage(params) {
     // console.log("=> TENANT", tenant)
     if (contactId === tenant) {
       // dont send to self
+      console.log('=> dont send to self')
       return;
     }
 
     const contact = await models.Contact.findOne({ where: { id: contactId } });
     if (!contact) {
+      console.log('=> sendMessage no contact')
       return; // skip if u simply dont have the contact
     }
     if (tenant===-1) { // this is a bot sent from me!
-      if (contact.isOwner) return // dont MQTT to myself!
+      if (contact.isOwner) {
+        console.log('=> dont MQTT to myself!')
+        return // dont MQTT to myself!
+      }
     }
 
     // console.log("=> CONTACT", contactId, contact.publicKey)
     const destkey = contact.publicKey;
     if (destkey === skipPubKey) {
+      console.log('=> skipPubKey', skipPubKey)
       return; // skip (for tribe owner broadcasting, not back to the sender)
     }
     // console.log('-> sending to ', contact.id, destkey)

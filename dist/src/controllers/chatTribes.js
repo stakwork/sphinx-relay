@@ -130,7 +130,9 @@ function joinTribe(req, res) {
                         tenant,
                     });
                     console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
-                    tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
+                    setTimeout(() => {
+                        tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
+                    }, 1500);
                     res_1.success(res, jsonUtils.chatToJson(chat));
                 });
             },

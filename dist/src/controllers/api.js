@@ -78,7 +78,7 @@ function finalAction(a) {
                 },
             });
         }
-        console.log("=> ACTION HIT", a);
+        // console.log("=> ACTION HIT", a);
         if (myBot) {
             // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
             const owner = yield models_1.models.Contact.findOne({ where: { id: myBot.tenant } });

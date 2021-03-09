@@ -33,7 +33,7 @@ function sendMessage(params) {
             theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants_1.default.chat_roles.owner });
         }
         let msg = newmsg(type, chat, theSender, message, isForwarded);
-        // console.log("=> MSG TO SEND",msg)
+        console.log("=> MSG TO SEND", msg);
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
             console.log("NO SENDER?????");
@@ -84,19 +84,24 @@ function sendMessage(params) {
             // console.log("=> TENANT", tenant)
             if (contactId === tenant) {
                 // dont send to self
+                console.log('=> dont send to self');
                 return;
             }
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
             if (!contact) {
+                console.log('=> sendMessage no contact');
                 return; // skip if u simply dont have the contact
             }
             if (tenant === -1) { // this is a bot sent from me!
-                if (contact.isOwner)
+                if (contact.isOwner) {
+                    console.log('=> dont MQTT to myself!');
                     return; // dont MQTT to myself!
+                }
             }
             // console.log("=> CONTACT", contactId, contact.publicKey)
             const destkey = contact.publicKey;
             if (destkey === skipPubKey) {
+                console.log('=> skipPubKey', skipPubKey);
                 return; // skip (for tribe owner broadcasting, not back to the sender)
             }
             // console.log('-> sending to ', contact.id, destkey)

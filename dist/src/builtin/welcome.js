@@ -25,9 +25,9 @@ function init() {
     client.login("_", api_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         const arr = (message.content && message.content.split(" ")) || [];
-        console.log("message.type", message.type);
+        // console.log("message.type", message.type);
         const isGroupJoin = message.type === constants_1.default.message_types.group_join;
-        console.log("isGroupJoin", isGroupJoin);
+        // console.log("isGroupJoin", isGroupJoin);
         if (arr.length < 2 && !isGroupJoin)
             return;
         if (arr[0] !== "/welcome" && !isGroupJoin)
@@ -36,7 +36,7 @@ function init() {
         if (isGroupJoin) {
             try {
                 const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
-                console.log("=> WelcomeBot chat", chat && chat.dataValues);
+                // console.log("=> WelcomeBot chat", chat);
                 if (!(chat && chat.id))
                     return console.log("=> welcomebot no chat");
                 const chatBot = yield models_1.models.ChatBot.findOne({
@@ -53,7 +53,7 @@ function init() {
                 if (chatBot && chatBot.meta) {
                     meta = chatBot.meta;
                 }
-                console.log("=> WELCOMEMETA", meta);
+                // console.log("=> WELCOMEMETA", meta);
                 const resEmbed = new Sphinx.MessageEmbed()
                     .setAuthor("WelcomeBot")
                     .setDescription(meta);

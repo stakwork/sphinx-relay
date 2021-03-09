@@ -17,9 +17,9 @@ export function init() {
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
     const arr = (message.content && message.content.split(" ")) || [];
-    console.log("message.type", message.type);
+    // console.log("message.type", message.type);
     const isGroupJoin = message.type === constants.message_types.group_join;
-    console.log("isGroupJoin", isGroupJoin);
+    // console.log("isGroupJoin", isGroupJoin);
     if (arr.length < 2 && !isGroupJoin) return;
     if (arr[0] !== "/welcome" && !isGroupJoin) return;
     const cmd = arr[1];
@@ -27,7 +27,7 @@ export function init() {
     if (isGroupJoin) {
       try {
         const chat = await getTribeOwnersChatByUUID(message.channel.id);
-        console.log("=> WelcomeBot chat", chat && chat.dataValues);
+        // console.log("=> WelcomeBot chat", chat);
         if (!(chat && chat.id)) return console.log("=> welcomebot no chat");
         const chatBot = await models.ChatBot.findOne({
           where: {
@@ -42,7 +42,7 @@ export function init() {
         if (chatBot && chatBot.meta) {
           meta = chatBot.meta;
         }
-        console.log("=> WELCOMEMETA", meta);
+        // console.log("=> WELCOMEMETA", meta);
         const resEmbed = new Sphinx.MessageEmbed()
           .setAuthor("WelcomeBot")
           .setDescription(meta);

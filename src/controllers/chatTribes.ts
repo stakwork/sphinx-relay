@@ -136,7 +136,9 @@ export async function joinTribe(req, res) {
         tenant,
       });
       console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
-      tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
+      setTimeout(()=>{ // delay so you dont get WelcomeBot message twice
+        tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
+      }, 1500)
       success(res, jsonUtils.chatToJson(chat));
     },
   });
