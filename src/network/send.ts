@@ -38,11 +38,11 @@ export async function sendMessage(params) {
   }
   let msg = newmsg(type, chat, theSender, message, isForwarded);
 
-  console.log("=> MSG TO SEND",msg)
+  // console.log("=> MSG TO SEND",msg)
 
   // console.log(type,message)
   if (!(sender && sender.publicKey)) {
-    console.log("NO SENDER?????");
+    // console.log("NO SENDER?????");
     return;
   }
 
@@ -91,18 +91,18 @@ export async function sendMessage(params) {
     // console.log("=> TENANT", tenant)
     if (contactId === tenant) {
       // dont send to self
-      console.log('=> dont send to self')
+      // console.log('=> dont send to self')
       return;
     }
 
     const contact = await models.Contact.findOne({ where: { id: contactId } });
     if (!contact) {
-      console.log('=> sendMessage no contact')
+      // console.log('=> sendMessage no contact')
       return; // skip if u simply dont have the contact
     }
     if (tenant===-1) { // this is a bot sent from me!
       if (contact.isOwner) {
-        console.log('=> dont MQTT to myself!')
+        // console.log('=> dont MQTT to myself!')
         return // dont MQTT to myself!
       }
     }
@@ -110,7 +110,7 @@ export async function sendMessage(params) {
     // console.log("=> CONTACT", contactId, contact.publicKey)
     const destkey = contact.publicKey;
     if (destkey === skipPubKey) {
-      console.log('=> skipPubKey', skipPubKey)
+      // console.log('=> skipPubKey', skipPubKey)
       return; // skip (for tribe owner broadcasting, not back to the sender)
     }
     // console.log('-> sending to ', contact.id, destkey)
@@ -136,7 +136,7 @@ export async function sendMessage(params) {
     };
 
     // console.log("==> SENDER",sender)
-    // console.log("==> OK SIGN AND SEND", opts)
+    console.log("==> OK SIGN AND SEND", opts)
     try {
       const r = await signAndSend(opts, sender, mqttTopic);
       yes = r;
