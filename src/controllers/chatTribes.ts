@@ -29,6 +29,7 @@ export async function joinTribe(req, res) {
     my_alias,
     my_photo_url,
   } = req.body;
+  console.log("received owner route hint",owner_route_hint)
   const is_private = req.body.private;
 
   const existing = await models.Chat.findOne({ where: { uuid, tenant } });
@@ -67,6 +68,7 @@ export async function joinTribe(req, res) {
       routeHint: owner_route_hint || "",
     });
     theTribeOwner = createdContact;
+    console.log("CREATE TRIBE OWNER", createdContact)
     contactIds.push(createdContact.id);
   }
   let date = new Date();

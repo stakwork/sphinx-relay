@@ -29,6 +29,7 @@ function joinTribe(req, res) {
         const tenant = req.owner.id;
         console.log("=> joinTribe");
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url, } = req.body;
+        console.log("received owner route hint", owner_route_hint);
         const is_private = req.body.private;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
         if (existing) {
@@ -63,6 +64,7 @@ function joinTribe(req, res) {
                 routeHint: owner_route_hint || "",
             });
             theTribeOwner = createdContact;
+            console.log("CREATE TRIBE OWNER", createdContact);
             contactIds.push(createdContact.id);
         }
         let date = new Date();
