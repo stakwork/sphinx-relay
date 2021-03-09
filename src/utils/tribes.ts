@@ -31,7 +31,7 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
       SELECT sphinx_chats.* FROM sphinx_chats
       INNER JOIN sphinx_contacts
       ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
-      AND sphinx_chats.tenant = sphinx_contacts.tenant
+      AND sphinx_contacts.is_owner = 't'
       AND sphinx_chats.uuid = '${uuid}'`, {
       model: models.Chat,
       mapToModel: true // pass true here if you have any mapped fields
