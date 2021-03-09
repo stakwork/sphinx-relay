@@ -100,12 +100,13 @@ export async function sendMessage(params) {
       // console.log('=> sendMessage no contact')
       return; // skip if u simply dont have the contact
     }
-    if (tenant===-1) { // this is a bot sent from me!
-      if (contact.isOwner) {
-        // console.log('=> dont MQTT to myself!')
-        return // dont MQTT to myself!
-      }
-    }
+    // if (tenant === -1) {
+    //   // this is a bot sent from me!
+    //   if (contact.isOwner) {
+    //     // console.log('=> dont MQTT to myself!')
+    //     return; // dont MQTT to myself!
+    //   }
+    // }
 
     // console.log("=> CONTACT", contactId, contact.publicKey)
     const destkey = contact.publicKey;
@@ -136,7 +137,7 @@ export async function sendMessage(params) {
     };
 
     // console.log("==> SENDER",sender)
-    console.log("==> OK SIGN AND SEND", opts)
+    // console.log("==> OK SIGN AND SEND", opts);
     try {
       const r = await signAndSend(opts, sender, mqttTopic);
       yes = r;
