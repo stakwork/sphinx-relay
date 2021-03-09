@@ -197,6 +197,7 @@ export async function finalAction(a: Action) {
       },
       tenant
     );
+    console.log("BOT BROADCASE CHAT", theChat)
     await network.sendMessage({
       chat: theChat,
       sender: {

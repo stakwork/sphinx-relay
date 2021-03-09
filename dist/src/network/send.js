@@ -84,12 +84,12 @@ function sendMessage(params) {
             console.log("=> TENANT", tenant);
             if (contactId === tenant) {
                 // dont send to self
-                console.log('=> dont send to self');
+                // console.log('=> dont send to self')
                 return;
             }
             const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
             if (!contact) {
-                console.log('=> sendMessage no contact');
+                // console.log('=> sendMessage no contact')
                 return; // skip if u simply dont have the contact
             }
             // if (tenant === -1) {
@@ -99,13 +99,13 @@ function sendMessage(params) {
             //     return; // dont MQTT to myself!
             //   }
             // }
-            console.log("=> CONTACT", contactId, contact.publicKey);
+            // console.log("=> CONTACT", contactId, contact.publicKey)
             const destkey = contact.publicKey;
             if (destkey === skipPubKey) {
                 console.log('=> skipPubKey', skipPubKey);
                 return; // skip (for tribe owner broadcasting, not back to the sender)
             }
-            console.log('-> sending to ', contact.id, destkey);
+            // console.log('-> sending to ', contact.id, destkey)
             let mqttTopic = networkType === "mqtt" ? `${destkey}/${chatUUID}` : "";
             // sending a payment to one subscriber, buying a pic from OG poster
             // or boost to og poster
@@ -124,7 +124,7 @@ function sendMessage(params) {
                 route_hint: contact.routeHint || "",
             };
             // console.log("==> SENDER",sender)
-            console.log("==> OK SIGN AND SEND", opts);
+            // console.log("==> OK SIGN AND SEND", opts);
             try {
                 const r = yield signAndSend(opts, sender, mqttTopic);
                 yes = r;
