@@ -178,7 +178,7 @@ function finalAction(a) {
                 type: "message",
                 response: jsonUtils.messageToJson(message, theChat, owner),
             }, tenant);
-            console.log("BOT BROADCASE CHAT", theChat);
+            // console.log("BOT BROADCASE CHAT", theChat)
             yield network.sendMessage({
                 chat: theChat,
                 sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }),

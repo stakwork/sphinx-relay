@@ -42,6 +42,7 @@ function sendMessage(params) {
         let contactIds = (typeof chat.contactIds === "string"
             ? JSON.parse(chat.contactIds)
             : chat.contactIds) || [];
+        console.log('-> contactIds 1', contactIds);
         if (contactIds.length === 1) {
             if (contactIds[0] === tenant) {
                 if (success)
@@ -52,12 +53,14 @@ function sendMessage(params) {
         let networkType = undefined;
         const chatUUID = chat.uuid;
         if (isTribe) {
+            console.log('-> isTribe');
             if (type === constants_1.default.message_types.confirmation) {
                 // if u are owner, go ahead!
                 if (!isTribeOwner)
                     return; // dont send confs for tribe if not owner
             }
             if (isTribeOwner) {
+                console.log('-> isTribeOwner');
                 networkType = "mqtt"; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
@@ -70,11 +73,14 @@ function sendMessage(params) {
                 tribes.putActivity(chat.uuid, chat.host, sender.publicKey);
             }
             else {
+                console.log('-> !isTribeOwner');
                 // if tribe, send to owner only
                 const tribeOwner = yield models_1.models.Contact.findOne({
                     where: { publicKey: chat.ownerPubkey, tenant },
                 });
+                console.log('-> found tribeOwner', (tribeOwner && tribeOwner.dataValues));
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
+                console.log('-> contactIds 1', contactIds);
             }
         }
         let yes = true;
