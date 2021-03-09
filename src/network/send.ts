@@ -28,6 +28,8 @@ export async function sendMessage(params) {
 
   const isTribe = chat.type === constants.chat_types.tribe;
   let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
+  console.log('-> sender.publicKey', sender.publicKey)
+  console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 
   let theSender = sender.dataValues || sender;
   if (isTribeOwner && !isForwarded) {
