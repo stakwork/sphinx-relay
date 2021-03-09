@@ -56,6 +56,9 @@ export async function joinTribe(req, res) {
   const contactIds = [owner.id];
   if (tribeOwner) {
     theTribeOwner = tribeOwner; // might already include??
+    if (tribeOwner.routeHint!==owner_route_hint) {
+      tribeOwner.update({routeHint: owner_route_hint})
+    }
     if (!contactIds.includes(tribeOwner.id)) contactIds.push(tribeOwner.id);
   } else {
     const createdContact = await models.Contact.create({
