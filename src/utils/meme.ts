@@ -32,6 +32,7 @@ export async function lazyToken(pubkey: string, host: string) {
       token: t,
       ts: moment().unix()
     }
+    return t
   } catch(e) {
     console.log("[meme] error getting token", e)
   }
