@@ -25,13 +25,14 @@ export async function connect(onMessage: Function) {
 }
 
 export async function getTribeOwnersChatByUUID(uuid: string) {
+  const isOwner = isProxy() ? "'t'" : "1";
   try {
     const r = await sequelize.query(
       `
       SELECT sphinx_chats.* FROM sphinx_chats
       INNER JOIN sphinx_contacts
       ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
-      AND sphinx_contacts.is_owner = 't'
+      AND sphinx_contacts.is_owner = ${isOwner}
       AND sphinx_contacts.id = sphinx_chats.tenant
       AND sphinx_chats.uuid = '${uuid}'`,
       {
@@ -39,7 +40,7 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
         mapToModel: true, // pass true here if you have any mapped fields
       }
     );
-    console.log('=> getTribeOWnersChatByUUID', r)
+    console.log("=> getTribeOWnersChatByUUID", r);
     // console.log('=> getTribeOwnersChatByUUID r:', r)
     return r && r[0] && r[0].dataValues;
   } catch (e) {

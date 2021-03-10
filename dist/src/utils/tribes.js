@@ -34,18 +34,19 @@ function connect(onMessage) {
 exports.connect = connect;
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
+        const isOwner = proxy_1.isProxy() ? "'t'" : "1";
         try {
             const r = yield models_1.sequelize.query(`
       SELECT sphinx_chats.* FROM sphinx_chats
       INNER JOIN sphinx_contacts
       ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
-      AND sphinx_contacts.is_owner = 't'
+      AND sphinx_contacts.is_owner = ${isOwner}
       AND sphinx_contacts.id = sphinx_chats.tenant
       AND sphinx_chats.uuid = '${uuid}'`, {
                 model: models_1.models.Chat,
                 mapToModel: true,
             });
-            console.log('=> getTribeOWnersChatByUUID', r);
+            console.log("=> getTribeOWnersChatByUUID", r);
             // console.log('=> getTribeOwnersChatByUUID r:', r)
             return r && r[0] && r[0].dataValues;
         }
