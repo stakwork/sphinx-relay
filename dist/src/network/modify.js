@@ -192,8 +192,10 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
             });
             const buf = yield r.buffer();
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
+            console.log('[modify] about to decrypt', buf.length, decMediaKey);
             const imgBuf = RNCryptor.Decrypt(buf.toString("base64"), decMediaKey);
             const newKey = crypto.randomBytes(20).toString("hex");
+            console.log('[modify] about to encrypt', imgBuf.length, newKey);
             const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey);
             var encImgBuffer = Buffer.from(encImgBase64, "base64");
             const form = new FormData();
