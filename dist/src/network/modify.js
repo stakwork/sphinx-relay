@@ -193,13 +193,13 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
             const r = yield node_fetch_1.default(`https://${terms.host}/file/${mt}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("[modify] dl RES", r);
+            // console.log("[modify] dl RES", r)
             const buf = yield r.buffer();
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
-            console.log('[modify] about to decrypt', buf.length, decMediaKey);
+            // console.log('[modify] about to decrypt', buf.length, decMediaKey)
             const imgBuf = RNCryptor.Decrypt(buf.toString("base64"), decMediaKey);
             const newKey = crypto.randomBytes(20).toString("hex");
-            console.log('[modify] about to encrypt', imgBuf.length, newKey);
+            // console.log('[modify] about to encrypt', imgBuf.length, newKey)
             const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey);
             var encImgBuffer = Buffer.from(encImgBase64, "base64");
             const form = new FormData();

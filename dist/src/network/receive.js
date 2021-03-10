@@ -71,7 +71,7 @@ function onReceive(payload, dest) {
                 return console.log("INVALID DEST", dest);
         }
         payload.dest = dest; // add "dest" into payload
-        // console.log("===> onReceive", JSON.stringify(payload, null, 2));
+        console.log("===> onReceive", JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return console.log("no payload.type");
         let owner = yield models_1.models.Contact.findOne({
