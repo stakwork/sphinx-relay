@@ -186,13 +186,14 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
         if (!terms.host)
             return payload;
         const token = yield meme.lazyToken(ownerPubkey, terms.host);
-        console.log('[modify] meme token', token);
-        console.log('[modify] terms.host', terms.host);
-        console.log('[modify] mt', mt);
+        // console.log('[modify] meme token', token)
+        // console.log('[modify] terms.host', terms.host)
+        // console.log('[modify] mt', mt)
         try {
             const r = yield node_fetch_1.default(`https://${terms.host}/file/${mt}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            console.log("[modify] dl RES", r);
             const buf = yield r.buffer();
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
             console.log('[modify] about to decrypt', buf.length, decMediaKey);

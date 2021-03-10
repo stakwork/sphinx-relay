@@ -225,13 +225,14 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
   if (!terms.host) return payload;
 
   const token = await meme.lazyToken(ownerPubkey, terms.host);
-  console.log('[modify] meme token', token)
-  console.log('[modify] terms.host', terms.host)
-  console.log('[modify] mt', mt)
+  // console.log('[modify] meme token', token)
+  // console.log('[modify] terms.host', terms.host)
+  // console.log('[modify] mt', mt)
   try {
     const r = await fetch(`https://${terms.host}/file/${mt}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    console.log("[modify] dl RES", r)
     const buf = await r.buffer();
 
     const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
