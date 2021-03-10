@@ -39,7 +39,7 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
         mapToModel: true, // pass true here if you have any mapped fields
       }
     );
-    // console.log('=> getTribeOWnersChatByUUID', r)
+    console.log('=> getTribeOWnersChatByUUID', r)
     // console.log('=> getTribeOwnersChatByUUID r:', r)
     return r && r[0] && r[0].dataValues;
   } catch (e) {

@@ -45,7 +45,7 @@ function getTribeOwnersChatByUUID(uuid) {
                 model: models_1.models.Chat,
                 mapToModel: true,
             });
-            // console.log('=> getTribeOWnersChatByUUID', r)
+            console.log('=> getTribeOWnersChatByUUID', r);
             // console.log('=> getTribeOwnersChatByUUID r:', r)
             return r && r[0] && r[0].dataValues;
         }
