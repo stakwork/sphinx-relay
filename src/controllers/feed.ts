@@ -81,6 +81,7 @@ export const streamFeed = async (req, res) => {
 }
 
 export async function anonymousKeysend(owner, destination_key: string, route_hint: string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
+  const tenant = owner.id
   const msg: { [k: string]: any } = {
     type: constants.message_types.keysend,
   }
@@ -107,7 +108,8 @@ export async function anonymousKeysend(owner, destination_key: string, route_hin
         messageContent: text || '',
         status: constants.statuses.confirmed,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        tenant
       })
       onSuccess({ destination_key, amount })
     },

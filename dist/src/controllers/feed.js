@@ -65,6 +65,7 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.streamFeed = streamFeed;
 function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
+        const tenant = owner.id;
         const msg = {
             type: constants_1.default.message_types.keysend,
         };
@@ -91,7 +92,8 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
                     messageContent: text || '',
                     status: constants_1.default.statuses.confirmed,
                     createdAt: date,
-                    updatedAt: date
+                    updatedAt: date,
+                    tenant
                 });
                 onSuccess({ destination_key, amount });
             },
