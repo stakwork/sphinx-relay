@@ -40,7 +40,7 @@ export async function lazyToken(pubkey: string, host: string) {
 
 const mediaURL = "http://" + config.media_host + "/";
 
-export async function getMediaToken(pubkey: string, host?: string) {
+export async function getMediaToken(ownerPubkey: string, host?: string) {
   const theURL = host ? "http://" + host + "/" : mediaURL;
   await helpers.sleep(300);
   try {
@@ -49,13 +49,10 @@ export async function getMediaToken(pubkey: string, host?: string) {
     if (!(r && r.challenge && r.id)) {
       throw new Error("no challenge");
     }
-    const sig = await signBuffer(Buffer.from(r.challenge, "base64"));
+    const sig = await signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
 
     if (!sig) throw new Error("no signature");
-    const pubkey = await getMyPubKey();
-    if (!pubkey) {
-      throw new Error("no pub key!");
-    }
+    const pubkey = ownerPubkey
 
     const sigBytes = zbase32.decode(sig);
     const sigBase64 = urlBase64FromBytes(sigBytes);

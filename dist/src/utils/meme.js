@@ -47,7 +47,7 @@ function lazyToken(pubkey, host) {
 }
 exports.lazyToken = lazyToken;
 const mediaURL = "http://" + config.media_host + "/";
-function getMediaToken(pubkey, host) {
+function getMediaToken(ownerPubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
         const theURL = host ? "http://" + host + "/" : mediaURL;
         yield helpers.sleep(300);
@@ -57,13 +57,10 @@ function getMediaToken(pubkey, host) {
             if (!(r && r.challenge && r.id)) {
                 throw new Error("no challenge");
             }
-            const sig = yield lightning_1.signBuffer(Buffer.from(r.challenge, "base64"));
+            const sig = yield lightning_1.signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
             if (!sig)
                 throw new Error("no signature");
-            const pubkey = yield getMyPubKey();
-            if (!pubkey) {
-                throw new Error("no pub key!");
-            }
+            const pubkey = ownerPubkey;
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
             const bod = yield rp.post(theURL + "verify", {
