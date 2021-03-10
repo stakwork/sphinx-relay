@@ -12,7 +12,7 @@ import { Op } from "sequelize";
 import constants from "../constants";
 
 export async function joinTribe(req, res) {
-  if (!req.owner) return failure(res, 'no owner');
+  if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
 
   console.log("=> joinTribe");
@@ -29,7 +29,7 @@ export async function joinTribe(req, res) {
     my_alias,
     my_photo_url,
   } = req.body;
-  console.log("received owner route hint",owner_route_hint)
+  console.log("received owner route hint", owner_route_hint);
   const is_private = req.body.private;
 
   const existing = await models.Chat.findOne({ where: { uuid, tenant } });
@@ -56,8 +56,8 @@ export async function joinTribe(req, res) {
   const contactIds = [owner.id];
   if (tribeOwner) {
     theTribeOwner = tribeOwner; // might already include??
-    if (tribeOwner.routeHint!==owner_route_hint) {
-      await tribeOwner.update({routeHint: owner_route_hint})
+    if (tribeOwner.routeHint !== owner_route_hint) {
+      await tribeOwner.update({ routeHint: owner_route_hint });
     }
     if (!contactIds.includes(tribeOwner.id)) contactIds.push(tribeOwner.id);
   } else {
@@ -71,7 +71,7 @@ export async function joinTribe(req, res) {
       routeHint: owner_route_hint || "",
     });
     theTribeOwner = createdContact;
-    console.log("CREATE TRIBE OWNER", createdContact)
+    console.log("CREATE TRIBE OWNER", createdContact);
     contactIds.push(createdContact.id);
   }
   let date = new Date();
@@ -190,7 +190,7 @@ export async function receiveMemberRequest(payload) {
         fromGroup: true,
         photoUrl: sender_photo_url,
         tenant,
-        routeHint: sender_route_hint||'',
+        routeHint: sender_route_hint || "",
       });
       theSender = createdContact;
     }
@@ -252,7 +252,7 @@ export async function receiveMemberRequest(payload) {
 }
 
 export async function editTribe(req, res) {
-  if (!req.owner) return failure(res, 'no owner');
+  if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
   const {
     name,
@@ -330,7 +330,7 @@ export async function editTribe(req, res) {
 }
 
 export async function approveOrRejectMember(req, res) {
-  if (!req.owner) return failure(res, 'no owner');
+  if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
 
   console.log("=> approve or reject tribe member");
@@ -544,7 +544,7 @@ export async function receiveTribeDelete(payload) {
 }
 
 export async function replayChatHistory(chat, contact, ownerRecord) {
-  const owner = ownerRecord.dataValues||ownerRecord
+  const owner = ownerRecord.dataValues || ownerRecord;
   const tenant: number = owner.id;
   console.log("-> replayHistory");
   if (!(chat && chat.id && contact && contact.id)) {

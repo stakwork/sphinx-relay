@@ -454,7 +454,7 @@ export async function receiveGroupJoin(payload) {
           fromGroup: true,
           photoUrl: sender_photo_url,
           tenant,
-          routeHint: sender_route_hint||''
+          routeHint: sender_route_hint || "",
         });
         theSender = createdContact;
         contactIds.push(createdContact.id);
@@ -488,9 +488,9 @@ export async function receiveGroupJoin(payload) {
       } catch (e) {
         console.log("=> groupJoin could not upsert ChatMember");
       }
-      setTimeout(()=>{
+      setTimeout(() => {
         replayChatHistory(chat, theSender, owner);
-      }, 2000)
+      }, 2000);
       tribes.putstats({
         chatId: chat.id,
         uuid: chat.uuid,

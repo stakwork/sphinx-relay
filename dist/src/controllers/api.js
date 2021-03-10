@@ -178,7 +178,7 @@ function finalAction(a) {
                 type: "message",
                 response: jsonUtils.messageToJson(message, theChat, owner),
             }, tenant);
-            console.log("BOT BROADCASE SENDER", owner.dataValues);
+            // console.log("BOT BROADCASE SENDER", owner.dataValues)
             yield network.sendMessage({
                 chat: theChat,
                 sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }),
@@ -192,7 +192,7 @@ function finalAction(a) {
             });
         }
         else {
-            return console.log('no action');
+            return console.log("no action");
         }
     });
 }

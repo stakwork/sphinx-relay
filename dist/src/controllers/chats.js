@@ -418,7 +418,7 @@ function receiveGroupJoin(payload) {
                         fromGroup: true,
                         photoUrl: sender_photo_url,
                         tenant,
-                        routeHint: sender_route_hint || ''
+                        routeHint: sender_route_hint || "",
                     });
                     theSender = createdContact;
                     contactIds.push(createdContact.id);

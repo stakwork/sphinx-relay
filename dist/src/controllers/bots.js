@@ -23,31 +23,33 @@ const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
     try {
         const bots = yield models_1.models.Bot.findAll({ where: { tenant } });
         res_1.success(res, {
-            bots: bots.map(b => jsonUtils.botToJson(b))
+            bots: bots.map((b) => jsonUtils.botToJson(b)),
         });
     }
     catch (e) {
-        res_1.failure(res, 'no bots');
+        res_1.failure(res, "no bots");
     }
 });
 exports.getBots = getBots;
 const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
-    const { name, webhook, price_per_use, img, description, tags, } = req.body;
+    const { name, webhook, price_per_use, img, description, tags } = req.body;
     const uuid = yield tribes.genSignedTimestamp(req.owner.publicKey);
     const newBot = {
-        name, uuid, webhook,
-        id: crypto.randomBytes(12).toString('hex').toUpperCase(),
-        secret: crypto.randomBytes(16).toString('hex').toUpperCase(),
+        name,
+        uuid,
+        webhook,
+        id: crypto.randomBytes(12).toString("hex").toUpperCase(),
+        secret: crypto.randomBytes(16).toString("hex").toUpperCase(),
         pricePerUse: price_per_use || 0,
-        tenant
+        tenant,
     };
     try {
         const theBot = yield models_1.models.Bot.create(newBot);
@@ -57,23 +59,23 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             owner_pubkey: req.owner.publicKey,
             price_per_use,
             name: name,
-            description: description || '',
+            description: description || "",
             tags: tags || [],
-            img: img || '',
+            img: img || "",
             unlisted: false,
             deleted: false,
-            owner_route_hint: req.owner.routeHint || ''
+            owner_route_hint: req.owner.routeHint || "",
         });
         res_1.success(res, jsonUtils.botToJson(theBot));
     }
     catch (e) {
-        res_1.failure(res, 'bot creation failed');
+        res_1.failure(res, "bot creation failed");
     }
 });
 exports.createBot = createBot;
 const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
     const id = req.params.id;
     if (!id)
@@ -83,7 +85,7 @@ const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res_1.success(res, true);
     }
     catch (e) {
-        console.log('ERROR deleteBot', e);
+        console.log("ERROR deleteBot", e);
         res_1.failure(res, e);
     }
 });
@@ -94,50 +96,51 @@ function installBotAsTribeAdmin(chat, bot_json) {
         const chat_uuid = chat && chat.uuid;
         const tenant = chat.tenant;
         if (!chatId || !chat_uuid || !tenant)
-            return console.log('no chat id in installBot');
+            return console.log("no chat id in installBot");
         console.log("=> chat to install bot into", chat.name);
         const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
         if (!owner)
-            return console.log('cant find owner in installBotAsTribeAdmin');
+            return console.log("cant find owner in installBotAsTribeAdmin");
         const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey);
         if (!isTribeOwner)
-            return console.log('=> only tribe owner can install bots');
-        const { uuid, owner_pubkey, unique_name, price_per_use, owner_route_hint } = bot_json;
+            return console.log("=> only tribe owner can install bots");
+        const { uuid, owner_pubkey, unique_name, price_per_use, owner_route_hint, } = bot_json;
         const isLocal = owner_pubkey === owner.publicKey;
         let botType = constants_1.default.bot_types.remote;
         if (isLocal) {
-            console.log('=> install local bot now!');
+            console.log("=> install local bot now!");
             botType = constants_1.default.bot_types.local;
         }
         const chatBot = {
             chatId,
-            botPrefix: '/' + unique_name,
+            botPrefix: "/" + unique_name,
             botType: botType,
             botUuid: uuid,
             botMakerPubkey: owner_pubkey,
-            botMakerRouteHint: owner_route_hint || '',
+            botMakerRouteHint: owner_route_hint || "",
             pricePerUse: price_per_use,
-            tenant
+            tenant,
         };
         if (isLocal) {
             // "install" my local bot and send "INSTALL" event
             const myBot = yield models_1.models.Bot.findOne({
                 where: {
-                    uuid: bot_json.uuid, tenant
-                }
+                    uuid: bot_json.uuid,
+                    tenant,
+                },
             });
             if (myBot) {
                 yield models_1.models.ChatBot.create(chatBot);
                 postToBotServer({
                     type: constants_1.default.message_types.bot_install,
                     bot_uuid: myBot.uuid,
-                    message: { content: '', amount: 0 },
+                    message: { content: "", amount: 0 },
                     sender: {
                         pub_key: owner.publicKey,
                         alias: owner.alias,
-                        role: constants_1.default.chat_roles.owner
+                        role: constants_1.default.chat_roles.owner,
                     },
-                    chat: { uuid: chat_uuid }
+                    chat: { uuid: chat_uuid },
                 }, myBot, SphinxBot.MSG_TYPE.INSTALL);
             }
         }
@@ -146,7 +149,8 @@ function installBotAsTribeAdmin(chat, bot_json) {
             console.log("installBot INSTALL REMOTE BOT NOW", chatBot);
             const succeeded = yield keysendBotInstall(chatBot, chat_uuid, owner);
             if (succeeded) {
-                try { // could fail
+                try {
+                    // could fail
                     yield models_1.models.ChatBot.create(chatBot);
                 }
                 catch (e) { }
@@ -157,7 +161,7 @@ function installBotAsTribeAdmin(chat, bot_json) {
 exports.installBotAsTribeAdmin = installBotAsTribeAdmin;
 function keysendBotInstall(b, chat_uuid, owner) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield botKeysend(constants_1.default.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid, owner, '', undefined, b.botMakerRouteHint);
+        return yield botKeysend(constants_1.default.message_types.bot_install, b.botUuid, b.botMakerPubkey, b.pricePerUse, chat_uuid, owner, "", undefined, b.botMakerRouteHint);
     });
 }
 exports.keysendBotInstall = keysendBotInstall;
@@ -165,7 +169,7 @@ function keysendBotCmd(msg, b, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         const amount = msg.message.amount || 0;
         const amt = Math.max(amount, b.pricePerUse);
-        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, owner, msg.message.content, (msg.sender && msg.sender.role), b.botMakerRouteHint);
+        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, owner, msg.message.content, msg.sender && msg.sender.role, b.botMakerRouteHint);
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
@@ -181,14 +185,14 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
                 type: msg_type,
                 bot_uuid,
                 chat: { uuid: chat_uuid },
-                message: { content: content || '', amount: amt },
+                message: { content: content || "", amount: amt },
                 sender: {
                     pub_key: owner.publicKey,
                     alias: owner.alias,
                     role: sender_role || constants_1.default.chat_roles.reader,
-                    route_hint: owner.routeHint || ''
-                }
-            }
+                    route_hint: owner.routeHint || "",
+                },
+            },
         };
         try {
             yield network.signAndSend(opts, owner);
@@ -202,7 +206,7 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
 exports.botKeysend = botKeysend;
 function receiveBotInstall(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> receiveBotInstall', payload);
+        console.log("=> receiveBotInstall", payload);
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender && dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
@@ -210,11 +214,12 @@ function receiveBotInstall(payload) {
         const owner = dat.owner;
         const tenant = owner.id;
         if (!chat_uuid || !sender_pub_key)
-            return console.log('no chat uuid or sender pub key');
+            return console.log("no chat uuid or sender pub key");
         const bot = yield models_1.models.Bot.findOne({
             where: {
-                uuid: bot_uuid, tenant
-            }
+                uuid: bot_uuid,
+                tenant,
+            },
         });
         if (!bot)
             return;
@@ -225,7 +230,7 @@ function receiveBotInstall(payload) {
                 memberPubkey: sender_pub_key,
                 tribeUuid: chat_uuid,
                 msgCount: 0,
-                tenant
+                tenant,
             };
             console.log("CREATE bot MEMBER", botMember);
             yield models_1.models.BotMember.create(botMember);
@@ -250,12 +255,13 @@ function receiveBotCmd(payload) {
         const owner = dat.owner;
         const tenant = owner.id;
         if (!chat_uuid)
-            return console.log('no chat uuid');
+            return console.log("no chat uuid");
         // const amount = dat.message.amount - check price_per_use
         const bot = yield models_1.models.Bot.findOne({
             where: {
-                uuid: bot_uuid, tenant
-            }
+                uuid: bot_uuid,
+                tenant,
+            },
         });
         if (!bot)
             return;
@@ -263,13 +269,13 @@ function receiveBotCmd(payload) {
             where: {
                 botId: bot.id,
                 tribeUuid: chat_uuid,
-                tenant
-            }
+                tenant,
+            },
         });
         if (!botMember)
             return;
         botMember.update({ msgCount: (botMember || 0) + 1 });
-        console.log('=> post to remote BOT!!!!! bot owner');
+        console.log("=> post to remote BOT!!!!! bot owner");
         postToBotServer(payload, bot, SphinxBot.MSG_TYPE.MESSAGE);
         // forward to the entire Action back over MQTT
     });
@@ -282,19 +288,19 @@ function postToBotServer(msg, bot, route) {
         if (!bot.webhook || !bot.secret)
             return false;
         let url = bot.webhook;
-        if (url.charAt(url.length - 1) === '/') {
+        if (url.charAt(url.length - 1) === "/") {
             url += route;
         }
         else {
-            url += ('/' + route);
+            url += "/" + route;
         }
         const r = yield node_fetch_1.default(url, {
-            method: 'POST',
+            method: "POST",
             body: JSON.stringify(buildBotPayload(msg)),
             headers: {
-                'x-secret': bot.secret,
-                'Content-Type': 'application/json'
-            }
+                "x-secret": bot.secret,
+                "Content-Type": "application/json",
+            },
         });
         return r.ok;
     });
@@ -314,14 +320,16 @@ function buildBotPayload(msg) {
         member: {
             id: msg.sender.pub_key,
             nickname: msg.sender.alias,
-            roles: []
-        }
+            roles: [],
+        },
     };
     if (msg.sender.role === constants_1.default.chat_roles.owner) {
         if (m.member)
-            m.member.roles = [{
-                    name: 'Admin'
-                }];
+            m.member.roles = [
+                {
+                    name: "Admin",
+                },
+            ];
     }
     return m;
 }
@@ -331,12 +339,12 @@ function receiveBotRes(payload) {
         console.log("=> receiveBotRes"); //, payload)
         const dat = payload.content || payload;
         if (!dat.chat || !dat.message || !dat.sender) {
-            return console.log('=> receiveBotRes error, no chat||msg||sender');
+            return console.log("=> receiveBotRes error, no chat||msg||sender");
         }
         const chat_uuid = dat.chat && dat.chat.uuid;
         const sender_pub_key = dat.sender.pub_key;
         const amount = dat.message.amount || 0;
-        const msg_uuid = dat.message.uuid || '';
+        const msg_uuid = dat.message.uuid || "";
         const content = dat.message.content;
         const action = dat.action;
         const bot_name = dat.bot_name;
@@ -347,10 +355,12 @@ function receiveBotRes(payload) {
         const owner = dat.owner;
         const tenant = owner.id;
         if (!chat_uuid)
-            return console.log('=> receiveBotRes Error no chat_uuid');
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant } });
+            return console.log("=> receiveBotRes Error no chat_uuid");
+        const chat = yield models_1.models.Chat.findOne({
+            where: { uuid: chat_uuid, tenant },
+        });
         if (!chat)
-            return console.log('=> receiveBotRes Error no chat');
+            return console.log("=> receiveBotRes Error no chat");
         const tribeOwnerPubKey = chat && chat.ownerPubkey;
         const isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         if (isTribeOwner) {
@@ -359,22 +369,30 @@ function receiveBotRes(payload) {
             // received the entire action?
             const bot_id = payload.bot_id;
             api_1.finalAction({
-                bot_id, action, bot_name, chat_uuid, content, amount,
+                bot_id,
+                action,
+                bot_name,
+                chat_uuid,
+                content,
+                amount,
             });
         }
         else {
             const theChat = yield models_1.models.Chat.findOne({
                 where: {
-                    uuid: chat_uuid, tenant
-                }
+                    uuid: chat_uuid,
+                    tenant,
+                },
             });
             if (!chat)
-                return console.log('=> receiveBotRes as sub error no chat');
+                return console.log("=> receiveBotRes as sub error no chat");
             var date = new Date();
             date.setMilliseconds(0);
             if (date_string)
                 date = new Date(date_string);
-            const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant } });
+            const sender = yield models_1.models.Contact.findOne({
+                where: { publicKey: sender_pub_key, tenant },
+            });
             const msg = {
                 chatId: chat.id,
                 uuid: msg_uuid,
@@ -386,15 +404,15 @@ function receiveBotRes(payload) {
                 status: constants_1.default.statuses.confirmed,
                 createdAt: date,
                 updatedAt: date,
-                senderAlias: sender_alias || 'Bot',
+                senderAlias: sender_alias || "Bot",
                 senderPic: sender_pic,
                 network_type,
-                tenant
+                tenant,
             };
             const message = yield models_1.models.Message.create(msg);
             socket.sendJson({
-                type: 'message',
-                response: jsonUtils.messageToJson(message, theChat, owner)
+                type: "message",
+                response: jsonUtils.messageToJson(message, theChat, owner),
             }, tenant);
         }
     });

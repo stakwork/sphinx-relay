@@ -160,7 +160,8 @@ export async function finalAction(a: Action) {
     if (!chat_uuid) return console.log("no chat_uuid");
     const theChat = await getTribeOwnersChatByUUID(chat_uuid);
     if (!(theChat && theChat.id)) return console.log("no chat");
-    if (theChat.type !== constants.chat_types.tribe) return console.log("not a tribe");
+    if (theChat.type !== constants.chat_types.tribe)
+      return console.log("not a tribe");
     const owner = await models.Contact.findOne({
       where: { id: theChat.tenant },
     });
@@ -173,7 +174,7 @@ export async function finalAction(a: Action) {
     date.setMilliseconds(0);
     const alias = bot_name || "Bot";
     const botContactId = -1;
-    
+
     const msg: { [k: string]: any } = {
       chatId: theChat.id,
       uuid: short.generate(),
@@ -197,7 +198,7 @@ export async function finalAction(a: Action) {
       },
       tenant
     );
-    console.log("BOT BROADCASE SENDER", owner.dataValues)
+    // console.log("BOT BROADCASE SENDER", owner.dataValues)
     await network.sendMessage({
       chat: theChat,
       sender: {
@@ -210,11 +211,11 @@ export async function finalAction(a: Action) {
       type: constants.message_types.bot_res,
       success: () => ({ success: true }),
       failure: (e) => {
-        return console.log(e)
+        return console.log(e);
       },
       isForwarded: true,
     });
   } else {
-    return console.log('no action')
+    return console.log("no action");
   }
 }

@@ -28,8 +28,8 @@ function sendMessage(params) {
             return;
         const isTribe = chat.type === constants_1.default.chat_types.tribe;
         let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
-        console.log('-> sender.publicKey', sender.publicKey);
-        console.log('-> chat.ownerPubkey', chat.ownerPubkey);
+        // console.log('-> sender.publicKey', sender.publicKey)
+        // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
         let theSender = sender.dataValues || sender;
         if (isTribeOwner && !isForwarded) {
             theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants_1.default.chat_roles.owner });
@@ -44,7 +44,7 @@ function sendMessage(params) {
         let contactIds = (typeof chat.contactIds === "string"
             ? JSON.parse(chat.contactIds)
             : chat.contactIds) || [];
-        console.log('-> contactIds 1', contactIds);
+        // console.log('-> contactIds 1', contactIds)
         if (contactIds.length === 1) {
             if (contactIds[0] === tenant) {
                 if (success)
@@ -55,14 +55,12 @@ function sendMessage(params) {
         let networkType = undefined;
         const chatUUID = chat.uuid;
         if (isTribe) {
-            console.log('-> isTribe');
             if (type === constants_1.default.message_types.confirmation) {
                 // if u are owner, go ahead!
                 if (!isTribeOwner)
                     return; // dont send confs for tribe if not owner
             }
             if (isTribeOwner) {
-                console.log('-> isTribeOwner');
                 networkType = "mqtt"; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
@@ -75,21 +73,18 @@ function sendMessage(params) {
                 tribes.putActivity(chat.uuid, chat.host, sender.publicKey);
             }
             else {
-                console.log('-> !isTribeOwner');
                 // if tribe, send to owner only
                 const tribeOwner = yield models_1.models.Contact.findOne({
                     where: { publicKey: chat.ownerPubkey, tenant },
                 });
-                console.log('-> found tribeOwner', (tribeOwner && tribeOwner.dataValues));
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
-                console.log('-> contactIds 1', contactIds);
             }
         }
         let yes = true;
         let no = null;
         console.log("=> sending to", contactIds.length, "contacts");
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
-            console.log("=> TENANT", tenant);
+            // console.log("=> TENANT", tenant)
             if (contactId === tenant) {
                 // dont send to self
                 // console.log('=> dont send to self')
@@ -110,7 +105,7 @@ function sendMessage(params) {
             // console.log("=> CONTACT", contactId, contact.publicKey)
             const destkey = contact.publicKey;
             if (destkey === skipPubKey) {
-                console.log('=> skipPubKey', skipPubKey);
+                // console.log('=> skipPubKey', skipPubKey)
                 return; // skip (for tribe owner broadcasting, not back to the sender)
             }
             // console.log('-> sending to ', contact.id, destkey)
