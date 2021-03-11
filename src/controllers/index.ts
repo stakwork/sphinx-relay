@@ -83,6 +83,7 @@ export async function set(app) {
 	app.post('/stream', feed.streamFeed)
 
 	app.get('/app_versions', details.getAppVersions)
+	app.get('/relay_version', details.getRelayVersion)
 
 	app.post('/invoices', invoices.createInvoice)
 	app.get('/invoices', invoices.listInvoices)
