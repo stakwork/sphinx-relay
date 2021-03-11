@@ -60,9 +60,13 @@ function getMediaToken(ownerPubkey, host) {
             const sig = yield lightning_1.signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
             if (!sig)
                 throw new Error("no signature");
-            const pubkey = ownerPubkey;
+            let pubkey = ownerPubkey;
+            if (!pubkey) {
+                pubkey = yield getMyPubKey();
+            }
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
+            console.log('[meme] verify', pubkey);
             const bod = yield rp.post(theURL + "verify", {
                 form: { id: r.id, sig: sigBase64, pubkey },
             });

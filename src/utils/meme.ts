@@ -52,11 +52,15 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
     const sig = await signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
 
     if (!sig) throw new Error("no signature");
-    const pubkey = ownerPubkey
+    let pubkey:string = ownerPubkey
+    if(!pubkey) {
+      pubkey = await getMyPubKey()
+    }
 
     const sigBytes = zbase32.decode(sig);
     const sigBase64 = urlBase64FromBytes(sigBytes);
 
+    console.log('[meme] verify', pubkey)
     const bod = await rp.post(theURL + "verify", {
       form: { id: r.id, sig: sigBase64, pubkey },
     });
@@ -70,7 +74,7 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
   }
 }
 
-export async function getMyPubKey() {
+export async function getMyPubKey(): Promise<string> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning();
     var request = {};
