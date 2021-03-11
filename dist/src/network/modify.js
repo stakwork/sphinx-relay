@@ -179,7 +179,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
         const typ = payload.message && payload.message.mediaType;
         if (!mt || !key)
             return payload; // save anyway??????????
-        console.log('[modify] ==> downloadAndUploadAndSaveReturningTermsAndKey', owner);
+        // console.log('[modify] ==> downloadAndUploadAndSaveReturningTermsAndKey', owner)
         const tenant = owner.id;
         const ownerPubkey = owner.publicKey;
         const ogmuid = mt && mt.split(".").length && mt.split(".")[1];

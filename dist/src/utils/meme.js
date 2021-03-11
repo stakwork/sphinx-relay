@@ -23,7 +23,7 @@ const config = config_1.loadConfig();
 const tokens = {};
 function lazyToken(pubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("[meme] lazyToken for", pubkey);
+        // console.log("[meme] lazyToken for", pubkey)
         if (tokens[pubkey] && tokens[pubkey][host]) {
             const ts = tokens[pubkey][host].ts;
             const now = moment().unix();
@@ -50,7 +50,7 @@ exports.lazyToken = lazyToken;
 const mediaURL = "http://" + config.media_host + "/";
 function getMediaToken(ownerPubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("[meme] gET MEDIA TOEKN", ownerPubkey);
+        // console.log("[meme] gET MEDIA TOEKN", ownerPubkey)
         const theURL = host ? "http://" + host + "/" : mediaURL;
         yield helpers.sleep(300);
         try {
