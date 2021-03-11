@@ -115,7 +115,8 @@ function payBack(t) {
                     createdAt: date,
                     updatedAt: date,
                     status: constants_1.default.statuses.received,
-                    network_type: constants_1.default.network_types.lightning
+                    network_type: constants_1.default.network_types.lightning,
+                    tenant: t.tenant
                 });
             }
         });

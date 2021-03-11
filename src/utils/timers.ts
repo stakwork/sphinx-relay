@@ -86,7 +86,8 @@ export async function payBack(t) {
                 createdAt: date,
                 updatedAt: date,
                 status: constants.statuses.received,
-                network_type: constants.network_types.lightning
+                network_type: constants.network_types.lightning,
+                tenant: t.tenant
             })
         }
     })
