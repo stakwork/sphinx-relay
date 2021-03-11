@@ -36,6 +36,10 @@ export const typesToForward = [
   msgtypes.delete,
   msgtypes.boost,
 ];
+export const typesToSkipIfSkipBroadcastJoins = [
+  msgtypes.group_join,
+  msgtypes.group_leave,
+]
 const typesToModify = [msgtypes.attachment];
 const typesThatNeedPricePerMessage = [
   msgtypes.message,
@@ -323,6 +327,12 @@ async function forwardMessageToTribe(
     where: { uuid: ogpayload.chat.uuid, tenant },
   });
   if (!chat) return;
+
+  if(chat.skipBroadcastJoins) {
+    if(typesToSkipIfSkipBroadcastJoins.includes(ogpayload.type)){
+      return
+    }
+  }
 
   let payload;
   if (sender && typesToModify.includes(ogpayload.type)) {

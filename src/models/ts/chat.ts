@@ -104,4 +104,11 @@ export default class Chat extends Model<Chat> {
   @Column
   tenant: number
 
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: true
+  })
+  skipBroadcastJoins: boolean
+
 }

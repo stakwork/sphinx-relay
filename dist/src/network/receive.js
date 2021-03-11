@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToForward = void 0;
+exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
 const lndService = require("../grpc");
 const lightning = require("../utils/lightning");
 const controllers_1 = require("../controllers");
@@ -40,6 +40,10 @@ exports.typesToForward = [
     msgtypes.attachment,
     msgtypes.delete,
     msgtypes.boost,
+];
+exports.typesToSkipIfSkipBroadcastJoins = [
+    msgtypes.group_join,
+    msgtypes.group_leave,
 ];
 const typesToModify = [msgtypes.attachment];
 const typesThatNeedPricePerMessage = [
@@ -318,6 +322,11 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         });
         if (!chat)
             return;
+        if (chat.skipBroadcastJoins) {
+            if (exports.typesToSkipIfSkipBroadcastJoins.includes(ogpayload.type)) {
+                return;
+            }
+        }
         let payload;
         if (sender && typesToModify.includes(ogpayload.type)) {
             payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, owner);

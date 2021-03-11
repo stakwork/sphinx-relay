@@ -2,6 +2,8 @@ import { sequelize } from '../models'
 
 export default async function migrate() {
 
+  addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN')
+
   addTenant('sphinx_chat_members')
   addTenant('sphinx_chats')
   addTenant('sphinx_bots')

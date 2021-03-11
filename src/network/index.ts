@@ -5,6 +5,7 @@ import {
   parseKeysendInvoice,
   typesToReplay,
   typesToForward,
+  typesToSkipIfSkipBroadcastJoins,
   receiveMqttMessage,
 } from "./receive";
 import { Msg } from "./interfaces";
@@ -22,6 +23,7 @@ export {
   parseKeysendInvoice,
   typesToReplay,
   typesToForward,
+  typesToSkipIfSkipBroadcastJoins,
   receiveMqttMessage,
   Msg,
 };
