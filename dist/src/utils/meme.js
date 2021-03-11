@@ -63,9 +63,9 @@ function getMediaToken(ownerPubkey, host) {
             if (!sig)
                 throw new Error("no signature");
             let pubkey = ownerPubkey;
-            if (!pubkey) {
-                pubkey = yield getMyPubKey();
-            }
+            // if(!pubkey) {
+            //   pubkey = await getMyPubKey()
+            // }
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
             console.log('[meme] verify', pubkey);

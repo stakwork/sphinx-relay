@@ -150,7 +150,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         //   mediaToken: {[Op.like]: `${host}.${muid}%`},
         //   type: msgtypes.purchase,
         // }})
-        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, tenant, amt);
+        const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner, amt);
         // send it to the purchaser
         send_1.sendMessage({
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), (sender && sender.alias && { alias: sender.alias })), { role: constants_1.default.chat_roles.reader }),

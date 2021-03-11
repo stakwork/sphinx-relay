@@ -163,7 +163,7 @@ export async function sendFinalMemeIfFirstPurchaser(
     payload,
     chat,
     sender,
-    tenant,
+    owner,
     amt
   );
 

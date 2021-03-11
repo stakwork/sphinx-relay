@@ -55,9 +55,9 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
 
     if (!sig) throw new Error("no signature");
     let pubkey:string = ownerPubkey
-    if(!pubkey) {
-      pubkey = await getMyPubKey()
-    }
+    // if(!pubkey) {
+    //   pubkey = await getMyPubKey()
+    // }
 
     const sigBytes = zbase32.decode(sig);
     const sigBase64 = urlBase64FromBytes(sigBytes);
