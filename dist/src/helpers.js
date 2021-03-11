@@ -16,6 +16,7 @@ const network = require("./network");
 const constants_1 = require("./constants");
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
+    console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id);
     let chat;
     let date = new Date();
     date.setMilliseconds(0);
