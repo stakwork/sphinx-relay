@@ -28,7 +28,7 @@ export default class MediaKey extends Model<MediaKey> {
   @Column(DataType.BIGINT)
   receiver: number
 
-  @Column
+  @Column(DataType.TEXT)
   key: string
 
   @Column(DataType.BIGINT)
@@ -46,4 +46,6 @@ export default class MediaKey extends Model<MediaKey> {
   @Column
   originalMuid: string // for tribe, remember the og muid, so second time someone buys it, can just send it
 
+  @Column
+  tenant: number
 }

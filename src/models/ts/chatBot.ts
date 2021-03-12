@@ -35,6 +35,9 @@ export default class ChatBot extends Model<ChatBot> {
   botMakerPubkey: string
 
   @Column
+  botMakerRouteHint: string
+
+  @Column
   msgTypes: string
 
   @Column
@@ -48,4 +51,7 @@ export default class ChatBot extends Model<ChatBot> {
 
   @Column
   updatedAt: Date
+
+  @Column
+  tenant: number
 }

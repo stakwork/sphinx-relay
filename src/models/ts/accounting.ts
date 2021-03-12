@@ -18,6 +18,9 @@ export default class Accounting extends Model<Accounting> {
   pubkey: string
 
   @Column
+  routeHint: string
+
+  @Column
   onchainAddress: string
 
   @Column(DataType.DECIMAL)

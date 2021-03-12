@@ -69,6 +69,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], Subscription.prototype, "updatedAt", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Subscription.prototype, "tenant", void 0);
 Subscription = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_subscriptions', underscored: true })
 ], Subscription);

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.base64ToHex = exports.authModule = exports.unlocker = void 0;
+exports.authModule = exports.base64ToHex = exports.ownerMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
 const cryptoJS = require("crypto-js");
@@ -70,6 +70,82 @@ function unlocker(req, res) {
     });
 }
 exports.unlocker = unlocker;
+function ownerMiddleware(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (req.path == '/app' ||
+            req.path == '/' ||
+            req.path == '/unlock' ||
+            req.path == '/info' ||
+            req.path == '/action' ||
+            req.path == '/contacts/tokens' ||
+            req.path == '/latest' ||
+            req.path.startsWith('/static') ||
+            req.path == '/contacts/set_dev' ||
+            req.path == '/connect') {
+            next();
+            return;
+        }
+        const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
+        if (process.env.HOSTING_PROVIDER === 'true') {
+            if (token) { // add owner in anyway
+                const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
+                const owner = yield models_1.models.Contact.findOne({ where: { authToken: hashedToken, isOwner: true } });
+                if (owner)
+                    req.owner = owner.dataValues;
+            }
+            if (req.path === '/invoices') {
+                next();
+                return;
+            }
+        }
+        if (!token) {
+            res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
+            res.end('Invalid credentials');
+            return;
+        }
+        const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
+        const owner = yield models_1.models.Contact.findOne({ where: { authToken: hashedToken, isOwner: true } });
+        if (!owner) {
+            res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
+            res.end('Invalid credentials');
+        }
+        else {
+            req.owner = owner.dataValues;
+            next();
+        }
+    });
+}
+exports.ownerMiddleware = ownerMiddleware;
+function decryptMacaroon(password, macaroon) {
+    try {
+        const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);
+        const decryptResult = atob(decrypted);
+        return decryptResult;
+    }
+    catch (e) {
+        console.error('cipher mismatch, macaroon decryption failed');
+        console.error(e);
+        return '';
+    }
+}
+function base64ToHex(str) {
+    const raw = atob(str);
+    let result = '';
+    for (let i = 0; i < raw.length; i++) {
+        const hex = raw.charCodeAt(i).toString(16);
+        result += (hex.length === 2 ? hex : '0' + hex);
+    }
+    return result.toUpperCase();
+}
+exports.base64ToHex = base64ToHex;
+const atob = a => Buffer.from(a, 'base64').toString('binary');
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    });
+}
+const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
+/* deprecated */
 function authModule(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         if (req.path == '/app' ||
@@ -81,8 +157,7 @@ function authModule(req, res, next) {
             req.path == '/latest' ||
             req.path.startsWith('/static') ||
             req.path == '/contacts/set_dev' ||
-            req.path == '/connect' ||
-            req.path == '/utxos') {
+            req.path == '/connect') {
             next();
             return;
         }
@@ -113,33 +188,4 @@ function authModule(req, res, next) {
     });
 }
 exports.authModule = authModule;
-function decryptMacaroon(password, macaroon) {
-    try {
-        const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);
-        const decryptResult = atob(decrypted);
-        return decryptResult;
-    }
-    catch (e) {
-        console.error('cipher mismatch, macaroon decryption failed');
-        console.error(e);
-        return '';
-    }
-}
-function base64ToHex(str) {
-    const raw = atob(str);
-    let result = '';
-    for (let i = 0; i < raw.length; i++) {
-        const hex = raw.charCodeAt(i).toString(16);
-        result += (hex.length === 2 ? hex : '0' + hex);
-    }
-    return result.toUpperCase();
-}
-exports.base64ToHex = base64ToHex;
-const atob = a => Buffer.from(a, 'base64').toString('binary');
-function sleep(ms) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    });
-}
-const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
 //# sourceMappingURL=auth.js.map

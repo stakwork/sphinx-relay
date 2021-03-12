@@ -12,6 +12,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN');
+        addTenant('sphinx_chat_members');
+        addTenant('sphinx_chats');
+        addTenant('sphinx_bots');
+        addTenant('sphinx_contacts');
+        addTenant('sphinx_messages');
+        addTenant('sphinx_bot_members');
+        addTenant('sphinx_chat_bots');
+        addTenant('sphinx_invites');
+        addTenant('sphinx_media_keys');
+        addTenant('sphinx_subscriptions');
+        addTenant('sphinx_timers');
+        addTableColumn('sphinx_contacts', 'route_hint');
+        addTableColumn('sphinx_chat_bots', 'bot_maker_route_hint');
+        addTableColumn('sphinx_accountings', 'route_hint');
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_accountings (
@@ -126,6 +141,17 @@ function migrate() {
     });
 }
 exports.default = migrate;
+function addTenant(tableName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield addTableColumn(tableName, 'tenant', 'BIGINT');
+        try {
+            yield models_1.sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    });
+}
 function addTableColumn(table, column, type = 'TEXT') {
     return __awaiter(this, void 0, void 0, function* () {
         try {

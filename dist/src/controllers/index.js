@@ -31,13 +31,14 @@ const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
 const feed = require("./feed");
+const res_1 = require("../utils/res");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
         }
-        media.cycleMediaToken();
+        // media.cycleMediaToken()
         timers.reloadTimers();
         queries.startWatchingUTXOs();
         app.get('/chats', chats.getChats);
@@ -80,6 +81,7 @@ function set(app) {
         app.get('/signer/:challenge', media.signer);
         app.post('/stream', feed.streamFeed);
         app.get('/app_versions', details.getAppVersions);
+        app.get('/relay_version', details.getRelayVersion);
         app.post('/invoices', invoices.createInvoice);
         app.get('/invoices', invoices.listInvoices);
         app.put('/invoices', invoices.payInvoice);
@@ -108,9 +110,13 @@ function set(app) {
         });
         app.get('/latest', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
+                if (!req.owner)
+                    return res_1.failure(res, 'no owner');
+                const tenant = req.owner.id;
                 const lasts = yield models_1.models.Message.findAll({
                     limit: 1,
-                    order: [['createdAt', 'DESC']]
+                    order: [['createdAt', 'DESC']],
+                    where: { tenant }
                 });
                 const last = lasts && lasts[0];
                 if (!last) {

@@ -62,13 +62,13 @@ export default class Message extends Model<Message> {
   @Column(DataType.BIGINT)
   subscriptionId: number
 
-  @Column
+  @Column(DataType.TEXT)
   mediaKey: string
 
   @Column
   mediaType: string
 
-  @Column
+  @Column(DataType.TEXT)
   mediaToken: string
 
   @Column({
@@ -87,7 +87,7 @@ export default class Message extends Model<Message> {
   @Column
   senderAlias: string // for tribes, no "sender" id maybe
 
-  @Column
+  @Column(DataType.TEXT)
   senderPic: string // for tribes, no "sender" id maybe
 
   @Column
@@ -98,4 +98,11 @@ export default class Message extends Model<Message> {
 
   @Column(DataType.INTEGER)
   network_type: number
+
+  @Column
+  tenant: number
 }
+
+/*
+ALTER TABLE sphinx_invites ALTER COLUMN invoice TYPE text;
+*/

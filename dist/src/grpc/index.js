@@ -24,11 +24,13 @@ const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
+    console.log('subscribeInvoices');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        const lightning = yield lightning_1.loadLightning();
+        const lightning = yield lightning_1.loadLightning(true); // try proxy
         var call = lightning.subscribeInvoices();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
+                // console.log("AN INVOICES WAS RECIEVED!!!=======================>",response)
                 if (response['state'] !== 'SETTLED') {
                     return;
                 }
@@ -49,7 +51,13 @@ function subscribeInvoices(parseKeysendInvoice) {
                     let settleDate = parseInt(response['settle_date'] + '000');
                     const invoice = yield models_1.models.Message.findOne({ where: { type: constants_1.default.message_types.invoice, payment_request: response['payment_request'] } });
                     if (invoice == null) {
-                        // console.log("ERROR: Invoice " + response['payment_request'] + " not found");
+                        const invoice = yield lightning_1.decodePayReq(response['payment_request']);
+                        if (!invoice)
+                            return console.log("subscribeInvoices: couldn't decode pay req");
+                        if (!invoice.destination)
+                            return console.log("subscribeInvoices: cant get dest from pay req");
+                        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: invoice.destination } });
+                        const tenant = owner.id;
                         const payReq = response['payment_request'];
                         const amount = response['amt_paid_sat'];
                         if (process.env.HOSTING_PROVIDER === 'true') {
@@ -58,7 +66,7 @@ function subscribeInvoices(parseKeysendInvoice) {
                         socket.sendJson({
                             type: 'invoice_payment',
                             response: { invoice: payReq }
-                        });
+                        }, tenant);
                         yield models_1.models.Message.create({
                             chatId: 0,
                             type: constants_1.default.message_types.payment,
@@ -70,12 +78,16 @@ function subscribeInvoices(parseKeysendInvoice) {
                             messageContent: response['memo'],
                             status: constants_1.default.statuses.confirmed,
                             createdAt: new Date(settleDate),
-                            updatedAt: new Date(settleDate)
+                            updatedAt: new Date(settleDate),
+                            tenant
                         });
                         return;
                     }
+                    // invoice is defined
+                    const tenant = invoice.tenant;
+                    const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
                     models_1.models.Message.update({ status: constants_1.default.statuses.confirmed }, { where: { id: invoice.id } });
-                    const chat = yield models_1.models.Chat.findOne({ where: { id: invoice.chatId } });
+                    const chat = yield models_1.models.Chat.findOne({ where: { id: invoice.chatId, tenant } });
                     const contactIds = JSON.parse(chat.contactIds);
                     const senderId = contactIds.find(id => id != invoice.sender);
                     const message = yield models_1.models.Message.create({
@@ -89,14 +101,15 @@ function subscribeInvoices(parseKeysendInvoice) {
                         messageContent: response['memo'],
                         status: constants_1.default.statuses.confirmed,
                         createdAt: new Date(settleDate),
-                        updatedAt: new Date(settleDate)
+                        updatedAt: new Date(settleDate),
+                        tenant
                     });
-                    const sender = yield models_1.models.Contact.findOne({ where: { id: senderId } });
+                    const sender = yield models_1.models.Contact.findOne({ where: { id: senderId, tenant } });
                     socket.sendJson({
                         type: 'payment',
                         response: jsonUtils.messageToJson(message, chat, sender)
-                    });
-                    hub_1.sendNotification(chat, sender.alias, 'message');
+                    }, tenant);
+                    hub_1.sendNotification(chat, sender.alias, 'message', owner);
                 }
             });
         });
@@ -105,7 +118,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             // The server is unavailable, trying to reconnect.
             if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
-                reconnectToLND(Math.random());
+                // waitAndReconnect()
             }
             else {
                 resolve(status);
@@ -116,7 +129,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             console.error('[LND] Error', now, err.code);
             if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
-                reconnectToLND(Math.random());
+                // waitAndReconnect()
             }
             else {
                 reject(err);
@@ -127,7 +140,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             console.log(`Closed stream ${now}`);
             // The server has closed the stream.
             i = 0;
-            reconnectToLND(Math.random());
+            waitAndReconnect();
         });
         setTimeout(() => {
             resolve(null);
@@ -135,10 +148,14 @@ function subscribeInvoices(parseKeysendInvoice) {
     }));
 }
 exports.subscribeInvoices = subscribeInvoices;
+function waitAndReconnect() {
+    setTimeout(() => reconnectToLND(Math.random()), 2000);
+}
 var i = 0;
 var ctx = 0;
 function reconnectToLND(innerCtx, callback) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("reconnectToLND");
         ctx = innerCtx;
         i++;
         const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
@@ -155,6 +172,7 @@ function reconnectToLND(innerCtx, callback) {
                 yield unlock_1.tryToUnlockLND();
             }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                // console.log('?', ctx===innerCtx)
                 if (ctx === innerCtx) { // if another retry fires, then this will not run
                     yield reconnectToLND(innerCtx, callback);
                 }

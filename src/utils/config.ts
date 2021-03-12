@@ -1,7 +1,12 @@
 import * as path from 'path'
+import * as minimist from 'minimist';
+
+const argv = minimist(process.argv.slice(2));
+
+const configFile = argv.config ? argv.config : path.join(__dirname, '../../config/app.json')
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, '../../config/app.json'))[env]
+const config = require(configFile)[env]
 const ENV = process.env
 
 export function loadConfig() {
@@ -21,6 +26,8 @@ export function loadConfig() {
     hub_check_invite_url: ENV.HUB_CHECK_INVITE_URL || config.hub_check_invite_url,
     media_host: ENV.MEDIA_HOST || config.media_host,
     tribes_host: ENV.TRIBES_HOST || config.tribes_host,
+    tribes_mqtt_port: ENV.TRIBES_MQTT_PORT || config.tribes_mqtt_port,
+    tribes_insecure: ENV.TRIBES_INSECURE || config.tribes_insecure,
     public_url: ENV.PUBLIC_URL || config.public_url,
     connection_string_path: ENV.CONNECTION_STRING_PATH || config.connection_string_path,
     ssl: {
@@ -34,5 +41,13 @@ export function loadConfig() {
     unlock: (ENV.unlock || config.unlock) ? true : false,
     lnd_pwd_path: ENV.LND_PWD_PATH || config.lnd_pwd_path,
     connect_ui: ENV.CONNECT_UI || config.connect_ui,
+    proxy_macaroons_dir: ENV.PROXY_MACAROONS_DIR || config.proxy_macaroons_dir,
+    proxy_tls_location: ENV.PROXY_TLS_LOCATION || config.proxy_tls_location,
+    proxy_lnd_ip: ENV.PROXY_LND_IP || config.proxy_lnd_ip,
+    proxy_lnd_port: ENV.PROXY_LND_PORT || config.proxy_lnd_port,
+    proxy_admin_token: ENV.PROXY_ADMIN_TOKEN || config.proxy_admin_token,
+    proxy_admin_url: ENV.PROXY_ADMIN_URL || config.proxy_admin_url,
+    proxy_new_nodes: ENV.PROXY_NEW_NODES || config.proxy_new_nodes,
+    proxy_initial_sats: ENV.PROXY_INITIAL_SATS || config.proxy_initial_sats
   }
 }

@@ -32,6 +32,10 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
+], Accounting.prototype, "routeHint", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
 ], Accounting.prototype, "onchainAddress", void 0);
 __decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),

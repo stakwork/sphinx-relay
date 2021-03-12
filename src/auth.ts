@@ -66,7 +66,7 @@ export async function unlocker(req, res): Promise<boolean> {
   }
 }
 
-export async function authModule(req, res, next) {
+export async function ownerMiddleware(req, res, next) {
   if (
     req.path == '/app' ||
     req.path == '/' ||
@@ -77,36 +77,41 @@ export async function authModule(req, res, next) {
     req.path == '/latest' ||
     req.path.startsWith('/static') ||
     req.path == '/contacts/set_dev' ||
-    req.path == '/connect' ||
-    req.path == '/utxos'
+    req.path == '/connect'
   ) {
     next()
     return
   }
 
+  const token = req.headers['x-user-token'] || req.cookies['x-user-token']
+
   if (process.env.HOSTING_PROVIDER === 'true') {
-    // const host = req.headers.origin
-    // const referer = req.headers.referer
+    if(token) { // add owner in anyway
+      const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
+      const owner = await models.Contact.findOne({ where: { authToken: hashedToken, isOwner:true } })
+      if(owner) req.owner = owner.dataValues
+    }
     if (req.path === '/invoices') {
       next()
       return
     }
   }
+  
+  if(!token) {
+    res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
+    res.end('Invalid credentials');
+    return
+  }
+  const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
 
-  const token = req.headers['x-user-token'] || req.cookies['x-user-token']
+  const owner = await models.Contact.findOne({ where: { authToken: hashedToken, isOwner:true } })
 
-  if (token == null) {
+  if (!owner) {
     res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
     res.end('Invalid credentials');
   } else {
-    const user = await models.Contact.findOne({ where: { isOwner: true } })
-    const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-    if (user.authToken == null || user.authToken != hashedToken) {
-      res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
-      res.end('Invalid credentials');
-    } else {
-      next();
-    }
+    req.owner = owner.dataValues
+    next();
   }
 }
 
@@ -139,3 +144,47 @@ async function sleep(ms) {
 }
 
 const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/
+
+/* deprecated */
+export async function authModule(req, res, next) {
+  if (
+    req.path == '/app' ||
+    req.path == '/' ||
+    req.path == '/unlock' ||
+    req.path == '/info' ||
+    req.path == '/action' ||
+    req.path == '/contacts/tokens' ||
+    req.path == '/latest' ||
+    req.path.startsWith('/static') ||
+    req.path == '/contacts/set_dev' ||
+    req.path == '/connect'
+  ) {
+    next()
+    return
+  }
+
+  if (process.env.HOSTING_PROVIDER === 'true') {
+    // const host = req.headers.origin
+    // const referer = req.headers.referer
+    if (req.path === '/invoices') {
+      next()
+      return
+    }
+  }
+
+  const token = req.headers['x-user-token'] || req.cookies['x-user-token']
+
+  if (token == null) {
+    res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
+    res.end('Invalid credentials');
+  } else {
+    const user = await models.Contact.findOne({ where: { isOwner: true } })
+    const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
+    if (user.authToken == null || user.authToken != hashedToken) {
+      res.writeHead(401, 'Access invalid for user', { 'Content-Type': 'text/plain' });
+      res.end('Invalid credentials');
+    } else {
+      next();
+    }
+  }
+}

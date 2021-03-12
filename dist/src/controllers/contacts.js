@@ -19,14 +19,20 @@ const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
+const tribes = require("../utils/tribes");
+const network = require("../network");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false }, raw: true });
-    const invites = yield models_1.models.Invite.findAll({ raw: true });
-    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false }, raw: true });
-    const subscriptions = yield models_1.models.Subscription.findAll({ raw: true });
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
+    const contacts = yield models_1.models.Contact.findAll({ where: { deleted: false, tenant }, raw: true });
+    const invites = yield models_1.models.Invite.findAll({ raw: true, where: { tenant } });
+    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false, tenant }, raw: true });
+    const subscriptions = yield models_1.models.Subscription.findAll({ raw: true, where: { tenant } });
     const pendingMembers = yield models_1.models.ChatMember.findAll({
         where: {
-            status: constants_1.default.chat_statuses.pending
+            status: constants_1.default.chat_statuses.pending,
+            tenant
         }
     });
     const contactsResponse = contacts.map(contact => {
@@ -55,7 +61,14 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getContacts = getContacts;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> generateToken called', { body: req.body, params: req.params, query: req.query });
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const pubkey = req.body['pubkey'];
+    if (!pubkey) {
+        return res_1.failure(res, 'no pubkey');
+    }
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: pubkey } });
+    if (!owner) {
+        return res_1.failure(res, 'no owner');
+    }
     const pwd = password_1.default;
     if (process.env.USE_PASSWORD === 'true') {
         if (pwd !== req.query.pwd) {
@@ -66,31 +79,31 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             console.log("PASSWORD ACCEPTED!");
         }
     }
-    if (owner) {
-        const token = req.body['token'];
-        if (!token) {
+    const token = req.body['token'];
+    if (!token) {
+        return res_1.failure(res, {});
+    }
+    const hash = crypto.createHash('sha256').update(token).digest('base64');
+    if (owner.authToken) {
+        if (owner.authToken !== hash) {
             return res_1.failure(res, {});
         }
-        const hash = crypto.createHash('sha256').update(token).digest('base64');
-        if (owner.authToken) {
-            if (owner.authToken !== hash) {
-                return res_1.failure(res, {});
-            }
-        }
-        else {
-            owner.update({ authToken: hash });
-        }
-        res_1.success(res, {});
     }
     else {
-        res_1.failure(res, {});
+        // done!
+        tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
+        owner.update({ authToken: hash });
     }
+    res_1.success(res, { id: (owner && owner.id) || 0 });
 });
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     console.log('=> updateContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
-    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
+    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id, tenant } });
     if (!contact) {
         return res_1.failure(res, 'no contact found');
     }
@@ -109,8 +122,8 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
     // send updated owner info to others!
-    const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false } })
-        .filter(c => c.id !== 1 && c.publicKey).map(c => c.id);
+    const contactIds = yield models_1.models.Contact.findAll({ where: { deleted: false, tenant } })
+        .filter(c => c.id !== tenant && c.publicKey).map(c => c.id);
     if (contactIds.length == 0)
         return;
     console.log("=> send contact_key to", contactIds);
@@ -123,9 +136,12 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.updateContact = updateContact;
 const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     console.log('=> exchangeKeys called', { body: req.body, params: req.params, query: req.query });
-    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id } });
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const contact = yield models_1.models.Contact.findOne({ where: { id: req.params.id, tenant } });
+    const owner = req.owner;
     res_1.success(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
         contactIds: [contact.id],
@@ -135,10 +151,13 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.exchangeKeys = exchangeKeys;
 const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     console.log('=> createContact called', { body: req.body, params: req.params, query: req.query });
     let attrs = extractAttrs(req.body);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'] } }));
+    const owner = req.owner;
+    const existing = attrs['public_key'] && (yield models_1.models.Contact.findOne({ where: { publicKey: attrs['public_key'], tenant } }));
     if (existing) {
         const updateObj = { fromGroup: false };
         if (attrs['alias'])
@@ -148,6 +167,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     if (attrs['public_key'].length > 66)
         attrs['public_key'] = attrs['public_key'].substring(0, 66);
+    attrs.tenant = tenant;
     const createdContact = yield models_1.models.Contact.create(attrs);
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(contact));
@@ -159,20 +179,23 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createContact = createContact;
 const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const id = parseInt(req.params.id || '0');
-    if (!id || id === 1) {
+    if (!id || id === tenant) {
         res_1.failure(res, 'Cannot delete self');
         return;
     }
-    const contact = yield models_1.models.Contact.findOne({ where: { id } });
+    const contact = yield models_1.models.Contact.findOne({ where: { id, tenant } });
     if (!contact)
         return;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const tribesImAdminOf = yield models_1.models.Chat.findAll({ where: { ownerPubkey: owner.publicKey } });
+    const owner = req.owner;
+    const tribesImAdminOf = yield models_1.models.Chat.findAll({ where: { ownerPubkey: owner.publicKey, tenant } });
     const tribesIdArray = tribesImAdminOf && tribesImAdminOf.length && tribesImAdminOf.map(t => t.id);
     let okToDelete = true;
     if (tribesIdArray && tribesIdArray.length) {
-        const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { contactId: id, chatId: { [sequelize_1.Op.in]: tribesIdArray } } });
+        const thisContactMembers = yield models_1.models.ChatMember.findAll({ where: { contactId: id, chatId: { [sequelize_1.Op.in]: tribesIdArray }, tenant } });
         if (thisContactMembers && thisContactMembers.length) {
             // IS A MEMBER! dont delete, instead just set from_group=true
             okToDelete = false;
@@ -189,7 +212,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
     // find and destroy chat & messages
-    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false } });
+    const chats = yield models_1.models.Chat.findAll({ where: { deleted: false, tenant } });
     chats.map((chat) => __awaiter(void 0, void 0, void 0, function* () {
         if (chat.type === constants_1.default.chat_types.conversation) {
             const contactIds = JSON.parse(chat.contactIds);
@@ -200,42 +223,48 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     contactIds: '[]',
                     name: ''
                 });
-                yield models_1.models.Message.destroy({ where: { chatId: chat.id } });
+                yield models_1.models.Message.destroy({ where: { chatId: chat.id, tenant } });
             }
         }
     }));
-    yield models_1.models.Invite.destroy({ where: { contactId: id } });
-    yield models_1.models.Subscription.destroy({ where: { contactId: id } });
+    yield models_1.models.Invite.destroy({ where: { contactId: id, tenant } });
+    yield models_1.models.Subscription.destroy({ where: { contactId: id, tenant } });
     res_1.success(res, {});
 });
 exports.deleteContact = deleteContact;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('=> received contact key', JSON.stringify(payload));
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
+    const sender_route_hint = dat.sender.route_hint;
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';
     const sender_photo_url = dat.sender.photo_url;
+    const owner = payload.owner;
+    const tenant = owner.id;
+    console.log('=> received contact key from', sender_pub_key, tenant);
     if (!sender_pub_key) {
         return console.log("no pubkey!");
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
+    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed, tenant } });
     let msgIncludedContactKey = false; // ???????
     if (sender_contact_key) {
         msgIncludedContactKey = true;
     }
-    if (sender_contact_key && sender) {
-        const objToUpdate = { contactKey: sender_contact_key };
+    if (sender) {
+        const objToUpdate = {};
+        if (sender_contact_key)
+            objToUpdate.contactKey = sender_contact_key;
         if (sender_alias)
             objToUpdate.alias = sender_alias;
         if (sender_photo_url)
             objToUpdate.photoUrl = sender_photo_url;
-        yield sender.update(objToUpdate);
+        if (Object.keys(objToUpdate).length) {
+            yield sender.update(objToUpdate);
+        }
         socket.sendJson({
             type: 'contact',
             response: jsonUtils.contactToJson(sender)
-        });
+        }, tenant);
     }
     else {
         console.log("DID NOT FIND SENDER");
@@ -243,6 +272,7 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     if (msgIncludedContactKey) {
         helpers.sendContactKeys({
             contactPubKey: sender_pub_key,
+            routeHint: sender_route_hint,
             contactIds: sender ? [sender.id] : [],
             sender: owner,
             type: constants_1.default.message_types.contact_key_confirmation,
@@ -257,10 +287,12 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';
     const sender_photo_url = dat.sender.photo_url;
+    const owner = dat.owner;
+    const tenant = owner.id;
     if (!sender_pub_key) {
         return console.log("no pubkey!");
     }
-    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed } });
+    const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, status: constants_1.default.contact_statuses.confirmed, tenant } });
     if (sender_contact_key && sender) {
         const objToUpdate = { contactKey: sender_contact_key };
         if (sender_alias)
@@ -271,12 +303,12 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
         socket.sendJson({
             type: 'contact',
             response: jsonUtils.contactToJson(sender)
-        });
+        }, tenant);
     }
 });
 exports.receiveConfirmContactKey = receiveConfirmContactKey;
-const extractAttrs = body => {
-    let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount"];
+function extractAttrs(body) {
+    let fields_to_update = ["public_key", "node_alias", "alias", "photo_url", "device_id", "status", "contact_key", "from_group", "private_photo", "notification_sound", "tip_amount", "route_hint"];
     let attrs = {};
     Object.keys(body).forEach(key => {
         if (fields_to_update.includes(key)) {
@@ -284,5 +316,5 @@ const extractAttrs = body => {
         }
     });
     return attrs;
-};
+}
 //# sourceMappingURL=contacts.js.map

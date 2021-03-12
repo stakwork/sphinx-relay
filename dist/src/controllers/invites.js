@@ -14,6 +14,8 @@ const models_1 = require("../models");
 const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
 const hub_1 = require("../hub");
+// import * as proxy from '../utils/proxy'
+const res_1 = require("../utils/res");
 const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { invite_string } = req.body;
     const params = {
@@ -35,8 +37,11 @@ const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.finishInvite = finishInvite;
 const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const invite_string = req.params['invite_string'];
-    const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite_string } });
+    const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite_string, tenant } });
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
         // const invite = response.object
         // console.log("response", invite)
@@ -62,16 +67,20 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.end();
     };
     // payInviteInHub(invite_string, params, onSuccess, onFailure)
-    hub_1.payInviteInvoice(dbInvite.invoice, onSuccess, onFailure);
+    hub_1.payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure);
 });
 exports.payInvite = payInvite;
 const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const { nickname, welcome_message } = req.body;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     const params = {
         invite: {
             nickname: owner.alias,
             pubkey: owner.publicKey,
+            route_hint: owner.routeHint,
             contact_nickname: nickname,
             message: welcome_message,
             pin: crypto.randomBytes(20).toString('hex')
@@ -82,13 +91,15 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const inviteCreated = response.object;
         const contact = yield models_1.models.Contact.create({
             alias: nickname,
-            status: 0
+            status: 0,
+            tenant
         });
         const invite = yield models_1.models.Invite.create({
             welcomeMessage: inviteCreated.message,
             contactId: contact.id,
             status: inviteCreated.invite_status,
             inviteString: inviteCreated.pin,
+            tenant,
         });
         let contactJson = jsonUtils.contactToJson(contact);
         if (invite) {

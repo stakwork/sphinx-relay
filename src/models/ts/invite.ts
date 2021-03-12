@@ -14,7 +14,7 @@ export default class Invite extends Model<Invite> {
   @Column
   inviteString: string
 
-  @Column
+  @Column(DataType.TEXT)
   invoice: string
 
   @Column
@@ -34,5 +34,8 @@ export default class Invite extends Model<Invite> {
 
   @Column
   updatedAt: Date
+
+  @Column
+  tenant: number
 
 }

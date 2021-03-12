@@ -20,17 +20,19 @@ const nodeinfo_1 = require("./nodeinfo");
 const connect_1 = require("./connect");
 const config_1 = require("./config");
 const migrate_1 = require("./migrate");
+const proxy_1 = require("../utils/proxy");
 const USER_VERSION = 7;
 const config = config_1.loadConfig();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('=> [db] starting setup...');
     yield setVersion();
+    console.log('=> [db] sync now');
     try {
         yield models_1.sequelize.sync();
         console.log("=> [db] done syncing");
     }
     catch (e) {
-        // console.log("db sync failed", e)
+        console.log("[db] sync failed", e);
     }
     yield migrate_1.default();
     console.log('=> [db] setup done');
@@ -42,12 +44,12 @@ function setVersion() {
             yield models_1.sequelize.query(`PRAGMA user_version = ${USER_VERSION}`);
         }
         catch (e) {
-            console.log('=> setVersion failed', e);
+            console.log('=> [db] setVersion failed');
         }
     });
 }
 const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
     if (!owner) {
         const lightning = yield lightning_1.loadLightning();
         lightning.getInfo({}, (err, info) => __awaiter(void 0, void 0, void 0, function* () {
@@ -56,13 +58,23 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
             }
             else {
                 try {
-                    const one = yield models_1.models.Contact.findOne({ where: { id: 1 } });
+                    const one = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
                     if (!one) {
+                        let authToken = null;
+                        let tenant = null;
+                        // dont allow "signup" on root contact of proxy node
+                        if (proxy_1.isProxy()) {
+                            authToken = '_';
+                        }
+                        else {
+                            tenant = 1; // add tenant here
+                        }
                         const contact = yield models_1.models.Contact.create({
                             id: 1,
                             publicKey: info.identity_pubkey,
                             isOwner: true,
-                            authToken: null
+                            authToken,
+                            tenant
                         });
                         console.log('[db] created node owner contact, id:', contact.id);
                     }

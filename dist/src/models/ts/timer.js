@@ -41,6 +41,10 @@ __decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
 ], Timer.prototype, "amount", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Timer.prototype, "tenant", void 0);
 Timer = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_timers', underscored: true })
 ], Timer);

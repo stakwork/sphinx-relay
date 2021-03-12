@@ -17,10 +17,11 @@ const socket = require("./utils/socket");
 const jsonUtils = require("./utils/json");
 const helpers = require("./helpers");
 const nodeinfo_1 = require("./utils/nodeinfo");
-const lightning_1 = require("./utils/lightning");
+const LND = require("./utils/lightning");
 const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
 const https = require("https");
+const proxy_1 = require("./utils/proxy");
 const pingAgent = new https.Agent({
     keepAlive: true
 });
@@ -33,7 +34,6 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
     if (env != "production") {
         return;
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     //console.log('[hub] checking invites ping')
     const inviteStrings = yield models_1.models.Invite.findAll({ where: { status: { [sequelize_1.Op.notIn]: [constants_1.default.invite_statuses.complete, constants_1.default.invite_statuses.expired] } } }).map(invite => invite.inviteString);
     if (inviteStrings.length === 0) {
@@ -51,9 +51,11 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
             json.object.invites.map((object) => __awaiter(void 0, void 0, void 0, function* () {
                 const invite = object.invite;
                 const pubkey = object.pubkey;
+                const routeHint = object.route_hint;
                 const price = object.price;
                 const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite.pin } });
                 const contact = yield models_1.models.Contact.findOne({ where: { id: dbInvite.contactId } });
+                const owner = yield models_1.models.Contact.findOne({ where: { id: dbInvite.tenant } });
                 if (dbInvite.status != invite.invite_status) {
                     const updateObj = { status: invite.invite_status, price: price };
                     if (invite.invoice)
@@ -62,19 +64,22 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     socket.sendJson({
                         type: 'invite',
                         response: jsonUtils.inviteToJson(dbInvite)
-                    });
+                    }, owner.id);
                     if (dbInvite.status == constants_1.default.invite_statuses.ready && contact) {
-                        sendNotification(-1, contact.alias, 'invite');
+                        sendNotification(-1, contact.alias, 'invite', owner);
                     }
                 }
                 if (pubkey && dbInvite.status == constants_1.default.invite_statuses.complete && contact) {
-                    contact.update({ publicKey: pubkey, status: constants_1.default.contact_statuses.confirmed });
+                    const updateObj = { publicKey: pubkey, status: constants_1.default.contact_statuses.confirmed };
+                    if (routeHint)
+                        updateObj.routeHint = routeHint;
+                    contact.update(updateObj);
                     var contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
                         type: 'contact',
                         response: contactJson
-                    });
+                    }, owner.id);
                     helpers.sendContactKeys({
                         contactIds: [contact.id],
                         sender: owner,
@@ -94,19 +99,39 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
     }
     const node = yield nodeinfo_1.nodeinfo();
     sendHubCall(Object.assign(Object.assign({}, params), { node }));
+    if (proxy_1.isProxy()) { // send all "clean" nodes
+        massPingHubFromProxies(node);
+    }
 });
-function sendHubCall(params) {
+function massPingHubFromProxies(rn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const owners = yield models_1.models.Contact.findAll({ where: {
+                isOwner: true,
+                id: { [sequelize_1.Op.ne]: 1 }
+            } });
+        const nodes = [];
+        yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
+            const proxyNodeInfo = yield nodeinfo_1.proxynodeinfo(o.publicKey);
+            const clean = o.authToken === null || o.authToken === '';
+            nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet, ip: rn.ip, public_ip: rn.public_ip, node_alias: rn.node_alias }));
+        }));
+        sendHubCall({ nodes }, true);
+    });
+}
+function sendHubCall(body, mass) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(config.hub_api_url + '/ping', {
+            // console.log("=> PING BODY", body)
+            const r = yield node_fetch_1.default(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
                 agent: pingAgent,
                 method: 'POST',
-                body: JSON.stringify(params),
+                body: JSON.stringify(body),
                 headers: { 'Content-Type': 'application/json' }
             });
             const j = yield r.json();
+            // console.log("=> PING RESPONSE", j)
             if (!(j && j.status && j.status === 'ok')) {
-                console.log('[hub] ping returned not ok');
+                console.log('[hub] ping returned not ok', j);
             }
         }
         catch (e) {
@@ -171,17 +196,15 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
     });
 };
 exports.payInviteInHub = payInviteInHub;
-function payInviteInvoice(invoice, onSuccess, onFailure) {
+function payInviteInvoice(invoice, pubkey, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
-        const lightning = yield lightning_1.loadLightning();
-        var call = lightning.sendPayment({});
-        call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
-            onSuccess(response);
-        }));
-        call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
-            onFailure(err);
-        }));
-        call.write({ payment_request: invoice });
+        try {
+            const res = LND.sendPayment(invoice, pubkey);
+            onSuccess(res);
+        }
+        catch (e) {
+            onFailure(e);
+        }
     });
 }
 exports.payInviteInvoice = payInviteInvoice;
@@ -220,7 +243,9 @@ function getAppVersionsFromHub() {
     });
 }
 exports.getAppVersionsFromHub = getAppVersionsFromHub;
-const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0, void 0, function* () {
+const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!owner)
+        return console.log('=> sendNotification error: no owner');
     let message = `You have a new message from ${name}`;
     if (type === 'invite') {
         message = `Your invite to ${name} is ready`;
@@ -245,7 +270,6 @@ const sendNotification = (chat, name, type, amount) => __awaiter(void 0, void 0,
             message += ` in ${chat.name}`;
         }
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
     if (!owner.deviceId) {
         console.log('[send notification] skipping. owner.deviceId not set.');
         return;
@@ -288,7 +312,8 @@ function finalNotification(ownerID, params) {
             where: {
                 sender: { [sequelize_1.Op.ne]: ownerID },
                 seen: false,
-                chatId: { [sequelize_1.Op.ne]: 0 } // no anon keysends
+                chatId: { [sequelize_1.Op.ne]: 0 },
+                tenant: ownerID
             }
         });
         params.notification.badge = unseenMessages;
@@ -327,5 +352,12 @@ function debounce(func, id, delay) {
         // setTimeout(()=> tribeCounts[id]=0, 15)
         tribeCounts[id] = 0;
     }, delay);
+}
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
 }
 //# sourceMappingURL=hub.js.map

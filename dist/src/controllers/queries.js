@@ -21,6 +21,7 @@ const jsonUtils = require("../utils/json");
 const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
 const helpers = require("../helpers");
+const proxy_1 = require("../utils/proxy");
 let queries = {};
 const POLL_MINS = 10;
 let hub_pubkey = '';
@@ -30,7 +31,7 @@ function get_hub_pubkey() {
         const r = yield node_fetch_1.default(hub_url + '/routingnode');
         const j = yield r.json();
         if (j && j.pubkey) {
-            console.log("=> GOT HUB PUBKEY", j.pubkey);
+            // console.log("=> GOT HUB PUBKEY", j.pubkey)
             hub_pubkey = j.pubkey;
         }
     });
@@ -138,6 +139,8 @@ function genChannelAndConfirmAccounting(acc) {
 }
 function pollUTXOs() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (proxy_1.isProxy())
+            return; // not on proxy for now???
         // console.log("[WATCH]=> pollUTXOs")
         const accs = yield getPendingAccountings();
         if (!accs)
@@ -195,6 +198,7 @@ function checkChannelsAndKeysend(rec) {
                 helpers.performKeysendMessage({
                     sender: owner,
                     destination_key: rec.pubkey,
+                    route_hint: rec.routeHint,
                     amount, msg,
                     success: function () {
                         console.log('[WATCH] complete! Updating accounting, id:', rec.id);
@@ -220,11 +224,14 @@ function startWatchingUTXOs() {
 exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        // const tenant:number = req.owner.id
         console.log('=> queryOnchainAddress');
         if (!hub_pubkey)
             return console.log("=> NO ROUTING NODE PUBKEY SET");
         const uuid = short.generate();
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = req.owner;
         const app = req.params.app;
         const query = {
             type: 'onchain_address',
@@ -239,11 +246,11 @@ function queryOnchainAddress(req, res) {
                 message: {
                     content: JSON.stringify(query)
                 },
-                sender: { pub_key: owner.publicKey }
+                sender: Object.assign({ pub_key: owner.publicKey }, owner.routeHint && { route_hint: owner.routeHint })
             }
         };
         try {
-            yield network.signAndSend(opts);
+            yield network.signAndSend(opts, owner);
         }
         catch (e) {
             res_1.failure(res, e);
@@ -272,7 +279,9 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
     const content = dat.message.content;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = dat.owner;
+    const sender_route_hint = dat.sender.route_hint;
+    // const tenant:number = owner.id
     if (!sender_pub_key || !content || !owner) {
         return console.log('=> wrong query format');
     }
@@ -297,6 +306,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
                 sourceApp: q.app,
                 status: constants_1.default.statuses.pending,
                 error: '',
+                routeHint: sender_route_hint
             };
             yield models_1.models.Accounting.create(acc);
             result = addy;
@@ -310,6 +320,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     const opts = {
         amt: constants_1.default.min_sat_amount,
         dest: sender_pub_key,
+        route_hint: sender_route_hint,
         data: {
             type: constants_1.default.message_types.query_response,
             message: {
@@ -319,7 +330,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         }
     };
     try {
-        yield network.signAndSend(opts);
+        yield network.signAndSend(opts, owner);
     }
     catch (e) {
         console.log("FAILED TO SEND QUERY_RESPONSE");

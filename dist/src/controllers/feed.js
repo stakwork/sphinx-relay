@@ -15,6 +15,9 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const { destinations, amount, chat_id, text, update_meta, } = req.body;
     if (!(destinations && destinations.length)) {
         return res_1.failure(res, 'no destinations');
@@ -35,14 +38,14 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 sats_per_minute: amount || 0,
                 speed: meta.speed || '1'
             };
-            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
             if (!chat) {
                 return res_1.failure(res, 'no chat');
             }
             yield chat.update({ meta: JSON.stringify(cm) });
         }
     }
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     if (amount && typeof amount === 'number') {
         yield asyncForEach(destinations, (d) => __awaiter(void 0, void 0, void 0, function* () {
             if (d.type === 'node') {
@@ -53,15 +56,16 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 if (d.address === owner.publicKey)
                     return; // dont send to self
                 const amt = Math.max(Math.round((d.split / 100) * amount), 1);
-                yield anonymousKeysend(owner, d.address, amt, text, function () { }, function () { });
+                yield anonymousKeysend(owner, d.address, d.routeHint, amt, text, function () { }, function () { });
             }
         }));
     }
     res_1.success(res, {});
 });
 exports.streamFeed = streamFeed;
-function anonymousKeysend(owner, destination_key, amount, text, onSuccess, onFailure) {
+function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
+        const tenant = owner.id;
         const msg = {
             type: constants_1.default.message_types.keysend,
         };
@@ -70,6 +74,7 @@ function anonymousKeysend(owner, destination_key, amount, text, onSuccess, onFai
         return helpers.performKeysendMessage({
             sender: owner,
             destination_key,
+            route_hint,
             amount,
             msg,
             success: () => {
@@ -87,7 +92,8 @@ function anonymousKeysend(owner, destination_key, amount, text, onSuccess, onFai
                     messageContent: text || '',
                     status: constants_1.default.statuses.confirmed,
                     createdAt: date,
-                    updatedAt: date
+                    updatedAt: date,
+                    tenant
                 });
                 onSuccess({ destination_key, amount });
             },

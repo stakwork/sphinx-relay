@@ -23,11 +23,14 @@ const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { amount, chat_id, contact_id, destination_key, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
+    const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
-        feed_1.anonymousKeysend(owner, destination_key, amount || '', text || '', function (body) {
+        feed_1.anonymousKeysend(owner, destination_key, route_hint, amount || '', text || '', function (body) {
             res_1.success(res, body);
         }, function (error) {
             res.status(200);
@@ -54,6 +57,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         createdAt: date,
         updatedAt: date,
         network_type: constants_1.default.network_types.lightning,
+        tenant
     };
     if (text)
         msg.messageContent = text;
@@ -65,7 +69,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const myMediaToken = yield ldat_1.tokenFromTerms({
             meta: { dim: dimensions }, host: '',
             muid, ttl: null,
-            pubkey: owner.publicKey
+            pubkey: owner.publicKey,
+            ownerPubkey: owner.publicKey,
         });
         msg.mediaToken = myMediaToken;
         msg.mediaType = media_type || '';
@@ -122,6 +127,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
@@ -132,7 +138,8 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         date: date,
         createdAt: date,
         updatedAt: date,
-        network_type
+        network_type,
+        tenant
     };
     if (content)
         msg.messageContent = content;
@@ -151,11 +158,14 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     socket.sendJson({
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
+    }, tenant);
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const MIN_VAL = constants_1.default.min_sat_amount;
@@ -189,6 +199,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed }
                     }
                 ],
+                tenant
             },
             order: [['createdAt', 'desc']],
             limit,

@@ -54,8 +54,10 @@ function startCronJob(sub) {
                     delete jobs[subscription.id];
                     return this.stop();
                 }
+                const tenant = subscription.tenant;
+                const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
                 // SEND PAYMENT!!!
-                sendSubscriptionPayment(subscription, false);
+                sendSubscriptionPayment(subscription, false, owner);
             });
         }, null, true);
     });
@@ -109,16 +111,16 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
     }
     return text;
 }
-function sendSubscriptionPayment(sub, isFirstMessage) {
+function sendSubscriptionPayment(sub, isFirstMessage, owner) {
     return __awaiter(this, void 0, void 0, function* () {
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const tenant = owner.id;
         var date = new Date();
         date.setMilliseconds(0);
-        const subscription = yield models_1.models.Subscription.findOne({ where: { id: sub.id } });
+        const subscription = yield models_1.models.Subscription.findOne({ where: { id: sub.id, tenant } });
         if (!subscription) {
             return;
         }
-        const chat = yield models_1.models.Chat.findOne({ where: { id: subscription.chatId } });
+        const chat = yield models_1.models.Chat.findOne({ where: { id: subscription.chatId, tenant } });
         if (!subscription) {
             console.log("=> no sub for this payment!!!");
             return;
@@ -162,11 +164,12 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
                     createdAt: date,
                     updatedAt: date,
                     subscriptionId: subscription.id,
+                    tenant
                 });
                 socket.sendJson({
                     type: 'direct_payment',
                     response: jsonUtils.messageToJson(message, chat)
-                });
+                }, tenant);
             }),
             failure: (err) => __awaiter(this, void 0, void 0, function* () {
                 console.log("SEND PAY ERROR");
@@ -184,11 +187,12 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
                     createdAt: date,
                     updatedAt: date,
                     subscriptionId: sub.id,
+                    tenant
                 });
                 socket.sendJson({
                     type: 'direct_payment',
                     response: jsonUtils.messageToJson(message, chat)
-                });
+                }, tenant);
             })
         });
     });
@@ -196,9 +200,12 @@ function sendSubscriptionPayment(sub, isFirstMessage) {
 // pause sub
 function pauseSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id } });
+            const sub = yield models_1.models.Subscription.findOne({ where: { id, tenant } });
             if (sub) {
                 sub.update({ paused: true });
                 if (jobs[id])
@@ -220,9 +227,12 @@ exports.pauseSubscription = pauseSubscription;
 // restart sub
 function restartSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id } });
+            const sub = yield models_1.models.Subscription.findOne({ where: { id, tenant } });
             if (sub) {
                 sub.update({ paused: false });
                 if (jobs[id])
@@ -255,8 +265,11 @@ function getRawSubs(opts = {}) {
 }
 // all subs
 const getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     try {
-        const subs = yield getRawSubs();
+        const subs = yield getRawSubs({ where: { tenant } });
         res_1.success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)));
     }
     catch (e) {
@@ -268,8 +281,11 @@ exports.getAllSubscriptions = getAllSubscriptions;
 // one sub by id
 function getSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        const tenant = req.owner.id;
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id: req.params.id } });
+            const sub = yield models_1.models.Subscription.findOne({ where: { id: req.params.id, tenant } });
             res_1.success(res, jsonUtils.subscriptionToJson(sub, null));
         }
         catch (e) {
@@ -283,6 +299,9 @@ exports.getSubscription = getSubscription;
 // delete sub by id
 function deleteSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        const tenant = req.owner.id;
         const id = req.params.id;
         if (!id)
             return;
@@ -291,7 +310,7 @@ function deleteSubscription(req, res) {
                 jobs[id].stop();
                 delete jobs[id];
             }
-            models_1.models.Subscription.destroy({ where: { id } });
+            models_1.models.Subscription.destroy({ where: { id, tenant } });
             res_1.success(res, true);
         }
         catch (e) {
@@ -304,8 +323,11 @@ exports.deleteSubscription = deleteSubscription;
 ;
 // all subs for contact id
 const getSubscriptionsForContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     try {
-        const subs = yield getRawSubs({ where: { contactId: req.params.contactId } });
+        const subs = yield getRawSubs({ where: { contactId: req.params.contactId, tenant } });
         res_1.success(res, subs.map(sub => jsonUtils.subscriptionToJson(sub, null)));
     }
     catch (e) {
@@ -317,14 +339,17 @@ exports.getSubscriptionsForContact = getSubscriptionsForContact;
 // create new sub
 function createSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        const tenant = req.owner.id;
         const date = new Date();
         date.setMilliseconds(0);
-        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, total_paid: 0, createdAt: date, ended: false, paused: false }));
+        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, total_paid: 0, createdAt: date, ended: false, paused: false, tenant }));
         if (!s.cron) {
             return res_1.failure(res, 'Invalid interval');
         }
         try {
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            const owner = req.owner;
             const chat = yield helpers.findOrCreateChat({
                 chat_id: req.body.chat_id,
                 owner_id: owner.id,
@@ -337,7 +362,7 @@ function createSubscription(req, res) {
             const sub = yield models_1.models.Subscription.create(s);
             startCronJob(sub);
             const isFirstMessage = true;
-            sendSubscriptionPayment(sub, isFirstMessage);
+            sendSubscriptionPayment(sub, isFirstMessage, owner);
             res_1.success(res, jsonUtils.subscriptionToJson(sub, chat));
         }
         catch (e) {
@@ -350,11 +375,14 @@ exports.createSubscription = createSubscription;
 ;
 function editSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        const tenant = req.owner.id;
         console.log('=> editSubscription');
         const date = new Date();
         date.setMilliseconds(0);
         const id = parseInt(req.params.id);
-        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, createdAt: date, ended: false, paused: false }));
+        const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, createdAt: date, ended: false, paused: false, tenant }));
         try {
             if (!id || !s.chatId || !s.cron) {
                 return res_1.failure(res, 'Invalid data');
@@ -385,7 +413,7 @@ function editSubscription(req, res) {
             else {
                 startCronJob(sub); // restart
             }
-            const chat = yield models_1.models.Chat.findOne({ where: { id: s.chatId } });
+            const chat = yield models_1.models.Chat.findOne({ where: { id: s.chatId, tenant } });
             res_1.success(res, jsonUtils.subscriptionToJson(sub, chat));
         }
         catch (e) {

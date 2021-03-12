@@ -14,141 +14,135 @@ exports.init = void 0;
 const Sphinx = require("sphinx-bot");
 const api_1 = require("../controllers/api");
 const bots_1 = require("../controllers/bots");
-const WelcomeBot = require("./welcome");
-const LoopBot = require("./loop");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
+const tribes_1 = require("../utils/tribes");
 const msg_types = Sphinx.MSG_TYPE;
 const config = config_1.loadConfig();
-const builtinBots = [
-    'welcome', 'loopout'
-];
+const builtinBots = ["welcome", "loopout"];
 const builtInBotMsgTypes = {
-    'welcome': [
+    welcome: [
         constants_1.default.message_types.message,
-        constants_1.default.message_types.group_join
+        constants_1.default.message_types.group_join,
     ],
 };
 const builtInBotNames = {
-    welcome: 'WelcomeBot',
-    loopout: 'LoopBot',
+    welcome: "WelcomeBot",
+    loopout: "LoopBot",
 };
 function init() {
+    console.log("MOTHERBOT INIT");
     const client = new Sphinx.Client();
-    client.login('_', api_1.finalAction);
+    client.login("_", api_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        const arr = (message.content && message.content.split(' ')) || [];
+        // console.log("MOTHERBOT GOT A MESSAGE", message);
+        const arr = (message.content && message.content.split(" ")) || [];
         if (arr.length < 2)
             return;
-        if (arr[0] !== '/bot')
+        if (arr[0] !== "/bot")
             return;
         const cmd = arr[1];
-        const isAdmin = message.member.roles.find(role => role.name === 'Admin');
+        const isAdmin = message.member.roles.find((role) => role.name === "Admin");
         if (!isAdmin)
             return;
         switch (cmd) {
-            case 'install':
+            case "install":
                 if (arr.length < 3)
                     return;
                 const botName = arr[2];
                 if (builtinBots.includes(botName)) {
-                    console.log("INSTALL", botName);
-                    const chat = yield models_1.models.Chat.findOne({
-                        where: {
-                            uuid: message.channel.id
-                        }
-                    });
-                    if (!chat)
-                        return;
+                    console.log("mombot INSTALL", botName);
+                    const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                    if (!(chat && chat.id))
+                        return console.log("=> motherbot no chat");
                     const existing = yield models_1.models.ChatBot.findOne({
                         where: {
-                            chatId: chat.id, botPrefix: '/' + botName,
-                        }
+                            chatId: chat.id,
+                            botPrefix: "/" + botName,
+                            tenant: chat.tenant,
+                        },
                     });
                     if (existing) {
                         const embed = new Sphinx.MessageEmbed()
-                            .setAuthor('MotherBot')
-                            .setDescription(botName + ' already installed');
+                            .setAuthor("MotherBot")
+                            .setDescription(botName + " already installed");
                         return message.channel.send({ embed });
                     }
                     const msgTypes = builtInBotMsgTypes[botName] || [
-                        constants_1.default.message_types.message
+                        constants_1.default.message_types.message,
                     ];
                     const chatBot = {
                         chatId: chat.id,
-                        botPrefix: '/' + botName,
+                        botPrefix: "/" + botName,
                         botType: constants_1.default.bot_types.builtin,
                         msgTypes: JSON.stringify(msgTypes),
                         pricePerUse: 0,
+                        tenant: chat.tenant,
                     };
                     yield models_1.models.ChatBot.create(chatBot);
-                    if (botName === 'welcome') {
-                        WelcomeBot.init();
-                    }
-                    if (botName === 'loopout') {
-                        LoopBot.init();
-                    }
-                    const theName = builtInBotNames[botName] || 'Bot';
+                    // if (botName === 'welcome') {
+                    //   WelcomeBot.init()
+                    // }
+                    // if (botName === 'loopout') {
+                    //   LoopBot.init()
+                    // }
+                    const theName = builtInBotNames[botName] || "Bot";
                     const embed = new Sphinx.MessageEmbed()
-                        .setAuthor('MotherBot')
-                        .setDescription(theName + ' has been installed!');
+                        .setAuthor("MotherBot")
+                        .setDescription(theName + " has been installed!");
                     message.channel.send({ embed });
                 }
                 else {
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
-                        console.log('=> FOUND BOT', bot.unique_name);
-                        const chat = yield models_1.models.Chat.findOne({
-                            where: {
-                                uuid: message.channel.id
-                            }
-                        });
-                        if (!chat)
-                            return;
+                        console.log("=> FOUND BOT", bot.unique_name);
+                        const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                        if (!(chat && chat.id))
+                            return console.log("=> motherbot no chat");
                         bots_1.installBotAsTribeAdmin(chat.dataValues, bot);
                     }
                     else {
                         const embed = new Sphinx.MessageEmbed()
-                            .setAuthor('MotherBot')
-                            .setDescription('No bot with that name');
+                            .setAuthor("MotherBot")
+                            .setDescription("No bot with that name");
                         message.channel.send({ embed });
                     }
                 }
                 return true;
-            case 'search':
+            case "search":
                 if (arr.length < 2)
                     return;
                 const query = arr[2];
                 const bots = yield searchBots(query);
                 if (bots.length === 0) {
                     const embed = new Sphinx.MessageEmbed()
-                        .setAuthor('MotherBot')
-                        .setDescription('No bots found');
+                        .setAuthor("MotherBot")
+                        .setDescription("No bots found");
                     return message.channel.send({ embed });
                 }
                 const embed3 = new Sphinx.MessageEmbed()
-                    .setAuthor('MotherBot')
-                    .setTitle('Bots:')
-                    .addFields(bots.map(b => {
+                    .setAuthor("MotherBot")
+                    .setTitle("Bots:")
+                    .addFields(bots.map((b) => {
                     const maxLength = 35;
-                    const value = b.description.length > maxLength ?
-                        b.description.substr(0, maxLength) + '...' :
-                        b.description;
-                    return ({ name: b.unique_name, value });
+                    const value = b.description.length > maxLength
+                        ? b.description.substr(0, maxLength) + "..."
+                        : b.description;
+                    return { name: b.unique_name, value };
                 }))
                     .setThumbnail(botSVG);
                 message.channel.send({ embed: embed3 });
                 return true;
             default:
                 const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('MotherBot')
-                    .setTitle('Bot Commands:')
+                    .setAuthor("MotherBot")
+                    .setTitle("Bot Commands:")
                     .addFields([
-                    { name: 'Install a new bot', value: '/bot install {BOTNAME}' },
-                    { name: 'Search for bots', value: '/bot search {SEARCH_TERM}' },
-                    { name: 'Help', value: '/bot help' }
+                    { name: "Install a new bot", value: "/bot install {BOTNAME}" },
+                    { name: "Search for bots", value: "/bot search {SEARCH_TERM}" },
+                    { name: "Help", value: "/bot help" },
                 ])
                     .setThumbnail(botSVG);
                 message.channel.send({ embed });

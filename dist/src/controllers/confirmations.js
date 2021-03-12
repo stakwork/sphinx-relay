@@ -22,7 +22,7 @@ const res_1 = require("../utils/res");
  UNLESS tribe admin:
    then send only to the og sender
 */
-function sendConfirmation({ chat, sender, msg_id, receiver }) {
+function sendConfirmation({ chat, sender, msg_id, receiver, }) {
     if (!msg_id || !chat || !sender)
         return;
     let theChat = chat;
@@ -30,7 +30,7 @@ function sendConfirmation({ chat, sender, msg_id, receiver }) {
     const isTribeOwner = isTribe && (sender && sender.publicKey) === (chat && chat.ownerPubkey);
     if (isTribe && !isTribeOwner)
         return; // DONT SEND IF NORMAL MEMBER
-    if (isTribeOwner && (receiver && receiver.id)) {
+    if (isTribeOwner && receiver && receiver.id) {
         theChat = Object.assign(Object.assign({}, (chat.dataValues || chat)), { contactIds: [receiver.id] });
     }
     network.sendMessage({
@@ -43,41 +43,49 @@ function sendConfirmation({ chat, sender, msg_id, receiver }) {
 exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> received confirmation', (payload.message && payload.message.id));
+        console.log("=> received confirmation", payload.message && payload.message.id);
         const dat = payload.content || payload;
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;
         const sender_pub_key = dat.sender.pub_key;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
-        const sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key } });
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        const owner = dat.owner;
+        const tenant = owner.id;
+        const sender = yield models_1.models.Contact.findOne({
+            where: { publicKey: sender_pub_key, tenant },
+        });
+        const chat = yield models_1.models.Chat.findOne({
+            where: { uuid: chat_uuid, tenant },
+        });
         // new confirmation logic
         if (msg_id) {
-            lock_1.default.acquire('confirmation', function (done) {
+            lock_1.default.acquire("confirmation", function (done) {
                 return __awaiter(this, void 0, void 0, function* () {
                     // console.log("update status map")
-                    const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
+                    const message = yield models_1.models.Message.findOne({
+                        where: { id: msg_id, tenant },
+                    });
                     if (message) {
                         let statusMap = {};
                         try {
-                            statusMap = JSON.parse(message.statusMap || '{}');
+                            statusMap = JSON.parse(message.statusMap || "{}");
                         }
                         catch (e) { }
                         statusMap[sender.id] = constants_1.default.statuses.received;
                         yield message.update({
                             status: constants_1.default.statuses.received,
-                            statusMap: JSON.stringify(statusMap)
+                            statusMap: JSON.stringify(statusMap),
                         });
                         socket.sendJson({
-                            type: 'confirmation',
-                            response: jsonUtils.messageToJson(message, chat, sender)
-                        });
+                            type: "confirmation",
+                            response: jsonUtils.messageToJson(message, chat, sender),
+                        }, tenant);
                     }
                     done();
                 });
             });
         }
-        else { // old logic
+        else {
+            // old logic
             const messages = yield models_1.models.Message.findAll({
                 limit: 1,
                 where: {
@@ -89,68 +97,76 @@ function receiveConfirmation(payload) {
                         constants_1.default.message_types.attachment,
                     ],
                     status: constants_1.default.statuses.pending,
+                    tenant,
                 },
-                order: [['createdAt', 'desc']]
+                order: [["createdAt", "desc"]],
             });
             const message = messages[0];
             message.update({ status: constants_1.default.statuses.received });
             socket.sendJson({
-                type: 'confirmation',
-                response: jsonUtils.messageToJson(message, chat, sender)
-            });
+                type: "confirmation",
+                response: jsonUtils.messageToJson(message, chat, sender),
+            }, tenant);
         }
     });
 }
 exports.receiveConfirmation = receiveConfirmation;
-function tribeOwnerAutoConfirmation(msg_id, chat_uuid) {
+function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!msg_id || !chat_uuid)
             return;
-        const message = yield models_1.models.Message.findOne({ where: { id: msg_id } });
-        const chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid } });
+        const message = yield models_1.models.Message.findOne({
+            where: { id: msg_id, tenant },
+        });
+        const chat = yield models_1.models.Chat.findOne({
+            where: { uuid: chat_uuid, tenant },
+        });
         if (message) {
             let statusMap = {};
             try {
-                statusMap = JSON.parse(message.statusMap || '{}');
+                statusMap = JSON.parse(message.statusMap || "{}");
             }
             catch (e) { }
-            statusMap['chat'] = constants_1.default.statuses.received;
+            statusMap["chat"] = constants_1.default.statuses.received;
             yield message.update({
                 status: constants_1.default.statuses.received,
-                statusMap: JSON.stringify(statusMap)
+                statusMap: JSON.stringify(statusMap),
             });
             socket.sendJson({
-                type: 'confirmation',
-                response: jsonUtils.messageToJson(message, chat, null)
-            });
+                type: "confirmation",
+                response: jsonUtils.messageToJson(message, chat, null),
+            }, tenant);
         }
     });
 }
 exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
 function receiveHeartbeat(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> received heartbeat');
+        console.log("=> received heartbeat");
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
+        const sender_route_hint = dat.sender.route_hint;
         const receivedAmount = dat.message.amount;
+        const owner = dat.owner;
+        // const tenant:number = owner.id
         if (!(sender_pub_key && sender_pub_key.length === 66))
-            return console.log('no sender');
+            return console.log("no sender");
         if (!receivedAmount)
-            return console.log('no amount');
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            return console.log("no amount");
         const amount = Math.round(receivedAmount / 2);
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
             amt,
             dest: sender_pub_key,
+            route_hint: sender_route_hint || "",
             data: {
                 type: constants_1.default.message_types.heartbeat_confirmation,
                 message: { amount: amt },
-                sender: { pub_key: owner.publicKey }
-            }
+                sender: { pub_key: owner.publicKey },
+            },
         };
         try {
-            yield network.signAndSend(opts);
+            yield network.signAndSend(opts, owner);
             return true;
         }
         catch (e) {
@@ -162,25 +178,30 @@ exports.receiveHeartbeat = receiveHeartbeat;
 let heartbeats = {};
 function healthcheck(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        // const tenant:number = req.owner.id
         const pubkey = req.query.pubkey;
         if (!(pubkey && pubkey.length === 66)) {
-            return res_1.failure200(res, 'missing pubkey');
+            return res_1.failure200(res, "missing pubkey");
         }
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const routeHint = req.query.route_hint;
+        const owner = req.owner;
         const amt = 10;
         const opts = {
             amt,
             dest: pubkey,
+            route_hint: routeHint || "",
             data: {
                 type: constants_1.default.message_types.heartbeat,
                 message: {
                     amount: amt,
                 },
-                sender: { pub_key: owner.publicKey }
-            }
+                sender: { pub_key: owner.publicKey },
+            },
         };
         try {
-            yield network.signAndSend(opts);
+            yield network.signAndSend(opts, owner);
         }
         catch (e) {
             res_1.failure200(res, e);
@@ -191,11 +212,11 @@ function healthcheck(req, res) {
             if (i >= 15) {
                 clearInterval(interval);
                 delete heartbeats[pubkey];
-                res_1.failure200(res, 'no confimration received');
+                res_1.failure200(res, "no confimration received");
                 return;
             }
             if (heartbeats[pubkey]) {
-                res_1.success(res, 'success');
+                res_1.success(res, "success");
                 clearInterval(interval);
                 delete heartbeats[pubkey];
                 return;
@@ -207,7 +228,7 @@ function healthcheck(req, res) {
 exports.healthcheck = healthcheck;
 function receiveHeartbeatConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> received heartbeat confirmation');
+        console.log("=> received heartbeat confirmation");
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         heartbeats[sender_pub_key] = true;

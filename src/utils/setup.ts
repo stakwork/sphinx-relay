@@ -8,6 +8,7 @@ import { isClean } from './nodeinfo'
 import { getQR } from './connect'
 import { loadConfig } from './config'
 import migrate from './migrate'
+import {isProxy} from '../utils/proxy'
 
 const USER_VERSION = 7
 const config = loadConfig()
@@ -15,11 +16,12 @@ const config = loadConfig()
 const setupDatabase = async () => {
   console.log('=> [db] starting setup...')
   await setVersion()
+  console.log('=> [db] sync now')
   try {
     await sequelize.sync()
     console.log("=> [db] done syncing")
   } catch (e) {
-    // console.log("db sync failed", e)
+    console.log("[db] sync failed", e)
   }
   await migrate()
   console.log('=> [db] setup done')
@@ -29,12 +31,12 @@ async function setVersion() {
   try {
     await sequelize.query(`PRAGMA user_version = ${USER_VERSION}`)
   } catch (e) {
-    console.log('=> setVersion failed', e)
+    console.log('=> [db] setVersion failed')
   }
 }
 
 const setupOwnerContact = async () => {
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = await models.Contact.findOne({ where: { isOwner: true, id:1 } })
   if (!owner) {
     const lightning = await loadLightning()
     lightning.getInfo({}, async (err, info) => {
@@ -42,13 +44,22 @@ const setupOwnerContact = async () => {
         console.log('[db] error creating node owner due to lnd failure', err)
       } else {
         try {
-          const one = await models.Contact.findOne({ where: { id: 1 } })
+          const one = await models.Contact.findOne({ where: { isOwner:true, id: 1 } })
           if (!one) {
+            let authToken:string|null = null
+            let tenant:number|null = null
+            // dont allow "signup" on root contact of proxy node
+            if(isProxy()) {
+              authToken = '_'
+            } else {
+              tenant = 1 // add tenant here
+            }
             const contact = await models.Contact.create({
               id: 1,
               publicKey: info.identity_pubkey,
               isOwner: true,
-              authToken: null
+              authToken,
+              tenant
             })
             console.log('[db] created node owner contact, id:', contact.id)
           }

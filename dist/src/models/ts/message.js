@@ -90,7 +90,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Message.prototype, "subscriptionId", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "mediaKey", void 0);
 __decorate([
@@ -98,7 +98,7 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "mediaType", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "mediaToken", void 0);
 __decorate([
@@ -122,7 +122,7 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "senderAlias", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "senderPic", void 0);
 __decorate([
@@ -137,8 +137,15 @@ __decorate([
     sequelize_typescript_1.Column(sequelize_typescript_1.DataType.INTEGER),
     __metadata("design:type", Number)
 ], Message.prototype, "network_type", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Message.prototype, "tenant", void 0);
 Message = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_messages', underscored: true })
 ], Message);
 exports.default = Message;
+/*
+ALTER TABLE sphinx_invites ALTER COLUMN invoice TYPE text;
+*/ 
 //# sourceMappingURL=message.js.map

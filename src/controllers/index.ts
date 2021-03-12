@@ -19,6 +19,7 @@ import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
 import * as feed from './feed'
+import { failure } from '../utils/res'
 
 export async function set(app) {
 
@@ -28,7 +29,7 @@ export async function set(app) {
 		subcriptions.initializeCronJobs()
 	}
 
-	media.cycleMediaToken()
+	// media.cycleMediaToken()
 
 	timers.reloadTimers()
 
@@ -82,6 +83,7 @@ export async function set(app) {
 	app.post('/stream', feed.streamFeed)
 
 	app.get('/app_versions', details.getAppVersions)
+	app.get('/relay_version', details.getRelayVersion)
 
 	app.post('/invoices', invoices.createInvoice)
 	app.get('/invoices', invoices.listInvoices)
@@ -115,9 +117,12 @@ export async function set(app) {
 	})
 
 	app.get('/latest', async function (req, res) {
+		if (!req.owner) return failure(res, 'no owner')
+		const tenant: number = req.owner.id
 		const lasts = await models.Message.findAll({
 			limit: 1,
-			order: [['createdAt', 'DESC']]
+			order: [['createdAt', 'DESC']],
+			where: { tenant }
 		})
 		const last = lasts && lasts[0]
 		if (!last) {

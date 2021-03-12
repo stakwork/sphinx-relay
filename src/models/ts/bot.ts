@@ -35,4 +35,7 @@ export default class Bot extends Model<Bot> {
   @Column
   updatedAt: Date
 
+  @Column
+  tenant: number
+
 }

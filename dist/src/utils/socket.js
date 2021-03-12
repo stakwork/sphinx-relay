@@ -14,6 +14,8 @@ const models_1 = require("../models");
 const crypto = require("crypto");
 // import * as WebSocket from 'ws'
 const socketio = require("socket.io");
+// { ownerID: [client1, client2] }
+const CLIENTS = {};
 let io;
 // let srvr: any
 function connect(server) {
@@ -29,43 +31,68 @@ function connect(server) {
             res.end();
         }
     });
-    io.use((socket, next) => __awaiter(this, void 0, void 0, function* () {
-        let userToken = socket.handshake.headers['x-user-token'];
-        const isValid = yield isValidToken(userToken);
-        if (isValid) {
+    io.use((client, next) => __awaiter(this, void 0, void 0, function* () {
+        let userToken = client.handshake.headers['x-user-token'];
+        const owner = yield getOwnerFromToken(userToken);
+        if (owner) {
+            client.ownerID = owner.id; // add it in
             return next();
         }
         return next(new Error('authentication error'));
     }));
-    io.on('connection', client => {
-        console.log("=> [socket.io] connected!");
+    io.on('connection', (client) => {
+        console.log("=> [socket.io] connected!", client.ownerID);
+        addClient(client.ownerID, client);
+        client.on('disconnect', (reason) => {
+            removeClientById(client.ownerID, client.id);
+            // console.log('=> [socket.io] disconnect', reason)
+        });
     });
 }
 exports.connect = connect;
-function isValidToken(token) {
+function addClient(id, client) {
+    const existing = CLIENTS[id];
+    if (existing && Array.isArray(existing)) {
+        CLIENTS[id].push(client);
+    }
+    if (!existing) {
+        CLIENTS[id] = [client];
+    }
+}
+function removeClientById(id, clientID) {
+    const existing = CLIENTS[id];
+    if (!existing)
+        return;
+    if (!existing.length)
+        return;
+    const idx = existing.findIndex(c => c.id === clientID);
+    if (idx > -1) {
+        CLIENTS[id].splice(idx, 1);
+    }
+}
+function getOwnerFromToken(token) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!token)
-            return false;
-        const user = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            return null;
         const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-        if (user.authToken == null || user.authToken != hashedToken) {
-            return false; // failed
+        const owner = yield models_1.models.Contact.findOne({ where: { authToken: hashedToken, isOwner: true } });
+        if (owner && owner.id) {
+            return owner.dataValues; // failed
         }
-        return true;
+        return null;
     });
 }
-const send = (body) => {
-    if (io)
-        io.sockets.emit('message', body);
-    // if(srvr){
-    //   srvr.clients.forEach(c=>{
-    //     if(c) c.send(body)
-    //   })
-    // }
+const send = (body, tenant) => {
+    if (!io)
+        return; // io.sockets.emit('message', body)
+    const clients = CLIENTS[tenant];
+    if (!clients)
+        return;
+    clients.forEach(c => c.emit('message', body));
 };
 exports.send = send;
-const sendJson = (object) => {
-    exports.send(JSON.stringify(object));
+const sendJson = (object, tenant) => {
+    exports.send(JSON.stringify(object), tenant);
 };
 exports.sendJson = sendJson;
 //# sourceMappingURL=socket.js.map

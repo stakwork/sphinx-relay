@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unlockWallet = exports.channelBalance = exports.getChanInfo = exports.listChannels = exports.queryRoute = exports.listAllPaymentsFull = exports.listAllInvoices = exports.getInfo = exports.listAllPayments = exports.listInvoices = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = exports.signBuffer = exports.signAscii = exports.verifyBytes = exports.verifyAscii = exports.verifyMessage = exports.signMessage = exports.keysendMessage = exports.keysend = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.openChannel = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = void 0;
+exports.decodePayReq = exports.sendPayment = exports.unlockWallet = exports.channelBalance = exports.getChanInfo = exports.listChannels = exports.queryRoute = exports.listAllPaymentsFull = exports.listAllInvoices = exports.getInfo = exports.listAllPayments = exports.listInvoices = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = exports.signBuffer = exports.signAscii = exports.verifyBytes = exports.verifyAscii = exports.verifyMessage = exports.signMessage = exports.keysendMessage = exports.keysend = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.openChannel = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -19,6 +19,7 @@ const crypto = require("crypto");
 const constants_1 = require("../constants");
 const macaroon_1 = require("./macaroon");
 const config_1 = require("./config");
+const proxy_1 = require("./proxy");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -28,6 +29,7 @@ const SPHINX_CUSTOM_RECORD_KEY = 133773310;
 exports.SPHINX_CUSTOM_RECORD_KEY = SPHINX_CUSTOM_RECORD_KEY;
 var lightningClient = null;
 var walletUnlocker = null;
+var routerClient = null;
 const loadCredentials = (macName) => {
     var lndCert = fs.readFileSync(config.tls_location);
     var sslCreds = grpc.credentials.createSsl(lndCert);
@@ -40,35 +42,30 @@ const loadCredentials = (macName) => {
     return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
 };
 exports.loadCredentials = loadCredentials;
-// async function loadLightningNew() {
-//   if (lightningClient) {
-//     return lightningClient
-//   } else {
-//   	var credentials = loadCredentials()
-//     const packageDefinition = await protoLoader.load("rpc.proto", {})
-//     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
-//     var { lnrpc } = lnrpcDescriptor;
-//     lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
-//     return lightningClient
-//   }
-// }
-const loadLightning = () => {
-    if (lightningClient) {
-        return lightningClient;
-    }
-    else {
-        try {
-            var credentials = loadCredentials();
-            var lnrpcDescriptor = grpc.load("proto/rpc.proto");
-            var lnrpc = lnrpcDescriptor.lnrpc;
-            lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+function loadLightning(tryProxy, ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // only if specified AND available
+        if (tryProxy && proxy_1.isProxy()) {
+            const pl = yield proxy_1.loadProxyLightning(ownerPubkey);
+            return pl;
+        }
+        if (lightningClient) {
             return lightningClient;
         }
-        catch (e) {
-            throw e;
+        else {
+            try {
+                var credentials = loadCredentials();
+                var lnrpcDescriptor = grpc.load("proto/rpc.proto");
+                var lnrpc = lnrpcDescriptor.lnrpc;
+                lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+                return lightningClient;
+            }
+            catch (e) {
+                throw e;
+            }
         }
-    }
-};
+    });
+}
 exports.loadLightning = loadLightning;
 const loadWalletUnlocker = () => {
     if (walletUnlocker) {
@@ -125,16 +122,36 @@ const setLock = (value) => {
     }, 1000 * 60 * 2);
 };
 exports.setLock = setLock;
-const getRoute = (pub_key, amt, callback) => __awaiter(void 0, void 0, void 0, function* () {
-    let lightning = yield loadLightning();
-    lightning.queryRoutes({ pub_key, amt }, (err, response) => callback(err, response));
+const getRoute = (pub_key, amt, route_hint, callback) => __awaiter(void 0, void 0, void 0, function* () {
+    log('getRoute');
+    let lightning = yield loadLightning(true); // try proxy
+    const options = { pub_key, amt };
+    if (route_hint && route_hint.includes(':')) {
+        const arr = route_hint.split(':');
+        const node_id = arr[0];
+        const chan_id = arr[1];
+        options.route_hints = [{
+                hop_hints: [{ node_id, chan_id }]
+            }];
+    }
+    lightning.queryRoutes(options, (err, response) => callback(err, response));
 });
 exports.getRoute = getRoute;
-const queryRoute = (pub_key, amt) => __awaiter(void 0, void 0, void 0, function* () {
+const queryRoute = (pub_key, amt, route_hint, ownerPubkey) => __awaiter(void 0, void 0, void 0, function* () {
+    log('queryRoute');
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            let lightning = yield loadLightning();
-            lightning.queryRoutes({ pub_key, amt }, (err, response) => {
+            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+            const options = { pub_key, amt };
+            if (route_hint && route_hint.includes(':')) {
+                const arr = route_hint.split(':');
+                const node_id = arr[0];
+                const chan_id = arr[1];
+                options.route_hints = [{
+                        hop_hints: [{ node_id, chan_id }]
+                    }];
+            }
+            lightning.queryRoutes(options, (err, response) => {
                 if (err) {
                     reject(err);
                     return;
@@ -145,6 +162,22 @@ const queryRoute = (pub_key, amt) => __awaiter(void 0, void 0, void 0, function*
     });
 });
 exports.queryRoute = queryRoute;
+const decodePayReq = (pay_req) => __awaiter(void 0, void 0, void 0, function* () {
+    log('decodePayReq');
+    return new Promise(function (resolve, reject) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let lightning = yield loadLightning();
+            lightning.decodePayReq({ pay_req }, (err, response) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(response);
+            });
+        });
+    });
+});
+exports.decodePayReq = decodePayReq;
 exports.WITNESS_PUBKEY_HASH = 0;
 exports.NESTED_PUBKEY_HASH = 1;
 exports.UNUSED_WITNESS_PUBKEY_HASH = 2;
@@ -170,10 +203,51 @@ function newAddress(type = exports.NESTED_PUBKEY_HASH) {
     });
 }
 exports.newAddress = newAddress;
-const keysend = (opts) => {
+// for payingn invoice and invite invoice
+function sendPayment(payment_request, ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        log('sendPayment');
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+            if (proxy_1.isProxy()) {
+                lightning.sendPaymentSync({ payment_request }, (err, response) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        if (response.payment_error) {
+                            reject(response.payment_error);
+                        }
+                        else {
+                            resolve(response);
+                        }
+                    }
+                });
+            }
+            else {
+                var call = lightning.sendPayment({});
+                call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
+                    if (response.payment_error) {
+                        reject(response.payment_error);
+                    }
+                    else {
+                        resolve(response);
+                    }
+                }));
+                call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
+                    reject(err);
+                }));
+                call.write({ payment_request });
+            }
+        }));
+    });
+}
+exports.sendPayment = sendPayment;
+const keysend = (opts, ownerPubkey) => {
+    log('keysend');
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            let lightning = yield loadLightning();
+            const FEE_LIMIT_SAT = 10;
             const randoStr = crypto.randomBytes(32).toString('hex');
             const preimage = ByteBuffer.fromHex(randoStr);
             const options = {
@@ -186,28 +260,91 @@ const keysend = (opts) => {
                 },
                 payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
                 dest_features: [9],
-                fee_limit: { fixed: 10 }
             };
-            const call = lightning.sendPayment();
-            call.on('data', function (payment) {
-                if (payment.payment_error) {
-                    reject(payment.payment_error);
-                }
-                else {
-                    resolve(payment);
-                }
-            });
-            call.on('error', function (err) {
-                reject(err);
-            });
-            call.write(options);
+            // add in route hints
+            if (opts.route_hint && opts.route_hint.includes(':')) {
+                const arr = opts.route_hint.split(':');
+                const node_id = arr[0];
+                const chan_id = arr[1];
+                options.route_hints = [{
+                        hop_hints: [{ node_id, chan_id }]
+                    }];
+            }
+            // sphinx-proxy sendPaymentSync
+            if (proxy_1.isProxy()) {
+                // console.log("SEND sendPaymentSync", options)
+                options.fee_limit = { fixed: FEE_LIMIT_SAT };
+                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                lightning.sendPaymentSync(options, (err, response) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        if (response.payment_error) {
+                            reject(response.payment_error);
+                        }
+                        else {
+                            resolve(response);
+                        }
+                    }
+                });
+            }
+            else {
+                // console.log("SEND sendPaymentV2", options)
+                // new sendPayment (with optional route hints)
+                options.fee_limit_sat = FEE_LIMIT_SAT;
+                options.timeout_seconds = 16;
+                const router = yield loadRouter();
+                const call = router.sendPaymentV2(options);
+                call.on('data', function (payment) {
+                    const state = payment.status || payment.state;
+                    if (payment.payment_error) {
+                        reject(payment.payment_error);
+                    }
+                    else {
+                        if (state === 'IN_FLIGHT') {
+                        }
+                        else if (state === 'FAILED_NO_ROUTE') {
+                            reject(payment);
+                        }
+                        else if (state === 'FAILED') {
+                            reject(payment);
+                        }
+                        else if (state === 'SUCCEEDED') {
+                            resolve(payment);
+                        }
+                    }
+                });
+                call.on('error', function (err) {
+                    reject(err);
+                });
+                // call.write(options)
+            }
         });
     });
 };
 exports.keysend = keysend;
+const loadRouter = () => {
+    if (routerClient) {
+        return routerClient;
+    }
+    else {
+        try {
+            var credentials = loadCredentials('router.macaroon');
+            var descriptor = grpc.load("proto/router.proto");
+            var router = descriptor.routerrpc;
+            routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials);
+            return routerClient;
+        }
+        catch (e) {
+            throw e;
+        }
+    }
+};
 const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
-function keysendMessage(opts) {
+function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
+        log('keysendMessage');
         return new Promise(function (resolve, reject) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!opts.data || typeof opts.data !== 'string') {
@@ -215,7 +352,7 @@ function keysendMessage(opts) {
                 }
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
-                        const res = yield keysend(opts);
+                        const res = yield keysend(opts, ownerPubkey);
                         resolve(res);
                     }
                     catch (e) {
@@ -236,7 +373,7 @@ function keysendMessage(opts) {
                     const isLastThread = i === n - 1;
                     const amt = isLastThread ? opts.amt : constants_1.default.min_sat_amount;
                     try {
-                        res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }));
+                        res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
                         success = true;
                         yield helpers_1.sleep(432);
                     }
@@ -263,10 +400,10 @@ function asyncForEach(array, callback) {
         }
     });
 }
-function signAscii(ascii) {
+function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const sig = yield signMessage(ascii_to_hexa(ascii));
+            const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
             return sig;
         }
         catch (e) {
@@ -276,6 +413,7 @@ function signAscii(ascii) {
 }
 exports.signAscii = signAscii;
 function listInvoices() {
+    log('listInvoices');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         lightning.listInvoices({
@@ -385,9 +523,10 @@ function listAllPaymentsFull() {
     }));
 }
 exports.listAllPaymentsFull = listAllPaymentsFull;
-const signMessage = (msg) => {
+const signMessage = (msg, ownerPubkey) => {
+    // log('signMessage')
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let lightning = yield loadLightning();
+        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {
             const options = { msg: ByteBuffer.fromHex(msg) };
             lightning.signMessage(options, function (err, sig) {
@@ -405,9 +544,10 @@ const signMessage = (msg) => {
     }));
 };
 exports.signMessage = signMessage;
-const signBuffer = (msg) => {
+const signBuffer = (msg, ownerPubkey) => {
+    log('signBuffer');
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let lightning = yield loadLightning();
+        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {
             const options = { msg };
             lightning.signMessage(options, function (err, sig) {
@@ -437,9 +577,10 @@ function verifyBytes(msg, sig) {
     });
 }
 exports.verifyBytes = verifyBytes;
-function verifyMessage(msg, sig) {
+function verifyMessage(msg, sig, ownerPubkey) {
+    log('verifyMessage');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        let lightning = yield loadLightning();
+        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
@@ -460,10 +601,10 @@ function verifyMessage(msg, sig) {
     }));
 }
 exports.verifyMessage = verifyMessage;
-function verifyAscii(ascii, sig) {
+function verifyAscii(ascii, sig, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield verifyMessage(ascii_to_hexa(ascii), sig);
+            const r = yield verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey);
             return r;
         }
         catch (e) {
@@ -472,10 +613,11 @@ function verifyAscii(ascii, sig) {
     });
 }
 exports.verifyAscii = verifyAscii;
-function getInfo() {
+function getInfo(tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            const lightning = loadLightning();
+        // log('getInfo')
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning(tryProxy === false ? false : true); // try proxy
             lightning.getInfo({}, function (err, response) {
                 if (err == null) {
                     resolve(response);
@@ -484,18 +626,19 @@ function getInfo() {
                     reject(err);
                 }
             });
-        });
+        }));
     });
 }
 exports.getInfo = getInfo;
-function listChannels(args) {
+function listChannels(args, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
+        log('listChannels');
         const opts = args || {};
         if (args && args.peer) {
             opts.peer = ByteBuffer.fromHex(args.peer);
         }
-        return new Promise((resolve, reject) => {
-            const lightning = loadLightning();
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             lightning.listChannels(opts, function (err, response) {
                 if (err == null) {
                     resolve(response);
@@ -504,18 +647,19 @@ function listChannels(args) {
                     reject(err);
                 }
             });
-        });
+        }));
     });
 }
 exports.listChannels = listChannels;
 function openChannel(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        log('openChannel');
         const opts = args || {};
         if (args && args.node_pubkey) {
             opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey);
         }
-        return new Promise((resolve, reject) => {
-            const lightning = loadLightning();
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning();
             lightning.openChannelSync(opts, function (err, response) {
                 if (err == null) {
                     resolve(response);
@@ -524,14 +668,15 @@ function openChannel(args) {
                     reject(err);
                 }
             });
-        });
+        }));
     });
 }
 exports.openChannel = openChannel;
-function channelBalance() {
+function channelBalance(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            const lightning = loadLightning();
+        log('channelBalance');
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             lightning.channelBalance({}, function (err, response) {
                 if (err == null) {
                     resolve(response);
@@ -540,17 +685,18 @@ function channelBalance() {
                     reject(err);
                 }
             });
-        });
+        }));
     });
 }
 exports.channelBalance = channelBalance;
-function getChanInfo(chan_id) {
+function getChanInfo(chan_id, tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
+        // log('getChanInfo')
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             if (!chan_id) {
                 return reject('no chan id');
             }
-            const lightning = loadLightning();
+            const lightning = yield loadLightning(tryProxy === false ? false : true); // try proxy
             lightning.getChanInfo({ chan_id }, function (err, response) {
                 if (err == null) {
                     resolve(response);
@@ -559,7 +705,7 @@ function getChanInfo(chan_id) {
                     reject(err);
                 }
             });
-        });
+        }));
     });
 }
 exports.getChanInfo = getChanInfo;
@@ -570,5 +716,23 @@ function ascii_to_hexa(str) {
         arr1.push(hex);
     }
     return arr1.join('');
+}
+// async function loadLightningNew() {
+//   if (lightningClient) {
+//     return lightningClient
+//   } else {
+//   	var credentials = loadCredentials()
+//     const packageDefinition = await protoLoader.load("rpc.proto", {})
+//     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
+//     var { lnrpc } = lnrpcDescriptor;
+//     lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+//     return lightningClient
+//   }
+// }
+let yeslog = true;
+function log(a, b, c) {
+    if (!yeslog)
+        return;
+    console.log("[lightning]", [...arguments]);
 }
 //# sourceMappingURL=lightning.js.map

@@ -9,17 +9,73 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isClean = exports.nodeinfo = void 0;
+exports.isClean = exports.nodeinfo = exports.proxynodeinfo = void 0;
 const LND = require("../utils/lightning");
 const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
+function proxynodeinfo(pk) {
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        const lightning = yield LND.loadLightning(true, pk); // dont try proxy
+        lightning.listChannels({}, (err, channelList) => {
+            if (err)
+                console.log(err);
+            if (!channelList)
+                return;
+            const { channels } = channelList;
+            const localBalances = channels.map(c => c.local_balance);
+            const remoteBalances = channels.map(c => c.remote_balance);
+            const largestLocalBalance = Math.max(...localBalances);
+            const largestRemoteBalance = Math.max(...remoteBalances);
+            const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+            resolve({
+                pubkey: pk,
+                number_channels: channels.length,
+                open_channel_data: channels,
+                largest_local_balance: largestLocalBalance,
+                largest_remote_balance: largestRemoteBalance,
+                total_local_balance: totalLocalBalance,
+                node_type: 'node_virtual'
+            });
+        });
+    }));
+}
+exports.proxynodeinfo = proxynodeinfo;
 function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const nzp = yield listNonZeroPolicies();
+        let owner_pubkey;
+        try {
+            const tryProxy = false;
+            const info = yield LND.getInfo(tryProxy);
+            if (info.identity_pubkey)
+                owner_pubkey = info.identity_pubkey;
+        }
+        catch (e) { // no LND
+            let owner;
+            try {
+                owner = yield models_1.models.Contact.findOne({ where: { id: 1 } });
+            }
+            catch (e) {
+                return; // just skip in SQLITE not open yet
+            }
+            if (!owner)
+                return;
+            let lastActive = owner.lastActive;
+            if (!lastActive) {
+                lastActive = new Date();
+            }
+            const node = {
+                pubkey: owner.publicKey,
+                wallet_locked: true,
+                last_active: lastActive
+            };
+            resolve(node);
+            return;
+        }
         let owner;
         try {
-            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: owner_pubkey } });
         }
         catch (e) {
             return; // just skip in SQLITE not open yet
@@ -30,18 +86,6 @@ function nodeinfo() {
         if (!lastActive) {
             lastActive = new Date();
         }
-        try {
-            yield LND.getInfo();
-        }
-        catch (e) { // no LND
-            const node = {
-                pubkey: owner.publicKey,
-                wallet_locked: true,
-                last_active: lastActive
-            };
-            resolve(node);
-            return;
-        }
         let public_ip = "";
         try {
             public_ip = yield publicIp.v4();
@@ -51,63 +95,59 @@ function nodeinfo() {
         const tag = yield gitinfo_1.checkTag();
         const clean = yield isClean();
         const latest_message = yield latestMessage();
-        const lightning = LND.loadLightning();
+        const lightning = yield LND.loadLightning(false); // dont try proxy
         try {
-            lightning.channelBalance({}, (err, channelBalance) => {
+            lightning.listChannels({}, (err, channelList) => {
                 if (err)
                     console.log(err);
-                // const { balance, pending_open_balance } = channelBalance
-                lightning.listChannels({}, (err, channelList) => {
+                if (!channelList)
+                    return;
+                const { channels } = channelList;
+                const localBalances = channels.map(c => c.local_balance);
+                const remoteBalances = channels.map(c => c.remote_balance);
+                const largestLocalBalance = Math.max(...localBalances);
+                const largestRemoteBalance = Math.max(...remoteBalances);
+                const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+                lightning.pendingChannels({}, (err, pendingChannels) => {
                     if (err)
                         console.log(err);
-                    if (!channelList)
-                        return;
-                    const { channels } = channelList;
-                    const localBalances = channels.map(c => c.local_balance);
-                    const remoteBalances = channels.map(c => c.remote_balance);
-                    const largestLocalBalance = Math.max(...localBalances);
-                    const largestRemoteBalance = Math.max(...remoteBalances);
-                    const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
-                    lightning.pendingChannels({}, (err, pendingChannels) => {
+                    lightning.getInfo({}, (err, info) => {
                         if (err)
                             console.log(err);
-                        lightning.getInfo({}, (err, info) => {
-                            if (err)
-                                console.log(err);
-                            if (!err && info) {
-                                const node = {
-                                    node_alias: process.env.NODE_ALIAS,
-                                    ip: process.env.NODE_IP,
-                                    lnd_port: process.env.NODE_LND_PORT,
-                                    relay_commit: commitHash,
-                                    public_ip: public_ip,
-                                    pubkey: owner.publicKey,
-                                    number_channels: channels.length,
-                                    number_active_channels: info.num_active_channels,
-                                    number_pending_channels: info.num_pending_channels,
-                                    number_peers: info.num_peers,
-                                    largest_local_balance: largestLocalBalance,
-                                    largest_remote_balance: largestRemoteBalance,
-                                    total_local_balance: totalLocalBalance,
-                                    lnd_version: info.version,
-                                    relay_version: tag,
-                                    payment_channel: '',
-                                    hosting_provider: '',
-                                    open_channel_data: channels,
-                                    pending_channel_data: pendingChannels,
-                                    synced_to_chain: info.synced_to_chain,
-                                    synced_to_graph: info.synced_to_graph,
-                                    best_header_timestamp: info.best_header_timestamp,
-                                    testnet: info.testnet,
-                                    clean,
-                                    latest_message,
-                                    last_active: lastActive,
-                                    wallet_locked: false,
-                                    non_zero_policies: nzp
-                                };
-                                resolve(node);
-                            }
-                        });
+                        if (!err && info) {
+                            const node = {
+                                node_alias: process.env.NODE_ALIAS,
+                                ip: process.env.NODE_IP,
+                                lnd_port: process.env.NODE_LND_PORT,
+                                relay_commit: commitHash,
+                                public_ip: public_ip,
+                                pubkey: owner.publicKey,
+                                route_hint: owner.routeHint,
+                                number_channels: channels.length,
+                                number_active_channels: info.num_active_channels,
+                                number_pending_channels: info.num_pending_channels,
+                                number_peers: info.num_peers,
+                                largest_local_balance: largestLocalBalance,
+                                largest_remote_balance: largestRemoteBalance,
+                                total_local_balance: totalLocalBalance,
+                                lnd_version: info.version,
+                                relay_version: tag,
+                                payment_channel: '',
+                                hosting_provider: '',
+                                open_channel_data: channels,
+                                pending_channel_data: pendingChannels,
+                                synced_to_chain: info.synced_to_chain,
+                                synced_to_graph: info.synced_to_graph,
+                                best_header_timestamp: info.best_header_timestamp,
+                                testnet: info.testnet,
+                                clean,
+                                latest_message,
+                                last_active: lastActive,
+                                wallet_locked: false,
+                                non_zero_policies: nzp
+                            };
+                            resolve(node);
+                        }
                     });
                 });
             });
@@ -120,8 +160,8 @@ function nodeinfo() {
 exports.nodeinfo = nodeinfo;
 function isClean() {
     return __awaiter(this, void 0, void 0, function* () {
-        // has owner but with no auth token
-        const cleanOwner = yield models_1.models.Contact.findOne({ where: { isOwner: true, authToken: null } });
+        // has owner but with no auth token (id=1?)
+        const cleanOwner = yield models_1.models.Contact.findOne({ where: { id: 1, isOwner: true, authToken: null } });
         const msgs = yield models_1.models.Message.count();
         const allContacts = yield models_1.models.Contact.count();
         const noMsgs = msgs === 0;
@@ -151,32 +191,40 @@ const policies = ['node1_policy', 'node2_policy'];
 function listNonZeroPolicies() {
     return __awaiter(this, void 0, void 0, function* () {
         const ret = [];
-        const chans = yield LND.listChannels({});
-        if (!(chans && chans.channels))
-            return ret;
-        yield asyncForEach(chans.channels, (chan) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const info = yield LND.getChanInfo(chan.chan_id);
-                if (!info)
-                    return;
-                policies.forEach(p => {
-                    if (info[p]) {
-                        const fee_base_msat = parseInt(info[p].fee_base_msat);
-                        const disabled = info[p].disabled;
-                        if (fee_base_msat > 0 || disabled) {
-                            ret.push({
-                                node: p,
-                                fee_base_msat,
-                                chan_id: chan.chan_id,
-                                disabled
-                            });
+        const lightning = yield LND.loadLightning(false); // dont try proxy
+        lightning.listChannels({}, (err, channelList) => __awaiter(this, void 0, void 0, function* () {
+            if (err)
+                return ret;
+            if (!channelList)
+                return ret;
+            if (!channelList.channels)
+                return ret;
+            const { channels } = channelList;
+            yield asyncForEach(channels, (chan) => __awaiter(this, void 0, void 0, function* () {
+                try {
+                    const tryProxy = false;
+                    const info = yield LND.getChanInfo(chan.chan_id, tryProxy);
+                    if (!info)
+                        return;
+                    policies.forEach(p => {
+                        if (info[p]) {
+                            const fee_base_msat = parseInt(info[p].fee_base_msat);
+                            const disabled = info[p].disabled;
+                            if (fee_base_msat > 0 || disabled) {
+                                ret.push({
+                                    node: p,
+                                    fee_base_msat,
+                                    chan_id: chan.chan_id,
+                                    disabled
+                                });
+                            }
                         }
-                    }
-                });
-            }
-            catch (e) { }
+                    });
+                }
+                catch (e) { }
+            }));
+            return ret;
         }));
-        return ret;
     });
 }
 function asyncForEach(array, callback) {

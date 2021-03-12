@@ -6,17 +6,16 @@ import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import { signBuffer, verifyMessage } from '../utils/lightning'
 import * as rp from 'request-promise'
-import { loadLightning } from '../utils/lightning'
-import { parseLDAT, tokenFromTerms, urlBase64FromBytes, testLDAT } from '../utils/ldat'
-import { CronJob } from 'cron'
+import { parseLDAT, tokenFromTerms, urlBase64FromBytes } from '../utils/ldat'
+import * as meme from '../utils/meme'
 import * as zbase32 from '../utils/zbase32'
 import * as schemas from './schemas'
 import { sendConfirmation } from './confirmations'
 import * as network from '../network'
-import * as meme from '../utils/meme'
 import * as short from 'short-uuid'
 import constants from '../constants'
-import {loadConfig} from '../utils/config'
+import { loadConfig } from "../utils/config";
+import { failure } from '../utils/res'
 
 const config = loadConfig()
 
@@ -39,6 +38,8 @@ purchase_deny returns the sats
 */
 
 export const sendAttachmentMessage = async (req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
   // try {
   //   schemas.attachment.validateSync(req.body)
   // } catch(e) {
@@ -63,7 +64,7 @@ export const sendAttachmentMessage = async (req, res) => {
 
   console.log('[send attachment]', req.body)
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
   const chat = await helpers.findOrCreateChat({
     chat_id,
     owner_id: owner.id,
@@ -81,7 +82,8 @@ export const sendAttachmentMessage = async (req, res) => {
   const myMediaToken = await tokenFromTerms({
     muid, ttl: TTL, host: '',
     pubkey: owner.publicKey,
-    meta: { ...amt && { amt }, ttl }
+    meta: { ...amt && { amt }, ttl },
+    ownerPubkey: owner.publicKey
   })
 
   const date = new Date();
@@ -105,14 +107,15 @@ export const sendAttachmentMessage = async (req, res) => {
     mediaType: mediaType,
     date,
     createdAt: date,
-    updatedAt: date
+    updatedAt: date,
+    tenant
   }
   if (reply_uuid) mm.replyUuid = reply_uuid
   const message = await models.Message.create(mm)
 
   console.log('saved attachment msg from me', message.id)
 
-  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType)
+  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant)
 
   const mediaTerms: { [k: string]: any } = {
     muid, ttl: TTL,
@@ -142,7 +145,7 @@ export const sendAttachmentMessage = async (req, res) => {
   })
 }
 
-export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
+export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) {
   if (typeof mediaKeyMap !== 'object') {
     console.log('wrong type for mediaKeyMap')
     return
@@ -150,19 +153,22 @@ export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType) {
   var date = new Date();
   date.setMilliseconds(0)
   for (let [contactId, key] of Object.entries(mediaKeyMap)) {
-    if (parseInt(contactId) !== 1) {
+    if (parseInt(contactId) !== tenant) {
       const receiverID = parseInt(contactId) || 0 // 0 is for a tribe
       models.MediaKey.create({
         muid, chatId, key, messageId,
         receiver: receiverID,
         createdAt: date,
-        mediaType
+        mediaType,
+        tenant
       })
     }
   }
 }
 
 export const purchase = async (req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
   const {
     chat_id,
     contact_id,
@@ -178,7 +184,7 @@ export const purchase = async (req, res) => {
     return resUtils.failure(res, e.message)
   }
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
   const chat = await helpers.findOrCreateChat({
     chat_id,
     owner_id: owner.id,
@@ -195,7 +201,8 @@ export const purchase = async (req, res) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type: constants.network_types.lightning
+    network_type: constants.network_types.lightning,
+    tenant
   })
 
   const msg = {
@@ -229,6 +236,7 @@ export const receivePurchase = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> group chat not found!')
   }
+  const tenant: number = owner.id
 
   const message = await models.Message.create({
     chatId: chat.id,
@@ -240,12 +248,13 @@ export const receivePurchase = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   })
   socket.sendJson({
     type: 'purchase',
     response: jsonUtils.messageToJson(message, chat, sender)
-  })
+  }, tenant)
 
   const isTribe = chat_type === constants.chat_types.tribe
 
@@ -261,7 +270,7 @@ export const receivePurchase = async (payload) => {
   }
 
   const ogMessage = await models.Message.findOne({
-    where: { mediaToken }
+    where: { mediaToken, tenant }
   })
   if (!ogMessage) {
     return console.log('no original message')
@@ -270,7 +279,7 @@ export const receivePurchase = async (payload) => {
   // find mediaKey for who sent
   const mediaKey = await models.MediaKey.findOne({
     where: {
-      muid, receiver: isTribe ? 0 : sender.id,
+      muid, receiver: isTribe ? 0 : sender.id, tenant
     }
   })
   // console.log('mediaKey found!',mediaKey.dataValues)
@@ -281,7 +290,7 @@ export const receivePurchase = async (payload) => {
   let TTL = terms.meta && terms.meta.ttl
   let price = terms.meta && terms.meta.amt
   if (!TTL || !price) {
-    const media = await getMediaInfo(muid)
+    const media = await getMediaInfo(muid, owner.publicKey)
     console.log("GOT MEDIA", media)
     if (media) {
       TTL = media.ttl && parseInt(media.ttl)
@@ -305,12 +314,13 @@ export const receivePurchase = async (payload) => {
           sender: owner.id,
           type: constants.message_types.purchase_deny,
           mediaToken: mediaToken,
-          date: date, createdAt: date, updatedAt: date
+          date: date, createdAt: date, updatedAt: date,
+          tenant
         })
         socket.sendJson({
           type: 'purchase_deny',
           response: jsonUtils.messageToJson(denyMsg, chat, sender)
-        })
+        }, tenant)
       },
       failure: error => console.log('=> couldnt send purcahse deny', error),
     })
@@ -320,6 +330,7 @@ export const receivePurchase = async (payload) => {
     muid, ttl: TTL, host: '',
     meta: { amt: amount },
     pubkey: sender.publicKey,
+    ownerPubkey: owner.publicKey,
   })
   const msgToSend: { [k: string]: any } = {
     mediaToken: theMediaToken,
@@ -339,12 +350,13 @@ export const receivePurchase = async (payload) => {
         sender: owner.id,
         type: constants.message_types.purchase_accept,
         mediaToken: theMediaToken,
-        date: date, createdAt: date, updatedAt: date
+        date: date, createdAt: date, updatedAt: date,
+        tenant
       })
       socket.sendJson({
         type: 'purchase_accept',
         response: jsonUtils.messageToJson(acceptMsg, chat, sender)
-      })
+      }, tenant)
     },
     failure: error => console.log('=> couldnt send purchase accept', error),
   })
@@ -359,6 +371,7 @@ export const receivePurchaseAccept = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant: number = owner.id
 
   const termsArray = mediaToken.split('.')
   // const host = termsArray[0]
@@ -388,12 +401,13 @@ export const receivePurchaseAccept = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   })
   socket.sendJson({
     type: 'purchase_accept',
     response: jsonUtils.messageToJson(msg, chat, sender)
-  })
+  }, tenant)
 }
 
 export const receivePurchaseDeny = async (payload) => {
@@ -404,6 +418,7 @@ export const receivePurchaseDeny = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant: number = owner.id
   const msg = await models.Message.create({
     chatId: chat.id,
     sender: sender.id,
@@ -416,12 +431,13 @@ export const receivePurchaseDeny = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   })
   socket.sendJson({
     type: 'purchase_deny',
     response: jsonUtils.messageToJson(msg, chat, sender)
-  })
+  }, tenant)
 }
 
 export const receiveAttachment = async (payload) => {
@@ -434,6 +450,7 @@ export const receiveAttachment = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant: number = owner.id
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -443,7 +460,8 @@ export const receiveAttachment = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   }
   if (content) msg.messageContent = content
   if (mediaToken) msg.mediaToken = mediaToken
@@ -463,18 +481,20 @@ export const receiveAttachment = async (payload) => {
   socket.sendJson({
     type: 'attachment',
     response: jsonUtils.messageToJson(message, chat, sender)
-  })
+  }, tenant)
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
 export async function signer(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  // const tenant:number = req.owner.id
   if (!req.params.challenge) return resUtils.failure(res, "no challenge")
   try {
     const sig = await signBuffer(
-      Buffer.from(req.params.challenge, 'base64')
+      Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey
     )
     const sigBytes = zbase32.decode(sig)
     const sigBase64 = urlBase64FromBytes(sigBytes)
@@ -495,77 +515,10 @@ export async function verifier(msg, sig) {
   }
 }
 
-export async function getMyPubKey() {
-  return new Promise((resolve, reject) => {
-    const lightning = loadLightning()
-    var request = {}
-    lightning.getInfo(request, function (err, response) {
-      if (err) reject(err)
-      if (!response.identity_pubkey) reject('no pub key')
-      else resolve(response.identity_pubkey)
-    });
-  })
-}
-
-export async function cycleMediaToken() {
+export async function getMediaInfo(muid, pubkey:string) {
   try {
-    if (process.env.TEST_LDAT) testLDAT()
-
-    const mt = await getMediaToken(null)
-    if (mt) {
-      console.log('=> [meme] authed!')
-      meme.setMediaToken(mt)
-    }
-
-    new CronJob('1 * * * *', function () { // every hour
-      getMediaToken(true)
-    })
-  } catch (e) {
-    console.log(e.message)
-  }
-}
-
-const mediaURL = 'http://' + config.media_host + '/'
-
-export async function getMediaToken(force) {
-  if (!force && meme.mediaToken) return meme.mediaToken
-  await helpers.sleep(3000)
-  try {
-    const res = await rp.get(mediaURL + 'ask')
-    const r = JSON.parse(res)
-    if (!(r && r.challenge && r.id)) {
-      throw new Error('no challenge')
-    }
-    const sig = await signBuffer(
-      Buffer.from(r.challenge, 'base64')
-    )
-
-    if (!sig) throw new Error('no signature')
-    const pubkey = await getMyPubKey()
-    if (!pubkey) {
-      throw new Error('no pub key!')
-    }
-
-    const sigBytes = zbase32.decode(sig)
-    const sigBase64 = urlBase64FromBytes(sigBytes)
-
-    const bod = await rp.post(mediaURL + 'verify', {
-      form: { id: r.id, sig: sigBase64, pubkey }
-    })
-    const body = JSON.parse(bod)
-    if (!(body && body.token)) {
-      throw new Error('no token')
-    }
-    meme.setMediaToken(body.token)
-    return body.token
-  } catch (e) {
-    throw e
-  }
-}
-
-export async function getMediaInfo(muid) {
-  try {
-    const token = await getMediaToken(null)
+    const token = await meme.lazyToken(pubkey, config.media_host)
+    const mediaURL = 'http://' + config.media_host + '/'
     const res = await rp.get(mediaURL + 'mymedia/' + muid, {
       headers: {
         'Authorization': `Bearer ${token}`,

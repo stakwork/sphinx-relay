@@ -24,19 +24,23 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
         return exports.getAllMessages(req, res);
     }
     console.log(dateToReturn);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     // const chatId = req.query.chat_id
     let newMessagesWhere = {
         date: { [sequelize_1.Op.gte]: dateToReturn },
         [sequelize_1.Op.or]: [
             { receiver: owner.id },
             { receiver: null }
-        ]
+        ],
+        tenant
     };
     let confirmedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
@@ -45,7 +49,8 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 constants_1.default.statuses.received,
             ]
         },
-        sender: owner.id
+        sender: owner.id,
+        tenant
     };
     let deletedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
@@ -54,6 +59,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 constants_1.default.statuses.deleted
             ]
         },
+        tenant
     };
     // if (chatId) {
     // 	newMessagesWhere.chat_id = chatId
@@ -75,7 +81,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!chatIds.includes(m.chatId))
             chatIds.push(m.chatId);
     });
-    let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
+    let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds, tenant } }) : [];
     const chatsById = underscore_1.indexBy(chats, 'id');
     res.json({
         success: true,
@@ -90,10 +96,13 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getMessages = getMessages;
 const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
-    const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit, offset });
+    const messages = yield models_1.models.Message.findAll({ order: [['id', 'asc']], limit, offset, where: { tenant } });
     console.log('=> got msgs', (messages && messages.length));
     const chatIds = [];
     messages.forEach((m) => {
@@ -101,7 +110,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             chatIds.push(m.chatId);
         }
     });
-    let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
+    let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds, tenant } }) : [];
     console.log('=> found all chats', (chats && chats.length));
     const chatsById = underscore_1.indexBy(chats, 'id');
     console.log('=> indexed chats');
@@ -112,6 +121,9 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.getAllMessages = getAllMessages;
 const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit));
     const offset = (req.query.offset && parseInt(req.query.offset));
     const dateToReturn = req.query.date;
@@ -123,6 +135,7 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         order: [['id', 'asc']],
         where: {
             updated_at: { [sequelize_1.Op.gte]: dateToReturn },
+            tenant
         }
     };
     if (limit) {
@@ -137,7 +150,7 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             chatIds.push(m.chatId);
         }
     });
-    let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds } }) : [];
+    let chats = chatIds.length > 0 ? yield models_1.models.Chat.findAll({ where: { deleted: false, id: chatIds, tenant } }) : [];
     const chatsById = underscore_1.indexBy(chats, 'id');
     res_1.success(res, {
         new_messages: messages.map(message => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
@@ -146,20 +159,24 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getMsgs = getMsgs;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, 'no owner');
+        const tenant = req.owner.id;
         const id = parseInt(req.params.id);
-        const message = yield models_1.models.Message.findOne({ where: { id } });
+        const message = yield models_1.models.Message.findOne({ where: { id, tenant } });
         const uuid = message.uuid;
         yield message.update({ status: constants_1.default.statuses.deleted });
         const chat_id = message.chatId;
         let chat;
         if (chat_id) {
-            chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+            chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
         }
         res_1.success(res, jsonUtils.messageToJson(message, chat));
-        if (!chat)
-            return;
+        if (!chat) {
+            return res_1.failure(res, 'no Chat');
+        }
         const isTribe = chat.type === constants_1.default.chat_types.tribe;
-        const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+        const owner = req.owner;
         const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
         if (isTribeOwner) {
             timers.removeTimerByMsgId(id);
@@ -174,6 +191,9 @@ function deleteMessage(req, res) {
 }
 exports.deleteMessage = deleteMessage;
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
     // try {
     // 	schemas.message.validateSync(req.body)
     // } catch(e) {
@@ -185,7 +205,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msgtype = constants_1.default.message_types.boost;
     var date = new Date();
     date.setMilliseconds(0);
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
     const chat = yield helpers.findOrCreateChat({
         chat_id,
         owner_id: owner.id,
@@ -193,12 +213,16 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     });
     let realSatsContactId;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
+    if (!chat) {
+        return res_1.failure(res, 'no Chat');
+    }
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
     if (reply_uuid && boost && amount) {
         const ogMsg = yield models_1.models.Message.findOne({
             where: {
                 uuid: reply_uuid,
+                tenant,
             }
         });
         if (ogMsg && ogMsg.sender) {
@@ -226,7 +250,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         updatedAt: date,
         network_type: (!isTribe || hasRealAmount || realSatsContactId) ?
             constants_1.default.network_types.lightning :
-            constants_1.default.network_types.mqtt
+            constants_1.default.network_types.mqtt,
+        tenant
     };
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
@@ -255,6 +280,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         sendMessageParams.amount = amtToStore;
     }
     // final send
+    // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
     network.sendMessage(sendMessageParams);
 });
 exports.sendMessage = sendMessage;
@@ -264,6 +290,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const text = content || '';
     var date = new Date();
     date.setMilliseconds(0);
@@ -281,6 +308,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         updatedAt: date,
         status: message_status || constants_1.default.statuses.received,
         network_type: network_type,
+        tenant,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -295,8 +323,8 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     socket.sendJson({
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message');
+    }, tenant);
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveMessage = receiveMessage;
@@ -306,6 +334,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const text = content;
     var date = new Date();
     date.setMilliseconds(0);
@@ -322,7 +351,8 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         createdAt: date,
         updatedAt: date,
         status: constants_1.default.statuses.received,
-        network_type
+        network_type,
+        tenant
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -337,14 +367,14 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     socket.sendJson({
         type: 'boost',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
     if (msg.replyUuid) {
         const ogMsg = yield models_1.models.Message.findOne({
-            where: { uuid: msg.replyUuid }
+            where: { uuid: msg.replyUuid, tenant }
         });
-        if (ogMsg && ogMsg.sender === 1) {
-            hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost');
+        if (ogMsg && ogMsg.sender === tenant) {
+            hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner);
         }
     }
 });
@@ -355,6 +385,7 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     var date = new Date();
     date.setMilliseconds(0);
     if (date_string)
@@ -368,12 +399,13 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
         createdAt: date,
         updatedAt: date,
         status: constants_1.default.statuses.received,
-        network_type
+        network_type,
+        tenant
     });
     socket.sendJson({
         type: 'repayment',
         response: jsonUtils.messageToJson(message, null, sender)
-    });
+    }, tenant);
 });
 exports.receiveRepayment = receiveRepayment;
 const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -382,9 +414,10 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     if (!owner || !sender || !chat) {
         return console.log('=> no group chat!');
     }
+    const tenant = owner.id;
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     // in tribe this is already validated on admin's node
-    let where = { uuid: msg_uuid };
+    let where = { uuid: msg_uuid, tenant };
     if (!isTribe) {
         where.sender = sender.id; // validate sender
     }
@@ -395,12 +428,15 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     socket.sendJson({
         type: 'delete',
         response: jsonUtils.messageToJson(message, chat, sender)
-    });
+    }, tenant);
 });
 exports.receiveDeleteMessage = receiveDeleteMessage;
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
     const chat_id = req.params.chat_id;
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+    const owner = req.owner;
+    const tenant = owner.id;
     yield models_1.models.Message.update({ seen: true }, {
         where: {
             sender: {
@@ -410,18 +446,19 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             [sequelize_1.Op.or]: [
                 { seen: false },
                 { seen: null }
-            ]
+            ],
+            tenant
         }
     });
-    const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id } });
+    const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
     if (chat) {
         yield chat.update({ seen: true });
         res_1.success(res, {});
-        hub_1.sendNotification(chat, '', 'badge');
+        hub_1.sendNotification(chat, '', 'badge', owner);
         socket.sendJson({
             type: 'chat_seen',
             response: jsonUtils.chatToJson(chat)
-        });
+        }, tenant);
     }
     else {
         res_1.failure(res, 'no chat');
@@ -429,7 +466,10 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.readMessages = readMessages;
 const clearMessages = (req, res) => {
-    models_1.models.Message.destroy({ where: {}, truncate: true });
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    const tenant = req.owner.id;
+    models_1.models.Message.destroy({ where: { tenant }, truncate: true });
     res_1.success(res, {});
 };
 exports.clearMessages = clearMessages;

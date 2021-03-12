@@ -15,32 +15,19 @@ const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
 const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
-const models_1 = require("../models");
 const bots_1 = require("../controllers/bots");
 Object.defineProperty(exports, "buildBotPayload", { enumerable: true, get: function () { return bots_1.buildBotPayload; } });
-const constants_1 = require("../constants");
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         MotherBot.init();
-        const builtInBots = yield models_1.models.ChatBot.findAll({
-            where: {
-                botType: constants_1.default.bot_types.builtin
-            }
-        });
-        if (!(builtInBots && builtInBots.length))
-            return;
-        builtInBots.forEach(b => {
-            if (b.botPrefix === '/welcome')
-                WelcomeBot.init();
-            if (b.botPrefix === '/loopout')
-                LoopBot.init();
-        });
+        WelcomeBot.init();
+        LoopBot.init();
     });
 }
 exports.init = init;
 function builtinBotEmit(msg) {
     setTimeout(() => {
-        SphinxBot._emit('message', bots_1.buildBotPayload(msg));
+        SphinxBot._emit("message", bots_1.buildBotPayload(msg));
     }, 1200);
 }
 exports.builtinBotEmit = builtinBotEmit;

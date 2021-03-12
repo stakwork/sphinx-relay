@@ -4,11 +4,12 @@ import { Op } from 'sequelize'
 import * as socket from './utils/socket'
 import * as jsonUtils from './utils/json'
 import * as helpers from './helpers'
-import { nodeinfo } from './utils/nodeinfo'
-import { loadLightning } from './utils/lightning'
+import { nodeinfo, proxynodeinfo } from './utils/nodeinfo'
+import * as LND from './utils/lightning'
 import constants from './constants'
 import {loadConfig} from './utils/config'
 import * as https from 'https'
+import { isProxy } from './utils/proxy'
 
 const pingAgent = new https.Agent({ 
 	keepAlive: true 
@@ -24,8 +25,6 @@ const checkInviteHub = async (params = {}) => {
   if (env != "production") {
     return
   }
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
-
   //console.log('[hub] checking invites ping')
 
   const inviteStrings = await models.Invite.findAll({ where: { status: { [Op.notIn]: [constants.invite_statuses.complete, constants.invite_statuses.expired] } } }).map(invite => invite.inviteString)
@@ -45,10 +44,12 @@ const checkInviteHub = async (params = {}) => {
       json.object.invites.map(async object => {
         const invite = object.invite
         const pubkey = object.pubkey
+        const routeHint = object.route_hint
         const price = object.price
 
         const dbInvite = await models.Invite.findOne({ where: { inviteString: invite.pin } })
         const contact = await models.Contact.findOne({ where: { id: dbInvite.contactId } })
+        const owner = await models.Contact.findOne({ where: { id: dbInvite.tenant } })
 
         if (dbInvite.status != invite.invite_status) {
           const updateObj: { [k: string]: any } = { status: invite.invite_status, price: price }
@@ -59,15 +60,17 @@ const checkInviteHub = async (params = {}) => {
           socket.sendJson({
             type: 'invite',
             response: jsonUtils.inviteToJson(dbInvite)
-          })
+          }, owner.id)
 
           if (dbInvite.status == constants.invite_statuses.ready && contact) {
-            sendNotification(-1, contact.alias, 'invite')
+            sendNotification(-1, contact.alias, 'invite', owner)
           }
         }
 
         if (pubkey && dbInvite.status == constants.invite_statuses.complete && contact) {
-          contact.update({ publicKey: pubkey, status: constants.contact_statuses.confirmed })
+          const updateObj:{[k:string]:any} = { publicKey: pubkey, status: constants.contact_statuses.confirmed }
+          if(routeHint) updateObj.routeHint = routeHint
+          contact.update(updateObj)
 
           var contactJson = jsonUtils.contactToJson(contact)
           contactJson.invite = jsonUtils.inviteToJson(dbInvite)
@@ -75,7 +78,7 @@ const checkInviteHub = async (params = {}) => {
           socket.sendJson({
             type: 'contact',
             response: contactJson
-          })
+          }, owner.id)
 
           helpers.sendContactKeys({
             contactIds: [contact.id],
@@ -98,19 +101,51 @@ const pingHub = async (params = {}) => {
 
   const node = await nodeinfo()
   sendHubCall({ ...params, node })
+
+  if(isProxy()) { // send all "clean" nodes
+    massPingHubFromProxies(node)
+  }
+
 }
 
-async function sendHubCall(params) {
+async function massPingHubFromProxies(rn){ // real node
+  const owners = await models.Contact.findAll({where:{
+    isOwner:true,
+    id:{[Op.ne]: 1}
+  }})
+  const nodes:{[k:string]:any}[] = []
+  await asyncForEach(owners, async o=>{
+    const proxyNodeInfo = await proxynodeinfo(o.publicKey)
+    const clean = o.authToken===null || o.authToken===''
+    nodes.push({
+      ...proxyNodeInfo, clean,
+      last_active: o.lastActive,
+      route_hint: o.routeHint,
+      relay_commit: rn.relay_commit,
+      lnd_version: rn.lnd_version,
+      relay_version: rn.relay_version,
+      testnet: rn.testnet,
+      ip: rn.ip,
+      public_ip: rn.public_ip,
+      node_alias: rn.node_alias,
+    })
+  })
+  sendHubCall({nodes}, true)
+}
+
+async function sendHubCall(body, mass?:boolean) {
   try {
-    const r = await fetch(config.hub_api_url + '/ping', {
+    // console.log("=> PING BODY", body)
+    const r = await fetch(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
       agent: pingAgent,
       method: 'POST',
-      body: JSON.stringify(params),
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
     const j = await r.json()
+    // console.log("=> PING RESPONSE", j)
     if(!(j && j.status && j.status==='ok')) {
-      console.log('[hub] ping returned not ok')
+      console.log('[hub] ping returned not ok', j)
     }
   } catch(e) {
     console.log('[hub warning]: cannot reach hub',e)
@@ -172,16 +207,13 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
     })
 }
 
-async function payInviteInvoice(invoice, onSuccess, onFailure) {
-  const lightning = await loadLightning()
-  var call = lightning.sendPayment({})
-  call.on('data', async response => {
-    onSuccess(response)
-  })
-  call.on('error', async err => {
-    onFailure(err)
-  })
-  call.write({ payment_request: invoice })
+async function payInviteInvoice(invoice, pubkey:string, onSuccess, onFailure) {
+  try {
+    const res = LND.sendPayment(invoice, pubkey)
+    onSuccess(res)
+  } catch(e) {
+    onFailure(e)
+  }
 }
 
 const createInviteInHub = (params, onSuccess, onFailure) => {
@@ -217,7 +249,9 @@ export async function getAppVersionsFromHub() {
 
 type NotificationType = 'group' | 'badge' | 'invite' | 'message' | 'reject' | 'keysend' | 'boost'
 
-const sendNotification = async (chat, name, type: NotificationType, amount?: number) => {
+const sendNotification = async (chat, name, type: NotificationType, owner, amount?: number) => {
+
+  if(!owner) return console.log('=> sendNotification error: no owner')
 
   let message = `You have a new message from ${name}`
   if (type === 'invite') {
@@ -245,8 +279,6 @@ const sendNotification = async (chat, name, type: NotificationType, amount?: num
       message += ` in ${chat.name}`
     }
   }
-
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
 
   if (!owner.deviceId) {
     console.log('[send notification] skipping. owner.deviceId not set.')
@@ -288,7 +320,8 @@ async function finalNotification(ownerID: number, params: { [k: string]: any }) 
     where: {
       sender: { [Op.ne]: ownerID },
       seen: false,
-      chatId: { [Op.ne]: 0 } // no anon keysends
+      chatId: { [Op.ne]: 0 } ,// no anon keysends
+      tenant: ownerID
     }
   })
   params.notification.badge = unseenMessages
@@ -338,4 +371,10 @@ function debounce(func, id, delay) {
     // setTimeout(()=> tribeCounts[id]=0, 15)
     tribeCounts[id] = 0
   }, delay)
+}
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+		await callback(array[index], index, array);
+	}
 }

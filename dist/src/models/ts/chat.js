@@ -66,11 +66,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Chat.prototype, "deleted", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Chat.prototype, "groupKey", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Chat.prototype, "groupPrivateKey", void 0);
 __decorate([
@@ -136,6 +136,18 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Chat.prototype, "myAlias", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Chat.prototype, "tenant", void 0);
+__decorate([
+    sequelize_typescript_1.Column({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+        allowNull: true
+    }),
+    __metadata("design:type", Boolean)
+], Chat.prototype, "skipBroadcastJoins", void 0);
 Chat = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);

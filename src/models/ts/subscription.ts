@@ -46,4 +46,7 @@ export default class Subscription extends Model<Subscription> {
 
   @Column
   updatedAt: Date
+
+  @Column
+  tenant: number
 }

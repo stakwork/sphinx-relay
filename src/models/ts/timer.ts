@@ -26,4 +26,7 @@ export default class Timer extends Model<Timer> {
   @Column(DataType.DECIMAL)
   amount: number
 
+  @Column
+  tenant: number
+
 }

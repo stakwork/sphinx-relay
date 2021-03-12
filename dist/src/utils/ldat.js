@@ -26,7 +26,7 @@ Base64 strings separated by dots:
 - meta: key/value pairs, url query encoded (alphabetically ordered, ascii->base64)
 - signature of all that (concatenated bytes of each)
 */
-function tokenFromTerms({ host, muid, ttl, pubkey, meta }) {
+function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         const theHost = host || config.media_host || '';
         const pubkeyBytes = Buffer.from(pubkey, 'hex');
@@ -35,7 +35,7 @@ function tokenFromTerms({ host, muid, ttl, pubkey, meta }) {
         const exp = ttl ? now + (60 * 60 * 24 * 365) : 0;
         const ldat = startLDAT(theHost, muid, pubkey64, exp, meta);
         if (pubkey != '') {
-            const sig = yield lightning_1.signBuffer(ldat.bytes);
+            const sig = yield lightning_1.signBuffer(ldat.bytes, ownerPubkey);
             const sigBytes = zbase32.decode(sig);
             return ldat.terms + "." + urlBase64FromBytes(sigBytes);
         }
@@ -103,7 +103,8 @@ function testLDAT() {
                 amt: 100,
                 ttl: 31536000,
                 dim: '1500x1300'
-            }
+            },
+            ownerPubkey: '0373ca36a331d8fd847f190908715a34997b15dc3c5d560ca032cf3412fcf494e4'
         };
         const token = yield tokenFromTerms(terms);
         console.log(token);
@@ -115,7 +116,8 @@ function testLDAT() {
             meta: {
                 amt: 100,
                 ttl: 31536000,
-            }
+            },
+            ownerPubkey: ''
         };
         const token2 = yield tokenFromTerms(terms2);
         console.log(token2);

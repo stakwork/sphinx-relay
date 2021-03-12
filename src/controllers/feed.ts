@@ -14,11 +14,14 @@ export interface ChatMeta {
 type DestinationType = 'wallet' | 'node'
 export interface Destination {
   address: string
+  routeHint: string,
   split: number
   type: DestinationType
 }
 
 export const streamFeed = async (req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
   const {
     destinations,
     amount,
@@ -52,7 +55,7 @@ export const streamFeed = async (req, res) => {
         sats_per_minute: amount || 0,
         speed: meta.speed || '1'
       }
-      const chat = await models.Chat.findOne({ where: { id: chat_id } })
+      const chat = await models.Chat.findOne({ where: { id: chat_id, tenant } })
       if (!chat) {
         return failure(res, 'no chat')
       }
@@ -60,7 +63,7 @@ export const streamFeed = async (req, res) => {
     }
   }
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
 
   if (amount && typeof amount === 'number') {
     await asyncForEach(destinations, async (d: Destination) => {
@@ -69,7 +72,7 @@ export const streamFeed = async (req, res) => {
         if (d.address.length !== 66) return
         if (d.address === owner.publicKey) return // dont send to self
         const amt = Math.max(Math.round((d.split / 100) * amount), 1)
-        await anonymousKeysend(owner, d.address, amt, text, function () { }, function () { })
+        await anonymousKeysend(owner, d.address, d.routeHint, amt, text, function () { }, function () { })
       }
     })
   }
@@ -77,16 +80,17 @@ export const streamFeed = async (req, res) => {
   success(res, {})
 }
 
-
-export async function anonymousKeysend(owner, destination_key: string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
+export async function anonymousKeysend(owner, destination_key: string, route_hint: string, amount: number, text: string, onSuccess: Function, onFailure: Function) {
+  const tenant = owner.id
   const msg: { [k: string]: any } = {
     type: constants.message_types.keysend,
   }
   if (text) msg.message = { content: text }
-
+  
   return helpers.performKeysendMessage({
     sender: owner,
     destination_key,
+    route_hint,
     amount,
     msg,
     success: () => {
@@ -104,7 +108,8 @@ export async function anonymousKeysend(owner, destination_key: string, amount: n
         messageContent: text || '',
         status: constants.statuses.confirmed,
         createdAt: date,
-        updatedAt: date
+        updatedAt: date,
+        tenant
       })
       onSuccess({ destination_key, amount })
     },

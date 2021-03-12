@@ -2,7 +2,7 @@ import { models } from '../models'
 import { getHost } from './tribes'
 import fetch from 'node-fetch'
 
-export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted }) {
+export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint }) {
   const host = getHost()
   try {
     const r = await fetch('https://' + host + '/bots', {
@@ -13,6 +13,7 @@ export async function declare_bot({ uuid, name, description, tags, img, price_pe
         price_per_use: price_per_use || 0,
         unlisted: unlisted || false,
         deleted: deleted || false,
+        owner_route_hint: owner_route_hint || ''
       }),
       headers: { 'Content-Type': 'application/json' }
     })

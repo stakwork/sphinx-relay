@@ -2,6 +2,24 @@ import { sequelize } from '../models'
 
 export default async function migrate() {
 
+  addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN')
+
+  addTenant('sphinx_chat_members')
+  addTenant('sphinx_chats')
+  addTenant('sphinx_bots')
+  addTenant('sphinx_contacts')
+  addTenant('sphinx_messages')
+  addTenant('sphinx_bot_members')
+  addTenant('sphinx_chat_bots')
+  addTenant('sphinx_invites')
+  addTenant('sphinx_media_keys')
+  addTenant('sphinx_subscriptions')
+  addTenant('sphinx_timers')
+
+  addTableColumn('sphinx_contacts', 'route_hint')
+  addTableColumn('sphinx_chat_bots', 'bot_maker_route_hint')
+  addTableColumn('sphinx_accountings', 'route_hint')
+
   try {
     await sequelize.query(`
     CREATE TABLE sphinx_accountings (
@@ -130,7 +148,13 @@ export default async function migrate() {
   //   amount DECIMAL
   // )`)
   //   } catch(e){}
+}
 
+async function addTenant(tableName){
+  await addTableColumn(tableName, 'tenant', 'BIGINT')
+  try {
+    await sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`)
+  } catch (e) { console.log(e) }
 }
 
 async function addTableColumn(table: string, column: string, type = 'TEXT') {

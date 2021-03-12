@@ -45,10 +45,10 @@ export default class Chat extends Model<Chat> {
   })
   deleted: boolean
 
-  @Column
+  @Column(DataType.TEXT)
   groupKey: string
 
-  @Column
+  @Column(DataType.TEXT)
   groupPrivateKey: string
 
   @Column
@@ -100,5 +100,15 @@ export default class Chat extends Model<Chat> {
 
   @Column
   myAlias: string
+
+  @Column
+  tenant: number
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: true
+  })
+  skipBroadcastJoins: boolean
 
 }

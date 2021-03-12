@@ -9,6 +9,7 @@ import * as jsonUtils from '../utils/json'
 import { Op } from 'sequelize'
 import fetch from 'node-fetch'
 import * as helpers from '../helpers'
+import { isProxy } from '../utils/proxy'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -25,11 +26,11 @@ const POLL_MINS = 10
 let hub_pubkey = ''
 
 const hub_url = 'https://hub.sphinx.chat/api/v1/'
-async function get_hub_pubkey(){
-  const r = await fetch(hub_url+'/routingnode')
+async function get_hub_pubkey() {
+  const r = await fetch(hub_url + '/routingnode')
   const j = await r.json()
-  if(j && j.pubkey) {
-    console.log("=> GOT HUB PUBKEY", j.pubkey)
+  if (j && j.pubkey) {
+    // console.log("=> GOT HUB PUBKEY", j.pubkey)
     hub_pubkey = j.pubkey
   }
 }
@@ -45,6 +46,7 @@ interface Accounting {
   date: string
   fundingTxid: string
   onchainTxid: string
+  routeHint: string
 }
 
 async function getReceivedAccountings(): Promise<Accounting[]> {
@@ -58,7 +60,7 @@ async function getReceivedAccountings(): Promise<Accounting[]> {
 
 async function getPendingAccountings(): Promise<Accounting[]> {
   // console.log('[WATCH] getPendingAccountings')
-  const utxos: UTXO[] = await listUnspent() 
+  const utxos: UTXO[] = await listUnspent()
   const accountings = await models.Accounting.findAll({
     where: {
       onchain_address: {
@@ -140,6 +142,7 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
 }
 
 async function pollUTXOs() {
+  if (isProxy()) return // not on proxy for now???
   // console.log("[WATCH]=> pollUTXOs")
   const accs: Accounting[] = await getPendingAccountings()
   if (!accs) return
@@ -154,7 +157,7 @@ async function pollUTXOs() {
   await checkForConfirmedChannels()
 }
 
-async function checkForConfirmedChannels(){
+async function checkForConfirmedChannels() {
   const received = await getReceivedAccountings()
   // console.log('[WATCH] received accountings:', received)
   await asyncForEach(received, async (rec: Accounting) => {
@@ -165,31 +168,32 @@ async function checkForConfirmedChannels(){
   })
 }
 
-async function checkChannelsAndKeysend(rec: Accounting){
+async function checkChannelsAndKeysend(rec: Accounting) {
   const owner = await models.Contact.findOne({ where: { isOwner: true } })
   const chans = await lightning.listChannels({
-    active_only:true,
+    active_only: true,
     peer: rec.pubkey
   })
   console.log('[WATCH] chans for pubkey:', rec.pubkey, chans)
-  if(!(chans && chans.channels)) return
-  chans.channels.forEach(chan=>{ // find by txid
-    if(chan.channel_point.includes(rec.fundingTxid)) {
+  if (!(chans && chans.channels)) return
+  chans.channels.forEach(chan => { // find by txid
+    if (chan.channel_point.includes(rec.fundingTxid)) {
       console.log('[WATCH] found channel to keysend!', chan)
       const msg: { [k: string]: any } = {
         type: constants.message_types.keysend,
       }
       const extraAmount = 2000
-      const localReserve = parseInt(chan.local_chan_reserve_sat||0)
-      const remoteReserve = parseInt(chan.remote_chan_reserve_sat||0)
-      const commitFee = parseInt(chan.commit_fee||0)
+      const localReserve = parseInt(chan.local_chan_reserve_sat || 0)
+      const remoteReserve = parseInt(chan.remote_chan_reserve_sat || 0)
+      const commitFee = parseInt(chan.commit_fee || 0)
       const amount = rec.amount - localReserve - remoteReserve - commitFee - extraAmount
       console.log('[WATCH] amt to final keysend', amount)
       helpers.performKeysendMessage({
         sender: owner,
         destination_key: rec.pubkey,
+        route_hint: rec.routeHint,
         amount, msg,
-        success: function(){
+        success: function () {
           console.log('[WATCH] complete! Updating accounting, id:', rec.id)
           models.Accounting.update({
             status: constants.statuses.confirmed,
@@ -199,7 +203,7 @@ async function checkChannelsAndKeysend(rec: Accounting){
             where: { id: rec.id }
           })
         },
-        failure: function(){
+        failure: function () {
           console.log('[WATCH] failed final keysend')
         }
       })
@@ -212,11 +216,14 @@ export function startWatchingUTXOs() {
 }
 
 export async function queryOnchainAddress(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  // const tenant:number = req.owner.id
+
   console.log('=> queryOnchainAddress')
-  if(!hub_pubkey) return console.log("=> NO ROUTING NODE PUBKEY SET")
+  if (!hub_pubkey) return console.log("=> NO ROUTING NODE PUBKEY SET")
 
   const uuid = short.generate()
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
   const app = req.params.app;
 
   const query: Query = {
@@ -233,11 +240,14 @@ export async function queryOnchainAddress(req, res) {
       message: {
         content: JSON.stringify(query)
       },
-      sender: { pub_key: owner.publicKey }
+      sender: {
+        pub_key: owner.publicKey,
+        ...owner.routeHint && { route_hint: owner.routeHint }
+      }
     }
   }
   try {
-    await network.signAndSend(opts)
+    await network.signAndSend(opts, owner)
   } catch (e) {
     failure(res, e)
     return
@@ -265,7 +275,9 @@ export const receiveQuery = async (payload) => {
   const dat = payload.content || payload
   const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = dat.owner
+  const sender_route_hint = dat.sender.route_hint
+  // const tenant:number = owner.id
 
   if (!sender_pub_key || !content || !owner) {
     return console.log('=> wrong query format')
@@ -290,6 +302,7 @@ export const receiveQuery = async (payload) => {
         sourceApp: q.app,
         status: constants.statuses.pending,
         error: '',
+        routeHint: sender_route_hint
       }
       await models.Accounting.create(acc)
       result = addy
@@ -303,6 +316,7 @@ export const receiveQuery = async (payload) => {
   const opts = {
     amt: constants.min_sat_amount,
     dest: sender_pub_key,
+    route_hint: sender_route_hint,
     data: <network.Msg>{
       type: constants.message_types.query_response,
       message: {
@@ -312,7 +326,7 @@ export const receiveQuery = async (payload) => {
     }
   }
   try {
-    await network.signAndSend(opts)
+    await network.signAndSend(opts, owner)
   } catch (e) {
     console.log("FAILED TO SEND QUERY_RESPONSE")
     return

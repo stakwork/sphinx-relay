@@ -76,7 +76,7 @@ function addInMediaKey(full: { [k: string]: any }, contactId, isTribe: boolean) 
 }
 
 // add the token if its free, but if a price just the base64(host).muid
-async function finishTermsAndReceipt(full: { [k: string]: any }, destkey) {
+async function finishTermsAndReceipt(full: { [k: string]: any }, destkey:string, senderPubkey:string) {
 	const m = full && full.message
 	if (!(m && m.mediaTerms)) return full
 
@@ -89,7 +89,8 @@ async function finishTermsAndReceipt(full: { [k: string]: any }, destkey) {
 		muid: t.muid,
 		ttl: t.skipSigning ? 0 : t.ttl,
 		pubkey: t.skipSigning ? '' : destkey,
-		meta
+		meta,
+		ownerPubkey: senderPubkey
 	})
 	const fullmsg = fillmsg(full, { mediaToken })
 	delete fullmsg.message.mediaTerms
@@ -132,6 +133,7 @@ async function decryptMessage(full: { [k: string]: any }, chat) {
 async function personalizeMessage(m, contact, isTribeOwner: boolean) {
 	const contactId = contact.id
 	const destkey = contact.publicKey
+	const senderPubkey = m.sender.pub_key
 
 	const cloned = JSON.parse(JSON.stringify(m))
 
@@ -142,7 +144,7 @@ async function personalizeMessage(m, contact, isTribeOwner: boolean) {
 	const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey)
 	const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey)
 	const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId, isTribe)
-	const msgWithMediaToken = await finishTermsAndReceipt(msgWithMediaKey, destkey)
+	const msgWithMediaToken = await finishTermsAndReceipt(msgWithMediaKey, destkey, senderPubkey)
 	const encMsg = await encryptTribeBroadcast(msgWithMediaToken, contact, isTribeOwner)
 	return encMsg
 }

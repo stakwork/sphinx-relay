@@ -12,11 +12,14 @@ import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 
 export const sendPayment = async (req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
   const {
     amount,
     chat_id,
     contact_id,
     destination_key,
+    route_hint,
     media_type,
     muid,
     text,
@@ -29,10 +32,10 @@ export const sendPayment = async (req, res) => {
 
   console.log('[send payment]', req.body)
 
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = req.owner
 
   if (destination_key && !contact_id && !chat_id) {
-    anonymousKeysend(owner, destination_key, amount || '', text || '',
+    anonymousKeysend(owner, destination_key, route_hint, amount || '', text || '',
       function (body) {
         success(res, body)
       },
@@ -65,6 +68,7 @@ export const sendPayment = async (req, res) => {
     createdAt: date,
     updatedAt: date,
     network_type: constants.network_types.lightning,
+    tenant
   }
   if (text) msg.messageContent = text
   if (remote_text) msg.remoteMessageContent = remote_text
@@ -74,7 +78,8 @@ export const sendPayment = async (req, res) => {
     const myMediaToken = await tokenFromTerms({
       meta: { dim: dimensions }, host: '',
       muid, ttl: null, // default one year
-      pubkey: owner.publicKey
+      pubkey: owner.publicKey,
+      ownerPubkey: owner.publicKey,
     })
     msg.mediaToken = myMediaToken
     msg.mediaType = media_type || ''
@@ -133,6 +138,7 @@ export const receivePayment = async (payload) => {
   if (!owner || !sender || !chat) {
     return console.log('=> no group chat!')
   }
+  const tenant: number = owner.id
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -144,7 +150,8 @@ export const receivePayment = async (payload) => {
     date: date,
     createdAt: date,
     updatedAt: date,
-    network_type
+    network_type,
+    tenant
   }
   if (content) msg.messageContent = content
   if (mediaType) msg.mediaType = mediaType
@@ -162,12 +169,14 @@ export const receivePayment = async (payload) => {
   socket.sendJson({
     type: 'direct_payment',
     response: jsonUtils.messageToJson(message, chat, sender)
-  })
+  }, tenant)
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message')
+  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 }
 
 export const listPayments = async (req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
   const limit = (req.query.limit && parseInt(req.query.limit)) || 100
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
 
@@ -202,6 +211,7 @@ export const listPayments = async (req, res) => {
             status: { [Op.not]: constants.statuses.failed }
           }
         ],
+        tenant
       },
       order: [['createdAt', 'desc']],
       limit,
