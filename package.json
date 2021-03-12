@@ -71,7 +71,7 @@
     "sequelize-typescript": "^1.1.0",
     "short-uuid": "^3.1.1",
     "sjcl": "^1.0.8",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "sphinx-bot": "^0.2.19",
     "tail": "^2.0.3",
     "ts-node": "^8.5.4",
