@@ -5,7 +5,7 @@ import constants from './constants'
 
 export const findOrCreateChat = async (params) => {
 	const { chat_id, owner_id, recipient_id } = params
-	console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
+	// console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
 	let chat
 	let date = new Date();
 	date.setMilliseconds(0)
