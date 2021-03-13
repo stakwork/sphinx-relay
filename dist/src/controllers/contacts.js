@@ -109,7 +109,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     else {
         // done!
-        if (pubkey) {
+        if (proxy_1.isProxy()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
         owner.update({ authToken: hash });
