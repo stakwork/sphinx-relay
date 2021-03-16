@@ -57,6 +57,7 @@ function set(app) {
         app.post('/invites/finish', invites.finishInvite);
         app.post('/contacts/tokens', contacts.generateToken);
         app.get('/contacts', contacts.getContacts);
+        app.get('/contacts/:chat_id', contacts.getContactsForChat);
         app.put('/contacts/:id', contacts.updateContact);
         app.post('/contacts/:id/keys', contacts.exchangeKeys);
         app.post('/contacts', contacts.createContact);

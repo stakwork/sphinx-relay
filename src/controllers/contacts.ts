@@ -15,8 +15,15 @@ export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
 
+  const dontIncludeFromGroup =
+    req.query.from_group && req.query.from_group === "false";
+
+  const where: { [k: string]: any } = { deleted: false, tenant };
+  if (dontIncludeFromGroup) {
+    where.fromGroup = false;
+  }
   const contacts = await models.Contact.findAll({
-    where: { deleted: false, tenant },
+    where,
     raw: true,
   });
   const invites = await models.Invite.findAll({ raw: true, where: { tenant } });
@@ -62,6 +69,36 @@ export const getContacts = async (req, res) => {
     chats: chatsResponse,
     subscriptions: subsResponse,
   });
+};
+
+export const getContactsForChat = async (req, res) => {
+  const chat_id = parseInt(req.params.chat_id);
+  if (!chat_id) return failure(res, "no chat id");
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+
+  const chat = await models.Chat.findOne({
+    where: { id: chat_id, tenant },
+  });
+  if (!chat) return failure(res, "chat not found");
+
+  let contactIDs;
+  try {
+    contactIDs = JSON.parse(chat.contactIds || "");
+  } catch (e) {
+    return failure(res, "no contact ids");
+  }
+
+  if (!contactIDs || !contactIDs.length)
+    return failure(res, "no contact ids length");
+
+  const contacts = await models.Contact.findAll({
+    where: { id: { [Op.in]: contactIDs }, tenant },
+  });
+  if (!contacts) return failure(res, "no contacts found");
+
+  const ret = contacts.map((c) => jsonUtils.contactToJson(c));
+  success(res, { contacts: ret });
 };
 
 export const generateToken = async (req, res) => {
