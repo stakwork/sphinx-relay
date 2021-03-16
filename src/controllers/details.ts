@@ -11,6 +11,7 @@ import constants from "../constants";
 import { models } from "../models";
 import { loadConfig } from "../utils/config";
 import { getAppVersionsFromHub } from "../hub";
+import { Op } from "sequelize";
 
 const config = loadConfig();
 
@@ -193,5 +194,43 @@ export const getNodeInfo = async (req, res) => {
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
+  }
+}
+
+export async function clearForTesting(req, res) {
+  if (!config.allow_test_clearing) {
+    return failure(res, "nope");
+  }
+  if (config.allow_test_clearing !== "true") {
+    return failure(res, "nope");
+  }
+
+  try {
+    await models.Chat.destroy({ truncate: true });
+    await models.Subscription.destroy({ truncate: true });
+    await models.Accounting.destroy({ truncate: true });
+    await models.Bot.destroy({ truncate: true });
+    await models.BotMember.destroy({ truncate: true });
+    await models.ChatBot.destroy({ truncate: true });
+    await models.Invite.destroy({ truncate: true });
+    await models.MediaKey.destroy({ truncate: true });
+    await models.Message.destroy({ truncate: true });
+    await models.Timer.destroy({ truncate: true });
+    await models.Contact.destroy({
+      where: {
+        isOwner: { [Op.ne]: true },
+      },
+    });
+    const me = await models.Contact.findOne({ where: { isOwner: true } });
+    await me.update({
+      authToken: "",
+      photoUrl: "",
+      contactKey: "",
+      alias: "",
+      deviceId: "",
+    });
+    success(res, { clean: true });
+  } catch (e) {
+    failure(res, e);
   }
 }

@@ -100,6 +100,7 @@ export async function set(app) {
 	app.get('/logs', details.getLogsSince)
 	app.get('/info', details.getNodeInfo)
 	app.get('/route', details.checkRoute)
+	app.get('/test_clear', details.clearForTesting)
 
 	app.get('/query/onchain_address/:app', queries.queryOnchainAddress)
 	app.get('/utxos', queries.listUTXOs)

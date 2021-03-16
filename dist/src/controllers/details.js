@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getInfo = exports.getLogsSince = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
+exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getInfo = exports.getLogsSince = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
 const lightning_1 = require("../utils/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
@@ -18,6 +18,7 @@ const constants_1 = require("../constants");
 const models_1 = require("../models");
 const config_1 = require("../utils/config");
 const hub_1 = require("../hub");
+const sequelize_1 = require("sequelize");
 const config = config_1.loadConfig();
 const VERSION = 2;
 function getRelayVersion(req, res) {
@@ -201,4 +202,44 @@ function asyncForEach(array, callback) {
         }
     });
 }
+function clearForTesting(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!config.allow_test_clearing) {
+            return res_1.failure(res, "nope");
+        }
+        if (config.allow_test_clearing !== "true") {
+            return res_1.failure(res, "nope");
+        }
+        try {
+            yield models_1.models.Chat.destroy({ truncate: true });
+            yield models_1.models.Subscription.destroy({ truncate: true });
+            yield models_1.models.Accounting.destroy({ truncate: true });
+            yield models_1.models.Bot.destroy({ truncate: true });
+            yield models_1.models.BotMember.destroy({ truncate: true });
+            yield models_1.models.ChatBot.destroy({ truncate: true });
+            yield models_1.models.Invite.destroy({ truncate: true });
+            yield models_1.models.MediaKey.destroy({ truncate: true });
+            yield models_1.models.Message.destroy({ truncate: true });
+            yield models_1.models.Timer.destroy({ truncate: true });
+            yield models_1.models.Contact.destroy({
+                where: {
+                    isOwner: { [sequelize_1.Op.ne]: true },
+                },
+            });
+            const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            yield me.update({
+                authToken: "",
+                photoUrl: "",
+                contactKey: "",
+                alias: "",
+                deviceId: "",
+            });
+            res_1.success(res, { clean: true });
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.clearForTesting = clearForTesting;
 //# sourceMappingURL=details.js.map
