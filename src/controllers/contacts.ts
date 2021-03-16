@@ -22,6 +22,7 @@ export const getContacts = async (req, res) => {
   if (dontIncludeFromGroup) {
     where.fromGroup = { [Op.ne]: true };
   }
+  console.log('=> GET contacts where', where)
   const contacts = await models.Contact.findAll({
     where,
     raw: true,

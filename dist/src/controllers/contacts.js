@@ -31,6 +31,7 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (dontIncludeFromGroup) {
         where.fromGroup = { [sequelize_1.Op.ne]: true };
     }
+    console.log('=> GET contacts where', where);
     const contacts = yield models_1.models.Contact.findAll({
         where,
         raw: true,
