@@ -122,8 +122,9 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
         if (pendingContacts) {
             const pendingContactsRet = pendingContacts.map((c) => {
-                c.pending = true;
-                return jsonUtils.contactToJson(c);
+                const ctc = c.dataValues;
+                ctc.pending = true;
+                return jsonUtils.contactToJson(ctc);
             });
             finalContacts = pendingContactsRet.concat(contactsRet);
         }
