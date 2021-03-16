@@ -20,7 +20,7 @@ export const getContacts = async (req, res) => {
 
   const where: { [k: string]: any } = { deleted: false, tenant };
   if (dontIncludeFromGroup) {
-    where.fromGroup = false;
+    where.fromGroup = { [Op.ne]: true };
   }
   const contacts = await models.Contact.findAll({
     where,
@@ -84,18 +84,27 @@ export const getContactsForChat = async (req, res) => {
 
   let contactIDs;
   try {
-    contactIDs = JSON.parse(chat.contactIds || "");
+    contactIDs = JSON.parse(chat.contactIds || "[]");
   } catch (e) {
     return failure(res, "no contact ids");
   }
+  const pendingMembers = await models.ChatMember.findAll({
+    where: {
+      status: constants.chat_statuses.pending,
+      chatId: chat_id,
+      tenant,
+    },
+  });
+  const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
+  const theContactIds = contactIDs.concat(pendingContactIDs);
 
-  if (!contactIDs || !contactIDs.length)
+  if (!theContactIds || !theContactIds.length)
     return failure(res, "no contact ids length");
 
   const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
   const contacts = await models.Contact.findAll({
-    where: { id: { [Op.in]: contactIDs }, tenant },
+    where: { id: { [Op.in]: theContactIds }, tenant },
     limit,
     offset,
     order: [["id", "asc"]],

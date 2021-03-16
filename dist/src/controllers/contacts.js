@@ -29,7 +29,7 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const dontIncludeFromGroup = req.query.from_group && req.query.from_group === "false";
     const where = { deleted: false, tenant };
     if (dontIncludeFromGroup) {
-        where.fromGroup = false;
+        where.fromGroup = { [sequelize_1.Op.ne]: true };
     }
     const contacts = yield models_1.models.Contact.findAll({
         where,
@@ -88,17 +88,26 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         return res_1.failure(res, "chat not found");
     let contactIDs;
     try {
-        contactIDs = JSON.parse(chat.contactIds || "");
+        contactIDs = JSON.parse(chat.contactIds || "[]");
     }
     catch (e) {
         return res_1.failure(res, "no contact ids");
     }
-    if (!contactIDs || !contactIDs.length)
+    const pendingMembers = yield models_1.models.ChatMember.findAll({
+        where: {
+            status: constants_1.default.chat_statuses.pending,
+            chatId: chat_id,
+            tenant,
+        },
+    });
+    const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
+    const theContactIds = contactIDs.concat(pendingContactIDs);
+    if (!theContactIds || !theContactIds.length)
         return res_1.failure(res, "no contact ids length");
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const contacts = yield models_1.models.Contact.findAll({
-        where: { id: { [sequelize_1.Op.in]: contactIDs }, tenant },
+        where: { id: { [sequelize_1.Op.in]: theContactIds }, tenant },
         limit,
         offset,
         order: [["id", "asc"]],
