@@ -29,7 +29,7 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const dontIncludeFromGroup = req.query.from_group && req.query.from_group === "false";
     const where = { deleted: false, tenant };
     if (dontIncludeFromGroup) {
-        where.fromGroup = { [sequelize_1.Op.ne]: true };
+        where.fromGroup = { [sequelize_1.Op.or]: [false, 0, null] };
     }
     console.log('=> GET contacts where', where);
     const contacts = yield models_1.models.Contact.findAll({
