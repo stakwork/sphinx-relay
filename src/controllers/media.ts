@@ -1,23 +1,23 @@
-import { models } from '../models'
-import * as socket from '../utils/socket'
-import * as jsonUtils from '../utils/json'
-import * as resUtils from '../utils/res'
-import * as helpers from '../helpers'
-import { sendNotification } from '../hub'
-import { signBuffer, verifyMessage } from '../utils/lightning'
-import * as rp from 'request-promise'
-import { parseLDAT, tokenFromTerms, urlBase64FromBytes } from '../utils/ldat'
-import * as meme from '../utils/meme'
-import * as zbase32 from '../utils/zbase32'
-import * as schemas from './schemas'
-import { sendConfirmation } from './confirmations'
-import * as network from '../network'
-import * as short from 'short-uuid'
-import constants from '../constants'
+import { models } from "../models";
+import * as socket from "../utils/socket";
+import * as jsonUtils from "../utils/json";
+import * as resUtils from "../utils/res";
+import * as helpers from "../helpers";
+import { sendNotification } from "../hub";
+import { signBuffer, verifyMessage } from "../utils/lightning";
+import * as rp from "request-promise";
+import { parseLDAT, tokenFromTerms, urlBase64FromBytes } from "../utils/ldat";
+import * as meme from "../utils/meme";
+import * as zbase32 from "../utils/zbase32";
+import * as schemas from "./schemas";
+import { sendConfirmation } from "./confirmations";
+import * as network from "../network";
+import * as short from "short-uuid";
+import constants from "../constants";
 import { loadConfig } from "../utils/config";
-import { failure } from '../utils/res'
+import { failure } from "../utils/res";
 
-const config = loadConfig()
+const config = loadConfig();
 
 /*
 
@@ -38,8 +38,8 @@ purchase_deny returns the sats
 */
 
 export const sendAttachmentMessage = async (req, res) => {
-  if (!req.owner) return failure(res, 'no owner')
-  const tenant: number = req.owner.id
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
   // try {
   //   schemas.attachment.validateSync(req.body)
   // } catch(e) {
@@ -60,39 +60,43 @@ export const sendAttachmentMessage = async (req, res) => {
     ttl,
     price, // IF AMOUNT>0 THEN do NOT sign or send receipt
     reply_uuid,
-  } = req.body
+  } = req.body;
 
-  console.log('[send attachment]', req.body)
+  console.log("[send attachment]", req.body);
 
-  const owner = req.owner
+  const owner = req.owner;
   const chat = await helpers.findOrCreateChat({
     chat_id,
     owner_id: owner.id,
-    recipient_id: contact_id
-  })
+    recipient_id: contact_id,
+  });
 
-  let TTL = ttl
+  let TTL = ttl;
   if (ttl) {
-    TTL = parseInt(ttl)
+    TTL = parseInt(ttl);
   }
-  if (!TTL) TTL = 31536000 // default year
+  if (!TTL) TTL = 31536000; // default year
 
-  const amt = price || 0
+  const amt = price || 0;
   // generate media token for self!
   const myMediaToken = await tokenFromTerms({
-    muid, ttl: TTL, host: '',
+    muid,
+    ttl: TTL,
+    host: "",
     pubkey: owner.publicKey,
-    meta: { ...amt && { amt }, ttl },
-    ownerPubkey: owner.publicKey
-  })
+    meta: { ...(amt && { amt }), ttl },
+    ownerPubkey: owner.publicKey,
+  });
 
   const date = new Date();
-  date.setMilliseconds(0)
-  const myMediaKey = (media_key_map && media_key_map[owner.id]) || ''
-  const mediaType = media_type || ''
-  const remoteMessageContent = remote_text_map ? JSON.stringify(remote_text_map) : remote_text
+  date.setMilliseconds(0);
+  const myMediaKey = (media_key_map && media_key_map[owner.id]) || "";
+  const mediaType = media_type || "";
+  const remoteMessageContent = remote_text_map
+    ? JSON.stringify(remote_text_map)
+    : remote_text;
 
-  const uuid = short.generate()
+  const uuid = short.generate();
   const mm: { [k: string]: any } = {
     chatId: chat.id,
     uuid: uuid,
@@ -100,7 +104,7 @@ export const sendAttachmentMessage = async (req, res) => {
     type: constants.message_types.attachment,
     status: constants.statuses.pending,
     amount: amount || 0,
-    messageContent: text || file_name || '',
+    messageContent: text || file_name || "",
     remoteMessageContent,
     mediaToken: myMediaToken,
     mediaKey: myMediaKey,
@@ -108,29 +112,30 @@ export const sendAttachmentMessage = async (req, res) => {
     date,
     createdAt: date,
     updatedAt: date,
-    tenant
-  }
-  if (reply_uuid) mm.replyUuid = reply_uuid
-  const message = await models.Message.create(mm)
+    tenant,
+  };
+  if (reply_uuid) mm.replyUuid = reply_uuid;
+  const message = await models.Message.create(mm);
 
-  console.log('saved attachment msg from me', message.id)
+  console.log("saved attachment msg from me", message.id);
 
-  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant)
+  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant);
 
   const mediaTerms: { [k: string]: any } = {
-    muid, ttl: TTL,
-    meta: { ...amt && { amt } },
-    skipSigning: amt ? true : false // only sign if its free
-  }
+    muid,
+    ttl: TTL,
+    meta: { ...(amt && { amt }) },
+    skipSigning: amt ? true : false, // only sign if its free
+  };
   const msg: { [k: string]: any } = {
     mediaTerms, // this gets converted to mediaToken
     id: message.id,
     uuid: uuid,
-    content: remote_text_map || remote_text || text || file_name || '',
+    content: remote_text_map || remote_text || text || file_name || "",
     mediaKey: media_key_map,
     mediaType: mediaType,
-  }
-  if (reply_uuid) msg.replyUuid = reply_uuid
+  };
+  if (reply_uuid) msg.replyUuid = reply_uuid;
   network.sendMessage({
     chat: chat,
     sender: owner,
@@ -138,58 +143,63 @@ export const sendAttachmentMessage = async (req, res) => {
     amount: amount || 0,
     message: msg,
     success: async (data) => {
-      console.log('attachment sent', { data })
-      resUtils.success(res, jsonUtils.messageToJson(message, chat))
+      console.log("attachment sent", { data });
+      resUtils.success(res, jsonUtils.messageToJson(message, chat));
     },
-    failure: error => resUtils.failure(res, error.message),
-  })
-}
+    failure: (error) => resUtils.failure(res, error.message),
+  });
+};
 
-export function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) {
-  if (typeof mediaKeyMap !== 'object') {
-    console.log('wrong type for mediaKeyMap')
-    return
+export function saveMediaKeys(
+  muid,
+  mediaKeyMap,
+  chatId,
+  messageId,
+  mediaType,
+  tenant
+) {
+  if (typeof mediaKeyMap !== "object") {
+    console.log("wrong type for mediaKeyMap");
+    return;
   }
   var date = new Date();
-  date.setMilliseconds(0)
+  date.setMilliseconds(0);
   for (let [contactId, key] of Object.entries(mediaKeyMap)) {
     if (parseInt(contactId) !== tenant) {
-      const receiverID = parseInt(contactId) || 0 // 0 is for a tribe
+      const receiverID = parseInt(contactId) || 0; // 0 is for a tribe
       models.MediaKey.create({
-        muid, chatId, key, messageId,
+        muid,
+        chatId,
+        key,
+        messageId,
         receiver: receiverID,
         createdAt: date,
         mediaType,
-        tenant
-      })
+        tenant,
+      });
     }
   }
 }
 
 export const purchase = async (req, res) => {
-  if (!req.owner) return failure(res, 'no owner')
-  const tenant: number = req.owner.id
-  const {
-    chat_id,
-    contact_id,
-    amount,
-    media_token,
-  } = req.body
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+  const { chat_id, contact_id, amount, media_token } = req.body;
   var date = new Date();
-  date.setMilliseconds(0)
+  date.setMilliseconds(0);
 
   try {
-    schemas.purchase.validateSync(req.body)
+    schemas.purchase.validateSync(req.body);
   } catch (e) {
-    return resUtils.failure(res, e.message)
+    return resUtils.failure(res, e.message);
   }
 
-  const owner = req.owner
+  const owner = req.owner;
   const chat = await helpers.findOrCreateChat({
     chat_id,
     owner_id: owner.id,
-    recipient_id: contact_id
-  })
+    recipient_id: contact_id,
+  });
 
   const message = await models.Message.create({
     chatId: chat.id,
@@ -203,13 +213,15 @@ export const purchase = async (req, res) => {
     createdAt: date,
     updatedAt: date,
     network_type: constants.network_types.lightning,
-    tenant
-  })
+    tenant,
+  });
 
   const msg = {
-    mediaToken: media_token, id: message.id, uuid: message.uuid,
+    mediaToken: media_token,
+    id: message.id,
+    uuid: message.uuid,
     purchaser: owner.id, // for tribe, knows who sent
-  }
+  };
   network.sendMessage({
     chat: { ...chat.dataValues, contactIds: [contact_id] },
     sender: owner,
@@ -218,26 +230,37 @@ export const purchase = async (req, res) => {
     message: msg,
     amount: amount,
     success: async (data) => {
-      console.log('purchase sent!')
-      resUtils.success(res, jsonUtils.messageToJson(message, chat))
+      console.log("purchase sent!");
+      resUtils.success(res, jsonUtils.messageToJson(message, chat));
     },
-    failure: error => resUtils.failure(res, error.message),
-  })
-}
+    failure: (error) => resUtils.failure(res, error.message),
+  });
+};
 
 /* RECEIVERS */
 
 export const receivePurchase = async (payload) => {
-  console.log('=> received purchase', { payload })
+  console.log("=> received purchase", { payload });
 
   var date = new Date();
-  date.setMilliseconds(0)
+  date.setMilliseconds(0);
 
-  const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id, network_type } = await helpers.parseReceiveParams(payload)
+  const {
+    owner,
+    sender,
+    chat,
+    amount,
+    mediaToken,
+    msg_uuid,
+    chat_type,
+    skip_payment_processing,
+    purchaser_id,
+    network_type,
+  } = await helpers.parseReceiveParams(payload);
   if (!owner || !sender || !chat) {
-    return console.log('=> group chat not found!')
+    return console.log("=> group chat not found!");
   }
-  const tenant: number = owner.id
+  const tenant: number = owner.id;
 
   const message = await models.Message.create({
     chatId: chat.id,
@@ -251,135 +274,164 @@ export const receivePurchase = async (payload) => {
     createdAt: date,
     updatedAt: date,
     network_type,
+    tenant,
+  });
+  socket.sendJson(
+    {
+      type: "purchase",
+      response: jsonUtils.messageToJson(message, chat, sender),
+    },
     tenant
-  })
-  socket.sendJson({
-    type: 'purchase',
-    response: jsonUtils.messageToJson(message, chat, sender)
-  }, tenant)
+  );
 
-  const isTribe = chat_type === constants.chat_types.tribe
+  const isTribe = chat_type === constants.chat_types.tribe;
 
   // if sats forwarded from tribe owner, for the >1 time
   // dont need to send back token, because admin already has it
   if (isTribe && skip_payment_processing) {
-    return console.log('=> skip payment processing')
+    return console.log("=> skip payment processing");
   }
 
-  const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1]
+  const muid =
+    mediaToken && mediaToken.split(".").length && mediaToken.split(".")[1];
   if (!muid) {
-    return console.log('no muid')
+    return console.log("no muid");
   }
 
   const ogMessage = await models.Message.findOne({
-    where: { mediaToken, tenant }
-  })
+    where: { mediaToken, tenant },
+  });
   if (!ogMessage) {
-    return console.log('no original message')
+    return console.log("no original message");
   }
 
   // find mediaKey for who sent
   const mediaKey = await models.MediaKey.findOne({
     where: {
-      muid, receiver: isTribe ? 0 : sender.id, tenant
-    }
-  })
+      muid,
+      receiver: isTribe ? 0 : sender.id,
+      tenant,
+    },
+  });
   // console.log('mediaKey found!',mediaKey.dataValues)
-  if (!mediaKey) return // this is from another person (admin is forwarding)
+  if (!mediaKey) return; // this is from another person (admin is forwarding)
 
-  const terms = parseLDAT(mediaToken)
+  const terms = parseLDAT(mediaToken);
   // get info
-  let TTL = terms.meta && terms.meta.ttl
-  let price = terms.meta && terms.meta.amt
+  let TTL = terms.meta && terms.meta.ttl;
+  let price = terms.meta && terms.meta.amt;
   if (!TTL || !price) {
-    const media = await getMediaInfo(muid, owner.publicKey)
-    console.log("GOT MEDIA", media)
+    const media = await getMediaInfo(muid, owner.publicKey);
+    console.log("GOT MEDIA", media);
     if (media) {
-      TTL = media.ttl && parseInt(media.ttl)
-      price = media.price
+      TTL = media.ttl && parseInt(media.ttl);
+      price = media.price;
     }
-    if (!TTL) TTL = 31536000
-    if (!price) price = 0
+    if (!TTL) TTL = 31536000;
+    if (!price) price = 0;
   }
 
-  if (amount < price) { // didnt pay enough
-    return network.sendMessage({ // "purchase_deny"
+  if (amount < price) {
+    // didnt pay enough
+    return network.sendMessage({
+      // "purchase_deny"
       chat: { ...chat.dataValues, contactIds: [sender.id] }, // only send back to sender
       sender: owner,
       amount: amount,
       type: constants.message_types.purchase_deny,
-      message: { amount, content: 'Payment Denied', mediaToken },
+      message: { amount, content: "Payment Denied", mediaToken },
       success: async (data) => {
-        console.log('purchase_deny sent')
+        console.log("purchase_deny sent");
         const denyMsg = await models.Message.create({
           chatId: chat.id,
           sender: owner.id,
           type: constants.message_types.purchase_deny,
           mediaToken: mediaToken,
-          date: date, createdAt: date, updatedAt: date,
+          date: date,
+          createdAt: date,
+          updatedAt: date,
+          tenant,
+        });
+        socket.sendJson(
+          {
+            type: "purchase_deny",
+            response: jsonUtils.messageToJson(denyMsg, chat, sender),
+          },
           tenant
-        })
-        socket.sendJson({
-          type: 'purchase_deny',
-          response: jsonUtils.messageToJson(denyMsg, chat, sender)
-        }, tenant)
+        );
       },
-      failure: error => console.log('=> couldnt send purcahse deny', error),
-    })
+      failure: (error) => console.log("=> couldnt send purcahse deny", error),
+    });
   }
 
   const theMediaToken = await tokenFromTerms({
-    muid, ttl: TTL, host: '',
+    muid,
+    ttl: TTL,
+    host: "",
     meta: { amt: amount },
     pubkey: sender.publicKey,
     ownerPubkey: owner.publicKey,
-  })
+  });
   const msgToSend: { [k: string]: any } = {
     mediaToken: theMediaToken,
     mediaKey: mediaKey.key,
     mediaType: ogMessage.mediaType,
-  }
-  if (purchaser_id) msgToSend.purchaser = purchaser_id
+  };
+  if (purchaser_id) msgToSend.purchaser = purchaser_id;
   network.sendMessage({
     chat: { ...chat.dataValues, contactIds: [sender.id] }, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
     message: msgToSend,
     success: async (data) => {
-      console.log('purchase_accept sent!')
+      console.log("purchase_accept sent!");
       const acceptMsg = await models.Message.create({
         chatId: chat.id,
         sender: owner.id,
         type: constants.message_types.purchase_accept,
         mediaToken: theMediaToken,
-        date: date, createdAt: date, updatedAt: date,
+        date: date,
+        createdAt: date,
+        updatedAt: date,
+        tenant,
+      });
+      socket.sendJson(
+        {
+          type: "purchase_accept",
+          response: jsonUtils.messageToJson(acceptMsg, chat, sender),
+        },
         tenant
-      })
-      socket.sendJson({
-        type: 'purchase_accept',
-        response: jsonUtils.messageToJson(acceptMsg, chat, sender)
-      }, tenant)
+      );
     },
-    failure: error => console.log('=> couldnt send purchase accept', error),
-  })
-}
+    failure: (error) => console.log("=> couldnt send purchase accept", error),
+  });
+};
 
 export const receivePurchaseAccept = async (payload) => {
-  console.log('=> receivePurchaseAccept')
+  console.log("=> receivePurchaseAccept");
   var date = new Date();
-  date.setMilliseconds(0)
+  date.setMilliseconds(0);
 
-  const { owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid, network_type } = await helpers.parseReceiveParams(payload)
+  const {
+    owner,
+    sender,
+    chat,
+    mediaToken,
+    mediaKey,
+    mediaType,
+    originalMuid,
+    network_type,
+  } = await helpers.parseReceiveParams(payload);
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return console.log("=> no group chat!");
   }
-  const tenant: number = owner.id
+  const tenant: number = owner.id;
 
-  const termsArray = mediaToken.split('.')
+  const termsArray = mediaToken.split(".");
   // const host = termsArray[0]
-  const muid = termsArray[1]
+  const muid = termsArray[1];
   if (!muid) {
-    return console.log('wtf no muid')
+    return console.log("wtf no muid");
   }
   // const attachmentMessage = await models.Message.findOne({where:{
   //   mediaToken: {$like: `${host}.${muid}%`}
@@ -399,34 +451,44 @@ export const receivePurchaseAccept = async (payload) => {
     mediaToken,
     mediaKey,
     mediaType,
-    originalMuid: originalMuid || '',
+    originalMuid: originalMuid || "",
     date: date,
     createdAt: date,
     updatedAt: date,
     network_type,
+    tenant,
+  });
+  socket.sendJson(
+    {
+      type: "purchase_accept",
+      response: jsonUtils.messageToJson(msg, chat, sender),
+    },
     tenant
-  })
-  socket.sendJson({
-    type: 'purchase_accept',
-    response: jsonUtils.messageToJson(msg, chat, sender)
-  }, tenant)
-}
+  );
+};
 
 export const receivePurchaseDeny = async (payload) => {
-  console.log('=> receivePurchaseDeny')
-  var date = new Date()
-  date.setMilliseconds(0)
-  const { owner, sender, chat, amount, mediaToken, network_type } = await helpers.parseReceiveParams(payload)
+  console.log("=> receivePurchaseDeny");
+  var date = new Date();
+  date.setMilliseconds(0);
+  const {
+    owner,
+    sender,
+    chat,
+    amount,
+    mediaToken,
+    network_type,
+  } = await helpers.parseReceiveParams(payload);
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return console.log("=> no group chat!");
   }
-  const tenant: number = owner.id
+  const tenant: number = owner.id;
   const msg = await models.Message.create({
     chatId: chat.id,
     sender: sender.id,
     type: constants.message_types.purchase_deny,
     status: constants.statuses.received,
-    messageContent: 'Purchase has been denied and sats returned to you',
+    messageContent: "Purchase has been denied and sats returned to you",
     amount: amount,
     amountMsat: parseFloat(amount) * 1000,
     mediaToken,
@@ -434,25 +496,43 @@ export const receivePurchaseDeny = async (payload) => {
     createdAt: date,
     updatedAt: date,
     network_type,
+    tenant,
+  });
+  socket.sendJson(
+    {
+      type: "purchase_deny",
+      response: jsonUtils.messageToJson(msg, chat, sender),
+    },
     tenant
-  })
-  socket.sendJson({
-    type: 'purchase_deny',
-    response: jsonUtils.messageToJson(msg, chat, sender)
-  }, tenant)
-}
+  );
+};
 
 export const receiveAttachment = async (payload) => {
   // console.log('received attachment', { payload })
 
   var date = new Date();
-  date.setMilliseconds(0)
+  date.setMilliseconds(0);
 
-  const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type, sender_photo_url } = await helpers.parseReceiveParams(payload)
+  const {
+    owner,
+    sender,
+    chat,
+    mediaToken,
+    mediaKey,
+    mediaType,
+    content,
+    msg_id,
+    chat_type,
+    sender_alias,
+    msg_uuid,
+    reply_uuid,
+    network_type,
+    sender_photo_url,
+  } = await helpers.parseReceiveParams(payload);
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return console.log("=> no group chat!");
   }
-  const tenant: number = owner.id
+  const tenant: number = owner.id;
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -464,74 +544,77 @@ export const receiveAttachment = async (payload) => {
     createdAt: date,
     updatedAt: date,
     network_type,
-    tenant
-  }
-  if (content) msg.messageContent = content
-  if (mediaToken) msg.mediaToken = mediaToken
-  if (mediaKey) msg.mediaKey = mediaKey
-  if (mediaType) msg.mediaType = mediaType
-  if (reply_uuid) msg.replyUuid = reply_uuid
-  const isTribe = chat_type === constants.chat_types.tribe
+    tenant,
+  };
+  if (content) msg.messageContent = content;
+  if (mediaToken) msg.mediaToken = mediaToken;
+  if (mediaKey) msg.mediaKey = mediaKey;
+  if (mediaType) msg.mediaType = mediaType;
+  if (reply_uuid) msg.replyUuid = reply_uuid;
+  const isTribe = chat_type === constants.chat_types.tribe;
   if (isTribe) {
-    msg.senderAlias = sender_alias
-    msg.senderPic = sender_photo_url
+    msg.senderAlias = sender_alias;
+    msg.senderPic = sender_photo_url;
   }
 
-  const message = await models.Message.create(msg)
+  const message = await models.Message.create(msg);
 
   // console.log('saved attachment', message.dataValues)
 
-  socket.sendJson({
-    type: 'attachment',
-    response: jsonUtils.messageToJson(message, chat, sender)
-  }, tenant)
+  socket.sendJson(
+    {
+      type: "attachment",
+      response: jsonUtils.messageToJson(message, chat, sender),
+    },
+    tenant
+  );
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(chat, msg.senderAlias || sender.alias, "message", owner);
 
-  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
-}
+  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
+};
 
 export async function signer(req, res) {
-  if (!req.owner) return failure(res, 'no owner')
+  if (!req.owner) return failure(res, "no owner");
   // const tenant:number = req.owner.id
-  if (!req.params.challenge) return resUtils.failure(res, "no challenge")
+  if (!req.params.challenge) return resUtils.failure(res, "no challenge");
   try {
     const sig = await signBuffer(
-      Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey
-    )
-    const sigBytes = zbase32.decode(sig)
-    const sigBase64 = urlBase64FromBytes(sigBytes)
+      Buffer.from(req.params.challenge, "base64"),
+      req.owner.publicKey
+    );
+    const sigBytes = zbase32.decode(sig);
+    const sigBase64 = urlBase64FromBytes(sigBytes);
     resUtils.success(res, {
-      sig: sigBase64
-    })
+      sig: sigBase64,
+    });
   } catch (e) {
-    resUtils.failure(res, e)
+    resUtils.failure(res, e);
   }
 }
 
 export async function verifier(msg, sig) {
   try {
-    const res = await verifyMessage(msg, sig)
-    return res
+    const res = await verifyMessage(msg, sig);
+    return res;
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
 }
 
-export async function getMediaInfo(muid, pubkey:string) {
+export async function getMediaInfo(muid, pubkey: string) {
   try {
-    const token = await meme.lazyToken(pubkey, config.media_host)
-    const mediaURL = 'http://' + config.media_host + '/'
-    const res = await rp.get(mediaURL + 'mymedia/' + muid, {
+    const token = await meme.lazyToken(pubkey, config.media_host);
+    const mediaURL = "http://" + config.media_host + "/";
+    const res = await rp.get(mediaURL + "mymedia/" + muid, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-      json: true
-    })
-    return res
+      json: true,
+    });
+    return res;
   } catch (e) {
-    return null
+    return null;
   }
 }
-

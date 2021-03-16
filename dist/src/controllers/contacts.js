@@ -31,7 +31,6 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (dontIncludeFromGroup) {
         where.fromGroup = { [sequelize_1.Op.or]: [false, 0, null] };
     }
-    console.log('=> GET contacts where', where);
     const contacts = yield models_1.models.Contact.findAll({
         where,
         raw: true,
@@ -101,22 +100,35 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
             tenant,
         },
     });
-    const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
-    const theContactIds = contactIDs.concat(pendingContactIDs);
-    if (!theContactIds || !theContactIds.length)
+    if (!contactIDs || !contactIDs.length)
         return res_1.failure(res, "no contact ids length");
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const contacts = yield models_1.models.Contact.findAll({
-        where: { id: { [sequelize_1.Op.in]: theContactIds }, tenant },
+        where: { id: { [sequelize_1.Op.in]: contactIDs }, tenant },
         limit,
         offset,
-        order: [["id", "asc"]],
+        order: [["alias", "asc"]],
     });
     if (!contacts)
         return res_1.failure(res, "no contacts found");
-    const ret = contacts.map((c) => jsonUtils.contactToJson(c));
-    res_1.success(res, { contacts: ret });
+    const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
+    let finalContacts = contactsRet;
+    if (offset === 0) {
+        const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
+        const pendingContacts = yield models_1.models.Contact.findAll({
+            where: { id: { [sequelize_1.Op.in]: pendingContactIDs }, tenant },
+            order: [["alias", "asc"]],
+        });
+        if (pendingContacts) {
+            const pendingContactsRet = pendingContacts.map((c) => {
+                c.pending = true;
+                return jsonUtils.contactToJson(c);
+            });
+            finalContacts = pendingContactsRet.concat(contactsRet);
+        }
+    }
+    res_1.success(res, { contacts: finalContacts });
 });
 exports.getContactsForChat = getContactsForChat;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

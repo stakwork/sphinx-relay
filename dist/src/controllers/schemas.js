@@ -18,6 +18,6 @@ exports.purchase = yup.object().shape({
     chat_id: yup.number().required(),
     contact_id: yup.number().required(),
     media_token: yup.string().required(),
-    amount: yup.number().required()
+    amount: yup.number().required(),
 });
 //# sourceMappingURL=schemas.js.map

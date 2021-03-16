@@ -22,7 +22,6 @@ export const getContacts = async (req, res) => {
   if (dontIncludeFromGroup) {
     where.fromGroup = { [Op.or]: [false, 0, null] };
   }
-  console.log('=> GET contacts where', where)
   const contacts = await models.Contact.findAll({
     where,
     raw: true,
@@ -96,24 +95,38 @@ export const getContactsForChat = async (req, res) => {
       tenant,
     },
   });
-  const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
-  const theContactIds = contactIDs.concat(pendingContactIDs);
 
-  if (!theContactIds || !theContactIds.length)
+  if (!contactIDs || !contactIDs.length)
     return failure(res, "no contact ids length");
 
   const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
   const contacts = await models.Contact.findAll({
-    where: { id: { [Op.in]: theContactIds }, tenant },
+    where: { id: { [Op.in]: contactIDs }, tenant },
     limit,
     offset,
-    order: [["id", "asc"]],
+    order: [["alias", "asc"]],
   });
   if (!contacts) return failure(res, "no contacts found");
+  const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
 
-  const ret = contacts.map((c) => jsonUtils.contactToJson(c));
-  success(res, { contacts: ret });
+  let finalContacts = contactsRet;
+  if (offset === 0) {
+    const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
+    const pendingContacts = await models.Contact.findAll({
+      where: { id: { [Op.in]: pendingContactIDs }, tenant },
+      order: [["alias", "asc"]],
+    });
+    if (pendingContacts) {
+      const pendingContactsRet = pendingContacts.map((c) => {
+        c.pending = true;
+        return jsonUtils.contactToJson(c);
+      });
+      finalContacts = pendingContactsRet.concat(contactsRet);
+    }
+  }
+
+  success(res, { contacts: finalContacts });
 };
 
 export const generateToken = async (req, res) => {

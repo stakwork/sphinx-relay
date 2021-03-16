@@ -566,8 +566,8 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
     asyncForEach(msgs, async (m) => {
       if (!network.typesToReplay.includes(m.type)) return; // only for message for now
       if (chat.skipBroadcastJoins) {
-        if (network.typesToSkipIfSkipBroadcastJoins.includes(m.type)){
-          return // no join or leave announcements if set this way
+        if (network.typesToSkipIfSkipBroadcastJoins.includes(m.type)) {
+          return; // no join or leave announcements if set this way
         }
       }
       const sender = {
