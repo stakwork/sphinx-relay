@@ -92,8 +92,13 @@ export const getContactsForChat = async (req, res) => {
   if (!contactIDs || !contactIDs.length)
     return failure(res, "no contact ids length");
 
+  const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
+  const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
   const contacts = await models.Contact.findAll({
     where: { id: { [Op.in]: contactIDs }, tenant },
+    limit,
+    offset,
+    order: [["id", "asc"]],
   });
   if (!contacts) return failure(res, "no contacts found");
 

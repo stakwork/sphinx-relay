@@ -95,8 +95,13 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
     if (!contactIDs || !contactIDs.length)
         return res_1.failure(res, "no contact ids length");
+    const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
+    const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const contacts = yield models_1.models.Contact.findAll({
         where: { id: { [sequelize_1.Op.in]: contactIDs }, tenant },
+        limit,
+        offset,
+        order: [["id", "asc"]],
     });
     if (!contacts)
         return res_1.failure(res, "no contacts found");
