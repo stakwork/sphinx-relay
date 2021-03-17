@@ -57,7 +57,6 @@ function updateChat(req, res) {
 exports.updateChat = updateChat;
 function kickChatMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> kickChatMember');
         if (!req.owner)
             return res_1.failure(res, "no owner");
         const tenant = req.owner.id;
@@ -66,14 +65,11 @@ function kickChatMember(req, res) {
         if (!chatId || !contactId) {
             return res_1.failure(res, "missing param");
         }
-        console.log('=> kickChatMember chat and contact', chatId, contactId);
         // remove chat.contactIds
         let chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
-        console.log('=> kickChatMember Chat', chat.dataValues);
         const contactIds = JSON.parse(chat.contactIds || "[]");
         const newContactIds = contactIds.filter((cid) => cid !== contactId);
         yield chat.update({ contactIds: JSON.stringify(newContactIds) });
-        console.log('=> kickChatMember Chat updated');
         // remove from ChatMembers
         yield models_1.models.ChatMember.destroy({
             where: {
@@ -82,7 +78,6 @@ function kickChatMember(req, res) {
                 tenant,
             },
         });
-        console.log('=> kickChatMember ChatMember destoryed');
         const owner = req.owner;
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contactId] }),
@@ -90,10 +85,8 @@ function kickChatMember(req, res) {
             message: {},
             type: constants_1.default.message_types.group_kick,
         });
-        console.log('=> kickChatMember 55');
         // delete all timers for this member
         timers.removeTimersByContactIdChatId(contactId, chatId, tenant);
-        console.log('=> kickChatMember 66');
         res_1.success(res, jsonUtils.chatToJson(chat));
     });
 }
