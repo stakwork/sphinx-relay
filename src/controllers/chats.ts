@@ -45,7 +45,7 @@ export async function updateChat(req, res) {
 export async function kickChatMember(req, res) {
   console.log('=> kickChatMember')
   if (!req.owner) return failure(res, "no owner");
-  const tenant: number = req.tenant.id;
+  const tenant: number = req.owner.id;
 
   const chatId = parseInt(req.params["chat_id"]);
   const contactId = parseInt(req.params["contact_id"]);
