@@ -59,7 +59,7 @@ function kickChatMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
             return res_1.failure(res, "no owner");
-        const tenant = req.tenant.id;
+        const tenant = req.owner.id;
         const chatId = parseInt(req.params["chat_id"]);
         const contactId = parseInt(req.params["contact_id"]);
         if (!chatId || !contactId) {

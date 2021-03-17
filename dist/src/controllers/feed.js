@@ -16,11 +16,11 @@ const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
     const { destinations, amount, chat_id, text, update_meta, } = req.body;
     if (!(destinations && destinations.length)) {
-        return res_1.failure(res, 'no destinations');
+        return res_1.failure(res, "no destinations");
     }
     if (update_meta) {
         let meta;
@@ -29,26 +29,28 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         catch (e) { }
         if (!meta) {
-            return res_1.failure(res, 'no meta');
+            return res_1.failure(res, "no meta");
         }
         if (meta && meta.itemID) {
             const cm = {
                 itemID: meta.itemID,
                 ts: meta.ts || 0,
                 sats_per_minute: amount || 0,
-                speed: meta.speed || '1'
+                speed: meta.speed || "1",
             };
-            const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
+            const chat = yield models_1.models.Chat.findOne({
+                where: { id: chat_id, tenant },
+            });
             if (!chat) {
-                return res_1.failure(res, 'no chat');
+                return res_1.failure(res, "no chat");
             }
             yield chat.update({ meta: JSON.stringify(cm) });
         }
     }
     const owner = req.owner;
-    if (amount && typeof amount === 'number') {
+    if (amount && typeof amount === "number") {
         yield asyncForEach(destinations, (d) => __awaiter(void 0, void 0, void 0, function* () {
-            if (d.type === 'node') {
+            if (d.type === "node") {
                 if (!d.address)
                     return;
                 if (d.address.length !== 66)
@@ -78,7 +80,7 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
             amount,
             msg,
             success: () => {
-                console.log('payment sent!');
+                console.log("payment sent!");
                 var date = new Date();
                 date.setMilliseconds(0);
                 models_1.models.Message.create({
@@ -87,19 +89,19 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
                     sender: 1,
                     amount,
                     amountMsat: amount * 1000,
-                    paymentHash: '',
+                    paymentHash: "",
                     date,
-                    messageContent: text || '',
+                    messageContent: text || "",
                     status: constants_1.default.statuses.confirmed,
                     createdAt: date,
                     updatedAt: date,
-                    tenant
+                    tenant,
                 });
                 onSuccess({ destination_key, amount });
             },
             failure: (error) => {
                 onFailure(error);
-            }
+            },
         });
     });
 }

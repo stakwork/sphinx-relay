@@ -329,6 +329,7 @@ export async function editTribe(req, res) {
   }
 }
 
+type ChatMemberStatus = 'approved' | 'rejected'
 export async function approveOrRejectMember(req, res) {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
@@ -336,7 +337,7 @@ export async function approveOrRejectMember(req, res) {
   console.log("=> approve or reject tribe member");
   const msgId = parseInt(req.params["messageId"]);
   const contactId = parseInt(req.params["contactId"]);
-  const status = req.params["status"];
+  const status:ChatMemberStatus = req.params["status"];
 
   const msg = await models.Message.findOne({ where: { id: msgId, tenant } });
   if (!msg) return failure(res, "no message");
@@ -361,18 +362,23 @@ export async function approveOrRejectMember(req, res) {
     const contactIds = JSON.parse(chat.contactIds || "[]");
     if (!contactIds.includes(contactId)) contactIds.push(contactId);
     await chat.update({ contactIds: JSON.stringify(contactIds) });
-  }
+  } 
 
   await msg.update({ type: msgType });
-
+  
   const member = await models.ChatMember.findOne({
     where: { contactId, chatId },
   });
   if (!member) {
     return failure(res, "cant find chat member");
   }
-  // update ChatMember status
-  await member.update({ status: memberStatus });
+  if (status === 'approved') {
+    // update ChatMember status
+    await member.update({ status: memberStatus });
+  } else if (status === 'rejected') {
+    // destroy the row
+    await member.destroy()
+  }
 
   const owner = req.owner;
   const chatToSend = chat.dataValues || chat;
@@ -566,8 +572,8 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
     asyncForEach(msgs, async (m) => {
       if (!network.typesToReplay.includes(m.type)) return; // only for message for now
       if (chat.skipBroadcastJoins) {
-        if (network.typesToSkipIfSkipBroadcastJoins.includes(m.type)){
-          return // no join or leave announcements if set this way
+        if (network.typesToSkipIfSkipBroadcastJoins.includes(m.type)) {
+          return; // no join or leave announcements if set this way
         }
       }
       const sender = {

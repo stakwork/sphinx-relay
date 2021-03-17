@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContacts = void 0;
+exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -26,8 +26,13 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!req.owner)
         return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
+    const dontIncludeFromGroup = req.query.from_group && req.query.from_group === "false";
+    const where = { deleted: false, tenant };
+    if (dontIncludeFromGroup) {
+        where.fromGroup = { [sequelize_1.Op.or]: [false, 0, null] };
+    }
     const contacts = yield models_1.models.Contact.findAll({
-        where: { deleted: false, tenant },
+        where,
         raw: true,
     });
     const invites = yield models_1.models.Invite.findAll({ raw: true, where: { tenant } });
@@ -69,6 +74,64 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     });
 });
 exports.getContacts = getContacts;
+const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const chat_id = parseInt(req.params.chat_id);
+    if (!chat_id)
+        return res_1.failure(res, "no chat id");
+    if (!req.owner)
+        return res_1.failure(res, "no owner");
+    const tenant = req.owner.id;
+    const chat = yield models_1.models.Chat.findOne({
+        where: { id: chat_id, tenant },
+    });
+    if (!chat)
+        return res_1.failure(res, "chat not found");
+    let contactIDs;
+    try {
+        contactIDs = JSON.parse(chat.contactIds || "[]");
+    }
+    catch (e) {
+        return res_1.failure(res, "no contact ids");
+    }
+    const pendingMembers = yield models_1.models.ChatMember.findAll({
+        where: {
+            status: constants_1.default.chat_statuses.pending,
+            chatId: chat_id,
+            tenant,
+        },
+    });
+    if (!contactIDs || !contactIDs.length)
+        return res_1.failure(res, "no contact ids length");
+    const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
+    const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+    const contacts = yield models_1.models.Contact.findAll({
+        where: { id: { [sequelize_1.Op.in]: contactIDs }, tenant },
+        limit,
+        offset,
+        order: [["alias", "asc"]],
+    });
+    if (!contacts)
+        return res_1.failure(res, "no contacts found");
+    const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
+    let finalContacts = contactsRet;
+    if (offset === 0) {
+        const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
+        const pendingContacts = yield models_1.models.Contact.findAll({
+            where: { id: { [sequelize_1.Op.in]: pendingContactIDs }, tenant },
+            order: [["alias", "asc"]],
+        });
+        if (pendingContacts) {
+            const pendingContactsRet = pendingContacts.map((c) => {
+                const ctc = c.dataValues;
+                ctc.pending = true;
+                return jsonUtils.contactToJson(ctc);
+            });
+            finalContacts = pendingContactsRet.concat(contactsRet);
+        }
+    }
+    res_1.success(res, { contacts: finalContacts });
+});
+exports.getContactsForChat = getContactsForChat;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("=> generateToken called", {
         body: req.body,

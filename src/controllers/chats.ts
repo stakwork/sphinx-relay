@@ -44,7 +44,7 @@ export async function updateChat(req, res) {
 
 export async function kickChatMember(req, res) {
   if (!req.owner) return failure(res, "no owner");
-  const tenant: number = req.tenant.id;
+  const tenant: number = req.owner.id;
 
   const chatId = parseInt(req.params["chat_id"]);
   const contactId = parseInt(req.params["contact_id"]);
@@ -56,7 +56,6 @@ export async function kickChatMember(req, res) {
   const contactIds = JSON.parse(chat.contactIds || "[]");
   const newContactIds = contactIds.filter((cid) => cid !== contactId);
   await chat.update({ contactIds: JSON.stringify(newContactIds) });
-
   // remove from ChatMembers
   await models.ChatMember.destroy({
     where: {

@@ -15,8 +15,15 @@ export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
 
+  const dontIncludeFromGroup =
+    req.query.from_group && req.query.from_group === "false";
+
+  const where: { [k: string]: any } = { deleted: false, tenant };
+  if (dontIncludeFromGroup) {
+    where.fromGroup = { [Op.or]: [false, 0, null] };
+  }
   const contacts = await models.Contact.findAll({
-    where: { deleted: false, tenant },
+    where,
     raw: true,
   });
   const invites = await models.Invite.findAll({ raw: true, where: { tenant } });
@@ -62,6 +69,65 @@ export const getContacts = async (req, res) => {
     chats: chatsResponse,
     subscriptions: subsResponse,
   });
+};
+
+export const getContactsForChat = async (req, res) => {
+  const chat_id = parseInt(req.params.chat_id);
+  if (!chat_id) return failure(res, "no chat id");
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+
+  const chat = await models.Chat.findOne({
+    where: { id: chat_id, tenant },
+  });
+  if (!chat) return failure(res, "chat not found");
+
+  let contactIDs;
+  try {
+    contactIDs = JSON.parse(chat.contactIds || "[]");
+  } catch (e) {
+    return failure(res, "no contact ids");
+  }
+  const pendingMembers = await models.ChatMember.findAll({
+    where: {
+      status: constants.chat_statuses.pending,
+      chatId: chat_id,
+      tenant,
+    },
+  });
+
+  if (!contactIDs || !contactIDs.length)
+    return failure(res, "no contact ids length");
+
+  const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
+  const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+  const contacts = await models.Contact.findAll({
+    where: { id: { [Op.in]: contactIDs }, tenant },
+    limit,
+    offset,
+    order: [["alias", "asc"]],
+  });
+  if (!contacts) return failure(res, "no contacts found");
+  const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
+
+  let finalContacts = contactsRet;
+  if (offset === 0) {
+    const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
+    const pendingContacts = await models.Contact.findAll({
+      where: { id: { [Op.in]: pendingContactIDs }, tenant },
+      order: [["alias", "asc"]],
+    });
+    if (pendingContacts) {
+      const pendingContactsRet = pendingContacts.map((c) => {
+        const ctc = c.dataValues
+        ctc.pending = true;
+        return jsonUtils.contactToJson(ctc);
+      });
+      finalContacts = pendingContactsRet.concat(contactsRet);
+    }
+  }
+
+  success(res, { contacts: finalContacts });
 };
 
 export const generateToken = async (req, res) => {

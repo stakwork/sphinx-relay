@@ -23,28 +23,31 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 function stripLightningPrefix(s) {
-    if (s.toLowerCase().startsWith('lightning:'))
+    if (s.toLowerCase().startsWith("lightning:"))
         return s.substring(10);
     return s;
 }
 const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
     const payment_request = stripLightningPrefix(req.body.payment_request);
     if (!payment_request) {
         console.log('[pay invoice] "payment_request" is empty');
         res.status(400);
-        res.json({ success: false, error: 'payment_request is empty' });
+        res.json({ success: false, error: "payment_request is empty" });
         res.end();
         return;
     }
     console.log(`[pay invoice] ${payment_request}`);
     try {
         const response = yield LND.sendPayment(payment_request, req.owner.publicKey);
-        console.log('[pay invoice data]', response);
-        const message = yield models_1.models.Message.findOne({ where: { payment_request, tenant } });
-        if (!message) { // invoice still paid
+        console.log("[pay invoice data]", response);
+        const message = yield models_1.models.Message.findOne({
+            where: { payment_request, tenant },
+        });
+        if (!message) {
+            // invoice still paid
             anonymousInvoice(res, payment_request, tenant);
             return;
         }
@@ -52,9 +55,11 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         message.save();
         var date = new Date();
         date.setMilliseconds(0);
-        const chat = yield models_1.models.Chat.findOne({ where: { id: message.chatId, tenant } });
+        const chat = yield models_1.models.Chat.findOne({
+            where: { id: message.chatId, tenant },
+        });
         const contactIds = JSON.parse(chat.contactIds);
-        const senderId = contactIds.find(id => id != message.sender);
+        const senderId = contactIds.find((id) => id != message.sender);
         const paidMessage = yield models_1.models.Message.create({
             chatId: message.chatId,
             sender: senderId,
@@ -68,14 +73,14 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             status: constants_1.default.statuses.confirmed,
             createdAt: date,
             updatedAt: date,
-            tenant
+            tenant,
         });
-        console.log('[pay invoice] stored message', paidMessage);
+        console.log("[pay invoice] stored message", paidMessage);
         res_1.success(res, jsonUtils.messageToJson(paidMessage, chat));
     }
     catch (e) {
         console.log("ERR paying invoice", e);
-        return res_1.failure(res, 'could not pay invoice');
+        return res_1.failure(res, "could not pay invoice");
     }
 });
 exports.payInvoice = payInvoice;
@@ -96,11 +101,11 @@ function anonymousInvoice(res, payment_request, tenant) {
             status: constants_1.default.statuses.confirmed,
             createdAt: date,
             updatedAt: date,
-            tenant
+            tenant,
         });
         return res_1.success(res, {
             success: true,
-            response: { payment_request }
+            response: { payment_request },
         });
     });
 }
@@ -112,27 +117,29 @@ const cancelInvoice = (req, res) => {
 exports.cancelInvoice = cancelInvoice;
 const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
     const lightning = yield LND.loadLightning(true, req.owner.publicKey); // try proxy
-    const { amount, memo, remote_memo, chat_id, contact_id, expiry, } = req.body;
+    const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
     var request = {
         value: amount,
         memo: remote_memo || memo,
     };
-    if (req.owner.routeHint && req.owner.routeHint.includes(':')) {
-        const arr = req.owner.routeHint.split(':');
+    if (req.owner.routeHint && req.owner.routeHint.includes(":")) {
+        const arr = req.owner.routeHint.split(":");
         const node_id = arr[0];
         const chan_id = arr[1];
-        request.route_hints = [{
-                hop_hints: [{ node_id, chan_id }]
-            }];
+        request.route_hints = [
+            {
+                hop_hints: [{ node_id, chan_id }],
+            },
+        ];
     }
     if (expiry)
         request.expiry = expiry;
     if (amount == null) {
         res.status(200);
-        res.json({ err: "no amount specified", });
+        res.json({ err: "no amount specified" });
         res.end();
     }
     else {
@@ -141,24 +148,25 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 console.log({ err, response });
                 if (err == null) {
                     const { payment_request } = response;
-                    if (!contact_id && !chat_id) { // if no contact
+                    if (!contact_id && !chat_id) {
+                        // if no contact
                         res_1.success(res, {
-                            invoice: payment_request
+                            invoice: payment_request,
                         });
                         return; // end here
                     }
                     const lightning2 = yield LND.loadLightning(false);
                     lightning2.decodePayReq({ pay_req: payment_request }, (error, invoice) => __awaiter(this, void 0, void 0, function* () {
                         if (res) {
-                            console.log('decoded pay req', { invoice });
+                            console.log("decoded pay req", { invoice });
                             const owner = req.owner;
                             const chat = yield helpers.findOrCreateChat({
                                 chat_id,
                                 owner_id: owner.id,
-                                recipient_id: contact_id
+                                recipient_id: contact_id,
                             });
-                            let timestamp = parseInt(invoice.timestamp + '000');
-                            let expiry = parseInt(invoice.expiry + '000');
+                            let timestamp = parseInt(invoice.timestamp + "000");
+                            let expiry = parseInt(invoice.expiry + "000");
                             if (error) {
                                 res.status(200);
                                 res.json({ success: false, error });
@@ -181,7 +189,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                                     status: constants_1.default.statuses.pending,
                                     createdAt: new Date(timestamp),
                                     updatedAt: new Date(timestamp),
-                                    tenant
+                                    tenant,
                                 });
                                 res_1.success(res, jsonUtils.messageToJson(message, chat));
                                 network.sendMessage({
@@ -190,13 +198,13 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                                     type: constants_1.default.message_types.invoice,
                                     message: {
                                         id: message.id,
-                                        invoice: message.paymentRequest
-                                    }
+                                        invoice: message.paymentRequest,
+                                    },
                                 });
                             }
                         }
                         else {
-                            console.log('error decoding pay req', { err, res });
+                            console.log("error decoding pay req", { err, res });
                             res.status(500);
                             res.json({ err, res });
                             res.end();
@@ -213,7 +221,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createInvoice = createInvoice;
 const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return res_1.failure(res, "no owner");
     const lightning = yield LND.loadLightning();
     lightning.listInvoices({}, (err, response) => {
         console.log({ err, response });
@@ -229,19 +237,19 @@ const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.listInvoices = listInvoices;
 const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received invoice', payload);
+    console.log("received invoice", payload);
     const total_spent = 1;
     const dat = payload.content || payload;
     const payment_request = dat.message.invoice;
     const network_type = dat.network_type || 0;
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid, sender_photo_url } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log('=> no group chat!');
+        return console.log("=> no group chat!");
     }
     const tenant = owner.id;
-    const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = decodePaymentRequest(payment_request);
+    const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds, } = decodePaymentRequest(payment_request);
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
@@ -259,7 +267,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         createdAt: date,
         updatedAt: date,
         network_type: network_type,
-        tenant
+        tenant,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -267,12 +275,12 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.senderPic = sender_photo_url;
     }
     const message = yield models_1.models.Message.create(msg);
-    console.log('received keysend invoice message', message.id);
+    console.log("received keysend invoice message", message.id);
     socket.sendJson({
-        type: 'invoice',
-        response: jsonUtils.messageToJson(message, chat, sender)
+        type: "invoice",
+        response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, "message", owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveInvoice = receiveInvoice;
@@ -285,20 +293,20 @@ function decodePaymentRequest(paymentRequest) {
     for (var i = 0; i < decodedPaymentRequest.data.tags.length; i++) {
         let tag = decodedPaymentRequest.data.tags[i];
         if (tag) {
-            if (tag.description == 'payment_hash') {
+            if (tag.description == "payment_hash") {
                 paymentHash = tag.value;
             }
-            else if (tag.description == 'description') {
+            else if (tag.description == "description") {
                 memo = tag.value;
             }
-            else if (tag.description == 'expiry') {
+            else if (tag.description == "expiry") {
                 expirationSeconds = tag.value;
             }
         }
     }
-    expirationSeconds = parseInt(expirationSeconds.toString() + '000');
-    let invoiceDate = parseInt(decodedPaymentRequest.data.time_stamp.toString() + '000');
-    let amount = decodedPaymentRequest['human_readable_part']['amount'];
+    expirationSeconds = parseInt(expirationSeconds.toString() + "000");
+    let invoiceDate = parseInt(decodedPaymentRequest.data.time_stamp.toString() + "000");
+    let amount = decodedPaymentRequest["human_readable_part"]["amount"];
     var msat = 0;
     var sat = 0;
     if (Number.isInteger(amount)) {

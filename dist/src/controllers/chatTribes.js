@@ -345,8 +345,14 @@ function approveOrRejectMember(req, res) {
         if (!member) {
             return res_1.failure(res, "cant find chat member");
         }
-        // update ChatMember status
-        yield member.update({ status: memberStatus });
+        if (status === 'approved') {
+            // update ChatMember status
+            yield member.update({ status: memberStatus });
+        }
+        else if (status === 'rejected') {
+            // destroy the row
+            yield member.destroy();
+        }
         const owner = req.owner;
         const chatToSend = chat.dataValues || chat;
         network.sendMessage({

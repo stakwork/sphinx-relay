@@ -15,11 +15,13 @@ const path = require("path");
 const config_1 = require("../utils/config");
 const config = config_1.loadConfig();
 // setup disk storage
-var multer = require('multer');
+var multer = require("multer");
 var avatarStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let dir = __dirname.includes('/dist/') ? path.join(__dirname, '..') : __dirname;
-        cb(null, dir + '/../../public/uploads');
+        let dir = __dirname.includes("/dist/")
+            ? path.join(__dirname, "..")
+            : __dirname;
+        cb(null, dir + "/../../public/uploads");
     },
     filename: (req, file, cb) => {
         const mime = file.mimetype;
@@ -31,13 +33,13 @@ var avatarStorage = multer.diskStorage({
         else {
             cb(null, `${req.body.contact_id}_profile_picture.${ext}`);
         }
-    }
+    },
 });
 exports.avatarUpload = multer({ storage: avatarStorage });
 function hasProtocol(ip) {
-    if (ip.startsWith('https://'))
+    if (ip.startsWith("https://"))
         return true;
-    if (ip.startsWith('http://'))
+    if (ip.startsWith("http://"))
         return true;
     return false;
 }
@@ -47,11 +49,9 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const ip = String(process.env.NODE_IP);
     let theIP = ip;
     if (!hasProtocol(ip)) {
-        theIP = config.node_http_protocol + '://' + ip;
+        theIP = config.node_http_protocol + "://" + ip;
     }
-    const photo_url = theIP +
-        '/static/uploads/' +
-        file.filename;
+    const photo_url = theIP + "/static/uploads/" + file.filename;
     if (contact_id) {
         const contact = yield models_1.models.Contact.findOne({ where: { id: contact_id } });
         if (contact)
@@ -67,7 +67,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         success: true,
         contact_id: parseInt(contact_id || 0),
         chat_id: parseInt(chat_id || 0),
-        photo_url
+        photo_url,
     });
     res.end();
 });
