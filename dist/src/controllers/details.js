@@ -204,6 +204,9 @@ function asyncForEach(array, callback) {
 }
 function clearForTesting(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        const tenant = req.owner.id;
         if (!config.allow_test_clearing) {
             return res_1.failure(res, "nope");
         }
@@ -211,22 +214,23 @@ function clearForTesting(req, res) {
             return res_1.failure(res, "nope");
         }
         try {
-            yield models_1.models.Chat.destroy({ truncate: true });
-            yield models_1.models.Subscription.destroy({ truncate: true });
-            yield models_1.models.Accounting.destroy({ truncate: true });
-            yield models_1.models.Bot.destroy({ truncate: true });
-            yield models_1.models.BotMember.destroy({ truncate: true });
-            yield models_1.models.ChatBot.destroy({ truncate: true });
-            yield models_1.models.Invite.destroy({ truncate: true });
-            yield models_1.models.MediaKey.destroy({ truncate: true });
-            yield models_1.models.Message.destroy({ truncate: true });
-            yield models_1.models.Timer.destroy({ truncate: true });
+            yield models_1.models.Chat.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.Subscription.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.Accounting.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.Bot.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.BotMember.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.ChatBot.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.Invite.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.MediaKey.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.Message.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.Timer.destroy({ truncate: true, where: { tenant } });
             yield models_1.models.Contact.destroy({
                 where: {
                     isOwner: { [sequelize_1.Op.ne]: true },
+                    tenant,
                 },
             });
-            const me = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            const me = yield models_1.models.Contact.findOne({ where: { isOwner: true, tenant } });
             yield me.update({
                 authToken: "",
                 photoUrl: "",

@@ -198,6 +198,9 @@ async function asyncForEach(array, callback) {
 }
 
 export async function clearForTesting(req, res) {
+  if (!req.owner) return failure(res, "no owner");
+  const tenant:number = req.owner.id
+
   if (!config.allow_test_clearing) {
     return failure(res, "nope");
   }
@@ -206,22 +209,23 @@ export async function clearForTesting(req, res) {
   }
 
   try {
-    await models.Chat.destroy({ truncate: true });
-    await models.Subscription.destroy({ truncate: true });
-    await models.Accounting.destroy({ truncate: true });
-    await models.Bot.destroy({ truncate: true });
-    await models.BotMember.destroy({ truncate: true });
-    await models.ChatBot.destroy({ truncate: true });
-    await models.Invite.destroy({ truncate: true });
-    await models.MediaKey.destroy({ truncate: true });
-    await models.Message.destroy({ truncate: true });
-    await models.Timer.destroy({ truncate: true });
+    await models.Chat.destroy({ truncate: true, where: {tenant} });
+    await models.Subscription.destroy({ truncate: true, where: {tenant} });
+    await models.Accounting.destroy({ truncate: true, where: {tenant} });
+    await models.Bot.destroy({ truncate: true, where: {tenant} });
+    await models.BotMember.destroy({ truncate: true, where: {tenant} });
+    await models.ChatBot.destroy({ truncate: true, where: {tenant} });
+    await models.Invite.destroy({ truncate: true, where: {tenant} });
+    await models.MediaKey.destroy({ truncate: true, where: {tenant} });
+    await models.Message.destroy({ truncate: true, where: {tenant} });
+    await models.Timer.destroy({ truncate: true, where: {tenant} });
     await models.Contact.destroy({
       where: {
         isOwner: { [Op.ne]: true },
+        tenant,
       },
     });
-    const me = await models.Contact.findOne({ where: { isOwner: true } });
+    const me = await models.Contact.findOne({ where: { isOwner: true, tenant } });
     await me.update({
       authToken: "",
       photoUrl: "",
