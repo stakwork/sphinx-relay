@@ -20,7 +20,7 @@ export const getContacts = async (req, res) => {
 
   const where: { [k: string]: any } = { deleted: false, tenant };
   if (dontIncludeFromGroup) {
-    where.fromGroup = { [Op.or]: [false, 0, null] };
+    where.fromGroup = { [Op.or]: [false, null] };
   }
   const contacts = await models.Contact.findAll({
     where,
