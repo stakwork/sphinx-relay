@@ -96,14 +96,12 @@ export async function ownerMiddleware(req, res, next) {
       });
       if (owner) {
         req.owner = owner.dataValues;
-      } else if (!isProxy()) {
-        const owner2 = await models.Contact.findOne({
-          where: { isOwner: true },
-        });
-        if (owner2) req.owner = owner2.dataValues;
       }
-    } else {
-      console.log("=> auth HOSTING_PROVIDER no token")
+    } else if (!isProxy()) {
+      const owner2 = await models.Contact.findOne({
+        where: { isOwner: true },
+      });
+      if (owner2) req.owner = owner2.dataValues;
     }
     if (req.path === "/invoices") {
       next();

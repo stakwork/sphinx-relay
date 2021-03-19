@@ -100,16 +100,13 @@ function ownerMiddleware(req, res, next) {
                 if (owner) {
                     req.owner = owner.dataValues;
                 }
-                else if (!proxy_1.isProxy()) {
-                    const owner2 = yield models_1.models.Contact.findOne({
-                        where: { isOwner: true },
-                    });
-                    if (owner2)
-                        req.owner = owner2.dataValues;
-                }
             }
-            else {
-                console.log("=> auth HOSTING_PROVIDER no token");
+            else if (!proxy_1.isProxy()) {
+                const owner2 = yield models_1.models.Contact.findOne({
+                    where: { isOwner: true },
+                });
+                if (owner2)
+                    req.owner = owner2.dataValues;
             }
             if (req.path === "/invoices") {
                 next();
