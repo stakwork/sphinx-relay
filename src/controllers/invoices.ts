@@ -116,13 +116,9 @@ export const cancelInvoice = (req, res) => {
 };
 
 export const createInvoice = async (req, res) => {
-  let tenant = 1
-  let pubkey = ''
-  if (req.owner) {
-    tenant = req.owner.id
-    pubkey = req.owner.publicKey
-  }
-  const lightning = await LND.loadLightning(pubkey?true:false, pubkey); // try proxy
+  if(!req.owner) return failure(res, 'no owner')
+  const tenant:number = req.owner.id
+  const lightning = await LND.loadLightning(true, req.owner.publicKey); // try proxy
 
   const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
 
@@ -130,7 +126,7 @@ export const createInvoice = async (req, res) => {
     value: amount,
     memo: remote_memo || memo,
   };
-  if (req.owner.routeHint && req.owner.routeHint.includes(":")) {
+  if (req.owner && req.owner.routeHint && req.owner.routeHint.includes(":")) {
     const arr = req.owner.routeHint.split(":");
     const node_id = arr[0];
     const chan_id = arr[1];
@@ -168,7 +164,7 @@ export const createInvoice = async (req, res) => {
             if (res) {
               console.log("decoded pay req", { invoice });
 
-              const owner = req.owner;
+              const owner = req.owner
 
               const chat = await helpers.findOrCreateChat({
                 chat_id,
