@@ -116,9 +116,13 @@ export const cancelInvoice = (req, res) => {
 };
 
 export const createInvoice = async (req, res) => {
-  if (!req.owner) return failure(res, "no owner");
-  const tenant: number = req.owner.id;
-  const lightning = await LND.loadLightning(true, req.owner.publicKey); // try proxy
+  let tenant = 1
+  let pubkey = ''
+  if (req.owner) {
+    tenant = req.owner.id
+    pubkey = req.owner.publicKey
+  }
+  const lightning = await LND.loadLightning(pubkey?true:false, pubkey); // try proxy
 
   const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
 

@@ -116,10 +116,13 @@ const cancelInvoice = (req, res) => {
 };
 exports.cancelInvoice = cancelInvoice;
 const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!req.owner)
-        return res_1.failure(res, "no owner");
-    const tenant = req.owner.id;
-    const lightning = yield LND.loadLightning(true, req.owner.publicKey); // try proxy
+    let tenant = 1;
+    let pubkey = '';
+    if (req.owner) {
+        tenant = req.owner.id;
+        pubkey = req.owner.publicKey;
+    }
+    const lightning = yield LND.loadLightning(pubkey ? true : false, pubkey); // try proxy
     const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
     var request = {
         value: amount,
