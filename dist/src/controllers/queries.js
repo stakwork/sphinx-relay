@@ -136,6 +136,12 @@ function genChannelAndConfirmAccounting(acc) {
         }
         catch (e) {
             console.log("[ACCOUNTING] error creating channel", e);
+            const existing = yield models_1.models.Accounting.findOne({ where: { id: acc.id } });
+            if (existing) {
+                if (!existing.amount) {
+                    yield existing.update({ amount: acc.amount });
+                }
+            }
         }
     });
 }

@@ -146,6 +146,12 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
     console.log("[WATCH]=> ACCOUNTINGS UPDATED to received!", acc.id);
   } catch (e) {
     console.log("[ACCOUNTING] error creating channel", e);
+    const existing = await models.Accounting.findOne({ where: { id: acc.id } });
+    if (existing) {
+      if (!existing.amount) {
+        await existing.update({ amount: acc.amount });
+      }
+    }
   }
 }
 
