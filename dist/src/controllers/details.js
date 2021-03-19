@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getInfo = exports.getLogsSince = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
+exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getInfo = exports.getLogsSince = exports.checkRouteByContactOrChat = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
 const lightning_1 = require("../utils/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
@@ -56,6 +56,53 @@ const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.checkRoute = checkRoute;
+const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, "no owner");
+    const chatID = req.query.chat_id;
+    const contactID = req.query.contact_id;
+    if (!chatID && !contactID)
+        return res_1.failure(res, "no chat_id or contact_id");
+    let pubkey = "";
+    let routeHint = "";
+    if (contactID) {
+        const contactId = parseInt(contactID);
+        const contact = yield models_1.models.Concat.findOne({ where: { id: contactId } });
+        if (!contact)
+            return res_1.failure(res, "cant find contact");
+        pubkey = contact.publicKey;
+        routeHint = contact.routeHint;
+    }
+    else if (chatID) {
+        const chatId = parseInt(chatID);
+        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
+        if (!chat)
+            return res_1.failure(res, "cant find chat");
+        if (!chat.ownerPubkey)
+            return res_1.failure(res, "cant find owern_pubkey");
+        pubkey = chat.ownerPubkey;
+        const chatowner = yield models_1.models.Contact.findOne({
+            where: { publicKey: chat.ownerPubkey },
+        });
+        if (!chatowner)
+            return res_1.failure(res, "cant find chat owner");
+        if (chatowner.routeHint)
+            routeHint = chatowner.routeHint;
+    }
+    if (!(pubkey && pubkey.length === 66))
+        return res_1.failure(res, "wrong pubkey");
+    const amount = req.query.amount;
+    const owner = req.owner;
+    try {
+        const amt = parseInt(amount) || constants_1.default.min_sat_amount;
+        const r = yield lightning_1.queryRoute(pubkey, amt, routeHint || "", owner.publicKey);
+        res_1.success(res, r);
+    }
+    catch (e) {
+        res_1.failure(res, e);
+    }
+});
+exports.checkRouteByContactOrChat = checkRouteByContactOrChat;
 const defaultLogFiles = [
     "/var/log/supervisor/relay.log",
     "/home/lnd/.pm2/logs/app-error.log",
@@ -230,7 +277,9 @@ function clearForTesting(req, res) {
                     tenant,
                 },
             });
-            const me = yield models_1.models.Contact.findOne({ where: { isOwner: true, tenant } });
+            const me = yield models_1.models.Contact.findOne({
+                where: { isOwner: true, tenant },
+            });
             yield me.update({
                 authToken: "",
                 photoUrl: "",
