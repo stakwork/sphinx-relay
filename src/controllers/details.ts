@@ -56,7 +56,7 @@ export const checkRouteByContactOrChat = async (req, res) => {
   let routeHint = "";
   if (contactID) {
     const contactId = parseInt(contactID);
-    const contact = await models.Concat.findOne({ where: { id: contactId } });
+    const contact = await models.Contact.findOne({ where: { id: contactId } });
     if (!contact) return failure(res, "cant find contact");
     pubkey = contact.publicKey;
     routeHint = contact.routeHint;

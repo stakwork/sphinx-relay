@@ -67,7 +67,7 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
     let routeHint = "";
     if (contactID) {
         const contactId = parseInt(contactID);
-        const contact = yield models_1.models.Concat.findOne({ where: { id: contactId } });
+        const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
         if (!contact)
             return res_1.failure(res, "cant find contact");
         pubkey = contact.publicKey;
