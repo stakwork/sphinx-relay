@@ -150,7 +150,7 @@ async function subExtraHostsForTenant(
   });
 }
 
-function printClients() {
+export function printTribesClients() {
   const ret = {};
   Object.entries(clients).forEach((entry) => {
     const pk = entry[0];
@@ -168,7 +168,7 @@ export async function addExtraHost(
   host: string,
   onMessage: Function
 ) {
-  console.log("ADD EXTRA HOST", printClients(), host);
+  // console.log("ADD EXTRA HOST", printTribesClients(), host);
   if (getHost() === host) return; // not for default host
   if (clients[pubkey] && clients[pubkey][host]) return; // already exists
   const client = await lazyClient(pubkey, host, onMessage);
