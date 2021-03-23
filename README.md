@@ -100,6 +100,8 @@ If you have a permanent public IP on your internet connection and you want your 
 
 If you plan to use your Sphinx clients within the local network, then you do not have to do anything special.
 
+If you are using the Docker file, the port may be 3300 ([1](https://github.com/stakwork/sphinx-relay/blob/master/Dockerfile#L32))
+
 ## Deployment
 
 * [Docker deployment](docs/docker_deployment.md)
