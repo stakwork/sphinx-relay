@@ -26,13 +26,15 @@ const POLL_MINS = 10;
 let hub_pubkey = "";
 
 const hub_url = "https://hub.sphinx.chat/api/v1/";
-async function get_hub_pubkey() {
+export async function get_hub_pubkey(): Promise<string> {
   const r = await fetch(hub_url + "/routingnode");
   const j = await r.json();
   if (j && j.pubkey) {
     // console.log("=> GOT HUB PUBKEY", j.pubkey)
     hub_pubkey = j.pubkey;
+    return j.pubkey
   }
+  return ''
 }
 get_hub_pubkey();
 

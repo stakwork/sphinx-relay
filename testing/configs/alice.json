@@ -22,7 +22,8 @@
       "enabled": false,
       "save": true,
       "port": "80"
-    }
+    },
+    "connect_ui": true
   },
   "production": {
     "senza_url": "https://staging.senza.us/api/v2/",

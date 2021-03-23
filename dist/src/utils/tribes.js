@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.getTribeOwnersChatByUUID = exports.connect = exports.declare_bot = void 0;
+exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("./lightning");
@@ -168,7 +168,7 @@ function subExtraHostsForTenant(tenant, pubkey, onMessage) {
         }));
     });
 }
-function printClients() {
+function printTribesClients() {
     const ret = {};
     Object.entries(clients).forEach((entry) => {
         const pk = entry[0];
@@ -180,9 +180,10 @@ function printClients() {
     });
     return JSON.stringify(ret);
 }
+exports.printTribesClients = printTribesClients;
 function addExtraHost(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("ADD EXTRA HOST", printClients(), host);
+        // console.log("ADD EXTRA HOST", printTribesClients(), host);
         if (getHost() === host)
             return; // not for default host
         if (clients[pubkey] && clients[pubkey][host])

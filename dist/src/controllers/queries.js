@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveQueryResponse = exports.receiveQuery = exports.queryOnchainAddress = exports.startWatchingUTXOs = exports.listUTXOs = void 0;
+exports.receiveQueryResponse = exports.receiveQuery = exports.queryOnchainAddress = exports.startWatchingUTXOs = exports.listUTXOs = exports.get_hub_pubkey = void 0;
 const res_1 = require("../utils/res");
 const models_1 = require("../models");
 const network = require("../network");
@@ -33,9 +33,12 @@ function get_hub_pubkey() {
         if (j && j.pubkey) {
             // console.log("=> GOT HUB PUBKEY", j.pubkey)
             hub_pubkey = j.pubkey;
+            return j.pubkey;
         }
+        return '';
     });
 }
+exports.get_hub_pubkey = get_hub_pubkey;
 get_hub_pubkey();
 function getReceivedAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
