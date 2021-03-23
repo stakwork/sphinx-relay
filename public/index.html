@@ -106,7 +106,7 @@ lncli updatechanpolicy --base_fee_msat=0 --fee_rate=0.000001 --time_lock_delta=4
 
   </ul>
 
-  <div id="qr-wrap">
+  <div id="qr-wrap" style="display: none;">
     <canvas id="qr"></canvas>
   </div>
 
@@ -114,7 +114,7 @@ lncli updatechanpolicy --base_fee_msat=0 --fee_rate=0.000001 --time_lock_delta=4
     Scan the QR or copy the connection string into your Sphinx app
   </p>
 
-  <pre id="connection-string">
+  <pre id="connection-string" style="display: none;">
 CONNECTION_STRING
   </pre>
 
@@ -162,17 +162,20 @@ CONNECTION_STRING
       bal.checked = true
       balText.innerHTML = 'You have remote balance'
     } else {
-      balText.innerHTML = 'You need remote balance (1% recommended)'
+      balText.innerHTML = 'You need remote balance (2% of channel size recommended)'
     }
 
     const qrWrap = get('qr-wrap')
     const connString = get('connection-string')
     const qrText = get('qr-text')
 
+    const readyToGo = window.hasRemoteBalance && window.channelFeesBaseZero && window.channelIsOpen
+
     if(window.isSignedUp) {
-      qrWrap.style.display = 'none'
-      connString.style.display = 'none'
       qrText.innerHTML = "You have connected your app!"
+    } else if(readyToGo) {
+      qrWrap.style.display = 'flex'
+      connString.style.display = 'block'
     }
   </script>
 </body>
