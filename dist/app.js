@@ -74,7 +74,9 @@ function setupApp() {
         app.use(helmet());
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: true }));
-        app.use(logger_1.default);
+        if (logger_1.logging.Express) {
+            app.use(logger_1.default);
+        }
         app.use(cors({
             allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token']
         }));

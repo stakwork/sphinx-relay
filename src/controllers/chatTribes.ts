@@ -10,12 +10,13 @@ import { sendNotification } from "../hub";
 import { personalizeMessage, decryptMessage } from "../utils/msg";
 import { Op } from "sequelize";
 import constants from "../constants";
+import { logging } from "../utils/logger";
 
 export async function joinTribe(req, res) {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
 
-  console.log("=> joinTribe");
+  if(logging.Express) console.log("=> joinTribe");
   const {
     uuid,
     group_key,
@@ -29,7 +30,7 @@ export async function joinTribe(req, res) {
     my_alias,
     my_photo_url,
   } = req.body;
-  console.log("received owner route hint", owner_route_hint);
+  if(logging.Express) console.log("received owner route hint", owner_route_hint);
   const is_private = req.body.private;
 
   const existing = await models.Chat.findOne({ where: { uuid, tenant } });
@@ -130,7 +131,7 @@ export async function joinTribe(req, res) {
       failure(res, e);
     },
     success: async function () {
-      console.log("=> joinTribe: CREATE CHAT RECORD NOW");
+      // console.log("=> joinTribe: CREATE CHAT RECORD NOW");
       const chat = await models.Chat.create(chatParams);
       models.ChatMember.create({
         contactId: theTribeOwner.id,
@@ -140,7 +141,7 @@ export async function joinTribe(req, res) {
         status: constants.chat_statuses.approved,
         tenant,
       });
-      console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
+      // console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
       tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
       success(res, jsonUtils.chatToJson(chat));
     },
@@ -148,7 +149,7 @@ export async function joinTribe(req, res) {
 }
 
 export async function receiveMemberRequest(payload) {
-  console.log("=> receiveMemberRequest");
+  if (logging.Network) console.log("=> receiveMemberRequest");
   const {
     owner,
     chat,
@@ -329,7 +330,7 @@ export async function editTribe(req, res) {
   }
 }
 
-type ChatMemberStatus = 'approved' | 'rejected'
+type ChatMemberStatus = "approved" | "rejected";
 export async function approveOrRejectMember(req, res) {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
@@ -337,7 +338,7 @@ export async function approveOrRejectMember(req, res) {
   console.log("=> approve or reject tribe member");
   const msgId = parseInt(req.params["messageId"]);
   const contactId = parseInt(req.params["contactId"]);
-  const status:ChatMemberStatus = req.params["status"];
+  const status: ChatMemberStatus = req.params["status"];
 
   const msg = await models.Message.findOne({ where: { id: msgId, tenant } });
   if (!msg) return failure(res, "no message");
@@ -362,22 +363,22 @@ export async function approveOrRejectMember(req, res) {
     const contactIds = JSON.parse(chat.contactIds || "[]");
     if (!contactIds.includes(contactId)) contactIds.push(contactId);
     await chat.update({ contactIds: JSON.stringify(contactIds) });
-  } 
+  }
 
   await msg.update({ type: msgType });
-  
+
   const member = await models.ChatMember.findOne({
     where: { contactId, chatId },
   });
   if (!member) {
     return failure(res, "cant find chat member");
   }
-  if (status === 'approved') {
+  if (status === "approved") {
     // update ChatMember status
     await member.update({ status: memberStatus });
-  } else if (status === 'rejected') {
+  } else if (status === "rejected") {
     // destroy the row
-    await member.destroy()
+    await member.destroy();
   }
 
   const owner = req.owner;
@@ -400,7 +401,7 @@ export async function approveOrRejectMember(req, res) {
 }
 
 export async function receiveMemberApprove(payload) {
-  console.log("=> receiveMemberApprove"); // received by the joiner only
+  if (logging.Network) console.log("=> receiveMemberApprove"); // received by the joiner only
   const {
     owner,
     chat,
@@ -466,7 +467,7 @@ export async function receiveMemberApprove(payload) {
 }
 
 export async function receiveMemberReject(payload) {
-  console.log("=> receiveMemberReject");
+  if (logging.Network) console.log("=> receiveMemberReject");
   const {
     owner,
     chat,
@@ -510,7 +511,7 @@ export async function receiveMemberReject(payload) {
 }
 
 export async function receiveTribeDelete(payload) {
-  console.log("=> receiveTribeDelete");
+  if (logging.Network) console.log("=> receiveTribeDelete");
   const {
     owner,
     chat,
@@ -552,7 +553,7 @@ export async function receiveTribeDelete(payload) {
 export async function replayChatHistory(chat, contact, ownerRecord) {
   const owner = ownerRecord.dataValues || ownerRecord;
   const tenant: number = owner.id;
-  console.log("-> replayHistory");
+  if(logging.Tribes) console.log("-> replayHistory");
   if (!(chat && chat.id && contact && contact.id)) {
     return console.log("[tribes] cant replay history");
   }

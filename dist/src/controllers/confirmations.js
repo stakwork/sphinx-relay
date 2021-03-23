@@ -17,6 +17,7 @@ const jsonUtils = require("../utils/json");
 const network = require("../network");
 const constants_1 = require("../constants");
 const res_1 = require("../utils/res");
+const logger_1 = require("../utils/logger");
 /*
  if in tribe: dont send
  UNLESS tribe admin:
@@ -43,7 +44,9 @@ function sendConfirmation({ chat, sender, msg_id, receiver, }) {
 exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> received confirmation", payload.message && payload.message.id);
+        if (logger_1.logging.Network) {
+            console.log("=> received confirmation", payload.message && payload.message.id);
+        }
         const dat = payload.content || payload;
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;
@@ -142,7 +145,8 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
 exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
 function receiveHeartbeat(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> received heartbeat");
+        if (logger_1.logging.Network)
+            console.log("=> received heartbeat");
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_route_hint = dat.sender.route_hint;
@@ -228,7 +232,8 @@ function healthcheck(req, res) {
 exports.healthcheck = healthcheck;
 function receiveHeartbeatConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> received heartbeat confirmation");
+        if (logger_1.logging.Network)
+            console.log("=> received heartbeat confirmation");
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         heartbeats[sender_pub_key] = true;

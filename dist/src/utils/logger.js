@@ -1,8 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.logging = void 0;
 const expressWinston = require("express-winston");
 const winston = require("winston");
 const moment = require("moment");
+const config_1 = require("./config");
+const config = config_1.loadConfig();
 const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim();
 const logger = expressWinston.logger({
     transports: [
@@ -22,4 +25,13 @@ const logger = expressWinston.logger({
     } // optional: allows to skip some log messages based on request and/or response
 });
 exports.default = logger;
+const logging = {
+    Express: config.logging && config.logging.includes('EXPRESS'),
+    Lightning: config.logging && config.logging.includes('LIGHTNING'),
+    Meme: config.logging && config.logging.includes('MEME'),
+    Tribes: config.logging && config.logging.includes('TRIBES'),
+    Notification: config.logging && config.logging.includes('NOTIFICATION'),
+    Network: config.logging && config.logging.includes('NETWORK'),
+};
+exports.logging = logging;
 //# sourceMappingURL=logger.js.map

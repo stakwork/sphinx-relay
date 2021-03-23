@@ -10,6 +10,7 @@ import { Op } from "sequelize";
 import fetch from "node-fetch";
 import * as helpers from "../helpers";
 import { isProxy } from "../utils/proxy";
+import {logging} from '../utils/logger'
 
 type QueryType = "onchain_address";
 export interface Query {
@@ -359,7 +360,7 @@ export const receiveQuery = async (payload) => {
 };
 
 export const receiveQueryResponse = async (payload) => {
-  console.log("=> receiveQueryResponse");
+  if(logging.Network) console.log("=> receiveQueryResponse");
   const dat = payload.content || payload;
   // const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content;

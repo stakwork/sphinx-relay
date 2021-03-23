@@ -21,6 +21,7 @@ const socket = require("../utils/socket");
 const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
@@ -206,7 +207,8 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
 exports.botKeysend = botKeysend;
 function receiveBotInstall(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveBotInstall", payload);
+        if (logger_1.logging.Network)
+            console.log("=> receiveBotInstall", payload);
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender && dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
@@ -247,7 +249,8 @@ exports.receiveBotInstall = receiveBotInstall;
 // ONLY FOR BOT MAKER
 function receiveBotCmd(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveBotCmd", payload);
+        if (logger_1.logging.Network)
+            console.log("=> receiveBotCmd", payload);
         const dat = payload.content || payload;
         // const sender_pub_key = dat.sender.pub_key
         const bot_uuid = dat.bot_uuid;
@@ -336,7 +339,8 @@ function buildBotPayload(msg) {
 exports.buildBotPayload = buildBotPayload;
 function receiveBotRes(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveBotRes"); //, payload)
+        if (logger_1.logging.Network)
+            console.log("=> receiveBotRes"); //, payload)
         const dat = payload.content || payload;
         if (!dat.chat || !dat.message || !dat.sender) {
             return console.log("=> receiveBotRes error, no chat||msg||sender");

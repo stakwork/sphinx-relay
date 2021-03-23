@@ -22,6 +22,7 @@ const tribes = require("../utils/tribes");
 const timers = require("../utils/timers");
 const chatTribes_1 = require("./chatTribes");
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 function updateChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -93,7 +94,8 @@ function kickChatMember(req, res) {
 exports.kickChatMember = kickChatMember;
 function receiveGroupKick(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveGroupKick");
+        if (logger_1.logging.Network)
+            console.log("=> receiveGroupKick");
         const { owner, chat, sender, date_string, network_type, } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return;
@@ -379,7 +381,8 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveGroupJoin");
+        if (logger_1.logging.Network)
+            console.log("=> receiveGroupJoin");
         const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, sender_route_hint, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
@@ -496,7 +499,8 @@ function receiveGroupJoin(payload) {
 exports.receiveGroupJoin = receiveGroupJoin;
 function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> receiveGroupLeave");
+        if (logger_1.logging.Network)
+            console.log("=> receiveGroupLeave");
         const { chat, owner, sender_pub_key, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)

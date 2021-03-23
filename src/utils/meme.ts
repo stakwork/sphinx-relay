@@ -6,6 +6,7 @@ import * as helpers from "../helpers";
 import { loadConfig } from "../utils/config";
 import { signBuffer } from "../utils/lightning";
 import { loadLightning } from '../utils/lightning'
+import {logging} from './logger'
 
 const config = loadConfig();
 
@@ -35,7 +36,7 @@ export async function lazyToken(pubkey: string, host: string) {
     }
     return t
   } catch(e) {
-    console.log("[meme] error getting token", e)
+    if(logging.Meme) console.log("[meme] error getting token", e)
   }
 }
 
@@ -62,7 +63,7 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
     const sigBytes = zbase32.decode(sig);
     const sigBase64 = urlBase64FromBytes(sigBytes);
 
-    console.log('[meme] verify', pubkey)
+    if(logging.Meme) console.log('[meme] verify', pubkey)
     const bod = await rp.post(theURL + "verify", {
       form: { id: r.id, sig: sigBase64, pubkey },
     });

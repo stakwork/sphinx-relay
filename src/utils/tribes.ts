@@ -9,6 +9,7 @@ import { makeBotsJSON, declare_bot } from "./tribeBots";
 import { loadConfig } from "./config";
 import { isProxy } from "./proxy";
 import { Op } from "sequelize";
+import {logging} from './logger'
 
 export { declare_bot };
 
@@ -58,15 +59,15 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
         password: pwd,
         reconnectPeriod: 0, // dont auto reconnect
       });
-      console.log("[tribes] try to connect:", url);
+      if(logging.Tribes) console.log("[tribes] try to connect:", url);
       cl.on("connect", async function () {
-        console.log("[tribes] connected!");
+        if(logging.Tribes) console.log("[tribes] connected!");
         cl.on("close", function (e) {
-          console.log("[tribes] CLOSE", e);
+          if(logging.Tribes) console.log("[tribes] CLOSE", e);
           setTimeout(() => reconnect(), 2000);
         });
         cl.on("error", function (e) {
-          console.log("[tribes] error: ", e.message || e);
+          if(logging.Tribes) console.log("[tribes] error: ", e.message || e);
         });
         cl.on("message", function (topic, message) {
           // console.log("============>>>>> GOT A MSG", topic, message)
@@ -75,7 +76,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
         cl.subscribe(`${pubkey}/#`, function (err) {
           if (err) console.log("[tribes] error subscribing", err);
           else {
-            console.log("[tribes] subscribed!", `${pubkey}/#`);
+            if(logging.Tribes) console.log("[tribes] subscribed!", `${pubkey}/#`);
             resolve(cl);
           }
         });
@@ -215,7 +216,7 @@ async function updateTribeStats(myPubkey) {
     } catch (e) {}
   });
   if (myTribes.length) {
-    console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
+    if(logging.Tribes) console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
   }
 }
 
@@ -226,7 +227,7 @@ export async function subscribe(topic, onMessage: Function) {
   const client = await lazyClient(pubkey, host, onMessage);
   if (client)
     client.subscribe(topic, function () {
-      console.log("[tribes] added sub", host, topic);
+      if(logging.Tribes) console.log("[tribes] added sub", host, topic);
     });
 }
 

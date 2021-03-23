@@ -3,7 +3,7 @@ import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
-import logger from './src/utils/logger'
+import logger, {logging} from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
 import { setupDatabase, setupDone, setupOwnerContact } from './src/utils/setup'
@@ -66,7 +66,9 @@ function setupApp() {
 		app.use(helmet());
 		app.use(bodyParser.json());
 		app.use(bodyParser.urlencoded({ extended: true }));
-		app.use(logger)
+		if (logging.Express) {
+			app.use(logger)
+		}
 		app.use(cors({
 			allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token']
 		}))

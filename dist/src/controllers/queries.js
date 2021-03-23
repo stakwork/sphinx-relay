@@ -22,6 +22,7 @@ const sequelize_1 = require("sequelize");
 const node_fetch_1 = require("node-fetch");
 const helpers = require("../helpers");
 const proxy_1 = require("../utils/proxy");
+const logger_1 = require("../utils/logger");
 let queries = {};
 const POLL_MINS = 10;
 let hub_pubkey = "";
@@ -355,7 +356,8 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.receiveQuery = receiveQuery;
 const receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("=> receiveQueryResponse");
+    if (logger_1.logging.Network)
+        console.log("=> receiveQueryResponse");
     const dat = payload.content || payload;
     // const sender_pub_key = dat.sender.pub_key
     const content = dat.message.content;
