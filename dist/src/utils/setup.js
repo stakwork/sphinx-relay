@@ -21,21 +21,27 @@ const connect_1 = require("./connect");
 const config_1 = require("./config");
 const migrate_1 = require("./migrate");
 const proxy_1 = require("../utils/proxy");
+const logger_1 = require("../utils/logger");
 const USER_VERSION = 7;
 const config = config_1.loadConfig();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('=> [db] starting setup...');
+    if (logger_1.logging.DB)
+        console.log('=> [db] starting setup...');
     yield setVersion();
-    console.log('=> [db] sync now');
+    if (logger_1.logging.DB)
+        console.log('=> [db] sync now');
     try {
         yield models_1.sequelize.sync();
-        console.log("=> [db] done syncing");
+        if (logger_1.logging.DB)
+            console.log("=> [db] done syncing");
     }
     catch (e) {
-        console.log("[db] sync failed", e);
+        if (logger_1.logging.DB)
+            console.log("[db] sync failed", e);
     }
     yield migrate_1.default();
-    console.log('=> [db] setup done');
+    if (logger_1.logging.DB)
+        console.log('=> [db] setup done');
 });
 exports.setupDatabase = setupDatabase;
 function setVersion() {

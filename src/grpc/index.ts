@@ -14,7 +14,6 @@ const ERR_CODE_STREAM_REMOVED = 2
 const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
 export function subscribeInvoices(parseKeysendInvoice) {
-	console.log('subscribeInvoices')
 	return new Promise(async (resolve, reject) => {
 		const lightning = await loadLightning(true) // try proxy
 
@@ -147,7 +146,6 @@ function waitAndReconnect(){
 var i = 0
 var ctx = 0
 export async function reconnectToLND(innerCtx: number, callback?: Function) {
-	console.log("reconnectToLND")
 	ctx = innerCtx
 	i++
 	const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();

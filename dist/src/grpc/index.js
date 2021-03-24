@@ -24,7 +24,6 @@ const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
-    console.log('subscribeInvoices');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning(true); // try proxy
         var call = lightning.subscribeInvoices();
@@ -155,7 +154,6 @@ var i = 0;
 var ctx = 0;
 function reconnectToLND(innerCtx, callback) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("reconnectToLND");
         ctx = innerCtx;
         i++;
         const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();

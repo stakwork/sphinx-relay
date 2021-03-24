@@ -32,6 +32,7 @@ const logging = {
     Tribes: config.logging && config.logging.includes('TRIBES'),
     Notification: config.logging && config.logging.includes('NOTIFICATION'),
     Network: config.logging && config.logging.includes('NETWORK'),
+    DB: config.logging && config.logging.includes('DB'),
 };
 exports.logging = logging;
 //# sourceMappingURL=logger.js.map

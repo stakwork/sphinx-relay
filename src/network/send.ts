@@ -6,6 +6,7 @@ import { tribeOwnerAutoConfirmation } from "../controllers/confirmations";
 import { typesToForward } from "./receive";
 import * as intercept from "./intercept";
 import constants from "../constants";
+import {logging} from '../utils/logger'
 
 type NetworkType = undefined | "mqtt" | "lightning";
 
@@ -89,7 +90,10 @@ export async function sendMessage(params) {
 
   let yes: any = true;
   let no: any = null;
-  console.log("=> sending to", contactIds.length, "contacts");
+
+  if(logging.Network) {
+    console.log("=> sending to", contactIds.length, "contacts");
+  }
   await asyncForEach(contactIds, async (contactId) => {
     // console.log("=> TENANT", tenant)
     if (contactId === tenant) {

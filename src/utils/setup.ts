@@ -9,22 +9,23 @@ import { getQR } from './connect'
 import { loadConfig } from './config'
 import migrate from './migrate'
 import {isProxy} from '../utils/proxy'
+import {logging} from '../utils/logger'
 
 const USER_VERSION = 7
 const config = loadConfig()
 
 const setupDatabase = async () => {
-  console.log('=> [db] starting setup...')
+  if(logging.DB) console.log('=> [db] starting setup...')
   await setVersion()
-  console.log('=> [db] sync now')
+  if(logging.DB) console.log('=> [db] sync now')
   try {
     await sequelize.sync()
-    console.log("=> [db] done syncing")
+    if(logging.DB) console.log("=> [db] done syncing")
   } catch (e) {
-    console.log("[db] sync failed", e)
+    if(logging.DB) console.log("[db] sync failed", e)
   }
   await migrate()
-  console.log('=> [db] setup done')
+  if(logging.DB) console.log('=> [db] setup done')
 }
 
 async function setVersion() {

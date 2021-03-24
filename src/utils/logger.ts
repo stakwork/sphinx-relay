@@ -37,6 +37,7 @@ interface Logging {
   Tribes: boolean,
   Notification: boolean,
   Network: boolean,
+  DB: boolean,
 }
 
 const logging:Logging = {
@@ -46,6 +47,7 @@ const logging:Logging = {
   Tribes: config.logging && config.logging.includes('TRIBES'),
   Notification: config.logging && config.logging.includes('NOTIFICATION'),
   Network: config.logging && config.logging.includes('NETWORK'),
+  DB: config.logging && config.logging.includes('DB'),
 }
 
 export {logging}
