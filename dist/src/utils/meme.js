@@ -18,6 +18,7 @@ const helpers = require("../helpers");
 const config_1 = require("../utils/config");
 const lightning_1 = require("../utils/lightning");
 const lightning_2 = require("../utils/lightning");
+const logger_1 = require("./logger");
 const config = config_1.loadConfig();
 // {pubkey: {host: {token,ts} }}
 const tokens = {};
@@ -42,7 +43,8 @@ function lazyToken(pubkey, host) {
             return t;
         }
         catch (e) {
-            console.log("[meme] error getting token", e);
+            if (logger_1.logging.Meme)
+                console.log("[meme] error getting token", e);
         }
     });
 }
@@ -68,7 +70,8 @@ function getMediaToken(ownerPubkey, host) {
             // }
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
-            console.log('[meme] verify', pubkey);
+            if (logger_1.logging.Meme)
+                console.log('[meme] verify', pubkey);
             const bod = yield rp.post(theURL + "verify", {
                 form: { id: r.id, sig: sigBase64, pubkey },
             });

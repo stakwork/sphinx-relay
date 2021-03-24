@@ -14,6 +14,7 @@ import {
   addPendingContactIdsToChat,
 } from "./chatTribes";
 import constants from "../constants";
+import { logging } from "../utils/logger";
 
 export async function updateChat(req, res) {
   if (!req.owner) return failure(res, "no owner");
@@ -80,7 +81,7 @@ export async function kickChatMember(req, res) {
 }
 
 export async function receiveGroupKick(payload) {
-  console.log("=> receiveGroupKick");
+  if (logging.Network) console.log("=> receiveGroupKick");
   const {
     owner,
     chat,
@@ -401,7 +402,7 @@ export const deleteChat = async (req, res) => {
 };
 
 export async function receiveGroupJoin(payload) {
-  console.log("=> receiveGroupJoin");
+  if (logging.Network) console.log("=> receiveGroupJoin");
   const {
     owner,
     chat,
@@ -534,7 +535,7 @@ export async function receiveGroupJoin(payload) {
 }
 
 export async function receiveGroupLeave(payload) {
-  console.log("=> receiveGroupLeave");
+  if (logging.Network) console.log("=> receiveGroupLeave");
   const {
     chat,
     owner,

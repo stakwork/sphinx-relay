@@ -22,6 +22,7 @@ const constants_1 = require("../constants");
 const tribes = require("../utils/tribes");
 const network = require("../network");
 const proxy_1 = require("../utils/proxy");
+const logger_1 = require("../utils/logger");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
@@ -354,7 +355,8 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     const sender_photo_url = dat.sender.photo_url;
     const owner = payload.owner;
     const tenant = owner.id;
-    console.log("=> received contact key from", sender_pub_key, tenant);
+    if (logger_1.logging.Network)
+        console.log("=> received contact key from", sender_pub_key, tenant);
     if (!sender_pub_key) {
         return console.log("no pubkey!");
     }

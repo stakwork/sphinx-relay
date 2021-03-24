@@ -1,6 +1,9 @@
 import * as expressWinston from 'express-winston'
 import * as winston from 'winston'
 import * as moment from 'moment'
+import { loadConfig } from './config'
+
+const config = loadConfig()
 
 const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim();
 
@@ -26,3 +29,25 @@ const logger = expressWinston.logger({
 })
 
 export default logger
+
+interface Logging {
+  Express: boolean,
+  Lightning: boolean,
+  Meme: boolean,
+  Tribes: boolean,
+  Notification: boolean,
+  Network: boolean,
+  DB: boolean,
+}
+
+const logging:Logging = {
+  Express: config.logging && config.logging.includes('EXPRESS'),
+  Lightning: config.logging && config.logging.includes('LIGHTNING'),
+  Meme: config.logging && config.logging.includes('MEME'),
+  Tribes: config.logging && config.logging.includes('TRIBES'),
+  Notification: config.logging && config.logging.includes('NOTIFICATION'),
+  Network: config.logging && config.logging.includes('NETWORK'),
+  DB: config.logging && config.logging.includes('DB'),
+}
+
+export {logging}

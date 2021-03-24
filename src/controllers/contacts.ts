@@ -10,6 +10,7 @@ import constants from "../constants";
 import * as tribes from "../utils/tribes";
 import * as network from "../network";
 import { isProxy } from "../utils/proxy";
+import {logging} from '../utils/logger'
 
 export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
@@ -374,7 +375,7 @@ export const receiveContactKey = async (payload) => {
   const owner = payload.owner;
   const tenant: number = owner.id;
 
-  console.log("=> received contact key from", sender_pub_key, tenant);
+  if(logging.Network) console.log("=> received contact key from", sender_pub_key, tenant);
 
   if (!sender_pub_key) {
     return console.log("no pubkey!");

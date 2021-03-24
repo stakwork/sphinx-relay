@@ -21,6 +21,7 @@ Object.defineProperty(exports, "declare_bot", { enumerable: true, get: function 
 const config_1 = require("./config");
 const proxy_1 = require("./proxy");
 const sequelize_1 = require("sequelize");
+const logger_1 = require("./logger");
 const config = config_1.loadConfig();
 // {pubkey: {host: Client} }
 let clients = {};
@@ -68,16 +69,20 @@ function initializeClient(pubkey, host, onMessage) {
                         password: pwd,
                         reconnectPeriod: 0,
                     });
-                    console.log("[tribes] try to connect:", url);
+                    if (logger_1.logging.Tribes)
+                        console.log("[tribes] try to connect:", url);
                     cl.on("connect", function () {
                         return __awaiter(this, void 0, void 0, function* () {
-                            console.log("[tribes] connected!");
+                            if (logger_1.logging.Tribes)
+                                console.log("[tribes] connected!");
                             cl.on("close", function (e) {
-                                console.log("[tribes] CLOSE", e);
+                                if (logger_1.logging.Tribes)
+                                    console.log("[tribes] CLOSE", e);
                                 setTimeout(() => reconnect(), 2000);
                             });
                             cl.on("error", function (e) {
-                                console.log("[tribes] error: ", e.message || e);
+                                if (logger_1.logging.Tribes)
+                                    console.log("[tribes] error: ", e.message || e);
                             });
                             cl.on("message", function (topic, message) {
                                 // console.log("============>>>>> GOT A MSG", topic, message)
@@ -88,7 +93,8 @@ function initializeClient(pubkey, host, onMessage) {
                                 if (err)
                                     console.log("[tribes] error subscribing", err);
                                 else {
-                                    console.log("[tribes] subscribed!", `${pubkey}/#`);
+                                    if (logger_1.logging.Tribes)
+                                        console.log("[tribes] subscribed!", `${pubkey}/#`);
                                     resolve(cl);
                                 }
                             });
@@ -235,7 +241,8 @@ function updateTribeStats(myPubkey) {
             catch (e) { }
         }));
         if (myTribes.length) {
-            console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
+            if (logger_1.logging.Tribes)
+                console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
         }
     });
 }
@@ -248,7 +255,8 @@ function subscribe(topic, onMessage) {
         const client = yield lazyClient(pubkey, host, onMessage);
         if (client)
             client.subscribe(topic, function () {
-                console.log("[tribes] added sub", host, topic);
+                if (logger_1.logging.Tribes)
+                    console.log("[tribes] added sub", host, topic);
             });
     });
 }

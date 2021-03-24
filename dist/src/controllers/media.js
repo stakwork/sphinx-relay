@@ -28,6 +28,7 @@ const short = require("short-uuid");
 const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const res_1 = require("../utils/res");
+const logger_1 = require("../utils/logger");
 const config = config_1.loadConfig();
 /*
 
@@ -220,7 +221,8 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.purchase = purchase;
 /* RECEIVERS */
 const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("=> received purchase", { payload });
+    if (logger_1.logging.Network)
+        console.log("=> received purchase", { payload });
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id, network_type, } = yield helpers.parseReceiveParams(payload);
@@ -360,7 +362,8 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.receivePurchase = receivePurchase;
 const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("=> receivePurchaseAccept");
+    if (logger_1.logging.Network)
+        console.log("=> receivePurchaseAccept");
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid, network_type, } = yield helpers.parseReceiveParams(payload);
@@ -405,7 +408,8 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
 });
 exports.receivePurchaseAccept = receivePurchaseAccept;
 const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("=> receivePurchaseDeny");
+    if (logger_1.logging.Network)
+        console.log("=> receivePurchaseDeny");
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, mediaToken, network_type, } = yield helpers.parseReceiveParams(payload);

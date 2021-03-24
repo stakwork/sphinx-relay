@@ -18,6 +18,7 @@ const confirmations_1 = require("../controllers/confirmations");
 const receive_1 = require("./receive");
 const intercept = require("./intercept");
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, realSatsContactId, } = params;
@@ -82,7 +83,9 @@ function sendMessage(params) {
         }
         let yes = true;
         let no = null;
-        console.log("=> sending to", contactIds.length, "contacts");
+        if (logger_1.logging.Network) {
+            console.log("=> sending to", contactIds.length, "contacts");
+        }
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
             // console.log("=> TENANT", tenant)
             if (contactId === tenant) {

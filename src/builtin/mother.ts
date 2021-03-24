@@ -27,7 +27,6 @@ const builtInBotNames = {
 };
 
 export function init() {
-  console.log("MOTHERBOT INIT");
 
   const client = new Sphinx.Client();
   client.login("_", finalAction);

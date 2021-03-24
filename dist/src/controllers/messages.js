@@ -23,6 +23,7 @@ const confirmations_1 = require("./confirmations");
 const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
@@ -31,7 +32,8 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!dateToReturn) {
         return exports.getAllMessages(req, res);
     }
-    console.log(dateToReturn);
+    if (logger_1.logging.Express)
+        console.log(dateToReturn);
     const owner = req.owner;
     // const chatId = req.query.chat_id
     let newMessagesWhere = {
@@ -102,14 +104,18 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
-    console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
+    if (logger_1.logging.Express) {
+        console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
+    }
     const messages = yield models_1.models.Message.findAll({
         order: [["id", "asc"]],
         limit,
         offset,
         where: { tenant },
     });
-    console.log("=> got msgs", messages && messages.length);
+    if (logger_1.logging.Express) {
+        console.log("=> got msgs", messages && messages.length);
+    }
     const chatIds = [];
     messages.forEach((m) => {
         if (m.chatId && !chatIds.includes(m.chatId)) {
@@ -121,9 +127,9 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             where: { deleted: false, id: chatIds, tenant },
         })
         : [];
-    console.log("=> found all chats", chats && chats.length);
+    // console.log("=> found all chats", chats && chats.length);
     const chatsById = underscore_1.indexBy(chats, "id");
-    console.log("=> indexed chats");
+    // console.log("=> indexed chats");
     res_1.success(res, {
         new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
         confirmed_messages: [],
@@ -140,7 +146,9 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!dateToReturn) {
         return exports.getAllMessages(req, res);
     }
-    console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`);
+    if (logger_1.logging.Express) {
+        console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`);
+    }
     const clause = {
         order: [["id", "asc"]],
         where: {
@@ -153,7 +161,9 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         clause.offset = offset;
     }
     const messages = yield models_1.models.Message.findAll(clause);
-    console.log("=> got msgs", messages && messages.length);
+    if (logger_1.logging.Express) {
+        console.log("=> got msgs", messages && messages.length);
+    }
     const chatIds = [];
     messages.forEach((m) => {
         if (m.chatId && !chatIds.includes(m.chatId)) {
@@ -350,7 +360,9 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id, } = yield helpers.parseReceiveParams(payload);
-    console.log("=> received boost " + amount + " sats on network:", network_type);
+    if (logger_1.logging.Network) {
+        console.log("=> received boost " + amount + " sats on network:", network_type);
+    }
     if (!owner || !sender || !chat) {
         return console.log("=> no group chat!");
     }
@@ -401,7 +413,9 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
 exports.receiveBoost = receiveBoost;
 const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, date_string, amount, network_type, } = yield helpers.parseReceiveParams(payload);
-    console.log("=> received repayment " + amount + " sats");
+    if (logger_1.logging.Network) {
+        console.log("=> received repayment " + amount + " sats");
+    }
     if (!owner || !sender || !chat) {
         return console.log("=> no group chat!");
     }
@@ -429,7 +443,9 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
 });
 exports.receiveRepayment = receiveRepayment;
 const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("=> received delete message");
+    if (logger_1.logging.Network) {
+        console.log("=> received delete message");
+    }
     const { owner, sender, chat, chat_type, msg_uuid, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return console.log("=> no group chat!");

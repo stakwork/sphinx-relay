@@ -22,63 +22,87 @@ const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
 const https = require("https");
 const proxy_1 = require("./utils/proxy");
+const logger_1 = require("./utils/logger");
 const pingAgent = new https.Agent({
-    keepAlive: true
+    keepAlive: true,
 });
 const checkInvitesAgent = new https.Agent({
-    keepAlive: true
+    keepAlive: true,
 });
-const env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || "development";
 const config = config_1.loadConfig();
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
     if (env != "production") {
         return;
     }
     //console.log('[hub] checking invites ping')
-    const inviteStrings = yield models_1.models.Invite.findAll({ where: { status: { [sequelize_1.Op.notIn]: [constants_1.default.invite_statuses.complete, constants_1.default.invite_statuses.expired] } } }).map(invite => invite.inviteString);
+    const inviteStrings = yield models_1.models.Invite.findAll({
+        where: {
+            status: {
+                [sequelize_1.Op.notIn]: [
+                    constants_1.default.invite_statuses.complete,
+                    constants_1.default.invite_statuses.expired,
+                ],
+            },
+        },
+    }).map((invite) => invite.inviteString);
     if (inviteStrings.length === 0) {
         return; // skip if no invites
     }
-    node_fetch_1.default(config.hub_api_url + '/invites/check', {
+    node_fetch_1.default(config.hub_api_url + "/invites/check", {
         agent: checkInvitesAgent,
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ invite_strings: inviteStrings }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
     })
-        .then(res => res.json())
-        .then(json => {
+        .then((res) => res.json())
+        .then((json) => {
         if (json.object) {
             json.object.invites.map((object) => __awaiter(void 0, void 0, void 0, function* () {
                 const invite = object.invite;
                 const pubkey = object.pubkey;
                 const routeHint = object.route_hint;
                 const price = object.price;
-                const dbInvite = yield models_1.models.Invite.findOne({ where: { inviteString: invite.pin } });
-                const contact = yield models_1.models.Contact.findOne({ where: { id: dbInvite.contactId } });
-                const owner = yield models_1.models.Contact.findOne({ where: { id: dbInvite.tenant } });
+                const dbInvite = yield models_1.models.Invite.findOne({
+                    where: { inviteString: invite.pin },
+                });
+                const contact = yield models_1.models.Contact.findOne({
+                    where: { id: dbInvite.contactId },
+                });
+                const owner = yield models_1.models.Contact.findOne({
+                    where: { id: dbInvite.tenant },
+                });
                 if (dbInvite.status != invite.invite_status) {
-                    const updateObj = { status: invite.invite_status, price: price };
+                    const updateObj = {
+                        status: invite.invite_status,
+                        price: price,
+                    };
                     if (invite.invoice)
                         updateObj.invoice = invite.invoice;
                     dbInvite.update(updateObj);
                     socket.sendJson({
-                        type: 'invite',
-                        response: jsonUtils.inviteToJson(dbInvite)
+                        type: "invite",
+                        response: jsonUtils.inviteToJson(dbInvite),
                     }, owner.id);
                     if (dbInvite.status == constants_1.default.invite_statuses.ready && contact) {
-                        sendNotification(-1, contact.alias, 'invite', owner);
+                        sendNotification(-1, contact.alias, "invite", owner);
                     }
                 }
-                if (pubkey && dbInvite.status == constants_1.default.invite_statuses.complete && contact) {
-                    const updateObj = { publicKey: pubkey, status: constants_1.default.contact_statuses.confirmed };
+                if (pubkey &&
+                    dbInvite.status == constants_1.default.invite_statuses.complete &&
+                    contact) {
+                    const updateObj = {
+                        publicKey: pubkey,
+                        status: constants_1.default.contact_statuses.confirmed,
+                    };
                     if (routeHint)
                         updateObj.routeHint = routeHint;
                     contact.update(updateObj);
                     var contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
-                        type: 'contact',
-                        response: contactJson
+                        type: "contact",
+                        response: contactJson,
                     }, owner.id);
                     helpers.sendContactKeys({
                         contactIds: [contact.id],
@@ -89,8 +113,8 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
             }));
         }
     })
-        .catch(error => {
-        console.log('[hub error]', error);
+        .catch((error) => {
+        console.log("[hub error]", error);
     });
 });
 const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99,20 +123,24 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
     }
     const node = yield nodeinfo_1.nodeinfo();
     sendHubCall(Object.assign(Object.assign({}, params), { node }));
-    if (proxy_1.isProxy()) { // send all "clean" nodes
+    if (proxy_1.isProxy()) {
+        // send all "clean" nodes
         massPingHubFromProxies(node);
     }
 });
 function massPingHubFromProxies(rn) {
     return __awaiter(this, void 0, void 0, function* () {
-        const owners = yield models_1.models.Contact.findAll({ where: {
+        // real node
+        const owners = yield models_1.models.Contact.findAll({
+            where: {
                 isOwner: true,
-                id: { [sequelize_1.Op.ne]: 1 }
-            } });
+                id: { [sequelize_1.Op.ne]: 1 },
+            },
+        });
         const nodes = [];
         yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
             const proxyNodeInfo = yield nodeinfo_1.proxynodeinfo(o.publicKey);
-            const clean = o.authToken === null || o.authToken === '';
+            const clean = o.authToken === null || o.authToken === "";
             nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet, ip: rn.ip, public_ip: rn.public_ip, node_alias: rn.node_alias }));
         }));
         sendHubCall({ nodes }, true);
@@ -122,20 +150,20 @@ function sendHubCall(body, mass) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // console.log("=> PING BODY", body)
-            const r = yield node_fetch_1.default(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
+            const r = yield node_fetch_1.default(config.hub_api_url + (mass ? "/mass_ping" : "/ping"), {
                 agent: pingAgent,
-                method: 'POST',
+                method: "POST",
                 body: JSON.stringify(body),
-                headers: { 'Content-Type': 'application/json' }
+                headers: { "Content-Type": "application/json" },
             });
             const j = yield r.json();
             // console.log("=> PING RESPONSE", j)
-            if (!(j && j.status && j.status === 'ok')) {
-                console.log('[hub] ping returned not ok', j);
+            if (!(j && j.status && j.status === "ok")) {
+                console.log("[hub] ping returned not ok", j);
             }
         }
         catch (e) {
-            console.log('[hub warning]: cannot reach hub', e);
+            console.log("[hub warning]: cannot reach hub", e);
         }
     });
 }
@@ -149,48 +177,47 @@ const checkInvitesHubInterval = (ms) => {
 };
 exports.checkInvitesHubInterval = checkInvitesHubInterval;
 function sendInvoice(payReq, amount) {
-    console.log('[hub] sending invoice');
-    node_fetch_1.default(config.hub_api_url + '/invoices', {
-        method: 'POST',
+    console.log("[hub] sending invoice");
+    node_fetch_1.default(config.hub_api_url + "/invoices", {
+        method: "POST",
         body: JSON.stringify({ invoice: payReq, amount }),
-        headers: { 'Content-Type': 'application/json' }
-    })
-        .catch(error => {
-        console.log('[hub error]: sendInvoice', error);
+        headers: { "Content-Type": "application/json" },
+    }).catch((error) => {
+        console.log("[hub error]: sendInvoice", error);
     });
 }
 exports.sendInvoice = sendInvoice;
 const finishInviteInHub = (params, onSuccess, onFailure) => {
-    node_fetch_1.default(config.hub_api_url + '/invites/finish', {
-        method: 'POST',
+    node_fetch_1.default(config.hub_api_url + "/invites/finish", {
+        method: "POST",
         body: JSON.stringify(params),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
     })
-        .then(res => res.json())
-        .then(json => {
-        console.log('[hub] finished invite to hub');
+        .then((res) => res.json())
+        .then((json) => {
+        console.log("[hub] finished invite to hub");
         onSuccess(json);
     })
-        .catch(e => {
-        console.log('[hub] fail to finish invite in hub');
+        .catch((e) => {
+        console.log("[hub] fail to finish invite in hub");
         onFailure(e);
     });
 };
 exports.finishInviteInHub = finishInviteInHub;
 const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
-    node_fetch_1.default(config.hub_api_url + '/invites/' + invite_string + '/pay', {
-        method: 'POST',
+    node_fetch_1.default(config.hub_api_url + "/invites/" + invite_string + "/pay", {
+        method: "POST",
         body: JSON.stringify(params),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
     })
-        .then(res => res.json())
-        .then(json => {
+        .then((res) => res.json())
+        .then((json) => {
         if (json.object) {
-            console.log('[hub] finished pay to hub');
+            console.log("[hub] finished pay to hub");
             onSuccess(json);
         }
         else {
-            console.log('[hub] fail to pay invite in hub');
+            console.log("[hub] fail to pay invite in hub");
             onFailure(json);
         }
     });
@@ -209,19 +236,19 @@ function payInviteInvoice(invoice, pubkey, onSuccess, onFailure) {
 }
 exports.payInviteInvoice = payInviteInvoice;
 const createInviteInHub = (params, onSuccess, onFailure) => {
-    node_fetch_1.default(config.hub_api_url + '/invites_new', {
-        method: 'POST',
+    node_fetch_1.default(config.hub_api_url + "/invites_new", {
+        method: "POST",
         body: JSON.stringify(params),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
     })
-        .then(res => res.json())
-        .then(json => {
+        .then((res) => res.json())
+        .then((json) => {
         if (json.object) {
-            console.log('[hub] sent invite to be created to hub');
+            console.log("[hub] sent invite to be created to hub");
             onSuccess(json);
         }
         else {
-            console.log('[hub] fail to create invite in hub');
+            console.log("[hub] fail to create invite in hub");
             onFailure(json);
         }
     });
@@ -230,9 +257,9 @@ exports.createInviteInHub = createInviteInHub;
 function getAppVersionsFromHub() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(config.hub_api_url + '/app_versions', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+            const r = yield node_fetch_1.default(config.hub_api_url + "/app_versions", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
             });
             const j = yield r.json();
             return j;
@@ -245,33 +272,38 @@ function getAppVersionsFromHub() {
 exports.getAppVersionsFromHub = getAppVersionsFromHub;
 const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
     if (!owner)
-        return console.log('=> sendNotification error: no owner');
+        return console.log("=> sendNotification error: no owner");
     let message = `You have a new message from ${name}`;
-    if (type === 'invite') {
+    if (type === "invite") {
         message = `Your invite to ${name} is ready`;
     }
-    if (type === 'group') {
+    if (type === "group") {
         message = `You have been added to group ${name}`;
     }
-    if (type === 'reject') {
+    if (type === "reject") {
         message = `The admin has declined your request to join "${name}"`;
     }
-    if (type === 'keysend') {
+    if (type === "keysend") {
         message = `You have received a payment of ${amount} sats`;
     }
     // group
-    if (type === 'message' && chat.type == constants_1.default.chat_types.group && chat.name && chat.name.length) {
+    if (type === "message" &&
+        chat.type == constants_1.default.chat_types.group &&
+        chat.name &&
+        chat.name.length) {
         message += ` in ${chat.name}`;
     }
     // tribe
-    if ((type === 'message' || type === 'boost') && chat.type === constants_1.default.chat_types.tribe) {
+    if ((type === "message" || type === "boost") &&
+        chat.type === constants_1.default.chat_types.tribe) {
         message = `You have a new ${type}`;
         if (chat.name && chat.name.length) {
             message += ` in ${chat.name}`;
         }
     }
     if (!owner.deviceId) {
-        console.log('[send notification] skipping. owner.deviceId not set.');
+        if (logger_1.logging.Notification)
+            console.log("[send notification] skipping. owner.deviceId not set.");
         return;
     }
     const device_id = owner.deviceId;
@@ -280,41 +312,54 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     const params = { device_id };
     const notification = {
         chat_id: chat.id,
-        sound: ''
+        sound: "",
     };
-    if (type !== 'badge' && !chat.isMuted) {
+    if (type !== "badge" && !chat.isMuted) {
         notification.message = message;
-        notification.sound = owner.notificationSound || 'default';
+        notification.sound = owner.notificationSound || "default";
     }
     else {
         if (isAndroid)
             return; // skip on Android if no actual message
     }
     params.notification = notification;
-    if (type === 'message' && chat.type == constants_1.default.chat_types.tribe) {
+    const isTribeOwner = chat.ownerPubkey === owner.publicKey;
+    if (type === "message" && chat.type == constants_1.default.chat_types.tribe) {
         debounce(() => {
-            const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : '';
-            params.notification.message = chat.isMuted ? '' : `You have ${count}new messages in ${chat.name}`;
-            finalNotification(owner.id, params);
+            const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + " " : "";
+            params.notification.message = chat.isMuted
+                ? ""
+                : `You have ${count}new messages in ${chat.name}`;
+            finalNotification(owner.id, params, isTribeOwner);
         }, chat.id, 30000);
     }
     else {
-        finalNotification(owner.id, params);
+        finalNotification(owner.id, params, isTribeOwner);
     }
 });
 exports.sendNotification = sendNotification;
-function finalNotification(ownerID, params) {
+const typesToNotNotify = [
+    constants_1.default.message_types.group_join,
+    constants_1.default.message_types.group_leave,
+    constants_1.default.message_types.boost,
+];
+function finalNotification(ownerID, params, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         if (params.notification.message) {
-            console.log('[send notification]', params.notification);
+            if (logger_1.logging.Notification)
+                console.log("[send notification]", params.notification);
+        }
+        const where = {
+            sender: { [sequelize_1.Op.ne]: ownerID },
+            seen: false,
+            chatId: { [sequelize_1.Op.ne]: 0 },
+            tenant: ownerID,
+        };
+        if (!isTribeOwner) {
+            where.type = { [sequelize_1.Op.notIn]: typesToNotNotify };
         }
         let unseenMessages = yield models_1.models.Message.count({
-            where: {
-                sender: { [sequelize_1.Op.ne]: ownerID },
-                seen: false,
-                chatId: { [sequelize_1.Op.ne]: 0 },
-                tenant: ownerID
-            }
+            where,
         });
         params.notification.badge = unseenMessages;
         triggerNotification(params);
@@ -322,12 +367,11 @@ function finalNotification(ownerID, params) {
 }
 function triggerNotification(params) {
     node_fetch_1.default("https://hub.sphinx.chat/api/v1/nodes/notify", {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(params),
-        headers: { 'Content-Type': 'application/json' }
-    })
-        .catch(error => {
-        console.log('[hub error]: triggerNotification', error);
+        headers: { "Content-Type": "application/json" },
+    }).catch((error) => {
+        console.log("[hub error]: triggerNotification", error);
     });
 }
 // let inDebounce

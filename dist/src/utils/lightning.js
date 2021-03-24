@@ -20,6 +20,7 @@ const constants_1 = require("../constants");
 const macaroon_1 = require("./macaroon");
 const config_1 = require("./config");
 const proxy_1 = require("./proxy");
+const logger_1 = require("./logger");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -729,7 +730,7 @@ function ascii_to_hexa(str) {
 //     return lightningClient
 //   }
 // }
-let yeslog = true;
+let yeslog = logger_1.logging.Lightning;
 function log(a, b, c) {
     if (!yeslog)
         return;

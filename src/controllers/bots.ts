@@ -10,6 +10,7 @@ import fetch from "node-fetch";
 import * as SphinxBot from "sphinx-bot";
 import { Msg } from "../network/interfaces";
 import constants from "../constants";
+import {logging} from '../utils/logger'
 
 export const getBots = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
@@ -224,7 +225,7 @@ export async function botKeysend(
 }
 
 export async function receiveBotInstall(payload) {
-  console.log("=> receiveBotInstall", payload);
+  if(logging.Network) console.log("=> receiveBotInstall", payload);
 
   const dat = payload.content || payload;
   const sender_pub_key = dat.sender && dat.sender.pub_key;
@@ -268,7 +269,7 @@ export async function receiveBotInstall(payload) {
 
 // ONLY FOR BOT MAKER
 export async function receiveBotCmd(payload) {
-  console.log("=> receiveBotCmd", payload);
+  if(logging.Network) console.log("=> receiveBotCmd", payload);
 
   const dat = payload.content || payload;
   // const sender_pub_key = dat.sender.pub_key
@@ -356,7 +357,7 @@ export function buildBotPayload(msg: Msg): SphinxBot.Message {
 }
 
 export async function receiveBotRes(payload) {
-  console.log("=> receiveBotRes"); //, payload)
+  if(logging.Network) console.log("=> receiveBotRes"); //, payload)
   const dat = payload.content || payload;
 
   if (!dat.chat || !dat.message || !dat.sender) {

@@ -10,7 +10,9 @@ const config = require(configFile)[env]
 const ENV = process.env
 
 export function loadConfig() {
+  const logg = ENV.LOGGING || config.logging
   return {
+    logging: logg || 'LIGHTNING,TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB',
     senza_url: ENV.SENZA_URL || config.senza_url,
     macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
     tls_location: ENV.TLS_LOCATION || config.tls_location,

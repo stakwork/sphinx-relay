@@ -11,6 +11,7 @@ import { sendConfirmation } from "./confirmations";
 import * as network from "../network";
 import * as short from "short-uuid";
 import constants from "../constants";
+import { logging } from "../utils/logger";
 
 export const getMessages = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
@@ -21,7 +22,9 @@ export const getMessages = async (req, res) => {
   if (!dateToReturn) {
     return getAllMessages(req, res);
   }
-  console.log(dateToReturn);
+
+  if (logging.Express) console.log(dateToReturn);
+
   const owner = req.owner;
   // const chatId = req.query.chat_id
 
@@ -105,7 +108,9 @@ export const getAllMessages = async (req, res) => {
   const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
 
-  console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
+  if (logging.Express) {
+    console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
+  }
 
   const messages = await models.Message.findAll({
     order: [["id", "asc"]],
@@ -113,7 +118,11 @@ export const getAllMessages = async (req, res) => {
     offset,
     where: { tenant },
   });
-  console.log("=> got msgs", messages && messages.length);
+
+  if (logging.Express) {
+    console.log("=> got msgs", messages && messages.length);
+  }
+
   const chatIds: number[] = [];
   messages.forEach((m) => {
     if (m.chatId && !chatIds.includes(m.chatId)) {
@@ -127,9 +136,9 @@ export const getAllMessages = async (req, res) => {
           where: { deleted: false, id: chatIds, tenant },
         })
       : [];
-  console.log("=> found all chats", chats && chats.length);
+  // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, "id");
-  console.log("=> indexed chats");
+  // console.log("=> indexed chats");
   success(res, {
     new_messages: messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
@@ -148,7 +157,10 @@ export const getMsgs = async (req, res) => {
   if (!dateToReturn) {
     return getAllMessages(req, res);
   }
-  console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`);
+
+  if (logging.Express) {
+    console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`);
+  }
 
   const clause: { [k: string]: any } = {
     order: [["id", "asc"]],
@@ -162,7 +174,10 @@ export const getMsgs = async (req, res) => {
     clause.offset = offset;
   }
   const messages = await models.Message.findAll(clause);
-  console.log("=> got msgs", messages && messages.length);
+
+  if (logging.Express) {
+    console.log("=> got msgs", messages && messages.length);
+  }
   const chatIds: number[] = [];
   messages.forEach((m) => {
     if (m.chatId && !chatIds.includes(m.chatId)) {
@@ -421,10 +436,13 @@ export const receiveBoost = async (payload) => {
     sender_photo_url,
     msg_id,
   } = await helpers.parseReceiveParams(payload);
-  console.log(
-    "=> received boost " + amount + " sats on network:",
-    network_type
-  );
+
+  if (logging.Network) {
+    console.log(
+      "=> received boost " + amount + " sats on network:",
+      network_type
+    );
+  }
   if (!owner || !sender || !chat) {
     return console.log("=> no group chat!");
   }
@@ -487,7 +505,10 @@ export const receiveRepayment = async (payload) => {
     amount,
     network_type,
   } = await helpers.parseReceiveParams(payload);
-  console.log("=> received repayment " + amount + " sats");
+
+  if (logging.Network) {
+    console.log("=> received repayment " + amount + " sats");
+  }
   if (!owner || !sender || !chat) {
     return console.log("=> no group chat!");
   }
@@ -520,7 +541,9 @@ export const receiveRepayment = async (payload) => {
 };
 
 export const receiveDeleteMessage = async (payload) => {
-  console.log("=> received delete message");
+  if (logging.Network) {
+    console.log("=> received delete message");
+  }
   const {
     owner,
     sender,
