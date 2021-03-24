@@ -589,6 +589,27 @@ async function listChannels(args?:ListChannelsArgs, ownerPubkey?:string): Promis
   })
 }
 
+interface Addr {
+  pubkey: string
+  host: string
+}
+interface ConnectPeerArgs {
+  addr: Addr
+}
+export async function connectPeer(args: ConnectPeerArgs): Promise<{ [k: string]: any }> {
+  log('connectPeer')
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning()
+    lightning.connectPeer(args, function (err, response) {
+      if (err == null) {
+        resolve(response)
+      } else {
+        reject(err)
+      }
+    });
+  })
+}
+
 export interface OpenChannelArgs {
   node_pubkey: any // bytes
   local_funding_amount: number

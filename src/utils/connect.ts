@@ -3,7 +3,8 @@ import password from './password'
 import * as LND from './lightning'
 import { isClean } from './nodeinfo'
 import {loadConfig} from './config'
-import { get_hub_pubkey } from '../controllers/queries'
+import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
+import { failure } from './res'
 const fs = require('fs')
 
 const config = loadConfig()
@@ -30,7 +31,7 @@ export async function getQR():Promise<string> {
 }
 
 async function makeVarScript(): Promise<string> {
-
+  return ''
   const clean = await isClean()
   const isSignedUp = clean ? false : true
 
@@ -73,6 +74,28 @@ async function makeVarScript(): Promise<string> {
   window.hasRemoteBalance=${hasRemoteBalance};
   window.isSignedUp=${isSignedUp};
 </script>`
+}
+
+export async function genChannel(req, res) {
+  const { amount } = req.body;
+  if(!amount) return failure(res, 'no amount')
+  try {
+    await LND.connectPeer({
+      addr: {
+        pubkey:'023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
+        host:'54.159.193.149:9735'
+      }
+    })
+    const sat_per_byte = await getSuggestedSatPerByte();
+    await LND.openChannel({
+      node_pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f', // bytes
+      local_funding_amount: amount,
+      push_sat: Math.round(amount*0.02),
+      sat_per_byte,
+    })
+  } catch(e) {
+    console.log('=> connect failed', e)
+  }
 }
 
 export async function connect(req, res) {

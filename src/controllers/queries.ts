@@ -107,7 +107,7 @@ export async function listUTXOs(req, res) {
   }
 }
 
-async function getSuggestedSatPerByte(): Promise<number> {
+export async function getSuggestedSatPerByte(): Promise<number> {
   const MAX_AMT = 250;
   try {
     const r = await fetch("https://mempool.space/api/v1/fees/recommended");

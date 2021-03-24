@@ -71,20 +71,6 @@
     input[type="checkbox"] {
       pointer-events: none;
     }
-
-    a{
-      color:#628aff;
-      font-weight: bold;
-    }
-    a:visited{
-      color:#628aff;
-      font-weight: bold;
-    }
-    #stuff{
-      display: flex;
-      align-items: center;
-      flex-direction: column;
-    }
   </style>
   <script>var hi='hello';</script>
 </head>
@@ -98,30 +84,27 @@
     <li>
       <input id="chan" type="checkbox" />
       <span id="chan-text"></span>
-    </li>
-  
-    <li>
-      <input id="fees" type="checkbox" />
-      <span id="fees-text"></span>
-    </li>
+      <pre id="chan-pre" style="display:none;">
+lncli connect SPHINX_HUB_PUBKEY@54.159.193.149:9735
 
-    <li>
-      <input id="bal" type="checkbox" />
-      <span id="bal-text"></span>
+lncli openchannel SPHINX_HUB_PUBKEY --local_amt=*** --push_amt=*** --sat_per_byte=***
+      </pre>
     </li>
 
   </ul>
 
-  <br />
-  <a href="https://github.com/stakwork/sphinx-relay/wiki" target="_blank">
-    Read more here
-  </a>
+  <div id="open-stuff">
+    <p>Open a channel now:</p>
+    <label>Amount:</label>
+    <input id="amount" />
+    <button id="open-button" disabled>OPEN CHANNEL</button>
+  </div>
 
   <div id="qr-wrap" style="display: none;">
     <canvas id="qr"></canvas>
   </div>
 
-  <p id="qr-text" style="display: none;">
+  <p id="qr-text">
     Scan the QR or copy the connection string into your Sphinx app
   </p>
 
@@ -144,32 +127,14 @@ CONNECTION_STRING
 
     const chan = get('chan')
     const chanText = get('chan-text')
+    const chanPre = get('chan-pre')
 
     if(window.channelIsOpen) {
       chan.checked = true
       chanText.innerHTML = 'You have an open channel'
     } else {
       chanText.innerHTML = 'You need to open a channel'
-    }
-
-    const fees = get('fees')
-    const feesText = get('fees-text')
-
-    if(window.channelFeesBaseZero) {
-      fees.checked = true
-      feesText.innerHTML = 'You have set your fee base to 0'
-    } else {
-      feesText.innerHTML = 'You need to set your fee base to 0'
-    }
-
-    const bal = get('bal')
-    const balText = get('bal-text')
-
-    if(window.hasRemoteBalance) {
-      bal.checked = true
-      balText.innerHTML = 'You have remote balance'
-    } else {
-      balText.innerHTML = 'You need remote balance (2% of channel size recommended)'
+      chanPre.style.display = 'block'
     }
 
     const qrWrap = get('qr-wrap')
@@ -182,10 +147,38 @@ CONNECTION_STRING
       qrText.innerHTML = "You have connected your app!"
     } else if(readyToGo) {
       qrWrap.style.display = 'flex'
-      qrText.style.display = 'block'
       connString.style.display = 'block'
     }
 
+    const amount = get('amount')
+    const openButton = get('open-button')
+    const amt = 0
+    amount.onchange = function(e) {
+      const amt1 = e.target.value
+      const a = parseInt(amt1)
+      if (a) {
+        openButton.disabled = false
+        amt = a
+      }
+    }
+    openButton.onclick = async function() {
+      if(!amt) return
+      try {
+        const r = await fetch('/gen_channel', {
+          method: 'POST',
+          body: JSON.stringify({
+            amount: amt
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          },
+        })
+        const j = await r.json()
+
+      } catch(e) {
+        alert(e)
+      }
+    }
   </script>
 </body>
 

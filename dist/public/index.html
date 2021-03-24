@@ -93,27 +93,41 @@
 
   <img src="/static/sphinx-logo.png" alt="logo" />
 
+  <ul>
+    
+    <li>
+      <input id="chan" type="checkbox" />
+      <span id="chan-text"></span>
+    </li>
+  
+    <li>
+      <input id="fees" type="checkbox" />
+      <span id="fees-text"></span>
+    </li>
+
+    <li>
+      <input id="bal" type="checkbox" />
+      <span id="bal-text"></span>
+    </li>
+
+  </ul>
+
+  <br />
+  <a href="https://github.com/stakwork/sphinx-relay/wiki" target="_blank">
+    Read more here
+  </a>
+
   <div id="qr-wrap" style="display: none;">
     <canvas id="qr"></canvas>
   </div>
 
-  <p id="qr-text">
+  <p id="qr-text" style="display: none;">
     Scan the QR or copy the connection string into your Sphinx app
   </p>
 
   <pre id="connection-string" style="display: none;">
 CONNECTION_STRING
   </pre>
-
-  <div id="stuff">
-    <p>
-      You need to open a channel with our routing hub in order to connect to other Sphinx users.
-    </p>
-
-    <a href="https://github.com/stakwork/sphinx-relay/wiki" target="_blank">
-      Read more here
-    </a>
-  </div>
 
   <script src="/static/js/qrious.js"></script>
   <script>
@@ -128,26 +142,50 @@ CONNECTION_STRING
   <script>
     function get(id){ return document.getElementById(id) }
 
+    const chan = get('chan')
+    const chanText = get('chan-text')
+
+    if(window.channelIsOpen) {
+      chan.checked = true
+      chanText.innerHTML = 'You have an open channel'
+    } else {
+      chanText.innerHTML = 'You need to open a channel'
+    }
+
+    const fees = get('fees')
+    const feesText = get('fees-text')
+
+    if(window.channelFeesBaseZero) {
+      fees.checked = true
+      feesText.innerHTML = 'You have set your fee base to 0'
+    } else {
+      feesText.innerHTML = 'You need to set your fee base to 0'
+    }
+
+    const bal = get('bal')
+    const balText = get('bal-text')
+
+    if(window.hasRemoteBalance) {
+      bal.checked = true
+      balText.innerHTML = 'You have remote balance'
+    } else {
+      balText.innerHTML = 'You need remote balance (2% of channel size recommended)'
+    }
+
     const qrWrap = get('qr-wrap')
     const connString = get('connection-string')
     const qrText = get('qr-text')
+
+    const readyToGo = window.hasRemoteBalance && window.channelFeesBaseZero && window.channelIsOpen
 
     if(window.isSignedUp) {
       qrText.innerHTML = "You have connected your app!"
     } else if(readyToGo) {
       qrWrap.style.display = 'flex'
+      qrText.style.display = 'block'
       connString.style.display = 'block'
     }
 
-    const readyToGo = window.hasRemoteBalance && window.channelFeesBaseZero && window.channelIsOpen
-    const stuff = get('stuff')
-    if(readyToGo) {
-      stuff.style.display='none'
-    }
-
-function genChannel() {
-
-}
   </script>
 </body>
 

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveQueryResponse = exports.receiveQuery = exports.queryOnchainAddress = exports.startWatchingUTXOs = exports.listUTXOs = exports.get_hub_pubkey = void 0;
+exports.receiveQueryResponse = exports.receiveQuery = exports.queryOnchainAddress = exports.startWatchingUTXOs = exports.getSuggestedSatPerByte = exports.listUTXOs = exports.get_hub_pubkey = void 0;
 const res_1 = require("../utils/res");
 const models_1 = require("../models");
 const network = require("../network");
@@ -110,6 +110,7 @@ function getSuggestedSatPerByte() {
         }
     });
 }
+exports.getSuggestedSatPerByte = getSuggestedSatPerByte;
 // https://mempool.space/api/v1/fees/recommended
 function genChannelAndConfirmAccounting(acc) {
     return __awaiter(this, void 0, void 0, function* () {

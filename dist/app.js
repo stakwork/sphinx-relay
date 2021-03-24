@@ -86,6 +86,7 @@ function setupApp() {
         app.get('/app', (req, res) => res.send('INDEX'));
         if (config.connect_ui) {
             app.get('/connect', connect.connect);
+            app.post('/gen_channel', connect.genChannel);
         }
         let server;
         if ('ssl' in config && config.ssl.enabled) {

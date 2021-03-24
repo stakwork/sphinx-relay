@@ -9,13 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connect = exports.getQR = void 0;
+exports.connect = exports.genChannel = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
 const LND = require("./lightning");
 const nodeinfo_1 = require("./nodeinfo");
 const config_1 = require("./config");
 const queries_1 = require("../controllers/queries");
+const res_1 = require("./res");
 const fs = require('fs');
 const config = config_1.loadConfig();
 function getQR() {
@@ -44,6 +45,7 @@ function getQR() {
 exports.getQR = getQR;
 function makeVarScript() {
     return __awaiter(this, void 0, void 0, function* () {
+        return '';
         const clean = yield nodeinfo_1.isClean();
         const isSignedUp = clean ? false : true;
         const channelList = yield LND.listChannels({});
@@ -82,6 +84,32 @@ function makeVarScript() {
 </script>`;
     });
 }
+function genChannel(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { amount } = req.body;
+        if (!amount)
+            return res_1.failure(res, 'no amount');
+        try {
+            yield LND.connectPeer({
+                addr: {
+                    pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
+                    host: '54.159.193.149:9735'
+                }
+            });
+            const sat_per_byte = yield queries_1.getSuggestedSatPerByte();
+            yield LND.openChannel({
+                node_pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
+                local_funding_amount: amount,
+                push_sat: Math.round(amount * 0.02),
+                sat_per_byte,
+            });
+        }
+        catch (e) {
+            console.log('=> connect failed', e);
+        }
+    });
+}
+exports.genChannel = genChannel;
 function connect(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         fs.readFile("public/index.html", function (error, pgResp) {
