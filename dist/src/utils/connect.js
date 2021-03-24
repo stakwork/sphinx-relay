@@ -45,7 +45,6 @@ function getQR() {
 exports.getQR = getQR;
 function makeVarScript() {
     return __awaiter(this, void 0, void 0, function* () {
-        return '';
         const clean = yield nodeinfo_1.isClean();
         const isSignedUp = clean ? false : true;
         const channelList = yield LND.listChannels({});

@@ -31,7 +31,6 @@ export async function getQR():Promise<string> {
 }
 
 async function makeVarScript(): Promise<string> {
-  return ''
   const clean = await isClean()
   const isSignedUp = clean ? false : true
 
