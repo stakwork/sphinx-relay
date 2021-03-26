@@ -415,6 +415,7 @@ export async function receiveGroupJoin(payload) {
     network_type,
     sender_photo_url,
     sender_route_hint,
+    chat_name,
   } = await helpers.parseReceiveParams(payload);
   const tenant: number = owner.id;
 
@@ -532,6 +533,10 @@ export async function receiveGroupJoin(payload) {
     },
     tenant
   );
+
+  if(isTribeOwner) {
+    sendNotification(chat, chat_name, "group", owner);
+  }
 }
 
 export async function receiveGroupLeave(payload) {
@@ -546,6 +551,7 @@ export async function receiveGroupLeave(payload) {
     date_string,
     network_type,
     sender_photo_url,
+    chat_name,
   } = await helpers.parseReceiveParams(payload);
   const tenant: number = owner.id;
   if (!chat) return;
@@ -615,6 +621,10 @@ export async function receiveGroupLeave(payload) {
     },
     tenant
   );
+
+  if(isTribeOwner) {
+    sendNotification(chat, chat_name, "group", owner);
+  }
 }
 
 async function validateTribeOwner(chat_uuid: string, pubkey: string) {

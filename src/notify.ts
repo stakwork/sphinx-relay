@@ -20,7 +20,7 @@ const sendNotification = async (
   owner,
   amount?: number
 ) => {
-  console.log("=> NOTIFICAIONT!!!!!!!!!!!!!", type)
+
   if (!owner) return console.log("=> sendNotification error: no owner");
 
   let message = `You have a new message from ${name}`;
@@ -28,7 +28,7 @@ const sendNotification = async (
     message = `Your invite to ${name} is ready`;
   }
   if (type === "group") {
-    message = `You have been added to group ${name}`;
+    message = `Someone joined ${name}`;
   }
   if (type === "reject") {
     message = `The admin has declined your request to join "${name}"`;
@@ -98,11 +98,11 @@ const sendNotification = async (
   }
 };
 
-// const typesToNotNotify = [
-//   constants.message_types.group_join,
-//   constants.message_types.group_leave,
-//   constants.message_types.boost,
-// ];
+const typesToNotNotify = [
+  constants.message_types.group_join,
+  constants.message_types.group_leave,
+  constants.message_types.boost,
+];
 
 async function finalNotification(
   ownerID: number,
@@ -119,13 +119,12 @@ async function finalNotification(
     chatId: { [Op.ne]: 0 }, // no anon keysends
     tenant: ownerID,
   };
-  // if (!isTribeOwner) {
-  //   where.type = { [Op.notIn]: typesToNotNotify };
-  // }
+  if (!isTribeOwner) {
+    where.type = { [Op.notIn]: typesToNotNotify };
+  }
   let unseenMessages = await models.Message.count({
     where,
   });
-  console.log('=> unseenMessages', unseenMessages)
   if(!unseenMessages) return
   params.notification.badge = unseenMessages;
   triggerNotification(params);

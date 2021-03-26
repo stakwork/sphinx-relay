@@ -16,7 +16,6 @@ const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("./constants");
 const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("=> NOTIFICAIONT!!!!!!!!!!!!!", type);
     if (!owner)
         return console.log("=> sendNotification error: no owner");
     let message = `You have a new message from ${name}`;
@@ -24,7 +23,7 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
         message = `Your invite to ${name} is ready`;
     }
     if (type === "group") {
-        message = `You have been added to group ${name}`;
+        message = `Someone joined ${name}`;
     }
     if (type === "reject") {
         message = `The admin has declined your request to join "${name}"`;
@@ -84,11 +83,11 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     }
 });
 exports.sendNotification = sendNotification;
-// const typesToNotNotify = [
-//   constants.message_types.group_join,
-//   constants.message_types.group_leave,
-//   constants.message_types.boost,
-// ];
+const typesToNotNotify = [
+    constants_1.default.message_types.group_join,
+    constants_1.default.message_types.group_leave,
+    constants_1.default.message_types.boost,
+];
 function finalNotification(ownerID, params, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         if (params.notification.message) {
@@ -101,13 +100,12 @@ function finalNotification(ownerID, params, isTribeOwner) {
             chatId: { [sequelize_1.Op.ne]: 0 },
             tenant: ownerID,
         };
-        // if (!isTribeOwner) {
-        //   where.type = { [Op.notIn]: typesToNotNotify };
-        // }
+        if (!isTribeOwner) {
+            where.type = { [sequelize_1.Op.notIn]: typesToNotNotify };
+        }
         let unseenMessages = yield models_1.models.Message.count({
             where,
         });
-        console.log('=> unseenMessages', unseenMessages);
         if (!unseenMessages)
             return;
         params.notification.badge = unseenMessages;

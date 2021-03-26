@@ -383,7 +383,7 @@ function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         if (logger_1.logging.Network)
             console.log("=> receiveGroupJoin");
-        const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, sender_route_hint, } = yield helpers.parseReceiveParams(payload);
+        const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, sender_route_hint, chat_name, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
             return;
@@ -494,6 +494,9 @@ function receiveGroupJoin(payload) {
                 message: jsonUtils.messageToJson(message, null),
             },
         }, tenant);
+        if (isTribeOwner) {
+            hub_1.sendNotification(chat, chat_name, "group", owner);
+        }
     });
 }
 exports.receiveGroupJoin = receiveGroupJoin;
@@ -501,7 +504,7 @@ function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         if (logger_1.logging.Network)
             console.log("=> receiveGroupLeave");
-        const { chat, owner, sender_pub_key, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
+        const { chat, owner, sender_pub_key, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url, chat_name, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
             return;
@@ -565,6 +568,9 @@ function receiveGroupLeave(payload) {
                 message: jsonUtils.messageToJson(message, null),
             },
         }, tenant);
+        if (isTribeOwner) {
+            hub_1.sendNotification(chat, chat_name, "group", owner);
+        }
     });
 }
 exports.receiveGroupLeave = receiveGroupLeave;
