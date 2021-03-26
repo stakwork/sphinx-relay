@@ -5,7 +5,8 @@ import { Op } from "sequelize";
 import constants from "./constants";
 
 type NotificationType =
-  | "group"
+  | "group_join"
+  | "group_leave"
   | "badge"
   | "invite"
   | "message"
@@ -27,8 +28,11 @@ const sendNotification = async (
   if (type === "invite") {
     message = `Your invite to ${name} is ready`;
   }
-  if (type === "group") {
+  if (type === "group_join") {
     message = `Someone joined ${name}`;
+  }
+  if (type === "group_leave") {
+    message = `Someone left ${name}`;
   }
   if (type === "reject") {
     message = `The admin has declined your request to join "${name}"`;
@@ -98,11 +102,11 @@ const sendNotification = async (
   }
 };
 
-const typesToNotNotify = [
-  constants.message_types.group_join,
-  constants.message_types.group_leave,
-  constants.message_types.boost,
-];
+// const typesToNotNotify = [
+//   constants.message_types.group_join,
+//   constants.message_types.group_leave,
+//   constants.message_types.boost,
+// ];
 
 async function finalNotification(
   ownerID: number,
@@ -119,9 +123,9 @@ async function finalNotification(
     chatId: { [Op.ne]: 0 }, // no anon keysends
     tenant: ownerID,
   };
-  if (!isTribeOwner) {
-    where.type = { [Op.notIn]: typesToNotNotify };
-  }
+  // if (!isTribeOwner) {
+  //   where.type = { [Op.notIn]: typesToNotNotify };
+  // }
   let unseenMessages = await models.Message.count({
     where,
   });

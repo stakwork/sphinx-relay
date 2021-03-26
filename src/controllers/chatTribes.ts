@@ -405,7 +405,6 @@ export async function receiveMemberApprove(payload) {
   const {
     owner,
     chat,
-    chat_name,
     sender,
     network_type,
   } = await helpers.parseReceiveParams(payload);
@@ -463,7 +462,7 @@ export async function receiveMemberApprove(payload) {
     type: constants.message_types.group_join,
   });
 
-  sendNotification(chat, chat_name, "group", theOwner);
+  // sendNotification(chat, chat_name, "group", theOwner);
 }
 
 export async function receiveMemberReject(payload) {

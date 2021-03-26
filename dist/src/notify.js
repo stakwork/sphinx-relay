@@ -22,8 +22,11 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     if (type === "invite") {
         message = `Your invite to ${name} is ready`;
     }
-    if (type === "group") {
+    if (type === "group_join") {
         message = `Someone joined ${name}`;
+    }
+    if (type === "group_leave") {
+        message = `Someone left ${name}`;
     }
     if (type === "reject") {
         message = `The admin has declined your request to join "${name}"`;
@@ -83,11 +86,11 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     }
 });
 exports.sendNotification = sendNotification;
-const typesToNotNotify = [
-    constants_1.default.message_types.group_join,
-    constants_1.default.message_types.group_leave,
-    constants_1.default.message_types.boost,
-];
+// const typesToNotNotify = [
+//   constants.message_types.group_join,
+//   constants.message_types.group_leave,
+//   constants.message_types.boost,
+// ];
 function finalNotification(ownerID, params, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         if (params.notification.message) {
@@ -100,9 +103,9 @@ function finalNotification(ownerID, params, isTribeOwner) {
             chatId: { [sequelize_1.Op.ne]: 0 },
             tenant: ownerID,
         };
-        if (!isTribeOwner) {
-            where.type = { [sequelize_1.Op.notIn]: typesToNotNotify };
-        }
+        // if (!isTribeOwner) {
+        //   where.type = { [Op.notIn]: typesToNotNotify };
+        // }
         let unseenMessages = yield models_1.models.Message.count({
             where,
         });

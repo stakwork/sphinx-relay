@@ -495,7 +495,7 @@ function receiveGroupJoin(payload) {
             },
         }, tenant);
         if (isTribeOwner) {
-            hub_1.sendNotification(chat, chat_name, "group", owner);
+            hub_1.sendNotification(chat, chat_name, "group_join", owner);
         }
     });
 }
@@ -569,7 +569,7 @@ function receiveGroupLeave(payload) {
             },
         }, tenant);
         if (isTribeOwner) {
-            hub_1.sendNotification(chat, chat_name, "group", owner);
+            hub_1.sendNotification(chat, chat_name, "group_leave", owner);
         }
     });
 }
@@ -653,7 +653,7 @@ function receiveGroupCreateOrInvite(payload) {
             type: "group_create",
             response: jsonUtils.messageToJson({ newContacts }, chat),
         }, tenant);
-        hub_1.sendNotification(chat, chat_name, "group", owner);
+        // sendNotification(chat, chat_name, "group", owner);
         if (payload.type === constants_1.default.message_types.group_invite) {
             network.sendMessage({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { members: {

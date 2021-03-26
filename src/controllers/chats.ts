@@ -535,7 +535,7 @@ export async function receiveGroupJoin(payload) {
   );
 
   if(isTribeOwner) {
-    sendNotification(chat, chat_name, "group", owner);
+    sendNotification(chat, chat_name, "group_join", owner);
   }
 }
 
@@ -623,7 +623,7 @@ export async function receiveGroupLeave(payload) {
   );
 
   if(isTribeOwner) {
-    sendNotification(chat, chat_name, "group", owner);
+    sendNotification(chat, chat_name, "group_leave", owner);
   }
 }
 
@@ -728,7 +728,7 @@ export async function receiveGroupCreateOrInvite(payload) {
     tenant
   );
 
-  sendNotification(chat, chat_name, "group", owner);
+  // sendNotification(chat, chat_name, "group", owner);
 
   if (payload.type === constants.message_types.group_invite) {
     network.sendMessage({
