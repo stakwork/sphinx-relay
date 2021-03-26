@@ -16,6 +16,7 @@ const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("./constants");
 const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("=> NOTIFICAIONT!!!!!!!!!!!!!", type);
     if (!owner)
         return console.log("=> sendNotification error: no owner");
     let message = `You have a new message from ${name}`;

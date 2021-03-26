@@ -20,6 +20,7 @@ const sendNotification = async (
   owner,
   amount?: number
 ) => {
+  console.log("=> NOTIFICAIONT!!!!!!!!!!!!!", type)
   if (!owner) return console.log("=> sendNotification error: no owner");
 
   let message = `You have a new message from ${name}`;
