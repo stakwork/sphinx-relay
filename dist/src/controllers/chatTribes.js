@@ -379,7 +379,7 @@ function receiveMemberApprove(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         if (logger_1.logging.Network)
             console.log("=> receiveMemberApprove"); // received by the joiner only
-        const { owner, chat, chat_name, sender, network_type, } = yield helpers.parseReceiveParams(payload);
+        const { owner, chat, sender, network_type, } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return console.log("no chat");
         yield chat.update({ status: constants_1.default.chat_statuses.approved });
@@ -426,7 +426,7 @@ function receiveMemberApprove(payload) {
             message: {},
             type: constants_1.default.message_types.group_join,
         });
-        hub_1.sendNotification(chat, chat_name, "group", theOwner);
+        // sendNotification(chat, chat_name, "group", theOwner);
     });
 }
 exports.receiveMemberApprove = receiveMemberApprove;
