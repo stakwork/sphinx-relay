@@ -311,6 +311,7 @@ export const deleteContact = async (req, res) => {
   const contact = await models.Contact.findOne({ where: { id, tenant } });
   if (!contact) return;
 
+  // CHECK IF IN MY TRIBE
   const owner = req.owner;
   const tribesImAdminOf = await models.Chat.findAll({
     where: { ownerPubkey: owner.publicKey, tenant },
@@ -329,6 +330,15 @@ export const deleteContact = async (req, res) => {
       okToDelete = false;
       await contact.update({ fromGroup: true });
     }
+  }
+
+  // CHECK IF IM IN THEIR TRIBE
+  const tribesTheyreAdminOf = await models.Chat.findAll({
+    where: { ownerPubkey: contact.publicKey, tenant },
+  });
+  if (tribesTheyreAdminOf && tribesTheyreAdminOf.length) {
+    okToDelete = false;
+    await contact.update({ fromGroup: true });
   }
 
   if (okToDelete) {

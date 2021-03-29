@@ -296,6 +296,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const contact = yield models_1.models.Contact.findOne({ where: { id, tenant } });
     if (!contact)
         return;
+    // CHECK IF IN MY TRIBE
     const owner = req.owner;
     const tribesImAdminOf = yield models_1.models.Chat.findAll({
         where: { ownerPubkey: owner.publicKey, tenant },
@@ -313,6 +314,14 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             okToDelete = false;
             yield contact.update({ fromGroup: true });
         }
+    }
+    // CHECK IF IM IN THEIR TRIBE
+    const tribesTheyreAdminOf = yield models_1.models.Chat.findAll({
+        where: { ownerPubkey: contact.publicKey, tenant },
+    });
+    if (tribesTheyreAdminOf && tribesTheyreAdminOf.length) {
+        okToDelete = false;
+        yield contact.update({ fromGroup: true });
     }
     if (okToDelete) {
         yield contact.update({

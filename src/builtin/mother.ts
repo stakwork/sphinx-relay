@@ -102,6 +102,31 @@ export function init() {
         }
         return true;
 
+      case "uninstall":
+        if (arr.length < 3) return;
+        const botName2 = arr[2];
+        const chat2 = await getTribeOwnersChatByUUID(message.channel.id);
+        if (!(chat2 && chat2.id)) return console.log("=> motherbot no chat");
+        const existing2 = await models.ChatBot.findOne({
+          where: {
+            chatId: chat2.id,
+            botPrefix: "/" + botName2,
+            tenant: chat2.tenant,
+          },
+        });
+        if(existing2) {
+          await existing2.destroy()
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor("MotherBot")
+            .setDescription(botName2 + " has been removed");
+          return message.channel.send({ embed });
+        } else {
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor("MotherBot")
+            .setDescription("Cant find a bot by that name");
+          return message.channel.send({ embed });
+        }
+
       case "search":
         if (arr.length < 2) return;
         const query = arr[2];
@@ -134,8 +159,9 @@ export function init() {
           .setAuthor("MotherBot")
           .setTitle("Bot Commands:")
           .addFields([
-            { name: "Install a new bot", value: "/bot install {BOTNAME}" },
             { name: "Search for bots", value: "/bot search {SEARCH_TERM}" },
+            { name: "Install a new bot", value: "/bot install {BOTNAME}" },
+            { name: "Uninstall a bot", value: "/bot uninstall {BOTNAME}" },
             { name: "Help", value: "/bot help" },
           ])
           .setThumbnail(botSVG);
