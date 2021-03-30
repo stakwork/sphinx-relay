@@ -164,13 +164,13 @@ export const generateToken = async (req, res) => {
 
   const token = req.body["token"];
   if (!token) {
-    return failure(res, {});
+    return failure(res, 'no token in body');
   }
   const hash = crypto.createHash("sha256").update(token).digest("base64");
 
   if (owner.authToken) {
     if (owner.authToken !== hash) {
-      return failure(res, {});
+      return failure(res, 'invalid token');
     }
   } else {
     // done!

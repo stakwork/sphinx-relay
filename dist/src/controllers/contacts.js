@@ -163,12 +163,12 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     const token = req.body["token"];
     if (!token) {
-        return res_1.failure(res, {});
+        return res_1.failure(res, 'no token in body');
     }
     const hash = crypto.createHash("sha256").update(token).digest("base64");
     if (owner.authToken) {
         if (owner.authToken !== hash) {
-            return res_1.failure(res, {});
+            return res_1.failure(res, 'invalid token');
         }
     }
     else {
