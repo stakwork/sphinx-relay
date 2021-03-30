@@ -93,13 +93,13 @@
 
   <img src="/static/sphinx-logo.png" alt="logo" />
 
-  <ul>
-    
+  <!-- <ul>
+
     <li>
       <input id="chan" type="checkbox" />
       <span id="chan-text"></span>
     </li>
-  
+
     <li>
       <input id="fees" type="checkbox" />
       <span id="fees-text"></span>
@@ -110,12 +110,12 @@
       <span id="bal-text"></span>
     </li>
 
-  </ul>
+  </ul> -->
 
-  <br />
+  <!-- <br />
   <a href="https://github.com/stakwork/sphinx-relay/wiki" target="_blank">
     Read more here
-  </a>
+  </a> -->
 
   <div id="qr-wrap" style="display: none;">
     <canvas id="qr"></canvas>
@@ -140,51 +140,51 @@ CONNECTION_STRING
     })();
   </script>
   <script>
-    function get(id){ return document.getElementById(id) }
+    // function get(id){ return document.getElementById(id) }
 
-    const chan = get('chan')
-    const chanText = get('chan-text')
+    // const chan = get('chan')
+    // const chanText = get('chan-text')
 
-    if(window.channelIsOpen) {
-      chan.checked = true
-      chanText.innerHTML = 'You have an open channel'
-    } else {
-      chanText.innerHTML = 'You need to open a channel'
-    }
+    // if(window.channelIsOpen) {
+    //   chan.checked = true
+    //   chanText.innerHTML = 'You have an open channel'
+    // } else {
+    //   chanText.innerHTML = 'You need to open a channel'
+    // }
 
-    const fees = get('fees')
-    const feesText = get('fees-text')
+    // const fees = get('fees')
+    // const feesText = get('fees-text')
 
-    if(window.channelFeesBaseZero) {
-      fees.checked = true
-      feesText.innerHTML = 'You have set your fee base to 0'
-    } else {
-      feesText.innerHTML = 'You need to set your fee base to 0'
-    }
+    // if(window.channelFeesBaseZero) {
+    //   fees.checked = true
+    //   feesText.innerHTML = 'You have set your fee base to 0'
+    // } else {
+    //   feesText.innerHTML = 'You need to set your fee base to 0'
+    // }
 
-    const bal = get('bal')
-    const balText = get('bal-text')
+    // const bal = get('bal')
+    // const balText = get('bal-text')
 
-    if(window.hasRemoteBalance) {
-      bal.checked = true
-      balText.innerHTML = 'You have remote balance'
-    } else {
-      balText.innerHTML = 'You need remote balance (2% of channel size recommended)'
-    }
+    // if(window.hasRemoteBalance) {
+    //   bal.checked = true
+    //   balText.innerHTML = 'You have remote balance'
+    // } else {
+    //   balText.innerHTML = 'You need remote balance (2% of channel size recommended)'
+    // }
 
     const qrWrap = get('qr-wrap')
     const connString = get('connection-string')
     const qrText = get('qr-text')
 
-    const readyToGo = window.hasRemoteBalance && window.channelFeesBaseZero && window.channelIsOpen
+    // const readyToGo = window.hasRemoteBalance && window.channelFeesBaseZero && window.channelIsOpen
 
-    if(window.isSignedUp) {
-      qrText.innerHTML = "You have connected your app!"
-    } else if(readyToGo) {
+    // if(window.isSignedUp) {
+    //   qrText.innerHTML = "You have connected your app!"
+    // } else if(readyToGo) {
       qrWrap.style.display = 'flex'
       qrText.style.display = 'block'
       connString.style.display = 'block'
-    }
+    // }
 
   </script>
 </body>
