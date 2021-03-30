@@ -106,8 +106,8 @@ export async function joinTribe(req, res) {
   const contactIdsToSend = is_private
     ? [theTribeOwner.id] // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
     : chatParams.contactIds;
-  console.log("=> joinTribe: typeToSend", typeToSend);
-  console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
+  // console.log("=> joinTribe: typeToSend", typeToSend);
+  // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
   // set my alias to be the custom one
   const theOwner = owner.dataValues || owner;
   if (my_alias) theOwner.alias = my_alias;

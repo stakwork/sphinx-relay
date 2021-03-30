@@ -11,10 +11,12 @@ function success(res, json) {
 }
 exports.success = success;
 function failure(res, e) {
+    const errorMessage = (e && e.message) || e;
+    console.log('--> failure:', errorMessage);
     res.status(400);
     res.json({
         success: false,
-        error: (e && e.message) || e,
+        error: errorMessage,
     });
     res.end();
 }
