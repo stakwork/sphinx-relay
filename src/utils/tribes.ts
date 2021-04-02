@@ -10,6 +10,7 @@ import { loadConfig } from "./config";
 import { isProxy } from "./proxy";
 import { Op } from "sequelize";
 import {logging} from './logger'
+import { sleep } from "../helpers";
 
 export { declare_bot };
 
@@ -50,7 +51,8 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
 }
 
 async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    let connected = false
     async function reconnect() {
       const pwd = await genSignedTimestamp(pubkey);
       const url = mqttURL(host);
@@ -62,9 +64,11 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
       if(logging.Tribes) console.log("[tribes] try to connect:", url);
       cl.on("connect", async function () {
         if(logging.Tribes) console.log("[tribes] connected!");
+        connected = true
         cl.on("close", function (e) {
           if(logging.Tribes) console.log("[tribes] CLOSE", e);
-          setTimeout(() => reconnect(), 2000);
+          // setTimeout(() => reconnect(), 2000);
+          connected = false
         });
         cl.on("error", function (e) {
           if(logging.Tribes) console.log("[tribes] error: ", e.message || e);
@@ -82,7 +86,12 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
         });
       });
     }
-    reconnect();
+    while (true) {
+      if(!connected) {
+        reconnect();
+      }
+      await sleep(Math.round(Math.random()*10000))
+    }
   });
 }
 
@@ -447,3 +456,4 @@ async function asyncForEach(array, callback) {
     await callback(array[index], index, array);
   }
 }
+

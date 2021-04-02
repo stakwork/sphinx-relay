@@ -22,6 +22,7 @@ const config_1 = require("./config");
 const proxy_1 = require("./proxy");
 const sequelize_1 = require("sequelize");
 const logger_1 = require("./logger");
+const helpers_1 = require("../helpers");
 const config = config_1.loadConfig();
 // {pubkey: {host: Client} }
 let clients = {};
@@ -59,7 +60,8 @@ function getTribeOwnersChatByUUID(uuid) {
 exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
 function initializeClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            let connected = false;
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
                     const pwd = yield genSignedTimestamp(pubkey);
@@ -75,10 +77,12 @@ function initializeClient(pubkey, host, onMessage) {
                         return __awaiter(this, void 0, void 0, function* () {
                             if (logger_1.logging.Tribes)
                                 console.log("[tribes] connected!");
+                            connected = true;
                             cl.on("close", function (e) {
                                 if (logger_1.logging.Tribes)
                                     console.log("[tribes] CLOSE", e);
-                                setTimeout(() => reconnect(), 2000);
+                                // setTimeout(() => reconnect(), 2000);
+                                connected = false;
                             });
                             cl.on("error", function (e) {
                                 if (logger_1.logging.Tribes)
@@ -102,8 +106,13 @@ function initializeClient(pubkey, host, onMessage) {
                     });
                 });
             }
-            reconnect();
-        });
+            while (true) {
+                if (!connected) {
+                    reconnect();
+                }
+                yield helpers_1.sleep(Math.round(Math.random() * 10000));
+            }
+        }));
     });
 }
 function lazyClient(pubkey, host, onMessage) {
