@@ -51,6 +51,7 @@ function loadConfig() {
         proxy_new_nodes: ENV.PROXY_NEW_NODES || config.proxy_new_nodes,
         proxy_initial_sats: ENV.PROXY_INITIAL_SATS || config.proxy_initial_sats,
         allow_test_clearing: ENV.ALLOW_TEST_CLEARING || config.allow_test_clearing,
+        sql_log: ENV.SQL_LOG || config.sql_log,
     };
 }
 exports.loadConfig = loadConfig;

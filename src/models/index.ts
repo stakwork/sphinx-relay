@@ -15,6 +15,7 @@ import ChatBot from './ts/chatBot'
 import BotMember from './ts/botMember'
 import Accounting from './ts/accounting'
 import * as minimist from 'minimist';
+import { loadConfig } from "../utils/config";
 
 const argv = minimist(process.argv.slice(2));
 
@@ -23,9 +24,11 @@ const configFile = argv.db ? argv.db : path.join(__dirname, '../../config/config
 const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env]
 
+const appConfig = loadConfig()
+
 const sequelize = new Sequelize({
   ...config,
-  logging: process.env.SQL_LOG === 'true' ? console.log : false,
+  logging: appConfig.sql_log === 'true' ? console.log : false,
   models: [Chat, Contact, Invite, Message, Subscription, MediaKey, ChatMember, Timer, Bot, ChatBot, BotMember, Accounting]
 })
 const models = sequelize.models

@@ -74,8 +74,8 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
             return;
         destination_key = contact.publicKey;
         const route_hint = contact.routeHint;
-        console.log("=> KEY EXCHANGE", msg);
-        console.log("=> TO", destination_key, route_hint);
+        // console.log("=> KEY EXCHANGE", msg)
+        // console.log("=> TO", destination_key, route_hint)
         yield exports.performKeysendMessage({
             sender,
             destination_key,

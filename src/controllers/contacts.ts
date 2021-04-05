@@ -186,11 +186,13 @@ export const generateToken = async (req, res) => {
 export const updateContact = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
-  console.log("=> updateContact called", {
-    body: req.body,
-    params: req.params,
-    query: req.query,
-  });
+  if(logging.Network) {
+    console.log("=> updateContact called", {
+      body: req.body,
+      params: req.params,
+      query: req.query,
+    });
+  }
 
   let attrs = extractAttrs(req.body);
 
@@ -262,11 +264,13 @@ export const exchangeKeys = async (req, res) => {
 export const createContact = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
-  console.log("=> createContact called", {
-    body: req.body,
-    params: req.params,
-    query: req.query,
-  });
+  if(logging.Network) {
+    console.log("=> createContact called", {
+      body: req.body,
+      params: req.params,
+      query: req.query,
+    });
+  }
 
   let attrs = extractAttrs(req.body);
 

@@ -72,7 +72,7 @@ export async function joinTribe(req, res) {
       routeHint: owner_route_hint || "",
     });
     theTribeOwner = createdContact;
-    console.log("CREATE TRIBE OWNER", createdContact);
+    // console.log("CREATE TRIBE OWNER", createdContact);
     contactIds.push(createdContact.id);
   }
   let date = new Date();

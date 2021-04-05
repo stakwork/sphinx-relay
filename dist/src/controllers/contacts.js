@@ -185,11 +185,13 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!req.owner)
         return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
-    console.log("=> updateContact called", {
-        body: req.body,
-        params: req.params,
-        query: req.query,
-    });
+    if (logger_1.logging.Network) {
+        console.log("=> updateContact called", {
+            body: req.body,
+            params: req.params,
+            query: req.query,
+        });
+    }
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({
         where: { id: req.params.id, tenant },
@@ -253,11 +255,13 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!req.owner)
         return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
-    console.log("=> createContact called", {
-        body: req.body,
-        params: req.params,
-        query: req.query,
-    });
+    if (logger_1.logging.Network) {
+        console.log("=> createContact called", {
+            body: req.body,
+            params: req.params,
+            query: req.query,
+        });
+    }
     let attrs = extractAttrs(req.body);
     const owner = req.owner;
     const existing = attrs["public_key"] &&
