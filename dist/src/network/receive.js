@@ -481,7 +481,6 @@ function parseKeysendInvoice(i) {
                 if (!invoice.destination)
                     return console.log("cant get dest from pay req");
                 dest = invoice.destination;
-                console.log("=> RECEIVED DEST", dest);
                 owner = yield models_1.models.Contact.findOne({
                     where: { isOwner: true, publicKey: dest },
                 });

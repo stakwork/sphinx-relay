@@ -21,7 +21,7 @@ export function genUsersInterval(ms) {
   }, 2000) 
 }
 
-const NEW_USER_NUM = config.proxy_new_nodes || 2
+const NEW_USER_NUM = (config.proxy_new_nodes || config.proxy_new_nodes===0) ? config.proxy_new_nodes : 2
 const SATS_PER_USER = config.proxy_initial_sats || 5000
 // isOwner users with no authToken
 export async function generateNewUsers(){
