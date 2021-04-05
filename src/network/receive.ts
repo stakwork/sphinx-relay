@@ -486,7 +486,7 @@ export async function parseKeysendInvoice(i) {
       if (!invoice.destination)
         return console.log("cant get dest from pay req");
       dest = invoice.destination;
-      // console.log("=> RECEIVED DEST", dest)
+      console.log("=> RECEIVED DEST", dest)
       owner = await models.Contact.findOne({
         where: { isOwner: true, publicKey: dest },
       });

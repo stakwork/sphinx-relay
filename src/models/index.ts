@@ -16,6 +16,7 @@ import BotMember from './ts/botMember'
 import Accounting from './ts/accounting'
 import * as minimist from 'minimist';
 import { loadConfig } from "../utils/config";
+import { isProxy } from '../utils/proxy';
 
 const argv = minimist(process.argv.slice(2));
 
@@ -26,11 +27,21 @@ const config = require(configFile)[env]
 
 const appConfig = loadConfig()
 
-const sequelize = new Sequelize({
+const opts = {
   ...config,
   logging: appConfig.sql_log === 'true' ? console.log : false,
   models: [Chat, Contact, Invite, Message, Subscription, MediaKey, ChatMember, Timer, Bot, ChatBot, BotMember, Accounting]
-})
+}
+if (isProxy()) {
+  opts.pool = {
+    max: 7,
+    min: 2,
+    acquire: 30000,
+    idle: 10000,
+  }
+}
+
+const sequelize = new Sequelize(opts)
 const models = sequelize.models
 
 export {
