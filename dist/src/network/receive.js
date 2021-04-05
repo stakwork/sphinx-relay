@@ -433,7 +433,7 @@ function parseAndVerifyPayload(data) {
         }
     });
 }
-function saveAnonymousKeysend(response, memo, sender_pubkey, tenant) {
+function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         let sender = 0; // not required
         if (sender_pubkey) {
@@ -444,14 +444,14 @@ function saveAnonymousKeysend(response, memo, sender_pubkey, tenant) {
                 sender = theSender.id;
             }
         }
-        let settleDate = parseInt(response["settle_date"] + "000");
-        const amount = response["amt_paid_sat"] || 0;
+        let settleDate = inv.settle_date ? parseInt(inv.settle_date["settle_date"] + "000") : Date.now();
+        const amount = (inv && inv.value && parseInt(inv.value)) || 0;
         const msg = yield models_1.models.Message.create({
             chatId: 0,
             type: constants_1.default.message_types.keysend,
             sender,
             amount,
-            amountMsat: response["amt_paid_msat"],
+            amountMsat: amount * 1000,
             paymentHash: "",
             date: new Date(settleDate),
             messageContent: memo || "",
