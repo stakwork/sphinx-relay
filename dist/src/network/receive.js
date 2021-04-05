@@ -444,8 +444,9 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
                 sender = theSender.id;
             }
         }
-        let settleDate = inv.settle_date ? parseInt(inv.settle_date["settle_date"] + "000") : Date.now();
         const amount = (inv.value && parseInt(inv.value)) || 0;
+        var date = new Date();
+        date.setMilliseconds(0);
         const msg = yield models_1.models.Message.create({
             chatId: 0,
             type: constants_1.default.message_types.keysend,
@@ -453,11 +454,11 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
             amount,
             amountMsat: amount * 1000,
             paymentHash: "",
-            date: new Date(settleDate),
+            date: date,
             messageContent: memo || "",
             status: constants_1.default.statuses.confirmed,
-            createdAt: new Date(settleDate),
-            updatedAt: new Date(settleDate),
+            createdAt: date,
+            updatedAt: date,
             network_type: constants_1.default.network_types.lightning,
             tenant,
         });
