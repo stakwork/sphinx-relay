@@ -448,7 +448,7 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
     }
   }
   let settleDate = inv.settle_date ? parseInt(inv.settle_date["settle_date"] + "000") : Date.now()
-  const amount = (inv && inv.value && parseInt(inv.value)) || 0
+  const amount = (inv.value && parseInt(inv.value)) || 0
   const msg = await models.Message.create({
     chatId: 0,
     type: constants.message_types.keysend,
