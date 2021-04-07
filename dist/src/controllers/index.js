@@ -40,7 +40,7 @@ function set(app) {
         }
         // media.cycleMediaToken()
         timers.reloadTimers();
-        queries.startWatchingUTXOs();
+        // queries.startWatchingUTXOs();
         app.get("/chats", chats.getChats);
         app.post("/group", chats.createGroupChat);
         app.put("/chats/:id", chats.updateChat);

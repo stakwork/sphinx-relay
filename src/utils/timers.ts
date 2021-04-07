@@ -79,7 +79,7 @@ export async function payBack(t) {
             models.Message.create({
                 // chatId: chat.id,
                 type: constants.message_types.repayment,
-                sender: 1,
+                sender: t.tenant,
                 receiver: t.receiver,
                 date: date,
                 amount: t.amount,

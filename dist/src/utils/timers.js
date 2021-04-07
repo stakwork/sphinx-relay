@@ -108,7 +108,7 @@ function payBack(t) {
                 models_1.models.Message.create({
                     // chatId: chat.id,
                     type: constants_1.default.message_types.repayment,
-                    sender: 1,
+                    sender: t.tenant,
                     receiver: t.receiver,
                     date: date,
                     amount: t.amount,

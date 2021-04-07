@@ -117,7 +117,7 @@ export async function anonymousKeysend(
       models.Message.create({
         chatId: 0,
         type: constants.message_types.keysend,
-        sender: 1,
+        sender: tenant,
         amount,
         amountMsat: amount * 1000,
         paymentHash: "",

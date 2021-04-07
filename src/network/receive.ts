@@ -222,7 +222,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
       where: {
         mediaToken: { [Op.like]: `${host}.${muid}%` },
         type: msgtypes.attachment,
-        sender: 1,
+        sender: tenant,
         tenant,
       },
     });

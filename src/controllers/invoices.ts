@@ -92,7 +92,7 @@ async function anonymousInvoice(res, payment_request: string, tenant: number) {
   models.Message.create({
     chatId: 0,
     type: constants.message_types.payment,
-    sender: 1,
+    sender: tenant,
     amount: sat,
     amountMsat: msat,
     paymentHash: paymentHash,

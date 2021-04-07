@@ -217,7 +217,7 @@ function onReceive(payload, dest) {
                 where: {
                     mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
                     type: msgtypes.attachment,
-                    sender: 1,
+                    sender: tenant,
                     tenant,
                 },
             });

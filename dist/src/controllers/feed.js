@@ -86,7 +86,7 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
                 models_1.models.Message.create({
                     chatId: 0,
                     type: constants_1.default.message_types.keysend,
-                    sender: 1,
+                    sender: tenant,
                     amount,
                     amountMsat: amount * 1000,
                     paymentHash: "",

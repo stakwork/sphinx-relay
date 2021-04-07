@@ -32,7 +32,7 @@ export async function set(app) {
 
   timers.reloadTimers();
 
-  queries.startWatchingUTXOs();
+  // queries.startWatchingUTXOs();
 
   app.get("/chats", chats.getChats);
   app.post("/group", chats.createGroupChat);
