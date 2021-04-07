@@ -32,6 +32,7 @@ const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
 const feed = require("./feed");
 const res_1 = require("../utils/res");
+const auth = require("./auth");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -80,6 +81,7 @@ function set(app) {
         app.post("/attachment", media.sendAttachmentMessage);
         app.post("/purchase", media.purchase);
         app.get("/signer/:challenge", media.signer);
+        app.get("/external_tokens", auth.requestExternalTokens);
         app.post("/stream", feed.streamFeed);
         app.get("/app_versions", details.getAppVersions);
         app.get("/relay_version", details.getRelayVersion);

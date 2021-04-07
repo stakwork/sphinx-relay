@@ -20,6 +20,7 @@ import * as builtInBots from "../builtin";
 import constants from "../constants";
 import * as feed from "./feed";
 import { failure } from "../utils/res";
+import * as auth from "./auth";
 
 export async function set(app) {
   builtInBots.init();
@@ -85,6 +86,8 @@ export async function set(app) {
   app.post("/attachment", media.sendAttachmentMessage);
   app.post("/purchase", media.purchase);
   app.get("/signer/:challenge", media.signer);
+
+  app.get("/external_tokens", auth.requestExternalTokens)
 
   app.post("/stream", feed.streamFeed);
 
