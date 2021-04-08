@@ -55,6 +55,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
     let connected = false
     async function reconnect() {
       const pwd = await genSignedTimestamp(pubkey);
+      if (!connected) return
       const url = mqttURL(host);
       const cl = mqtt.connect(url, {
         username: pubkey,
@@ -90,7 +91,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
       if(!connected) {
         reconnect();
       }
-      await sleep(3000 + Math.round(Math.random()*10000))
+      await sleep(5000 + Math.round(Math.random()*8000))
     }
   });
 }

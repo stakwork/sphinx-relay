@@ -65,6 +65,8 @@ function initializeClient(pubkey, host, onMessage) {
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
                     const pwd = yield genSignedTimestamp(pubkey);
+                    if (!connected)
+                        return;
                     const url = mqttURL(host);
                     const cl = mqtt.connect(url, {
                         username: pubkey,
@@ -110,7 +112,7 @@ function initializeClient(pubkey, host, onMessage) {
                 if (!connected) {
                     reconnect();
                 }
-                yield helpers_1.sleep(3000 + Math.round(Math.random() * 10000));
+                yield helpers_1.sleep(5000 + Math.round(Math.random() * 8000));
             }
         }));
     });

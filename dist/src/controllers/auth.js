@@ -24,9 +24,15 @@ function requestExternalTokens(req, res) {
             if (!memeToken || !tribesToken) {
                 return res_1.failure(res, 'failed to generate token');
             }
-            res_1.success(res, {
-                memeToken, tribesToken
-            });
+            const result = {
+                memeToken,
+                tribesToken,
+                alias: req.owner.alias,
+                photoUrl: req.owner.photoUrl,
+                routeHint: req.owner.routeHint,
+                contactKey: req.owner.contactKey,
+            };
+            res_1.success(res, result);
         }
         catch (e) {
             res_1.failure(res, e);
