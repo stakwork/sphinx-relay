@@ -65,7 +65,7 @@ function initializeClient(pubkey, host, onMessage) {
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
                     const pwd = yield genSignedTimestamp(pubkey);
-                    if (!connected)
+                    if (connected)
                         return;
                     const url = mqttURL(host);
                     const cl = mqtt.connect(url, {
