@@ -46,7 +46,7 @@ function getTribeOwnersChatByUUID(uuid) {
       AND sphinx_contacts.id = sphinx_chats.tenant
       AND sphinx_chats.uuid = '${uuid}'`, {
                 model: models_1.models.Chat,
-                mapToModel: true,
+                mapToModel: true, // pass true here if you have any mapped fields
             });
             // console.log("=> getTribeOWnersChatByUUID", r);
             // console.log('=> getTribeOwnersChatByUUID r:', r)
@@ -71,7 +71,7 @@ function initializeClient(pubkey, host, onMessage) {
                     const cl = mqtt.connect(url, {
                         username: pubkey,
                         password: pwd,
-                        reconnectPeriod: 0,
+                        reconnectPeriod: 0, // dont auto reconnect
                     });
                     if (logger_1.logging.Tribes)
                         console.log("[tribes] try to connect:", url);
@@ -167,7 +167,7 @@ function subExtraHostsForTenant(tenant, pubkey, onMessage) {
         const externalTribes = yield models_1.models.Chat.findAll({
             where: {
                 tenant,
-                host: { [sequelize_1.Op.ne]: host },
+                host: { [sequelize_1.Op.ne]: host }, // not the host from config
             },
         });
         if (!(externalTribes && externalTribes.length))

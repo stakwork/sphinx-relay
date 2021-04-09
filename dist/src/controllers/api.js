@@ -108,7 +108,7 @@ function finalAction(a) {
                     alias: bot_name,
                     role: 0,
                     route_hint,
-                },
+                }, // for verify sig
             };
             try {
                 yield network.signAndSend({ dest, data, route_hint }, owner, topic);

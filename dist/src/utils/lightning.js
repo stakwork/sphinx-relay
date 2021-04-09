@@ -590,7 +590,7 @@ function verifyMessage(msg, sig, ownerPubkey) {
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
-                signature: sig,
+                signature: sig, // zbase32 encoded string
             };
             lightning.verifyMessage(options, function (err, res) {
                 if (err || !res.pubkey) {

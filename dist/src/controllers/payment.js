@@ -197,7 +197,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                             ],
                         },
                         amount: {
-                            [sequelize_1.Op.gt]: MIN_VAL,
+                            [sequelize_1.Op.gt]: MIN_VAL, // greater than
                         },
                         network_type: constants_1.default.network_types.lightning,
                         status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },

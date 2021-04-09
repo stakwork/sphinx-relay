@@ -115,7 +115,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         muid,
         ttl: TTL,
         meta: Object.assign({}, (amt && { amt })),
-        skipSigning: amt ? true : false,
+        skipSigning: amt ? true : false, // only sign if its free
     };
     const msg = {
         mediaTerms,
@@ -202,7 +202,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         mediaToken: media_token,
         id: message.id,
         uuid: message.uuid,
-        purchaser: owner.id,
+        purchaser: owner.id, // for tribe, knows who sent
     };
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),

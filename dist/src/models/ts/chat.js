@@ -97,6 +97,7 @@ __decorate([
     sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
+        // allowNull: false
     }),
     __metadata("design:type", Boolean)
 ], Chat.prototype, "unlisted", void 0);
