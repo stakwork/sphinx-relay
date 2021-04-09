@@ -68,7 +68,8 @@ export function subscribeInvoices(parseKeysendInvoice) {
 						status: constants.statuses.confirmed,
 						createdAt: new Date(settleDate),
 						updatedAt: new Date(settleDate),
-						tenant
+						network_type: constants.network_types.lightning,
+						tenant,
 					})
 					return
 				}
@@ -93,7 +94,8 @@ export function subscribeInvoices(parseKeysendInvoice) {
 					status: constants.statuses.confirmed,
 					createdAt: new Date(settleDate),
 					updatedAt: new Date(settleDate),
-					tenant
+					network_type: constants.network_types.lightning,
+					tenant,
 				})
 
 				const sender = await models.Contact.findOne({ where: { id: senderId, tenant } })

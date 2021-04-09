@@ -78,7 +78,8 @@ function subscribeInvoices(parseKeysendInvoice) {
                             status: constants_1.default.statuses.confirmed,
                             createdAt: new Date(settleDate),
                             updatedAt: new Date(settleDate),
-                            tenant
+                            network_type: constants_1.default.network_types.lightning,
+                            tenant,
                         });
                         return;
                     }
@@ -101,7 +102,8 @@ function subscribeInvoices(parseKeysendInvoice) {
                         status: constants_1.default.statuses.confirmed,
                         createdAt: new Date(settleDate),
                         updatedAt: new Date(settleDate),
-                        tenant
+                        network_type: constants_1.default.network_types.lightning,
+                        tenant,
                     });
                     const sender = yield models_1.models.Contact.findOne({ where: { id: senderId, tenant } });
                     socket.sendJson({
