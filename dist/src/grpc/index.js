@@ -56,6 +56,8 @@ function subscribeInvoices(parseKeysendInvoice) {
                         if (!invoice.destination)
                             return console.log("subscribeInvoices: cant get dest from pay req");
                         const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: invoice.destination } });
+                        if (!owner)
+                            return console.log('subscribeInvoices: no owner found');
                         const tenant = owner.id;
                         const payReq = response['payment_request'];
                         const amount = response['amt_paid_sat'];

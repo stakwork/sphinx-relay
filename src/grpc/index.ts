@@ -46,6 +46,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 					if(!invoice) return console.log("subscribeInvoices: couldn't decode pay req")
 					if(!invoice.destination) return console.log("subscribeInvoices: cant get dest from pay req")
 					const owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:invoice.destination } })
+					if(!owner) return console.log('subscribeInvoices: no owner found')
 					const tenant:number = owner.id
 					const payReq = response['payment_request']
 					const amount = response['amt_paid_sat']
