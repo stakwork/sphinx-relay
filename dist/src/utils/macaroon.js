@@ -12,7 +12,8 @@ function getMacaroon(macName) {
     else {
         let macLocation = config.macaroon_location;
         if (macName) {
-            macLocation = macLocation.replace(/admin.macaroon/, macName);
+            const location = config[`${macName.split('.')[0]}_macaroon_location`];
+            macLocation = location || macLocation.replace('admin.macaroon', macName);
         }
         const m = fs.readFileSync(macLocation);
         return m.toString('hex');
