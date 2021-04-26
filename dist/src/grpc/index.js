@@ -174,7 +174,6 @@ function reconnectToLND(innerCtx, callback) {
                 yield unlock_1.tryToUnlockLND();
             }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                console.log('????????', ctx === innerCtx);
                 if (ctx === innerCtx) { // if another retry fires, then this will not run
                     yield reconnectToLND(innerCtx, callback);
                 }

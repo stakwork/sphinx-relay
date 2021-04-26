@@ -163,7 +163,6 @@ export async function reconnectToLND(innerCtx: number, callback?: Function) {
 			await tryToUnlockLND()
 		}
 		setTimeout(async () => { // retry each 2 secs
-			console.log('????????', ctx===innerCtx)
 			if (ctx === innerCtx) { // if another retry fires, then this will not run
 				await reconnectToLND(innerCtx, callback)
 			}
