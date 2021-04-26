@@ -502,8 +502,8 @@ const signMessage = (msg, ownerPubkey?:string) => {
 const signBuffer = (msg, ownerPubkey?:string) => {
   log('signBuffer')
   return new Promise(async (resolve, reject) => {
-    let lightning = await loadLightning(true, ownerPubkey) // try proxy
     try {
+      let lightning = await loadLightning(true, ownerPubkey) // try proxy
       const options = { msg }
       lightning.signMessage(options, function (err, sig) {
         if (err || !sig.signature) {
@@ -529,8 +529,8 @@ async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
 function verifyMessage(msg, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('verifyMessage')
   return new Promise(async (resolve, reject) => {
-    let lightning = await loadLightning(true, ownerPubkey) // try proxy
     try {
+      let lightning = await loadLightning(true, ownerPubkey) // try proxy
       const options = {
         msg: ByteBuffer.fromHex(msg),
         signature: sig, // zbase32 encoded string

@@ -54,38 +54,42 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
   return new Promise(async (resolve, reject) => {
     let connected = false
     async function reconnect() {
-      const pwd = await genSignedTimestamp(pubkey);
-      if (connected) return
-      const url = mqttURL(host);
-      const cl = mqtt.connect(url, {
-        username: pubkey,
-        password: pwd,
-        reconnectPeriod: 0, // dont auto reconnect
-      });
-      if(logging.Tribes) console.log("[tribes] try to connect:", url);
-      cl.on("connect", async function () {
-        if(logging.Tribes) console.log("[tribes] connected!");
-        connected = true
-        cl.on("close", function (e) {
-          if(logging.Tribes) console.log("[tribes] CLOSE", e);
-          // setTimeout(() => reconnect(), 2000);
-          connected = false
+      try {
+        const pwd = await genSignedTimestamp(pubkey);
+        if (connected) return
+        const url = mqttURL(host);
+        const cl = mqtt.connect(url, {
+          username: pubkey,
+          password: pwd,
+          reconnectPeriod: 0, // dont auto reconnect
         });
-        cl.on("error", function (e) {
-          if(logging.Tribes) console.log("[tribes] error: ", e.message || e);
+        if(logging.Tribes) console.log("[tribes] try to connect:", url);
+        cl.on("connect", async function () {
+          if(logging.Tribes) console.log("[tribes] connected!");
+          connected = true
+          cl.on("close", function (e) {
+            if(logging.Tribes) console.log("[tribes] CLOSE", e);
+            // setTimeout(() => reconnect(), 2000);
+            connected = false
+          });
+          cl.on("error", function (e) {
+            if(logging.Tribes) console.log("[tribes] error: ", e.message || e);
+          });
+          cl.on("message", function (topic, message) {
+            // console.log("============>>>>> GOT A MSG", topic, message)
+            if (onMessage) onMessage(topic, message);
+          });
+          cl.subscribe(`${pubkey}/#`, function (err) {
+            if (err) console.log("[tribes] error subscribing", err);
+            else {
+              if(logging.Tribes) console.log("[tribes] subscribed!", `${pubkey}/#`);
+              resolve(cl);
+            }
+          });
         });
-        cl.on("message", function (topic, message) {
-          // console.log("============>>>>> GOT A MSG", topic, message)
-          if (onMessage) onMessage(topic, message);
-        });
-        cl.subscribe(`${pubkey}/#`, function (err) {
-          if (err) console.log("[tribes] error subscribing", err);
-          else {
-            if(logging.Tribes) console.log("[tribes] subscribed!", `${pubkey}/#`);
-            resolve(cl);
-          }
-        });
-      });
+      } catch(e) {
+        if(logging.Tribes) console.log('[tribes] error initializing', e)
+      }
     }
     while (true) {
       if(!connected) {
@@ -423,13 +427,17 @@ export async function putstats({
 
 export async function genSignedTimestamp(ownerPubkey: string) {
   // console.log('genSignedTimestamp')
-  const now = moment().unix();
-  const tsBytes = Buffer.from(now.toString(16), "hex");
-  const sig = await LND.signBuffer(tsBytes, ownerPubkey);
-  const sigBytes = zbase32.decode(sig);
-  const totalLength = tsBytes.length + sigBytes.length;
-  const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
-  return urlBase64(buf);
+  try {
+    const now = moment().unix();
+    const tsBytes = Buffer.from(now.toString(16), "hex");
+    const sig = await LND.signBuffer(tsBytes, ownerPubkey);
+    const sigBytes = zbase32.decode(sig);
+    const totalLength = tsBytes.length + sigBytes.length;
+    const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
+    return urlBase64(buf);
+  } catch(e) {
+    throw e
+  }
 }
 
 export async function verifySignedTimestamp(stsBase64) {

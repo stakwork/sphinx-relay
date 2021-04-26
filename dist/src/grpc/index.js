@@ -29,7 +29,7 @@ function subscribeInvoices(parseKeysendInvoice) {
         var call = lightning.subscribeInvoices();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                // console.log("AN INVOICES WAS RECIEVED!!!=======================>",response)
+                console.log("AN INVOICE WAS RECIEVED!!!=======================>", response);
                 if (response['state'] !== 'SETTLED') {
                     return;
                 }
@@ -121,7 +121,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             // The server is unavailable, trying to reconnect.
             if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
-                // waitAndReconnect()
+                waitAndReconnect();
             }
             else {
                 resolve(status);
@@ -132,7 +132,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             console.error('[LND] Error', now, err.code);
             if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
-                // waitAndReconnect()
+                waitAndReconnect();
             }
             else {
                 reject(err);
@@ -174,7 +174,7 @@ function reconnectToLND(innerCtx, callback) {
                 yield unlock_1.tryToUnlockLND();
             }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                // console.log('?', ctx===innerCtx)
+                console.log('????????', ctx === innerCtx);
                 if (ctx === innerCtx) { // if another retry fires, then this will not run
                     yield reconnectToLND(innerCtx, callback);
                 }

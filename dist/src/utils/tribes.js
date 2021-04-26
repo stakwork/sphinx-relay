@@ -64,48 +64,54 @@ function initializeClient(pubkey, host, onMessage) {
             let connected = false;
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    const pwd = yield genSignedTimestamp(pubkey);
-                    if (connected)
-                        return;
-                    const url = mqttURL(host);
-                    const cl = mqtt.connect(url, {
-                        username: pubkey,
-                        password: pwd,
-                        reconnectPeriod: 0,
-                    });
-                    if (logger_1.logging.Tribes)
-                        console.log("[tribes] try to connect:", url);
-                    cl.on("connect", function () {
-                        return __awaiter(this, void 0, void 0, function* () {
-                            if (logger_1.logging.Tribes)
-                                console.log("[tribes] connected!");
-                            connected = true;
-                            cl.on("close", function (e) {
+                    try {
+                        const pwd = yield genSignedTimestamp(pubkey);
+                        if (connected)
+                            return;
+                        const url = mqttURL(host);
+                        const cl = mqtt.connect(url, {
+                            username: pubkey,
+                            password: pwd,
+                            reconnectPeriod: 0,
+                        });
+                        if (logger_1.logging.Tribes)
+                            console.log("[tribes] try to connect:", url);
+                        cl.on("connect", function () {
+                            return __awaiter(this, void 0, void 0, function* () {
                                 if (logger_1.logging.Tribes)
-                                    console.log("[tribes] CLOSE", e);
-                                // setTimeout(() => reconnect(), 2000);
-                                connected = false;
-                            });
-                            cl.on("error", function (e) {
-                                if (logger_1.logging.Tribes)
-                                    console.log("[tribes] error: ", e.message || e);
-                            });
-                            cl.on("message", function (topic, message) {
-                                // console.log("============>>>>> GOT A MSG", topic, message)
-                                if (onMessage)
-                                    onMessage(topic, message);
-                            });
-                            cl.subscribe(`${pubkey}/#`, function (err) {
-                                if (err)
-                                    console.log("[tribes] error subscribing", err);
-                                else {
+                                    console.log("[tribes] connected!");
+                                connected = true;
+                                cl.on("close", function (e) {
                                     if (logger_1.logging.Tribes)
-                                        console.log("[tribes] subscribed!", `${pubkey}/#`);
-                                    resolve(cl);
-                                }
+                                        console.log("[tribes] CLOSE", e);
+                                    // setTimeout(() => reconnect(), 2000);
+                                    connected = false;
+                                });
+                                cl.on("error", function (e) {
+                                    if (logger_1.logging.Tribes)
+                                        console.log("[tribes] error: ", e.message || e);
+                                });
+                                cl.on("message", function (topic, message) {
+                                    // console.log("============>>>>> GOT A MSG", topic, message)
+                                    if (onMessage)
+                                        onMessage(topic, message);
+                                });
+                                cl.subscribe(`${pubkey}/#`, function (err) {
+                                    if (err)
+                                        console.log("[tribes] error subscribing", err);
+                                    else {
+                                        if (logger_1.logging.Tribes)
+                                            console.log("[tribes] subscribed!", `${pubkey}/#`);
+                                        resolve(cl);
+                                    }
+                                });
                             });
                         });
-                    });
+                    }
+                    catch (e) {
+                        if (logger_1.logging.Tribes)
+                            console.log('[tribes] error initializing', e);
+                    }
                 });
             }
             while (true) {
@@ -433,13 +439,18 @@ exports.putstats = putstats;
 function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('genSignedTimestamp')
-        const now = moment().unix();
-        const tsBytes = Buffer.from(now.toString(16), "hex");
-        const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
-        const sigBytes = zbase32.decode(sig);
-        const totalLength = tsBytes.length + sigBytes.length;
-        const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
-        return urlBase64(buf);
+        try {
+            const now = moment().unix();
+            const tsBytes = Buffer.from(now.toString(16), "hex");
+            const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
+            const sigBytes = zbase32.decode(sig);
+            const totalLength = tsBytes.length + sigBytes.length;
+            const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
+            return urlBase64(buf);
+        }
+        catch (e) {
+            throw e;
+        }
     });
 }
 exports.genSignedTimestamp = genSignedTimestamp;

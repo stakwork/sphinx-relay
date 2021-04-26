@@ -1,4 +1,4 @@
-import { models } from "./models";
+import { models, Contact } from "./models";
 import fetch from "node-fetch";
 import { Op } from "sequelize";
 import * as socket from "./utils/socket";
@@ -149,7 +149,7 @@ async function massPingHubFromProxies(rn) {
     },
   });
   const nodes: { [k: string]: any }[] = [];
-  await asyncForEach(owners, async (o) => {
+  await asyncForEach(owners, async (o:Contact) => {
     const proxyNodeInfo = await proxynodeinfo(o.publicKey);
     const clean = o.authToken === null || o.authToken === "";
     nodes.push({

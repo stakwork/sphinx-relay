@@ -1,78 +1,24 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table({ tableName: 'sphinx_contacts', underscored: true })
-export default class Contact extends Model<Contact> {
-
-  @Column({
-    type: DataType.BIGINT,
-    primaryKey: true,
-    unique: true,
-    autoIncrement: true
-  })
-  id: number
-
-  @Column
-  routeHint: string
-
-  @Column
-  publicKey: string
-
-  @Column
-  nodeAlias: string
-
-  @Column
-  alias: string
-
-  @Column
-  photoUrl: string
-
-  @Column
-  privatePhoto: boolean
-
-  @Column
-  isOwner: boolean
-
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: false,
-    allowNull: false
-  })
-  deleted: boolean
-
-  @Column
-  authToken: string
-
-  @Column(DataType.BIGINT)
-  remoteId: number
-
-  @Column(DataType.BIGINT)
-  status: number
-
-  @Column(DataType.TEXT)
-  contactKey: string
-
-  @Column
-  deviceId: string
-
-  @Column
-  createdAt: Date
-
-  @Column
-  updatedAt: Date
-
-  @Column
-  fromGroup: boolean
-
-  @Column
-  notificationSound: string
-
-  @Column
-  lastActive: Date
-
-  @Column(DataType.BIGINT)
-  tipAmount: number
-
-  @Column
-  tenant: number
-
+export interface Contact {
+    id: number
+    routeHint: string
+    publicKey: string
+    nodeAlias: string
+    alias: string
+    photoUrl: string
+    privatePhoto: boolean
+    isOwner: boolean
+    deleted: boolean
+    authToken: string
+    remoteId: number
+    status: number
+    contactKey: string
+    deviceId: string
+    createdAt: Date
+    updatedAt: Date
+    fromGroup: boolean
+    notificationSound: string
+    lastActive: Date
+    tipAmount: number
+    tenant: number
 }

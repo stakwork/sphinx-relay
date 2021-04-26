@@ -2,18 +2,18 @@
 require('pg').defaults.parseInt8 = true
 import { Sequelize } from 'sequelize-typescript';
 import * as path from 'path'
-import Chat from './ts/chat'
-import Contact from './ts/contact'
-import Invite from './ts/invite'
-import Message from './ts/message'
-import Subscription from './ts/subscription'
-import MediaKey from './ts/mediaKey'
-import ChatMember from './ts/chatMember'
-import Timer from './ts/timer'
-import Bot from './ts/bot'
-import ChatBot from './ts/chatBot'
-import BotMember from './ts/botMember'
-import Accounting from './ts/accounting'
+import Chat from './sql/chat'
+import Contact from './sql/contact'
+import Invite from './sql/invite'
+import Message from './sql/message'
+import Subscription from './sql/subscription'
+import MediaKey from './sql/mediaKey'
+import ChatMember from './sql/chatMember'
+import Timer from './sql/timer'
+import Bot from './sql/bot'
+import ChatBot from './sql/chatBot'
+import BotMember from './sql/botMember'
+import Accounting from './sql/accounting'
 import * as minimist from 'minimist';
 import { loadConfig } from "../utils/config";
 import { isProxy } from '../utils/proxy';
@@ -44,7 +44,12 @@ if (isProxy()) {
 const sequelize = new Sequelize(opts)
 const models = sequelize.models
 
+import {Contact as ContactType, Chat as ChatType, Message as MessageType} from './ts'
+
 export {
   sequelize,
   models,
+  ContactType as Contact,
+  ChatType as Chat,
+  MessageType as Message,
 }

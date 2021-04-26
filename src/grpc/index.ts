@@ -19,7 +19,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 
 		var call = lightning.subscribeInvoices()
 		call.on('data', async function (response) {
-			// console.log("AN INVOICES WAS RECIEVED!!!=======================>",response)
+			console.log("AN INVOICE WAS RECIEVED!!!=======================>",response)
 			if (response['state'] !== 'SETTLED') {
 				return
 			}
@@ -114,7 +114,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			// The server is unavailable, trying to reconnect.
 			if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
 				i = 0
-				// waitAndReconnect()
+				waitAndReconnect()
 			} else {
 				resolve(status);
 			}
@@ -124,7 +124,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
 			console.error('[LND] Error', now, err.code)
 			if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
 				i = 0
-				// waitAndReconnect()
+				waitAndReconnect()
 			} else {
 				reject(err)
 			}
@@ -163,7 +163,7 @@ export async function reconnectToLND(innerCtx: number, callback?: Function) {
 			await tryToUnlockLND()
 		}
 		setTimeout(async () => { // retry each 2 secs
-			// console.log('?', ctx===innerCtx)
+			console.log('????????', ctx===innerCtx)
 			if (ctx === innerCtx) { // if another retry fires, then this will not run
 				await reconnectToLND(innerCtx, callback)
 			}

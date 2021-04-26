@@ -553,8 +553,8 @@ exports.signMessage = signMessage;
 const signBuffer = (msg, ownerPubkey) => {
     log('signBuffer');
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {
+            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
             const options = { msg };
             lightning.signMessage(options, function (err, sig) {
                 if (err || !sig.signature) {
@@ -586,8 +586,8 @@ exports.verifyBytes = verifyBytes;
 function verifyMessage(msg, sig, ownerPubkey) {
     log('verifyMessage');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
         try {
+            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
             const options = {
                 msg: ByteBuffer.fromHex(msg),
                 signature: sig,
