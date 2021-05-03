@@ -115,6 +115,9 @@ function finalNotification(ownerID, params, isTribeOwner) {
             where,
         });
         // if(!unseenMessages) return
+        if (!unseenMessages) {
+            params.notification.message = "";
+        }
         params.notification.badge = unseenMessages;
         triggerNotification(params);
     });
