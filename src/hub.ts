@@ -10,7 +10,7 @@ import constants from "./constants";
 import { loadConfig } from "./utils/config";
 import * as https from "https";
 import { isProxy } from "./utils/proxy";
-import {sendNotification} from './notify'
+import {sendNotification, resetNotifyTribeCount} from './notify'
 
 const pingAgent = new https.Agent({
   keepAlive: true,
@@ -295,6 +295,7 @@ export {
   finishInviteInHub,
   payInviteInHub,
   payInviteInvoice,
+  resetNotifyTribeCount,
 };
 
 

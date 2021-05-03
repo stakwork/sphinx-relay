@@ -29,7 +29,7 @@ function subscribeInvoices(parseKeysendInvoice) {
         var call = lightning.subscribeInvoices();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log("AN INVOICE WAS RECIEVED!!!=======================>", response);
+                console.log("AN INVOICE WAS RECIEVED!!!=======================>", JSON.stringify(response, null, 2));
                 if (response['state'] !== 'SETTLED') {
                     return;
                 }

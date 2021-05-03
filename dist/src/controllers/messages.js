@@ -485,6 +485,7 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     });
     const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
     if (chat) {
+        hub_1.resetNotifyTribeCount(parseInt(chat_id));
         yield chat.update({ seen: true });
         res_1.success(res, {});
         hub_1.sendNotification(chat, "", "badge", owner);

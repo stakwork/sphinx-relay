@@ -117,10 +117,15 @@ async function finalNotification(
     if (logging.Notification)
       console.log("[send notification]", params.notification);
   }
+  const mutedChats = await models.Chat.count({
+    where: {isMuted:true},
+  });
+  const mutedChatIds = (mutedChats && mutedChats.map(mc=> mc.id)) || []
+  mutedChatIds.push(0) // no msgs in non chat (anon keysends)
   const where: { [k: string]: any } = {
     sender: { [Op.ne]: ownerID },
     seen: false,
-    chatId: { [Op.ne]: 0 }, // no anon keysends
+    chatId: { [Op.notIn]: mutedChatIds }, 
     tenant: ownerID,
   };
   // if (!isTribeOwner) {
@@ -159,4 +164,8 @@ function debounce(func, id, delay) {
     // setTimeout(()=> tribeCounts[id]=0, 15)
     tribeCounts[id] = 0;
   }, delay);
+}
+
+export function resetNotifyTribeCount(chatID:number) {
+  tribeCounts[chatID] = 0
 }

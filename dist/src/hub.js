@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.payInviteInvoice = exports.payInviteInHub = exports.finishInviteInHub = exports.createInviteInHub = exports.sendNotification = exports.sendHubCall = exports.checkInvitesHubInterval = exports.pingHubInterval = exports.getAppVersionsFromHub = exports.sendInvoice = void 0;
+exports.resetNotifyTribeCount = exports.payInviteInvoice = exports.payInviteInHub = exports.finishInviteInHub = exports.createInviteInHub = exports.sendNotification = exports.sendHubCall = exports.checkInvitesHubInterval = exports.pingHubInterval = exports.getAppVersionsFromHub = exports.sendInvoice = void 0;
 const models_1 = require("./models");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
@@ -24,6 +24,7 @@ const https = require("https");
 const proxy_1 = require("./utils/proxy");
 const notify_1 = require("./notify");
 Object.defineProperty(exports, "sendNotification", { enumerable: true, get: function () { return notify_1.sendNotification; } });
+Object.defineProperty(exports, "resetNotifyTribeCount", { enumerable: true, get: function () { return notify_1.resetNotifyTribeCount; } });
 const pingAgent = new https.Agent({
     keepAlive: true,
 });
