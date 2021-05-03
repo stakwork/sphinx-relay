@@ -14,8 +14,9 @@ const ERR_CODE_STREAM_REMOVED = 2
 const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
 const oktolog = true
-function loginvoice(r){
+function loginvoice(response){
 	if(!oktolog) return
+	const r = JSON.parse(JSON.stringify(response))
 	r.r_hash = ''
 	r.r_preimage = ''
 	r.htlcs = r.htlcs && r.htlcs.map(h=> ({...h, custom_records:{}}))
