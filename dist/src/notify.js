@@ -97,7 +97,7 @@ function finalNotification(ownerID, params, isTribeOwner) {
             if (logger_1.logging.Notification)
                 console.log("[send notification]", params.notification);
         }
-        const mutedChats = yield models_1.models.Chat.count({
+        const mutedChats = yield models_1.models.Chat.findAll({
             where: { isMuted: true },
         });
         console.log(mutedChats);

@@ -117,7 +117,7 @@ async function finalNotification(
     if (logging.Notification)
       console.log("[send notification]", params.notification);
   }
-  const mutedChats = await models.Chat.count({
+  const mutedChats = await models.Chat.findAll({
     where: {isMuted:true},
   });
   console.log(mutedChats)
