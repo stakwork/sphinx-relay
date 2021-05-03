@@ -120,10 +120,8 @@ async function finalNotification(
   const mutedChats = await models.Chat.findAll({
     where: {isMuted:true},
   });
-  console.log(mutedChats)
   const mutedChatIds = (mutedChats && mutedChats.map(mc=> mc.id)) || []
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)
-  console.log('muted chat IDS', mutedChatIds)
   const where: { [k: string]: any } = {
     sender: { [Op.ne]: ownerID },
     seen: false,
@@ -136,7 +134,7 @@ async function finalNotification(
   let unseenMessages = await models.Message.count({
     where,
   });
-  if(!unseenMessages) return
+  // if(!unseenMessages) return
   params.notification.badge = unseenMessages;
   triggerNotification(params);
 }
