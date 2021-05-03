@@ -23,7 +23,7 @@ const unlock_1 = require("../utils/unlock");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
-const oktolog = false;
+const oktolog = true;
 function loginvoice(r) {
     if (!oktolog)
         return;
