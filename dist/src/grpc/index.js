@@ -29,7 +29,7 @@ function loginvoice(r) {
         return;
     r.r_hash = '';
     r.r_preimage = '';
-    r.htlcs = [];
+    r.htlcs = r.htlcs && r.htlcs.map(h => (Object.assign(Object.assign({}, h), { custom_records: {} })));
     console.log("AN INVOICE WAS RECIEVED!!!=======================>", JSON.stringify(r, null, 2));
 }
 function subscribeInvoices(parseKeysendInvoice) {

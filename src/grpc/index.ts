@@ -18,7 +18,7 @@ function loginvoice(r){
 	if(!oktolog) return
 	r.r_hash = ''
 	r.r_preimage = ''
-	r.htlcs = []
+	r.htlcs = r.htlcs && r.htlcs.map(h=> ({...h, custom_records:{}}))
 	console.log("AN INVOICE WAS RECIEVED!!!=======================>", JSON.stringify(r, null, 2))
 }
 
