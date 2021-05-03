@@ -137,6 +137,7 @@ async function finalNotification(
   // if(!unseenMessages) return
   if(!unseenMessages) {
     params.notification.message = ""
+    params.notification.sound = ""
   }
   params.notification.badge = unseenMessages;
   triggerNotification(params);
