@@ -100,8 +100,10 @@ function finalNotification(ownerID, params, isTribeOwner) {
         const mutedChats = yield models_1.models.Chat.count({
             where: { isMuted: true },
         });
+        console.log(mutedChats);
         const mutedChatIds = (mutedChats && mutedChats.map(mc => mc.id)) || [];
         mutedChatIds.push(0); // no msgs in non chat (anon keysends)
+        console.log('muted chat IDS', mutedChatIds);
         const where = {
             sender: { [sequelize_1.Op.ne]: ownerID },
             seen: false,
