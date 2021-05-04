@@ -1,12 +1,13 @@
 {
   "development": {
-    "dialect": "sqlite",
-    "storage": "/Users/Shared/sphinx-proxy.db"
-  },
-  "postgres": {
     "dialect": "postgres",
+    "host": "localhost",
+    "username": "postgres",
+    "password": "sphinx",
+    "database": "postgres",
+    "sslmode": "disable",
     "dialectOptions": {
-        "connectionString": "postgres://localhost"
+        "connectionString": "postgres://postgres:sphinx@localhost:5432/postgres?sslmode=disable"
     }
   }
 }
