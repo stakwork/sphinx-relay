@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendNotification = void 0;
+exports.resetNotifyTribeCount = exports.sendNotification = void 0;
 const logger_1 = require("./utils/logger");
 const models_1 = require("./models");
 const node_fetch_1 = require("node-fetch");
@@ -97,10 +97,15 @@ function finalNotification(ownerID, params, isTribeOwner) {
             if (logger_1.logging.Notification)
                 console.log("[send notification]", params.notification);
         }
+        const mutedChats = yield models_1.models.Chat.findAll({
+            where: { isMuted: true },
+        });
+        const mutedChatIds = (mutedChats && mutedChats.map(mc => mc.id)) || [];
+        mutedChatIds.push(0); // no msgs in non chat (anon keysends)
         const where = {
             sender: { [sequelize_1.Op.ne]: ownerID },
             seen: false,
-            chatId: { [sequelize_1.Op.ne]: 0 },
+            chatId: { [sequelize_1.Op.notIn]: mutedChatIds },
             tenant: ownerID,
         };
         // if (!isTribeOwner) {
@@ -109,8 +114,11 @@ function finalNotification(ownerID, params, isTribeOwner) {
         let unseenMessages = yield models_1.models.Message.count({
             where,
         });
-        if (!unseenMessages)
-            return;
+        // if(!unseenMessages) return
+        if (!unseenMessages) {
+            params.notification.message = "";
+            params.notification.sound = "";
+        }
         params.notification.badge = unseenMessages;
         triggerNotification(params);
     });
@@ -140,4 +148,8 @@ function debounce(func, id, delay) {
         tribeCounts[id] = 0;
     }, delay);
 }
+function resetNotifyTribeCount(chatID) {
+    tribeCounts[chatID] = 0;
+}
+exports.resetNotifyTribeCount = resetNotifyTribeCount;
 //# sourceMappingURL=notify.js.map

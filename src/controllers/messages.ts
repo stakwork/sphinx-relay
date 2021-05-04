@@ -1,7 +1,7 @@
 import { models } from "../models";
 import { Op } from "sequelize";
 import { indexBy } from "underscore";
-import { sendNotification } from "../hub";
+import { sendNotification, resetNotifyTribeCount } from "../hub";
 import * as socket from "../utils/socket";
 import * as jsonUtils from "../utils/json";
 import * as helpers from "../helpers";
@@ -597,6 +597,7 @@ export const readMessages = async (req, res) => {
   );
   const chat = await models.Chat.findOne({ where: { id: chat_id, tenant } });
   if (chat) {
+    resetNotifyTribeCount(parseInt(chat_id))
     await chat.update({ seen: true });
     success(res, {});
     sendNotification(chat, "", "badge", owner);

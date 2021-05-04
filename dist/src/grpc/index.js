@@ -23,13 +23,23 @@ const unlock_1 = require("../utils/unlock");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
+const oktolog = true;
+function loginvoice(response) {
+    if (!oktolog)
+        return;
+    const r = JSON.parse(JSON.stringify(response));
+    r.r_hash = '';
+    r.r_preimage = '';
+    r.htlcs = r.htlcs && r.htlcs.map(h => (Object.assign(Object.assign({}, h), { custom_records: {} })));
+    console.log("AN INVOICE WAS RECIEVED!!!=======================>", JSON.stringify(r, null, 2));
+}
 function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning(true); // try proxy
         var call = lightning.subscribeInvoices();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log("AN INVOICE WAS RECIEVED!!!=======================>", response);
+                loginvoice(response);
                 if (response['state'] !== 'SETTLED') {
                     return;
                 }
