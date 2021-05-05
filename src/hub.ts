@@ -127,7 +127,7 @@ const checkInviteHub = async (params = {}) => {
 };
 
 const pingHub = async (params = {}) => {
-  if (env != "production") {
+  if (env != "production" || config.dont_ping_hub==='true') {
     return;
   }
 
