@@ -16,6 +16,7 @@ const config_1 = require("./config");
 const lightning_1 = require("./lightning");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
+const logger_1 = require("./logger");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -37,23 +38,35 @@ const SATS_PER_USER = config.proxy_initial_sats || 5000;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!isProxy())
+        if (!isProxy()) {
+            if (logger_1.logging.Proxy)
+                console.log("[proxy] not proxy");
             return;
+        }
         const newusers = yield models_1.models.Contact.findAll({ where: { isOwner: true, authToken: null } });
-        if (newusers.length >= NEW_USER_NUM)
+        if (newusers.length >= NEW_USER_NUM) {
+            if (logger_1.logging.Proxy)
+                console.log("[proxy] already have new users");
             return; // we already have the mimimum
+        }
         const n1 = NEW_USER_NUM - newusers.length;
         const virtualBal = yield getProxyTotalBalance();
-        if (!virtualBal)
-            return; // skip
+        if (!virtualBal) {
+            if (logger_1.logging.Proxy)
+                console.log("[proxy] no virtual balance");
+            return;
+        }
         const realBal = yield getProxyLNDBalance();
         let availableBalance = realBal - virtualBal;
         if (availableBalance < SATS_PER_USER)
             availableBalance = 1;
         const n2 = Math.floor(availableBalance / SATS_PER_USER);
         const n = Math.min(n1, n2);
-        if (!n)
+        if (!n) {
+            if (logger_1.logging.Proxy)
+                console.log("[proxy] not enough sats");
             return;
+        }
         console.log('=> gen new users:', n);
         const arr = new Array(n);
         const rootpk = yield getProxyRootPubkey();

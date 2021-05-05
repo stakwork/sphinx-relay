@@ -33,6 +33,7 @@ const logging = {
     Notification: config.logging && config.logging.includes('NOTIFICATION'),
     Network: config.logging && config.logging.includes('NETWORK'),
     DB: config.logging && config.logging.includes('DB'),
+    Proxy: config.logging && config.logging.includes('PROXY'),
 };
 exports.logging = logging;
 //# sourceMappingURL=logger.js.map

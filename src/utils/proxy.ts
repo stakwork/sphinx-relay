@@ -4,6 +4,7 @@ import { loadConfig } from './config'
 import {loadCredentials} from './lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
+import {logging} from './logger'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -25,13 +26,22 @@ const NEW_USER_NUM = (config.proxy_new_nodes || config.proxy_new_nodes===0) ? co
 const SATS_PER_USER = config.proxy_initial_sats || 5000
 // isOwner users with no authToken
 export async function generateNewUsers(){
-  if(!isProxy()) return
+  if(!isProxy()) {
+    if(logging.Proxy) console.log("[proxy] not proxy");
+    return
+  }
   const newusers = await models.Contact.findAll({where:{isOwner:true,authToken:null}})
-  if(newusers.length>=NEW_USER_NUM) return // we already have the mimimum
+  if(newusers.length>=NEW_USER_NUM) {
+    if(logging.Proxy) console.log("[proxy] already have new users");
+    return // we already have the mimimum
+  }
   const n1 = NEW_USER_NUM-newusers.length
 
   const virtualBal = await getProxyTotalBalance()
-  if(!virtualBal) return // skip
+  if(!virtualBal) {
+    if(logging.Proxy) console.log("[proxy] no virtual balance");
+    return 
+  }
   const realBal = await getProxyLNDBalance()
 
   let availableBalance = realBal - virtualBal
@@ -39,7 +49,10 @@ export async function generateNewUsers(){
   const n2 = Math.floor(availableBalance/SATS_PER_USER)
   const n = Math.min(n1,n2)
 
-  if(!n) return
+  if(!n) {
+    if(logging.Proxy) console.log("[proxy] not enough sats");
+    return
+  }
   console.log('=> gen new users:', n)
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
