@@ -51,11 +51,6 @@ function generateNewUsers() {
         }
         const n1 = NEW_USER_NUM - newusers.length;
         const virtualBal = yield getProxyTotalBalance();
-        if (!virtualBal) {
-            if (logger_1.logging.Proxy)
-                console.log("[proxy] no virtual balance");
-            return;
-        }
         const realBal = yield getProxyLNDBalance();
         let availableBalance = realBal - virtualBal;
         if (availableBalance < SATS_PER_USER)

@@ -38,10 +38,6 @@ export async function generateNewUsers(){
   const n1 = NEW_USER_NUM-newusers.length
 
   const virtualBal = await getProxyTotalBalance()
-  if(!virtualBal) {
-    if(logging.Proxy) console.log("[proxy] no virtual balance");
-    return 
-  }
   const realBal = await getProxyLNDBalance()
 
   let availableBalance = realBal - virtualBal
