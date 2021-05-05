@@ -86,6 +86,7 @@ function run_script(command, args, name, color, options, callback) {
     });
 
     child.on('close', function(code) {
+        srv.setError(name, 'PROCESS QUIT: '+code)
         callback(code);
     });
 }

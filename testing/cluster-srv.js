@@ -52,8 +52,6 @@ function start() {
         }
 
         let thepath = './testing/console/public/' + filePath.substr(2)
-        console.log("FILE PAHT", thepath)
-
 
         var extname = String(path.extname(thepath)).toLowerCase();
         var mimeTypes = {
