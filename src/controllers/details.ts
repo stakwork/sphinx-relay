@@ -174,8 +174,8 @@ export const getBalance = async (req, res) => {
       success: true,
       response: <BalanceRes>{
         reserve,
-        full_balance: parseInt(response.balance),
-        balance: parseInt(response.balance) - reserve,
+        full_balance: Math.max(0, parseInt(response.balance)),
+        balance: Math.max(0, parseInt(response.balance) - reserve),
         pending_open_balance: parseInt(response.pending_open_balance),
       },
     });
