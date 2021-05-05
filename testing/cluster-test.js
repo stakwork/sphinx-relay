@@ -2,6 +2,7 @@ var child_process = require('child_process');
 const chalk = require('chalk');
 const config = require('./cluster_config.json')
 const srv = require('./cluster-srv')
+srv.start()
 
 console.log("Node Version: ", process.version);
 

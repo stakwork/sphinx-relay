@@ -1,12 +1,12 @@
 
 var http = require('http')
-
+var fs = require('fs');
+var path = require('path');
 /*
 {
-    alice: {
-        logs: ['line one\n', 'line two\n'],
-        errors: ['error one\n']
-    },
+    alice: [
+        {type:'error': 'text':...}
+    ],
     bob: {
         ...
     }
@@ -15,20 +15,19 @@ var http = require('http')
 let logs = {}
 
 function set(name, kind, line) {
-    if(!logs[name]) logs[name] = {}
-    if(logs[name][kind]) {
-        logs[name][kind].push(line)
-    } else {
-        logs[name][kind] = [line]
-    }
+    if(!logs[name]) logs[name] = []
+    logs[name].push({
+        type: kind,
+        text: line
+    })
 }
 
 function setLog(name, line) {
-    set(name, 'logs', line)
+    set(name, 'log', line)
 }
 
 function setError(name, line) {
-    set(name, 'errors', line)
+    set(name, 'error', line)
 }
 
 function getlogs(req, res) {
@@ -37,17 +36,48 @@ function getlogs(req, res) {
 
 function start() {
     const hostname = '127.0.0.1';
-    const port = 3335;
+    const port = 3333;
     http.createServer((req, res) => {
-    if (req.method==='OPTIONS') {
-        return end(res, 200, '')
-    }
-    console.log("=>", req.url, req.method)
-    if (req.url==='/log' && req.method==='GET') {
-        getlogs(req, res)
-    }
+        if (req.method==='OPTIONS') {
+            return end(res, 200, '')
+        }
+        // console.log("=>", req.url, req.method)
+        if (req.url==='/logs' && req.method==='GET') {
+            return getlogs(req, res)
+        }
+
+        var filePath = '.' + req.url;
+        if (filePath == './') {
+            filePath = './index.html';
+        }
+
+        let thepath = './testing/console/public/' + filePath.substr(2)
+        console.log("FILE PAHT", thepath)
+
+
+        var extname = String(path.extname(thepath)).toLowerCase();
+        var mimeTypes = {
+            '.html': 'text/html',
+            '.js': 'text/javascript',
+            '.css': 'text/css',
+        };
+
+        var contentType = mimeTypes[extname] || 'application/octet-stream';
+
+        fs.readFile(thepath, function(error, content) {
+            if (error) {
+                res.writeHead(500);
+                res.end('Nope: '+error.code+' ..\n');
+            } else {
+                res.writeHead(200, { 'Content-Type': contentType });
+                res.end(content, 'utf-8');
+            }
+        });
+
     }).listen(port, hostname, () => {
-        console.log(`Server running at http://${hostname}:${port}/`);
+        console.log('*********************************************')
+        console.log(`Server running at http://${hostname}:${port}/`)
+        console.log('*********************************************')
     })
 }
 
