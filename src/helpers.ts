@@ -2,6 +2,7 @@ import { models } from './models'
 import * as md5 from 'md5'
 import * as network from './network'
 import constants from './constants'
+import { logging } from './utils/logger'
 
 export const findOrCreateChat = async (params) => {
 	const { chat_id, owner_id, recipient_id } = params
@@ -104,7 +105,9 @@ export const performKeysendMessage = async ({ destination_key, route_hint, amoun
 		// console.log("=> keysend to new contact")
 		if (success) success(r)
 	} catch (e) {
-		console.log("KEYSEND MESSAGE ERROR to", destination_key, e)
+		if(logging.Network) {
+			console.log("KEYSEND MESSAGE ERROR to", destination_key, e, opts)
+		}
 		if (failure) failure(e)
 	}
 }

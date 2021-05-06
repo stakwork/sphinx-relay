@@ -14,6 +14,7 @@ const models_1 = require("./models");
 const md5 = require("md5");
 const network = require("./network");
 const constants_1 = require("./constants");
+const logger_1 = require("./utils/logger");
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
@@ -113,7 +114,9 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
             success(r);
     }
     catch (e) {
-        console.log("KEYSEND MESSAGE ERROR to", destination_key, e);
+        if (logger_1.logging.Network) {
+            console.log("KEYSEND MESSAGE ERROR to", destination_key, e, opts);
+        }
         if (failure)
             failure(e);
     }
