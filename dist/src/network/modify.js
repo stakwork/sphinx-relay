@@ -191,7 +191,10 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
         // console.log('[modify] terms.host', terms.host)
         // console.log('[modify] mt', mt)
         try {
-            const r = yield node_fetch_1.default(`https://${terms.host}/file/${mt}`, {
+            let protocol = 'https';
+            if (terms.host.includes('localhost'))
+                protocol = 'http';
+            const r = yield node_fetch_1.default(`${protocol}://${terms.host}/file/${mt}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             // console.log("[modify] dl RES", r)
@@ -210,7 +213,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
                 knownLength: encImgBuffer.length,
             });
             const formHeaders = form.getHeaders();
-            const resp = yield node_fetch_1.default(`https://${terms.host}/file`, {
+            const resp = yield node_fetch_1.default(`${protocol}://${terms.host}/file`, {
                 method: "POST",
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
                 body: form,

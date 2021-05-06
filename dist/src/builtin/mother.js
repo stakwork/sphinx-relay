@@ -183,7 +183,10 @@ const botSVG = `<svg viewBox="64 64 896 896" height="16" width="16" fill="white"
 function searchBots(q) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(`https://${config.tribes_host}/search/bots/${q}`);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = "http";
+            const r = yield node_fetch_1.default(`${protocol}://${config.tribes_host}/search/bots/${q}`);
             const j = yield r.json();
             return Array.isArray(j) ? j : [];
         }
@@ -195,7 +198,10 @@ function searchBots(q) {
 function getBotByName(name) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(`https://${config.tribes_host}/bot/${name}`);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = "http";
+            const r = yield node_fetch_1.default(`${protocol}://${config.tribes_host}/bot/${name}`);
             const j = yield r.json();
             if (j && j.uuid && j.owner_pubkey) {
                 return j;

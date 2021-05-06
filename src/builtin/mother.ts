@@ -176,7 +176,9 @@ const botSVG = `<svg viewBox="64 64 896 896" height="16" width="16" fill="white"
 
 async function searchBots(q: string) {
   try {
-    const r = await fetch(`https://${config.tribes_host}/search/bots/${q}`);
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = "http";
+    const r = await fetch(`${protocol}://${config.tribes_host}/search/bots/${q}`);
     const j = await r.json();
     return Array.isArray(j) ? j : [];
   } catch (e) {
@@ -185,7 +187,9 @@ async function searchBots(q: string) {
 }
 async function getBotByName(name: string) {
   try {
-    const r = await fetch(`https://${config.tribes_host}/bot/${name}`);
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = "http";
+    const r = await fetch(`${protocol}://${config.tribes_host}/bot/${name}`);
     const j = await r.json();
     if (j && j.uuid && j.owner_pubkey) {
       return j;

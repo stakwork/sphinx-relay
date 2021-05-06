@@ -230,7 +230,9 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
   // console.log('[modify] terms.host', terms.host)
   // console.log('[modify] mt', mt)
   try {
-    const r = await fetch(`https://${terms.host}/file/${mt}`, {
+    let protocol = 'https'
+    if(terms.host.includes('localhost')) protocol='http'
+    const r = await fetch(`${protocol}://${terms.host}/file/${mt}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     // console.log("[modify] dl RES", r)
@@ -255,7 +257,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
       knownLength: encImgBuffer.length,
     });
     const formHeaders = form.getHeaders();
-    const resp = await fetch(`https://${terms.host}/file`, {
+    const resp = await fetch(`${protocol}://${terms.host}/file`, {
       method: "POST",
       headers: {
         ...formHeaders, // THIS IS REQUIRED!!!
