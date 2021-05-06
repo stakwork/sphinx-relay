@@ -17,7 +17,10 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
     return __awaiter(this, void 0, void 0, function* () {
         const host = tribes_1.getHost();
         try {
-            const r = yield node_fetch_1.default('https://' + host + '/bots', {
+            let protocol = 'https';
+            if (host.includes('localhost'))
+                protocol = 'http';
+            const r = yield node_fetch_1.default(protocol + '://' + host + '/bots', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid, owner_pubkey,

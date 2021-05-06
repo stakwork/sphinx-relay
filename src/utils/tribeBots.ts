@@ -5,7 +5,9 @@ import fetch from 'node-fetch'
 export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint }) {
   const host = getHost()
   try {
-    const r = await fetch('https://' + host + '/bots', {
+    let protocol = 'https'
+    if(host.includes('localhost')) protocol='http'
+    const r = await fetch(protocol + '://' + host + '/bots', {
       method: 'POST',
       body: JSON.stringify({
         uuid, owner_pubkey,
