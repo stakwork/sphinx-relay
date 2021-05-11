@@ -62,6 +62,7 @@ export async function set(app) {
   app.post("/contacts/:id/keys", contacts.exchangeKeys);
   app.post("/contacts", contacts.createContact);
   app.delete("/contacts/:id", contacts.deleteContact);
+  app.get("/latest_contacts", contacts.getLatestContacts);
 
   app.get("/msgs", messages.getMsgs);
   app.get("/allmessages", messages.getAllMessages);

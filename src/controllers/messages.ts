@@ -12,6 +12,7 @@ import * as network from "../network";
 import * as short from "short-uuid";
 import constants from "../constants";
 import { logging } from "../utils/logger";
+// import { date } from "yup/lib/locale";
 
 export const getMessages = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
@@ -174,7 +175,6 @@ export const getMsgs = async (req, res) => {
     clause.offset = offset;
   }
   const messages = await models.Message.findAll(clause);
-
   if (logging.Express) {
     console.log("=> got msgs", messages && messages.length);
   }

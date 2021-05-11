@@ -11,6 +11,7 @@ import * as tribes from "../utils/tribes";
 import * as network from "../network";
 import { isProxy } from "../utils/proxy";
 import {logging} from '../utils/logger'
+import * as moment from 'moment'
 
 export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
@@ -502,4 +503,29 @@ function extractAttrs(body): { [k: string]: any } {
     }
   });
   return attrs;
+}
+
+export const getLatestContacts = async (req, res) => {
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+  const dateToReturn = req.query.date;
+  const local = moment.utc(dateToReturn).local().toDate()
+  const where: { [k: string]: any } = { updatedAt: { [Op.gte]: local }, deleted: false, tenant };
+  const contacts = await models.Contact.findAll({ where });
+  const invites = await models.Invite.findAll({ where: { updated_at: {[Op.gte]: dateToReturn}, tenant } });
+  const chats = await models.Chat.findAll({ where });
+  const subscriptions = await models.Subscription.findAll({ where: { updated_at: {[Op.gte]: dateToReturn}, tenant } });
+
+  const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
+  const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
+  const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
+  const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
+
+  success(res, {
+    contacts: contactsResponse,
+    invites: invitesResponse,
+    chats: chatsResponse,
+    subscriptions: subsResponse,
+  });
+
 }
