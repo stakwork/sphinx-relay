@@ -512,9 +512,9 @@ export const getLatestContacts = async (req, res) => {
   const local = moment.utc(dateToReturn).local().toDate()
   const where: { [k: string]: any } = { updatedAt: { [Op.gte]: local }, deleted: false, tenant };
   const contacts = await models.Contact.findAll({ where });
-  const invites = await models.Invite.findAll({ where: { updated_at: {[Op.gte]: dateToReturn}, tenant } });
+  const invites = await models.Invite.findAll({ where: { updated_at: {[Op.gte]: local}, tenant } });
   const chats = await models.Chat.findAll({ where });
-  const subscriptions = await models.Subscription.findAll({ where: { updated_at: {[Op.gte]: dateToReturn}, tenant } });
+  const subscriptions = await models.Subscription.findAll({ where: { updated_at: {[Op.gte]: local}, tenant } });
 
   const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
   const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
