@@ -481,9 +481,9 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const local = moment.utc(dateToReturn).local().toDate();
     const where = { updatedAt: { [sequelize_1.Op.gte]: local }, deleted: false, tenant };
     const contacts = yield models_1.models.Contact.findAll({ where });
-    const invites = yield models_1.models.Invite.findAll({ where: { updated_at: { [sequelize_1.Op.gte]: dateToReturn }, tenant } });
+    const invites = yield models_1.models.Invite.findAll({ where: { updated_at: { [sequelize_1.Op.gte]: local }, tenant } });
     const chats = yield models_1.models.Chat.findAll({ where });
-    const subscriptions = yield models_1.models.Subscription.findAll({ where: { updated_at: { [sequelize_1.Op.gte]: dateToReturn }, tenant } });
+    const subscriptions = yield models_1.models.Subscription.findAll({ where: { updated_at: { [sequelize_1.Op.gte]: local }, tenant } });
     const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
     const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
     const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
