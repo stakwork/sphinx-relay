@@ -339,7 +339,7 @@ export const deleteContact = async (req, res) => {
 
   // CHECK IF IM IN THEIR TRIBE
   const tribesTheyreAdminOf = await models.Chat.findAll({
-    where: { ownerPubkey: contact.publicKey, tenant },
+    where: { ownerPubkey: contact.publicKey, tenant, deleted:false },
   });
   if (tribesTheyreAdminOf && tribesTheyreAdminOf.length) {
     okToDelete = false;
@@ -508,24 +508,28 @@ function extractAttrs(body): { [k: string]: any } {
 export const getLatestContacts = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
-  const dateToReturn = req.query.date;
-  const local = moment.utc(dateToReturn).local().toDate()
-  const where: { [k: string]: any } = { updatedAt: { [Op.gte]: local }, tenant };
-  const contacts = await models.Contact.findAll({ where });
-  const invites = await models.Invite.findAll({ where });
-  const chats = await models.Chat.findAll({ where });
-  const subscriptions = await models.Subscription.findAll({ where });
 
-  const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
-  const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
-  const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
-  const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
+  try {
+    const dateToReturn = decodeURI(req.query.date);
+    const local = moment.utc(dateToReturn).local().toDate()
+    const where: { [k: string]: any } = { updatedAt: { [Op.gte]: local }, tenant };
+    const contacts = await models.Contact.findAll({ where });
+    const invites = await models.Invite.findAll({ where });
+    const chats = await models.Chat.findAll({ where });
+    const subscriptions = await models.Subscription.findAll({ where });
 
-  success(res, {
-    contacts: contactsResponse,
-    invites: invitesResponse,
-    chats: chatsResponse,
-    subscriptions: subsResponse,
-  });
+    const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
+    const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
+    const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
+    const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
 
+    success(res, {
+      contacts: contactsResponse,
+      invites: invitesResponse,
+      chats: chatsResponse,
+      subscriptions: subsResponse,
+    });
+  } catch(e) {
+    failure(res, e)
+  }
 }

@@ -322,7 +322,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     // CHECK IF IM IN THEIR TRIBE
     const tribesTheyreAdminOf = yield models_1.models.Chat.findAll({
-        where: { ownerPubkey: contact.publicKey, tenant },
+        where: { ownerPubkey: contact.publicKey, tenant, deleted: false },
     });
     if (tribesTheyreAdminOf && tribesTheyreAdminOf.length) {
         okToDelete = false;
@@ -477,23 +477,28 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     if (!req.owner)
         return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
-    const dateToReturn = req.query.date;
-    const local = moment.utc(dateToReturn).local().toDate();
-    const where = { updatedAt: { [sequelize_1.Op.gte]: local }, tenant };
-    const contacts = yield models_1.models.Contact.findAll({ where });
-    const invites = yield models_1.models.Invite.findAll({ where });
-    const chats = yield models_1.models.Chat.findAll({ where });
-    const subscriptions = yield models_1.models.Subscription.findAll({ where });
-    const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
-    const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
-    const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
-    const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
-    res_1.success(res, {
-        contacts: contactsResponse,
-        invites: invitesResponse,
-        chats: chatsResponse,
-        subscriptions: subsResponse,
-    });
+    try {
+        const dateToReturn = decodeURI(req.query.date);
+        const local = moment.utc(dateToReturn).local().toDate();
+        const where = { updatedAt: { [sequelize_1.Op.gte]: local }, tenant };
+        const contacts = yield models_1.models.Contact.findAll({ where });
+        const invites = yield models_1.models.Invite.findAll({ where });
+        const chats = yield models_1.models.Chat.findAll({ where });
+        const subscriptions = yield models_1.models.Subscription.findAll({ where });
+        const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
+        const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
+        const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
+        const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
+        res_1.success(res, {
+            contacts: contactsResponse,
+            invites: invitesResponse,
+            chats: chatsResponse,
+            subscriptions: subsResponse,
+        });
+    }
+    catch (e) {
+        res_1.failure(res, e);
+    }
 });
 exports.getLatestContacts = getLatestContacts;
 //# sourceMappingURL=contacts.js.map
