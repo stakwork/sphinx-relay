@@ -75,4 +75,10 @@ export default class Contact extends Model<Contact> {
   @Column
   tenant: number
 
+  @Column
+  priceToMeet: number
+
+  @Column
+  unmet: boolean
+
 }

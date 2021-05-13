@@ -12,6 +12,10 @@ import * as network from "../network";
 import { isProxy } from "../utils/proxy";
 import {logging} from '../utils/logger'
 import * as moment from 'moment'
+import * as people from '../utils/people'
+import { loadConfig } from "../utils/config";
+
+const config = loadConfig();
 
 export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
@@ -532,4 +536,40 @@ export const getLatestContacts = async (req, res) => {
   } catch(e) {
     failure(res, e)
   }
+}
+
+// accessed from people.sphinx.chat website
+export async function createPeopleProfile(req, res){
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+
+  const priceToMeet = req.body.price_to_meet || 0
+
+  try {
+    const owner = await models.Contact.findOne({where:{tenant,isOwner:true}})
+    const {
+      host,
+      owner_alias,
+      description,
+      img,
+      tags,
+    } = req.body
+    await people.createProfile({
+      host: host || config.tribes_host,
+      owner_alias: owner_alias || owner.alias,
+      description: description || '',
+      img: img || owner.photoUrl,
+      tags: tags || [],
+      price_to_meet: priceToMeet,
+      owner_pubkey: owner.publicKey,
+      owner_route_hint: owner.routeHint,
+    })
+
+    await owner.update({priceToMeet: priceToMeet||0})
+
+    success(res, jsonUtils.contactToJson(owner))
+  } catch(e) {
+    failure(res, e)
+  }
+
 }

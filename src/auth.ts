@@ -5,6 +5,8 @@ import { success, failure } from "./utils/res";
 import { setInMemoryMacaroon } from "./utils/macaroon";
 import { loadConfig } from "./utils/config";
 import { isProxy } from "./utils/proxy";
+import * as jwtUtils from "./utils/jwt";
+
 const fs = require("fs");
 
 const config = loadConfig();
@@ -109,21 +111,42 @@ export async function ownerMiddleware(req, res, next) {
     }
   }
 
-  if (!token) {
+  const jwt = req.headers["x-jwt"] || req.cookies["x-jwt"];
+  if (!token && !jwt) {
     res.writeHead(401, "Access invalid for user", {
       "Content-Type": "text/plain",
     });
     res.end("Invalid credentials");
     return;
   }
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("base64");
 
-  const owner = await models.Contact.findOne({
-    where: { authToken: hashedToken, isOwner: true },
-  });
+  let owner
+
+  // find by auth token
+  if (token) {
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("base64");
+    owner = await models.Contact.findOne({
+      where: { authToken: hashedToken, isOwner: true },
+    });
+  }
+
+  // find by JWT
+  if(jwt) {
+    const parsed = jwtUtils.verifyJWT(jwt)
+    if(parsed) {
+      const publicKey = parsed.body.pubkey
+      if(publicKey) {
+        owner = await models.Contact.findOne({
+          where: { publicKey, isOwner: true },
+        });
+      }
+    }
+  }
+
+  // CHECK JWT CLAIMS HERE?
 
   if (!owner) {
     res.writeHead(401, "Access invalid for user", {

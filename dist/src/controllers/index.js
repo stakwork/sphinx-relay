@@ -64,6 +64,7 @@ function set(app) {
         app.post("/contacts", contacts.createContact);
         app.delete("/contacts/:id", contacts.deleteContact);
         app.get("/latest_contacts", contacts.getLatestContacts);
+        app.post("/profile", contacts.createPeopleProfile);
         app.get("/msgs", messages.getMsgs);
         app.get("/allmessages", messages.getAllMessages);
         app.get("/messages", messages.getMessages);
@@ -82,7 +83,7 @@ function set(app) {
         app.post("/attachment", media.sendAttachmentMessage);
         app.post("/purchase", media.purchase);
         app.get("/signer/:challenge", media.signer);
-        app.get("/external_tokens", auth.requestExternalTokens);
+        app.post("/verify_external", auth.verifyAuthRequest);
         app.post("/stream", feed.streamFeed);
         app.get("/app_versions", details.getAppVersions);
         app.get("/relay_version", details.getRelayVersion);

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
+exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -24,6 +24,9 @@ const network = require("../network");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const moment = require("moment");
+const people = require("../utils/people");
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
@@ -501,4 +504,33 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getLatestContacts = getLatestContacts;
+// accessed from people.sphinx.chat website
+function createPeopleProfile(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        const tenant = req.owner.id;
+        const priceToMeet = req.body.price_to_meet || 0;
+        try {
+            const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
+            const { host, owner_alias, description, img, tags, } = req.body;
+            yield people.createProfile({
+                host: host || config.tribes_host,
+                owner_alias: owner_alias || owner.alias,
+                description: description || '',
+                img: img || owner.photoUrl,
+                tags: tags || [],
+                price_to_meet: priceToMeet,
+                owner_pubkey: owner.publicKey,
+                owner_route_hint: owner.routeHint,
+            });
+            yield owner.update({ priceToMeet: priceToMeet || 0 });
+            res_1.success(res, jsonUtils.contactToJson(owner));
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.createPeopleProfile = createPeopleProfile;
 //# sourceMappingURL=contacts.js.map

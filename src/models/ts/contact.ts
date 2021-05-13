@@ -21,4 +21,6 @@ export interface Contact {
     lastActive: Date
     tipAmount: number
     tenant: number
+    priceToMeet: number
+    unmet: boolean
 }
