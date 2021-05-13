@@ -1,5 +1,5 @@
 import nJwt from 'njwt'
-import secureRandom from 'secure-random'
+import * as secureRandom from 'secure-random'
 
 // each restart of relay creates new key
 // to revoke any JWT out in the wild, just restart relay
