@@ -1,4 +1,4 @@
-import * as jwt from "../utils/jwt";
+import {createJWT, scopes} from "../utils/jwt";
 import { success, failure } from "../utils/res";
 import * as tribes from "../utils/tribes";
 
@@ -15,7 +15,8 @@ export async function verifyAuthRequest(req, res) {
   const j = req.body
   if(!j.host || !j.challenge) return failure(res, 'nope1')
   try {
-    const jot = jwt.createJWT(req.owner.publicKey)
+    const sc = [scopes.PERSONAL]
+    const jot = createJWT(req.owner.publicKey, sc)
     const bod:MeInfo = {
       alias: req.owner.alias,
       photoUrl: req.owner.photoUrl,

@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.requestExternalTokens = exports.verifyAuthRequest = void 0;
-const jwt = require("../utils/jwt");
+const jwt_1 = require("../utils/jwt");
 const res_1 = require("../utils/res");
 const tribes = require("../utils/tribes");
 function verifyAuthRequest(req, res) {
@@ -21,7 +21,8 @@ function verifyAuthRequest(req, res) {
         if (!j.host || !j.challenge)
             return res_1.failure(res, 'nope1');
         try {
-            const jot = jwt.createJWT(req.owner.publicKey);
+            const sc = [jwt_1.scopes.PERSONAL];
+            const jot = jwt_1.createJWT(req.owner.publicKey, sc);
             const bod = {
                 alias: req.owner.alias,
                 photoUrl: req.owner.photoUrl,

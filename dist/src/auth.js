@@ -18,6 +18,7 @@ const macaroon_1 = require("./utils/macaroon");
 const config_1 = require("./utils/config");
 const proxy_1 = require("./utils/proxy");
 const jwtUtils = require("./utils/jwt");
+const scopes_1 = require("./scopes");
 const fs = require("fs");
 const config = config_1.loadConfig();
 /*
@@ -135,17 +136,20 @@ function ownerMiddleware(req, res, next) {
         }
         // find by JWT
         if (jwt) {
+            console.log("[AUTH] find by jwt");
             const parsed = jwtUtils.verifyJWT(jwt);
             if (parsed) {
+                console.log("[AUTH] parsed", parsed);
                 const publicKey = parsed.body.pubkey;
-                if (publicKey) {
+                const allowed = scopes_1.allowedJwtRoutes(parsed.body, req.path);
+                console.log("[AUTH] allowed", allowed, publicKey);
+                if (allowed && publicKey) {
                     owner = yield models_1.models.Contact.findOne({
                         where: { publicKey, isOwner: true },
                     });
                 }
             }
         }
-        // CHECK JWT CLAIMS HERE?
         if (!owner) {
             res.writeHead(401, "Access invalid for user", {
                 "Content-Type": "text/plain",
