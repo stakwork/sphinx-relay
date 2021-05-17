@@ -12,8 +12,6 @@ interface MeInfo {
 
 export async function verifyAuthRequest(req, res) {
   if (!req.owner) return failure(res, "no owner");
-  const j = req.body
-  if(!j.host || !j.challenge) return failure(res, 'nope1')
   try {
     const sc = [scopes.PERSONAL]
     const jot = createJWT(req.owner.publicKey, sc)

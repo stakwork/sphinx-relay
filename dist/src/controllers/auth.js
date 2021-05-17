@@ -17,9 +17,6 @@ function verifyAuthRequest(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
             return res_1.failure(res, "no owner");
-        const j = req.body;
-        if (!j.host || !j.challenge)
-            return res_1.failure(res, 'nope1');
         try {
             const sc = [jwt_1.scopes.PERSONAL];
             const jot = jwt_1.createJWT(req.owner.publicKey, sc);
