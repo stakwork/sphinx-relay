@@ -25,15 +25,19 @@ export async function verifyAuthRequest(req, res) {
       jwt: jot,
     }
     const token = await tribes.genSignedTimestamp(req.owner.publicKey)
-    const protocol = j.host.includes("localhost") ? "http" : "https";
-    await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
-      method: "POST",
-      body: JSON.stringify(bod),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    success(res, 'ok')
+    success(res, {
+      info: bod,
+      token
+    })
+    // const protocol = j.host.includes("localhost") ? "http" : "https";
+    // await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
+    //   method: "POST",
+    //   body: JSON.stringify(bod),
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
+    // success(res, 'ok')
   } catch(e) {
     failure(res, e)
   }

@@ -31,15 +31,19 @@ function verifyAuthRequest(req, res) {
                 jwt: jot,
             };
             const token = yield tribes.genSignedTimestamp(req.owner.publicKey);
-            const protocol = j.host.includes("localhost") ? "http" : "https";
-            yield fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
-                method: "POST",
-                body: JSON.stringify(bod),
-                headers: {
-                    "Content-Type": "application/json",
-                },
+            res_1.success(res, {
+                info: bod,
+                token
             });
-            res_1.success(res, 'ok');
+            // const protocol = j.host.includes("localhost") ? "http" : "https";
+            // await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
+            //   method: "POST",
+            //   body: JSON.stringify(bod),
+            //   headers: {
+            //     "Content-Type": "application/json",
+            //   },
+            // });
+            // success(res, 'ok')
         }
         catch (e) {
             res_1.failure(res, e);
