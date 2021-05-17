@@ -32,9 +32,13 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
     const dontIncludeFromGroup = req.query.from_group && req.query.from_group === "false";
+    const includeUnmet = req.query.unmet && req.query.unmet === "include";
     const where = { deleted: false, tenant };
     if (dontIncludeFromGroup) {
         where.fromGroup = { [sequelize_1.Op.or]: [false, null] };
+    }
+    if (!includeUnmet) { // this is the default
+        where.unmet = { [sequelize_1.Op.or]: [false, null] };
     }
     const contacts = yield models_1.models.Contact.findAll({
         where,

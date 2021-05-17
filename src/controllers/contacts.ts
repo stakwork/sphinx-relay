@@ -23,10 +23,15 @@ export const getContacts = async (req, res) => {
 
   const dontIncludeFromGroup =
     req.query.from_group && req.query.from_group === "false";
+  const includeUnmet = 
+    req.query.unmet && req.query.unmet === "include";
 
   const where: { [k: string]: any } = { deleted: false, tenant };
   if (dontIncludeFromGroup) {
     where.fromGroup = { [Op.or]: [false, null] };
+  }
+  if (!includeUnmet) { // this is the default
+    where.unmet = { [Op.or]: [false, null] };
   }
   const contacts = await models.Contact.findAll({
     where,
