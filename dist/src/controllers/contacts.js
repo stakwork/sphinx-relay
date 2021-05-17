@@ -471,6 +471,7 @@ function extractAttrs(body) {
         "notification_sound",
         "tip_amount",
         "route_hint",
+        "price_to_meet"
     ];
     let attrs = {};
     Object.keys(body).forEach((key) => {
