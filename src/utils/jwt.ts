@@ -1,4 +1,4 @@
-import nJwt from 'njwt'
+import * as nJwt from 'njwt'
 import * as secureRandom from 'secure-random'
 import {scopes} from '../scopes'
 

@@ -11,7 +11,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyJWT = exports.createJWT = void 0;
-const njwt_1 = require("njwt");
+const nJwt = require("njwt");
 const secureRandom = require("secure-random");
 __exportStar(require("../scopes"), exports);
 // each restart of relay creates new key
@@ -23,7 +23,7 @@ function createJWT(ownerPubkey, scopes, minutes) {
         pubkey: ownerPubkey,
         scope: scopes ? scopes.join(', ') : ''
     };
-    var jwt = njwt_1.default.create(claims, signingKey);
+    var jwt = nJwt.create(claims, signingKey);
     const mins = minutes || 5;
     jwt.setExpiration(new Date().getTime() + (mins * 60 * 1000));
     return jwt.compact();
@@ -31,7 +31,7 @@ function createJWT(ownerPubkey, scopes, minutes) {
 exports.createJWT = createJWT;
 function verifyJWT(token) {
     try {
-        return njwt_1.default.verify(token, signingKey);
+        return nJwt.verify(token, signingKey);
     }
     catch (e) {
         return false;
