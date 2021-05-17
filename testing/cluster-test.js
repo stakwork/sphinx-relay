@@ -2,7 +2,13 @@ var child_process = require('child_process');
 const chalk = require('chalk');
 const config = require('./cluster_config.json')
 const srv = require('./cluster-srv')
-srv.start()
+const minimist = require('minimist')
+const argv = minimist(process.argv.slice(2));
+const skip = argv.skip?argv.skip.split(','):[]
+const only = argv.only?argv.only.split(','):[]
+
+const isOnly = only.length>0
+if(!isOnly) srv.start() //to prevent overlap of ports
 
 console.log("Node Version: ", process.version);
 
@@ -69,7 +75,12 @@ relay_nodes.forEach(n => {
 // AS is runs, AND will return the full combined output
 // as well as exit code when it's done (using the callback).
 function run_script(command, args, name, color, options, callback) {
+
+    if(isOnly&&!only.includes(name)) return
+    if(skip.includes(name))return
+
     console.log("Starting Process.", color);
+    
 
     var child = child_process.spawn(command, args, options);
 
