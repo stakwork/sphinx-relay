@@ -1,5 +1,6 @@
 import { loadConfig } from "./config";
 import {genSignedTimestamp} from './tribes'
+import fetch from "node-fetch";
 
 const config = loadConfig();
 
@@ -32,7 +33,7 @@ export async function createProfile({
     });
     // const j = await r.json()
   } catch (e) {
-    console.log("[tribes] unauthorized to declare");
+    console.log("[tribes] unauthorized to declare profile");
     throw e;
   }
 }

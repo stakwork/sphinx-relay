@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createProfile = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
+const node_fetch_1 = require("node-fetch");
 const config = config_1.loadConfig();
 function createProfile({ host, owner_alias, owner_pubkey, owner_route_hint, description, img, tags, price_to_meet, }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -20,7 +21,7 @@ function createProfile({ host, owner_alias, owner_pubkey, owner_route_hint, desc
             let protocol = "https";
             if (config.tribes_insecure)
                 protocol = "http";
-            yield fetch(protocol + "://" + host + "/person?token=" + token, {
+            yield node_fetch_1.default(protocol + "://" + host + "/person?token=" + token, {
                 method: "POST",
                 body: JSON.stringify({
                     owner_alias,
@@ -36,7 +37,7 @@ function createProfile({ host, owner_alias, owner_pubkey, owner_route_hint, desc
             // const j = await r.json()
         }
         catch (e) {
-            console.log("[tribes] unauthorized to declare");
+            console.log("[tribes] unauthorized to declare profile");
             throw e;
         }
     });
