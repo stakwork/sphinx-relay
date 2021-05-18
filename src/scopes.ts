@@ -15,8 +15,10 @@ export const routes = {
 }
 
 export function allowedJwtRoutes(jwt, path): boolean {
-    const ok = jwt.scopes.find(sc=>{
-        routes[sc] && routes[sc].includes(path)
+    const scopes = jwt.scope.split(',')
+    let ok = false
+    scopes.forEach(sc=>{
+        if(routes[sc] && routes[sc].includes(path)) ok = true
     })
-    return ok ? true : false
+    return ok
 }

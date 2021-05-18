@@ -15,10 +15,13 @@ exports.routes = {
     ],
 };
 function allowedJwtRoutes(jwt, path) {
-    const ok = jwt.scopes.find(sc => {
-        exports.routes[sc] && exports.routes[sc].includes(path);
+    const scopes = jwt.scope.split(',');
+    let ok = false;
+    scopes.forEach(sc => {
+        if (exports.routes[sc] && exports.routes[sc].includes(path))
+            ok = true;
     });
-    return ok ? true : false;
+    return ok;
 }
 exports.allowedJwtRoutes = allowedJwtRoutes;
 //# sourceMappingURL=scopes.js.map
