@@ -22,9 +22,9 @@ function verifyAuthRequest(req, res) {
             const jot = jwt_1.createJWT(req.owner.publicKey, sc);
             const bod = {
                 alias: req.owner.alias,
-                photoUrl: req.owner.photoUrl,
-                routeHint: req.owner.routeHint,
-                contactKey: req.owner.contactKey,
+                photo_url: req.owner.photoUrl,
+                route_hint: req.owner.routeHint,
+                contact_key: req.owner.contactKey,
                 jwt: jot,
             };
             const token = yield tribes.genSignedTimestamp(req.owner.publicKey);
@@ -55,9 +55,9 @@ function requestExternalTokens(req, res) {
         try {
             const result = {
                 alias: req.owner.alias,
-                photoUrl: req.owner.photoUrl,
-                routeHint: req.owner.routeHint,
-                contactKey: req.owner.contactKey,
+                photo_url: req.owner.photoUrl,
+                route_hint: req.owner.routeHint,
+                contact_key: req.owner.contactKey,
                 jwt: ''
             };
             res_1.success(res, result);

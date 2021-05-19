@@ -3,10 +3,10 @@ import { success, failure } from "../utils/res";
 import * as tribes from "../utils/tribes";
 
 interface MeInfo {
-  photoUrl: string
+  photo_url: string
   alias: string
-  routeHint: string
-  contactKey: string
+  route_hint: string
+  contact_key: string
   jwt: string
 }
 
@@ -17,9 +17,9 @@ export async function verifyAuthRequest(req, res) {
     const jot = createJWT(req.owner.publicKey, sc)
     const bod:MeInfo = {
       alias: req.owner.alias,
-      photoUrl: req.owner.photoUrl,
-      routeHint: req.owner.routeHint,
-      contactKey: req.owner.contactKey,
+      photo_url: req.owner.photoUrl,
+      route_hint: req.owner.routeHint,
+      contact_key: req.owner.contactKey,
       jwt: jot,
     }
     const token = await tribes.genSignedTimestamp(req.owner.publicKey)
@@ -46,9 +46,9 @@ export async function requestExternalTokens(req, res) {
   try {
     const result:MeInfo = {
       alias: req.owner.alias,
-      photoUrl: req.owner.photoUrl,
-      routeHint: req.owner.routeHint,
-      contactKey: req.owner.contactKey,
+      photo_url: req.owner.photoUrl,
+      route_hint: req.owner.routeHint,
+      contact_key: req.owner.contactKey,
       jwt: ''
     }
     success(res, result)
