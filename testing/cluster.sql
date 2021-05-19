@@ -78,3 +78,27 @@ CREATE TABLE bots (
 ALTER TABLE bots ADD COLUMN tsv tsvector;
 
 CREATE INDEX bots_tsv ON bots USING GIN(tsv);
+
+
+
+
+
+CREATE TABLE people (
+  id SERIAL PRIMARY KEY,
+  owner_pub_key TEXT NOT NULL,
+  owner_alias TEXT,
+  owner_route_hint TEXT,
+  description TEXT,
+  tags TEXT[] not null default '{}',
+  img TEXT,
+  created timestamptz,
+  updated timestamptz,
+  unlisted boolean,
+  deleted boolean,
+  unique_name TEXT,
+  price_to_meet BIGINT
+);
+
+ALTER TABLE people ADD COLUMN tsv tsvector;
+
+CREATE INDEX people_tsv ON people USING GIN(tsv);

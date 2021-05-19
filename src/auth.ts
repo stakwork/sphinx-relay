@@ -136,13 +136,10 @@ export async function ownerMiddleware(req, res, next) {
 
   // find by JWT
   if(jwt) {
-    console.log("[AUTH] find by jwt")
     const parsed = jwtUtils.verifyJWT(jwt)
     if(parsed) {
-      console.log("[AUTH] parsed", parsed)
       const publicKey = parsed.body.pubkey
       const allowed = allowedJwtRoutes(parsed.body, req.path)
-      console.log("[AUTH] allowed", allowed, publicKey)
       if(allowed && publicKey) {
         owner = await models.Contact.findOne({
           where: { publicKey, isOwner: true },
