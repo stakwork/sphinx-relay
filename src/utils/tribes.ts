@@ -279,7 +279,7 @@ export async function declare({
   try {
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(protocol + "://" + host + "/tribes", {
+    const r = await fetch(protocol + "://" + host + "/tribes", {
       method: "POST",
       body: JSON.stringify({
         uuid,
@@ -302,6 +302,9 @@ export async function declare({
       }),
       headers: { "Content-Type": "application/json" },
     });
+    if (!r.ok) {
+      throw 'failed to create tribe' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to declare");
@@ -333,7 +336,7 @@ export async function edit({
     const token = await genSignedTimestamp(owner_pubkey);
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(protocol + "://" + host + "/tribe?token=" + token, {
+    const r = await fetch(protocol + "://" + host + "/tribe?token=" + token, {
       method: "PUT",
       body: JSON.stringify({
         uuid,
@@ -355,6 +358,9 @@ export async function edit({
       }),
       headers: { "Content-Type": "application/json" },
     });
+    if (!r.ok) {
+      throw 'failed to edit tribe' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to edit");
@@ -368,9 +374,12 @@ export async function delete_tribe(uuid, owner_pubkey) {
     const token = await genSignedTimestamp(owner_pubkey);
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
+    const r = await fetch(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
       method: "DELETE",
     });
+    if (!r.ok) {
+      throw 'failed to delete tribe' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to delete");

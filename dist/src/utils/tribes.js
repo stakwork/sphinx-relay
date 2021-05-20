@@ -300,7 +300,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
             let protocol = "https";
             if (config.tribes_insecure)
                 protocol = "http";
-            yield node_fetch_1.default(protocol + "://" + host + "/tribes", {
+            const r = yield node_fetch_1.default(protocol + "://" + host + "/tribes", {
                 method: "POST",
                 body: JSON.stringify({
                     uuid,
@@ -323,6 +323,9 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                 }),
                 headers: { "Content-Type": "application/json" },
             });
+            if (!r.ok) {
+                throw 'failed to create tribe' + r.status;
+            }
             // const j = await r.json()
         }
         catch (e) {
@@ -339,7 +342,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
             let protocol = "https";
             if (config.tribes_insecure)
                 protocol = "http";
-            yield node_fetch_1.default(protocol + "://" + host + "/tribe?token=" + token, {
+            const r = yield node_fetch_1.default(protocol + "://" + host + "/tribe?token=" + token, {
                 method: "PUT",
                 body: JSON.stringify({
                     uuid,
@@ -361,6 +364,9 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                 }),
                 headers: { "Content-Type": "application/json" },
             });
+            if (!r.ok) {
+                throw 'failed to edit tribe' + r.status;
+            }
             // const j = await r.json()
         }
         catch (e) {
@@ -378,9 +384,12 @@ function delete_tribe(uuid, owner_pubkey) {
             let protocol = "https";
             if (config.tribes_insecure)
                 protocol = "http";
-            yield node_fetch_1.default(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
+            const r = yield node_fetch_1.default(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
                 method: "DELETE",
             });
+            if (!r.ok) {
+                throw 'failed to delete tribe' + r.status;
+            }
             // const j = await r.json()
         }
         catch (e) {

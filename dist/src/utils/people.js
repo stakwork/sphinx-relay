@@ -21,7 +21,7 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
             let protocol = "https";
             if (config.tribes_insecure)
                 protocol = "http";
-            yield node_fetch_1.default(protocol + "://" + host + "/person?token=" + token, {
+            const r = yield node_fetch_1.default(protocol + "://" + host + "/person?token=" + token, {
                 method: "POST",
                 body: JSON.stringify(Object.assign(Object.assign({}, id && { id }), { // id optional (for editing)
                     owner_alias,
@@ -31,6 +31,9 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
                     img, tags: tags || [], price_to_meet: price_to_meet || 0 })),
                 headers: { "Content-Type": "application/json" },
             });
+            if (!r.ok) {
+                throw 'failed to create or edit person' + r.status;
+            }
             // const j = await r.json()
         }
         catch (e) {
@@ -47,9 +50,12 @@ function deletePerson(host, id, owner_pubkey) {
             let protocol = "https";
             if (config.tribes_insecure)
                 protocol = "http";
-            yield node_fetch_1.default(`${protocol}://${host}/person/${id}?token=${token}`, {
+            const r = yield node_fetch_1.default(`${protocol}://${host}/person/${id}?token=${token}`, {
                 method: "DELETE",
             });
+            if (!r.ok) {
+                throw 'failed to delete person' + r.status;
+            }
             // const j = await r.json()
         }
         catch (e) {

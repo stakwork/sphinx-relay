@@ -18,7 +18,7 @@ export async function createOrEditPerson({
     const token = await genSignedTimestamp(owner_pubkey);
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(protocol + "://" + host + "/person?token=" + token, {
+    const r = await fetch(protocol + "://" + host + "/person?token=" + token, {
       method: "POST",
       body: JSON.stringify({
         ...id && {id}, // id optional (for editing)
@@ -32,6 +32,9 @@ export async function createOrEditPerson({
       }),
       headers: { "Content-Type": "application/json" },
     });
+    if (!r.ok) {
+      throw 'failed to create or edit person' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to create person");
@@ -44,9 +47,12 @@ export async function deletePerson(host, id, owner_pubkey) {
     const token = await genSignedTimestamp(owner_pubkey);
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(`${protocol}://${host}/person/${id}?token=${token}`, {
+    const r = await fetch(`${protocol}://${host}/person/${id}?token=${token}`, {
       method: "DELETE",
     });
+    if (!r.ok) {
+      throw 'failed to delete person' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to delete person");
