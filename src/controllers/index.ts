@@ -64,6 +64,7 @@ export async function set(app) {
   app.delete("/contacts/:id", contacts.deleteContact);
   app.get("/latest_contacts", contacts.getLatestContacts);
   app.post("/profile", contacts.createPeopleProfile)
+  app.delete("/profile", contacts.deletePersonProfile)
 
   app.get("/msgs", messages.getMsgs);
   app.get("/allmessages", messages.getAllMessages);

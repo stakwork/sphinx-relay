@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createOrEditPerson = void 0;
+exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
@@ -40,4 +40,23 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
     });
 }
 exports.createOrEditPerson = createOrEditPerson;
+function deletePerson(host, id, owner_pubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield tribes_1.genSignedTimestamp(owner_pubkey);
+            let protocol = "https";
+            if (config.tribes_insecure)
+                protocol = "http";
+            yield node_fetch_1.default(`${protocol}://${host}/person/${id}?token=${token}`, {
+                method: "DELETE",
+            });
+            // const j = await r.json()
+        }
+        catch (e) {
+            console.log("[tribes] unauthorized to delete person");
+            throw e;
+        }
+    });
+}
+exports.deletePerson = deletePerson;
 //# sourceMappingURL=people.js.map

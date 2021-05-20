@@ -580,3 +580,32 @@ export async function createPeopleProfile(req, res){
   }
 
 }
+
+// accessed from people.sphinx.chat website
+export async function deletePersonProfile(req, res){
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+
+  try {
+    const owner = await models.Contact.findOne({where:{tenant,isOwner:true}})
+    const {
+      id,
+      host,
+    } = req.body
+    if (!id) {
+      return failure(res, 'no id')
+    }
+    await people.deletePerson(
+      host || config.tribes_host,
+      id,
+      owner.publicKey,
+    )
+
+    await owner.update({priceToMeet: 0})
+
+    success(res, jsonUtils.contactToJson(owner))
+  } catch(e) {
+    failure(res, e)
+  }
+
+}

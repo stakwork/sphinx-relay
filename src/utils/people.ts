@@ -38,3 +38,18 @@ export async function createOrEditPerson({
     throw e;
   }
 }
+
+export async function deletePerson(host, id, owner_pubkey) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey);
+    let protocol = "https";
+    if (config.tribes_insecure) protocol = "http";
+    await fetch(`${protocol}://${host}/person/${id}?token=${token}`, {
+      method: "DELETE",
+    });
+    // const j = await r.json()
+  } catch (e) {
+    console.log("[tribes] unauthorized to delete person");
+    throw e;
+  }
+}
