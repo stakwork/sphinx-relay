@@ -554,13 +554,14 @@ export async function createPeopleProfile(req, res){
   try {
     const owner = await models.Contact.findOne({where:{tenant,isOwner:true}})
     const {
+      id,
       host,
       owner_alias,
       description,
       img,
       tags,
     } = req.body
-    await people.createProfile({
+    await people.createOrEditPerson({
       host: host || config.tribes_host,
       owner_alias: owner_alias || owner.alias,
       description: description || '',
@@ -568,8 +569,8 @@ export async function createPeopleProfile(req, res){
       tags: tags || [],
       price_to_meet: priceToMeet,
       owner_pubkey: owner.publicKey,
-      owner_route_hint: owner.routeHint,
-    })
+      owner_route_hint: owner.routeHint
+    }, id||null)
 
     await owner.update({priceToMeet: priceToMeet||0})
 

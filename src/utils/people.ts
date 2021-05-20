@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 
 const config = loadConfig();
 
-export async function createProfile({
+export async function createOrEditPerson({
   host,
   owner_alias,
   owner_pubkey,
@@ -13,7 +13,7 @@ export async function createProfile({
   img,
   tags,
   price_to_meet,
-}) {
+}, id?:number) {
   try {
     const token = await genSignedTimestamp(owner_pubkey);
     let protocol = "https";
@@ -21,6 +21,7 @@ export async function createProfile({
     await fetch(protocol + "://" + host + "/person?token=" + token, {
       method: "POST",
       body: JSON.stringify({
+        ...id && {id}, // id optional (for editing)
         owner_alias,
         owner_pubkey,
         owner_route_hint,
@@ -33,7 +34,7 @@ export async function createProfile({
     });
     // const j = await r.json()
   } catch (e) {
-    console.log("[tribes] unauthorized to declare profile");
+    console.log("[tribes] unauthorized to create person");
     throw e;
   }
 }

@@ -518,8 +518,8 @@ function createPeopleProfile(req, res) {
         const priceToMeet = req.body.price_to_meet || 0;
         try {
             const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
-            const { host, owner_alias, description, img, tags, } = req.body;
-            yield people.createProfile({
+            const { id, host, owner_alias, description, img, tags, } = req.body;
+            yield people.createOrEditPerson({
                 host: host || config.tribes_host,
                 owner_alias: owner_alias || owner.alias,
                 description: description || '',
@@ -527,8 +527,8 @@ function createPeopleProfile(req, res) {
                 tags: tags || [],
                 price_to_meet: priceToMeet,
                 owner_pubkey: owner.publicKey,
-                owner_route_hint: owner.routeHint,
-            });
+                owner_route_hint: owner.routeHint
+            }, id || null);
             yield owner.update({ priceToMeet: priceToMeet || 0 });
             res_1.success(res, jsonUtils.contactToJson(owner));
         }
