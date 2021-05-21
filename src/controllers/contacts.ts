@@ -556,11 +556,18 @@ export async function createPeopleProfile(req, res){
     const {
       id,
       host,
+      pubkey,
       owner_alias,
       description,
       img,
       tags,
     } = req.body
+
+    if (pubkey !== owner.publicKey) {
+      failure(res, 'mismatched pubkey')
+      return
+    }
+
     await people.createOrEditPerson({
       host: host || config.tribes_host,
       owner_alias: owner_alias || owner.alias,
