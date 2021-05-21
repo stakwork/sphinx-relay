@@ -21,10 +21,12 @@ function verifyAuthRequest(req, res) {
             const sc = [jwt_1.scopes.PERSONAL];
             const jot = jwt_1.createJWT(req.owner.publicKey, sc);
             const bod = {
+                pubkey: req.owner.publicKey,
                 alias: req.owner.alias,
                 photo_url: req.owner.photoUrl,
                 route_hint: req.owner.routeHint,
                 contact_key: req.owner.contactKey,
+                price_to_meet: req.owner.priceToMeet,
                 jwt: jot,
             };
             const token = yield tribes.genSignedTimestamp(req.owner.publicKey);
@@ -54,10 +56,12 @@ function requestExternalTokens(req, res) {
             return res_1.failure(res, "no owner");
         try {
             const result = {
+                pubkey: req.owner.publicKey,
                 alias: req.owner.alias,
                 photo_url: req.owner.photoUrl,
                 route_hint: req.owner.routeHint,
                 contact_key: req.owner.contactKey,
+                price_to_meet: req.owner.priceToMeet,
                 jwt: ''
             };
             res_1.success(res, result);
