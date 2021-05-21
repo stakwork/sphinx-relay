@@ -14,7 +14,7 @@ const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const config = config_1.loadConfig();
-function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, description, img, tags, price_to_meet, }, id) {
+function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, }, id) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield tribes_1.genSignedTimestamp(owner_pubkey);
@@ -27,12 +27,13 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
                     owner_alias,
                     owner_pubkey,
                     owner_route_hint,
+                    owner_contact_key,
                     description,
                     img, tags: tags || [], price_to_meet: price_to_meet || 0 })),
                 headers: { "Content-Type": "application/json" },
             });
             if (!r.ok) {
-                throw 'failed to create or edit person' + r.status;
+                throw 'failed to create or edit person ' + r.status;
             }
             // const j = await r.json()
         }
@@ -54,7 +55,7 @@ function deletePerson(host, id, owner_pubkey) {
                 method: "DELETE",
             });
             if (!r.ok) {
-                throw 'failed to delete person' + r.status;
+                throw 'failed to delete person ' + r.status;
             }
             // const j = await r.json()
         }

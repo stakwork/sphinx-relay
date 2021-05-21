@@ -9,6 +9,7 @@ export async function createOrEditPerson({
   owner_alias,
   owner_pubkey,
   owner_route_hint,
+  owner_contact_key,
   description,
   img,
   tags,
@@ -25,6 +26,7 @@ export async function createOrEditPerson({
         owner_alias,
         owner_pubkey,
         owner_route_hint,
+        owner_contact_key,
         description,
         img,
         tags: tags || [],
@@ -33,7 +35,7 @@ export async function createOrEditPerson({
       headers: { "Content-Type": "application/json" },
     });
     if (!r.ok) {
-      throw 'failed to create or edit person' + r.status
+      throw 'failed to create or edit person ' + r.status
     }
     // const j = await r.json()
   } catch (e) {
@@ -51,7 +53,7 @@ export async function deletePerson(host, id, owner_pubkey) {
       method: "DELETE",
     });
     if (!r.ok) {
-      throw 'failed to delete person' + r.status
+      throw 'failed to delete person ' + r.status
     }
     // const j = await r.json()
   } catch (e) {

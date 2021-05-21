@@ -569,7 +569,8 @@ export async function createPeopleProfile(req, res){
       tags: tags || [],
       price_to_meet: priceToMeet,
       owner_pubkey: owner.publicKey,
-      owner_route_hint: owner.routeHint
+      owner_route_hint: owner.routeHint,
+      owner_contact_key: owner.contactKey,
     }, id||null)
 
     await owner.update({priceToMeet: priceToMeet||0})

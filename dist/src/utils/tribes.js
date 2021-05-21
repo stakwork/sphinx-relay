@@ -324,7 +324,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                 headers: { "Content-Type": "application/json" },
             });
             if (!r.ok) {
-                throw 'failed to create tribe' + r.status;
+                throw 'failed to create tribe ' + r.status;
             }
             // const j = await r.json()
         }
@@ -365,7 +365,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                 headers: { "Content-Type": "application/json" },
             });
             if (!r.ok) {
-                throw 'failed to edit tribe' + r.status;
+                throw 'failed to edit tribe ' + r.status;
             }
             // const j = await r.json()
         }
@@ -388,7 +388,7 @@ function delete_tribe(uuid, owner_pubkey) {
                 method: "DELETE",
             });
             if (!r.ok) {
-                throw 'failed to delete tribe' + r.status;
+                throw 'failed to delete tribe ' + r.status;
             }
             // const j = await r.json()
         }

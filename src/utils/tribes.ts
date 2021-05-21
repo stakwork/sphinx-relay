@@ -303,7 +303,7 @@ export async function declare({
       headers: { "Content-Type": "application/json" },
     });
     if (!r.ok) {
-      throw 'failed to create tribe' + r.status
+      throw 'failed to create tribe ' + r.status
     }
     // const j = await r.json()
   } catch (e) {
@@ -359,7 +359,7 @@ export async function edit({
       headers: { "Content-Type": "application/json" },
     });
     if (!r.ok) {
-      throw 'failed to edit tribe' + r.status
+      throw 'failed to edit tribe ' + r.status
     }
     // const j = await r.json()
   } catch (e) {
@@ -378,7 +378,7 @@ export async function delete_tribe(uuid, owner_pubkey) {
       method: "DELETE",
     });
     if (!r.ok) {
-      throw 'failed to delete tribe' + r.status
+      throw 'failed to delete tribe ' + r.status
     }
     // const j = await r.json()
   } catch (e) {
