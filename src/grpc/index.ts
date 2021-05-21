@@ -13,7 +13,7 @@ const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
 const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
-const oktolog = true
+const oktolog = false
 function loginvoice(response){
 	if(!oktolog) return
 	const r = JSON.parse(JSON.stringify(response))
