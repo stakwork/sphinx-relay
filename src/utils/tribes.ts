@@ -71,6 +71,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
             if(logging.Tribes) console.log("[tribes] CLOSE", e);
             // setTimeout(() => reconnect(), 2000);
             connected = false
+            clients = {} // clear out old client(s)
           });
           cl.on("error", function (e) {
             if(logging.Tribes) console.log("[tribes] error: ", e.message || e);
@@ -105,7 +106,7 @@ async function lazyClient(
   host: string,
   onMessage?: Function
 ): Promise<mqtt.Client> {
-  if (clients[pubkey] && clients[pubkey][host]) {
+  if (clients[pubkey] && clients[pubkey][host] && clients[pubkey][host].connected) {
     return clients[pubkey][host];
   }
   const cl = await initializeClient(pubkey, host, onMessage);

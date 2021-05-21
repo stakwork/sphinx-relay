@@ -86,6 +86,7 @@ function initializeClient(pubkey, host, onMessage) {
                                         console.log("[tribes] CLOSE", e);
                                     // setTimeout(() => reconnect(), 2000);
                                     connected = false;
+                                    clients = {}; // clear out old client(s)
                                 });
                                 cl.on("error", function (e) {
                                     if (logger_1.logging.Tribes)
@@ -125,7 +126,7 @@ function initializeClient(pubkey, host, onMessage) {
 }
 function lazyClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (clients[pubkey] && clients[pubkey][host]) {
+        if (clients[pubkey] && clients[pubkey][host] && clients[pubkey][host].connected) {
             return clients[pubkey][host];
         }
         const cl = yield initializeClient(pubkey, host, onMessage);
