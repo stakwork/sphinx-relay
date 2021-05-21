@@ -63,6 +63,8 @@ export async function set(app) {
   app.post("/contacts", contacts.createContact);
   app.delete("/contacts/:id", contacts.deleteContact);
   app.get("/latest_contacts", contacts.getLatestContacts);
+  app.post("/profile", contacts.createPeopleProfile)
+  app.delete("/profile", contacts.deletePersonProfile)
 
   app.get("/msgs", messages.getMsgs);
   app.get("/allmessages", messages.getAllMessages);
@@ -88,7 +90,7 @@ export async function set(app) {
   app.post("/purchase", media.purchase);
   app.get("/signer/:challenge", media.signer);
 
-  app.get("/external_tokens", auth.requestExternalTokens)
+  app.post("/verify_external", auth.verifyAuthRequest)
 
   app.post("/stream", feed.streamFeed);
 

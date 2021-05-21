@@ -122,16 +122,22 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
     }
 });
 exports.performKeysendMessage = performKeysendMessage;
-function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, owner) {
+function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, senderAlias, owner, realAmount) {
     return __awaiter(this, void 0, void 0, function* () {
         let sender = yield models_1.models.Contact.findOne({ where: { publicKey: senderPubKey, tenant: owner.id } });
         if (!sender) {
+            let unmet = false;
+            if (owner.priceToMeet) {
+                if (realAmount < owner.priceToMeet)
+                    unmet = true;
+            }
             sender = yield models_1.models.Contact.create({
                 publicKey: senderPubKey,
                 routeHint: senderRouteHint || '',
-                alias: "Unknown",
+                alias: senderAlias || "Unknown",
                 status: 1,
-                tenant: owner.id
+                tenant: owner.id,
+                unmet
             });
             exports.sendContactKeys({
                 contactIds: [sender.id],
@@ -209,7 +215,8 @@ function parseReceiveParams(payload) {
         if (!owner)
             console.log('=> parseReceiveParams cannot find owner');
         if (isConversation) {
-            sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, owner.dataValues);
+            const realAmount = network_type === constants_1.default.network_types.lightning ? amount : 0;
+            sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner.dataValues, realAmount);
             chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id);
             if (sender.fromGroup) { // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });

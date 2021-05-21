@@ -12,6 +12,10 @@ import * as network from "../network";
 import { isProxy } from "../utils/proxy";
 import {logging} from '../utils/logger'
 import * as moment from 'moment'
+import * as people from '../utils/people'
+import { loadConfig } from "../utils/config";
+
+const config = loadConfig();
 
 export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
@@ -19,10 +23,15 @@ export const getContacts = async (req, res) => {
 
   const dontIncludeFromGroup =
     req.query.from_group && req.query.from_group === "false";
+  const includeUnmet = 
+    req.query.unmet && req.query.unmet === "include";
 
   const where: { [k: string]: any } = { deleted: false, tenant };
   if (dontIncludeFromGroup) {
     where.fromGroup = { [Op.or]: [false, null] };
+  }
+  if (!includeUnmet) { // this is the default
+    where.unmet = { [Op.or]: [false, null] };
   }
   const contacts = await models.Contact.findAll({
     where,
@@ -495,6 +504,7 @@ function extractAttrs(body): { [k: string]: any } {
     "notification_sound",
     "tip_amount",
     "route_hint",
+    "price_to_meet"
   ];
   let attrs = {};
   Object.keys(body).forEach((key) => {
@@ -532,4 +542,78 @@ export const getLatestContacts = async (req, res) => {
   } catch(e) {
     failure(res, e)
   }
+}
+
+// accessed from people.sphinx.chat website
+export async function createPeopleProfile(req, res){
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+
+  const priceToMeet = req.body.price_to_meet || 0
+
+  try {
+    const owner = await models.Contact.findOne({where:{tenant,isOwner:true}})
+    const {
+      id,
+      host,
+      pubkey,
+      owner_alias,
+      description,
+      img,
+      tags,
+    } = req.body
+
+    if (pubkey !== owner.publicKey) {
+      failure(res, 'mismatched pubkey')
+      return
+    }
+
+    await people.createOrEditPerson({
+      host: host || config.tribes_host,
+      owner_alias: owner_alias || owner.alias,
+      description: description || '',
+      img: img || owner.photoUrl,
+      tags: tags || [],
+      price_to_meet: priceToMeet,
+      owner_pubkey: owner.publicKey,
+      owner_route_hint: owner.routeHint,
+      owner_contact_key: owner.contactKey,
+    }, id||null)
+
+    await owner.update({priceToMeet: priceToMeet||0})
+
+    success(res, jsonUtils.contactToJson(owner))
+  } catch(e) {
+    failure(res, e)
+  }
+
+}
+
+// accessed from people.sphinx.chat website
+export async function deletePersonProfile(req, res){
+  if (!req.owner) return failure(res, "no owner");
+  const tenant: number = req.owner.id;
+
+  try {
+    const owner = await models.Contact.findOne({where:{tenant,isOwner:true}})
+    const {
+      id,
+      host,
+    } = req.body
+    if (!id) {
+      return failure(res, 'no id')
+    }
+    await people.deletePerson(
+      host || config.tribes_host,
+      id,
+      owner.publicKey,
+    )
+
+    await owner.update({priceToMeet: 0})
+
+    success(res, jsonUtils.contactToJson(owner))
+  } catch(e) {
+    failure(res, e)
+  }
+
 }

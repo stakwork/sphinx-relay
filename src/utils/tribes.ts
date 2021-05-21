@@ -71,6 +71,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
             if(logging.Tribes) console.log("[tribes] CLOSE", e);
             // setTimeout(() => reconnect(), 2000);
             connected = false
+            clients = {} // clear out old client(s)
           });
           cl.on("error", function (e) {
             if(logging.Tribes) console.log("[tribes] error: ", e.message || e);
@@ -105,7 +106,7 @@ async function lazyClient(
   host: string,
   onMessage?: Function
 ): Promise<mqtt.Client> {
-  if (clients[pubkey] && clients[pubkey][host]) {
+  if (clients[pubkey] && clients[pubkey][host] && clients[pubkey][host].connected) {
     return clients[pubkey][host];
   }
   const cl = await initializeClient(pubkey, host, onMessage);
@@ -279,7 +280,7 @@ export async function declare({
   try {
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(protocol + "://" + host + "/tribes", {
+    const r = await fetch(protocol + "://" + host + "/tribes", {
       method: "POST",
       body: JSON.stringify({
         uuid,
@@ -302,6 +303,9 @@ export async function declare({
       }),
       headers: { "Content-Type": "application/json" },
     });
+    if (!r.ok) {
+      throw 'failed to create tribe ' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to declare");
@@ -333,7 +337,7 @@ export async function edit({
     const token = await genSignedTimestamp(owner_pubkey);
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(protocol + "://" + host + "/tribe?token=" + token, {
+    const r = await fetch(protocol + "://" + host + "/tribe?token=" + token, {
       method: "PUT",
       body: JSON.stringify({
         uuid,
@@ -355,6 +359,9 @@ export async function edit({
       }),
       headers: { "Content-Type": "application/json" },
     });
+    if (!r.ok) {
+      throw 'failed to edit tribe ' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to edit");
@@ -368,9 +375,12 @@ export async function delete_tribe(uuid, owner_pubkey) {
     const token = await genSignedTimestamp(owner_pubkey);
     let protocol = "https";
     if (config.tribes_insecure) protocol = "http";
-    await fetch(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
+    const r = await fetch(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
       method: "DELETE",
     });
+    if (!r.ok) {
+      throw 'failed to delete tribe ' + r.status
+    }
     // const j = await r.json()
   } catch (e) {
     console.log("[tribes] unauthorized to delete");

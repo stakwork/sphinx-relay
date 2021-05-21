@@ -105,6 +105,14 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
 ], Contact.prototype, "tenant", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], Contact.prototype, "priceToMeet", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Boolean)
+], Contact.prototype, "unmet", void 0);
 Contact = __decorate([
     sequelize_typescript_1.Table({ tableName: 'sphinx_contacts', underscored: true })
 ], Contact);

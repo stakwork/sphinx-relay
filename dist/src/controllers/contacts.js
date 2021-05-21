@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
+exports.deletePersonProfile = exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -24,14 +24,21 @@ const network = require("../network");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const moment = require("moment");
+const people = require("../utils/people");
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
     const tenant = req.owner.id;
     const dontIncludeFromGroup = req.query.from_group && req.query.from_group === "false";
+    const includeUnmet = req.query.unmet && req.query.unmet === "include";
     const where = { deleted: false, tenant };
     if (dontIncludeFromGroup) {
         where.fromGroup = { [sequelize_1.Op.or]: [false, null] };
+    }
+    if (!includeUnmet) { // this is the default
+        where.unmet = { [sequelize_1.Op.or]: [false, null] };
     }
     const contacts = yield models_1.models.Contact.findAll({
         where,
@@ -464,6 +471,7 @@ function extractAttrs(body) {
         "notification_sound",
         "tip_amount",
         "route_hint",
+        "price_to_meet"
     ];
     let attrs = {};
     Object.keys(body).forEach((key) => {
@@ -501,4 +509,60 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getLatestContacts = getLatestContacts;
+// accessed from people.sphinx.chat website
+function createPeopleProfile(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        const tenant = req.owner.id;
+        const priceToMeet = req.body.price_to_meet || 0;
+        try {
+            const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
+            const { id, host, pubkey, owner_alias, description, img, tags, } = req.body;
+            if (pubkey !== owner.publicKey) {
+                res_1.failure(res, 'mismatched pubkey');
+                return;
+            }
+            yield people.createOrEditPerson({
+                host: host || config.tribes_host,
+                owner_alias: owner_alias || owner.alias,
+                description: description || '',
+                img: img || owner.photoUrl,
+                tags: tags || [],
+                price_to_meet: priceToMeet,
+                owner_pubkey: owner.publicKey,
+                owner_route_hint: owner.routeHint,
+                owner_contact_key: owner.contactKey,
+            }, id || null);
+            yield owner.update({ priceToMeet: priceToMeet || 0 });
+            res_1.success(res, jsonUtils.contactToJson(owner));
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.createPeopleProfile = createPeopleProfile;
+// accessed from people.sphinx.chat website
+function deletePersonProfile(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        const tenant = req.owner.id;
+        try {
+            const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
+            const { id, host, } = req.body;
+            if (!id) {
+                return res_1.failure(res, 'no id');
+            }
+            yield people.deletePerson(host || config.tribes_host, id, owner.publicKey);
+            yield owner.update({ priceToMeet: 0 });
+            res_1.success(res, jsonUtils.contactToJson(owner));
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.deletePersonProfile = deletePersonProfile;
 //# sourceMappingURL=contacts.js.map

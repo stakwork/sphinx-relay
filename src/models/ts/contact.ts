@@ -1,5 +1,6 @@
+import {SequelizeFields} from './sequelize'
 
-export interface Contact {
+export interface Contact extends SequelizeFields {
     id: number
     routeHint: string
     publicKey: string
@@ -21,4 +22,6 @@ export interface Contact {
     lastActive: Date
     tipAmount: number
     tenant: number
+    priceToMeet: number
+    unmet: boolean
 }

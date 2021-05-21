@@ -1,4 +1,4 @@
-import { models } from './models'
+import { models, Contact } from './models'
 import * as md5 from 'md5'
 import * as network from './network'
 import constants from './constants'
@@ -112,15 +112,20 @@ export const performKeysendMessage = async ({ destination_key, route_hint, amoun
 	}
 }
 
-export async function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, owner) {
+export async function findOrCreateContactByPubkeyAndRouteHint(senderPubKey:string, senderRouteHint:string, senderAlias:string, owner:Contact, realAmount:number) {
 	let sender = await models.Contact.findOne({ where: { publicKey: senderPubKey, tenant:owner.id } })
 	if (!sender) {
+		let unmet = false
+		if(owner.priceToMeet) {
+			if(realAmount<owner.priceToMeet) unmet=true
+		}
 		sender = await models.Contact.create({
 			publicKey: senderPubKey,
 			routeHint: senderRouteHint||'',
-			alias: "Unknown",
+			alias: senderAlias||"Unknown",
 			status: 1,
-			tenant: owner.id
+			tenant: owner.id,
+			unmet
 		})
 		sendContactKeys({
 			contactIds: [sender.id],
@@ -192,7 +197,8 @@ export async function parseReceiveParams(payload) {
 	}
 	if(!owner) console.log('=> parseReceiveParams cannot find owner')
 	if (isConversation) {
-		sender = await findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, owner.dataValues)
+		const realAmount = network_type===constants.network_types.lightning ? amount : 0
+		sender = await findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner.dataValues, realAmount)
 		chat = await findOrCreateChatByUUID(
 			chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id
 		)

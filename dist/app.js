@@ -78,7 +78,7 @@ function setupApp() {
             app.use(logger_1.default);
         }
         app.use(cors({
-            allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token']
+            allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token', 'x-jwt']
         }));
         app.use(cookieParser());
         app.use(auth_1.ownerMiddleware);

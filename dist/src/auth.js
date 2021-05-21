@@ -17,6 +17,8 @@ const res_1 = require("./utils/res");
 const macaroon_1 = require("./utils/macaroon");
 const config_1 = require("./utils/config");
 const proxy_1 = require("./utils/proxy");
+const jwtUtils = require("./utils/jwt");
+const scopes_1 = require("./scopes");
 const fs = require("fs");
 const config = config_1.loadConfig();
 /*
@@ -113,20 +115,38 @@ function ownerMiddleware(req, res, next) {
                 return;
             }
         }
-        if (!token) {
+        const jwt = req.headers["x-jwt"] || req.cookies["x-jwt"];
+        if (!token && !jwt) {
             res.writeHead(401, "Access invalid for user", {
                 "Content-Type": "text/plain",
             });
             res.end("Invalid credentials");
             return;
         }
-        const hashedToken = crypto
-            .createHash("sha256")
-            .update(token)
-            .digest("base64");
-        const owner = yield models_1.models.Contact.findOne({
-            where: { authToken: hashedToken, isOwner: true },
-        });
+        let owner;
+        // find by auth token
+        if (token) {
+            const hashedToken = crypto
+                .createHash("sha256")
+                .update(token)
+                .digest("base64");
+            owner = yield models_1.models.Contact.findOne({
+                where: { authToken: hashedToken, isOwner: true },
+            });
+        }
+        // find by JWT
+        if (jwt) {
+            const parsed = jwtUtils.verifyJWT(jwt);
+            if (parsed) {
+                const publicKey = parsed.body.pubkey;
+                const allowed = scopes_1.allowedJwtRoutes(parsed.body, req.path);
+                if (allowed && publicKey) {
+                    owner = yield models_1.models.Contact.findOne({
+                        where: { publicKey, isOwner: true },
+                    });
+                }
+            }
+        }
         if (!owner) {
             res.writeHead(401, "Access invalid for user", {
                 "Content-Type": "text/plain",

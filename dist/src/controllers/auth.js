@@ -9,28 +9,60 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requestExternalTokens = void 0;
-const meme = require("../utils/meme");
+exports.requestExternalTokens = exports.verifyAuthRequest = void 0;
+const jwt_1 = require("../utils/jwt");
 const res_1 = require("../utils/res");
 const tribes = require("../utils/tribes");
+function verifyAuthRequest(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        try {
+            const sc = [jwt_1.scopes.PERSONAL];
+            const jot = jwt_1.createJWT(req.owner.publicKey, sc);
+            const bod = {
+                pubkey: req.owner.publicKey,
+                alias: req.owner.alias,
+                photo_url: req.owner.photoUrl,
+                route_hint: req.owner.routeHint,
+                contact_key: req.owner.contactKey,
+                price_to_meet: req.owner.priceToMeet,
+                jwt: jot,
+            };
+            const token = yield tribes.genSignedTimestamp(req.owner.publicKey);
+            res_1.success(res, {
+                info: bod,
+                token
+            });
+            // const protocol = j.host.includes("localhost") ? "http" : "https";
+            // await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
+            //   method: "POST",
+            //   body: JSON.stringify(bod),
+            //   headers: {
+            //     "Content-Type": "application/json",
+            //   },
+            // });
+            // success(res, 'ok')
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.verifyAuthRequest = verifyAuthRequest;
 function requestExternalTokens(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
             return res_1.failure(res, "no owner");
-        const pubkey = req.owner.publicKey;
         try {
-            const memeToken = yield meme.getMediaToken(pubkey);
-            const tribesToken = yield tribes.genSignedTimestamp(pubkey);
-            if (!memeToken || !tribesToken) {
-                return res_1.failure(res, 'failed to generate token');
-            }
             const result = {
-                memeToken,
-                tribesToken,
+                pubkey: req.owner.publicKey,
                 alias: req.owner.alias,
-                photoUrl: req.owner.photoUrl,
-                routeHint: req.owner.routeHint,
-                contactKey: req.owner.contactKey,
+                photo_url: req.owner.photoUrl,
+                route_hint: req.owner.routeHint,
+                contact_key: req.owner.contactKey,
+                price_to_meet: req.owner.priceToMeet,
+                jwt: ''
             };
             res_1.success(res, result);
         }
