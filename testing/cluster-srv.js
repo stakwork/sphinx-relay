@@ -1,7 +1,7 @@
+import * as http from 'http'
+import * as fs from 'fs'
+import * as path from 'path'
 
-var http = require('http')
-var fs = require('fs');
-var path = require('path');
 /*
 {
     alice: [
@@ -113,6 +113,6 @@ function end(res, status, data) {
   res.end(data)
 }
 
-module.exports = {
+export {
     start, setLog, setError
 }

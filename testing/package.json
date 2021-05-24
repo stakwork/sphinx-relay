@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "dependencies": {
     "chalk": "^4.1.1",
     "minimist": "^1.2.5",

@@ -1,8 +1,16 @@
-var child_process = require('child_process');
-const chalk = require('chalk');
-const config = require('./cluster_config.json')
-const srv = require('./cluster-srv')
-const minimist = require('minimist')
+
+import child_process from 'child_process'
+import chalk from 'chalk'
+import * as srv from './cluster-srv.js'
+import minimist from 'minimist'
+import * as fs from 'fs'
+
+function requireJson(path) {
+    return JSON.parse(fs.readFileSync(path, 'utf-8'))
+}
+
+let config = requireJson('./testing/cluster_config.json')
+
 const argv = minimist(process.argv.slice(2));
 const skip = argv.skip?argv.skip.split(','):[]
 const only = argv.only?argv.only.split(','):[]
