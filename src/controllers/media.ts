@@ -71,6 +71,7 @@ export const sendAttachmentMessage = async (req, res) => {
     owner_id: owner.id,
     recipient_id: contact_id,
   });
+  if(!chat) return failure(res, 'counldnt findOrCreateChat')
 
   let TTL = ttl;
   if (ttl) {
@@ -201,6 +202,7 @@ export const purchase = async (req, res) => {
     owner_id: owner.id,
     recipient_id: contact_id,
   });
+  if(!chat) return failure(res, 'counldnt findOrCreateChat')
 
   const message = await models.Message.create({
     chatId: chat.id,

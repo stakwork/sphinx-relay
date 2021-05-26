@@ -165,6 +165,8 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                                 owner_id: owner.id,
                                 recipient_id: contact_id,
                             });
+                            if (!chat)
+                                return res_1.failure(res, 'counldnt findOrCreateChat');
                             let timestamp = parseInt(invoice.timestamp + "000");
                             let expiry = parseInt(invoice.expiry + "000");
                             if (error) {

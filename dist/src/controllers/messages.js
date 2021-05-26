@@ -236,6 +236,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         owner_id: owner.id,
         recipient_id: contact_id,
     });
+    if (!chat)
+        return res_1.failure(res, 'counldnt findOrCreateChat');
     let realSatsContactId;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
     if (!chat) {

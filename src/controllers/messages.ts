@@ -267,6 +267,7 @@ export const sendMessage = async (req, res) => {
     owner_id: owner.id,
     recipient_id: contact_id,
   });
+  if(!chat) return failure(res, 'counldnt findOrCreateChat')
 
   let realSatsContactId;
   // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER

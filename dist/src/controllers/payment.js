@@ -44,6 +44,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         owner_id: owner.id,
         recipient_id: contact_id,
     });
+    if (!chat)
+        return res_1.failure(res, 'counldnt findOrCreateChat');
     var date = new Date();
     date.setMilliseconds(0);
     const msg = {

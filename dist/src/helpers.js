@@ -27,6 +27,8 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
         // console.log('findOrCreateChat: chat_id exists')
     }
     else {
+        if (!owner_id || !recipient_id)
+            return null;
         console.log("chat does not exists, create new");
         const owner = yield models_1.models.Contact.findOne({ where: { id: owner_id } });
         const recipient = yield models_1.models.Contact.findOne({ where: { id: recipient_id, tenant: owner_id } });

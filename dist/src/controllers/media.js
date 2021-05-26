@@ -65,6 +65,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         owner_id: owner.id,
         recipient_id: contact_id,
     });
+    if (!chat)
+        return res_1.failure(res, 'counldnt findOrCreateChat');
     let TTL = ttl;
     if (ttl) {
         TTL = parseInt(ttl);
@@ -184,6 +186,8 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         owner_id: owner.id,
         recipient_id: contact_id,
     });
+    if (!chat)
+        return res_1.failure(res, 'counldnt findOrCreateChat');
     const message = yield models_1.models.Message.create({
         chatId: chat.id,
         uuid: short.generate(),

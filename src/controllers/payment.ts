@@ -58,6 +58,7 @@ export const sendPayment = async (req, res) => {
     owner_id: owner.id,
     recipient_id: contact_id,
   });
+  if(!chat) return failure(res, 'counldnt findOrCreateChat')
 
   var date = new Date();
   date.setMilliseconds(0);

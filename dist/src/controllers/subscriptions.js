@@ -365,6 +365,8 @@ function createSubscription(req, res) {
                 owner_id: owner.id,
                 recipient_id: req.body.contact_id,
             });
+            if (!chat)
+                return res_1.failure(res, 'counldnt findOrCreateChat');
             s.chatId = chat.id; // add chat id if newly created
             if (!owner || !chat) {
                 return res_1.failure(res, "Invalid chat or contact");

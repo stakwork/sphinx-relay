@@ -359,6 +359,8 @@ export async function createSubscription(req, res) {
       owner_id: owner.id,
       recipient_id: req.body.contact_id,
     });
+    if(!chat) return failure(res, 'counldnt findOrCreateChat')
+
     s.chatId = chat.id; // add chat id if newly created
     if (!owner || !chat) {
       return failure(res, "Invalid chat or contact");

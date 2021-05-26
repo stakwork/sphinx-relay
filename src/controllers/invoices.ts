@@ -171,6 +171,7 @@ export const createInvoice = async (req, res) => {
                 owner_id: owner.id,
                 recipient_id: contact_id,
               });
+		          if(!chat) return failure(res, 'counldnt findOrCreateChat')
 
               let timestamp = parseInt(invoice.timestamp + "000");
               let expiry = parseInt(invoice.expiry + "000");

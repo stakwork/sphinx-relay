@@ -15,6 +15,7 @@ export const findOrCreateChat = async (params) => {
 		chat = await models.Chat.findOne({ where: { id: chat_id, tenant:owner_id } })
 		// console.log('findOrCreateChat: chat_id exists')
 	} else {
+		if(!owner_id || !recipient_id) return null
 		console.log("chat does not exists, create new")
 		const owner = await models.Contact.findOne({ where: { id: owner_id } })
 		const recipient = await models.Contact.findOne({ where: { id: recipient_id, tenant:owner_id } })
