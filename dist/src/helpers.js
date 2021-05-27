@@ -147,6 +147,13 @@ function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, 
                 type: constants_1.default.message_types.contact_key,
             });
         }
+        else {
+            if (sender.unmet) { // update "unmet" if they pay enough second time
+                if (owner.priceToMeet && realAmount >= owner.priceToMeet) {
+                    yield sender.update({ unmet: false });
+                }
+            }
+        }
         return sender;
     });
 }

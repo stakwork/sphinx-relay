@@ -561,6 +561,7 @@ export async function createPeopleProfile(req, res){
       description,
       img,
       tags,
+      extras,
     } = req.body
 
     if (pubkey !== owner.publicKey) {
@@ -578,6 +579,7 @@ export async function createPeopleProfile(req, res){
       owner_pubkey: owner.publicKey,
       owner_route_hint: owner.routeHint,
       owner_contact_key: owner.contactKey,
+      extras: extras || {}
     }, id||null)
 
     await owner.update({priceToMeet: priceToMeet||0})

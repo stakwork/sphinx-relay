@@ -98,7 +98,8 @@ CREATE TABLE people (
   unlisted boolean,
   deleted boolean,
   unique_name TEXT,
-  price_to_meet BIGINT
+  price_to_meet BIGINT,
+  twitter TEXT
 );
 
 ALTER TABLE people ADD COLUMN tsv tsvector;

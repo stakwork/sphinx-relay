@@ -14,7 +14,7 @@ const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const config = config_1.loadConfig();
-function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, }, id) {
+function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, }, id) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield tribes_1.genSignedTimestamp(owner_pubkey);
@@ -29,7 +29,7 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
                     owner_route_hint,
                     owner_contact_key,
                     description,
-                    img, tags: tags || [], price_to_meet: price_to_meet || 0 })),
+                    img, tags: tags || [], price_to_meet: price_to_meet || 0, extras: extras || {} })),
                 headers: { "Content-Type": "application/json" },
             });
             if (!r.ok) {

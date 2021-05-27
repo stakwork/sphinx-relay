@@ -14,6 +14,7 @@ export async function createOrEditPerson({
   img,
   tags,
   price_to_meet,
+  extras,
 }, id?:number) {
   try {
     const token = await genSignedTimestamp(owner_pubkey);
@@ -31,6 +32,7 @@ export async function createOrEditPerson({
         img,
         tags: tags || [],
         price_to_meet: price_to_meet || 0,
+        extras: extras || {}
       }),
       headers: { "Content-Type": "application/json" },
     });
