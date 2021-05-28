@@ -576,13 +576,14 @@ function uploadPublicPic(req, res) {
         if (!req.owner)
             return res_1.failure(res, "no owner");
         const { img_base64, img_type } = req.body;
+        let imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type;
         try {
             const host = config.media_host;
             var encImgBuffer = Buffer.from(img_base64, "base64");
             const token = yield meme.lazyToken(req.owner.publicKey, host);
             const form = new FormData();
             form.append("file", encImgBuffer, {
-                contentType: img_type || "image/jpg",
+                contentType: imgType || "image/jpg",
                 filename: "Profile.jpg",
                 knownLength: encImgBuffer.length,
             });
@@ -590,6 +591,7 @@ function uploadPublicPic(req, res) {
             let protocol = 'https';
             if (host.includes('localhost'))
                 protocol = 'http';
+            console.log("HEADERS", Object.assign({}, formHeaders));
             const resp = yield node_fetch_1.default(`${protocol}://${host}/public`, {
                 method: "POST",
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),

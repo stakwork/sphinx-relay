@@ -627,6 +627,7 @@ export async function uploadPublicPic(req, res) {
   if (!req.owner) return failure(res, "no owner");
 
   const {img_base64, img_type} = req.body
+  let imgType = img_type==='image/jpeg'?'image/jpg' : img_type
   try  {
 
     const host = config.media_host
@@ -637,13 +638,14 @@ export async function uploadPublicPic(req, res) {
 
     const form = new FormData();
     form.append("file", encImgBuffer, {
-      contentType: img_type || "image/jpg",
+      contentType: imgType || "image/jpg",
       filename: "Profile.jpg",
       knownLength: encImgBuffer.length,
     });
     const formHeaders = form.getHeaders();
     let protocol = 'https'
     if(host.includes('localhost')) protocol='http'
+    console.log("HEADERS", {...formHeaders})
     const resp = await fetch(`${protocol}://${host}/public`, {
       method: "POST",
       headers: {
