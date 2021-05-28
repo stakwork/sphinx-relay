@@ -11,7 +11,8 @@ var scopes;
 })(scopes = exports.scopes || (exports.scopes = {}));
 exports.routes = {
     [scopes.PERSONAL]: [
-        '/profile'
+        '/profile',
+        '/public_pic'
     ],
 };
 function allowedJwtRoutes(jwt, path) {

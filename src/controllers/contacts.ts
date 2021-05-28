@@ -14,6 +14,9 @@ import {logging} from '../utils/logger'
 import * as moment from 'moment'
 import * as people from '../utils/people'
 import { loadConfig } from "../utils/config";
+import * as meme from "../utils/meme";
+import * as FormData from "form-data";
+import fetch from "node-fetch";
 
 const config = loadConfig();
 
@@ -556,7 +559,7 @@ export async function createPeopleProfile(req, res){
     const {
       id,
       host,
-      pubkey,
+      // pubkey,
       owner_alias,
       description,
       img,
@@ -564,10 +567,10 @@ export async function createPeopleProfile(req, res){
       extras,
     } = req.body
 
-    if (pubkey !== owner.publicKey) {
-      failure(res, 'mismatched pubkey')
-      return
-    }
+    // if (pubkey !== owner.publicKey) {
+    //   failure(res, 'mismatched pubkey')
+    //   return
+    // }
 
     await people.createOrEditPerson({
       host: host || config.tribes_host,
@@ -618,4 +621,51 @@ export async function deletePersonProfile(req, res){
     failure(res, e)
   }
 
+}
+
+export async function uploadPublicPic(req, res) {
+  if (!req.owner) return failure(res, "no owner");
+
+  const {img_base64, img_type} = req.body
+  let imgType = img_type==='image/jpeg'?'image/jpg' : img_type
+  try  {
+
+    const host = config.media_host
+
+    let imageBase64 = img_base64
+    if(img_base64.indexOf(',')>-1) {
+      imageBase64 = img_base64.substr(img_base64.indexOf(',')+1)
+    }
+
+    var encImgBuffer = Buffer.from(imageBase64, "base64");
+
+    const token = await meme.lazyToken(req.owner.publicKey, host);
+
+    const form = new FormData();
+    form.append("file", encImgBuffer, {
+      contentType: imgType || "image/jpg",
+      filename: "Profile.jpg",
+      knownLength: encImgBuffer.length,
+    });
+    const formHeaders = form.getHeaders();
+    let protocol = 'https'
+    if(host.includes('localhost')) protocol='http'
+    const resp = await fetch(`${protocol}://${host}/public`, {
+      method: "POST",
+      headers: {
+        ...formHeaders, // THIS IS REQUIRED!!!
+        Authorization: `Bearer ${token}`,
+      },
+      body: form,
+    });
+
+    let json = await resp.json();
+    if (!json.muid) return failure(res, 'no muid')
+
+    success(res, {
+      img: `${protocol}://${host}/public/${json.muid}`
+    })
+  } catch(e) {
+    failure(res, e)
+  }
 }

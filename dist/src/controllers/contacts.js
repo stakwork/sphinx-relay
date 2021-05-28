@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePersonProfile = exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
+exports.uploadPublicPic = exports.deletePersonProfile = exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -26,6 +26,9 @@ const logger_1 = require("../utils/logger");
 const moment = require("moment");
 const people = require("../utils/people");
 const config_1 = require("../utils/config");
+const meme = require("../utils/meme");
+const FormData = require("form-data");
+const node_fetch_1 = require("node-fetch");
 const config = config_1.loadConfig();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
@@ -518,11 +521,13 @@ function createPeopleProfile(req, res) {
         const priceToMeet = req.body.price_to_meet || 0;
         try {
             const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
-            const { id, host, pubkey, owner_alias, description, img, tags, extras, } = req.body;
-            if (pubkey !== owner.publicKey) {
-                res_1.failure(res, 'mismatched pubkey');
-                return;
-            }
+            const { id, host, 
+            // pubkey,
+            owner_alias, description, img, tags, extras, } = req.body;
+            // if (pubkey !== owner.publicKey) {
+            //   failure(res, 'mismatched pubkey')
+            //   return
+            // }
             yield people.createOrEditPerson({
                 host: host || config.tribes_host,
                 owner_alias: owner_alias || owner.alias,
@@ -566,4 +571,46 @@ function deletePersonProfile(req, res) {
     });
 }
 exports.deletePersonProfile = deletePersonProfile;
+function uploadPublicPic(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        const { img_base64, img_type } = req.body;
+        let imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type;
+        try {
+            const host = config.media_host;
+            let imageBase64 = img_base64;
+            if (img_base64.indexOf(',') > -1) {
+                imageBase64 = img_base64.substr(img_base64.indexOf(',') + 1);
+            }
+            var encImgBuffer = Buffer.from(imageBase64, "base64");
+            const token = yield meme.lazyToken(req.owner.publicKey, host);
+            const form = new FormData();
+            form.append("file", encImgBuffer, {
+                contentType: imgType || "image/jpg",
+                filename: "Profile.jpg",
+                knownLength: encImgBuffer.length,
+            });
+            const formHeaders = form.getHeaders();
+            let protocol = 'https';
+            if (host.includes('localhost'))
+                protocol = 'http';
+            const resp = yield node_fetch_1.default(`${protocol}://${host}/public`, {
+                method: "POST",
+                headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
+                body: form,
+            });
+            let json = yield resp.json();
+            if (!json.muid)
+                return res_1.failure(res, 'no muid');
+            res_1.success(res, {
+                img: `${protocol}://${host}/public/${json.muid}`
+            });
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.uploadPublicPic = uploadPublicPic;
 //# sourceMappingURL=contacts.js.map

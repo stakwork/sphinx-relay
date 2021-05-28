@@ -66,6 +66,7 @@ function set(app) {
         app.get("/latest_contacts", contacts.getLatestContacts);
         app.post("/profile", contacts.createPeopleProfile);
         app.delete("/profile", contacts.deletePersonProfile);
+        app.post("/public_pic", contacts.uploadPublicPic);
         app.get("/msgs", messages.getMsgs);
         app.get("/allmessages", messages.getAllMessages);
         app.get("/messages", messages.getMessages);

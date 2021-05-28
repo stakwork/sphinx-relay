@@ -10,7 +10,8 @@ export enum scopes {
 
 export const routes = {
     [scopes.PERSONAL]: [
-        '/profile'
+        '/profile',
+        '/public_pic'
     ],
 }
 
