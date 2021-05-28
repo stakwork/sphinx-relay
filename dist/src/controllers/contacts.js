@@ -521,11 +521,13 @@ function createPeopleProfile(req, res) {
         const priceToMeet = req.body.price_to_meet || 0;
         try {
             const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
-            const { id, host, pubkey, owner_alias, description, img, tags, extras, } = req.body;
-            if (pubkey !== owner.publicKey) {
-                res_1.failure(res, 'mismatched pubkey');
-                return;
-            }
+            const { id, host, 
+            // pubkey,
+            owner_alias, description, img, tags, extras, } = req.body;
+            // if (pubkey !== owner.publicKey) {
+            //   failure(res, 'mismatched pubkey')
+            //   return
+            // }
             yield people.createOrEditPerson({
                 host: host || config.tribes_host,
                 owner_alias: owner_alias || owner.alias,
