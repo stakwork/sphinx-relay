@@ -71,7 +71,9 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
             if(logging.Tribes) console.log("[tribes] CLOSE", e);
             // setTimeout(() => reconnect(), 2000);
             connected = false
-            clients = {} // clear out old client(s)
+            if(clients[pubkey] && clients[pubkey][host]) {
+              delete clients[pubkey][host]
+            }
           });
           cl.on("error", function (e) {
             if(logging.Tribes) console.log("[tribes] error: ", e.message || e);
