@@ -656,9 +656,9 @@ export async function uploadPublicPic(req, res) {
     let json = await resp.json();
     if (!json.muid) return failure(res, 'no muid')
 
-    return {
+    success(res, {
       img: `${protocol}://${host}/public/${json.muid}`
-    }
+    })
   } catch(e) {
     failure(res, e)
   }

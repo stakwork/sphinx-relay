@@ -598,9 +598,9 @@ function uploadPublicPic(req, res) {
             let json = yield resp.json();
             if (!json.muid)
                 return res_1.failure(res, 'no muid');
-            return {
+            res_1.success(res, {
                 img: `${protocol}://${host}/public/${json.muid}`
-            };
+            });
         }
         catch (e) {
             res_1.failure(res, e);
