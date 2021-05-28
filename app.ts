@@ -1,5 +1,4 @@
 import * as express from 'express'
-import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
@@ -64,8 +63,8 @@ function setupApp() {
 		const app = express();
 
 		app.use(helmet());
-		app.use(bodyParser.json());
-		app.use(bodyParser.urlencoded({ extended: true }));
+		app.use(express.json({ limit: '5MB' }));
+		app.use(express.urlencoded());
 		if (logging.Express) {
 			app.use(logger)
 		}

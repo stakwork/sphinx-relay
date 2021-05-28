@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
-const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -72,8 +71,8 @@ function setupApp() {
     return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
         const app = express();
         app.use(helmet());
-        app.use(bodyParser.json());
-        app.use(bodyParser.urlencoded({ extended: true }));
+        app.use(express.json({ limit: '5MB' }));
+        app.use(express.urlencoded());
         if (logger_1.logging.Express) {
             app.use(logger_1.default);
         }
