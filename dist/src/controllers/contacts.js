@@ -579,7 +579,11 @@ function uploadPublicPic(req, res) {
         let imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type;
         try {
             const host = config.media_host;
-            var encImgBuffer = Buffer.from(img_base64, "base64");
+            let imageBase64 = img_base64;
+            if (img_base64.indexOf(',') > -1) {
+                imageBase64 = img_base64.substr(img_base64.indexOf(',') + 1);
+            }
+            var encImgBuffer = Buffer.from(imageBase64, "base64");
             const token = yield meme.lazyToken(req.owner.publicKey, host);
             const form = new FormData();
             form.append("file", encImgBuffer, {
