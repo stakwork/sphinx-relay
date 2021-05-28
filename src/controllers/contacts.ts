@@ -650,7 +650,6 @@ export async function uploadPublicPic(req, res) {
     const formHeaders = form.getHeaders();
     let protocol = 'https'
     if(host.includes('localhost')) protocol='http'
-    console.log("HEADERS", {...formHeaders})
     const resp = await fetch(`${protocol}://${host}/public`, {
       method: "POST",
       headers: {

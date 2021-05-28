@@ -595,7 +595,6 @@ function uploadPublicPic(req, res) {
             let protocol = 'https';
             if (host.includes('localhost'))
                 protocol = 'http';
-            console.log("HEADERS", Object.assign({}, formHeaders));
             const resp = yield node_fetch_1.default(`${protocol}://${host}/public`, {
                 method: "POST",
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
