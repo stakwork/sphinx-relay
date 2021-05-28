@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePersonProfile = exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
+exports.uploadPublicPic = exports.deletePersonProfile = exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -26,6 +26,9 @@ const logger_1 = require("../utils/logger");
 const moment = require("moment");
 const people = require("../utils/people");
 const config_1 = require("../utils/config");
+const meme = require("../utils/meme");
+const FormData = require("form-data");
+const node_fetch_1 = require("node-fetch");
 const config = config_1.loadConfig();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
@@ -566,4 +569,41 @@ function deletePersonProfile(req, res) {
     });
 }
 exports.deletePersonProfile = deletePersonProfile;
+function uploadPublicPic(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return res_1.failure(res, "no owner");
+        const { img_base64, img_type } = req.body;
+        try {
+            const host = config.media_host;
+            var encImgBuffer = Buffer.from(img_base64, "base64");
+            const token = yield meme.lazyToken(req.owner.publicKey, host);
+            const form = new FormData();
+            form.append("file", encImgBuffer, {
+                contentType: img_type || "image/jpg",
+                filename: "Profile.jpg",
+                knownLength: encImgBuffer.length,
+            });
+            const formHeaders = form.getHeaders();
+            let protocol = 'https';
+            if (host.includes('localhost'))
+                protocol = 'http';
+            const resp = yield node_fetch_1.default(`${protocol}://${host}/public`, {
+                method: "POST",
+                headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
+                body: form,
+            });
+            let json = yield resp.json();
+            if (!json.muid)
+                return res_1.failure(res, 'no muid');
+            return {
+                img: `${protocol}://${host}/public/${json.muid}`
+            };
+        }
+        catch (e) {
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.uploadPublicPic = uploadPublicPic;
 //# sourceMappingURL=contacts.js.map
