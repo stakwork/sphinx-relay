@@ -40,3 +40,8 @@
 - set up cluster_config.json
 - set path to Sphinx dir as config.path
 - `node ./testing/cluster-test.js`
+
+### arguments
+- `--skip=bob` skip a node
+- `--only=proxy,virtual-esp` only run nodes
+- `--hardware` config proxy for external signing on hardware
