@@ -65,8 +65,15 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
         });
         if(logging.Tribes) console.log("[tribes] try to connect:", url);
         cl.on("connect", async function () {
-          if(logging.Tribes) console.log("[tribes] connected!");
+          // first check if its already connected to this host (in case it takes a long time)
           connected = true
+          if (clients[pubkey] && clients[pubkey][host] && clients[pubkey][host].connected) {
+            resolve(clients[pubkey][host]);
+            return
+          }
+          if(logging.Tribes) console.log("[tribes] connected!");
+          if (!clients[pubkey]) clients[pubkey] = {};
+          clients[pubkey][host] = cl; // ADD TO MAIN STATE
           cl.on("close", function (e) {
             if(logging.Tribes) console.log("[tribes] CLOSE", e);
             // setTimeout(() => reconnect(), 2000);
@@ -98,7 +105,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
       if(!connected) {
         reconnect();
       }
-      await sleep(5000 + Math.round(Math.random()*8000))
+      await sleep(5000 + Math.round(Math.random()*8))
     }
   });
 }
@@ -112,8 +119,6 @@ async function lazyClient(
     return clients[pubkey][host];
   }
   const cl = await initializeClient(pubkey, host, onMessage);
-  if (!clients[pubkey]) clients[pubkey] = {};
-  clients[pubkey][host] = cl; // ADD TO MAIN STATE
   return cl;
 }
 

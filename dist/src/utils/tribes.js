@@ -78,9 +78,17 @@ function initializeClient(pubkey, host, onMessage) {
                             console.log("[tribes] try to connect:", url);
                         cl.on("connect", function () {
                             return __awaiter(this, void 0, void 0, function* () {
+                                // first check if its already connected to this host (in case it takes a long time)
+                                connected = true;
+                                if (clients[pubkey] && clients[pubkey][host] && clients[pubkey][host].connected) {
+                                    resolve(clients[pubkey][host]);
+                                    return;
+                                }
                                 if (logger_1.logging.Tribes)
                                     console.log("[tribes] connected!");
-                                connected = true;
+                                if (!clients[pubkey])
+                                    clients[pubkey] = {};
+                                clients[pubkey][host] = cl; // ADD TO MAIN STATE
                                 cl.on("close", function (e) {
                                     if (logger_1.logging.Tribes)
                                         console.log("[tribes] CLOSE", e);
@@ -121,7 +129,7 @@ function initializeClient(pubkey, host, onMessage) {
                 if (!connected) {
                     reconnect();
                 }
-                yield helpers_1.sleep(5000 + Math.round(Math.random() * 8000));
+                yield helpers_1.sleep(5000 + Math.round(Math.random() * 8));
             }
         }));
     });
@@ -132,9 +140,6 @@ function lazyClient(pubkey, host, onMessage) {
             return clients[pubkey][host];
         }
         const cl = yield initializeClient(pubkey, host, onMessage);
-        if (!clients[pubkey])
-            clients[pubkey] = {};
-        clients[pubkey][host] = cl; // ADD TO MAIN STATE
         return cl;
     });
 }
