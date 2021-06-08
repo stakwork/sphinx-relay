@@ -129,7 +129,7 @@ function initializeClient(pubkey, host, onMessage) {
                 if (!connected) {
                     reconnect();
                 }
-                yield helpers_1.sleep(5000 + Math.round(Math.random() * 8));
+                yield helpers_1.sleep(5000 + Math.round(Math.random() * 8000));
             }
         }));
     });

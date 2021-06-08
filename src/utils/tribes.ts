@@ -105,7 +105,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
       if(!connected) {
         reconnect();
       }
-      await sleep(5000 + Math.round(Math.random()*8))
+      await sleep(5000 + Math.round(Math.random()*8000))
     }
   });
 }
