@@ -11,7 +11,7 @@ import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
 import { ownerMiddleware, unlocker } from './src/auth'
-import * as grpc from './src/grpc'
+import * as grpc from './src/grpc/lnd'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
 
@@ -39,7 +39,7 @@ start()
 
 async function mainSetup() {
 	await setupApp() // setup routes
-	grpc.reconnectToLND(Math.random(), function () {
+	grpc.reconnectToLightning(Math.random(), function () {
 		console.log(">> FINISH SETUP")
 		finishSetup()
 	}) // recursive

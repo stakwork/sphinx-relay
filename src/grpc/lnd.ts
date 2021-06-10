@@ -153,12 +153,12 @@ export function subscribeInvoices(parseKeysendInvoice) {
 }
 
 function waitAndReconnect(){
-	setTimeout(()=> reconnectToLND(Math.random()), 2000)
+	setTimeout(()=> reconnectToLightning(Math.random()), 2000)
 }
 
 var i = 0
 var ctx = 0
-export async function reconnectToLND(innerCtx: number, callback?: Function) {
+export async function reconnectToLightning(innerCtx: number, callback?: Function) {
 	ctx = innerCtx
 	i++
 	const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
@@ -174,7 +174,7 @@ export async function reconnectToLND(innerCtx: number, callback?: Function) {
 		}
 		setTimeout(async () => { // retry each 2 secs
 			if (ctx === innerCtx) { // if another retry fires, then this will not run
-				await reconnectToLND(innerCtx, callback)
+				await reconnectToLightning(innerCtx, callback)
 			}
 		}, 2000)
 	}

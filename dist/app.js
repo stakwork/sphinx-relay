@@ -22,7 +22,7 @@ const connect = require("./src/utils/connect");
 const socket = require("./src/utils/socket");
 const network = require("./src/network");
 const auth_1 = require("./src/auth");
-const grpc = require("./src/grpc");
+const grpc = require("./src/grpc/lnd");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
 const env = process.env.NODE_ENV || 'development';
@@ -48,7 +48,7 @@ start();
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setupApp(); // setup routes
-        grpc.reconnectToLND(Math.random(), function () {
+        grpc.reconnectToLightning(Math.random(), function () {
             console.log(">> FINISH SETUP");
             finishSetup();
         }); // recursive

@@ -34,6 +34,11 @@ const loadCredentials = (macName?: string) => {
   return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
 }
 
+const loadGreenlightCredentials = () => {
+  var lndCert = fs.readFileSync(config.tls_location);
+  return grpc.credentials.createSsl(lndCert);
+}
+
 async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   // only if specified AND available
   if (tryProxy && isProxy()) {
@@ -42,17 +47,26 @@ async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   }
   if (lightningClient) {
     return lightningClient
-  } else {
-    try {
-      var credentials = loadCredentials()
-      var lnrpcDescriptor = grpc.load("proto/rpc.proto");
-      var lnrpc: any = lnrpcDescriptor.lnrpc
-      lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
-      return lightningClient
-    } catch (e) {
-      throw e
-    }
   }
+
+  if (config.lightning_provider==='GREENLIGHT') {
+    var credentials = loadGreenlightCredentials()
+    var descriptor = grpc.load("proto/greenlight.proto");
+    var greenlight: any = descriptor.greenlight
+    lightningClient = new greenlight.Node(LND_IP + ':' + config.lnd_port, credentials);
+    return lightningClient
+  }
+
+  try { // LND
+    var credentials = loadCredentials()
+    var lnrpcDescriptor = grpc.load("proto/rpc.proto");
+    var lnrpc: any = lnrpcDescriptor.lnrpc
+    lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+    return lightningClient
+  } catch (e) {
+    throw e
+  }
+  
 }
 
 const loadWalletUnlocker = () => {

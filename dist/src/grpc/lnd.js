@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reconnectToLND = exports.subscribeInvoices = void 0;
+exports.reconnectToLightning = exports.subscribeInvoices = void 0;
 const models_1 = require("../models");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
@@ -162,11 +162,11 @@ function subscribeInvoices(parseKeysendInvoice) {
 }
 exports.subscribeInvoices = subscribeInvoices;
 function waitAndReconnect() {
-    setTimeout(() => reconnectToLND(Math.random()), 2000);
+    setTimeout(() => reconnectToLightning(Math.random()), 2000);
 }
 var i = 0;
 var ctx = 0;
-function reconnectToLND(innerCtx, callback) {
+function reconnectToLightning(innerCtx, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         ctx = innerCtx;
         i++;
@@ -185,11 +185,11 @@ function reconnectToLND(innerCtx, callback) {
             }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 if (ctx === innerCtx) { // if another retry fires, then this will not run
-                    yield reconnectToLND(innerCtx, callback);
+                    yield reconnectToLightning(innerCtx, callback);
                 }
             }), 2000);
         }
     });
 }
-exports.reconnectToLND = reconnectToLND;
-//# sourceMappingURL=index.js.map
+exports.reconnectToLightning = reconnectToLightning;
+//# sourceMappingURL=lnd.js.map

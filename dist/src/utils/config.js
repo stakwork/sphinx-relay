@@ -10,7 +10,9 @@ const config = require(configFile)[env];
 const ENV = process.env;
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
+    const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
     return {
+        lightning_provider: provider,
         logging: logg || 'LIGHTNING,TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY',
         senza_url: ENV.SENZA_URL || config.senza_url,
         macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
