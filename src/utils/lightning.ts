@@ -9,6 +9,7 @@ import { getMacaroon } from './macaroon'
 import { loadConfig } from './config'
 import {isProxy, loadProxyLightning} from './proxy'
 import {logging} from './logger'
+import * as interfaces from '../grpc/interfaces'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -576,7 +577,9 @@ async function getInfo(tryProxy?:boolean): Promise<{ [k: string]: any }> {
     const lightning = await loadLightning(tryProxy===false?false:true) // try proxy
     lightning.getInfo({}, function (err, response) {
       if (err == null) {
-        resolve(response)
+        resolve(
+          interfaces.getInfoResponse(response)
+        )
       } else {
         reject(err)
       }

@@ -21,6 +21,7 @@ const macaroon_1 = require("./macaroon");
 const config_1 = require("./config");
 const proxy_1 = require("./proxy");
 const logger_1 = require("./logger");
+const interfaces = require("../grpc/interfaces");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -635,7 +636,7 @@ function getInfo(tryProxy) {
             const lightning = yield loadLightning(tryProxy === false ? false : true); // try proxy
             lightning.getInfo({}, function (err, response) {
                 if (err == null) {
-                    resolve(response);
+                    resolve(interfaces.getInfoResponse(response));
                 }
                 else {
                     reject(err);
