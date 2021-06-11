@@ -217,6 +217,11 @@ export async function receiveMemberRequest(payload) {
       lastAlias: senderAlias,
       tenant,
     });
+    // also update the chat
+    const theChat = await models.Chat.findOne({where:{id:chat.id}})
+    if(theChat) {
+      await theChat.update({updatedAt:date})
+    }
   } catch (e) {}
 
   const msg: { [k: string]: any } = {
