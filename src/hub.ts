@@ -5,7 +5,7 @@ import * as socket from "./utils/socket";
 import * as jsonUtils from "./utils/json";
 import * as helpers from "./helpers";
 import { nodeinfo, proxynodeinfo } from "./utils/nodeinfo";
-import * as LND from "./utils/lightning";
+import * as LND from "./grpc/lightning";
 import constants from "./constants";
 import { loadConfig } from "./utils/config";
 import * as https from "https";

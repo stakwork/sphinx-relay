@@ -1,8 +1,8 @@
 import * as lndService from "../grpc/lnd";
-import * as lightning from "../utils/lightning";
+import * as lightning from "../grpc/lightning";
 import { ACTIONS } from "../controllers";
 import * as tribes from "../utils/tribes";
-import { SPHINX_CUSTOM_RECORD_KEY, decodePayReq } from "../utils/lightning";
+import { SPHINX_CUSTOM_RECORD_KEY, decodePayReq } from "../grpc/lightning";
 import * as signer from "../utils/signer";
 import { models } from "../models";
 import { sendMessage } from "./send";

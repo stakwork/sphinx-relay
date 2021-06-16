@@ -1,5 +1,5 @@
 import { models } from "../models";
-import * as LND from "../utils/lightning";
+import * as LND from "../grpc/lightning";
 import * as socket from "../utils/socket";
 import * as jsonUtils from "../utils/json";
 import * as decodeUtils from "../utils/decode";

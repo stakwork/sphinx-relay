@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = exports.genChannel = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
-const LND = require("./lightning");
+const LND = require("../grpc/lightning");
 const nodeinfo_1 = require("./nodeinfo");
 const config_1 = require("./config");
 const queries_1 = require("../controllers/queries");

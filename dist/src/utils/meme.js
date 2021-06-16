@@ -9,15 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyPubKey = exports.getMediaToken = exports.lazyToken = void 0;
+exports.getMediaToken = exports.lazyToken = void 0;
 const moment = require("moment");
 const ldat_1 = require("../utils/ldat");
 const zbase32 = require("../utils/zbase32");
 const rp = require("request-promise");
 const helpers = require("../helpers");
 const config_1 = require("../utils/config");
-const lightning_1 = require("../utils/lightning");
-const lightning_2 = require("../utils/lightning");
+const lightning_1 = require("../grpc/lightning");
 const logger_1 = require("./logger");
 const config = config_1.loadConfig();
 // {pubkey: {host: {token,ts} }}
@@ -65,9 +64,6 @@ function getMediaToken(ownerPubkey, host) {
             if (!sig)
                 throw new Error("no signature");
             let pubkey = ownerPubkey;
-            // if(!pubkey) {
-            //   pubkey = await getMyPubKey()
-            // }
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
             if (logger_1.logging.Meme)
@@ -87,21 +83,4 @@ function getMediaToken(ownerPubkey, host) {
     });
 }
 exports.getMediaToken = getMediaToken;
-function getMyPubKey() {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield lightning_2.loadLightning();
-            var request = {};
-            lightning.getInfo(request, function (err, response) {
-                if (err)
-                    reject(err);
-                if (!response.identity_pubkey)
-                    reject("no pub key");
-                else
-                    resolve(response.identity_pubkey);
-            });
-        }));
-    });
-}
-exports.getMyPubKey = getMyPubKey;
 //# sourceMappingURL=meme.js.map

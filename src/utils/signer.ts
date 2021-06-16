@@ -1,6 +1,6 @@
 
 import * as grpc from 'grpc'
-import { loadCredentials } from './lightning'
+import { loadCredentials } from '../grpc/lightning'
 import * as ByteBuffer from 'bytebuffer'
 import { loadConfig } from './config'
 

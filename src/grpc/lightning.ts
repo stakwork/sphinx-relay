@@ -5,15 +5,17 @@ import { sleep } from '../helpers';
 import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
 import constants from '../constants'
-import { getMacaroon } from './macaroon'
-import { loadConfig } from './config'
-import {isProxy, loadProxyLightning} from './proxy'
-import {logging} from './logger'
-import * as interfaces from '../grpc/interfaces'
+import { getMacaroon } from '../utils/macaroon'
+import { loadConfig } from '../utils/config'
+import {isProxy, loadProxyLightning} from '../utils/proxy'
+import {logging} from '../utils/logger'
+import * as interfaces from './interfaces'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
+// const IS_LND = config.lightning_provider === "LND";
+const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
 
 const LND_KEYSEND_KEY = 5482373484
 const SPHINX_CUSTOM_RECORD_KEY = 133773310
@@ -36,8 +38,10 @@ const loadCredentials = (macName?: string) => {
 }
 
 const loadGreenlightCredentials = () => {
-  var lndCert = fs.readFileSync(config.tls_location);
-  return grpc.credentials.createSsl(lndCert);
+  var glCert = fs.readFileSync(config.tls_location);
+  var glPriv = fs.readFileSync(config.tls_key_location);
+  var glChain = fs.readFileSync(config.tls_chain_location);
+  return grpc.credentials.createSsl(glCert, glPriv, glChain);
 }
 
 async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
@@ -50,11 +54,14 @@ async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
     return lightningClient
   }
 
-  if (config.lightning_provider==='GREENLIGHT') {
+  if (IS_GREENLIGHT) {
     var credentials = loadGreenlightCredentials()
     var descriptor = grpc.load("proto/greenlight.proto");
     var greenlight: any = descriptor.greenlight
-    lightningClient = new greenlight.Node(LND_IP + ':' + config.lnd_port, credentials);
+    var options = {
+      'grpc.ssl_target_name_override' : 'localhost',
+    };
+    lightningClient = new greenlight.Node(LND_IP + ':' + config.lnd_port, credentials, options);
     return lightningClient
   }
 
@@ -571,11 +578,13 @@ async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: strin
   }
 }
 
-async function getInfo(tryProxy?:boolean): Promise<{ [k: string]: any }> {
+async function getInfo(tryProxy?:boolean): Promise<interfaces.GetInfoResponse> {
   // log('getInfo')
+  console.log("GET INTO")
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(tryProxy===false?false:true) // try proxy
     lightning.getInfo({}, function (err, response) {
+      console.log('============', err, response)
       if (err == null) {
         resolve(
           interfaces.getInfoResponse(response)
@@ -587,26 +596,21 @@ async function getInfo(tryProxy?:boolean): Promise<{ [k: string]: any }> {
   })
 }
 
-interface ListChannelsArgs {
-  active_only?: boolean
-  inactive_only?: boolean
-  peer?: string // HEX!
-}
-async function listChannels(args?:ListChannelsArgs, ownerPubkey?:string): Promise<{ [k: string]: any }> {
+async function listChannels(args?:interfaces.ListChannelsArgs, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('listChannels')
-  const opts:{[k:string]:any} = args || {}
-  if(args && args.peer) {
-    opts.peer = ByteBuffer.fromHex(args.peer)
-  }
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
-    lightning.listChannels(opts, function (err, response) {
+    const cmd = interfaces.listChannelsCommand()
+    const opts = interfaces.listChannelsRequest(args)
+    lightning[cmd](opts, function (err, response) {
       if (err == null) {
-        resolve(response)
+        resolve(
+          interfaces.listChannelsResponse(response)
+        )
       } else {
         reject(err)
       }
-    });
+    })
   })
 }
 

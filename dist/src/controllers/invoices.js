@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.receiveInvoice = exports.listInvoices = exports.createInvoice = exports.cancelInvoice = exports.payInvoice = void 0;
 const models_1 = require("../models");
-const LND = require("../utils/lightning");
+const LND = require("../grpc/lightning");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const decodeUtils = require("../utils/decode");

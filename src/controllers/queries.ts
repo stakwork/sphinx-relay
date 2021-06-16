@@ -3,7 +3,7 @@ import { models } from "../models";
 import * as network from "../network";
 import constants from "../constants";
 import * as short from "short-uuid";
-import * as lightning from "../utils/lightning";
+import * as lightning from "../grpc/lightning";
 import { listUnspent, UTXO } from "../utils/wallet";
 import * as jsonUtils from "../utils/json";
 import { Op } from "sequelize";

@@ -1,6 +1,6 @@
 import * as publicIp from 'public-ip'
 import password from './password'
-import * as LND from './lightning'
+import * as LND from '../grpc/lightning'
 import { isClean } from './nodeinfo'
 import {loadConfig} from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'

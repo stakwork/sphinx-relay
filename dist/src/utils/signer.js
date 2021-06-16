@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyAscii = exports.signAscii = exports.signBuffer = exports.signMessage = exports.loadSigner = void 0;
 const grpc = require("grpc");
-const lightning_1 = require("./lightning");
+const lightning_1 = require("../grpc/lightning");
 const ByteBuffer = require("bytebuffer");
 const config_1 = require("./config");
 // var protoLoader = require('@grpc/proto-loader')

@@ -1,5 +1,5 @@
 
-import { loadLightning } from '../utils/lightning'
+import { loadLightning } from './lightning'
 import * as network from '../network'
 import * as moment from 'moment'
 import { tryToUnlockLND } from '../utils/unlock'

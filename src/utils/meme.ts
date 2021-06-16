@@ -4,8 +4,7 @@ import * as zbase32 from "../utils/zbase32";
 import * as rp from "request-promise";
 import * as helpers from "../helpers";
 import { loadConfig } from "../utils/config";
-import { signBuffer } from "../utils/lightning";
-import { loadLightning } from '../utils/lightning'
+import { signBuffer } from "../grpc/lightning";
 import {logging} from './logger'
 
 const config = loadConfig();
@@ -56,9 +55,6 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
 
     if (!sig) throw new Error("no signature");
     let pubkey:string = ownerPubkey
-    // if(!pubkey) {
-    //   pubkey = await getMyPubKey()
-    // }
 
     const sigBytes = zbase32.decode(sig);
     const sigBase64 = urlBase64FromBytes(sigBytes);
@@ -75,16 +71,4 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
   } catch (e) {
     throw e;
   }
-}
-
-export async function getMyPubKey(): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning();
-    var request = {};
-    lightning.getInfo(request, function (err, response) {
-      if (err) reject(err);
-      if (!response.identity_pubkey) reject("no pub key");
-      else resolve(response.identity_pubkey);
-    });
-  });
 }

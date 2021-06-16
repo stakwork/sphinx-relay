@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
-const lightning_1 = require("./lightning");
+const lightning_1 = require("../grpc/lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
 const QRCode = require("qrcode");
@@ -57,39 +57,32 @@ function setVersion() {
 const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
     const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
     if (!owner) {
-        const lightning = yield lightning_1.loadLightning();
-        lightning.getInfo({}, (err, info) => __awaiter(void 0, void 0, void 0, function* () {
-            if (err) {
-                console.log('[db] error creating node owner due to lnd failure', err);
-            }
-            else {
-                try {
-                    const one = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
-                    if (!one) {
-                        let authToken = null;
-                        let tenant = null;
-                        // dont allow "signup" on root contact of proxy node
-                        if (proxy_1.isProxy()) {
-                            authToken = '_';
-                        }
-                        else {
-                            tenant = 1; // add tenant here
-                        }
-                        const contact = yield models_1.models.Contact.create({
-                            id: 1,
-                            publicKey: info.identity_pubkey,
-                            isOwner: true,
-                            authToken,
-                            tenant
-                        });
-                        console.log('[db] created node owner contact, id:', contact.id);
-                    }
+        try {
+            const info = yield lightning_1.getInfo();
+            const one = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
+            if (!one) {
+                let authToken = null;
+                let tenant = null;
+                // dont allow "signup" on root contact of proxy node
+                if (proxy_1.isProxy()) {
+                    authToken = '_';
                 }
-                catch (error) {
-                    console.log('[db] error creating owner contact', error);
+                else {
+                    tenant = 1; // add tenant here
                 }
+                const contact = yield models_1.models.Contact.create({
+                    id: 1,
+                    publicKey: info.identity_pubkey,
+                    isOwner: true,
+                    authToken,
+                    tenant
+                });
+                console.log('[db] created node owner contact, id:', contact.id);
             }
-        }));
+        }
+        catch (err) {
+            console.log('[db] error creating node owner due to lnd failure', err);
+        }
     }
 });
 exports.setupOwnerContact = setupOwnerContact;

@@ -4,7 +4,7 @@ import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import * as decodeUtils from '../utils/decode'
 import constants from '../constants'
-import { decodePayReq } from '../utils/lightning'
+import { decodePayReq } from './lightning'
 
 const oktolog = false
 export function loginvoice(response){

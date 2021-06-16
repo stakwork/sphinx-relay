@@ -1,8 +1,9 @@
 
-import * as LND from '../utils/lightning'
+import * as LND from '../grpc/lightning'
 import * as publicIp from 'public-ip'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import { models } from '../models'
+import * as interfaces from '../grpc/interfaces'
 
 export function proxynodeinfo(pk:string):Promise<Object> {
   return new Promise(async (resolve, reject)=> {
@@ -36,9 +37,11 @@ export function nodeinfo() {
 
     let owner_pubkey;
 
+    let info: interfaces.GetInfoResponse
+
     try {
       const tryProxy = false
-      const info = await LND.getInfo(tryProxy)
+      info = await LND.getInfo(tryProxy)
       if(info.identity_pubkey) owner_pubkey=info.identity_pubkey
     } catch (e) { // no LND
       let owner
@@ -102,43 +105,40 @@ export function nodeinfo() {
 
         lightning.pendingChannels({}, (err, pendingChannels) => {
           if (err) console.log(err)
-          lightning.getInfo({}, (err, info) => {
-            if (err) console.log(err)
-            if (!err && info) {
-              const node = {
-                node_alias: process.env.NODE_ALIAS,
-                ip: process.env.NODE_IP,
-                lnd_port: process.env.NODE_LND_PORT,
-                relay_commit: commitHash,
-                public_ip: public_ip,
-                pubkey: owner.publicKey,
-                route_hint: owner.routeHint,
-                number_channels: channels.length,
-                number_active_channels: info.num_active_channels,
-                number_pending_channels: info.num_pending_channels,
-                number_peers: info.num_peers,
-                largest_local_balance: largestLocalBalance,
-                largest_remote_balance: largestRemoteBalance,
-                total_local_balance: totalLocalBalance,
-                lnd_version: info.version,
-                relay_version: tag,
-                payment_channel: '', // ?
-                hosting_provider: '', // ?
-                open_channel_data: channels,
-                pending_channel_data: pendingChannels,
-                synced_to_chain: info.synced_to_chain,
-                synced_to_graph: info.synced_to_graph,
-                best_header_timestamp: info.best_header_timestamp,
-                testnet: info.testnet,
-                clean,
-                latest_message,
-                last_active: lastActive,
-                wallet_locked: false,
-                non_zero_policies: nzp
-              }
-              resolve(node)
+          if (!err && info) {
+            const node = {
+              node_alias: process.env.NODE_ALIAS,
+              ip: process.env.NODE_IP,
+              lnd_port: process.env.NODE_LND_PORT,
+              relay_commit: commitHash,
+              public_ip: public_ip,
+              pubkey: owner.publicKey,
+              route_hint: owner.routeHint,
+              number_channels: channels.length,
+              number_active_channels: info.num_active_channels,
+              number_pending_channels: info.num_pending_channels,
+              number_peers: info.num_peers,
+              largest_local_balance: largestLocalBalance,
+              largest_remote_balance: largestRemoteBalance,
+              total_local_balance: totalLocalBalance,
+              lnd_version: info.version,
+              relay_version: tag,
+              payment_channel: '', // ?
+              hosting_provider: '', // ?
+              open_channel_data: channels,
+              pending_channel_data: pendingChannels,
+              synced_to_chain: info.synced_to_chain,
+              synced_to_graph: info.synced_to_graph,
+              best_header_timestamp: info.best_header_timestamp,
+              testnet: info.testnet,
+              clean,
+              latest_message,
+              last_active: lastActive,
+              wallet_locked: false,
+              non_zero_policies: nzp
             }
-          })
+            resolve(node)
+          }
         })
       })
     } catch (e) {

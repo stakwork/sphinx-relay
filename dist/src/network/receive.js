@@ -11,10 +11,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
 const lndService = require("../grpc/lnd");
-const lightning = require("../utils/lightning");
+const lightning = require("../grpc/lightning");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
-const lightning_1 = require("../utils/lightning");
+const lightning_1 = require("../grpc/lightning");
 const signer = require("../utils/signer");
 const models_1 = require("../models");
 const send_1 = require("./send");

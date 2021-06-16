@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as grpc from 'grpc'
 import { loadConfig } from './config'
-import {loadCredentials} from './lightning'
+import {loadCredentials} from '../grpc/lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import {logging} from './logger'

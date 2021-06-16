@@ -3,7 +3,8 @@ import {
   queryRoute,
   channelBalance,
   listChannels,
-} from "../utils/lightning";
+  getInfo,
+} from "../grpc/lightning";
 import { success, failure } from "../utils/res";
 import * as readLastLines from "read-last-lines";
 import { nodeinfo } from "../utils/nodeinfo";
@@ -113,20 +114,17 @@ export async function getLogsSince(req, res) {
   else failure(res, err);
 }
 
-export const getInfo = async (req, res) => {
+export const getLightningInfo = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
 
-  const lightning = await loadLightning(true, req.owner.publicKey);
-  var request = {};
-  lightning.getInfo(request, function (err, response) {
-    res.status(200);
-    if (err == null) {
-      res.json({ success: true, response });
-    } else {
-      res.json({ success: false });
-    }
-    res.end();
-  });
+  res.status(200);
+  try {
+    const response = await getInfo()
+    res.json({ success: true, response });
+  } catch(e) {
+    res.json({ success: false });
+  }
+  res.end();
 };
 
 export const getChannels = async (req, res) => {

@@ -1,4 +1,4 @@
-import { loadLightning } from './lightning'
+import { getInfo } from '../grpc/lightning'
 import { sequelize, models } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
@@ -39,36 +39,30 @@ async function setVersion() {
 const setupOwnerContact = async () => {
   const owner = await models.Contact.findOne({ where: { isOwner: true, id:1 } })
   if (!owner) {
-    const lightning = await loadLightning()
-    lightning.getInfo({}, async (err, info) => {
-      if (err) {
-        console.log('[db] error creating node owner due to lnd failure', err)
-      } else {
-        try {
-          const one = await models.Contact.findOne({ where: { isOwner:true, id: 1 } })
-          if (!one) {
-            let authToken:string|null = null
-            let tenant:number|null = null
-            // dont allow "signup" on root contact of proxy node
-            if(isProxy()) {
-              authToken = '_'
-            } else {
-              tenant = 1 // add tenant here
-            }
-            const contact = await models.Contact.create({
-              id: 1,
-              publicKey: info.identity_pubkey,
-              isOwner: true,
-              authToken,
-              tenant
-            })
-            console.log('[db] created node owner contact, id:', contact.id)
-          }
-        } catch (error) {
-          console.log('[db] error creating owner contact', error)
+    try {
+      const info = await getInfo()
+      const one = await models.Contact.findOne({ where: { isOwner:true, id: 1 } })
+      if (!one) {
+        let authToken:string|null = null
+        let tenant:number|null = null
+        // dont allow "signup" on root contact of proxy node
+        if(isProxy()) {
+          authToken = '_'
+        } else {
+          tenant = 1 // add tenant here
         }
+        const contact = await models.Contact.create({
+          id: 1,
+          publicKey: info.identity_pubkey,
+          isOwner: true,
+          authToken,
+          tenant
+        })
+        console.log('[db] created node owner contact, id:', contact.id)
       }
-    })
+    } catch(err) {
+      console.log('[db] error creating node owner due to lnd failure', err)
+    }
   }
 }
 

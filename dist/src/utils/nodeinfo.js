@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isClean = exports.nodeinfo = exports.proxynodeinfo = void 0;
-const LND = require("../utils/lightning");
+const LND = require("../grpc/lightning");
 const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
@@ -45,9 +45,10 @@ function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const nzp = yield listNonZeroPolicies();
         let owner_pubkey;
+        let info;
         try {
             const tryProxy = false;
-            const info = yield LND.getInfo(tryProxy);
+            info = yield LND.getInfo(tryProxy);
             if (info.identity_pubkey)
                 owner_pubkey = info.identity_pubkey;
         }
@@ -111,44 +112,40 @@ function nodeinfo() {
                 lightning.pendingChannels({}, (err, pendingChannels) => {
                     if (err)
                         console.log(err);
-                    lightning.getInfo({}, (err, info) => {
-                        if (err)
-                            console.log(err);
-                        if (!err && info) {
-                            const node = {
-                                node_alias: process.env.NODE_ALIAS,
-                                ip: process.env.NODE_IP,
-                                lnd_port: process.env.NODE_LND_PORT,
-                                relay_commit: commitHash,
-                                public_ip: public_ip,
-                                pubkey: owner.publicKey,
-                                route_hint: owner.routeHint,
-                                number_channels: channels.length,
-                                number_active_channels: info.num_active_channels,
-                                number_pending_channels: info.num_pending_channels,
-                                number_peers: info.num_peers,
-                                largest_local_balance: largestLocalBalance,
-                                largest_remote_balance: largestRemoteBalance,
-                                total_local_balance: totalLocalBalance,
-                                lnd_version: info.version,
-                                relay_version: tag,
-                                payment_channel: '',
-                                hosting_provider: '',
-                                open_channel_data: channels,
-                                pending_channel_data: pendingChannels,
-                                synced_to_chain: info.synced_to_chain,
-                                synced_to_graph: info.synced_to_graph,
-                                best_header_timestamp: info.best_header_timestamp,
-                                testnet: info.testnet,
-                                clean,
-                                latest_message,
-                                last_active: lastActive,
-                                wallet_locked: false,
-                                non_zero_policies: nzp
-                            };
-                            resolve(node);
-                        }
-                    });
+                    if (!err && info) {
+                        const node = {
+                            node_alias: process.env.NODE_ALIAS,
+                            ip: process.env.NODE_IP,
+                            lnd_port: process.env.NODE_LND_PORT,
+                            relay_commit: commitHash,
+                            public_ip: public_ip,
+                            pubkey: owner.publicKey,
+                            route_hint: owner.routeHint,
+                            number_channels: channels.length,
+                            number_active_channels: info.num_active_channels,
+                            number_pending_channels: info.num_pending_channels,
+                            number_peers: info.num_peers,
+                            largest_local_balance: largestLocalBalance,
+                            largest_remote_balance: largestRemoteBalance,
+                            total_local_balance: totalLocalBalance,
+                            lnd_version: info.version,
+                            relay_version: tag,
+                            payment_channel: '',
+                            hosting_provider: '',
+                            open_channel_data: channels,
+                            pending_channel_data: pendingChannels,
+                            synced_to_chain: info.synced_to_chain,
+                            synced_to_graph: info.synced_to_graph,
+                            best_header_timestamp: info.best_header_timestamp,
+                            testnet: info.testnet,
+                            clean,
+                            latest_message,
+                            last_active: lastActive,
+                            wallet_locked: false,
+                            non_zero_policies: nzp
+                        };
+                        resolve(node);
+                    }
                 });
             });
         }

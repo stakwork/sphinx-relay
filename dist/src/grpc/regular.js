@@ -16,7 +16,7 @@ const hub_1 = require("../hub");
 const jsonUtils = require("../utils/json");
 const decodeUtils = require("../utils/decode");
 const constants_1 = require("../constants");
-const lightning_1 = require("../utils/lightning");
+const lightning_1 = require("./lightning");
 const oktolog = false;
 function loginvoice(response) {
     if (!oktolog)

@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.reconnectToLightning = exports.subscribeInvoices = void 0;
-const lightning_1 = require("../utils/lightning");
+const lightning_1 = require("./lightning");
 const network = require("../network");
 const moment = require("moment");
 const unlock_1 = require("../utils/unlock");

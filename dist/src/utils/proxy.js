@@ -13,7 +13,7 @@ exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTota
 const fs = require("fs");
 const grpc = require("grpc");
 const config_1 = require("./config");
-const lightning_1 = require("./lightning");
+const lightning_1 = require("../grpc/lightning");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");

@@ -4,7 +4,7 @@ import * as jsonUtils from "../utils/json";
 import * as resUtils from "../utils/res";
 import * as helpers from "../helpers";
 import { sendNotification } from "../hub";
-import { signBuffer, verifyMessage } from "../utils/lightning";
+import { signBuffer, verifyMessage } from "../grpc/lightning";
 import * as rp from "request-promise";
 import { parseLDAT, tokenFromTerms, urlBase64FromBytes } from "../utils/ldat";
 import * as meme from "../utils/meme";

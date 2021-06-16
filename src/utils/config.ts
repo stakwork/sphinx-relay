@@ -22,6 +22,8 @@ export function loadConfig() {
     router_macaroon_location: ENV.ROUTER_MACAROON_LOCATION || config.router_macaroon_location,
     signer_macaroon_location: ENV.SIGNER_MACAROON_LOCATION || config.signer_macaroon_location,
     tls_location: ENV.TLS_LOCATION || config.tls_location,
+    tls_key_location: ENV.TLS_KEY_LOCATION || config.tls_key_location,
+    tls_chain_location: ENV.TLS_CHAIN_LOCATION || config.tls_chain_location,
     lnd_log_location: ENV.LND_LOG_LOCATION || config.lnd_log_location,
     node_ip: ENV.NODE_IP || config.node_ip,
     lnd_ip: ENV.LND_IP || config.lnd_ip,

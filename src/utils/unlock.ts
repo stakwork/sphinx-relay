@@ -1,4 +1,4 @@
-import { unlockWallet } from './lightning'
+import { unlockWallet } from '../grpc/lightning'
 import {loadConfig} from './config'
 const fs = require('fs')
 const readline = require('readline');

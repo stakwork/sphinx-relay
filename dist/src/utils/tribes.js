@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
-const LND = require("./lightning");
+const LND = require("../grpc/lightning");
 const mqtt = require("mqtt");
 const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
