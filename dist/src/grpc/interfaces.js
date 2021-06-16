@@ -42,7 +42,6 @@ function listChannelsResponse(res) {
     if (IS_LND)
         return res;
     if (IS_GREENLIGHT) {
-        // loop peers?
         const chans = [];
         res.peers.forEach((p) => {
             p.channels.forEach((ch) => {
@@ -78,7 +77,7 @@ function listChannelsRequest(args) {
         if (IS_LND)
             opts.peer = ByteBuffer.fromHex(args.peer);
         if (IS_GREENLIGHT)
-            opts.node_id = ByteBuffer.fromHex(args.peer);
+            opts.node_id = args.peer;
     }
     return opts;
 }

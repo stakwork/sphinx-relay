@@ -354,6 +354,7 @@ function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield lightning.getInfo(true); // try proxy
+            // await lightning.listChannels(); // examp
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

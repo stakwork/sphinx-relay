@@ -232,7 +232,7 @@ export function listChannelsRequest(args?:ListChannelsArgs): {[k:string]:any} {
   const opts:{[k:string]:any} = args || {}
   if(args && args.peer) {
     if(IS_LND) opts.peer = ByteBuffer.fromHex(args.peer)
-    if(IS_GREENLIGHT) opts.node_id = ByteBuffer.fromHex(args.peer)
+    if(IS_GREENLIGHT) opts.node_id = args.peer
   }
   return opts
 }
