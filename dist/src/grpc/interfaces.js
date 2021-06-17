@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
+exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const config = config_1.loadConfig();
@@ -20,6 +20,13 @@ function getInfoResponse(res) {
             alias: r.alias,
             color: r.color,
             num_peers: r.num_peers,
+            // FAKE VALUES
+            num_active_channels: 0,
+            num_pending_channels: 0,
+            synced_to_chain: true,
+            synced_to_graph: true,
+            best_header_timestamp: 0,
+            testnet: false,
         };
     }
     return {};
@@ -38,18 +45,45 @@ function addInvoiceRequest(req) {
     return {};
 }
 exports.addInvoiceRequest = addInvoiceRequest;
+var GreenlightInvoiceStatus;
+(function (GreenlightInvoiceStatus) {
+    GreenlightInvoiceStatus[GreenlightInvoiceStatus["UNPAID"] = 0] = "UNPAID";
+    GreenlightInvoiceStatus[GreenlightInvoiceStatus["PAID"] = 1] = "PAID";
+    GreenlightInvoiceStatus[GreenlightInvoiceStatus["EXPIRED"] = 2] = "EXPIRED";
+})(GreenlightInvoiceStatus || (GreenlightInvoiceStatus = {}));
+function addInvoiceCommand() {
+    if (IS_LND)
+        return 'addInvoice';
+    if (IS_GREENLIGHT)
+        return 'createInvoice';
+    return 'addInvoice';
+}
+exports.addInvoiceCommand = addInvoiceCommand;
+function addInvoiceResponse(res) {
+    if (IS_LND)
+        return res;
+    if (IS_GREENLIGHT) {
+        const r = res;
+        return {
+            payment_request: r.bolt11,
+            r_hash: r.payment_hash,
+            add_index: 0
+        };
+    }
+    return {};
+}
+exports.addInvoiceResponse = addInvoiceResponse;
 function listChannelsResponse(res) {
     if (IS_LND)
         return res;
     if (IS_GREENLIGHT) {
-        console.log(JSON.stringify(res));
         const chans = [];
         res.peers.forEach((p) => {
             p.channels.forEach((ch, i) => {
                 chans.push({
                     active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
                     remote_pubkey: Buffer.from(p.id).toString("hex"),
-                    channel_point: ch.funding_txid = ':' + i,
+                    channel_point: ch.funding_txid + ':' + i,
                     chan_id: ch.channel_id,
                     capacity: greelightNumber(ch.total),
                     local_balance: greelightNumber(ch.spendable),
@@ -84,7 +118,6 @@ function listChannelsRequest(args) {
 }
 exports.listChannelsRequest = listChannelsRequest;
 function greelightNumber(s) {
-    console.log(s);
     if (s.endsWith('msat')) {
         const s1 = s.substr(0, s.length - 4);
         return Math.floor(parseInt(s1) / 1000);

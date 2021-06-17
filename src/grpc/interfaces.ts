@@ -42,7 +42,7 @@ interface GreenlightAddress {
   port: number;
 }
 interface GreenlightGetInfoResponse {
-  node_id: ArrayBuffer;
+  node_id: Buffer;
   alias: string;
   color: string;
   num_peers: number;
@@ -67,6 +67,13 @@ export function getInfoResponse(
       alias: r.alias,
       color: r.color,
       num_peers: r.num_peers,
+      // FAKE VALUES
+      num_active_channels: 0,
+      num_pending_channels: 0,
+      synced_to_chain: true,
+      synced_to_graph: true,
+      best_header_timestamp: 0,
+      testnet: false,
     };
   }
   return <GetInfoResponse>{};
@@ -108,6 +115,48 @@ export function addInvoiceRequest(
     };
   }
   return <AddInvoiceRequest>{};
+}
+export interface AddInvoiceResponse {
+  r_hash: Buffer;
+  payment_request: string;
+  add_index: number
+}
+enum GreenlightInvoiceStatus {
+  UNPAID = 0,
+	PAID = 1,
+	EXPIRED = 2
+}
+interface GreenlightInvoice {
+  label: string
+	description: string
+	millisatoshi?: number;
+  satoshi?: number;
+  bitcoin?: number;
+	status: GreenlightInvoiceStatus
+	payment_time: number
+	expiry_time: number
+	bolt11: string
+	payment_hash: Buffer
+	payment_preimage: Buffer
+}
+export function addInvoiceCommand(): string {
+  if(IS_LND) return 'addInvoice'
+  if(IS_GREENLIGHT) return 'createInvoice'
+  return 'addInvoice'
+}
+export function addInvoiceResponse(
+  res: AddInvoiceResponse | GreenlightInvoice
+): AddInvoiceResponse {
+  if (IS_LND) return res as AddInvoiceResponse;
+  if (IS_GREENLIGHT) {
+    const r = res as GreenlightInvoice
+    return <AddInvoiceResponse>{
+      payment_request: r.bolt11,
+      r_hash: r.payment_hash,
+      add_index: 0
+    };
+  }
+  return <AddInvoiceResponse>{};
 }
 
 /* LIST CHANNELS */
@@ -184,7 +233,7 @@ interface GreenlightChannel {
   htlcs: GreenlightHTLC[];
 }
 interface GreenlightPeer {
-  id: ArrayBuffer;
+  id: Buffer;
   connected: boolean;
   addresses: GreenlightAddress[];
   features: string
@@ -198,14 +247,13 @@ export function listChannelsResponse(
 ): ListChannelsResponse {
   if (IS_LND) return res as ListChannelsResponse;
   if (IS_GREENLIGHT) {
-    console.log(JSON.stringify(res))
     const chans: Channel[] = [];
     (res as GreenlightListPeersResponse).peers.forEach((p:GreenlightPeer)=>{
       p.channels.forEach((ch:GreenlightChannel,i:number)=>{
         chans.push(<Channel>{
           active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
           remote_pubkey: Buffer.from(p.id).toString("hex"),
-          channel_point: ch.funding_txid = ':' + i,
+          channel_point: ch.funding_txid + ':' + i,
           chan_id: ch.channel_id,
           capacity: greelightNumber(ch.total),
           local_balance: greelightNumber(ch.spendable),
@@ -239,7 +287,6 @@ export function listChannelsRequest(args?:ListChannelsArgs): {[k:string]:any} {
 }
 
 function greelightNumber(s: string): number {
-  console.log(s)
   if (s.endsWith('msat')) {
     const s1 = s.substr(0, s.length-4)
     return Math.floor(parseInt(s1)/1000)

@@ -1,6 +1,6 @@
 import * as publicIp from 'public-ip'
 import password from './password'
-import * as LND from '../grpc/lightning'
+import * as Lightning from '../grpc/lightning'
 import { isClean } from './nodeinfo'
 import {loadConfig} from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
@@ -34,7 +34,7 @@ async function makeVarScript(): Promise<string> {
   const clean = await isClean()
   const isSignedUp = clean ? false : true
 
-  const channelList = await LND.listChannels({});
+  const channelList = await Lightning.listChannels({});
   const { channels } = channelList;
   if (!channels || channels.length===0) {
     return `<script>
@@ -56,7 +56,7 @@ async function makeVarScript(): Promise<string> {
   let channelFeesBaseZero = false
   const policies = ['node1_policy','node2_policy']
   await asyncForEach(channels, async chan=>{
-    const info = await LND.getChanInfo(chan.chan_id)
+    const info = await Lightning.getChanInfo(chan.chan_id)
     if(!info) return
     policies.forEach(p=>{
       if(info[p]) {
@@ -79,14 +79,14 @@ export async function genChannel(req, res) {
   const { amount } = req.body;
   if(!amount) return failure(res, 'no amount')
   try {
-    await LND.connectPeer({
+    await Lightning.connectPeer({
       addr: {
         pubkey:'023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
         host:'54.159.193.149:9735'
       }
     })
     const sat_per_byte = await getSuggestedSatPerByte();
-    await LND.openChannel({
+    await Lightning.openChannel({
       node_pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f', // bytes
       local_funding_amount: amount,
       push_sat: Math.round(amount*0.02),

@@ -17,14 +17,14 @@ const LND_IP = config.lnd_ip || 'localhost'
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
 
-const LND_KEYSEND_KEY = 5482373484
-const SPHINX_CUSTOM_RECORD_KEY = 133773310
+export const LND_KEYSEND_KEY = 5482373484
+export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
 var lightningClient = <any>null;
 var walletUnlocker = <any>null;
 var routerClient = <any>null;
 
-const loadCredentials = (macName?: string) => {
+export const loadCredentials = (macName?: string) => {
   var lndCert = fs.readFileSync(config.tls_location);
   var sslCreds = grpc.credentials.createSsl(lndCert);
   var macaroon = getMacaroon(macName)
@@ -44,7 +44,7 @@ const loadGreenlightCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain);
 }
 
-async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
+export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   // only if specified AND available
   if (tryProxy && isProxy()) {
     const pl = await loadProxyLightning(ownerPubkey)
@@ -77,7 +77,7 @@ async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   
 }
 
-const loadWalletUnlocker = () => {
+export const loadWalletUnlocker = () => {
   if (walletUnlocker) {
     return walletUnlocker
   } else {
@@ -93,7 +93,7 @@ const loadWalletUnlocker = () => {
   }
 }
 
-const unlockWallet = async (pwd: string) => {
+export const unlockWallet = async (pwd: string) => {
   return new Promise(async function (resolve, reject) {
     let wu = await loadWalletUnlocker()
     wu.unlockWallet(
@@ -109,7 +109,7 @@ const unlockWallet = async (pwd: string) => {
   })
 }
 
-const getHeaders = (req) => {
+export const getHeaders = (req) => {
   return {
     "X-User-Token": req.headers['x-user-token'],
     "X-User-Email": req.headers['x-user-email']
@@ -118,8 +118,8 @@ const getHeaders = (req) => {
 
 var isLocked = false
 let lockTimeout: ReturnType<typeof setTimeout>;
-const getLock = () => isLocked
-const setLock = (value) => {
+export const getLock = () => isLocked
+export const setLock = (value) => {
   isLocked = value
   console.log({ isLocked })
   if (lockTimeout) clearTimeout(lockTimeout)
@@ -129,7 +129,7 @@ const setLock = (value) => {
   }, 1000 * 60 * 2)
 }
 
-const getRoute = async (pub_key, amt, route_hint, callback) => {
+export const getRoute = async (pub_key, amt, route_hint, callback) => {
   log('getRoute')
   let lightning = await loadLightning(true) // try proxy
   const options:{[k:string]:any} = { pub_key, amt }
@@ -147,7 +147,7 @@ const getRoute = async (pub_key, amt, route_hint, callback) => {
   )
 }
 
-const queryRoute = async (pub_key, amt, route_hint, ownerPubkey?:string) => {
+export const queryRoute = async (pub_key, amt, route_hint, ownerPubkey?:string) => {
   log('queryRoute')
   return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
@@ -173,7 +173,7 @@ const queryRoute = async (pub_key, amt, route_hint, ownerPubkey?:string) => {
   })
 }
 
-const decodePayReq = async (pay_req) => {
+export const decodePayReq = async (pay_req) => {
   log('decodePayReq')
   return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning()
@@ -216,7 +216,7 @@ export async function newAddress(type: NewAddressType = NESTED_PUBKEY_HASH): Pro
 }
 
 // for payingn invoice and invite invoice
-async function sendPayment(payment_request:string, ownerPubkey?:string) {
+export async function sendPayment(payment_request:string, ownerPubkey?:string) {
   log('sendPayment')
   return new Promise(async (resolve,reject)=>{
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
@@ -250,7 +250,7 @@ async function sendPayment(payment_request:string, ownerPubkey?:string) {
   })
 }
 
-const keysend = (opts, ownerPubkey?:string) => {
+export const keysend = (opts, ownerPubkey?:string) => {
   log('keysend')
   return new Promise(async function (resolve, reject) {
     try {
@@ -327,7 +327,7 @@ const keysend = (opts, ownerPubkey?:string) => {
   })
 }
 
-const loadRouter = () => {
+export const loadRouter = () => {
   if (routerClient) {
     return routerClient
   } else {
@@ -344,7 +344,7 @@ const loadRouter = () => {
 }
 
 const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
-async function keysendMessage(opts, ownerPubkey?:string) {
+export async function keysendMessage(opts, ownerPubkey?:string) {
   log('keysendMessage')
   return new Promise(async function (resolve, reject) {
     if (!opts.data || typeof opts.data !== 'string') {
@@ -398,7 +398,7 @@ async function asyncForEach(array, callback) {
   }
 }
 
-async function signAscii(ascii, ownerPubkey?:string) {
+export async function signAscii(ascii, ownerPubkey?:string) {
   try {
     const sig = await signMessage(ascii_to_hexa(ascii), ownerPubkey)
     return sig
@@ -407,7 +407,7 @@ async function signAscii(ascii, ownerPubkey?:string) {
   }
 }
 
-function listInvoices() {
+export function listInvoices() {
   log('listInvoices')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
@@ -424,7 +424,7 @@ function listInvoices() {
   })
 }
 
-async function listAllInvoices() {
+export async function listAllInvoices() {
   console.log('=> list all invoices')
   const invs = await paginateInvoices(40)
   return invs
@@ -456,7 +456,7 @@ function listInvoicesPaginated(limit, offset) {
 }
 
 // need to upgrade to .10 for this
-async function listAllPayments() {
+export async function listAllPayments() {
   console.log("=> list all payments")
   const pays = await paginatePayments(40) // max num
   console.log('pays', pays && pays.length)
@@ -474,7 +474,7 @@ async function paginatePayments(limit, i = 0) {
     return []
   }
 }
-function listPaymentsPaginated(limit, offset) {
+export function listPaymentsPaginated(limit, offset) {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listPayments({
@@ -488,7 +488,7 @@ function listPaymentsPaginated(limit, offset) {
   })
 }
 
-function listAllPaymentsFull() {
+export function listAllPaymentsFull() {
   console.log('=> list all payments')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
@@ -502,7 +502,7 @@ function listAllPaymentsFull() {
   })
 }
 
-const signMessage = (msg, ownerPubkey?:string) => {
+export const signMessage = (msg, ownerPubkey?:string) => {
   // log('signMessage')
   return new Promise(async (resolve, reject) => {
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
@@ -521,7 +521,7 @@ const signMessage = (msg, ownerPubkey?:string) => {
   })
 }
 
-const signBuffer = (msg, ownerPubkey?:string) => {
+export const signBuffer = (msg, ownerPubkey?:string) => {
   log('signBuffer')
   return new Promise(async (resolve, reject) => {
     try {
@@ -540,7 +540,7 @@ const signBuffer = (msg, ownerPubkey?:string) => {
   })
 }
 
-async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
+export async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
   try {
     const r = await verifyMessage(msg.toString('hex'), sig)
     return r
@@ -548,7 +548,7 @@ async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
     throw e
   }
 }
-function verifyMessage(msg, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
+export function verifyMessage(msg, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('verifyMessage')
   return new Promise(async (resolve, reject) => {
     try {
@@ -569,7 +569,7 @@ function verifyMessage(msg, sig, ownerPubkey?:string): Promise<{ [k: string]: an
     }
   })
 }
-async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
+export async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   try {
     const r = await verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey)
     return r
@@ -578,7 +578,7 @@ async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: strin
   }
 }
 
-async function getInfo(tryProxy?:boolean): Promise<interfaces.GetInfoResponse> {
+export async function getInfo(tryProxy?:boolean): Promise<interfaces.GetInfoResponse> {
   // log('getInfo')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(tryProxy===false?false:true) // try proxy
@@ -594,7 +594,24 @@ async function getInfo(tryProxy?:boolean): Promise<interfaces.GetInfoResponse> {
   })
 }
 
-async function listChannels(args?:interfaces.ListChannelsArgs, ownerPubkey?:string): Promise<{ [k: string]: any }> {
+export async function addInvoice(request: {[k: string]: any}, ownerPubkey?:string): Promise<interfaces.AddInvoiceResponse> {
+  // log('addInvoice')
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+    const cmd = interfaces.addInvoiceCommand()
+    lightning[cmd](request, function (err, response) {
+      if (err == null) {
+        resolve(
+          interfaces.addInvoiceResponse(response)
+        )
+      } else {
+        reject(err)
+      }
+    });
+  })
+}
+
+export async function listChannels(args?:interfaces.ListChannelsArgs, ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('listChannels')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
@@ -672,7 +689,7 @@ export async function openChannel(args: OpenChannelArgs): Promise<{ [k: string]:
   })
 }
 
-async function channelBalance(ownerPubkey?:string): Promise<{ [k: string]: any }> {
+export async function channelBalance(ownerPubkey?:string): Promise<{ [k: string]: any }> {
   log('channelBalance')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
@@ -686,8 +703,9 @@ async function channelBalance(ownerPubkey?:string): Promise<{ [k: string]: any }
   })
 }
 
-async function getChanInfo(chan_id: number, tryProxy?:boolean): Promise<{ [k: string]: any }> {
+export async function getChanInfo(chan_id: number, tryProxy?:boolean): Promise<{ [k: string]: any }> {
   // log('getChanInfo')
+  if (IS_GREENLIGHT) return {} // skip for now
   return new Promise(async (resolve, reject) => {
     if(!chan_id) {
       return reject('no chan id')
@@ -711,39 +729,6 @@ function ascii_to_hexa(str) {
   }
   return arr1.join('');
 }
-
-export {
-  loadCredentials,
-  loadLightning,
-  loadWalletUnlocker,
-  getHeaders,
-  getLock,
-  setLock,
-  getRoute,
-  keysend,
-  keysendMessage,
-  signMessage,
-  verifyMessage,
-  verifyAscii,
-  verifyBytes,
-  signAscii,
-  signBuffer,
-  LND_KEYSEND_KEY,
-  SPHINX_CUSTOM_RECORD_KEY,
-  listInvoices,
-  listAllPayments,
-  getInfo,
-  listAllInvoices,
-  listAllPaymentsFull,
-  queryRoute,
-  listChannels,
-  getChanInfo,
-  channelBalance,
-  unlockWallet,
-  sendPayment,
-  decodePayReq,
-}
-
 
 // async function loadLightningNew() {
 //   if (lightningClient) {

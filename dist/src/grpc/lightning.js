@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decodePayReq = exports.sendPayment = exports.unlockWallet = exports.channelBalance = exports.getChanInfo = exports.listChannels = exports.queryRoute = exports.listAllPaymentsFull = exports.listAllInvoices = exports.getInfo = exports.listAllPayments = exports.listInvoices = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = exports.signBuffer = exports.signAscii = exports.verifyBytes = exports.verifyAscii = exports.verifyMessage = exports.signMessage = exports.keysendMessage = exports.keysend = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = void 0;
+exports.getChanInfo = exports.channelBalance = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.decodePayReq = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -27,10 +27,8 @@ const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
-const LND_KEYSEND_KEY = 5482373484;
-exports.LND_KEYSEND_KEY = LND_KEYSEND_KEY;
-const SPHINX_CUSTOM_RECORD_KEY = 133773310;
-exports.SPHINX_CUSTOM_RECORD_KEY = SPHINX_CUSTOM_RECORD_KEY;
+exports.LND_KEYSEND_KEY = 5482373484;
+exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
 var lightningClient = null;
 var walletUnlocker = null;
 var routerClient = null;
@@ -73,7 +71,7 @@ function loadLightning(tryProxy, ownerPubkey) {
             return lightningClient;
         }
         try { // LND
-            var credentials = loadCredentials();
+            var credentials = exports.loadCredentials();
             var lnrpcDescriptor = grpc.load("proto/rpc.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
             lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
@@ -90,7 +88,7 @@ const loadWalletUnlocker = () => {
         return walletUnlocker;
     }
     else {
-        var credentials = loadCredentials();
+        var credentials = exports.loadCredentials();
         try {
             var lnrpcDescriptor = grpc.load("proto/walletunlocker.proto");
             var lnrpc = lnrpcDescriptor.lnrpc;
@@ -106,7 +104,7 @@ exports.loadWalletUnlocker = loadWalletUnlocker;
 const unlockWallet = (pwd) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            let wu = yield loadWalletUnlocker();
+            let wu = yield exports.loadWalletUnlocker();
             wu.unlockWallet({ wallet_password: ByteBuffer.fromUTF8(pwd) }, (err, response) => {
                 if (err) {
                     reject(err);
@@ -274,8 +272,8 @@ const keysend = (opts, ownerPubkey) => {
                     final_cltv_delta: 10,
                     dest: ByteBuffer.fromHex(opts.dest),
                     dest_custom_records: {
-                        [`${LND_KEYSEND_KEY}`]: preimage,
-                        [`${SPHINX_CUSTOM_RECORD_KEY}`]: ByteBuffer.fromUTF8(opts.data),
+                        [`${exports.LND_KEYSEND_KEY}`]: preimage,
+                        [`${exports.SPHINX_CUSTOM_RECORD_KEY}`]: ByteBuffer.fromUTF8(opts.data),
                     },
                     payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
                     dest_features: [9],
@@ -313,7 +311,7 @@ const keysend = (opts, ownerPubkey) => {
                     // new sendPayment (with optional route hints)
                     options.fee_limit_sat = FEE_LIMIT_SAT;
                     options.timeout_seconds = 16;
-                    const router = yield loadRouter();
+                    const router = yield exports.loadRouter();
                     const call = router.sendPaymentV2(options);
                     call.on('data', function (payment) {
                         const state = payment.status || payment.state;
@@ -353,7 +351,7 @@ const loadRouter = () => {
     }
     else {
         try {
-            var credentials = loadCredentials('router.macaroon');
+            var credentials = exports.loadCredentials('router.macaroon');
             var descriptor = grpc.load("proto/router.proto");
             var router = descriptor.routerrpc;
             routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials);
@@ -364,6 +362,7 @@ const loadRouter = () => {
         }
     }
 };
+exports.loadRouter = loadRouter;
 const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -375,7 +374,7 @@ function keysendMessage(opts, ownerPubkey) {
                 }
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
-                        const res = yield keysend(opts, ownerPubkey);
+                        const res = yield exports.keysend(opts, ownerPubkey);
                         resolve(res);
                     }
                     catch (e) {
@@ -396,7 +395,7 @@ function keysendMessage(opts, ownerPubkey) {
                     const isLastThread = i === n - 1;
                     const amt = isLastThread ? opts.amt : constants_1.default.min_sat_amount;
                     try {
-                        res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
+                        res = yield exports.keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
                         success = true;
                         yield helpers_1.sleep(432);
                     }
@@ -426,7 +425,7 @@ function asyncForEach(array, callback) {
 function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
+            const sig = yield exports.signMessage(ascii_to_hexa(ascii), ownerPubkey);
             return sig;
         }
         catch (e) {
@@ -531,6 +530,7 @@ function listPaymentsPaginated(limit, offset) {
         });
     }));
 }
+exports.listPaymentsPaginated = listPaymentsPaginated;
 function listAllPaymentsFull() {
     console.log('=> list all payments');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -653,6 +653,24 @@ function getInfo(tryProxy) {
     });
 }
 exports.getInfo = getInfo;
+function addInvoice(request, ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // log('addInvoice')
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+            const cmd = interfaces.addInvoiceCommand();
+            lightning[cmd](request, function (err, response) {
+                if (err == null) {
+                    resolve(interfaces.addInvoiceResponse(response));
+                }
+                else {
+                    reject(err);
+                }
+            });
+        }));
+    });
+}
+exports.addInvoice = addInvoice;
 function listChannels(args, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         log('listChannels');
@@ -749,6 +767,8 @@ exports.channelBalance = channelBalance;
 function getChanInfo(chan_id, tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
         // log('getChanInfo')
+        if (IS_GREENLIGHT)
+            return {}; // skip for now
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             if (!chan_id) {
                 return reject('no chan id');

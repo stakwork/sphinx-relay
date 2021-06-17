@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = exports.genChannel = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
-const LND = require("../grpc/lightning");
+const Lightning = require("../grpc/lightning");
 const nodeinfo_1 = require("./nodeinfo");
 const config_1 = require("./config");
 const queries_1 = require("../controllers/queries");
@@ -47,7 +47,7 @@ function makeVarScript() {
     return __awaiter(this, void 0, void 0, function* () {
         const clean = yield nodeinfo_1.isClean();
         const isSignedUp = clean ? false : true;
-        const channelList = yield LND.listChannels({});
+        const channelList = yield Lightning.listChannels({});
         const { channels } = channelList;
         if (!channels || channels.length === 0) {
             return `<script>
@@ -63,7 +63,7 @@ function makeVarScript() {
         let channelFeesBaseZero = false;
         const policies = ['node1_policy', 'node2_policy'];
         yield asyncForEach(channels, (chan) => __awaiter(this, void 0, void 0, function* () {
-            const info = yield LND.getChanInfo(chan.chan_id);
+            const info = yield Lightning.getChanInfo(chan.chan_id);
             if (!info)
                 return;
             policies.forEach(p => {
@@ -89,14 +89,14 @@ function genChannel(req, res) {
         if (!amount)
             return res_1.failure(res, 'no amount');
         try {
-            yield LND.connectPeer({
+            yield Lightning.connectPeer({
                 addr: {
                     pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
                     host: '54.159.193.149:9735'
                 }
             });
             const sat_per_byte = yield queries_1.getSuggestedSatPerByte();
-            yield LND.openChannel({
+            yield Lightning.openChannel({
                 node_pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
                 local_funding_amount: amount,
                 push_sat: Math.round(amount * 0.02),

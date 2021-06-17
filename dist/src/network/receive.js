@@ -360,6 +360,7 @@ function initGrpcSubscriptions() {
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
+            console.log(e);
             throw e;
         }
     });

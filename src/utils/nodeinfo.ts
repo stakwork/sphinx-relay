@@ -176,36 +176,34 @@ const policies = ['node1_policy','node2_policy']
 async function listNonZeroPolicies(){
   const ret: Policy[] = []
 
-  const lightning = await Lightning.loadLightning(false) // dont try proxy
-  lightning.listChannels({}, async (err, channelList) => {
-    if (err) return ret
+  try {
+    const channelList = await Lightning.listChannels({})
     if (!channelList) return ret
     if (!channelList.channels) return ret
     const { channels } = channelList
-
     await asyncForEach(channels, async chan=>{
-      try {
-        const tryProxy = false
-        const info = await Lightning.getChanInfo(chan.chan_id, tryProxy)
-        if(!info) return
-        policies.forEach(p=>{
-          if(info[p]) {
-            const fee_base_msat = parseInt(info[p].fee_base_msat)
-            const disabled = info[p].disabled
-            if(fee_base_msat>0 || disabled) {
-              ret.push({
-                node:p, 
-                fee_base_msat, 
-                chan_id:chan.chan_id, 
-                disabled
-              })
-            }
+      const tryProxy = false
+      const info = await Lightning.getChanInfo(chan.chan_id, tryProxy)
+      if(!info) return
+      policies.forEach(p=>{
+        if(info[p]) {
+          const fee_base_msat = parseInt(info[p].fee_base_msat)
+          const disabled = info[p].disabled
+          if(fee_base_msat>0 || disabled) {
+            ret.push({
+              node:p, 
+              fee_base_msat, 
+              chan_id:chan.chan_id, 
+              disabled
+            })
           }
-        })
-      } catch(e){}
+        }
+      })
     })
+  } catch(e) {
     return ret
-  })
+  }
+  return ret
 }
 
 async function asyncForEach(array, callback) {

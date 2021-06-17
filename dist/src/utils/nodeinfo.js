@@ -182,40 +182,38 @@ const policies = ['node1_policy', 'node2_policy'];
 function listNonZeroPolicies() {
     return __awaiter(this, void 0, void 0, function* () {
         const ret = [];
-        const lightning = yield Lightning.loadLightning(false); // dont try proxy
-        lightning.listChannels({}, (err, channelList) => __awaiter(this, void 0, void 0, function* () {
-            if (err)
-                return ret;
+        try {
+            const channelList = yield Lightning.listChannels({});
             if (!channelList)
                 return ret;
             if (!channelList.channels)
                 return ret;
             const { channels } = channelList;
             yield asyncForEach(channels, (chan) => __awaiter(this, void 0, void 0, function* () {
-                try {
-                    const tryProxy = false;
-                    const info = yield Lightning.getChanInfo(chan.chan_id, tryProxy);
-                    if (!info)
-                        return;
-                    policies.forEach(p => {
-                        if (info[p]) {
-                            const fee_base_msat = parseInt(info[p].fee_base_msat);
-                            const disabled = info[p].disabled;
-                            if (fee_base_msat > 0 || disabled) {
-                                ret.push({
-                                    node: p,
-                                    fee_base_msat,
-                                    chan_id: chan.chan_id,
-                                    disabled
-                                });
-                            }
+                const tryProxy = false;
+                const info = yield Lightning.getChanInfo(chan.chan_id, tryProxy);
+                if (!info)
+                    return;
+                policies.forEach(p => {
+                    if (info[p]) {
+                        const fee_base_msat = parseInt(info[p].fee_base_msat);
+                        const disabled = info[p].disabled;
+                        if (fee_base_msat > 0 || disabled) {
+                            ret.push({
+                                node: p,
+                                fee_base_msat,
+                                chan_id: chan.chan_id,
+                                disabled
+                            });
                         }
-                    });
-                }
-                catch (e) { }
+                    }
+                });
             }));
+        }
+        catch (e) {
             return ret;
-        }));
+        }
+        return ret;
     });
 }
 function asyncForEach(array, callback) {

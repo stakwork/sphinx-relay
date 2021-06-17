@@ -375,6 +375,7 @@ export async function initGrpcSubscriptions() {
     console.log('>>>>>>>>', c)
     await lndService.subscribeInvoices(parseKeysendInvoice);
   } catch (e) {
+    console.log(e)
     throw e;
   }
 }
