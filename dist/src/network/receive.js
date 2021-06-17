@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
 const lndService = require("../grpc/lnd");
-const lightning = require("../grpc/lightning");
+const Lightning = require("../grpc/lightning");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
 const lightning_1 = require("../grpc/lightning");
@@ -27,6 +27,7 @@ const hub_1 = require("../hub");
 const constants_1 = require("../constants");
 const jsonUtils = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
+const bolt11 = require("bolt11");
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -353,10 +354,15 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const i = yield lightning.getInfo(true); // try proxy
+            const i = yield Lightning.getInfo(true); // try proxy
             console.log('========', i);
-            const c = yield lightning.listChannels(); // examp
+            const c = yield Lightning.listChannels(); // examp
             console.log('>>>>>>>>', c);
+            // const inv = await Lightning.addInvoice({
+            //   value: 1000,
+            //   memo: 'hello world',
+            // })
+            // console.log("CREATED INVOICE", inv)
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
@@ -416,7 +422,7 @@ function parseAndVerifyPayload(data) {
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
                 }
                 if (sig.length === 104) {
-                    v = yield lightning.verifyAscii(msg, sig);
+                    v = yield Lightning.verifyAscii(msg, sig);
                 }
                 if (v && v.valid) {
                     return payload;
@@ -479,12 +485,10 @@ function parseKeysendInvoice(i) {
         let owner;
         if (proxy_1.isProxy()) {
             try {
-                const invoice = yield lightning_1.decodePayReq(i.payment_request);
-                if (!invoice)
-                    return console.log("couldn't decode pay req");
-                if (!invoice.destination)
+                const invoice = bolt11.decode(i.payment_request);
+                if (!invoice.payeeNodeKey)
                     return console.log("cant get dest from pay req");
-                dest = invoice.destination;
+                dest = invoice.payeeNodeKey;
                 owner = yield models_1.models.Contact.findOne({
                     where: { isOwner: true, publicKey: dest },
                 });

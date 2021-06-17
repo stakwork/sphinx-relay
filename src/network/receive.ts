@@ -1,8 +1,8 @@
 import * as lndService from "../grpc/lnd";
-import * as lightning from "../grpc/lightning";
+import * as Lightning from "../grpc/lightning";
 import { ACTIONS } from "../controllers";
 import * as tribes from "../utils/tribes";
-import { SPHINX_CUSTOM_RECORD_KEY, decodePayReq } from "../grpc/lightning";
+import { SPHINX_CUSTOM_RECORD_KEY } from "../grpc/lightning";
 import * as signer from "../utils/signer";
 import { models } from "../models";
 import { sendMessage } from "./send";
@@ -19,7 +19,7 @@ import { sendNotification } from "../hub";
 import constants from "../constants";
 import * as jsonUtils from "../utils/json";
 import { isProxy } from "../utils/proxy";
-
+import * as bolt11 from 'bolt11'
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -369,10 +369,15 @@ async function forwardMessageToTribe(
 
 export async function initGrpcSubscriptions() {
   try {
-    const i = await lightning.getInfo(true); // try proxy
+    const i = await Lightning.getInfo(true); // try proxy
     console.log('========', i)
-    const c = await lightning.listChannels(); // examp
+    const c = await Lightning.listChannels(); // examp
     console.log('>>>>>>>>', c)
+    // const inv = await Lightning.addInvoice({
+    //   value: 1000,
+    //   memo: 'hello world',
+    // })
+    // console.log("CREATED INVOICE", inv)
     await lndService.subscribeInvoices(parseKeysendInvoice);
   } catch (e) {
     console.log(e)
@@ -424,7 +429,7 @@ async function parseAndVerifyPayload(data) {
         v = await signer.verifyAscii(msg, sig, payload.sender.pub_key);
       }
       if (sig.length === 104) {
-        v = await lightning.verifyAscii(msg, sig);
+        v = await Lightning.verifyAscii(msg, sig);
       }
       if (v && v.valid) {
         return payload;
@@ -485,11 +490,10 @@ export async function parseKeysendInvoice(i) {
   let owner;
   if (isProxy()) {
     try {
-      const invoice: any = await decodePayReq(i.payment_request);
-      if (!invoice) return console.log("couldn't decode pay req");
-      if (!invoice.destination)
+      const invoice = bolt11.decode(i.payment_request)
+      if (!invoice.payeeNodeKey)
         return console.log("cant get dest from pay req");
-      dest = invoice.destination;
+      dest = invoice.payeeNodeKey;
       owner = await models.Contact.findOne({
         where: { isOwner: true, publicKey: dest },
       });

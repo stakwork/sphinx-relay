@@ -37,7 +37,7 @@ function addInvoiceRequest(req) {
         return req;
     if (IS_GREENLIGHT) {
         return {
-            satoshi: req.value,
+            amount: { satoshi: req.value },
             label: req.memo,
             description: req.memo,
         };

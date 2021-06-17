@@ -173,23 +173,6 @@ export const queryRoute = async (pub_key, amt, route_hint, ownerPubkey?:string) 
   })
 }
 
-export const decodePayReq = async (pay_req) => {
-  log('decodePayReq')
-  return new Promise(async function (resolve, reject) {
-    let lightning = await loadLightning()
-    lightning.decodePayReq(
-      { pay_req },
-      (err, response) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(response)
-      }
-    )
-  })
-}
-
 export const WITNESS_PUBKEY_HASH = 0;
 export const NESTED_PUBKEY_HASH = 1;
 export const UNUSED_WITNESS_PUBKEY_HASH = 2;
@@ -594,12 +577,13 @@ export async function getInfo(tryProxy?:boolean): Promise<interfaces.GetInfoResp
   })
 }
 
-export async function addInvoice(request: {[k: string]: any}, ownerPubkey?:string): Promise<interfaces.AddInvoiceResponse> {
+export async function addInvoice(request: interfaces.AddInvoiceRequest, ownerPubkey?:string): Promise<interfaces.AddInvoiceResponse> {
   // log('addInvoice')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
     const cmd = interfaces.addInvoiceCommand()
-    lightning[cmd](request, function (err, response) {
+    const req = interfaces.addInvoiceRequest(request)
+    lightning[cmd](req, function (err, response) {
       if (err == null) {
         resolve(
           interfaces.addInvoiceResponse(response)

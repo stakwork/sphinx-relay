@@ -2,9 +2,8 @@ import { models } from '../models'
 import * as socket from '../utils/socket'
 import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
-import * as decodeUtils from '../utils/decode'
 import constants from '../constants'
-import { decodePayReq } from './lightning'
+import * as bolt11 from 'bolt11'
 
 const oktolog = false
 export function loginvoice(response){
@@ -17,24 +16,16 @@ export function loginvoice(response){
 }
 
 export async function receiveNonKeysend(response) {
-  let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
-  var paymentHash = "";
-  for (var i = 0; i < decodedPaymentRequest["data"]["tags"].length; i++) {
-    let tag = decodedPaymentRequest["data"]["tags"][i];
-    if (tag['description'] == 'payment_hash') {
-      paymentHash = tag['value'];
-      break;
-    }
-  }
+
+  const decoded = bolt11.decode(response['payment_request'])
+  const paymentHash = decoded.tags.find(t=>t.tagName==='payment_hash')?.data || ''
 
   let settleDate = parseInt(response['settle_date'] + '000');
 
   const invoice = await models.Message.findOne({ where: { type: constants.message_types.invoice, payment_request: response['payment_request'] } })
   if (invoice == null) {
-    const invoice:any = await decodePayReq(response['payment_request'])
-    if(!invoice) return console.log("subscribeInvoices: couldn't decode pay req")
-    if(!invoice.destination) return console.log("subscribeInvoices: cant get dest from pay req")
-    const owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:invoice.destination } })
+    if (!decoded.payeeNodeKey) return console.log("subscribeInvoices: cant get dest from pay req")
+    const owner = await models.Contact.findOne({ where: { isOwner:true, publicKey:decoded.payeeNodeKey } })
     if(!owner) return console.log('subscribeInvoices: no owner found')
     const tenant:number = owner.id
     const payReq = response['payment_request']

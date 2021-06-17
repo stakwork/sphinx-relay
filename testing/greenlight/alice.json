@@ -7,7 +7,7 @@
     "tls_key_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/device-key.pem",
     "tls_chain_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/device.crt",
     "lnd_ip": "34.65.38.137",
-    "lnd_port": "6016",
+    "lnd_port": "6006",
     "node_http_protocol": "http",
     "node_http_port": "3001",
     "hub_api_url": "http://lvh.me/api/v1",

@@ -14,9 +14,8 @@ const models_1 = require("../models");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const jsonUtils = require("../utils/json");
-const decodeUtils = require("../utils/decode");
 const constants_1 = require("../constants");
-const lightning_1 = require("./lightning");
+const bolt11 = require("bolt11");
 const oktolog = false;
 function loginvoice(response) {
     if (!oktolog)
@@ -29,25 +28,16 @@ function loginvoice(response) {
 }
 exports.loginvoice = loginvoice;
 function receiveNonKeysend(response) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        let decodedPaymentRequest = decodeUtils.decode(response['payment_request']);
-        var paymentHash = "";
-        for (var i = 0; i < decodedPaymentRequest["data"]["tags"].length; i++) {
-            let tag = decodedPaymentRequest["data"]["tags"][i];
-            if (tag['description'] == 'payment_hash') {
-                paymentHash = tag['value'];
-                break;
-            }
-        }
+        const decoded = bolt11.decode(response['payment_request']);
+        const paymentHash = ((_a = decoded.tags.find(t => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
         let settleDate = parseInt(response['settle_date'] + '000');
         const invoice = yield models_1.models.Message.findOne({ where: { type: constants_1.default.message_types.invoice, payment_request: response['payment_request'] } });
         if (invoice == null) {
-            const invoice = yield lightning_1.decodePayReq(response['payment_request']);
-            if (!invoice)
-                return console.log("subscribeInvoices: couldn't decode pay req");
-            if (!invoice.destination)
+            if (!decoded.payeeNodeKey)
                 return console.log("subscribeInvoices: cant get dest from pay req");
-            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: invoice.destination } });
+            const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: decoded.payeeNodeKey } });
             if (!owner)
                 return console.log('subscribeInvoices: no owner found');
             const tenant = owner.id;

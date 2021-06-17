@@ -83,23 +83,26 @@ export function getInfoResponse(
 interface HopHint {
   node_id: string;
   chan_id: string;
-  fee_base_msat: number;
-  fee_proportional_millionths: number;
-  cltv_expiry_delta: number;
+  fee_base_msat?: number;
+  fee_proportional_millionths?: number;
+  cltv_expiry_delta?: number;
 }
 interface RouteHint {
   hop_hints: HopHint[];
 }
-interface AddInvoiceRequest {
-  memo: string;
+export interface AddInvoiceRequest {
   value: number;
-  route_hints: RouteHint[];
-  expiry: number;
+  memo?: string;
+  route_hints?: RouteHint[];
+  expiry?: number;
 }
-interface GreenlightAddInvoiceRequest {
+interface GreenlightAmount {
   millisatoshi?: number;
   satoshi?: number;
   bitcoin?: number;
+}
+interface GreenlightAddInvoiceRequest {
+  amount: GreenlightAmount;
   label: string;
   description: string;
 }
@@ -109,7 +112,7 @@ export function addInvoiceRequest(
   if (IS_LND) return req;
   if (IS_GREENLIGHT) {
     return <GreenlightAddInvoiceRequest>{
-      satoshi: req.value,
+      amount: {satoshi: req.value},
       label: req.memo,
       description: req.memo,
     };
