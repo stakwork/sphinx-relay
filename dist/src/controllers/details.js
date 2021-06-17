@@ -152,18 +152,15 @@ exports.getLightningInfo = getLightningInfo;
 const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
-    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
-    var request = {};
-    lightning.listChannels(request, function (err, response) {
-        res.status(200);
-        if (err == null) {
-            res.json({ success: true, response });
-        }
-        else {
-            res.json({ success: false });
-        }
-        res.end();
-    });
+    res.status(200);
+    try {
+        const response = yield lightning_1.listChannels({});
+        res.json({ success: true, response });
+    }
+    catch (err) {
+        res.json({ success: false });
+    }
+    res.end();
 });
 exports.getChannels = getChannels;
 const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -202,28 +199,26 @@ exports.getBalance = getBalance;
 const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
-    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
-    lightning.listChannels({}, (err, channelList) => {
+    res.status(200);
+    try {
+        const channelList = yield lightning_1.listChannels({});
         const { channels } = channelList;
         const localBalances = channels.map((c) => c.local_balance);
         const remoteBalances = channels.map((c) => c.remote_balance);
         const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
         const totalRemoteBalance = remoteBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
-        res.status(200);
-        if (err == null) {
-            res.json({
-                success: true,
-                response: {
-                    local_balance: totalLocalBalance,
-                    remote_balance: totalRemoteBalance,
-                },
-            });
-        }
-        else {
-            res.json({ success: false });
-        }
-        res.end();
-    });
+        res.json({
+            success: true,
+            response: {
+                local_balance: totalLocalBalance,
+                remote_balance: totalRemoteBalance,
+            },
+        });
+    }
+    catch (err) {
+        res.json({ success: false });
+    }
+    res.end();
 });
 exports.getLocalRemoteBalance = getLocalRemoteBalance;
 const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

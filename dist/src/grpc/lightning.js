@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decodePayReq = exports.sendPayment = exports.unlockWallet = exports.channelBalance = exports.getChanInfo = exports.listChannels = exports.queryRoute = exports.listAllPaymentsFull = exports.listAllInvoices = exports.getInfo = exports.listAllPayments = exports.listInvoices = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = exports.signBuffer = exports.signAscii = exports.verifyBytes = exports.verifyAscii = exports.verifyMessage = exports.signMessage = exports.keysendMessage = exports.keysend = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.openChannel = exports.connectPeer = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = void 0;
+exports.decodePayReq = exports.sendPayment = exports.unlockWallet = exports.channelBalance = exports.getChanInfo = exports.listChannels = exports.queryRoute = exports.listAllPaymentsFull = exports.listAllInvoices = exports.getInfo = exports.listAllPayments = exports.listInvoices = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = exports.signBuffer = exports.signAscii = exports.verifyBytes = exports.verifyAscii = exports.verifyMessage = exports.signMessage = exports.keysendMessage = exports.keysend = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -639,11 +639,9 @@ exports.verifyAscii = verifyAscii;
 function getInfo(tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
         // log('getInfo')
-        console.log("GET INTO");
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(tryProxy === false ? false : true); // try proxy
             lightning.getInfo({}, function (err, response) {
-                console.log('============', err, response);
                 if (err == null) {
                     resolve(interfaces.getInfoResponse(response));
                 }
@@ -674,6 +672,25 @@ function listChannels(args, ownerPubkey) {
     });
 }
 exports.listChannels = listChannels;
+function pendingChannels(ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        log('pendingChannels');
+        if (IS_GREENLIGHT)
+            return [];
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+            lightning.pendingChannels({}, function (err, response) {
+                if (err == null) {
+                    resolve(response);
+                }
+                else {
+                    reject(err);
+                }
+            });
+        }));
+    });
+}
+exports.pendingChannels = pendingChannels;
 function connectPeer(args) {
     return __awaiter(this, void 0, void 0, function* () {
         log('connectPeer');

@@ -580,11 +580,9 @@ async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: strin
 
 async function getInfo(tryProxy?:boolean): Promise<interfaces.GetInfoResponse> {
   // log('getInfo')
-  console.log("GET INTO")
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(tryProxy===false?false:true) // try proxy
     lightning.getInfo({}, function (err, response) {
-      console.log('============', err, response)
       if (err == null) {
         resolve(
           interfaces.getInfoResponse(response)
@@ -607,6 +605,21 @@ async function listChannels(args?:interfaces.ListChannelsArgs, ownerPubkey?:stri
         resolve(
           interfaces.listChannelsResponse(response)
         )
+      } else {
+        reject(err)
+      }
+    })
+  })
+}
+
+export async function pendingChannels(ownerPubkey?:string): Promise<{ [k: string]: any }> {
+  log('pendingChannels')
+  if (IS_GREENLIGHT) return []
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+    lightning.pendingChannels({}, function (err, response) {
+      if (err == null) {
+        resolve(response)
       } else {
         reject(err)
       }

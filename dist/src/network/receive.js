@@ -353,8 +353,10 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield lightning.getInfo(true); // try proxy
-            // await lightning.listChannels(); // examp
+            const i = yield lightning.getInfo(true); // try proxy
+            console.log('========', i);
+            const c = yield lightning.listChannels(); // examp
+            console.log('>>>>>>>>', c);
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

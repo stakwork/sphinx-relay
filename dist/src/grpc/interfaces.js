@@ -42,17 +42,18 @@ function listChannelsResponse(res) {
     if (IS_LND)
         return res;
     if (IS_GREENLIGHT) {
+        console.log(JSON.stringify(res));
         const chans = [];
         res.peers.forEach((p) => {
-            p.channels.forEach((ch) => {
+            p.channels.forEach((ch, i) => {
                 chans.push({
-                    active: ch.state === 'active',
+                    active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
                     remote_pubkey: Buffer.from(p.id).toString("hex"),
-                    channel_point: ch.funding_txid,
+                    channel_point: ch.funding_txid = ':' + i,
                     chan_id: ch.channel_id,
-                    capacity: Number(ch.total),
-                    local_balance: Number(ch.spendable),
-                    remote_balance: Number(ch.receivable),
+                    capacity: greelightNumber(ch.total),
+                    local_balance: greelightNumber(ch.spendable),
+                    remote_balance: greelightNumber(ch.receivable),
                 });
             });
         });
@@ -82,6 +83,45 @@ function listChannelsRequest(args) {
     return opts;
 }
 exports.listChannelsRequest = listChannelsRequest;
+function greelightNumber(s) {
+    console.log(s);
+    if (s.endsWith('msat')) {
+        const s1 = s.substr(0, s.length - 4);
+        return Math.floor(parseInt(s1) / 1000);
+    }
+    if (s.endsWith('sat')) {
+        const s1 = s.substr(0, s.length - 3);
+        return parseInt(s1);
+    }
+    return 0;
+}
+var GreenlightChannelState;
+(function (GreenlightChannelState) {
+    GreenlightChannelState["CHANNELD_AWAITING_LOCKIN"] = "CHANNELD_AWAITING_LOCKIN";
+    /* Normal operating state. */
+    GreenlightChannelState["CHANNELD_NORMAL"] = "CHANNELD_NORMAL";
+    /* We are closing, pending HTLC resolution. */
+    GreenlightChannelState["CHANNELD_SHUTTING_DOWN"] = "CHANNELD_SHUTTING_DOWN";
+    /* Exchanging signatures on closing tx. */
+    GreenlightChannelState["CLOSINGD_SIGEXCHANGE"] = "CLOSINGD_SIGEXCHANGE";
+    /* Waiting for onchain event. */
+    GreenlightChannelState["CLOSINGD_COMPLETE"] = "CLOSINGD_COMPLETE";
+    /* Waiting for unilateral close to hit blockchain. */
+    GreenlightChannelState["AWAITING_UNILATERAL"] = "AWAITING_UNILATERAL";
+    /* We've seen the funding spent, we're waiting for onchaind. */
+    GreenlightChannelState["FUNDING_SPEND_SEEN"] = "FUNDING_SPEND_SEEN";
+    /* On chain */
+    GreenlightChannelState["ONCHAIN"] = "ONCHAIN";
+    /* Final state after we have fully settled on-chain */
+    GreenlightChannelState["CLOSED"] = "CLOSED";
+    /* For dual-funded channels, we start at a different state.
+     * We transition to 'awaiting lockin' after sigs have
+     * been exchanged */
+    GreenlightChannelState["DUALOPEND_OPEN_INIT"] = "DUALOPEND_OPEN_INIT";
+    /* Dual-funded channel, waiting for lock-in */
+    GreenlightChannelState["DUALOPEND_AWAITING_LOCKIN"] = "DUALOPEND_AWAITING_LOCKIN";
+})(GreenlightChannelState || (GreenlightChannelState = {}));
+;
 /*
 GREENLIGHT NEEDS
 

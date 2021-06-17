@@ -1,5 +1,4 @@
 import {
-  loadLightning,
   queryRoute,
   channelBalance,
   listChannels,
@@ -130,17 +129,14 @@ export const getLightningInfo = async (req, res) => {
 export const getChannels = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
 
-  const lightning = await loadLightning(true, req.owner.publicKey); // try proxy
-  var request = {};
-  lightning.listChannels(request, function (err, response) {
-    res.status(200);
-    if (err == null) {
-      res.json({ success: true, response });
-    } else {
-      res.json({ success: false });
-    }
-    res.end();
-  });
+  res.status(200);
+  try {
+    const response = await listChannels({})
+    res.json({ success: true, response });
+  } catch(err) {
+    res.json({ success: false });
+  }
+  res.end();
 };
 
 interface BalanceRes {
@@ -186,8 +182,9 @@ export const getBalance = async (req, res) => {
 
 export const getLocalRemoteBalance = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
-  const lightning = await loadLightning(true, req.owner.publicKey); // try proxy
-  lightning.listChannels({}, (err, channelList) => {
+  res.status(200);
+  try {
+    const channelList = await listChannels({})
     const { channels } = channelList;
 
     const localBalances = channels.map((c) => c.local_balance);
@@ -200,21 +197,17 @@ export const getLocalRemoteBalance = async (req, res) => {
       (a, b) => parseInt(a) + parseInt(b),
       0
     );
-
-    res.status(200);
-    if (err == null) {
-      res.json({
-        success: true,
-        response: {
-          local_balance: totalLocalBalance,
-          remote_balance: totalRemoteBalance,
-        },
-      });
-    } else {
-      res.json({ success: false });
-    }
-    res.end();
-  });
+    res.json({
+      success: true,
+      response: {
+        local_balance: totalLocalBalance,
+        remote_balance: totalRemoteBalance,
+      },
+    });
+  } catch(err) {
+    res.json({ success: false });
+  }
+  res.end();
 };
 
 export const getNodeInfo = async (req, res) => {

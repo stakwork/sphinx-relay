@@ -369,8 +369,10 @@ async function forwardMessageToTribe(
 
 export async function initGrpcSubscriptions() {
   try {
-    await lightning.getInfo(true); // try proxy
-    // await lightning.listChannels(); // examp
+    const i = await lightning.getInfo(true); // try proxy
+    console.log('========', i)
+    const c = await lightning.listChannels(); // examp
+    console.log('>>>>>>>>', c)
     await lndService.subscribeInvoices(parseKeysendInvoice);
   } catch (e) {
     throw e;

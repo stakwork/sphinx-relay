@@ -198,17 +198,18 @@ export function listChannelsResponse(
 ): ListChannelsResponse {
   if (IS_LND) return res as ListChannelsResponse;
   if (IS_GREENLIGHT) {
+    console.log(JSON.stringify(res))
     const chans: Channel[] = [];
     (res as GreenlightListPeersResponse).peers.forEach((p:GreenlightPeer)=>{
-      p.channels.forEach((ch:GreenlightChannel)=>{
+      p.channels.forEach((ch:GreenlightChannel,i:number)=>{
         chans.push(<Channel>{
-          active: ch.state === 'active',
+          active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
           remote_pubkey: Buffer.from(p.id).toString("hex"),
-          channel_point: ch.funding_txid,
+          channel_point: ch.funding_txid = ':' + i,
           chan_id: ch.channel_id,
-          capacity: Number(ch.total),
-          local_balance: Number(ch.spendable),
-          remote_balance: Number(ch.receivable),
+          capacity: greelightNumber(ch.total),
+          local_balance: greelightNumber(ch.spendable),
+          remote_balance: greelightNumber(ch.receivable),
         })
       })
     })
@@ -236,6 +237,45 @@ export function listChannelsRequest(args?:ListChannelsArgs): {[k:string]:any} {
   }
   return opts
 }
+
+function greelightNumber(s: string): number {
+  console.log(s)
+  if (s.endsWith('msat')) {
+    const s1 = s.substr(0, s.length-4)
+    return Math.floor(parseInt(s1)/1000)
+  }
+  if (s.endsWith('sat')) {
+    const s1 = s.substr(0, s.length-3)
+    return parseInt(s1)
+  } 
+  return 0
+}
+
+enum GreenlightChannelState {
+	CHANNELD_AWAITING_LOCKIN = 'CHANNELD_AWAITING_LOCKIN',
+	/* Normal operating state. */
+	CHANNELD_NORMAL = 'CHANNELD_NORMAL',
+	/* We are closing, pending HTLC resolution. */
+	CHANNELD_SHUTTING_DOWN = 'CHANNELD_SHUTTING_DOWN',
+	/* Exchanging signatures on closing tx. */
+	CLOSINGD_SIGEXCHANGE = 'CLOSINGD_SIGEXCHANGE',
+	/* Waiting for onchain event. */
+	CLOSINGD_COMPLETE = 'CLOSINGD_COMPLETE',
+	/* Waiting for unilateral close to hit blockchain. */
+	AWAITING_UNILATERAL = 'AWAITING_UNILATERAL',
+	/* We've seen the funding spent, we're waiting for onchaind. */
+	FUNDING_SPEND_SEEN = 'FUNDING_SPEND_SEEN',
+	/* On chain */
+	ONCHAIN = 'ONCHAIN',
+	/* Final state after we have fully settled on-chain */
+	CLOSED = 'CLOSED',
+	/* For dual-funded channels, we start at a different state.
+	 * We transition to 'awaiting lockin' after sigs have
+	 * been exchanged */
+	DUALOPEND_OPEN_INIT = 'DUALOPEND_OPEN_INIT',
+	/* Dual-funded channel, waiting for lock-in */
+	DUALOPEND_AWAITING_LOCKIN = 'DUALOPEND_AWAITING_LOCKIN',
+};
 
 /*
 GREENLIGHT NEEDS
