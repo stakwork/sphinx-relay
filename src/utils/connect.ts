@@ -47,7 +47,7 @@ async function makeVarScript(): Promise<string> {
 
   const remoteBalances = channels.map((c) => c.remote_balance);
   const totalRemoteBalance = remoteBalances.reduce(
-    (a, b) => parseInt(a) + parseInt(b),
+    (a, b) => a + b,
     0
   );
 

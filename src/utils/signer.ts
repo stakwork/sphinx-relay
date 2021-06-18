@@ -1,6 +1,6 @@
 
 import * as grpc from 'grpc'
-import { loadCredentials } from '../grpc/lightning'
+import * as Lightning from '../grpc/lightning'
 import * as ByteBuffer from 'bytebuffer'
 import { loadConfig } from './config'
 
@@ -15,7 +15,7 @@ export const loadSigner = () => {
     return signerClient
   } else {
     try {
-      var credentials = loadCredentials('signer.macaroon')
+      var credentials = Lightning.loadCredentials('signer.macaroon')
       var lnrpcDescriptor = grpc.load("proto/signer.proto");
       var signer: any = lnrpcDescriptor.signrpc
       signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);

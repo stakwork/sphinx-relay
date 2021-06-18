@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.urlBase64FromHex = exports.testLDAT = exports.urlBase64FromBytes = exports.urlBase64FromAscii = exports.urlBase64 = exports.tokenFromTerms = exports.parseLDAT = exports.startLDAT = void 0;
 const zbase32 = require("./zbase32");
-const lightning_1 = require("../grpc/lightning");
+const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const config = config_1.loadConfig();
 /*
@@ -35,7 +35,7 @@ function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey }) {
         const exp = ttl ? now + (60 * 60 * 24 * 365) : 0;
         const ldat = startLDAT(theHost, muid, pubkey64, exp, meta);
         if (pubkey != '') {
-            const sig = yield lightning_1.signBuffer(ldat.bytes, ownerPubkey);
+            const sig = yield Lightning.signBuffer(ldat.bytes, ownerPubkey);
             const sigBytes = zbase32.decode(sig);
             return ldat.terms + "." + urlBase64FromBytes(sigBytes);
         }

@@ -13,7 +13,7 @@ exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTota
 const fs = require("fs");
 const grpc = require("grpc");
 const config_1 = require("./config");
-const lightning_1 = require("../grpc/lightning");
+const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
@@ -161,7 +161,7 @@ function getProxyRootPubkey() {
             return;
         }
         // normal client, to get pubkey of LND
-        var credentials = lightning_1.loadCredentials();
+        var credentials = Lightning.loadCredentials();
         var lnrpcDescriptor = grpc.load("proto/rpc.proto");
         var lnrpc = lnrpcDescriptor.lnrpc;
         var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
@@ -179,7 +179,7 @@ function getProxyRootPubkey() {
 function getProxyLNDBalance() {
     return new Promise((resolve, reject) => {
         // normal client, to get pubkey of LND
-        var credentials = lightning_1.loadCredentials();
+        var credentials = Lightning.loadCredentials();
         var lnrpcDescriptor = grpc.load("proto/rpc.proto");
         var lnrpc = lnrpcDescriptor.lnrpc;
         var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);

@@ -4,7 +4,7 @@ import * as zbase32 from "../utils/zbase32";
 import * as rp from "request-promise";
 import * as helpers from "../helpers";
 import { loadConfig } from "../utils/config";
-import { signBuffer } from "../grpc/lightning";
+import * as Lightning from "../grpc/lightning";
 import {logging} from './logger'
 
 const config = loadConfig();
@@ -51,7 +51,7 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
     if (!(r && r.challenge && r.id)) {
       throw new Error("no challenge");
     }
-    const sig = await signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
+    const sig = await Lightning.signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
 
     if (!sig) throw new Error("no signature");
     let pubkey:string = ownerPubkey

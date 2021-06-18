@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.tryToUnlockLND = void 0;
-const lightning_1 = require("../grpc/lightning");
+const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const fs = require('fs');
 const readline = require('readline');
@@ -29,7 +29,7 @@ function tryToUnlockLND() {
             return;
         console.log('==>', pwd, typeof pwd);
         try {
-            yield lightning_1.unlockWallet(String(pwd));
+            yield Lightning.unlockWallet(String(pwd));
         }
         catch (e) {
             console.log('[unlock] Error:', e);

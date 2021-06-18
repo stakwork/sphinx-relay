@@ -1,5 +1,6 @@
 import { loadConfig } from "../utils/config";
 import * as ByteBuffer from 'bytebuffer'
+import * as crypto from "crypto";
 
 const config = loadConfig();
 
@@ -111,9 +112,10 @@ export function addInvoiceRequest(
 ): AddInvoiceRequest | GreenlightAddInvoiceRequest {
   if (IS_LND) return req;
   if (IS_GREENLIGHT) {
+    const label = crypto.randomBytes(16).toString("hex").toUpperCase()
     return <GreenlightAddInvoiceRequest>{
       amount: {satoshi: req.value},
-      label: req.memo,
+      label: label,
       description: req.memo,
     };
   }
@@ -204,7 +206,7 @@ interface Channel {
   local_constraints: ChannelConstraints;
   remote_constraints: ChannelConstraints;
 }
-interface ListChannelsResponse {
+export interface ListChannelsResponse {
   channels: Channel[]
 }
 interface GreenlightHTLC {

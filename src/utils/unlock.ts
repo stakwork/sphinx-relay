@@ -1,4 +1,4 @@
-import { unlockWallet } from '../grpc/lightning'
+import * as Lightning from '../grpc/lightning'
 import {loadConfig} from './config'
 const fs = require('fs')
 const readline = require('readline');
@@ -21,7 +21,7 @@ export async function tryToUnlockLND() {
     console.log('==>', pwd, typeof pwd)
 
     try {
-        await unlockWallet(String(pwd))
+        await Lightning.unlockWallet(String(pwd))
     } catch (e) {
         console.log('[unlock] Error:', e)
     }

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
+const crypto = require("crypto");
 const config = config_1.loadConfig();
 const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
@@ -36,9 +37,10 @@ function addInvoiceRequest(req) {
     if (IS_LND)
         return req;
     if (IS_GREENLIGHT) {
+        const label = crypto.randomBytes(16).toString("hex").toUpperCase();
         return {
             amount: { satoshi: req.value },
-            label: req.memo,
+            label: label,
             description: req.memo,
         };
     }

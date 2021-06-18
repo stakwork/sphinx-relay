@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as grpc from 'grpc'
 import { loadConfig } from './config'
-import {loadCredentials} from '../grpc/lightning'
+import * as Lightning from '../grpc/lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import {logging} from './logger'
@@ -139,7 +139,7 @@ function getProxyRootPubkey(): Promise<string> {
       return
     }
     // normal client, to get pubkey of LND
-    var credentials = loadCredentials()
+    var credentials = Lightning.loadCredentials()
     var lnrpcDescriptor = grpc.load("proto/rpc.proto");
     var lnrpc: any = lnrpcDescriptor.lnrpc
     var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
@@ -157,7 +157,7 @@ function getProxyRootPubkey(): Promise<string> {
 function getProxyLNDBalance(): Promise<number> {
   return new Promise((resolve,reject)=>{
     // normal client, to get pubkey of LND
-    var credentials = loadCredentials()
+    var credentials = Lightning.loadCredentials()
     var lnrpcDescriptor = grpc.load("proto/rpc.proto");
     var lnrpc: any = lnrpcDescriptor.lnrpc
     var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);

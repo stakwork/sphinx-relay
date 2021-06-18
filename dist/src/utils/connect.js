@@ -58,7 +58,7 @@ function makeVarScript() {
 </script>`;
         }
         const remoteBalances = channels.map((c) => c.remote_balance);
-        const totalRemoteBalance = remoteBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+        const totalRemoteBalance = remoteBalances.reduce((a, b) => a + b, 0);
         const hasRemoteBalance = totalRemoteBalance > 0 ? true : false;
         let channelFeesBaseZero = false;
         const policies = ['node1_policy', 'node2_policy'];

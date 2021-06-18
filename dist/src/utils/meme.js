@@ -16,7 +16,7 @@ const zbase32 = require("../utils/zbase32");
 const rp = require("request-promise");
 const helpers = require("../helpers");
 const config_1 = require("../utils/config");
-const lightning_1 = require("../grpc/lightning");
+const Lightning = require("../grpc/lightning");
 const logger_1 = require("./logger");
 const config = config_1.loadConfig();
 // {pubkey: {host: {token,ts} }}
@@ -60,7 +60,7 @@ function getMediaToken(ownerPubkey, host) {
             if (!(r && r.challenge && r.id)) {
                 throw new Error("no challenge");
             }
-            const sig = yield lightning_1.signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
+            const sig = yield Lightning.signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
             if (!sig)
                 throw new Error("no signature");
             let pubkey = ownerPubkey;

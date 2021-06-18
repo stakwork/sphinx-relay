@@ -25,7 +25,7 @@ function proxynodeinfo(pk) {
             const remoteBalances = channels.map(c => c.remote_balance);
             const largestLocalBalance = Math.max(...localBalances);
             const largestRemoteBalance = Math.max(...remoteBalances);
-            const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+            const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
             resolve({
                 pubkey: pk,
                 number_channels: channels.length,
@@ -106,7 +106,7 @@ function nodeinfo() {
             const remoteBalances = channels.map(c => c.remote_balance);
             const largestLocalBalance = Math.max(...localBalances);
             const largestRemoteBalance = Math.max(...remoteBalances);
-            const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+            const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
             const pendingChannels = yield Lightning.pendingChannels();
             if (!info)
                 return;

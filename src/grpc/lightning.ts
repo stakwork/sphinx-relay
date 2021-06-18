@@ -595,7 +595,7 @@ export async function addInvoice(request: interfaces.AddInvoiceRequest, ownerPub
   })
 }
 
-export async function listChannels(args?:interfaces.ListChannelsArgs, ownerPubkey?:string): Promise<{ [k: string]: any }> {
+export async function listChannels(args?:interfaces.ListChannelsArgs, ownerPubkey?:string): Promise<interfaces.ListChannelsResponse> {
   log('listChannels')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
@@ -671,6 +671,42 @@ export async function openChannel(args: OpenChannelArgs): Promise<{ [k: string]:
       }
     });
   })
+}
+
+interface ComplexBalances {
+  pending_open_balance: number;
+  balance: number;
+  reserve: number;
+  full_balance: number;
+}
+export async function complexBalances(ownerPubkey?:string): Promise<ComplexBalances> {
+  log('complexBalances')
+  const channelList = await listChannels({}, ownerPubkey);
+  const { channels } = channelList;
+  if (IS_GREENLIGHT) {
+    const local_balance = channels.reduce(
+      (a, chan) => a + chan.local_balance,
+      0
+    );
+    return <ComplexBalances>{
+      reserve: 0,
+      full_balance: Math.max(0, local_balance),
+      balance: Math.max(0, local_balance),
+      pending_open_balance: 0,
+    }
+  } else {
+    const response = await channelBalance(ownerPubkey);
+    const reserve = channels.reduce(
+      (a, chan) => a + chan.local_chan_reserve_sat,
+      0
+    );
+    return <ComplexBalances>{
+      reserve,
+      full_balance: Math.max(0, parseInt(response.balance)),
+      balance: Math.max(0, parseInt(response.balance) - reserve),
+      pending_open_balance: parseInt(response.pending_open_balance),
+    }
+  }
 }
 
 export async function channelBalance(ownerPubkey?:string): Promise<{ [k: string]: any }> {

@@ -17,7 +17,7 @@ const socket = require("./utils/socket");
 const jsonUtils = require("./utils/json");
 const helpers = require("./helpers");
 const nodeinfo_1 = require("./utils/nodeinfo");
-const LND = require("./grpc/lightning");
+const Lightning = require("./grpc/lightning");
 const constants_1 = require("./constants");
 const config_1 = require("./utils/config");
 const https = require("https");
@@ -228,7 +228,7 @@ exports.payInviteInHub = payInviteInHub;
 function payInviteInvoice(invoice, pubkey, onSuccess, onFailure) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const res = LND.sendPayment(invoice, pubkey);
+            const res = Lightning.sendPayment(invoice, pubkey);
             onSuccess(res);
         }
         catch (e) {

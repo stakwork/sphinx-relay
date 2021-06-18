@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listUnspent = exports.loadWalletKit = void 0;
 const grpc = require("grpc");
-const lightning_1 = require("../grpc/lightning");
+const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -22,7 +22,7 @@ const loadWalletKit = () => {
     }
     else {
         try {
-            var credentials = lightning_1.loadCredentials();
+            var credentials = Lightning.loadCredentials();
             var lnrpcDescriptor = grpc.load("proto/walletkit.proto");
             var walletkit = lnrpcDescriptor.walletrpc;
             walletClient = new walletkit.WalletKit(LND_IP + ':' + config.lnd_port, credentials);

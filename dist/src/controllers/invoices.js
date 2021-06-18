@@ -121,7 +121,6 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!req.owner)
         return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
-    // const lightning = await LND.loadLightning(true, req.owner.publicKey); // try proxy
     const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
     var request = {
         value: amount,

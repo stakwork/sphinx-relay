@@ -2,7 +2,6 @@ import * as lndService from "../grpc/lnd";
 import * as Lightning from "../grpc/lightning";
 import { ACTIONS } from "../controllers";
 import * as tribes from "../utils/tribes";
-import { SPHINX_CUSTOM_RECORD_KEY } from "../grpc/lightning";
 import * as signer from "../utils/signer";
 import { models } from "../models";
 import { sendMessage } from "./send";
@@ -373,11 +372,11 @@ export async function initGrpcSubscriptions() {
     console.log('========', i)
     const c = await Lightning.listChannels(); // examp
     console.log('>>>>>>>>', c)
-    // const inv = await Lightning.addInvoice({
-    //   value: 1000,
-    //   memo: 'hello world',
-    // })
-    // console.log("CREATED INVOICE", inv)
+    const inv = await Lightning.addInvoice({
+      value: 1000,
+      memo: 'hello world',
+    })
+    console.log("CREATED INVOICE", inv)
     await lndService.subscribeInvoices(parseKeysendInvoice);
   } catch (e) {
     console.log(e)
@@ -510,7 +509,7 @@ export async function parseKeysendInvoice(i) {
     return;
   }
 
-  const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY];
+  const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];
   const data = buf && buf.toString();
   const value = i && i.value && parseInt(i.value);
 

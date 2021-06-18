@@ -1,4 +1,4 @@
-import { getInfo } from '../grpc/lightning'
+import * as Lightning from '../grpc/lightning'
 import { sequelize, models } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
@@ -40,7 +40,7 @@ const setupOwnerContact = async () => {
   const owner = await models.Contact.findOne({ where: { isOwner: true, id:1 } })
   if (!owner) {
     try {
-      const info = await getInfo()
+      const info = await Lightning.getInfo()
       const one = await models.Contact.findOne({ where: { isOwner:true, id: 1 } })
       if (!one) {
         let authToken:string|null = null

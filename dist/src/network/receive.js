@@ -14,7 +14,6 @@ const lndService = require("../grpc/lnd");
 const Lightning = require("../grpc/lightning");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
-const lightning_1 = require("../grpc/lightning");
 const signer = require("../utils/signer");
 const models_1 = require("../models");
 const send_1 = require("./send");
@@ -358,11 +357,11 @@ function initGrpcSubscriptions() {
             console.log('========', i);
             const c = yield Lightning.listChannels(); // examp
             console.log('>>>>>>>>', c);
-            // const inv = await Lightning.addInvoice({
-            //   value: 1000,
-            //   memo: 'hello world',
-            // })
-            // console.log("CREATED INVOICE", inv)
+            const inv = yield Lightning.addInvoice({
+                value: 1000,
+                memo: 'hello world',
+            });
+            console.log("CREATED INVOICE", inv);
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
@@ -506,7 +505,7 @@ function parseKeysendInvoice(i) {
             console.log("=> parseKeysendInvoice ERROR: cant find owner");
             return;
         }
-        const buf = recs && recs[lightning_1.SPHINX_CUSTOM_RECORD_KEY];
+        const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
         // "keysend" type is NOT encrypted
