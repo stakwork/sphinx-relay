@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
+exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const config_1 = require("./config");
@@ -97,6 +97,27 @@ function generateNewUser(rootpk) {
     });
 }
 exports.generateNewUser = generateNewUser;
+function generateNewExternalUser(pubkey, sig) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield node_fetch_1.default(adminURL + 'create_external', {
+                method: 'POST',
+                body: JSON.stringify({ pubkey, sig }),
+                headers: { 'x-admin-token': config.proxy_admin_token }
+            });
+            const j = yield r.json();
+            const rootpk = yield getProxyRootPubkey();
+            return {
+                publicKey: j.pubkey,
+                routeHint: `${rootpk}:${j.channel}`,
+            };
+        }
+        catch (e) {
+            console.log('=> could not gen new external user', e);
+        }
+    });
+}
+exports.generateNewExternalUser = generateNewExternalUser;
 // "total" is in msats
 function getProxyTotalBalance() {
     return __awaiter(this, void 0, void 0, function* () {

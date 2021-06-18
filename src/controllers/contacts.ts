@@ -9,7 +9,7 @@ import { Op } from "sequelize";
 import constants from "../constants";
 import * as tribes from "../utils/tribes";
 import * as network from "../network";
-import { isProxy } from "../utils/proxy";
+import { isProxy, generateNewExternalUser } from "../utils/proxy";
 import {logging} from '../utils/logger'
 import * as moment from 'moment'
 import * as people from '../utils/people'
@@ -143,6 +143,35 @@ export const getContactsForChat = async (req, res) => {
 
   success(res, { contacts: finalContacts });
 };
+
+export async function generateOwnerWithExternalSigner(req, res) {
+  if (!isProxy()) {
+    return failure(res, 'only proxy')
+  }
+  const {
+    pubkey, sig
+  } = req.body
+  const where: { [k: string]: any } = { isOwner: true, publicKey: pubkey };
+  const owner = await models.Contact.findOne({ where });
+  if (owner) {
+    return failure(res, 'owner already exists')
+  }
+
+  const generated = await generateNewExternalUser(pubkey, sig)
+  if(!generated) {
+    return failure(res, 'generate failed')
+  }
+  const contact = {
+    publicKey: generated.publicKey,
+    routeHint: generated.routeHint,
+    isOwner: true,
+    authToken: null
+  }
+  const created = await models.Contact.create(contact)
+  // set tenant to self!
+  created.update({tenant:created.id})
+  success(res, { id: (created && created.id) || 0 });
+}
 
 export const generateToken = async (req, res) => {
   console.log("=> generateToken called", {

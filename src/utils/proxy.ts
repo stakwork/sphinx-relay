@@ -80,6 +80,24 @@ export async function generateNewUser(rootpk: string){
   }
 }
 
+export async function generateNewExternalUser(pubkey: string, sig: string){
+  try {
+    const r = await fetch(adminURL + 'create_external', {
+      method:'POST',
+      body: JSON.stringify({pubkey, sig}),
+      headers:{'x-admin-token':config.proxy_admin_token}
+    })
+    const j = await r.json()
+    const rootpk = await getProxyRootPubkey()
+    return {
+      publicKey: j.pubkey,
+      routeHint: `${rootpk}:${j.channel}`,
+    }
+  } catch(e) {
+    console.log('=> could not gen new external user', e)
+  }
+}
+
 // "total" is in msats
 export async function getProxyTotalBalance(){
   try {
