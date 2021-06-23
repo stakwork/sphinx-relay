@@ -32,3 +32,5 @@ sqlite/sphinxlite.sql
 
 connection_string.txt
 
+testing/greenlight/*.pem
+testing/greenlight/*.crt
