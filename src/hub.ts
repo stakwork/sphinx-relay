@@ -167,7 +167,10 @@ async function massPingHubFromProxies(rn) {
       node_alias: rn.node_alias,
     });
   });
-  if(logging.Proxy) console.log(`[proxy] pinging hub with ${nodes.length} nodes`)
+  if(logging.Proxy) {
+    const cleanNodes = nodes.filter(n=>n.clean)
+    console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`)
+  }
   sendHubCall({ nodes }, true);
 }
 

@@ -146,8 +146,10 @@ function massPingHubFromProxies(rn) {
             const clean = o.authToken === null || o.authToken === "";
             nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet, ip: rn.ip, public_ip: rn.public_ip, node_alias: rn.node_alias }));
         }));
-        if (logger_1.logging.Proxy)
-            console.log(`[proxy] pinging hub with ${nodes.length} nodes`);
+        if (logger_1.logging.Proxy) {
+            const cleanNodes = nodes.filter(n => n.clean);
+            console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`);
+        }
         sendHubCall({ nodes }, true);
     });
 }
