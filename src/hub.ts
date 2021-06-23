@@ -171,19 +171,13 @@ async function massPingHubFromProxies(rn) {
     const cleanNodes = nodes.filter(n=>n.clean)
     console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`)
   }
-  // sendHubCall({ nodes }, true);
-  // console.log(nodes)
-  // const r = await fetch(
-  //   'https://requestbin.io/1h26a1q1',
-  //   {
-  //     agent: pingAgent,
-  //     method: "POST",
-  //     body: JSON.stringify({nodes}),
-  //     headers: { "Content-Type": "application/json" },
-  //   }
-  // );
-  // const j = await r.json();
-  // console.log(j)
+  // split into chunks of 50
+  const size = 50; 
+  for (let i=0; i<nodes.length; i+=size) {
+    await sendHubCall({
+      nodes: nodes.slice(i,i+size)
+    }, true)
+  }
 }
 
 async function sendHubCall(body, mass?: boolean) {

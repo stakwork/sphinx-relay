@@ -39,7 +39,7 @@ function start() {
         mainSetup();
         // // IF NOT UNLOCK, go ahead and start this now
         if (config.hub_api_url && !config.unlock) {
-            hub_1.pingHubInterval(20000);
+            hub_1.pingHubInterval(30000);
             proxy_1.genUsersInterval(15000);
         }
     });
