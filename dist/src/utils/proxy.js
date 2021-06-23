@@ -51,7 +51,11 @@ function generateNewUsers() {
         }
         const n1 = NEW_USER_NUM - newusers.length;
         const virtualBal = yield getProxyTotalBalance();
+        if (logger_1.logging.Proxy)
+            console.log('[proxy] total balance', virtualBal);
         const realBal = yield getProxyLNDBalance();
+        if (logger_1.logging.Proxy)
+            console.log('[proxy] LND balance', virtualBal);
         let availableBalance = realBal - virtualBal;
         if (availableBalance < SATS_PER_USER)
             availableBalance = 1;
@@ -62,7 +66,8 @@ function generateNewUsers() {
                 console.log("[proxy] not enough sats");
             return;
         }
-        console.log('=> gen new users:', n);
+        if (logger_1.logging.Proxy)
+            console.log('=> gen new users:', n);
         const arr = new Array(n);
         const rootpk = yield getProxyRootPubkey();
         yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {
@@ -89,7 +94,8 @@ function generateNewUser(rootpk) {
             const created = yield models_1.models.Contact.create(contact);
             // set tenant to self!
             created.update({ tenant: created.id });
-            console.log("=> CREATED OWNER:", created.dataValues);
+            if (logger_1.logging.Proxy)
+                console.log("=> CREATED OWNER:", created.dataValues.publicKey);
         }
         catch (e) {
             console.log('=> could not gen new user', e);
