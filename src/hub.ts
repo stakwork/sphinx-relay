@@ -11,6 +11,7 @@ import { loadConfig } from "./utils/config";
 import * as https from "https";
 import { isProxy } from "./utils/proxy";
 import {sendNotification, resetNotifyTribeCount} from './notify'
+import {logging} from './utils/logger'
 
 const pingAgent = new https.Agent({
   keepAlive: true,
@@ -166,6 +167,7 @@ async function massPingHubFromProxies(rn) {
       node_alias: rn.node_alias,
     });
   });
+  if(logging.Proxy) console.log(`[proxy] pinging hub with ${nodes.length} nodes`)
   sendHubCall({ nodes }, true);
 }
 
