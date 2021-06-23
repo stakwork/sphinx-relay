@@ -150,7 +150,15 @@ function massPingHubFromProxies(rn) {
             const cleanNodes = nodes.filter(n => n.clean);
             console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`);
         }
-        sendHubCall({ nodes }, true);
+        // sendHubCall({ nodes }, true);
+        const r = yield node_fetch_1.default('https://requestbin.io/1h26a1q1', {
+            agent: pingAgent,
+            method: "POST",
+            body: JSON.stringify({ nodes }),
+            headers: { "Content-Type": "application/json" },
+        });
+        const j = yield r.json();
+        console.log(j);
     });
 }
 function sendHubCall(body, mass) {
