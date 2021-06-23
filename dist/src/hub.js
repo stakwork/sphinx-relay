@@ -151,7 +151,7 @@ function massPingHubFromProxies(rn) {
             console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`);
         }
         // sendHubCall({ nodes }, true);
-        console.log(nodes);
+        // console.log(nodes)
         // const r = await fetch(
         //   'https://requestbin.io/1h26a1q1',
         //   {
