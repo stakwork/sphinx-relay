@@ -217,18 +217,32 @@ export async function sendPayment(payment_request:string, ownerPubkey?:string) {
         }
       })
     } else {
-      var call = lightning.sendPayment({})
-      call.on('data', async response => {
-        if(response.payment_error) {
-          reject(response.payment_error)
-        } else {
-          resolve(response)
-        }
-      })
-      call.on('error', async err => {
-        reject(err)
-      })
-      call.write({ payment_request })
+      if (IS_GREENLIGHT) {
+        lightning.pay({
+          bolt11:payment_request, timeout:12
+        }, (err, response) => {
+          if (err == null) {
+            resolve(
+              interfaces.keysendResponse(response)
+            )
+          } else {
+            reject(err)
+          }
+        })
+      } else {
+        var call = lightning.sendPayment({payment_request})
+        call.on('data', async response => {
+          if(response.payment_error) {
+            reject(response.payment_error)
+          } else {
+            resolve(response)
+          }
+        })
+        call.on('error', async err => {
+          reject(err)
+        })
+        call.write({ payment_request })
+      }
     }
   })
 }
@@ -240,7 +254,7 @@ export const keysend = (opts, ownerPubkey?:string) => {
       const FEE_LIMIT_SAT = 10
       const randoStr = crypto.randomBytes(32).toString('hex');
       const preimage = ByteBuffer.fromHex(randoStr)
-      const options:{[k:string]:any} = {
+      const options:interfaces.KeysendRequest = {
         amt: Math.max(opts.amt, constants.min_sat_amount || 3),
         final_cltv_delta: 10,
         dest: ByteBuffer.fromHex(opts.dest),
@@ -278,31 +292,45 @@ export const keysend = (opts, ownerPubkey?:string) => {
           }
         })
       } else {
-        // console.log("SEND sendPaymentV2", options)
-        // new sendPayment (with optional route hints)
-        options.fee_limit_sat = FEE_LIMIT_SAT
-        options.timeout_seconds = 16
-        const router = await loadRouter()
-        const call = router.sendPaymentV2(options)
-        call.on('data', function (payment) {
-          const state = payment.status || payment.state
-          if (payment.payment_error) {
-            reject(payment.payment_error)
-          } else {
-            if (state === 'IN_FLIGHT') {
-            } else if (state === 'FAILED_NO_ROUTE') {
-              reject(payment.failure_reason || payment)
-            } else if (state === 'FAILED') {
-              reject(payment.failure_reason || payment)
-            } else if (state === 'SUCCEEDED') {
-              resolve(payment)
+        if(IS_GREENLIGHT) {
+          let lightning = await loadLightning(false, ownerPubkey)
+          const req = interfaces.keysendRequest(options)
+          lightning.keysend(req, function (err, response) {
+            if (err == null) {
+              resolve(
+                interfaces.keysendResponse(response)
+              )
+            } else {
+              reject(err)
             }
-          }
-        })
-        call.on('error', function (err) {
-          reject(err)
-        })
-        // call.write(options)
+          });
+        } else {
+          // console.log("SEND sendPaymentV2", options)
+          // new sendPayment (with optional route hints)
+          options.fee_limit_sat = FEE_LIMIT_SAT
+          options.timeout_seconds = 16
+          const router = await loadRouter()
+          const call = router.sendPaymentV2(options)
+          call.on('data', function (payment) {
+            const state = payment.status || payment.state
+            if (payment.payment_error) {
+              reject(payment.payment_error)
+            } else {
+              if (state === 'IN_FLIGHT') {
+              } else if (state === 'FAILED_NO_ROUTE') {
+                reject(payment.failure_reason || payment)
+              } else if (state === 'FAILED') {
+                reject(payment.failure_reason || payment)
+              } else if (state === 'SUCCEEDED') {
+                resolve(payment)
+              }
+            }
+          })
+          call.on('error', function (err) {
+            reject(err)
+          })
+          // call.write(options)
+        }
       }
     } catch(e) {
       reject(e)

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
+exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
@@ -33,14 +33,16 @@ function getInfoResponse(res) {
     return {};
 }
 exports.getInfoResponse = getInfoResponse;
+function makeLabel() {
+    return crypto.randomBytes(16).toString("hex").toUpperCase();
+}
 function addInvoiceRequest(req) {
     if (IS_LND)
         return req;
     if (IS_GREENLIGHT) {
-        const label = crypto.randomBytes(16).toString("hex").toUpperCase();
         return {
             amount: { satoshi: req.value },
-            label: label,
+            label: makeLabel(),
             description: req.memo,
         };
     }
@@ -119,6 +121,65 @@ function listChannelsRequest(args) {
     return opts;
 }
 exports.listChannelsRequest = listChannelsRequest;
+function keysendRequest(req) {
+    if (IS_LND)
+        return req;
+    if (IS_GREENLIGHT) {
+        const r = {
+            node_id: req.dest,
+            amount: { satoshi: req.amt },
+            label: makeLabel(),
+        };
+        if (req.route_hints) {
+            r.routehints = req.route_hints.map(rh => {
+                return {
+                    hops: rh.hop_hints.map(hh => {
+                        return {
+                            node_id: ByteBuffer.fromHex(hh.node_id),
+                            short_channel_id: hh.chan_id,
+                        };
+                    })
+                };
+            });
+        }
+        if (req.dest_custom_records) {
+            const dest_recs = [];
+            Object.entries(req.dest_custom_records).forEach(([type, value]) => {
+                dest_recs.push({ type, value });
+            });
+            r.extratlvs = dest_recs;
+        }
+        return r;
+    }
+    return {};
+}
+exports.keysendRequest = keysendRequest;
+var GreenlightPaymentStatus;
+(function (GreenlightPaymentStatus) {
+    GreenlightPaymentStatus[GreenlightPaymentStatus["PENDING"] = 0] = "PENDING";
+    GreenlightPaymentStatus[GreenlightPaymentStatus["COMPLETE"] = 1] = "COMPLETE";
+    GreenlightPaymentStatus[GreenlightPaymentStatus["FAILED"] = 2] = "FAILED";
+})(GreenlightPaymentStatus || (GreenlightPaymentStatus = {}));
+function keysendResponse(res) {
+    if (IS_LND)
+        return res;
+    if (IS_GREENLIGHT) {
+        const r = res;
+        const route = {};
+        if (r.amount.satoshi)
+            route.total_amt = r.amount.satoshi + '';
+        if (r.amount.millisatoshi)
+            route.total_amt_msat = r.amount.millisatoshi + '';
+        return {
+            payment_error: r.status === GreenlightPaymentStatus.FAILED ? 'payment failed' : '',
+            payment_preimage: r.payment_preimage,
+            payment_hash: r.payment_hash,
+            payment_route: route,
+        };
+    }
+    return {};
+}
+exports.keysendResponse = keysendResponse;
 function greelightNumber(s) {
     if (s.endsWith('msat')) {
         const s1 = s.substr(0, s.length - 4);

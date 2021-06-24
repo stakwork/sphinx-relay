@@ -225,19 +225,33 @@ function sendPayment(payment_request, ownerPubkey) {
                 });
             }
             else {
-                var call = lightning.sendPayment({});
-                call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
-                    if (response.payment_error) {
-                        reject(response.payment_error);
-                    }
-                    else {
-                        resolve(response);
-                    }
-                }));
-                call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
-                    reject(err);
-                }));
-                call.write({ payment_request });
+                if (IS_GREENLIGHT) {
+                    lightning.pay({
+                        bolt11: payment_request, timeout: 12
+                    }, (err, response) => {
+                        if (err == null) {
+                            resolve(interfaces.keysendResponse(response));
+                        }
+                        else {
+                            reject(err);
+                        }
+                    });
+                }
+                else {
+                    var call = lightning.sendPayment({ payment_request });
+                    call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
+                        if (response.payment_error) {
+                            reject(response.payment_error);
+                        }
+                        else {
+                            resolve(response);
+                        }
+                    }));
+                    call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
+                        reject(err);
+                    }));
+                    call.write({ payment_request });
+                }
             }
         }));
     });
@@ -291,35 +305,49 @@ const keysend = (opts, ownerPubkey) => {
                     });
                 }
                 else {
-                    // console.log("SEND sendPaymentV2", options)
-                    // new sendPayment (with optional route hints)
-                    options.fee_limit_sat = FEE_LIMIT_SAT;
-                    options.timeout_seconds = 16;
-                    const router = yield exports.loadRouter();
-                    const call = router.sendPaymentV2(options);
-                    call.on('data', function (payment) {
-                        const state = payment.status || payment.state;
-                        if (payment.payment_error) {
-                            reject(payment.payment_error);
-                        }
-                        else {
-                            if (state === 'IN_FLIGHT') {
+                    if (IS_GREENLIGHT) {
+                        let lightning = yield loadLightning(false, ownerPubkey);
+                        const req = interfaces.keysendRequest(options);
+                        lightning.keysend(req, function (err, response) {
+                            if (err == null) {
+                                resolve(interfaces.keysendResponse(response));
                             }
-                            else if (state === 'FAILED_NO_ROUTE') {
-                                reject(payment.failure_reason || payment);
+                            else {
+                                reject(err);
                             }
-                            else if (state === 'FAILED') {
-                                reject(payment.failure_reason || payment);
+                        });
+                    }
+                    else {
+                        // console.log("SEND sendPaymentV2", options)
+                        // new sendPayment (with optional route hints)
+                        options.fee_limit_sat = FEE_LIMIT_SAT;
+                        options.timeout_seconds = 16;
+                        const router = yield exports.loadRouter();
+                        const call = router.sendPaymentV2(options);
+                        call.on('data', function (payment) {
+                            const state = payment.status || payment.state;
+                            if (payment.payment_error) {
+                                reject(payment.payment_error);
                             }
-                            else if (state === 'SUCCEEDED') {
-                                resolve(payment);
+                            else {
+                                if (state === 'IN_FLIGHT') {
+                                }
+                                else if (state === 'FAILED_NO_ROUTE') {
+                                    reject(payment.failure_reason || payment);
+                                }
+                                else if (state === 'FAILED') {
+                                    reject(payment.failure_reason || payment);
+                                }
+                                else if (state === 'SUCCEEDED') {
+                                    resolve(payment);
+                                }
                             }
-                        }
-                    });
-                    call.on('error', function (err) {
-                        reject(err);
-                    });
-                    // call.write(options)
+                        });
+                        call.on('error', function (err) {
+                            reject(err);
+                        });
+                        // call.write(options)
+                    }
                 }
             }
             catch (e) {

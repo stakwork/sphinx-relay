@@ -107,15 +107,17 @@ interface GreenlightAddInvoiceRequest {
   label: string;
   description: string;
 }
+function makeLabel() {
+  return crypto.randomBytes(16).toString("hex").toUpperCase()
+}
 export function addInvoiceRequest(
   req: AddInvoiceRequest
 ): AddInvoiceRequest | GreenlightAddInvoiceRequest {
   if (IS_LND) return req;
   if (IS_GREENLIGHT) {
-    const label = crypto.randomBytes(16).toString("hex").toUpperCase()
     return <GreenlightAddInvoiceRequest>{
       amount: {satoshi: req.value},
-      label: label,
+      label: makeLabel(),
       description: req.memo,
     };
   }
@@ -290,6 +292,129 @@ export function listChannelsRequest(args?:ListChannelsArgs): {[k:string]:any} {
   }
   return opts
 }
+
+type Buf = Buffer|ByteBuffer|ArrayBuffer
+type DestCustomRecords = {[key:string]:Buf}
+export interface KeysendRequest {
+  amt: number,
+  final_cltv_delta: number,
+  dest: Buf,
+  dest_custom_records: DestCustomRecords,
+  payment_hash: Buf,
+  dest_features: number[],
+  route_hints?: RouteHint[],
+  fee_limit?: {[k:string]:number},
+  fee_limit_sat?: number,
+  timeout_seconds?: number
+}
+interface GreenlightHop {
+  node_id: Buf
+	short_channel_id: string
+	fee_base?: number
+	fee_prop?: number
+	cltv_expiry_delta?: number
+}
+interface GreenlightRoutehint {
+  hops: GreenlightHop[]
+}
+interface GreenlightTLV {
+  type: string,
+  value: Buf,
+}
+interface GreenlightKeysendRequest {
+  node_id: Buf,
+	amount: GreenlightAmount
+	label: string
+  routehints?: GreenlightRoutehint[],
+  extratlvs?: GreenlightTLV[],
+}
+export function keysendRequest(req: KeysendRequest): KeysendRequest|GreenlightKeysendRequest {
+  if(IS_LND) return req
+  if(IS_GREENLIGHT) {
+    const r = <GreenlightKeysendRequest>{
+      node_id: req.dest,
+      amount: {satoshi: req.amt},
+      label: makeLabel(),
+    }
+    if(req.route_hints) {
+      r.routehints = req.route_hints.map(rh=>{
+        return <GreenlightRoutehint>{
+          hops: rh.hop_hints.map(hh=> {
+            return <GreenlightHop>{
+              node_id: ByteBuffer.fromHex(hh.node_id),
+              short_channel_id: hh.chan_id,
+            }
+          })
+        }
+      })
+    }
+    if(req.dest_custom_records) {
+      const dest_recs: GreenlightTLV[] = []
+      Object.entries(req.dest_custom_records).forEach(([type, value])=>{
+        dest_recs.push({type, value})
+      })
+      r.extratlvs = dest_recs
+    }
+    return r
+  }
+  return <KeysendRequest>{}
+}
+interface Hop {
+  chan_id: string,
+  chan_capacity: string,
+  amt_to_forward: string,
+  fee: string,
+  expiry: number,
+  amt_to_forward_msat: string,
+  fee_msat: string,
+  pub_key: string,
+  custom_records: DestCustomRecords,
+}
+interface Route {
+  total_time_lock: number,
+  total_fees: string, // deprecated
+  total_amt: string, // deprecated
+  hops: Hop[],
+  total_fees_msat: string,
+  total_amt_msat: string,
+}
+export interface SendPaymentResponse {
+  payment_error: string,
+  payment_preimage: Buf,
+  payment_route: Route
+  payment_hash: Buf,
+}
+enum GreenlightPaymentStatus {
+  PENDING = 0,
+	COMPLETE = 1,
+	FAILED = 2
+}
+export interface GreenlightPayment {
+  destination: Buf,
+  payment_hash: Buf,
+  payment_preimage: Buf,
+  status: GreenlightPaymentStatus,
+  amount: GreenlightAmount,
+  amount_sent: GreenlightAmount
+}
+export function keysendResponse(res: SendPaymentResponse|GreenlightPayment): SendPaymentResponse {
+  if(IS_LND) return res as SendPaymentResponse
+  if(IS_GREENLIGHT) {
+    const r = res as GreenlightPayment
+    const route = <Route>{}
+    if(r.amount.satoshi) route.total_amt = r.amount.satoshi + ''
+    if(r.amount.millisatoshi) route.total_amt_msat = r.amount.millisatoshi + ''
+    return <SendPaymentResponse>{
+      payment_error: r.status===GreenlightPaymentStatus.FAILED ? 'payment failed' : '',
+      payment_preimage: r.payment_preimage,
+      payment_hash: r.payment_hash,
+      payment_route: route,
+    }
+  }
+  return <SendPaymentResponse>{}
+}
+
+
 
 function greelightNumber(s: string): number {
   if (s.endsWith('msat')) {
