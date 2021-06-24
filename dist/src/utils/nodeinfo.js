@@ -21,8 +21,8 @@ function proxynodeinfo(pk) {
             if (!channelList)
                 return;
             const { channels } = channelList;
-            const localBalances = channels.map(c => c.local_balance);
-            const remoteBalances = channels.map(c => c.remote_balance);
+            const localBalances = channels.map(c => parseInt(c.local_balance));
+            const remoteBalances = channels.map(c => parseInt(c.remote_balance));
             const largestLocalBalance = Math.max(...localBalances);
             const largestRemoteBalance = Math.max(...remoteBalances);
             const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
@@ -102,8 +102,8 @@ function nodeinfo() {
             if (!channelList)
                 return;
             const { channels } = channelList;
-            const localBalances = channels.map(c => c.local_balance);
-            const remoteBalances = channels.map(c => c.remote_balance);
+            const localBalances = channels.map(c => parseInt(c.local_balance));
+            const remoteBalances = channels.map(c => parseInt(c.remote_balance));
             const largestLocalBalance = Math.max(...localBalances);
             const largestRemoteBalance = Math.max(...remoteBalances);
             const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);

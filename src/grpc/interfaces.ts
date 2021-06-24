@@ -182,8 +182,8 @@ interface Channel {
   channel_point: string;
   chan_id: string;
   capacity: number;
-  local_balance: number;
-  remote_balance: number;
+  local_balance: string;
+  remote_balance: string;
   commit_fee: number;
   commit_weight: number;
   fee_per_kw: number;
@@ -196,8 +196,8 @@ interface Channel {
   private: boolean;
   initiator: boolean;
   chan_status_flags: string;
-  local_chan_reserve_sat: number;
-  remote_chan_reserve_sat: number;
+  local_chan_reserve_sat: string;
+  remote_chan_reserve_sat: string;
   lifetime: number;
   uptime: number;
   close_address: string;
@@ -261,8 +261,8 @@ export function listChannelsResponse(
           channel_point: ch.funding_txid + ':' + i,
           chan_id: ch.channel_id,
           capacity: greelightNumber(ch.total),
-          local_balance: greelightNumber(ch.spendable),
-          remote_balance: greelightNumber(ch.receivable),
+          local_balance: greelightNumber(ch.spendable) + '',
+          remote_balance: greelightNumber(ch.receivable) + '',
         })
       })
     })

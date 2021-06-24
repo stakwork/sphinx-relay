@@ -57,7 +57,7 @@ function makeVarScript() {
   window.isSignedUp=${isSignedUp};
 </script>`;
         }
-        const remoteBalances = channels.map((c) => c.remote_balance);
+        const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
         const totalRemoteBalance = remoteBalances.reduce((a, b) => a + b, 0);
         const hasRemoteBalance = totalRemoteBalance > 0 ? true : false;
         let channelFeesBaseZero = false;

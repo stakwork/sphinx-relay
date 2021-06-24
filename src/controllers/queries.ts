@@ -201,8 +201,8 @@ async function checkChannelsAndKeysend(rec: Accounting) {
         type: constants.message_types.keysend,
       };
       const extraAmount = 2000;
-      const localReserve = chan.local_chan_reserve_sat || 0;
-      const remoteReserve = chan.remote_chan_reserve_sat || 0;
+      const localReserve = parseInt(chan.local_chan_reserve_sat) || 0;
+      const remoteReserve = parseInt(chan.remote_chan_reserve_sat) || 0;
       const commitFee = chan.commit_fee || 0;
       const amount =
         rec.amount - localReserve - remoteReserve - commitFee - extraAmount;

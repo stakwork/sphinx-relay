@@ -738,7 +738,7 @@ function complexBalances(ownerPubkey) {
         const channelList = yield listChannels({}, ownerPubkey);
         const { channels } = channelList;
         if (IS_GREENLIGHT) {
-            const local_balance = channels.reduce((a, chan) => a + chan.local_balance, 0);
+            const local_balance = channels.reduce((a, chan) => a + parseInt(chan.local_balance), 0);
             return {
                 reserve: 0,
                 full_balance: Math.max(0, local_balance),
@@ -747,8 +747,8 @@ function complexBalances(ownerPubkey) {
             };
         }
         else {
+            const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
             const response = yield channelBalance(ownerPubkey);
-            const reserve = channels.reduce((a, chan) => a + chan.local_chan_reserve_sat, 0);
             return {
                 reserve,
                 full_balance: Math.max(0, parseInt(response.balance)),

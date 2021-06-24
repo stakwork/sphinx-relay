@@ -88,8 +88,8 @@ function listChannelsResponse(res) {
                     channel_point: ch.funding_txid + ':' + i,
                     chan_id: ch.channel_id,
                     capacity: greelightNumber(ch.total),
-                    local_balance: greelightNumber(ch.spendable),
-                    remote_balance: greelightNumber(ch.receivable),
+                    local_balance: greelightNumber(ch.spendable) + '',
+                    remote_balance: greelightNumber(ch.receivable) + '',
                 });
             });
         });

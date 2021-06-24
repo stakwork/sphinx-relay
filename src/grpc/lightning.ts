@@ -685,7 +685,7 @@ export async function complexBalances(ownerPubkey?:string): Promise<ComplexBalan
   const { channels } = channelList;
   if (IS_GREENLIGHT) {
     const local_balance = channels.reduce(
-      (a, chan) => a + chan.local_balance,
+      (a, chan) => a + parseInt(chan.local_balance),
       0
     );
     return <ComplexBalances>{
@@ -695,11 +695,11 @@ export async function complexBalances(ownerPubkey?:string): Promise<ComplexBalan
       pending_open_balance: 0,
     }
   } else {
-    const response = await channelBalance(ownerPubkey);
     const reserve = channels.reduce(
-      (a, chan) => a + chan.local_chan_reserve_sat,
+      (a, chan) => a + parseInt(chan.local_chan_reserve_sat),
       0
     );
+    const response = await channelBalance(ownerPubkey);
     return <ComplexBalances>{
       reserve,
       full_balance: Math.max(0, parseInt(response.balance)),
