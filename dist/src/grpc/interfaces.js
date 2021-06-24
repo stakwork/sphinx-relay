@@ -87,7 +87,7 @@ function listChannelsResponse(res) {
                     remote_pubkey: Buffer.from(p.id).toString("hex"),
                     channel_point: ch.funding_txid + ':' + i,
                     chan_id: ch.channel_id,
-                    capacity: greelightNumber(ch.total),
+                    capacity: greelightNumber(ch.total) + '',
                     local_balance: greelightNumber(ch.spendable) + '',
                     remote_balance: greelightNumber(ch.receivable) + '',
                 });

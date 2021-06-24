@@ -181,12 +181,12 @@ interface Channel {
   remote_pubkey: string;
   channel_point: string;
   chan_id: string;
-  capacity: number;
+  capacity: string;
   local_balance: string;
   remote_balance: string;
-  commit_fee: number;
-  commit_weight: number;
-  fee_per_kw: number;
+  commit_fee: string;
+  commit_weight: string;
+  fee_per_kw: string;
   unsettled_balance: number;
   total_satoshis_sent: number;
   total_satoshis_received: number;
@@ -260,7 +260,7 @@ export function listChannelsResponse(
           remote_pubkey: Buffer.from(p.id).toString("hex"),
           channel_point: ch.funding_txid + ':' + i,
           chan_id: ch.channel_id,
-          capacity: greelightNumber(ch.total),
+          capacity: greelightNumber(ch.total) + '',
           local_balance: greelightNumber(ch.spendable) + '',
           remote_balance: greelightNumber(ch.receivable) + '',
         })
