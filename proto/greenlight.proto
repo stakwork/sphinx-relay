@@ -59,6 +59,9 @@ service Node {
 
 	rpc Pay(PayRequest) returns (Payment) {}
 
+	// Send a spontaneous payment, optionally with some extra information.
+	rpc Keysend(KeysendRequest) returns (Payment) {}
+
 	// Retrieve a list of payment performed by this node.
 	//
 	// The query can optionally be restricted to a single payment
@@ -75,6 +78,12 @@ service Node {
 	// The query can optionally be restricted to only return a
 	// single invoice matching the given criteria.
         rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesResponse) {}
+
+	// Stream incoming payments
+	//
+	// Currently includes off-chain payments received matching an
+	// invoice or spontaneus paymens through keysend.
+	rpc StreamIncoming(StreamIncomingFilter) returns (stream IncomingPayment) {}
 
 	//////////////////////////////// HSM Messages ////////////////////////
 	//
@@ -392,6 +401,7 @@ message Payment {
 	bytes payment_preimage = 3;
 	PayStatus status = 4;
 	Amount amount = 5;
+	Amount amount_sent = 6;
 }
 
 // A payment identifier is a way to reference a unique payment, either
@@ -430,6 +440,51 @@ message ListInvoicesRequest {
 	InvoiceIdentifier identifier = 1;
 }
 
+// Options to stream_incoming to specify what to stream.
+message StreamIncomingFilter {
+}
+
 message ListInvoicesResponse {
 	repeated Invoice invoices = 1;
+}
+
+message TlvField {
+	uint64 type = 1;
+	// length is implied since the value field carries its own
+	// length here.
+	bytes value = 2;
+}
+
+message OffChainPayment {
+	string label = 1;
+	bytes preimage = 2;
+	Amount amount = 3;
+	repeated TlvField extratlvs = 4;
+}
+
+message IncomingPayment {
+	oneof details {
+		OffChainPayment offchain = 1;
+	}
+}
+
+// A single hop in a Routehint
+message RoutehintHop {
+	bytes node_id = 1;
+	string short_channel_id = 2;
+	uint32 fee_base = 3;
+	uint32 fee_prop = 4;
+	uint32 cltv_expiry_delta = 5;
+}
+
+message Routehint {
+	repeated RoutehintHop hops = 1;
+}
+
+message KeysendRequest {
+	bytes node_id = 1;
+	Amount amount = 2;
+	string label = 3;
+	repeated Routehint routehints = 4;
+	repeated TlvField extratlvs = 5;
 }
