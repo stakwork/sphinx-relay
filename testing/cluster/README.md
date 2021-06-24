@@ -13,6 +13,9 @@
 ### Sphinx Proxy
 - `go build`
 
+### github.com/stakwork/lightning-onion
+- just needs to be a sibling directory of sphinx-proxy
+
 ### Sphinx Auth
 - `go build`
 
