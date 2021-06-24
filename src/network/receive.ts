@@ -18,7 +18,7 @@ import { sendNotification } from "../hub";
 import constants from "../constants";
 import * as jsonUtils from "../utils/json";
 import { isProxy } from "../utils/proxy";
-import * as bolt11 from 'bolt11'
+import * as bolt11 from '@boltz/bolt11'
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg

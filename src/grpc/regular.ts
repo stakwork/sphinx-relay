@@ -3,7 +3,7 @@ import * as socket from '../utils/socket'
 import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import constants from '../constants'
-import * as bolt11 from 'bolt11'
+import * as bolt11 from '@boltz/bolt11'
 
 const oktolog = false
 export function loginvoice(response){

@@ -11,7 +11,7 @@ import { sendConfirmation } from "./confirmations";
 import * as network from "../network";
 import * as short from "short-uuid";
 import constants from "../constants";
-import * as bolt11 from 'bolt11'
+import * as bolt11 from '@boltz/bolt11'
 
 function stripLightningPrefix(s) {
   if (s.toLowerCase().startsWith("lightning:")) return s.substring(10);

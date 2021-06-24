@@ -22,7 +22,7 @@ const confirmations_1 = require("./confirmations");
 const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
-const bolt11 = require("bolt11");
+const bolt11 = require("@boltz/bolt11");
 function stripLightningPrefix(s) {
     if (s.toLowerCase().startsWith("lightning:"))
         return s.substring(10);
