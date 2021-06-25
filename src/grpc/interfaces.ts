@@ -491,6 +491,7 @@ export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoi
       r_preimage: r.preimage,
       is_keysend: true,
       htlcs: [<InvoiceHTLC>{custom_records}],
+      state: InvoiceState.SETTLED,
     }
     if(r.amount.satoshi) {
       i.value = r.amount.satoshi + ''

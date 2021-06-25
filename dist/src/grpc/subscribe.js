@@ -28,7 +28,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             return __awaiter(this, void 0, void 0, function* () {
                 const inv = interfaces.subscribeResponse(response);
                 regular_1.loginvoice(inv);
-                if (inv['state'] !== interfaces.InvoiceState.SETTLED) {
+                if (inv.state !== interfaces.InvoiceState.SETTLED) {
                     return;
                 }
                 // console.log("IS KEYSEND", inv.is_keysend)
