@@ -11,7 +11,7 @@ import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
 import { ownerMiddleware, unlocker } from './src/auth'
-import * as grpc from './src/grpc/lnd'
+import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
 

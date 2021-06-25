@@ -1,4 +1,4 @@
-import * as lndService from "../grpc/lnd";
+import * as lndService from "../grpc/subscribe";
 import * as Lightning from "../grpc/lightning";
 import { ACTIONS } from "../controllers";
 import * as tribes from "../utils/tribes";

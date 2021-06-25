@@ -15,25 +15,28 @@ const network = require("../network");
 const moment = require("moment");
 const unlock_1 = require("../utils/unlock");
 const regular_1 = require("./regular");
+const interfaces = require("./interfaces");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning(true); // try proxy
-        var call = lightning.subscribeInvoices();
+        const cmd = interfaces.subscribeCommand();
+        var call = lightning[cmd];
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                regular_1.loginvoice(response);
-                if (response['state'] !== 'SETTLED') {
+                const inv = interfaces.subscribeResponse(response);
+                regular_1.loginvoice(inv);
+                if (inv['state'] !== interfaces.InvoiceState.SETTLED) {
                     return;
                 }
-                // console.log("IS KEYSEND", response.is_keysend)
-                if (response.is_keysend) {
-                    parseKeysendInvoice(response);
+                // console.log("IS KEYSEND", inv.is_keysend)
+                if (inv.is_keysend) {
+                    parseKeysendInvoice(inv);
                 }
                 else {
-                    regular_1.receiveNonKeysend(response);
+                    regular_1.receiveNonKeysend(inv);
                 }
             });
         });
@@ -103,4 +106,4 @@ function reconnectToLightning(innerCtx, callback) {
     });
 }
 exports.reconnectToLightning = reconnectToLightning;
-//# sourceMappingURL=lnd.js.map
+//# sourceMappingURL=subscribe.js.map

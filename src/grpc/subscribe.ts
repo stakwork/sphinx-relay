@@ -4,6 +4,7 @@ import * as network from '../network'
 import * as moment from 'moment'
 import { tryToUnlockLND } from '../utils/unlock'
 import {receiveNonKeysend, loginvoice} from './regular'
+import * as interfaces from './interfaces'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
@@ -13,17 +14,19 @@ export function subscribeInvoices(parseKeysendInvoice) {
 	return new Promise(async (resolve, reject) => {
 		const lightning = await loadLightning(true) // try proxy
 
-		var call = lightning.subscribeInvoices()
+		const cmd = interfaces.subscribeCommand()
+		var call = lightning[cmd]
 		call.on('data', async function (response) {
-			loginvoice(response)
-			if (response['state'] !== 'SETTLED') {
+			const inv = interfaces.subscribeResponse(response)
+			loginvoice(inv)
+			if (inv.state !== interfaces.InvoiceState.SETTLED) {
 				return
 			}
-			// console.log("IS KEYSEND", response.is_keysend)
-			if (response.is_keysend) {
-				parseKeysendInvoice(response)
+			// console.log("IS KEYSEND", inv.is_keysend)
+			if (inv.is_keysend) {
+				parseKeysendInvoice(inv)
 			} else {
-				receiveNonKeysend(response)
+				receiveNonKeysend(inv)
 			}
 		});
 		call.on('status', function (status) {

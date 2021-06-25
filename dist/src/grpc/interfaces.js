@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
+exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
@@ -180,6 +180,58 @@ function keysendResponse(res) {
     return {};
 }
 exports.keysendResponse = keysendResponse;
+function subscribeCommand() {
+    if (IS_LND)
+        return 'subscribeInvoices';
+    if (IS_GREENLIGHT)
+        return 'streamIncoming';
+    return 'subscribeInvoices';
+}
+exports.subscribeCommand = subscribeCommand;
+var InvoiceState;
+(function (InvoiceState) {
+    InvoiceState["OPEN"] = "OPEN";
+    InvoiceState["SETTLED"] = "SETTLED";
+    InvoiceState["CANCELED"] = "CANCELED";
+    InvoiceState["ACCEPTED"] = "ACCEPTED";
+})(InvoiceState = exports.InvoiceState || (exports.InvoiceState = {}));
+var InvoiceHTLCState;
+(function (InvoiceHTLCState) {
+    InvoiceHTLCState[InvoiceHTLCState["ACCEPTED"] = 0] = "ACCEPTED";
+    InvoiceHTLCState[InvoiceHTLCState["SETTLED"] = 1] = "SETTLED";
+    InvoiceHTLCState[InvoiceHTLCState["CANCELED"] = 2] = "CANCELED";
+})(InvoiceHTLCState || (InvoiceHTLCState = {}));
+function subscribeResponse(res) {
+    if (IS_LND)
+        return res;
+    if (IS_GREENLIGHT) {
+        const r1 = res;
+        if (!r1.offchain)
+            return {};
+        const r = r1.offchain;
+        const custom_records = {};
+        if (r.extratlvs) {
+            r.extratlvs.forEach(tlv => custom_records[tlv.type] = tlv.value);
+        }
+        const i = {
+            memo: r.label,
+            r_preimage: r.preimage,
+            is_keysend: true,
+            htlcs: [{ custom_records }],
+        };
+        if (r.amount.satoshi) {
+            i.value = r.amount.satoshi + '';
+            i.amt_paid_sat = r.amount.satoshi + '';
+        }
+        if (r.amount.millisatoshi) {
+            i.value_msat = r.amount.millisatoshi + '';
+            i.amt_paid_msat = r.amount.millisatoshi + '';
+        }
+        return i;
+    }
+    return {};
+}
+exports.subscribeResponse = subscribeResponse;
 function greelightNumber(s) {
     if (s.endsWith('msat')) {
         const s1 = s.substr(0, s.length - 4);

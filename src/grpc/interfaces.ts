@@ -414,7 +414,96 @@ export function keysendResponse(res: SendPaymentResponse|GreenlightPayment): Sen
   return <SendPaymentResponse>{}
 }
 
-
+export function subscribeCommand(): string {
+  if(IS_LND) return 'subscribeInvoices'
+  if(IS_GREENLIGHT) return 'streamIncoming'
+  return 'subscribeInvoices'
+}
+export enum InvoiceState {
+  OPEN = 'OPEN',
+  SETTLED = 'SETTLED',
+  CANCELED = 'CANCELED',
+  ACCEPTED = 'ACCEPTED',
+}
+enum InvoiceHTLCState {
+  ACCEPTED = 0,
+  SETTLED = 1,
+  CANCELED = 2,
+}
+interface InvoiceHTLC {
+  chan_id: string,
+  htlc_index: number,
+  amt_msat: string,
+  accept_height: number,
+  accept_time: string,
+  resolve_time: string,
+  expiry_height: number,
+  state: InvoiceHTLCState,
+  custom_records: DestCustomRecords,
+}
+export interface Invoice {
+  memo: string,
+  r_preimage: Buf,
+  r_hash: Buf,
+  value: string,
+  value_msat: string,
+  settled: boolean,
+  creation_date: string,
+  settle_date: string,
+  payment_request: string,
+  description_hash: Buf,
+  expiry: string,
+  fallback_addr: string,
+  cltv_expiry: string,
+  route_hints: RouteHint[],
+  private: boolean,
+  add_index: string,
+  settle_index: string,
+  amt_paid: string,
+  amt_paid_sat: string,
+  amt_paid_msat: string,
+  state: InvoiceState,
+  htlcs: InvoiceHTLC[],    
+  features: {[k:string]:any},
+  is_keysend: boolean,
+}
+interface GreenlightOffchainPayment {
+  label: string,
+	preimage: Buf,
+  amount: GreenlightAmount,
+	extratlvs: GreenlightTLV[],
+}
+interface GreenlightIncomingPayment {
+  offchain: GreenlightOffchainPayment
+}
+export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoice {
+  if(IS_LND) return res as Invoice
+  if(IS_GREENLIGHT) {
+    const r1 = res as GreenlightIncomingPayment
+    if(!r1.offchain) return <Invoice>{}
+    const r = r1.offchain
+    const custom_records = <DestCustomRecords>{}
+    if(r.extratlvs) {
+      r.extratlvs.forEach(tlv=> custom_records[tlv.type] = tlv.value)
+    }
+    const i = <Invoice>{
+      memo: r.label,
+      r_preimage: r.preimage,
+      is_keysend: true,
+      htlcs: [<InvoiceHTLC>{custom_records}],
+    }
+    if(r.amount.satoshi) {
+      i.value = r.amount.satoshi + ''
+      i.amt_paid_sat = r.amount.satoshi + ''
+    }
+    if(r.amount.millisatoshi) {
+      i.value_msat = r.amount.millisatoshi + ''
+      i.amt_paid_msat = r.amount.millisatoshi + ''
+    }
+    return i
+  }
+  return <Invoice>{}
+}
 
 function greelightNumber(s: string): number {
   if (s.endsWith('msat')) {
