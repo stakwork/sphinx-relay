@@ -23,7 +23,7 @@ function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield lightning_1.loadLightning(true); // try proxy
         const cmd = interfaces.subscribeCommand();
-        var call = lightning[cmd];
+        var call = lightning[cmd]();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
                 const inv = interfaces.subscribeResponse(response);
@@ -41,7 +41,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             });
         });
         call.on('status', function (status) {
-            console.log("Status", status.code, status);
+            console.log("[lightning] Status", status.code, status);
             // The server is unavailable, trying to reconnect.
             if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
@@ -53,7 +53,7 @@ function subscribeInvoices(parseKeysendInvoice) {
         });
         call.on('error', function (err) {
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            console.error('[LND] Error', now, err.code);
+            console.error('[lightning] Error', now, err.code);
             if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
                 waitAndReconnect();
@@ -64,7 +64,7 @@ function subscribeInvoices(parseKeysendInvoice) {
         });
         call.on('end', function () {
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            console.log(`Closed stream ${now}`);
+            console.log(`[lightning] Closed stream ${now}`);
             // The server has closed the stream.
             i = 0;
             waitAndReconnect();
@@ -85,11 +85,11 @@ function reconnectToLightning(innerCtx, callback) {
         ctx = innerCtx;
         i++;
         const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-        console.log(`=> ${now} [lnd] reconnecting... attempt #${i}`);
+        console.log(`=> ${now} [lightning] reconnecting... attempt #${i}`);
         try {
             yield network.initGrpcSubscriptions();
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            console.log(`=> [lnd] connected! ${now}`);
+            console.log(`=> [lightning] connected! ${now}`);
             if (callback)
                 callback();
         }

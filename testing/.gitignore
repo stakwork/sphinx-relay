@@ -3,3 +3,5 @@ node_modules
 nodes.json
 package-lock.json
 cluster_config.json
+greenlight/alice_creds
+greenlight/bob_creds

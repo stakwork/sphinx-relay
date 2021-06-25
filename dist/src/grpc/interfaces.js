@@ -4,6 +4,7 @@ exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = ex
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
+const lightning_1 = require("./lightning");
 const config = config_1.loadConfig();
 const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
@@ -41,7 +42,7 @@ function addInvoiceRequest(req) {
         return req;
     if (IS_GREENLIGHT) {
         return {
-            amount: { satoshi: req.value },
+            amount: { unit: 'satoshi', satoshi: req.value + '' },
             label: makeLabel(),
             description: req.memo,
         };
@@ -127,7 +128,7 @@ function keysendRequest(req) {
     if (IS_GREENLIGHT) {
         const r = {
             node_id: req.dest,
-            amount: { satoshi: req.amt },
+            amount: { unit: 'satoshi', satoshi: req.amt + '' },
             label: makeLabel(),
         };
         if (req.route_hints) {
@@ -145,6 +146,8 @@ function keysendRequest(req) {
         if (req.dest_custom_records) {
             const dest_recs = [];
             Object.entries(req.dest_custom_records).forEach(([type, value]) => {
+                if (type === `${lightning_1.LND_KEYSEND_KEY}`)
+                    return;
                 dest_recs.push({ type, value });
             });
             r.extratlvs = dest_recs;
@@ -166,10 +169,9 @@ function keysendResponse(res) {
     if (IS_GREENLIGHT) {
         const r = res;
         const route = {};
-        if (r.amount.satoshi)
-            route.total_amt = r.amount.satoshi + '';
-        if (r.amount.millisatoshi)
-            route.total_amt_msat = r.amount.millisatoshi + '';
+        const { satoshi, millisatoshi } = greenlightAmoutToAmounts(r.amount);
+        route.total_amt = satoshi;
+        route.total_amt_msat = millisatoshi;
         return {
             payment_error: r.status === GreenlightPaymentStatus.FAILED ? 'payment failed' : '',
             payment_preimage: r.payment_preimage,
@@ -205,6 +207,7 @@ function subscribeResponse(res) {
     if (IS_LND)
         return res;
     if (IS_GREENLIGHT) {
+        console.log("GREENLIGHT SBU RES", res);
         const r1 = res;
         if (!r1.offchain)
             return {};
@@ -220,19 +223,29 @@ function subscribeResponse(res) {
             htlcs: [{ custom_records }],
             state: InvoiceState.SETTLED,
         };
-        if (r.amount.satoshi) {
-            i.value = r.amount.satoshi + '';
-            i.amt_paid_sat = r.amount.satoshi + '';
-        }
-        if (r.amount.millisatoshi) {
-            i.value_msat = r.amount.millisatoshi + '';
-            i.amt_paid_msat = r.amount.millisatoshi + '';
-        }
+        const { satoshi, millisatoshi } = greenlightAmoutToAmounts(r.amount);
+        i.value = satoshi;
+        i.value_msat = millisatoshi;
+        i.amt_paid_sat = satoshi;
+        i.amt_paid_msat = millisatoshi;
         return i;
     }
     return {};
 }
 exports.subscribeResponse = subscribeResponse;
+function greenlightAmoutToAmounts(a) {
+    let satoshi = '';
+    let millisatoshi = '';
+    if (a.unit === 'satoshi') {
+        satoshi = a.satoshi || '0';
+        millisatoshi = (parseInt(a.satoshi || '0') * 1000) + '';
+    }
+    else if (a.unit === 'millisatoshi') {
+        satoshi = Math.floor(parseInt(a.millisatoshi || '0') / 1000) + '';
+        millisatoshi = a.millisatoshi + '';
+    }
+    return { satoshi, millisatoshi };
+}
 function greelightNumber(s) {
     if (s.endsWith('msat')) {
         const s1 = s.substr(0, s.length - 4);

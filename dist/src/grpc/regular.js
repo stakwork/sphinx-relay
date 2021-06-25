@@ -16,7 +16,7 @@ const hub_1 = require("../hub");
 const jsonUtils = require("../utils/json");
 const constants_1 = require("../constants");
 const bolt11 = require("@boltz/bolt11");
-const oktolog = false;
+const oktolog = true;
 function loginvoice(response) {
     if (!oktolog)
         return;

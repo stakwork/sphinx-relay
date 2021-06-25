@@ -260,10 +260,12 @@ export const keysend = (opts, ownerPubkey?:string) => {
         dest: ByteBuffer.fromHex(opts.dest),
         dest_custom_records: {
           [`${LND_KEYSEND_KEY}`]: preimage,
-          [`${SPHINX_CUSTOM_RECORD_KEY}`]: ByteBuffer.fromUTF8(opts.data),
         },
         payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
         dest_features: [9],
+      }
+      if(opts.data) {
+        options.dest_custom_records[`${SPHINX_CUSTOM_RECORD_KEY}`] = ByteBuffer.fromUTF8(opts.data)
       }
       // add in route hints
       if(opts.route_hint && opts.route_hint.includes(':')) {
@@ -295,6 +297,7 @@ export const keysend = (opts, ownerPubkey?:string) => {
         if(IS_GREENLIGHT) {
           let lightning = await loadLightning(false, ownerPubkey)
           const req = interfaces.keysendRequest(options)
+          console.log("KEYSEND REQ", JSON.stringify(req))
           lightning.keysend(req, function (err, response) {
             if (err == null) {
               resolve(

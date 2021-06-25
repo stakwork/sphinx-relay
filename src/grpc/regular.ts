@@ -5,7 +5,7 @@ import * as jsonUtils from '../utils/json'
 import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
 
-const oktolog = false
+const oktolog = true
 export function loginvoice(response){
 	if(!oktolog) return
 	const r = JSON.parse(JSON.stringify(response))

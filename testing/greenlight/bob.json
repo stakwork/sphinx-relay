@@ -1,0 +1,56 @@
+{
+    "development": {
+      "lightning_provider": "GREENLIGHT",
+      "senza_url": "http://localhost:3000/api/v2",
+      "node_ip": "127.0.0.1",
+      "tls_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/bob_creds/ca.pem",
+      "tls_key_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/bob_creds/device-key.pem",
+      "tls_chain_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/bob_creds/device.crt",
+      "lnd_ip": "35.236.110.178",
+      "lnd_port": "6049",
+      "node_http_protocol": "http",
+      "node_http_port": "3002",
+      "hub_api_url": "http://lvh.me/api/v1",
+      "hub_url": "http://lvh.me/ping",
+      "hub_invite_url": "http://lvh.me/invites",
+      "hub_check_invite_url": "http://lvh.me/check_invite",
+      "media_host": "localhost:5000",
+      "tribes_host": "localhost:5002",
+      "tribes_mqtt_port": "1883",
+      "tribes_insecure": true,
+      "public_url": "",
+      "connection_string_path": "connection_string.txt",
+      "ssl": {
+        "enabled": false,
+        "save": true,
+        "port": "80"
+      },
+      "connect_ui": true
+    },
+    "production": {
+      "senza_url": "https://staging.senza.us/api/v2/",
+      "macaroon_location": "/relay/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
+      "tls_location": "/relay/.lnd/tls.cert",
+      "lnd_log_location": "/relay/.lnd/logs/bitcoin/mainnet/lnd.log",
+      "node_ip": "localhost",
+      "lnd_ip": "localhost",
+      "node_http_protocol": "http",
+      "node_http_port": "3001",
+      "lnd_port": "10009",
+      "hub_api_url": "https://hub.sphinx.chat/api/v1",
+      "hub_url": "https://hub.sphinx.chat/ping",
+      "hub_invite_url": "https://hub.sphinx.chat/invites",
+      "hub_check_invite_url": "https://hub.sphinx.chat/check_invite",
+      "media_host": "localhost:5000",
+      "tribes_host": "localhost:5002",
+      "tribes_mqtt_port": "1883",
+      "public_url": "",
+      "connection_string_path": "connection_string.txt",
+      "ssl": {
+        "enabled": false,
+        "save": true,
+        "port": "80"
+      }
+    }
+  }
+  

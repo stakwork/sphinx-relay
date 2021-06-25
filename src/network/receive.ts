@@ -370,13 +370,13 @@ export async function initGrpcSubscriptions() {
   try {
     const i = await Lightning.getInfo(true); // try proxy
     console.log('========', i)
-    const c = await Lightning.listChannels(); // examp
-    console.log('>>>>>>>>', c)
-    const inv = await Lightning.addInvoice({
-      value: 1000,
-      memo: 'hello world',
-    })
-    console.log("CREATED INVOICE", inv)
+    // const c = await Lightning.listChannels(); // examp
+    // console.log('>>>>>>>>', c)
+    // const inv = await Lightning.addInvoice({
+    //   value: 1000,
+    //   memo: 'hello world',
+    // })
+    // console.log("CREATED INVOICE", inv)
     await lndService.subscribeInvoices(parseKeysendInvoice);
   } catch (e) {
     console.log(e)

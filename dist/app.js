@@ -25,6 +25,7 @@ const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
+// import * as lightning from './src/grpc/lightning'
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -49,7 +50,7 @@ function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setupApp(); // setup routes
         grpc.reconnectToLightning(Math.random(), function () {
-            console.log(">> FINISH SETUP");
+            console.log(">>> FINISH SETUP");
             finishSetup();
         }); // recursive
     });
@@ -65,6 +66,12 @@ function finishSetup() {
             hub_1.pingHubInterval(15000);
         }
         setup_1.setupDone();
+        // let r = await lightning.keysend({
+        // 	amt: 3,
+        // 	dest: '02d280bbd9af44a98a7d828eacc9b128a5902dba2681820e094a73e9b84cacaeb3',
+        // 	route_hint: '0315fad9096f8addac2870ca00175d446ae41fe79084b98b5f0e268288ada32e61:2006338x19x0'
+        // })
+        // console.log(r)
     });
 }
 function setupApp() {

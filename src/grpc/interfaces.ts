@@ -1,6 +1,7 @@
 import { loadConfig } from "../utils/config";
 import * as ByteBuffer from 'bytebuffer'
 import * as crypto from "crypto";
+import { LND_KEYSEND_KEY } from "./lightning";
 
 const config = loadConfig();
 
@@ -97,10 +98,12 @@ export interface AddInvoiceRequest {
   route_hints?: RouteHint[];
   expiry?: number;
 }
+type GreenlightAmountUnit = 'millisatoshi' | 'satoshi' | 'bitcoin'
 interface GreenlightAmount {
-  millisatoshi?: number;
-  satoshi?: number;
-  bitcoin?: number;
+  unit: GreenlightAmountUnit,
+  millisatoshi?: string;
+  satoshi?: string;
+  bitcoin?: string;
 }
 interface GreenlightAddInvoiceRequest {
   amount: GreenlightAmount;
@@ -116,7 +119,7 @@ export function addInvoiceRequest(
   if (IS_LND) return req;
   if (IS_GREENLIGHT) {
     return <GreenlightAddInvoiceRequest>{
-      amount: {satoshi: req.value},
+      amount: {unit:'satoshi', satoshi: req.value+''},
       label: makeLabel(),
       description: req.memo,
     };
@@ -333,7 +336,7 @@ export function keysendRequest(req: KeysendRequest): KeysendRequest|GreenlightKe
   if(IS_GREENLIGHT) {
     const r = <GreenlightKeysendRequest>{
       node_id: req.dest,
-      amount: {satoshi: req.amt},
+      amount: {unit:'satoshi', satoshi: req.amt+''},
       label: makeLabel(),
     }
     if(req.route_hints) {
@@ -351,6 +354,7 @@ export function keysendRequest(req: KeysendRequest): KeysendRequest|GreenlightKe
     if(req.dest_custom_records) {
       const dest_recs: GreenlightTLV[] = []
       Object.entries(req.dest_custom_records).forEach(([type, value])=>{
+        if (type===`${LND_KEYSEND_KEY}`) return
         dest_recs.push({type, value})
       })
       r.extratlvs = dest_recs
@@ -402,8 +406,9 @@ export function keysendResponse(res: SendPaymentResponse|GreenlightPayment): Sen
   if(IS_GREENLIGHT) {
     const r = res as GreenlightPayment
     const route = <Route>{}
-    if(r.amount.satoshi) route.total_amt = r.amount.satoshi + ''
-    if(r.amount.millisatoshi) route.total_amt_msat = r.amount.millisatoshi + ''
+    const {satoshi, millisatoshi} = greenlightAmoutToAmounts(r.amount)
+    route.total_amt = satoshi
+    route.total_amt_msat = millisatoshi
     return <SendPaymentResponse>{
       payment_error: r.status===GreenlightPaymentStatus.FAILED ? 'payment failed' : '',
       payment_preimage: r.payment_preimage,
@@ -479,6 +484,7 @@ interface GreenlightIncomingPayment {
 export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoice {
   if(IS_LND) return res as Invoice
   if(IS_GREENLIGHT) {
+    console.log("GREENLIGHT SBU RES", res)
     const r1 = res as GreenlightIncomingPayment
     if(!r1.offchain) return <Invoice>{}
     const r = r1.offchain
@@ -493,19 +499,32 @@ export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoi
       htlcs: [<InvoiceHTLC>{custom_records}],
       state: InvoiceState.SETTLED,
     }
-    if(r.amount.satoshi) {
-      i.value = r.amount.satoshi + ''
-      i.amt_paid_sat = r.amount.satoshi + ''
-    }
-    if(r.amount.millisatoshi) {
-      i.value_msat = r.amount.millisatoshi + ''
-      i.amt_paid_msat = r.amount.millisatoshi + ''
-    }
+    const {satoshi, millisatoshi} = greenlightAmoutToAmounts(r.amount)
+    i.value = satoshi
+    i.value_msat = millisatoshi
+    i.amt_paid_sat = satoshi
+    i.amt_paid_msat = millisatoshi
     return i
   }
   return <Invoice>{}
 }
 
+interface AmountsRes {
+  satoshi: string,
+  millisatoshi: string
+}
+function greenlightAmoutToAmounts(a: GreenlightAmount): AmountsRes {
+  let satoshi = ''
+  let millisatoshi = ''
+  if(a.unit==='satoshi') {
+    satoshi = a.satoshi || '0'
+    millisatoshi = (parseInt(a.satoshi || '0') * 1000) + ''
+  } else if(a.unit==='millisatoshi') {
+    satoshi = Math.floor(parseInt(a.millisatoshi||'0') / 1000) + ''
+    millisatoshi = a.millisatoshi + ''
+  }
+  return {satoshi, millisatoshi}
+}
 function greelightNumber(s: string): number {
   if (s.endsWith('msat')) {
     const s1 = s.substr(0, s.length-4)

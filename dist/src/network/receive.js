@@ -355,13 +355,13 @@ function initGrpcSubscriptions() {
         try {
             const i = yield Lightning.getInfo(true); // try proxy
             console.log('========', i);
-            const c = yield Lightning.listChannels(); // examp
-            console.log('>>>>>>>>', c);
-            const inv = yield Lightning.addInvoice({
-                value: 1000,
-                memo: 'hello world',
-            });
-            console.log("CREATED INVOICE", inv);
+            // const c = await Lightning.listChannels(); // examp
+            // console.log('>>>>>>>>', c)
+            // const inv = await Lightning.addInvoice({
+            //   value: 1000,
+            //   memo: 'hello world',
+            // })
+            // console.log("CREATED INVOICE", inv)
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
