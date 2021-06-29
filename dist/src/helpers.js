@@ -34,7 +34,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
         const recipient = yield models_1.models.Contact.findOne({ where: { id: recipient_id, tenant: owner_id } });
         const uuid = md5([owner.publicKey, recipient.publicKey].sort().join("-"));
         // find by uuid
-        chat = yield models_1.models.Chat.findOne({ where: { uuid, tenant: owner_id } });
+        chat = yield models_1.models.Chat.findOne({ where: { uuid, tenant: owner_id, deleted: false } });
         if (!chat) { // no chat! create new
             console.log("=> no chat! create new");
             chat = yield models_1.models.Chat.create({
@@ -160,7 +160,7 @@ function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, 
 exports.findOrCreateContactByPubkeyAndRouteHint = findOrCreateContactByPubkeyAndRouteHint;
 function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        let chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant } });
+        let chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant, deleted: false } });
         if (!chat) {
             var date = new Date();
             date.setMilliseconds(0);

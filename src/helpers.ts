@@ -22,7 +22,7 @@ export const findOrCreateChat = async (params) => {
 		const uuid = md5([owner.publicKey, recipient.publicKey].sort().join("-"))
 
 		// find by uuid
-		chat = await models.Chat.findOne({ where: { uuid, tenant:owner_id } })
+		chat = await models.Chat.findOne({ where: { uuid, tenant:owner_id, deleted:false } })
 
 		if (!chat) { // no chat! create new
 			console.log("=> no chat! create new")
@@ -144,7 +144,7 @@ export async function findOrCreateContactByPubkeyAndRouteHint(senderPubKey:strin
 }
 
 export async function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
-	let chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant } })
+	let chat = await models.Chat.findOne({ where: { uuid: chat_uuid, tenant, deleted:false } })
 	if (!chat) {
 		var date = new Date();
 		date.setMilliseconds(0)
