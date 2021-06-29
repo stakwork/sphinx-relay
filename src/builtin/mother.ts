@@ -92,7 +92,7 @@ export function init() {
             console.log("=> FOUND BOT", bot.unique_name);
             const chat = await getTribeOwnersChatByUUID(message.channel.id);
             if (!(chat && chat.id)) return console.log("=> motherbot no chat");
-            installBotAsTribeAdmin(chat.dataValues, bot);
+            installBotAsTribeAdmin(chat, bot);
           } else {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor("MotherBot")
