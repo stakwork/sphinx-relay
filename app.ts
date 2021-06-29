@@ -14,7 +14,8 @@ import { ownerMiddleware, unlocker } from './src/auth'
 import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
-// import * as lightning from './src/grpc/lightning'
+import * as lightning from './src/grpc/lightning'
+import * as ByteBuffer from 'bytebuffer'
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -39,6 +40,13 @@ async function start() {
 start()
 
 async function mainSetup() {
+	const s = lightning.loadScheduler()
+	s.schedule({
+		node_id: ByteBuffer.fromHex('022449dfcc67599ef432c89d6e169694d6d9708fba8e8fd2ce4e387bccd38b5a89'),
+	}, (err, response)=>{
+		console.log(err,response)
+	})
+
 	await setupApp() // setup routes
 	grpc.reconnectToLightning(Math.random(), function () {
 		console.log(">>> FINISH SETUP")
@@ -57,12 +65,21 @@ async function finishSetup() {
 	}
 	setupDone()
 
-	// let r = await lightning.keysend({
-	// 	amt: 3,
-	// 	dest: '02d280bbd9af44a98a7d828eacc9b128a5902dba2681820e094a73e9b84cacaeb3',
-	// 	route_hint: '0315fad9096f8addac2870ca00175d446ae41fe79084b98b5f0e268288ada32e61:2006338x19x0'
-	// })
-	// console.log(r)
+	// scheduler: 35.236.110.178:2601
+
+	// need to call "init" first (pass hex hsm_secret): https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L50
+	// "Lightning Message" is appended on the HSMD itself
+	// https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L57-L65
+	
+	// node bindings:
+	// https://github.com/cdecker/lightning/tree/libhsmd-node/contrib/libhsmd_node
+
+	let r = await lightning.keysend({
+		amt: 300,
+		dest: '02739d50cedddf3bd8affc8c978d19575c71bad1abfba90d9bcf90ea52aa7362ff',
+		// route_hint: '0315fad9096f8addac2870ca00175d446ae41fe79084b98b5f0e268288ada32e61:2006338x19x0'
+	})
+	console.log(r)
 }
 
 function setupApp() {

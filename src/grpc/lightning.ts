@@ -23,6 +23,7 @@ export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 var lightningClient = <any>null;
 var walletUnlocker = <any>null;
 var routerClient = <any>null;
+var schedulerClient = <any>null;
 
 export const loadCredentials = (macName?: string) => {
   var lndCert = fs.readFileSync(config.tls_location);
@@ -41,6 +42,13 @@ const loadGreenlightCredentials = () => {
   var glCert = fs.readFileSync(config.tls_location);
   var glPriv = fs.readFileSync(config.tls_key_location);
   var glChain = fs.readFileSync(config.tls_chain_location);
+  return grpc.credentials.createSsl(glCert, glPriv, glChain);
+}
+
+const loadSchedulerCredentials = () => {
+  var glCert = fs.readFileSync(config.scheduler_tls_location);
+  var glPriv = fs.readFileSync(config.scheduler_key_location);
+  var glChain = fs.readFileSync(config.scheduler_chain_location);
   return grpc.credentials.createSsl(glCert, glPriv, glChain);
 }
 
@@ -73,8 +81,18 @@ export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
     return lightningClient
   } catch (e) {
     throw e
-  }
-  
+  } 
+}
+
+export function loadScheduler() {
+  // 35.236.110.178:2601
+  var descriptor = grpc.load("proto/scheduler.proto");
+  var scheduler: any = descriptor.scheduler
+  var options = {
+    'grpc.ssl_target_name_override' : 'localhost',
+  };
+  schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
+  return schedulerClient
 }
 
 export const loadWalletUnlocker = () => {

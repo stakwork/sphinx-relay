@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadScheduler = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -32,6 +32,7 @@ exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
 var lightningClient = null;
 var walletUnlocker = null;
 var routerClient = null;
+var schedulerClient = null;
 const loadCredentials = (macName) => {
     var lndCert = fs.readFileSync(config.tls_location);
     var sslCreds = grpc.credentials.createSsl(lndCert);
@@ -48,6 +49,12 @@ const loadGreenlightCredentials = () => {
     var glCert = fs.readFileSync(config.tls_location);
     var glPriv = fs.readFileSync(config.tls_key_location);
     var glChain = fs.readFileSync(config.tls_chain_location);
+    return grpc.credentials.createSsl(glCert, glPriv, glChain);
+};
+const loadSchedulerCredentials = () => {
+    var glCert = fs.readFileSync(config.scheduler_tls_location);
+    var glPriv = fs.readFileSync(config.scheduler_key_location);
+    var glChain = fs.readFileSync(config.scheduler_chain_location);
     return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
 function loadLightning(tryProxy, ownerPubkey) {
@@ -83,6 +90,17 @@ function loadLightning(tryProxy, ownerPubkey) {
     });
 }
 exports.loadLightning = loadLightning;
+function loadScheduler() {
+    // 35.236.110.178:2601
+    var descriptor = grpc.load("proto/scheduler.proto");
+    var scheduler = descriptor.scheduler;
+    var options = {
+        'grpc.ssl_target_name_override': 'localhost',
+    };
+    schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
+    return schedulerClient;
+}
+exports.loadScheduler = loadScheduler;
 const loadWalletUnlocker = () => {
     if (walletUnlocker) {
         return walletUnlocker;
