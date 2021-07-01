@@ -372,7 +372,7 @@ async function forwardMessageToTribe(
 export async function initGrpcSubscriptions() {
   try {
     if(config.lightning_provider==='GREENLIGHT') {
-      await Lightning.schedule()
+      await Lightning.schedule(config.scheduler_default_pubkey)
     }
     const i = await Lightning.getInfo(true); // try proxy
     console.log('========', i)

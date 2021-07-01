@@ -356,7 +356,7 @@ function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (config.lightning_provider === 'GREENLIGHT') {
-                yield Lightning.schedule();
+                yield Lightning.schedule(config.scheduler_default_pubkey);
             }
             const i = yield Lightning.getInfo(true); // try proxy
             console.log('========', i);

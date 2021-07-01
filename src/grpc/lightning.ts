@@ -818,10 +818,10 @@ export function loadScheduler() {
   return schedulerClient
 }
 
-export function schedule() {
+export function schedule(pubkey:string) {
   const s = loadScheduler()
 	s.schedule({
-		node_id: ByteBuffer.fromHex('022449dfcc67599ef432c89d6e169694d6d9708fba8e8fd2ce4e387bccd38b5a89'),
+		node_id: ByteBuffer.fromHex(pubkey),
 	}, (err, response)=>{
 		console.log(err,response)
     if (!err) {
