@@ -27,6 +27,8 @@ const constants_1 = require("../constants");
 const jsonUtils = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
 const bolt11 = require("@boltz/bolt11");
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -353,6 +355,9 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            if (config.lightning_provider === 'GREENLIGHT') {
+                yield Lightning.schedule();
+            }
             const i = yield Lightning.getInfo(true); // try proxy
             console.log('========', i);
             // const c = await Lightning.listChannels(); // examp

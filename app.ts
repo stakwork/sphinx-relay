@@ -15,7 +15,6 @@ import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
 import * as lightning from './src/grpc/lightning'
-import * as ByteBuffer from 'bytebuffer'
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -40,13 +39,6 @@ async function start() {
 start()
 
 async function mainSetup() {
-	const s = lightning.loadScheduler()
-	s.schedule({
-		node_id: ByteBuffer.fromHex('022449dfcc67599ef432c89d6e169694d6d9708fba8e8fd2ce4e387bccd38b5a89'),
-	}, (err, response)=>{
-		console.log(err,response)
-	})
-
 	await setupApp() // setup routes
 	grpc.reconnectToLightning(Math.random(), function () {
 		console.log(">>> FINISH SETUP")

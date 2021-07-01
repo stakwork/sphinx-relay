@@ -26,7 +26,6 @@ const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
 const lightning = require("./src/grpc/lightning");
-const ByteBuffer = require("bytebuffer");
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -49,12 +48,6 @@ function start() {
 start();
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
-        const s = lightning.loadScheduler();
-        s.schedule({
-            node_id: ByteBuffer.fromHex('022449dfcc67599ef432c89d6e169694d6d9708fba8e8fd2ce4e387bccd38b5a89'),
-        }, (err, response) => {
-            console.log(err, response);
-        });
         yield setupApp(); // setup routes
         grpc.reconnectToLightning(Math.random(), function () {
             console.log(">>> FINISH SETUP");

@@ -45,13 +45,7 @@ const loadGreenlightCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain);
 }
 
-const loadSchedulerCredentials = () => {
-  var glCert = fs.readFileSync(config.scheduler_tls_location);
-  var glPriv = fs.readFileSync(config.scheduler_key_location);
-  var glChain = fs.readFileSync(config.scheduler_chain_location);
-  return grpc.credentials.createSsl(glCert, glPriv, glChain);
-}
-
+let GREENLIGHT_GRPC_URI = ''
 export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   // only if specified AND available
   if (tryProxy && isProxy()) {
@@ -69,7 +63,7 @@ export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
     var options = {
       'grpc.ssl_target_name_override' : 'localhost',
     };
-    lightningClient = new greenlight.Node(LND_IP + ':' + config.lnd_port, credentials, options);
+    lightningClient = new greenlight.Node(GREENLIGHT_GRPC_URI, credentials, options);
     return lightningClient
   }
 
@@ -82,17 +76,6 @@ export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   } catch (e) {
     throw e
   } 
-}
-
-export function loadScheduler() {
-  // 35.236.110.178:2601
-  var descriptor = grpc.load("proto/scheduler.proto");
-  var scheduler: any = descriptor.scheduler
-  var options = {
-    'grpc.ssl_target_name_override' : 'localhost',
-  };
-  schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
-  return schedulerClient
 }
 
 export const loadWalletUnlocker = () => {
@@ -815,4 +798,34 @@ let yeslog = logging.Lightning
 function log(a?,b?,c?){
   if(!yeslog) return
   console.log("[lightning]", [...arguments])
+}
+
+const loadSchedulerCredentials = () => {
+  var glCert = fs.readFileSync(config.scheduler_tls_location);
+  var glPriv = fs.readFileSync(config.scheduler_key_location);
+  var glChain = fs.readFileSync(config.scheduler_chain_location);
+  return grpc.credentials.createSsl(glCert, glPriv, glChain);
+}
+
+export function loadScheduler() {
+  // 35.236.110.178:2601
+  var descriptor = grpc.load("proto/scheduler.proto");
+  var scheduler: any = descriptor.scheduler
+  var options = {
+    'grpc.ssl_target_name_override' : 'localhost',
+  };
+  schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
+  return schedulerClient
+}
+
+export function schedule() {
+  const s = loadScheduler()
+	s.schedule({
+		node_id: ByteBuffer.fromHex('022449dfcc67599ef432c89d6e169694d6d9708fba8e8fd2ce4e387bccd38b5a89'),
+	}, (err, response)=>{
+		console.log(err,response)
+    if (!err) {
+      GREENLIGHT_GRPC_URI = response.grpc_uri
+    }
+	})
 }

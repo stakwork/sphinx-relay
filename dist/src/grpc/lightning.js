@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadScheduler = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.schedule = exports.loadScheduler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -51,12 +51,7 @@ const loadGreenlightCredentials = () => {
     var glChain = fs.readFileSync(config.tls_chain_location);
     return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
-const loadSchedulerCredentials = () => {
-    var glCert = fs.readFileSync(config.scheduler_tls_location);
-    var glPriv = fs.readFileSync(config.scheduler_key_location);
-    var glChain = fs.readFileSync(config.scheduler_chain_location);
-    return grpc.credentials.createSsl(glCert, glPriv, glChain);
-};
+let GREENLIGHT_GRPC_URI = '';
 function loadLightning(tryProxy, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // only if specified AND available
@@ -74,7 +69,7 @@ function loadLightning(tryProxy, ownerPubkey) {
             var options = {
                 'grpc.ssl_target_name_override': 'localhost',
             };
-            lightningClient = new greenlight.Node(LND_IP + ':' + config.lnd_port, credentials, options);
+            lightningClient = new greenlight.Node(GREENLIGHT_GRPC_URI, credentials, options);
             return lightningClient;
         }
         try { // LND
@@ -90,17 +85,6 @@ function loadLightning(tryProxy, ownerPubkey) {
     });
 }
 exports.loadLightning = loadLightning;
-function loadScheduler() {
-    // 35.236.110.178:2601
-    var descriptor = grpc.load("proto/scheduler.proto");
-    var scheduler = descriptor.scheduler;
-    var options = {
-        'grpc.ssl_target_name_override': 'localhost',
-    };
-    schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
-    return schedulerClient;
-}
-exports.loadScheduler = loadScheduler;
 const loadWalletUnlocker = () => {
     if (walletUnlocker) {
         return walletUnlocker;
@@ -873,4 +857,33 @@ function log(a, b, c) {
         return;
     console.log("[lightning]", [...arguments]);
 }
+const loadSchedulerCredentials = () => {
+    var glCert = fs.readFileSync(config.scheduler_tls_location);
+    var glPriv = fs.readFileSync(config.scheduler_key_location);
+    var glChain = fs.readFileSync(config.scheduler_chain_location);
+    return grpc.credentials.createSsl(glCert, glPriv, glChain);
+};
+function loadScheduler() {
+    // 35.236.110.178:2601
+    var descriptor = grpc.load("proto/scheduler.proto");
+    var scheduler = descriptor.scheduler;
+    var options = {
+        'grpc.ssl_target_name_override': 'localhost',
+    };
+    schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
+    return schedulerClient;
+}
+exports.loadScheduler = loadScheduler;
+function schedule() {
+    const s = loadScheduler();
+    s.schedule({
+        node_id: ByteBuffer.fromHex('022449dfcc67599ef432c89d6e169694d6d9708fba8e8fd2ce4e387bccd38b5a89'),
+    }, (err, response) => {
+        console.log(err, response);
+        if (!err) {
+            GREENLIGHT_GRPC_URI = response.grpc_uri;
+        }
+    });
+}
+exports.schedule = schedule;
 //# sourceMappingURL=lightning.js.map

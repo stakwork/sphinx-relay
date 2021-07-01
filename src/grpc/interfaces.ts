@@ -536,7 +536,29 @@ function greelightNumber(s: string): number {
   } 
   return 0
 }
+/*
+interface ShortChannelId {
+  blockHeight: number,
+  txIndex: number,
+  txPosition: number
+}
+function greenlightChannelIDToShortChannelID(scid:string): string {
+  const arr = scid.split('x')
+  if(arr.length!==3) return ''
+  const chan: ShortChannelId = {
+    blockHeight: parseInt(arr[0]) >> 40,
+    txIndex: (parseInt(arr[1])>>16) & 0xFFFFFF,
+    txPosition: 0
+  }
+  return ''
+}
+function shortChannelIDToSphinxChannel() {
 
+}
+function sphinxChanelIDToGreenlightChannelID() {
+
+}
+*/
 enum GreenlightChannelState {
 	CHANNELD_AWAITING_LOCKIN = 'CHANNELD_AWAITING_LOCKIN',
 	/* Normal operating state. */

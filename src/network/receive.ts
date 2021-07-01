@@ -19,6 +19,9 @@ import constants from "../constants";
 import * as jsonUtils from "../utils/json";
 import { isProxy } from "../utils/proxy";
 import * as bolt11 from '@boltz/bolt11'
+import {loadConfig} from '../utils/config'
+
+const config = loadConfig()
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -368,6 +371,9 @@ async function forwardMessageToTribe(
 
 export async function initGrpcSubscriptions() {
   try {
+    if(config.lightning_provider==='GREENLIGHT') {
+      await Lightning.schedule()
+    }
     const i = await Lightning.getInfo(true); // try proxy
     console.log('========', i)
     // const c = await Lightning.listChannels(); // examp
