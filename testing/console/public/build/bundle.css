@@ -1,1 +1,62 @@
-main.svelte-xfigi5{padding:1em;display:flex}section.svelte-21zv1k{border:1px solid green;display:inline-block;margin:20px}pre.svelte-21zv1k{min-height:400px;max-height:400px;max-width:calc(50vw - 80px);min-width:calc(50vw - 80px);background-color:#222;color:whitesmoke;margin:0;padding:5px;overflow:auto;display:flex;flex-direction:column-reverse}@media screen and (max-width:1257px){pre.svelte-21zv1k{max-width:calc(100vw - 100px);min-width:calc(100vw - 100px)}}.wrap.svelte-18t8n6f{height:50px;display:flex;position:relative}.tab.svelte-18t8n6f{width:100px;min-width:100px;height:50px;border-bottom:1px solid grey;border-right:1px solid grey;border-top:1px solid grey;cursor:pointer;display:flex;align-items:center;justify-content:center}.tab.svelte-18t8n6f:first-child{border-left:1px solid grey}.tab.svelte-18t8n6f:hover{background:whitesmoke}.tab.selected.svelte-18t8n6f{background:rgb(4, 88, 80);color:white}.bar.svelte-18t8n6f{height:6px;width:100px;position:absolute;bottom:-2px;background:cyan}
+main.svelte-xfigi5 {
+  padding: 1em;
+  display: flex;
+}
+section.svelte-21zv1k {
+  border: 1px solid green;
+  display: inline-block;
+  margin: 20px;
+}
+pre.svelte-21zv1k {
+  min-height: 400px;
+  max-height: 400px;
+  max-width: calc(50vw - 80px);
+  min-width: calc(50vw - 80px);
+  background-color: #222;
+  color: whitesmoke;
+  margin: 0;
+  padding: 5px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column-reverse;
+}
+@media screen and (max-width: 1257px) {
+  pre.svelte-21zv1k {
+    max-width: calc(100vw - 100px);
+    min-width: calc(100vw - 100px);
+  }
+}
+.wrap.svelte-18t8n6f {
+  height: 50px;
+  display: flex;
+  position: relative;
+}
+.tab.svelte-18t8n6f {
+  width: 100px;
+  min-width: 100px;
+  height: 50px;
+  border-bottom: 1px solid grey;
+  border-right: 1px solid grey;
+  border-top: 1px solid grey;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab.svelte-18t8n6f:first-child {
+  border-left: 1px solid grey;
+}
+.tab.svelte-18t8n6f:hover {
+  background: whitesmoke;
+}
+.tab.selected.svelte-18t8n6f {
+  background: rgb(4, 88, 80);
+  color: white;
+}
+.bar.svelte-18t8n6f {
+  height: 6px;
+  width: 100px;
+  position: absolute;
+  bottom: -2px;
+  background: cyan;
+}

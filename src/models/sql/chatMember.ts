@@ -1,12 +1,11 @@
-import { Table, Column, Model } from 'sequelize-typescript';
+import { Table, Column, Model } from 'sequelize-typescript'
 
 @Table({
-  tableName: 'sphinx_chat_members', underscored: true, indexes: [
-    { unique: true, fields: ['chat_id', 'contact_id'] }
-  ]
+  tableName: 'sphinx_chat_members',
+  underscored: true,
+  indexes: [{ unique: true, fields: ['chat_id', 'contact_id'] }],
 })
 export default class ChatMember extends Model<ChatMember> {
-
   @Column
   chatId: number
 
@@ -33,5 +32,4 @@ export default class ChatMember extends Model<ChatMember> {
 
   @Column
   tenant: number
-
 }

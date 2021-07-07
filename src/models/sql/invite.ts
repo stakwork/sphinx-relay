@@ -1,13 +1,12 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType } from 'sequelize-typescript'
 
 @Table({ tableName: 'sphinx_invites', underscored: true })
 export default class Invite extends Model<Invite> {
-
   @Column({
     type: DataType.BIGINT,
     primaryKey: true,
     unique: true,
-    autoIncrement: true
+    autoIncrement: true,
   })
   id: number
 
@@ -37,5 +36,4 @@ export default class Invite extends Model<Invite> {
 
   @Column
   tenant: number
-
 }

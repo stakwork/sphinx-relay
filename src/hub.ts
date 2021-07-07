@@ -1,31 +1,31 @@
-import { models, Contact } from "./models";
-import fetch from "node-fetch";
-import { Op } from "sequelize";
-import * as socket from "./utils/socket";
-import * as jsonUtils from "./utils/json";
-import * as helpers from "./helpers";
-import { nodeinfo, proxynodeinfo } from "./utils/nodeinfo";
-import * as LND from "./utils/lightning";
-import constants from "./constants";
-import { loadConfig } from "./utils/config";
-import * as https from "https";
-import { isProxy } from "./utils/proxy";
-import {sendNotification, resetNotifyTribeCount} from './notify'
-import {logging} from './utils/logger'
+import { models, Contact } from './models'
+import fetch from 'node-fetch'
+import { Op } from 'sequelize'
+import * as socket from './utils/socket'
+import * as jsonUtils from './utils/json'
+import * as helpers from './helpers'
+import { nodeinfo, proxynodeinfo } from './utils/nodeinfo'
+import * as LND from './utils/lightning'
+import constants from './constants'
+import { loadConfig } from './utils/config'
+import * as https from 'https'
+import { isProxy } from './utils/proxy'
+import { sendNotification, resetNotifyTribeCount } from './notify'
+import { logging } from './utils/logger'
 
 const pingAgent = new https.Agent({
   keepAlive: true,
-});
+})
 const checkInvitesAgent = new https.Agent({
   keepAlive: true,
-});
+})
 
-const env = process.env.NODE_ENV || "development";
-const config = loadConfig();
+const env = process.env.NODE_ENV || 'development'
+const config = loadConfig()
 
 const checkInviteHub = async (params = {}) => {
-  if (env != "production") {
-    return;
+  if (env != 'production') {
+    return
   }
   //console.log('[hub] checking invites ping')
 
@@ -38,55 +38,55 @@ const checkInviteHub = async (params = {}) => {
         ],
       },
     },
-  }).map((invite) => invite.inviteString);
+  }).map((invite) => invite.inviteString)
   if (inviteStrings.length === 0) {
-    return; // skip if no invites
+    return // skip if no invites
   }
 
-  fetch(config.hub_api_url + "/invites/check", {
+  fetch(config.hub_api_url + '/invites/check', {
     agent: checkInvitesAgent,
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ invite_strings: inviteStrings }),
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   })
     .then((res) => res.json())
     .then((json) => {
       if (json.object) {
         json.object.invites.map(async (object) => {
-          const invite = object.invite;
-          const pubkey = object.pubkey;
-          const routeHint = object.route_hint;
-          const price = object.price;
+          const invite = object.invite
+          const pubkey = object.pubkey
+          const routeHint = object.route_hint
+          const price = object.price
 
           const dbInvite = await models.Invite.findOne({
             where: { inviteString: invite.pin },
-          });
+          })
           const contact = await models.Contact.findOne({
             where: { id: dbInvite.contactId },
-          });
+          })
           const owner = await models.Contact.findOne({
             where: { id: dbInvite.tenant },
-          });
+          })
 
           if (dbInvite.status != invite.invite_status) {
             const updateObj: { [k: string]: any } = {
               status: invite.invite_status,
               price: price,
-            };
-            if (invite.invoice) updateObj.invoice = invite.invoice;
+            }
+            if (invite.invoice) updateObj.invoice = invite.invoice
 
-            dbInvite.update(updateObj);
+            dbInvite.update(updateObj)
 
             socket.sendJson(
               {
-                type: "invite",
+                type: 'invite',
                 response: jsonUtils.inviteToJson(dbInvite),
               },
               owner.id
-            );
+            )
 
             if (dbInvite.status == constants.invite_statuses.ready && contact) {
-              sendNotification(-1, contact.alias, "invite", owner);
+              sendNotification(-1, contact.alias, 'invite', owner)
             }
           }
 
@@ -98,48 +98,48 @@ const checkInviteHub = async (params = {}) => {
             const updateObj: { [k: string]: any } = {
               publicKey: pubkey,
               status: constants.contact_statuses.confirmed,
-            };
-            if (routeHint) updateObj.routeHint = routeHint;
-            contact.update(updateObj);
+            }
+            if (routeHint) updateObj.routeHint = routeHint
+            contact.update(updateObj)
 
-            var contactJson = jsonUtils.contactToJson(contact);
-            contactJson.invite = jsonUtils.inviteToJson(dbInvite);
+            var contactJson = jsonUtils.contactToJson(contact)
+            contactJson.invite = jsonUtils.inviteToJson(dbInvite)
 
             socket.sendJson(
               {
-                type: "contact",
+                type: 'contact',
                 response: contactJson,
               },
               owner.id
-            );
+            )
 
             helpers.sendContactKeys({
               contactIds: [contact.id],
               sender: owner,
               type: constants.message_types.contact_key,
-            });
+            })
           }
-        });
+        })
       }
     })
     .catch((error) => {
-      console.log("[hub error]", error);
-    });
-};
+      console.log('[hub error]', error)
+    })
+}
 
 const pingHub = async (params = {}) => {
-  if (env != "production" || config.dont_ping_hub==='true') {
-    return;
+  if (env != 'production' || config.dont_ping_hub === 'true') {
+    return
   }
 
-  const node = await nodeinfo();
-  sendHubCall({ ...params, node });
+  const node = await nodeinfo()
+  sendHubCall({ ...params, node })
 
   if (isProxy()) {
     // send all "clean" nodes
-    massPingHubFromProxies(node);
+    massPingHubFromProxies(node)
   }
-};
+}
 
 async function massPingHubFromProxies(rn) {
   // real node
@@ -148,11 +148,11 @@ async function massPingHubFromProxies(rn) {
       isOwner: true,
       id: { [Op.ne]: 1 },
     },
-  });
-  const nodes: { [k: string]: any }[] = [];
-  await asyncForEach(owners, async (o:Contact) => {
-    const proxyNodeInfo = await proxynodeinfo(o.publicKey);
-    const clean = o.authToken === null || o.authToken === "";
+  })
+  const nodes: { [k: string]: any }[] = []
+  await asyncForEach(owners, async (o: Contact) => {
+    const proxyNodeInfo = await proxynodeinfo(o.publicKey)
+    const clean = o.authToken === null || o.authToken === ''
     nodes.push({
       ...proxyNodeInfo,
       clean,
@@ -165,18 +165,23 @@ async function massPingHubFromProxies(rn) {
       ip: rn.ip,
       public_ip: rn.public_ip,
       node_alias: rn.node_alias,
-    });
-  });
-  if(logging.Proxy) {
-    const cleanNodes = nodes.filter(n=>n.clean)
-    console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`)
+    })
+  })
+  if (logging.Proxy) {
+    const cleanNodes = nodes.filter((n) => n.clean)
+    console.log(
+      `[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`
+    )
   }
   // split into chunks of 50
-  const size = 50; 
-  for (let i=0; i<nodes.length; i+=size) {
-    await sendHubCall({
-      nodes: nodes.slice(i,i+size)
-    }, true)
+  const size = 50
+  for (let i = 0; i < nodes.length; i += size) {
+    await sendHubCall(
+      {
+        nodes: nodes.slice(i, i + size),
+      },
+      true
+    )
   }
 }
 
@@ -184,118 +189,117 @@ async function sendHubCall(body, mass?: boolean) {
   try {
     // console.log("=> PING BODY", body)
     const r = await fetch(
-      config.hub_api_url + (mass ? "/mass_ping" : "/ping"),
+      config.hub_api_url + (mass ? '/mass_ping' : '/ping'),
       {
         agent: pingAgent,
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify(body),
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       }
-    );
-    const j = await r.json();
+    )
+    const j = await r.json()
     // console.log("=> PING RESPONSE", j)
-    if (!(j && j.status && j.status === "ok")) {
-      console.log("[hub] ping returned not ok", j);
+    if (!(j && j.status && j.status === 'ok')) {
+      console.log('[hub] ping returned not ok', j)
     }
   } catch (e) {
-    console.log("[hub warning]: cannot reach hub", e);
+    console.log('[hub warning]: cannot reach hub', e)
   }
 }
 
 const pingHubInterval = (ms) => {
-  setInterval(pingHub, ms);
-};
+  setInterval(pingHub, ms)
+}
 
 const checkInvitesHubInterval = (ms) => {
-  setInterval(checkInviteHub, ms);
-};
+  setInterval(checkInviteHub, ms)
+}
 
 export function sendInvoice(payReq, amount) {
-  console.log("[hub] sending invoice");
-  fetch(config.hub_api_url + "/invoices", {
-    method: "POST",
+  console.log('[hub] sending invoice')
+  fetch(config.hub_api_url + '/invoices', {
+    method: 'POST',
     body: JSON.stringify({ invoice: payReq, amount }),
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   }).catch((error) => {
-    console.log("[hub error]: sendInvoice", error);
-  });
+    console.log('[hub error]: sendInvoice', error)
+  })
 }
 
 const finishInviteInHub = (params, onSuccess, onFailure) => {
-  fetch(config.hub_api_url + "/invites/finish", {
-    method: "POST",
+  fetch(config.hub_api_url + '/invites/finish', {
+    method: 'POST',
     body: JSON.stringify(params),
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   })
     .then((res) => res.json())
     .then((json) => {
-      console.log("[hub] finished invite to hub");
-      onSuccess(json);
+      console.log('[hub] finished invite to hub')
+      onSuccess(json)
     })
     .catch((e) => {
-      console.log("[hub] fail to finish invite in hub");
-      onFailure(e);
-    });
-};
+      console.log('[hub] fail to finish invite in hub')
+      onFailure(e)
+    })
+}
 
 const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
-  fetch(config.hub_api_url + "/invites/" + invite_string + "/pay", {
-    method: "POST",
+  fetch(config.hub_api_url + '/invites/' + invite_string + '/pay', {
+    method: 'POST',
     body: JSON.stringify(params),
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   })
     .then((res) => res.json())
     .then((json) => {
       if (json.object) {
-        console.log("[hub] finished pay to hub");
-        onSuccess(json);
+        console.log('[hub] finished pay to hub')
+        onSuccess(json)
       } else {
-        console.log("[hub] fail to pay invite in hub");
-        onFailure(json);
+        console.log('[hub] fail to pay invite in hub')
+        onFailure(json)
       }
-    });
-};
+    })
+}
 
 async function payInviteInvoice(invoice, pubkey: string, onSuccess, onFailure) {
   try {
-    const res = LND.sendPayment(invoice, pubkey);
-    onSuccess(res);
+    const res = LND.sendPayment(invoice, pubkey)
+    onSuccess(res)
   } catch (e) {
-    onFailure(e);
+    onFailure(e)
   }
 }
 
 const createInviteInHub = (params, onSuccess, onFailure) => {
-  fetch(config.hub_api_url + "/invites_new", {
-    method: "POST",
+  fetch(config.hub_api_url + '/invites_new', {
+    method: 'POST',
     body: JSON.stringify(params),
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   })
     .then((res) => res.json())
     .then((json) => {
       if (json.object) {
-        console.log("[hub] sent invite to be created to hub");
-        onSuccess(json);
+        console.log('[hub] sent invite to be created to hub')
+        onSuccess(json)
       } else {
-        console.log("[hub] fail to create invite in hub");
-        onFailure(json);
+        console.log('[hub] fail to create invite in hub')
+        onFailure(json)
       }
-    });
-};
+    })
+}
 
 export async function getAppVersionsFromHub() {
   try {
-    const r = await fetch(config.hub_api_url + "/app_versions", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    const j = await r.json();
-    return j;
+    const r = await fetch(config.hub_api_url + '/app_versions', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const j = await r.json()
+    return j
   } catch (e) {
-    return null;
+    return null
   }
 }
-
 
 export {
   pingHubInterval,
@@ -307,11 +311,10 @@ export {
   payInviteInHub,
   payInviteInvoice,
   resetNotifyTribeCount,
-};
-
+}
 
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array);
+    await callback(array[index], index, array)
   }
 }

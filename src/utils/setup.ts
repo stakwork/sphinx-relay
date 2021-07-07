@@ -3,29 +3,29 @@ import { sequelize, models } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
-import * as fs from 'fs';
+import * as fs from 'fs'
 import { isClean } from './nodeinfo'
 import { getQR } from './connect'
 import { loadConfig } from './config'
 import migrate from './migrate'
-import {isProxy} from '../utils/proxy'
-import {logging} from '../utils/logger'
+import { isProxy } from '../utils/proxy'
+import { logging } from '../utils/logger'
 
 const USER_VERSION = 7
 const config = loadConfig()
 
 const setupDatabase = async () => {
-  if(logging.DB) console.log('=> [db] starting setup...')
+  if (logging.DB) console.log('=> [db] starting setup...')
   await setVersion()
-  if(logging.DB) console.log('=> [db] sync now')
+  if (logging.DB) console.log('=> [db] sync now')
   try {
     await sequelize.sync()
-    if(logging.DB) console.log("=> [db] done syncing")
+    if (logging.DB) console.log('=> [db] done syncing')
   } catch (e) {
-    if(logging.DB) console.log("[db] sync failed", e)
+    if (logging.DB) console.log('[db] sync failed', e)
   }
   await migrate()
-  if(logging.DB) console.log('=> [db] setup done')
+  if (logging.DB) console.log('=> [db] setup done')
 }
 
 async function setVersion() {
@@ -37,7 +37,9 @@ async function setVersion() {
 }
 
 const setupOwnerContact = async () => {
-  const owner = await models.Contact.findOne({ where: { isOwner: true, id:1 } })
+  const owner = await models.Contact.findOne({
+    where: { isOwner: true, id: 1 },
+  })
   if (!owner) {
     const lightning = await loadLightning()
     lightning.getInfo({}, async (err, info) => {
@@ -45,12 +47,14 @@ const setupOwnerContact = async () => {
         console.log('[db] error creating node owner due to lnd failure', err)
       } else {
         try {
-          const one = await models.Contact.findOne({ where: { isOwner:true, id: 1 } })
+          const one = await models.Contact.findOne({
+            where: { isOwner: true, id: 1 },
+          })
           if (!one) {
-            let authToken:string|null = null
-            let tenant:number|null = null
+            let authToken: string | null = null
+            let tenant: number | null = null
             // dont allow "signup" on root contact of proxy node
-            if(isProxy()) {
+            if (isProxy()) {
               authToken = '_'
             } else {
               tenant = 1 // add tenant here
@@ -60,7 +64,7 @@ const setupOwnerContact = async () => {
               publicKey: info.identity_pubkey,
               isOwner: true,
               authToken,
-              tenant
+              tenant,
             })
             console.log('[db] created node owner contact, id:', contact.id)
           }
@@ -74,21 +78,22 @@ const setupOwnerContact = async () => {
 
 const runMigrations = async () => {
   await new Promise((resolve, reject) => {
-    const migration: any = exec('node_modules/.bin/sequelize db:migrate',
+    const migration: any = exec(
+      'node_modules/.bin/sequelize db:migrate',
       { env: process.env },
       (err, stdout, stderr) => {
         if (err) {
-          reject(err);
+          reject(err)
         } else {
-          resolve(true);
+          resolve(true)
         }
       }
-    );
+    )
 
     // Forward stdout+stderr to this process
-    migration.stdout.pipe(process.stdout);
-    migration.stderr.pipe(process.stderr);
-  });
+    migration.stdout.pipe(process.stdout)
+    migration.stderr.pipe(process.stderr)
+  })
 }
 
 export { setupDatabase, setupOwnerContact, runMigrations, setupDone }
@@ -105,7 +110,6 @@ async function printGitInfo() {
 }
 
 async function printQR() {
-
   const b64 = await getQR()
   if (!b64) {
     console.log('=> no public IP provided')
@@ -129,7 +133,11 @@ function connectionStringFile(str: string) {
   if ('connection_string_path' in config) {
     connectStringPath = config.connection_string_path
   }
-  fs.writeFile(connectStringPath||'connection_string.txt', str, function (err) {
-    if (err) console.log('ERROR SAVING connection_string.txt.', err);
-  });
+  fs.writeFile(
+    connectStringPath || 'connection_string.txt',
+    str,
+    function (err) {
+      if (err) console.log('ERROR SAVING connection_string.txt.', err)
+    }
+  )
 }

@@ -5,6 +5,7 @@
 ![Relay](https://github.com/stakwork/sphinx-relay/raw/master/public/relay.jpg)
 
 Relay stores:
+
 - Aliases
 - Messages
 - Recurring payment configurations
@@ -15,8 +16,8 @@ Relay stores:
 
 ## Preparations
 
-* Be able to connect with your node through SSH.
-* Make sure you are running LND version `0.10.0` or higher. This can be seen at http://mynode.local/lnd at the right top. Or by inserting the following console command:
+- Be able to connect with your node through SSH.
+- Make sure you are running LND version `0.10.0` or higher. This can be seen at http://mynode.local/lnd at the right top. Or by inserting the following console command:
 
 ```sh
 $ lncli getinfo
@@ -43,6 +44,7 @@ $ lncli newaddress p2wkh
 Send 100000 sats to the provided bitcoin address.
 
 Check your LND wallet balance with
+
 ```bash
 $ lncli walletbalance
 {
@@ -51,7 +53,9 @@ $ lncli walletbalance
     "unconfirmed_balance": "100000"
 }
 ```
+
 until it shows:
+
 ```bash
 {
     "total_balance": "100000",
@@ -59,6 +63,7 @@ until it shows:
     "unconfirmed_balance": "0"
 }
 ```
+
 - Open a channel to sphinx.chat:
 
 ```bash
@@ -71,6 +76,7 @@ $ lncli openchannel 023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b28
     "funding_txid": "76bc738472545c343ab4eecc733bd26f1493fb512d1921f3f7d863d0f0f0fbca"
 }
 ```
+
 > **_NB_** Set the right amount of bitcoin transaction fee in `sat_per_byte`
 > We recommend using [mempool.space](https://mempool.space) to determine the necessary fee.
 
@@ -102,9 +108,9 @@ If you plan to use your Sphinx clients within the local network, then you do not
 
 ## Deployment
 
-* [Docker deployment](docs/docker_deployment.md)
-* [Raspberry Pi/myNode deployment](docs/myNode_deployment.md)
-* [Raspberry Pi/Raspiblitz deployment](docs/raspiblitz_deployment.md)
+- [Docker deployment](docs/docker_deployment.md)
+- [Raspberry Pi/myNode deployment](docs/myNode_deployment.md)
+- [Raspberry Pi/Raspiblitz deployment](docs/raspiblitz_deployment.md)
 
 ## Connecting a mobile client
 
@@ -119,10 +125,11 @@ Add some friends' addresses and start chatting!
 As of this writing, neither of the Desktop Sphinx clients can scan Relay QR codes, nor directly import the connection string (printed by Relay just above the QR code).
 
 To connect your Desktop Sphinx to your Relay:
--  connect a mobile Sphinx client;
--  open Profile in your mobile client;
--  Export Private Key (key is stored in your device clipboard);
--  send the private key to your Desktop and paste it to the connection input field.
+
+- connect a mobile Sphinx client;
+- open Profile in your mobile client;
+- Export Private Key (key is stored in your device clipboard);
+- send the private key to your Desktop and paste it to the connection input field.
 
 > You should see `[socket.io] connected!` in your Relay console output.
 
@@ -140,9 +147,11 @@ Then try again.
 ### Messages sent with your Relay are delivered empty or not delivered at all
 
 Make small manual lightning payments to the Sphinx.chat LND (or the node you are connected to)
+
 ```bash
 $ lncli sendpayment --dest=023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --final_cltv_delta=10 --amt=5 --keysend
 ```
+
 Then make manual payments to your destination address.
 
 Make sure all payments complete successfully.

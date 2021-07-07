@@ -1,4 +1,3 @@
-
 ### testing
 
 **how to spin up a local sphinx simnet stack**
@@ -11,15 +10,14 @@
 - sphinx-proxy (bitcoin.simnet)
 - 4x relay (alice, bob, casey, proxy)
 
-**alice** 
+**alice**
 node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/configs/alice.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/configs/alice-db.json"
 
-**bob** 
+**bob**
 node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/configs/bob.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/configs/bob-db.json"
 
-**casey** 
+**casey**
 node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/configs/casey.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/configs/casey-db.json"
 
-**proxy** 
+**proxy**
 node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/configs/proxy.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/configs/proxy-db.json"
-

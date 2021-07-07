@@ -1,26 +1,26 @@
-import { models } from "../models";
-import * as helpers from "../helpers";
-import { failure, success } from "../utils/res";
-import constants from "../constants";
+import { models } from '../models'
+import * as helpers from '../helpers'
+import { failure, success } from '../utils/res'
+import constants from '../constants'
 
 export interface ChatMeta {
-  itemID: number;
-  ts: number;
-  sats_per_minute: number;
-  speed?: string;
+  itemID: number
+  ts: number
+  sats_per_minute: number
+  speed?: string
 }
 
-type DestinationType = "wallet" | "node";
+type DestinationType = 'wallet' | 'node'
 export interface Destination {
-  address: string;
-  routeHint: string;
-  split: number;
-  type: DestinationType;
+  address: string
+  routeHint: string
+  split: number
+  type: DestinationType
 }
 
 export const streamFeed = async (req, res) => {
-  if (!req.owner) return failure(res, "no owner");
-  const tenant: number = req.owner.id;
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
   const {
     destinations,
     amount,
@@ -28,51 +28,51 @@ export const streamFeed = async (req, res) => {
     text,
     update_meta,
   }: {
-    destinations: Destination[];
-    amount: number;
-    chat_id: number;
-    text: string;
-    update_meta: boolean;
-  } = req.body;
+    destinations: Destination[]
+    amount: number
+    chat_id: number
+    text: string
+    update_meta: boolean
+  } = req.body
 
   if (!(destinations && destinations.length)) {
-    return failure(res, "no destinations");
+    return failure(res, 'no destinations')
   }
 
   if (update_meta) {
-    let meta;
+    let meta
     try {
-      meta = JSON.parse(text);
+      meta = JSON.parse(text)
     } catch (e) {}
     if (!meta) {
-      return failure(res, "no meta");
+      return failure(res, 'no meta')
     }
     if (meta && meta.itemID) {
       const cm: ChatMeta = {
         itemID: meta.itemID,
         ts: meta.ts || 0,
         sats_per_minute: amount || 0,
-        speed: meta.speed || "1",
-      };
+        speed: meta.speed || '1',
+      }
       const chat = await models.Chat.findOne({
         where: { id: chat_id, tenant },
-      });
+      })
       if (!chat) {
-        return failure(res, "no chat");
+        return failure(res, 'no chat')
       }
-      await chat.update({ meta: JSON.stringify(cm) });
+      await chat.update({ meta: JSON.stringify(cm) })
     }
   }
 
-  const owner = req.owner;
+  const owner = req.owner
 
-  if (amount && typeof amount === "number") {
+  if (amount && typeof amount === 'number') {
     await asyncForEach(destinations, async (d: Destination) => {
-      if (d.type === "node") {
-        if (!d.address) return;
-        if (d.address.length !== 66) return;
-        if (d.address === owner.publicKey) return; // dont send to self
-        const amt = Math.max(Math.round((d.split / 100) * amount), 1);
+      if (d.type === 'node') {
+        if (!d.address) return
+        if (d.address.length !== 66) return
+        if (d.address === owner.publicKey) return // dont send to self
+        const amt = Math.max(Math.round((d.split / 100) * amount), 1)
         await anonymousKeysend(
           owner,
           d.address,
@@ -81,13 +81,13 @@ export const streamFeed = async (req, res) => {
           text,
           function () {},
           function () {}
-        );
+        )
       }
-    });
+    })
   }
 
-  success(res, {});
-};
+  success(res, {})
+}
 
 export async function anonymousKeysend(
   owner,
@@ -98,11 +98,11 @@ export async function anonymousKeysend(
   onSuccess: Function,
   onFailure: Function
 ) {
-  const tenant = owner.id;
+  const tenant = owner.id
   const msg: { [k: string]: any } = {
     type: constants.message_types.keysend,
-  };
-  if (text) msg.message = { content: text };
+  }
+  if (text) msg.message = { content: text }
 
   return helpers.performKeysendMessage({
     sender: owner,
@@ -111,33 +111,33 @@ export async function anonymousKeysend(
     amount,
     msg,
     success: () => {
-      console.log("payment sent!");
-      var date = new Date();
-      date.setMilliseconds(0);
+      console.log('payment sent!')
+      var date = new Date()
+      date.setMilliseconds(0)
       models.Message.create({
         chatId: 0,
         type: constants.message_types.keysend,
         sender: tenant,
         amount,
         amountMsat: amount * 1000,
-        paymentHash: "",
+        paymentHash: '',
         date,
-        messageContent: text || "",
+        messageContent: text || '',
         status: constants.statuses.confirmed,
         createdAt: date,
         updatedAt: date,
         tenant,
-      });
-      onSuccess({ destination_key, amount });
+      })
+      onSuccess({ destination_key, amount })
     },
     failure: (error) => {
-      onFailure(error);
+      onFailure(error)
     },
-  });
+  })
 }
 
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array);
+    await callback(array[index], index, array)
   }
 }

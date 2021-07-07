@@ -1,21 +1,23 @@
-
 import * as LND from '../utils/lightning'
 import * as publicIp from 'public-ip'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import { models } from '../models'
 
-export function proxynodeinfo(pk:string):Promise<Object> {
-  return new Promise(async (resolve, reject)=> {
+export function proxynodeinfo(pk: string): Promise<Object> {
+  return new Promise(async (resolve, reject) => {
     const lightning = await LND.loadLightning(true, pk) // dont try proxy
     lightning.listChannels({}, (err, channelList) => {
       if (err) console.log(err)
       if (!channelList) return
       const { channels } = channelList
-      const localBalances = channels.map(c => c.local_balance)
-      const remoteBalances = channels.map(c => c.remote_balance)
+      const localBalances = channels.map((c) => c.local_balance)
+      const remoteBalances = channels.map((c) => c.remote_balance)
       const largestLocalBalance = Math.max(...localBalances)
       const largestRemoteBalance = Math.max(...remoteBalances)
-      const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0)
+      const totalLocalBalance = localBalances.reduce(
+        (a, b) => parseInt(a) + parseInt(b),
+        0
+      )
       resolve({
         pubkey: pk,
         number_channels: channels.length,
@@ -23,7 +25,7 @@ export function proxynodeinfo(pk:string):Promise<Object> {
         largest_local_balance: largestLocalBalance,
         largest_remote_balance: largestRemoteBalance,
         total_local_balance: totalLocalBalance,
-        node_type: 'node_virtual'
+        node_type: 'node_virtual',
       })
     })
   })
@@ -31,16 +33,16 @@ export function proxynodeinfo(pk:string):Promise<Object> {
 
 export function nodeinfo() {
   return new Promise(async (resolve, reject) => {
-
     const nzp = await listNonZeroPolicies()
 
-    let owner_pubkey;
+    let owner_pubkey
 
     try {
       const tryProxy = false
       const info = await LND.getInfo(tryProxy)
-      if(info.identity_pubkey) owner_pubkey=info.identity_pubkey
-    } catch (e) { // no LND
+      if (info.identity_pubkey) owner_pubkey = info.identity_pubkey
+    } catch (e) {
+      // no LND
       let owner
       try {
         owner = await models.Contact.findOne({ where: { id: 1 } })
@@ -55,7 +57,7 @@ export function nodeinfo() {
       const node = {
         pubkey: owner.publicKey,
         wallet_locked: true,
-        last_active: lastActive
+        last_active: lastActive,
       }
       resolve(node)
       return
@@ -63,7 +65,9 @@ export function nodeinfo() {
 
     let owner
     try {
-      owner = await models.Contact.findOne({ where: { isOwner: true, publicKey: owner_pubkey } })
+      owner = await models.Contact.findOne({
+        where: { isOwner: true, publicKey: owner_pubkey },
+      })
     } catch (e) {
       return // just skip in SQLITE not open yet
     }
@@ -74,10 +78,10 @@ export function nodeinfo() {
       lastActive = new Date()
     }
 
-    let public_ip = ""
+    let public_ip = ''
     try {
       public_ip = await publicIp.v4()
-    } catch (e) { }
+    } catch (e) {}
 
     const commitHash = await checkCommitHash()
 
@@ -94,11 +98,14 @@ export function nodeinfo() {
         if (!channelList) return
         const { channels } = channelList
 
-        const localBalances = channels.map(c => c.local_balance)
-        const remoteBalances = channels.map(c => c.remote_balance)
+        const localBalances = channels.map((c) => c.local_balance)
+        const remoteBalances = channels.map((c) => c.remote_balance)
         const largestLocalBalance = Math.max(...localBalances)
         const largestRemoteBalance = Math.max(...remoteBalances)
-        const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0)
+        const totalLocalBalance = localBalances.reduce(
+          (a, b) => parseInt(a) + parseInt(b),
+          0
+        )
 
         lightning.pendingChannels({}, (err, pendingChannels) => {
           if (err) console.log(err)
@@ -134,7 +141,7 @@ export function nodeinfo() {
                 latest_message,
                 last_active: lastActive,
                 wallet_locked: false,
-                non_zero_policies: nzp
+                non_zero_policies: nzp,
               }
               resolve(node)
             }
@@ -149,7 +156,9 @@ export function nodeinfo() {
 
 export async function isClean() {
   // has owner but with no auth token (id=1?)
-  const cleanOwner = await models.Contact.findOne({ where: { id:1, isOwner: true, authToken: null } })
+  const cleanOwner = await models.Contact.findOne({
+    where: { id: 1, isOwner: true, authToken: null },
+  })
   const msgs = await models.Message.count()
   const allContacts = await models.Contact.count()
   const noMsgs = msgs === 0
@@ -161,7 +170,7 @@ export async function isClean() {
 async function latestMessage(): Promise<any> {
   const lasts = await models.Message.findAll({
     limit: 1,
-    order: [['createdAt', 'DESC']]
+    order: [['createdAt', 'DESC']],
   })
   const last = lasts && lasts[0]
   if (last) {
@@ -172,13 +181,13 @@ async function latestMessage(): Promise<any> {
 }
 
 interface Policy {
-  chan_id: string,
+  chan_id: string
   node: string // "node1_policy" or "node2_policy"
   fee_base_msat: number
   disabled: boolean
 }
-const policies = ['node1_policy','node2_policy']
-async function listNonZeroPolicies(){
+const policies = ['node1_policy', 'node2_policy']
+async function listNonZeroPolicies() {
   const ret: Policy[] = []
 
   const lightning = await LND.loadLightning(false) // dont try proxy
@@ -188,33 +197,33 @@ async function listNonZeroPolicies(){
     if (!channelList.channels) return ret
     const { channels } = channelList
 
-    await asyncForEach(channels, async chan=>{
+    await asyncForEach(channels, async (chan) => {
       try {
         const tryProxy = false
         const info = await LND.getChanInfo(chan.chan_id, tryProxy)
-        if(!info) return
-        policies.forEach(p=>{
-          if(info[p]) {
+        if (!info) return
+        policies.forEach((p) => {
+          if (info[p]) {
             const fee_base_msat = parseInt(info[p].fee_base_msat)
             const disabled = info[p].disabled
-            if(fee_base_msat>0 || disabled) {
+            if (fee_base_msat > 0 || disabled) {
               ret.push({
-                node:p, 
-                fee_base_msat, 
-                chan_id:chan.chan_id, 
-                disabled
+                node: p,
+                fee_base_msat,
+                chan_id: chan.chan_id,
+                disabled,
               })
             }
           }
         })
-      } catch(e){}
+      } catch (e) {}
     })
     return ret
   })
 }
 
 async function asyncForEach(array, callback) {
-	for (let index = 0; index < array.length; index++) {
-		await callback(array[index], index, array);
-	}
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array)
+  }
 }

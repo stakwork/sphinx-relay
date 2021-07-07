@@ -2,14 +2,14 @@ import * as publicIp from 'public-ip'
 import password from './password'
 import * as LND from './lightning'
 import { isClean } from './nodeinfo'
-import {loadConfig} from './config'
+import { loadConfig } from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
 import { failure } from './res'
 const fs = require('fs')
 
 const config = loadConfig()
 
-export async function getQR():Promise<string> {
+export async function getQR(): Promise<string> {
   let theIP
 
   const public_url = config.public_url
@@ -20,7 +20,7 @@ export async function getQR():Promise<string> {
     if (!ip) {
       try {
         theIP = await publicIp.v4()
-      } catch (e) { }
+      } catch (e) {}
     } else {
       // const port = config.node_http_port
       // theIP = port ? `${ip}:${port}` : ip
@@ -34,9 +34,9 @@ async function makeVarScript(): Promise<string> {
   const clean = await isClean()
   const isSignedUp = clean ? false : true
 
-  const channelList = await LND.listChannels({});
-  const { channels } = channelList;
-  if (!channels || channels.length===0) {
+  const channelList = await LND.listChannels({})
+  const { channels } = channelList
+  if (!channels || channels.length === 0) {
     return `<script>
   window.channelIsOpen=false;
   window.channelFeesBaseZero=false;
@@ -45,23 +45,23 @@ async function makeVarScript(): Promise<string> {
 </script>`
   }
 
-  const remoteBalances = channels.map((c) => c.remote_balance);
+  const remoteBalances = channels.map((c) => c.remote_balance)
   const totalRemoteBalance = remoteBalances.reduce(
     (a, b) => parseInt(a) + parseInt(b),
     0
-  );
+  )
 
   const hasRemoteBalance = totalRemoteBalance > 0 ? true : false
 
   let channelFeesBaseZero = false
-  const policies = ['node1_policy','node2_policy']
-  await asyncForEach(channels, async chan=>{
+  const policies = ['node1_policy', 'node2_policy']
+  await asyncForEach(channels, async (chan) => {
     const info = await LND.getChanInfo(chan.chan_id)
-    if(!info) return
-    policies.forEach(p=>{
-      if(info[p]) {
+    if (!info) return
+    policies.forEach((p) => {
+      if (info[p]) {
         const fee_base_msat = parseInt(info[p].fee_base_msat)
-        if(fee_base_msat===0) {
+        if (fee_base_msat === 0) {
           channelFeesBaseZero = true
         }
       }
@@ -76,32 +76,34 @@ async function makeVarScript(): Promise<string> {
 }
 
 export async function genChannel(req, res) {
-  const { amount } = req.body;
-  if(!amount) return failure(res, 'no amount')
+  const { amount } = req.body
+  if (!amount) return failure(res, 'no amount')
   try {
     await LND.connectPeer({
       addr: {
-        pubkey:'023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
-        host:'54.159.193.149:9735'
-      }
+        pubkey:
+          '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
+        host: '54.159.193.149:9735',
+      },
     })
-    const sat_per_byte = await getSuggestedSatPerByte();
+    const sat_per_byte = await getSuggestedSatPerByte()
     await LND.openChannel({
-      node_pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f', // bytes
+      node_pubkey:
+        '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f', // bytes
       local_funding_amount: amount,
-      push_sat: Math.round(amount*0.02),
+      push_sat: Math.round(amount * 0.02),
       sat_per_byte,
     })
-  } catch(e) {
+  } catch (e) {
     console.log('=> connect failed', e)
   }
 }
 
 export async function connect(req, res) {
-  fs.readFile("public/index.html", async function (error, pgResp) {
+  fs.readFile('public/index.html', async function (error, pgResp) {
     if (error) {
-      res.writeHead(404);
-      res.write('Contents you are looking are Not Found');
+      res.writeHead(404)
+      res.write('Contents you are looking are Not Found')
     } else {
       const newScript = await makeVarScript()
       const hub_pubkey = await get_hub_pubkey()
@@ -111,15 +113,15 @@ export async function connect(req, res) {
       const rep2 = rep.replace("<script>var hi='hello';</script>", newScript)
       const rep3 = rep2.replace(/SPHINX_HUB_PUBKEY/g, hub_pubkey)
       const final = Buffer.from(rep3, 'utf8')
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.write(final);
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.write(final)
     }
-    res.end();
-  });
+    res.end()
+  })
 }
 
 async function asyncForEach(array, callback) {
-	for (let index = 0; index < array.length; index++) {
-		await callback(array[index], index, array);
-	}
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array)
+  }
 }
