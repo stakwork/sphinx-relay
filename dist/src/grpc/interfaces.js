@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
+exports.greenlightSignMessagePayload = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
@@ -133,14 +133,16 @@ function keysendRequest(req) {
         };
         if (req.route_hints) {
             r.routehints = req.route_hints.map(rh => {
-                return {
-                    hops: rh.hop_hints.map(hh => {
-                        return {
-                            node_id: ByteBuffer.fromHex(hh.node_id),
-                            short_channel_id: hh.chan_id,
-                        };
-                    })
-                };
+                const hops = rh.hop_hints.map(hh => {
+                    return {
+                        node_id: ByteBuffer.fromHex(hh.node_id),
+                        short_channel_id: hh.chan_id,
+                        fee_base: 1000,
+                        fee_prop: 1,
+                        cltv_expiry_delta: 40,
+                    };
+                });
+                return hops;
             });
         }
         if (req.dest_custom_records) {
@@ -207,14 +209,15 @@ function subscribeResponse(res) {
     if (IS_LND)
         return res;
     if (IS_GREENLIGHT) {
-        console.log("GREENLIGHT SBU RES", res);
         const r1 = res;
         if (!r1.offchain)
             return {};
         const r = r1.offchain;
         const custom_records = {};
         if (r.extratlvs) {
-            r.extratlvs.forEach(tlv => custom_records[tlv.type] = tlv.value);
+            r.extratlvs.forEach(tlv => {
+                custom_records[tlv.type] = tlv.value;
+            });
         }
         const i = {
             memo: r.label,
@@ -257,6 +260,17 @@ function greelightNumber(s) {
     }
     return 0;
 }
+function greenlightSignMessagePayload(msg) {
+    const type = 23;
+    const length = msg.length;
+    let typebuf = Buffer.allocUnsafe(2);
+    typebuf.writeUInt16BE(type, 0);
+    let lengthbuf = Buffer.allocUnsafe(2);
+    lengthbuf.writeUInt16BE(length, 0);
+    const buf = Buffer.concat([typebuf, lengthbuf, msg], 4 + length);
+    return buf.toString('hex');
+}
+exports.greenlightSignMessagePayload = greenlightSignMessagePayload;
 /*
 interface ShortChannelId {
   blockHeight: number,

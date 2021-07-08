@@ -317,9 +317,7 @@ interface GreenlightHop {
 	fee_prop?: number
 	cltv_expiry_delta?: number
 }
-interface GreenlightRoutehint {
-  hops: GreenlightHop[]
-}
+type GreenlightRoutehint = GreenlightHop[]
 interface GreenlightTLV {
   type: string,
   value: Buf,
@@ -341,14 +339,16 @@ export function keysendRequest(req: KeysendRequest): KeysendRequest|GreenlightKe
     }
     if(req.route_hints) {
       r.routehints = req.route_hints.map(rh=>{
-        return <GreenlightRoutehint>{
-          hops: rh.hop_hints.map(hh=> {
-            return <GreenlightHop>{
-              node_id: ByteBuffer.fromHex(hh.node_id),
-              short_channel_id: hh.chan_id,
-            }
-          })
-        }
+        const hops: GreenlightHop[] = rh.hop_hints.map(hh=> {
+          return <GreenlightHop>{
+            node_id: ByteBuffer.fromHex(hh.node_id),
+            short_channel_id: hh.chan_id,
+            fee_base: 1000,
+            fee_prop: 1,
+            cltv_expiry_delta: 40,
+          }
+        })
+        return hops
       })
     }
     if(req.dest_custom_records) {
@@ -484,13 +484,14 @@ interface GreenlightIncomingPayment {
 export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoice {
   if(IS_LND) return res as Invoice
   if(IS_GREENLIGHT) {
-    console.log("GREENLIGHT SBU RES", res)
     const r1 = res as GreenlightIncomingPayment
     if(!r1.offchain) return <Invoice>{}
     const r = r1.offchain
     const custom_records = <DestCustomRecords>{}
     if(r.extratlvs) {
-      r.extratlvs.forEach(tlv=> custom_records[tlv.type] = tlv.value)
+      r.extratlvs.forEach(tlv=> {
+        custom_records[tlv.type] = tlv.value
+      })
     }
     const i = <Invoice>{
       memo: r.label,
@@ -535,6 +536,17 @@ function greelightNumber(s: string): number {
     return parseInt(s1)
   } 
   return 0
+}
+
+export function greenlightSignMessagePayload(msg:Buffer):string {
+  const type = 23
+  const length = msg.length
+  let typebuf = Buffer.allocUnsafe(2);
+  typebuf.writeUInt16BE(type, 0);
+  let lengthbuf = Buffer.allocUnsafe(2);
+  lengthbuf.writeUInt16BE(length, 0);
+  const buf = Buffer.concat([typebuf, lengthbuf, msg], 4 + length)
+  return buf.toString('hex')
 }
 /*
 interface ShortChannelId {

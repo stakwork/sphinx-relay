@@ -3,7 +3,7 @@ import { loadLightning } from './lightning'
 import * as network from '../network'
 import * as moment from 'moment'
 import { tryToUnlockLND } from '../utils/unlock'
-import {receiveNonKeysend, loginvoice} from './regular'
+import {receiveNonKeysend} from './regular'
 import * as interfaces from './interfaces'
 
 const ERR_CODE_UNAVAILABLE = 14
@@ -18,7 +18,8 @@ export function subscribeInvoices(parseKeysendInvoice) {
 		var call = lightning[cmd]()
 		call.on('data', async function (response) {
 			const inv = interfaces.subscribeResponse(response)
-			loginvoice(inv)
+			console.log("INVOICE RECEIVED", inv)
+			// loginvoice(inv)
 			if (inv.state !== interfaces.InvoiceState.SETTLED) {
 				return
 			}

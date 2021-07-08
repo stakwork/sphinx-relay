@@ -25,6 +25,7 @@ function loadConfig() {
         scheduler_key_location: ENV.SCHEDULER_KEY_LOCATION || config.scheduler_key_location,
         scheduler_chain_location: ENV.SCHEDULER_CHAIN_LOCATION || config.scheduler_chain_location,
         scheduler_default_pubkey: ENV.SCHEDULER_DEFAULT_PUBKEY || config.scheduler_default_pubkey,
+        hsm_secret_path: ENV.HSM_SECRET_PATH || config.hsm_secret_path,
         lnd_log_location: ENV.LND_LOG_LOCATION || config.lnd_log_location,
         node_ip: ENV.NODE_IP || config.node_ip,
         lnd_ip: ENV.LND_IP || config.lnd_ip,

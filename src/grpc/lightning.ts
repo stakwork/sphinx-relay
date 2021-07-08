@@ -10,12 +10,19 @@ import { loadConfig } from '../utils/config'
 import {isProxy, loadProxyLightning} from '../utils/proxy'
 import {logging} from '../utils/logger'
 import * as interfaces from './interfaces'
+import * as zbase32 from "../utils/zbase32";
+import * as secp256k1 from 'secp256k1'
+import * as libhsmd from 'libhsmd'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
+
+if (IS_GREENLIGHT) {
+  initGreenlight()
+}
 
 export const LND_KEYSEND_KEY = 5482373484
 export const SPHINX_CUSTOM_RECORD_KEY = 133773310
@@ -63,7 +70,9 @@ export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
     var options = {
       'grpc.ssl_target_name_override' : 'localhost',
     };
-    lightningClient = new greenlight.Node(GREENLIGHT_GRPC_URI, credentials, options);
+    const uri = GREENLIGHT_GRPC_URI.split('//')
+    if(!uri[1]) return
+    lightningClient = new greenlight.Node(uri[1], credentials, options);
     return lightningClient
   }
 
@@ -413,7 +422,7 @@ async function asyncForEach(array, callback) {
   }
 }
 
-export async function signAscii(ascii, ownerPubkey?:string) {
+export async function signAscii(ascii:string, ownerPubkey?:string) {
   try {
     const sig = await signMessage(ascii_to_hexa(ascii), ownerPubkey)
     return sig
@@ -517,45 +526,48 @@ export function listAllPaymentsFull() {
   })
 }
 
-export const signMessage = (msg, ownerPubkey?:string) => {
+// msg is hex
+export async function signMessage(msg:string, ownerPubkey?:string) {
   // log('signMessage')
-  return new Promise(async (resolve, reject) => {
-    let lightning = await loadLightning(true, ownerPubkey) // try proxy
-    try {
-      const options = { msg: ByteBuffer.fromHex(msg) }
-      lightning.signMessage(options, function (err, sig) {
-        if (err || !sig.signature) {
-          reject(err)
-        } else {
-          resolve(sig.signature)
-        }
-      })
-    } catch (e) {
-      reject(e)
-    }
-  })
+  try {
+    const r = await signBuffer(
+      Buffer.from(msg, 'hex'), 
+      ownerPubkey
+    )
+    return r
+  } catch (e) {
+    throw e
+  }
 }
 
-export const signBuffer = (msg, ownerPubkey?:string) => {
+export const signBuffer = (msg:Buffer, ownerPubkey?:string) => {
   log('signBuffer')
   return new Promise(async (resolve, reject) => {
     try {
-      let lightning = await loadLightning(true, ownerPubkey) // try proxy
-      const options = { msg }
-      lightning.signMessage(options, function (err, sig) {
-        if (err || !sig.signature) {
-          reject(err)
-        } else {
-          resolve(sig.signature)
-        }
-      })
+      if (IS_GREENLIGHT) {
+        const pld = interfaces.greenlightSignMessagePayload(msg)
+        const sig = libhsmd.Handle(1024, 0, null, pld)
+        const sigBuf = Buffer.from(sig, 'hex')
+        const sigz = zbase32.encode(sigBuf.subarray(2, 66))
+        resolve(sigz)
+      } else {
+        let lightning = await loadLightning(true, ownerPubkey) // try proxy
+        const options = { msg }
+        lightning.signMessage(options, function (err, sig) {
+          if (err || !sig.signature) {
+            reject(err)
+          } else {
+            resolve(sig.signature)
+          }
+        })
+      }
     } catch (e) {
       reject(e)
     }
   })
 }
 
-export async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
+export async function verifyBytes(msg:Buffer, sig): Promise<VerifyResponse> {
   try {
     const r = await verifyMessage(msg.toString('hex'), sig)
     return r
@@ -563,28 +575,49 @@ export async function verifyBytes(msg, sig): Promise<{ [k: string]: any }> {
     throw e
   }
 }
-export function verifyMessage(msg, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
+
+interface VerifyResponse {
+  valid: boolean,
+  pubkey: string
+}
+// msg input is hex encoded, sig is zbase32 encoded
+export function verifyMessage(msg:string, sig:string, ownerPubkey?:string): Promise<VerifyResponse> {
   log('verifyMessage')
   return new Promise(async (resolve, reject) => {
     try {
-      let lightning = await loadLightning(true, ownerPubkey) // try proxy
-      const options = {
-        msg: ByteBuffer.fromHex(msg),
-        signature: sig, // zbase32 encoded string
-      }
-      lightning.verifyMessage(options, function (err, res) {
-        if (err || !res.pubkey) {
-          reject(err)
-        } else {
-          resolve(res)
+      if(IS_GREENLIGHT) {
+        const sigBytes = zbase32.decode(sig)        
+        const hash = sha.sha256.arrayBuffer(Buffer.from(msg, 'hex'))
+        const recoveredPubkey = secp256k1.recover(
+          hash, // 32 byte hash of message
+          sigBytes, // 64 byte signature of message (not DER, 32 byte R and 32 byte S with 0x00 padding)
+          1, // number 1 or 0. This will usually be encoded in the base64 message signature
+          true, // true if you want result to be compressed (33 bytes), false if you want it uncompressed (65 bytes) this also is usually encoded in the base64 signature
+        );
+        resolve(<VerifyResponse>{
+          valid: true,
+          pubkey: recoveredPubkey.toString('hex'),
+        })
+      } else {
+        let lightning = await loadLightning(true, ownerPubkey) // try proxy
+        const options = {
+          msg: ByteBuffer.fromHex(msg),
+          signature: sig, // zbase32 encoded string
         }
-      })
+        lightning.verifyMessage(options, function (err, res) {
+          if (err || !res.pubkey) {
+            reject(err)
+          } else {
+            resolve(res)
+          }
+        }) 
+      } 
     } catch (e) {
       reject(e)
     }
   })
 }
-export async function verifyAscii(ascii, sig, ownerPubkey?:string): Promise<{ [k: string]: any }> {
+export async function verifyAscii(ascii:string, sig:string, ownerPubkey?:string): Promise<VerifyResponse> {
   try {
     const r = await verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey)
     return r
@@ -819,13 +852,32 @@ export function loadScheduler() {
 }
 
 export function schedule(pubkey:string) {
-  const s = loadScheduler()
-	s.schedule({
-		node_id: ByteBuffer.fromHex(pubkey),
-	}, (err, response)=>{
-		console.log(err,response)
-    if (!err) {
-      GREENLIGHT_GRPC_URI = response.grpc_uri
+  return new Promise(async (resolve, reject) => {
+    try {
+      const s = loadScheduler()
+      s.schedule({
+        node_id: ByteBuffer.fromHex(pubkey),
+      }, (err, response)=>{
+        console.log(err,response)
+        if (!err) {
+          GREENLIGHT_GRPC_URI = response.grpc_uri
+          resolve(response)
+        } else {
+          reject(err)
+        }
+      })
+    } catch(e) {
+      console.log(e)
     }
-	})
+  })
+}
+
+function initGreenlight() {
+  const secretPath = config.hsm_secret_path || './hsm_secret'
+  if(!fs.existsSync(secretPath)){
+    const rando = crypto.randomBytes(32).toString('hex')
+    fs.writeFileSync(secretPath, rando)
+  }
+  const contents = fs.readFileSync(secretPath, 'utf8')
+  libhsmd.Init(contents, "bitcoin");
 }

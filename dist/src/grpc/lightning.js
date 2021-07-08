@@ -22,11 +22,17 @@ const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const interfaces = require("./interfaces");
+const zbase32 = require("../utils/zbase32");
+const secp256k1 = require("secp256k1");
+const libhsmd = require("libhsmd");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
+if (IS_GREENLIGHT) {
+    initGreenlight();
+}
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
 var lightningClient = null;
@@ -69,7 +75,10 @@ function loadLightning(tryProxy, ownerPubkey) {
             var options = {
                 'grpc.ssl_target_name_override': 'localhost',
             };
-            lightningClient = new greenlight.Node(GREENLIGHT_GRPC_URI, credentials, options);
+            const uri = GREENLIGHT_GRPC_URI.split('//');
+            if (!uri[1])
+                return;
+            lightningClient = new greenlight.Node(uri[1], credentials, options);
             return lightningClient;
         }
         try { // LND
@@ -442,7 +451,7 @@ function asyncForEach(array, callback) {
 function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const sig = yield exports.signMessage(ascii_to_hexa(ascii), ownerPubkey);
+            const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
             return sig;
         }
         catch (e) {
@@ -563,41 +572,43 @@ function listAllPaymentsFull() {
     }));
 }
 exports.listAllPaymentsFull = listAllPaymentsFull;
-const signMessage = (msg, ownerPubkey) => {
-    // log('signMessage')
-    return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+// msg is hex
+function signMessage(msg, ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // log('signMessage')
         try {
-            const options = { msg: ByteBuffer.fromHex(msg) };
-            lightning.signMessage(options, function (err, sig) {
-                if (err || !sig.signature) {
-                    reject(err);
-                }
-                else {
-                    resolve(sig.signature);
-                }
-            });
+            const r = yield exports.signBuffer(Buffer.from(msg, 'hex'), ownerPubkey);
+            return r;
         }
         catch (e) {
-            reject(e);
+            throw e;
         }
-    }));
-};
+    });
+}
 exports.signMessage = signMessage;
 const signBuffer = (msg, ownerPubkey) => {
     log('signBuffer');
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            const options = { msg };
-            lightning.signMessage(options, function (err, sig) {
-                if (err || !sig.signature) {
-                    reject(err);
-                }
-                else {
-                    resolve(sig.signature);
-                }
-            });
+            if (IS_GREENLIGHT) {
+                const pld = interfaces.greenlightSignMessagePayload(msg);
+                const sig = libhsmd.Handle(1024, 0, null, pld);
+                const sigBuf = Buffer.from(sig, 'hex');
+                const sigz = zbase32.encode(sigBuf.subarray(2, 66));
+                resolve(sigz);
+            }
+            else {
+                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                const options = { msg };
+                lightning.signMessage(options, function (err, sig) {
+                    if (err || !sig.signature) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(sig.signature);
+                    }
+                });
+            }
         }
         catch (e) {
             reject(e);
@@ -617,23 +628,38 @@ function verifyBytes(msg, sig) {
     });
 }
 exports.verifyBytes = verifyBytes;
+// msg input is hex encoded, sig is zbase32 encoded
 function verifyMessage(msg, sig, ownerPubkey) {
     log('verifyMessage');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
-            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            const options = {
-                msg: ByteBuffer.fromHex(msg),
-                signature: sig,
-            };
-            lightning.verifyMessage(options, function (err, res) {
-                if (err || !res.pubkey) {
-                    reject(err);
-                }
-                else {
-                    resolve(res);
-                }
-            });
+            if (IS_GREENLIGHT) {
+                const sigBytes = zbase32.decode(sig);
+                const hash = sha.sha256.arrayBuffer(Buffer.from(msg, 'hex'));
+                const recoveredPubkey = secp256k1.recover(hash, // 32 byte hash of message
+                sigBytes, // 64 byte signature of message (not DER, 32 byte R and 32 byte S with 0x00 padding)
+                1, // number 1 or 0. This will usually be encoded in the base64 message signature
+                true);
+                resolve({
+                    valid: true,
+                    pubkey: recoveredPubkey.toString('hex'),
+                });
+            }
+            else {
+                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                const options = {
+                    msg: ByteBuffer.fromHex(msg),
+                    signature: sig,
+                };
+                lightning.verifyMessage(options, function (err, res) {
+                    if (err || !res.pubkey) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(res);
+                    }
+                });
+            }
         }
         catch (e) {
             reject(e);
@@ -875,15 +901,35 @@ function loadScheduler() {
 }
 exports.loadScheduler = loadScheduler;
 function schedule(pubkey) {
-    const s = loadScheduler();
-    s.schedule({
-        node_id: ByteBuffer.fromHex(pubkey),
-    }, (err, response) => {
-        console.log(err, response);
-        if (!err) {
-            GREENLIGHT_GRPC_URI = response.grpc_uri;
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const s = loadScheduler();
+            s.schedule({
+                node_id: ByteBuffer.fromHex(pubkey),
+            }, (err, response) => {
+                console.log(err, response);
+                if (!err) {
+                    GREENLIGHT_GRPC_URI = response.grpc_uri;
+                    resolve(response);
+                }
+                else {
+                    reject(err);
+                }
+            });
         }
-    });
+        catch (e) {
+            console.log(e);
+        }
+    }));
 }
 exports.schedule = schedule;
+function initGreenlight() {
+    const secretPath = config.hsm_secret_path || './hsm_secret';
+    if (!fs.existsSync(secretPath)) {
+        const rando = crypto.randomBytes(32).toString('hex');
+        fs.writeFileSync(secretPath, rando);
+    }
+    const contents = fs.readFileSync(secretPath, 'utf8');
+    libhsmd.Init(contents, "bitcoin");
+}
 //# sourceMappingURL=lightning.js.map

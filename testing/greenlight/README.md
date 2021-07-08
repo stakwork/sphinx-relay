@@ -13,6 +13,9 @@ sqlite3 /Users/Shared/sphinx-alice-greenlight.db
 ```
 
 
+node ./dist/app.js --config="/home/pi/charlie.json" --db="/home/pi/charlie-db.json"
+
+
 
 http://rpcuser:rpcpass@34.65.140.45:8332
 

@@ -25,7 +25,11 @@
         "save": true,
         "port": "80"
       },
-      "connect_ui": true
+      "connect_ui": true,
+      "scheduler_tls_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/scheduler_creds/ca.pem",
+      "scheduler_key_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/scheduler_creds/device-key.pem",
+      "scheduler_chain_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/scheduler_creds/device.crt",
+      "scheduler_default_pubkey": "025686655c80eeb4657e5336228a8a1b46f96c52ddfa74e11b090ad6339d71445a"
     },
     "production": {
       "senza_url": "https://staging.senza.us/api/v2/",
