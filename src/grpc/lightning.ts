@@ -214,7 +214,11 @@ export async function sendPayment(payment_request:string, ownerPubkey?:string) {
   return new Promise(async (resolve,reject)=>{
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
     if(isProxy()) {
-      lightning.sendPaymentSync({payment_request}, (err, response) => {
+      const opts = {
+        payment_request,
+        fee_limit: {fixed:10}
+      }
+      lightning.sendPaymentSync(opts, (err, response) => {
         if(err) {
           reject(err)
         }

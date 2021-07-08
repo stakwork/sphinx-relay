@@ -221,7 +221,11 @@ function sendPayment(payment_request, ownerPubkey) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let lightning = yield loadLightning(true, ownerPubkey); // try proxy
             if (proxy_1.isProxy()) {
-                lightning.sendPaymentSync({ payment_request }, (err, response) => {
+                const opts = {
+                    payment_request,
+                    fee_limit: { fixed: 10 }
+                };
+                lightning.sendPaymentSync(opts, (err, response) => {
                     if (err) {
                         reject(err);
                     }
