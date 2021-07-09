@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.schedule = exports.loadScheduler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -25,20 +25,17 @@ const interfaces = require("./interfaces");
 const zbase32 = require("../utils/zbase32");
 const secp256k1 = require("secp256k1");
 const libhsmd = require("libhsmd");
+const greenlight_1 = require("./greenlight");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
-if (IS_GREENLIGHT) {
-    initGreenlight();
-}
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
 var lightningClient = null;
 var walletUnlocker = null;
 var routerClient = null;
-var schedulerClient = null;
 const loadCredentials = (macName) => {
     var lndCert = fs.readFileSync(config.tls_location);
     var sslCreds = grpc.credentials.createSsl(lndCert);
@@ -57,7 +54,6 @@ const loadGreenlightCredentials = () => {
     var glChain = fs.readFileSync(config.tls_chain_location);
     return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
-let GREENLIGHT_GRPC_URI = '';
 function loadLightning(tryProxy, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // only if specified AND available
@@ -75,7 +71,7 @@ function loadLightning(tryProxy, ownerPubkey) {
             var options = {
                 'grpc.ssl_target_name_override': 'localhost',
             };
-            const uri = GREENLIGHT_GRPC_URI.split('//');
+            const uri = greenlight_1.get_greenlight_grpc_uri().split('//');
             if (!uri[1])
                 return;
             lightningClient = new greenlight.Node(uri[1], credentials, options);
@@ -597,19 +593,13 @@ function signBuffer(msg, ownerPubkey) {
             if (IS_GREENLIGHT) {
                 const pld = interfaces.greenlightSignMessagePayload(msg);
                 const sig = libhsmd.Handle(1024, 0, null, pld);
-                console.log('sig', sig);
                 const sigBuf = Buffer.from(sig, 'hex');
-                console.log("sigBuf", sigBuf);
-                console.log('sigBuf.length', sigBuf.length);
                 const sigBytes = sigBuf.subarray(2, 66);
                 const recidBytes = sigBuf.subarray(66, 67);
-                console.log('recidBytes', recidBytes);
                 // 31 is the magic EC recid (27+4) for compressed pubkeys
                 const ecRecid = Buffer.from(recidBytes).readUIntBE(0, 1) + 31;
-                console.log('ecRecid', ecRecid);
                 const finalRecid = Buffer.from('00', 'hex');
                 finalRecid.writeUInt8(ecRecid, 0);
-                console.log('finalRecid', finalRecid);
                 const finalSig = Buffer.concat([finalRecid, sigBytes], 65);
                 resolve(zbase32.encode(finalSig));
             }
@@ -649,13 +639,12 @@ function verifyMessage(msg, sig, ownerPubkey) {
     log('verifyMessage');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
-            if (true) {
+            if (IS_GREENLIGHT) {
                 const fullBytes = zbase32.decode(sig);
                 const sigBytes = fullBytes.slice(1);
                 const recidBytes = fullBytes.slice(0, 1);
                 // 31 (27+4) is the magic number for compressed recid
                 const recid = Buffer.from(recidBytes).readUIntBE(0, 1) - 31;
-                console.log("RECID", recid);
                 // "Lightning Signed Message:"
                 const prefixBytes = Buffer.from('4c696768746e696e67205369676e6564204d6573736167653a', 'hex');
                 const msgBytes = Buffer.from(msg, 'hex');
@@ -910,54 +899,5 @@ function log(a, b, c) {
     if (!yeslog)
         return;
     console.log("[lightning]", [...arguments]);
-}
-const loadSchedulerCredentials = () => {
-    var glCert = fs.readFileSync(config.scheduler_tls_location);
-    var glPriv = fs.readFileSync(config.scheduler_key_location);
-    var glChain = fs.readFileSync(config.scheduler_chain_location);
-    return grpc.credentials.createSsl(glCert, glPriv, glChain);
-};
-function loadScheduler() {
-    // 35.236.110.178:2601
-    var descriptor = grpc.load("proto/scheduler.proto");
-    var scheduler = descriptor.scheduler;
-    var options = {
-        'grpc.ssl_target_name_override': 'localhost',
-    };
-    schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
-    return schedulerClient;
-}
-exports.loadScheduler = loadScheduler;
-function schedule(pubkey) {
-    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        try {
-            const s = loadScheduler();
-            s.schedule({
-                node_id: ByteBuffer.fromHex(pubkey),
-            }, (err, response) => {
-                console.log(err, response);
-                if (!err) {
-                    GREENLIGHT_GRPC_URI = response.grpc_uri;
-                    resolve(response);
-                }
-                else {
-                    reject(err);
-                }
-            });
-        }
-        catch (e) {
-            console.log(e);
-        }
-    }));
-}
-exports.schedule = schedule;
-function initGreenlight() {
-    const secretPath = config.hsm_secret_path || './hsm_secret';
-    if (!fs.existsSync(secretPath)) {
-        const rando = crypto.randomBytes(32).toString('hex');
-        fs.writeFileSync(secretPath, rando);
-    }
-    const contents = fs.readFileSync(secretPath, 'utf8');
-    libhsmd.Init(contents, "bitcoin");
 }
 //# sourceMappingURL=lightning.js.map

@@ -14,7 +14,6 @@ import { ownerMiddleware, unlocker } from './src/auth'
 import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
-import * as lightning from './src/grpc/lightning'
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -57,16 +56,6 @@ async function finishSetup() {
 		pingHubInterval(15000)
 	}
 	setupDone()
-
-	// INPUT (struct.pack("!HH32s"))
-	// 23|32|AAAAAAAAAAAAAAAAAAAAAAAAAA
-	// 0x0017 0x0100 DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF
-	// for a challenge, 
-	// struct.pack(f"!HH{len(challenge)}s", 23, len(challenge), challenge)
-
-	// node bindings:
-	// https://github.com/cdecker/lightning/tree/libhsmd-node/contrib/libhsmd_node
-
 }
 
 function setupApp() {

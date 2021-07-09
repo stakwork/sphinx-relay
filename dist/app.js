@@ -25,7 +25,6 @@ const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
-const lightning = require("./src/grpc/lightning");
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -66,37 +65,6 @@ function finishSetup() {
             hub_1.pingHubInterval(15000);
         }
         setup_1.setupDone();
-        // need to call "init" first (pass hex hsm_secret): https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L50
-        // "Lightning Message" is appended on the HSMD itself
-        // https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L57-L65
-        // OUTPUT
-        // type, signature, recid = struct.unpack("!H64ss", unhexlify(res))
-        // type=123 (unsigned 2 bytes)
-        // signature is 64 bytes
-        // INPUT (struct.pack("!HH32s"))
-        // 23|32|AAAAAAAAAAAAAAAAAAAAAAAAAA
-        // 0x0017 0x0100 DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF
-        // for a challenge, 
-        // struct.pack(f"!HH{len(challenge)}s", 23, len(challenge), challenge)
-        // node bindings:
-        // https://github.com/cdecker/lightning/tree/libhsmd-node/contrib/libhsmd_node
-        // let r = await lightning.keysend({
-        // 	amt: 300,
-        // 	dest: '02739d50cedddf3bd8affc8c978d19575c71bad1abfba90d9bcf90ea52aa7362ff',
-        // 	// route_hint: '0315fad9096f8addac2870ca00175d446ae41fe79084b98b5f0e268288ada32e61:2006338x19x0'
-        // })
-        // console.log(r)
-        const r = yield lightning.signMessage('00000000');
-        console.log("SIGNED", r);
-        const gr = 'rbpap378wwcift1yex6ot5nfjo7usqxxyjun5xdd96qwna9zw86bgox73fhmdtyst9owxk7ei1q4qpejt3py6ijd9phi11kk7ompmcos';
-        // const lr = 'dhfunr4gx7ii87c34wy1atb1yp4tcrjqtaxfob4g1kwaegxshtmu19maw3gpqcbtbsjd3943kacy9f18ya5y8gmyo5p1pfiwqmx9g5kp'
-        try {
-            const v = yield lightning.verifyMessage('00000000', gr);
-            console.log("VERIFIED", v);
-        }
-        catch (e) {
-            console.log(e);
-        }
     });
 }
 function setupApp() {

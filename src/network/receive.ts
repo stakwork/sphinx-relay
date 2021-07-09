@@ -1,5 +1,6 @@
 import * as lndService from "../grpc/subscribe";
 import * as Lightning from "../grpc/lightning";
+import * as Greenlight from '../grpc/greenlight'
 import { ACTIONS } from "../controllers";
 import * as tribes from "../utils/tribes";
 import * as signer from "../utils/signer";
@@ -372,17 +373,9 @@ async function forwardMessageToTribe(
 export async function initGrpcSubscriptions() {
   try {
     if(config.lightning_provider==='GREENLIGHT') {
-      await Lightning.schedule(config.scheduler_default_pubkey)
+      await Greenlight.initGreenlight()
     }
-    const i = await Lightning.getInfo(true); // try proxy
-    console.log('========', i)
-    // const c = await Lightning.listChannels(); // examp
-    // console.log('>>>>>>>>', c)
-    // const inv = await Lightning.addInvoice({
-    //   value: 1000,
-    //   memo: 'hello world',
-    // })
-    // console.log("CREATED INVOICE", inv)
+    await Lightning.getInfo(true); // try proxy
     await lndService.subscribeInvoices(parseKeysendInvoice);
   } catch (e) {
     console.log(e)

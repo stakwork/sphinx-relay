@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
 const lndService = require("../grpc/subscribe");
 const Lightning = require("../grpc/lightning");
+const Greenlight = require("../grpc/greenlight");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
 const signer = require("../utils/signer");
@@ -356,17 +357,9 @@ function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (config.lightning_provider === 'GREENLIGHT') {
-                yield Lightning.schedule(config.scheduler_default_pubkey);
+                yield Greenlight.initGreenlight();
             }
-            const i = yield Lightning.getInfo(true); // try proxy
-            console.log('========', i);
-            // const c = await Lightning.listChannels(); // examp
-            // console.log('>>>>>>>>', c)
-            // const inv = await Lightning.addInvoice({
-            //   value: 1000,
-            //   memo: 'hello world',
-            // })
-            // console.log("CREATED INVOICE", inv)
+            yield Lightning.getInfo(true); // try proxy
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

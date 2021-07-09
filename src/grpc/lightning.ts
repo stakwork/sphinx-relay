@@ -13,6 +13,7 @@ import * as interfaces from './interfaces'
 import * as zbase32 from "../utils/zbase32";
 import * as secp256k1 from 'secp256k1'
 import * as libhsmd from 'libhsmd'
+import { get_greenlight_grpc_uri } from './greenlight';
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -20,17 +21,12 @@ const LND_IP = config.lnd_ip || 'localhost'
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
 
-if (IS_GREENLIGHT) {
-  initGreenlight()
-}
-
 export const LND_KEYSEND_KEY = 5482373484
 export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
 var lightningClient = <any>null;
 var walletUnlocker = <any>null;
 var routerClient = <any>null;
-var schedulerClient = <any>null;
 
 export const loadCredentials = (macName?: string) => {
   var lndCert = fs.readFileSync(config.tls_location);
@@ -52,7 +48,6 @@ const loadGreenlightCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain);
 }
 
-let GREENLIGHT_GRPC_URI = ''
 export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
   // only if specified AND available
   if (tryProxy && isProxy()) {
@@ -70,7 +65,7 @@ export async function loadLightning(tryProxy?:boolean, ownerPubkey?:string) {
     var options = {
       'grpc.ssl_target_name_override' : 'localhost',
     };
-    const uri = GREENLIGHT_GRPC_URI.split('//')
+    const uri = get_greenlight_grpc_uri().split('//')
     if(!uri[1]) return
     lightningClient = new greenlight.Node(uri[1], credentials, options);
     return lightningClient
@@ -856,51 +851,3 @@ function log(a?,b?,c?){
   console.log("[lightning]", [...arguments])
 }
 
-const loadSchedulerCredentials = () => {
-  var glCert = fs.readFileSync(config.scheduler_tls_location);
-  var glPriv = fs.readFileSync(config.scheduler_key_location);
-  var glChain = fs.readFileSync(config.scheduler_chain_location);
-  return grpc.credentials.createSsl(glCert, glPriv, glChain);
-}
-
-export function loadScheduler() {
-  // 35.236.110.178:2601
-  var descriptor = grpc.load("proto/scheduler.proto");
-  var scheduler: any = descriptor.scheduler
-  var options = {
-    'grpc.ssl_target_name_override' : 'localhost',
-  };
-  schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
-  return schedulerClient
-}
-
-export function schedule(pubkey:string) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const s = loadScheduler()
-      s.schedule({
-        node_id: ByteBuffer.fromHex(pubkey),
-      }, (err, response)=>{
-        console.log(err,response)
-        if (!err) {
-          GREENLIGHT_GRPC_URI = response.grpc_uri
-          resolve(response)
-        } else {
-          reject(err)
-        }
-      })
-    } catch(e) {
-      console.log(e)
-    }
-  })
-}
-
-function initGreenlight() {
-  const secretPath = config.hsm_secret_path || './hsm_secret'
-  if(!fs.existsSync(secretPath)){
-    const rando = crypto.randomBytes(32).toString('hex')
-    fs.writeFileSync(secretPath, rando)
-  }
-  const contents = fs.readFileSync(secretPath, 'utf8')
-  libhsmd.Init(contents, "bitcoin");
-}
