@@ -95,12 +95,12 @@ function setupApp() {
     let server
     if ('ssl' in config && config.ssl.enabled) {
       try {
-        var certData = await cert.getCertificate(
+        const certData = await cert.getCertificate(
           config.public_url,
           config.ssl.port,
           config.ssl.save
         )
-        var credentials = {
+        const credentials = {
           key: certData?.privateKey.toString(),
           ca: certData?.caBundle,
           cert: certData?.certificate,
