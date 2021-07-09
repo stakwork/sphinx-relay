@@ -581,7 +581,7 @@ function signMessage(msg, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // log('signMessage')
         try {
-            const r = yield exports.signBuffer(Buffer.from(msg, 'hex'), ownerPubkey);
+            const r = yield signBuffer(Buffer.from(msg, 'hex'), ownerPubkey);
             return r;
         }
         catch (e) {
@@ -590,16 +590,28 @@ function signMessage(msg, ownerPubkey) {
     });
 }
 exports.signMessage = signMessage;
-const signBuffer = (msg, ownerPubkey) => {
+function signBuffer(msg, ownerPubkey) {
     log('signBuffer');
-    return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
             if (IS_GREENLIGHT) {
                 const pld = interfaces.greenlightSignMessagePayload(msg);
                 const sig = libhsmd.Handle(1024, 0, null, pld);
+                console.log('sig', sig);
                 const sigBuf = Buffer.from(sig, 'hex');
-                const sigz = zbase32.encode(sigBuf.subarray(2, 66));
-                resolve(sigz);
+                console.log("sigBuf", sigBuf);
+                console.log('sigBuf.length', sigBuf.length);
+                const sigBytes = sigBuf.subarray(2, 66);
+                const recidBytes = sigBuf.subarray(66, 67);
+                console.log('recidBytes', recidBytes);
+                // 31 is the magic EC recid (27+4) for compressed pubkeys
+                const ecRecid = Buffer.from(recidBytes).readUIntBE(0, 1) + 31;
+                console.log('ecRecid', ecRecid);
+                const finalRecid = Buffer.from('00', 'hex');
+                finalRecid.writeUInt8(ecRecid, 0);
+                console.log('finalRecid', finalRecid);
+                const finalSig = Buffer.concat([finalRecid, sigBytes], 65);
+                resolve(zbase32.encode(finalSig));
             }
             else {
                 let lightning = yield loadLightning(true, ownerPubkey); // try proxy
@@ -618,7 +630,7 @@ const signBuffer = (msg, ownerPubkey) => {
             reject(e);
         }
     }));
-};
+}
 exports.signBuffer = signBuffer;
 function verifyBytes(msg, sig) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -637,12 +649,23 @@ function verifyMessage(msg, sig, ownerPubkey) {
     log('verifyMessage');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
-            if (IS_GREENLIGHT) {
-                const sigBytes = zbase32.decode(sig);
-                const hash = sha.sha256.arrayBuffer(Buffer.from(msg, 'hex'));
-                const recoveredPubkey = secp256k1.recover(hash, // 32 byte hash of message
+            if (true) {
+                const fullBytes = zbase32.decode(sig);
+                const sigBytes = fullBytes.slice(1);
+                const recidBytes = fullBytes.slice(0, 1);
+                // 31 (27+4) is the magic number for compressed recid
+                const recid = Buffer.from(recidBytes).readUIntBE(0, 1) - 31;
+                console.log("RECID", recid);
+                // "Lightning Signed Message:"
+                const prefixBytes = Buffer.from('4c696768746e696e67205369676e6564204d6573736167653a', 'hex');
+                const msgBytes = Buffer.from(msg, 'hex');
+                // double hash
+                const hash = sha.sha256.arrayBuffer(sha.sha256.arrayBuffer(Buffer.concat([
+                    prefixBytes, msgBytes
+                ], msgBytes.length + prefixBytes.length)));
+                const recoveredPubkey = secp256k1.recover(Buffer.from(hash), // 32 byte hash of message
                 sigBytes, // 64 byte signature of message (not DER, 32 byte R and 32 byte S with 0x00 padding)
-                1, // number 1 or 0. This will usually be encoded in the base64 message signature
+                recid, // number 1 or 0. This will usually be encoded in the base64 message signature
                 true);
                 resolve({
                     valid: true,
@@ -656,6 +679,7 @@ function verifyMessage(msg, sig, ownerPubkey) {
                     signature: sig,
                 };
                 lightning.verifyMessage(options, function (err, res) {
+                    // console.log(res)
                     if (err || !res.pubkey) {
                         reject(err);
                     }

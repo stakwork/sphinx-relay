@@ -23,3 +23,6 @@ node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/confi
 **proxy** 
 node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/configs/proxy.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/configs/proxy-db.json"
 
+
+**alice cluster** 
+node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/cluster/alice.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/cluster/alice-db.json"

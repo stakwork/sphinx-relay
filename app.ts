@@ -14,7 +14,7 @@ import { ownerMiddleware, unlocker } from './src/auth'
 import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
-import * as interfaces from './src/grpc/interfaces'
+import * as lightning from './src/grpc/lightning'
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -39,8 +39,6 @@ async function start() {
 start()
 
 async function mainSetup() {
-	const pld = interfaces.greenlightSignMessagePayload(Buffer.from("00", 'hex'))
-	console.log(pld)
 
 	await setupApp() // setup routes
 	grpc.reconnectToLightning(Math.random(), function () {
@@ -60,17 +58,6 @@ async function finishSetup() {
 	}
 	setupDone()
 
-	// scheduler: 35.236.110.178:2601
-
-	// need to call "init" first (pass hex hsm_secret): https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L50
-	// "Lightning Message" is appended on the HSMD itself
-	// https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L57-L65
-	
-	// OUTPUT
-	// type, signature, recid = struct.unpack("!H64ss", unhexlify(res))
-	// type=123 (unsigned 2 bytes)
-	// signature is 64 bytes
-
 	// INPUT (struct.pack("!HH32s"))
 	// 23|32|AAAAAAAAAAAAAAAAAAAAAAAAAA
 	// 0x0017 0x0100 DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF
@@ -79,13 +66,6 @@ async function finishSetup() {
 
 	// node bindings:
 	// https://github.com/cdecker/lightning/tree/libhsmd-node/contrib/libhsmd_node
-
-	// let r = await lightning.keysend({
-	// 	amt: 300,
-	// 	dest: '02739d50cedddf3bd8affc8c978d19575c71bad1abfba90d9bcf90ea52aa7362ff',
-	// 	// route_hint: '0315fad9096f8addac2870ca00175d446ae41fe79084b98b5f0e268288ada32e61:2006338x19x0'
-	// })
-	// console.log(r)
 
 }
 

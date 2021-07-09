@@ -25,7 +25,7 @@ const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
-const interfaces = require("./src/grpc/interfaces");
+const lightning = require("./src/grpc/lightning");
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -48,8 +48,6 @@ function start() {
 start();
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
-        const pld = interfaces.greenlightSignMessagePayload(Buffer.from("00", 'hex'));
-        console.log(pld);
         yield setupApp(); // setup routes
         grpc.reconnectToLightning(Math.random(), function () {
             console.log(">>> FINISH SETUP");
@@ -68,7 +66,6 @@ function finishSetup() {
             hub_1.pingHubInterval(15000);
         }
         setup_1.setupDone();
-        // scheduler: 35.236.110.178:2601
         // need to call "init" first (pass hex hsm_secret): https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L50
         // "Lightning Message" is appended on the HSMD itself
         // https://github.com/Blockstream/greenlight/blob/main/libs/python/glapi/cli.py#L57-L65
@@ -89,6 +86,17 @@ function finishSetup() {
         // 	// route_hint: '0315fad9096f8addac2870ca00175d446ae41fe79084b98b5f0e268288ada32e61:2006338x19x0'
         // })
         // console.log(r)
+        const r = yield lightning.signMessage('00000000');
+        console.log("SIGNED", r);
+        const gr = 'rbpap378wwcift1yex6ot5nfjo7usqxxyjun5xdd96qwna9zw86bgox73fhmdtyst9owxk7ei1q4qpejt3py6ijd9phi11kk7ompmcos';
+        // const lr = 'dhfunr4gx7ii87c34wy1atb1yp4tcrjqtaxfob4g1kwaegxshtmu19maw3gpqcbtbsjd3943kacy9f18ya5y8gmyo5p1pfiwqmx9g5kp'
+        try {
+            const v = yield lightning.verifyMessage('00000000', gr);
+            console.log("VERIFIED", v);
+        }
+        catch (e) {
+            console.log(e);
+        }
     });
 }
 function setupApp() {
