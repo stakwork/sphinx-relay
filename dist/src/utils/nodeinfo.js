@@ -9,11 +9,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isClean = exports.nodeinfo = exports.proxynodeinfo = void 0;
+exports.isClean = exports.nodeinfo = exports.proxynodeinfo = exports.NodeType = void 0;
 const Lightning = require("../grpc/lightning");
 const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
+const config_1 = require("./config");
+const config = config_1.loadConfig();
+const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
+var NodeType;
+(function (NodeType) {
+    NodeType["NODE_PUBLIC"] = "node_public";
+    NodeType["NODE_VIRTUAL"] = "node_virtual";
+    NodeType["NODE_GREENLIGHT"] = "node_greenlight";
+})(NodeType = exports.NodeType || (exports.NodeType = {}));
 function proxynodeinfo(pk) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -33,7 +42,8 @@ function proxynodeinfo(pk) {
                 largest_local_balance: largestLocalBalance,
                 largest_remote_balance: largestRemoteBalance,
                 total_local_balance: totalLocalBalance,
-                node_type: 'node_virtual'
+                // node_type: 'node_virtual'
+                node_type: NodeType.NODE_VIRTUAL
             });
         }
         catch (e) {
@@ -139,7 +149,8 @@ function nodeinfo() {
                 latest_message,
                 last_active: lastActive,
                 wallet_locked: false,
-                non_zero_policies: nzp
+                non_zero_policies: nzp,
+                node_type: IS_GREENLIGHT ? NodeType.NODE_GREENLIGHT : NodeType.NODE_PUBLIC,
             };
             resolve(node);
         }

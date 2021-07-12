@@ -541,6 +541,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.getLatestContacts = getLatestContacts;
 // accessed from people.sphinx.chat website
+// U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)

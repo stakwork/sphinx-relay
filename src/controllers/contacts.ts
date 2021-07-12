@@ -577,6 +577,7 @@ export const getLatestContacts = async (req, res) => {
 }
 
 // accessed from people.sphinx.chat website
+// U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
 export async function createPeopleProfile(req, res){
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;

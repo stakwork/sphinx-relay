@@ -79,7 +79,8 @@ export async function ownerMiddleware(req, res, next) {
     req.path == "/latest" ||
     req.path.startsWith("/static") ||
     req.path == "/contacts/set_dev" ||
-    req.path == "/connect"
+    req.path == "/connect" ||
+    req.path == "/connect_peer"
   ) {
     next();
     return;

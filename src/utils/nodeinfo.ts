@@ -4,6 +4,16 @@ import * as publicIp from 'public-ip'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import { models } from '../models'
 import * as interfaces from '../grpc/interfaces'
+import { loadConfig } from './config'
+
+const config = loadConfig()
+const IS_GREENLIGHT = config.lightning_provider==='GREENLIGHT'
+
+export enum NodeType {
+  NODE_PUBLIC = "node_public",
+  NODE_VIRTUAL = "node_virtual",
+  NODE_GREENLIGHT = "node_greenlight"
+}
 
 export function proxynodeinfo(pk:string):Promise<Object> {
   return new Promise(async (resolve, reject)=> {
@@ -23,7 +33,8 @@ export function proxynodeinfo(pk:string):Promise<Object> {
         largest_local_balance: largestLocalBalance,
         largest_remote_balance: largestRemoteBalance,
         total_local_balance: totalLocalBalance,
-        node_type: 'node_virtual'
+        // node_type: 'node_virtual'
+        node_type: NodeType.NODE_VIRTUAL
       })
     } catch(e) {
       return 
@@ -133,7 +144,8 @@ export function nodeinfo() {
         latest_message,
         last_active: lastActive,
         wallet_locked: false,
-        non_zero_policies: nzp
+        non_zero_policies: nzp,
+        node_type: IS_GREENLIGHT ? NodeType.NODE_GREENLIGHT : NodeType.NODE_PUBLIC,
       }
       resolve(node)
     } catch (e) {

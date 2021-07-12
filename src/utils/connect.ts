@@ -4,7 +4,7 @@ import * as Lightning from '../grpc/lightning'
 import { isClean } from './nodeinfo'
 import {loadConfig} from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
-import { failure } from './res'
+import { failure, success } from './res'
 const fs = require('fs')
 
 const config = loadConfig()
@@ -75,6 +75,21 @@ async function makeVarScript(): Promise<string> {
 </script>`
 }
 
+export async function connectPeer(req, res) {
+  try {
+    await Lightning.connectPeer({
+      addr: {
+        pubkey:'023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
+        host:'54.159.193.149:9735'
+      }
+    })
+    success(res, 'ok')
+  } catch(e) {
+    console.log('=> connect peer failed', e)
+    failure(res, e)
+  }
+}
+
 export async function genChannel(req, res) {
   const { amount } = req.body;
   if(!amount) return failure(res, 'no amount')
@@ -92,6 +107,7 @@ export async function genChannel(req, res) {
       push_sat: Math.round(amount*0.02),
       sat_per_byte,
     })
+    success(res, 'ok')
   } catch(e) {
     console.log('=> connect failed', e)
   }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connect = exports.genChannel = exports.getQR = void 0;
+exports.connect = exports.genChannel = exports.connectPeer = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
 const Lightning = require("../grpc/lightning");
@@ -83,6 +83,24 @@ function makeVarScript() {
 </script>`;
     });
 }
+function connectPeer(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield Lightning.connectPeer({
+                addr: {
+                    pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
+                    host: '54.159.193.149:9735'
+                }
+            });
+            res_1.success(res, 'ok');
+        }
+        catch (e) {
+            console.log('=> connect peer failed', e);
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.connectPeer = connectPeer;
 function genChannel(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount } = req.body;
@@ -102,6 +120,7 @@ function genChannel(req, res) {
                 push_sat: Math.round(amount * 0.02),
                 sat_per_byte,
             });
+            res_1.success(res, 'ok');
         }
         catch (e) {
             console.log('=> connect failed', e);
