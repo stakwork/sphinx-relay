@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.initGreenlight = exports.get_greenlight_grpc_uri = exports.loadScheduler = void 0;
+exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.initGreenlight = exports.get_greenlight_grpc_uri = exports.loadScheduler = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const libhsmd = require("libhsmd");
@@ -69,6 +69,11 @@ function initGreenlight() {
             if (needToRegister) {
                 yield registerGreenlight(GID, rootkey, secretPath);
             }
+            const keyLoc = config.tls_key_location;
+            const noNeedToRecover = fs.existsSync(keyLoc);
+            if (!noNeedToRecover) {
+                yield recoverGreenlight(GID);
+            }
             yield schedule(GID.node_id);
         }
         catch (e) {
@@ -100,6 +105,23 @@ function schedule(pubkey) {
     }));
 }
 exports.schedule = schedule;
+function recoverGreenlight(gid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const challenge = yield get_challenge(gid.node_id);
+            const signature = yield sign_challenge(challenge);
+            const res = yield recover(gid.node_id, challenge, signature);
+            const keyLoc = config.tls_key_location || "./device-key.pem";
+            const chainLoc = config.tls_chain_location || './device.crt';
+            console.log("RECOVER KEY", keyLoc, res.device_key);
+            fs.writeFileSync(keyLoc, res.device_key);
+            fs.writeFileSync(chainLoc, res.device_cert);
+        }
+        catch (e) {
+            console.log('Greenlight register error', e);
+        }
+    });
+}
 function registerGreenlight(gid, rootkey, secretPath) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -175,4 +197,28 @@ function register(pubkey, bip32_key, challenge, signature) {
     }));
 }
 exports.register = register;
+function recover(pubkey, challenge, signature) {
+    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const s = loadScheduler();
+            s.recover({
+                node_id: ByteBuffer.fromHex(pubkey),
+                challenge: ByteBuffer.fromHex(challenge),
+                signature: ByteBuffer.fromHex(signature),
+            }, (err, response) => {
+                console.log(err, response);
+                if (!err) {
+                    resolve(response);
+                }
+                else {
+                    reject(err);
+                }
+            });
+        }
+        catch (e) {
+            reject(e);
+        }
+    }));
+}
+exports.recover = recover;
 //# sourceMappingURL=greenlight.js.map

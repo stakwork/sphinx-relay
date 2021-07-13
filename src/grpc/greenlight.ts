@@ -69,6 +69,11 @@ export async function initGreenlight() {
     if (needToRegister) {
       await registerGreenlight(GID, rootkey, secretPath);
     }
+    const keyLoc = config.tls_key_location
+    const noNeedToRecover = fs.existsSync(keyLoc)
+    if(!noNeedToRecover) {
+      await recoverGreenlight(GID)
+    }
     await schedule(GID.node_id)
   } catch(e) {
     console.log('initGreenlight error', e)
@@ -97,6 +102,25 @@ export function schedule(pubkey: string) {
       console.log(e);
     }
   });
+}
+
+async function recoverGreenlight(gid: GreenlightIdentity) {
+  try {
+    const challenge = await get_challenge(gid.node_id);
+    const signature = await sign_challenge(challenge)
+    const res = await recover(
+      gid.node_id, 
+      challenge,
+      signature
+    )
+    const keyLoc = config.tls_key_location || "./device-key.pem";
+    const chainLoc = config.tls_chain_location || './device.crt'
+    console.log("RECOVER KEY", keyLoc, res.device_key)
+    fs.writeFileSync(keyLoc, res.device_key)
+    fs.writeFileSync(chainLoc, res.device_cert)
+  } catch(e) {
+    console.log('Greenlight register error', e)
+  }
 }
 
 async function registerGreenlight(gid: GreenlightIdentity, rootkey: string, secretPath: string) {
@@ -167,6 +191,31 @@ export function register(pubkey: string, bip32_key: string, challenge: string, s
           node_id: ByteBuffer.fromHex(pubkey),
           bip32_key: ByteBuffer.fromHex(bip32_key),
           network: "bitcoin",
+          challenge: ByteBuffer.fromHex(challenge),
+          signature: ByteBuffer.fromHex(signature),
+        },
+        (err, response) => {
+          console.log(err, response);
+          if (!err) {
+            resolve(response);
+          } else {
+            reject(err);
+          }
+        }
+      );
+    } catch (e) {
+      reject(e)
+    }
+  });
+}
+
+export function recover(pubkey: string, challenge: string, signature: string): Promise<RegisterResponse> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const s = loadScheduler();
+      s.recover(
+        {
+          node_id: ByteBuffer.fromHex(pubkey),
           challenge: ByteBuffer.fromHex(challenge),
           signature: ByteBuffer.fromHex(signature),
         },
