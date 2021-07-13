@@ -81,7 +81,7 @@ function setupApp() {
         }));
         app.use(cookieParser());
         app.use(auth_1.ownerMiddleware);
-        app.use('/static', express.static('public'));
+        app.use('/static', express.static(publicPath()));
         app.get('/app', (req, res) => res.send('INDEX'));
         if (config.connect_ui) {
             app.get('/connect', connect.connect);
@@ -130,5 +130,12 @@ function setupApp() {
             });
         }
     }));
+}
+function publicPath() {
+    let public_path = 'public';
+    if (config.lightning_provider === 'GREENLIGHT') {
+        public_path = 'public/greenlight';
+    }
+    return public_path;
 }
 //# sourceMappingURL=app.js.map
