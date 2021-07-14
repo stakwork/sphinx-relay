@@ -218,12 +218,13 @@ function subscribeResponse(res) {
         let is_keysend = false;
         if (r.extratlvs) {
             r.extratlvs.forEach(tlv => {
-                console.log("TLV TYPE", tlv.type, typeof tlv.type, `${lightning_1.LND_KEYSEND_KEY}`);
-                if (tlv.type === `${lightning_1.LND_KEYSEND_KEY}`)
-                    is_keysend = true;
+                // console.log("TLV TYPE", tlv.type, typeof tlv.type, `${LND_KEYSEND_KEY}`)
+                // if(tlv.type===`${LND_KEYSEND_KEY}`) is_keysend=true
                 custom_records[tlv.type] = tlv.value;
             });
         }
+        if (r.label.startsWith('keysend'))
+            is_keysend = true;
         const i = {
             memo: r.label,
             r_preimage: r.preimage,
