@@ -2,6 +2,7 @@ import { loadConfig } from "../utils/config";
 import * as ByteBuffer from 'bytebuffer'
 import * as crypto from "crypto";
 import { LND_KEYSEND_KEY } from "./lightning";
+// import * as bolt11 from '@boltz/bolt11'
 
 const config = loadConfig();
 
@@ -491,6 +492,7 @@ export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoi
     let is_keysend = false;
     if(r.extratlvs) {
       r.extratlvs.forEach(tlv=> {
+        console.log("TLV TYPE", tlv.type, typeof tlv.type, `${LND_KEYSEND_KEY}`)
         if(tlv.type===`${LND_KEYSEND_KEY}`) is_keysend=true
         custom_records[tlv.type] = tlv.value
       })

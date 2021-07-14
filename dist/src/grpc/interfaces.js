@@ -5,6 +5,7 @@ const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
 const lightning_1 = require("./lightning");
+// import * as bolt11 from '@boltz/bolt11'
 const config = config_1.loadConfig();
 const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
@@ -217,6 +218,7 @@ function subscribeResponse(res) {
         let is_keysend = false;
         if (r.extratlvs) {
             r.extratlvs.forEach(tlv => {
+                console.log("TLV TYPE", tlv.type, typeof tlv.type, `${lightning_1.LND_KEYSEND_KEY}`);
                 if (tlv.type === `${lightning_1.LND_KEYSEND_KEY}`)
                     is_keysend = true;
                 custom_records[tlv.type] = tlv.value;
