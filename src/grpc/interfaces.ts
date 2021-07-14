@@ -488,15 +488,17 @@ export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoi
     if(!r1.offchain) return <Invoice>{}
     const r = r1.offchain
     const custom_records = <DestCustomRecords>{}
+    let is_keysend = false;
     if(r.extratlvs) {
       r.extratlvs.forEach(tlv=> {
+        if(tlv.type===`${LND_KEYSEND_KEY}`) is_keysend=true
         custom_records[tlv.type] = tlv.value
       })
     }
     const i = <Invoice>{
       memo: r.label,
       r_preimage: r.preimage,
-      is_keysend: true,
+      is_keysend,
       htlcs: [<InvoiceHTLC>{custom_records}],
       state: InvoiceState.SETTLED,
     }

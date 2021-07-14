@@ -214,15 +214,18 @@ function subscribeResponse(res) {
             return {};
         const r = r1.offchain;
         const custom_records = {};
+        let is_keysend = false;
         if (r.extratlvs) {
             r.extratlvs.forEach(tlv => {
+                if (tlv.type === `${lightning_1.LND_KEYSEND_KEY}`)
+                    is_keysend = true;
                 custom_records[tlv.type] = tlv.value;
             });
         }
         const i = {
             memo: r.label,
             r_preimage: r.preimage,
-            is_keysend: true,
+            is_keysend,
             htlcs: [{ custom_records }],
             state: InvoiceState.SETTLED,
         };
