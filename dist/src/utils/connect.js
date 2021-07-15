@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connect = exports.genChannel = exports.connectPeer = exports.getQR = void 0;
+exports.greenlight = exports.connect = exports.genChannel = exports.connectPeer = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
 const Lightning = require("../grpc/lightning");
@@ -154,6 +154,28 @@ function connect(req, res) {
     });
 }
 exports.connect = connect;
+function greenlight(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        fs.readFile("public/greenlight/index.html", function (error, pgResp) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (error) {
+                    res.writeHead(404);
+                    res.write('Contents you are looking are Not Found');
+                }
+                else {
+                    const htmlString = Buffer.from(pgResp).toString();
+                    const qr = yield getQR();
+                    const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
+                    const final = Buffer.from(rep, 'utf8');
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.write(final);
+                }
+                res.end();
+            });
+        });
+    });
+}
+exports.greenlight = greenlight;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {

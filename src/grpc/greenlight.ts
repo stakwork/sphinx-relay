@@ -74,13 +74,18 @@ export async function initGreenlight() {
     if(!noNeedToRecover) {
       await recoverGreenlight(GID)
     }
-    await schedule(GID.node_id)
+    const r = await schedule(GID.node_id)
+    console.log(r.node_id.toString('hex'))
   } catch(e) {
     console.log('initGreenlight error', e)
   }
 }
 
-export function schedule(pubkey: string) {
+interface ScheduleResponse {
+  node_id: Buffer,
+  grpc_uri: string
+}
+export function schedule(pubkey: string): Promise<ScheduleResponse> {
   return new Promise(async (resolve, reject) => {
     try {
       const s = loadScheduler();
@@ -89,7 +94,7 @@ export function schedule(pubkey: string) {
           node_id: ByteBuffer.fromHex(pubkey),
         },
         (err, response) => {
-          console.log('=> schedule', err, response);
+          // console.log('=> schedule', err, response);
           if (!err) {
             GREENLIGHT_GRPC_URI = response.grpc_uri;
             resolve(response);

@@ -74,7 +74,8 @@ function initGreenlight() {
             if (!noNeedToRecover) {
                 yield recoverGreenlight(GID);
             }
-            yield schedule(GID.node_id);
+            const r = yield schedule(GID.node_id);
+            console.log(r.node_id.toString('hex'));
         }
         catch (e) {
             console.log('initGreenlight error', e);
@@ -89,7 +90,7 @@ function schedule(pubkey) {
             s.schedule({
                 node_id: ByteBuffer.fromHex(pubkey),
             }, (err, response) => {
-                console.log('=> schedule', err, response);
+                // console.log('=> schedule', err, response);
                 if (!err) {
                     GREENLIGHT_GRPC_URI = response.grpc_uri;
                     resolve(response);

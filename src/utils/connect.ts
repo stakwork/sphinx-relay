@@ -134,6 +134,24 @@ export async function connect(req, res) {
   });
 }
 
+
+export async function greenlight(req, res) {
+  fs.readFile("public/greenlight/index.html", async function (error, pgResp) {
+    if (error) {
+      res.writeHead(404);
+      res.write('Contents you are looking are Not Found');
+    } else {
+      const htmlString = Buffer.from(pgResp).toString()
+      const qr = await getQR()
+      const rep = htmlString.replace(/CONNECTION_STRING/g, qr)
+      const final = Buffer.from(rep, 'utf8')
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.write(final);
+    }
+    res.end();
+  });
+}
+
 async function asyncForEach(array, callback) {
 	for (let index = 0; index < array.length; index++) {
 		await callback(array[index], index, array);

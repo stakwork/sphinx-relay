@@ -25,6 +25,7 @@ const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
+const lightning = require("./src/grpc/lightning");
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -65,6 +66,10 @@ function finishSetup() {
             hub_1.pingHubInterval(15000);
         }
         setup_1.setupDone();
+        lightning.keysend({
+            amt: 10,
+            dest: '025686655c80eeb4657e5336228a8a1b46f96c52ddfa74e11b090ad6339d71445a'
+        });
     });
 }
 function setupApp() {
@@ -85,6 +90,7 @@ function setupApp() {
         app.get('/app', (req, res) => res.send('INDEX'));
         if (config.connect_ui) {
             app.get('/connect', connect.connect);
+            app.get('/greenlight', connect.greenlight);
             app.post('/gen_channel', connect.genChannel);
             app.post('/connect_peer', connect.connectPeer);
         }

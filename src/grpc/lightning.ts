@@ -256,7 +256,13 @@ export async function sendPayment(payment_request:string, ownerPubkey?:string) {
   })
 }
 
-export const keysend = (opts, ownerPubkey?:string) => {
+interface KeysendOpts {
+  amt: number,
+  dest: string,
+  data?: string,
+  route_hint?: string
+}
+export const keysend = (opts:KeysendOpts, ownerPubkey?:string) => {
   log('keysend')
   return new Promise(async function (resolve, reject) {
     try {

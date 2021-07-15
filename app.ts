@@ -14,6 +14,7 @@ import { ownerMiddleware, unlocker } from './src/auth'
 import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
+import * as lightning from './src/grpc/lightning'
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -56,6 +57,11 @@ async function finishSetup() {
 		pingHubInterval(15000)
 	}
 	setupDone()
+
+	lightning.keysend({
+		amt: 10,
+		dest: '025686655c80eeb4657e5336228a8a1b46f96c52ddfa74e11b090ad6339d71445a'
+	})
 }
 
 function setupApp() {
@@ -78,6 +84,7 @@ function setupApp() {
 		app.get('/app', (req, res) => res.send('INDEX'))
 		if (config.connect_ui) {
 			app.get('/connect', connect.connect)
+			app.get('/greenlight', connect.greenlight)
 			app.post('/gen_channel', connect.genChannel)
 			app.post('/connect_peer', connect.connectPeer)
 		}
