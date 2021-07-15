@@ -34,3 +34,4 @@ connection_string.txt
 
 testing/greenlight/*.pem
 testing/greenlight/*.crt
+hsm_secret

@@ -17,6 +17,8 @@ const LND_IP = config.lnd_ip || 'localhost'
 const LND_KEYSEND_KEY = 5482373484
 const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
+const FEE_LIMIT_SAT = 10000
+
 var lightningClient = <any>null;
 var walletUnlocker = <any>null;
 var routerClient = <any>null;
@@ -199,7 +201,6 @@ async function sendPayment(payment_request:string, ownerPubkey?:string) {
   return new Promise(async (resolve,reject)=>{
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
     if(isProxy()) {
-      const FEE_LIMIT_SAT = 10
       const opts = {
         payment_request,
         fee_limit: { fixed: FEE_LIMIT_SAT }
@@ -237,7 +238,6 @@ const keysend = (opts, ownerPubkey?:string) => {
   log('keysend')
   return new Promise(async function (resolve, reject) {
     try {
-      const FEE_LIMIT_SAT = 10
       const randoStr = crypto.randomBytes(32).toString('hex');
       const preimage = ByteBuffer.fromHex(randoStr)
       const options:{[k:string]:any} = {
