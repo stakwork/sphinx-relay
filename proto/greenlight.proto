@@ -460,6 +460,8 @@ message OffChainPayment {
 	bytes preimage = 2;
 	Amount amount = 3;
 	repeated TlvField extratlvs = 4;
+	bytes payment_hash = 5;
+	string bolt11 = 6;
 }
 
 message IncomingPayment {
@@ -472,7 +474,7 @@ message IncomingPayment {
 message RoutehintHop {
 	bytes node_id = 1;
 	string short_channel_id = 2;
-	uint32 fee_base = 3;
+	uint64 fee_base = 3;
 	uint32 fee_prop = 4;
 	uint32 cltv_expiry_delta = 5;
 }

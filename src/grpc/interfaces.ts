@@ -314,7 +314,7 @@ export interface KeysendRequest {
 interface GreenlightHop {
   node_id: Buf
 	short_channel_id: string
-	fee_base?: number
+	fee_base?: string
 	fee_prop?: number
 	cltv_expiry_delta?: number
 }
@@ -344,7 +344,7 @@ export function keysendRequest(req: KeysendRequest): KeysendRequest|GreenlightKe
           return <GreenlightHop>{
             node_id: ByteBuffer.fromHex(hh.node_id),
             short_channel_id: hh.chan_id,
-            fee_base: 1000,
+            fee_base: '1000',
             fee_prop: 1,
             cltv_expiry_delta: 40,
           }
@@ -478,6 +478,8 @@ interface GreenlightOffchainPayment {
 	preimage: Buf,
   amount: GreenlightAmount,
 	extratlvs: GreenlightTLV[],
+  payment_hash: Buf
+	bolt11: string
 }
 interface GreenlightIncomingPayment {
   offchain: GreenlightOffchainPayment

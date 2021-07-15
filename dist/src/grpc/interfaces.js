@@ -138,7 +138,7 @@ function keysendRequest(req) {
                     return {
                         node_id: ByteBuffer.fromHex(hh.node_id),
                         short_channel_id: hh.chan_id,
-                        fee_base: 1000,
+                        fee_base: '1000',
                         fee_prop: 1,
                         cltv_expiry_delta: 40,
                     };
