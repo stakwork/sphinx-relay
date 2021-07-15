@@ -37,6 +37,7 @@ interface Logging {
   Network: boolean
   DB: boolean
   Proxy: boolean
+  Lsat: boolean
 }
 
 const logging: Logging = {
@@ -48,6 +49,7 @@ const logging: Logging = {
   Network: config.logging && config.logging.includes('NETWORK'),
   DB: config.logging && config.logging.includes('DB'),
   Proxy: config.logging && config.logging.includes('PROXY'),
+  Lsat: config?.logging.includes('LSAT'),
 }
 
 export { logging }
