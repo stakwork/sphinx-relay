@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.getRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const ByteBuffer = require("bytebuffer");
 const fs = require("fs");
 const grpc = require("grpc");
@@ -145,45 +145,38 @@ const setLock = (value) => {
     }, 1000 * 60 * 2);
 };
 exports.setLock = setLock;
-const getRoute = (pub_key, amt, route_hint, callback) => __awaiter(void 0, void 0, void 0, function* () {
-    log('getRoute');
-    let lightning = yield loadLightning(true); // try proxy
-    const options = { pub_key, amt };
-    if (route_hint && route_hint.includes(':')) {
-        const arr = route_hint.split(':');
-        const node_id = arr[0];
-        const chan_id = arr[1];
-        options.route_hints = [{
-                hop_hints: [{ node_id, chan_id }]
-            }];
-    }
-    lightning.queryRoutes(options, (err, response) => callback(err, response));
-});
-exports.getRoute = getRoute;
-const queryRoute = (pub_key, amt, route_hint, ownerPubkey) => __awaiter(void 0, void 0, void 0, function* () {
-    log('queryRoute');
-    return new Promise(function (resolve, reject) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            const options = { pub_key, amt };
-            if (route_hint && route_hint.includes(':')) {
-                const arr = route_hint.split(':');
-                const node_id = arr[0];
-                const chan_id = arr[1];
-                options.route_hints = [{
-                        hop_hints: [{ node_id, chan_id }]
-                    }];
-            }
-            lightning.queryRoutes(options, (err, response) => {
-                if (err) {
-                    reject(err);
-                    return;
+function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        log('queryRoute');
+        if (IS_GREENLIGHT) { // shim for now
+            return {
+                success_prob: 1,
+                routes: []
+            };
+        }
+        return new Promise(function (resolve, reject) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                const options = { pub_key, amt };
+                if (route_hint && route_hint.includes(':')) {
+                    const arr = route_hint.split(':');
+                    const node_id = arr[0];
+                    const chan_id = arr[1];
+                    options.route_hints = [{
+                            hop_hints: [{ node_id, chan_id }]
+                        }];
                 }
-                resolve(response);
+                lightning.queryRoutes(options, (err, response) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(response);
+                });
             });
         });
     });
-});
+}
 exports.queryRoute = queryRoute;
 exports.WITNESS_PUBKEY_HASH = 0;
 exports.NESTED_PUBKEY_HASH = 1;

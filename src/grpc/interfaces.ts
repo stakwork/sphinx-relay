@@ -375,7 +375,7 @@ interface Hop {
   pub_key: string,
   custom_records: DestCustomRecords,
 }
-interface Route {
+export interface Route {
   total_time_lock: number,
   total_fees: string, // deprecated
   total_amt: string, // deprecated
@@ -506,6 +506,8 @@ export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoi
       is_keysend,
       htlcs: [<InvoiceHTLC>{custom_records}],
       state: InvoiceState.SETTLED,
+      r_hash: r.payment_hash,
+      payment_request: r.bolt11,
     }
     const {satoshi, millisatoshi} = greenlightAmoutToAmounts(r.amount)
     i.value = satoshi

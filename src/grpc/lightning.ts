@@ -134,26 +134,18 @@ export const setLock = (value) => {
   }, 1000 * 60 * 2)
 }
 
-export const getRoute = async (pub_key, amt, route_hint, callback) => {
-  log('getRoute')
-  let lightning = await loadLightning(true) // try proxy
-  const options:{[k:string]:any} = { pub_key, amt }
-  if(route_hint && route_hint.includes(':')) {
-    const arr = route_hint.split(':')
-    const node_id = arr[0]
-    const chan_id = arr[1]
-    options.route_hints = [{
-      hop_hints: [{ node_id, chan_id }]
-    }]
-  }
-  lightning.queryRoutes(
-    options,
-    (err, response) => callback(err, response)
-  )
+interface QueryRouteResponse {
+  success_prob: number,
+  routes: interfaces.Route[]
 }
-
-export const queryRoute = async (pub_key, amt, route_hint, ownerPubkey?:string) => {
+export async function queryRoute(pub_key, amt, route_hint, ownerPubkey?:string): Promise<QueryRouteResponse> {
   log('queryRoute')
+  if(IS_GREENLIGHT) { // shim for now
+    return {
+      success_prob: 1,
+      routes: []
+    }
+  }
   return new Promise(async function (resolve, reject) {
     let lightning = await loadLightning(true, ownerPubkey) // try proxy
     const options:{[k:string]:any} = { pub_key, amt }

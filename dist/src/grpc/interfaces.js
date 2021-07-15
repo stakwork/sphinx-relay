@@ -231,6 +231,8 @@ function subscribeResponse(res) {
             is_keysend,
             htlcs: [{ custom_records }],
             state: InvoiceState.SETTLED,
+            r_hash: r.payment_hash,
+            payment_request: r.bolt11,
         };
         const { satoshi, millisatoshi } = greenlightAmoutToAmounts(r.amount);
         i.value = satoshi;
