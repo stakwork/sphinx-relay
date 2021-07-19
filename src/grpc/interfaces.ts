@@ -2,7 +2,7 @@ import { loadConfig } from "../utils/config";
 import * as ByteBuffer from 'bytebuffer'
 import * as crypto from "crypto";
 import { LND_KEYSEND_KEY } from "./lightning";
-// import * as bolt11 from '@boltz/bolt11'
+import * as long from 'long'
 
 const config = loadConfig();
 
@@ -265,7 +265,7 @@ export function listChannelsResponse(
           active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
           remote_pubkey: Buffer.from(p.id).toString("hex"),
           channel_point: ch.funding_txid + ':' + i,
-          chan_id: ch.channel_id,
+          chan_id: shortChanIDtoInt64(ch.channel_id),
           capacity: greelightNumber(ch.total) + '',
           local_balance: greelightNumber(ch.spendable) + '',
           remote_balance: greelightNumber(ch.receivable) + '',
@@ -343,7 +343,7 @@ export function keysendRequest(req: KeysendRequest): KeysendRequest|GreenlightKe
         const hops: GreenlightHop[] = rh.hop_hints.map(hh=> {
           return <GreenlightHop>{
             node_id: ByteBuffer.fromHex(hh.node_id),
-            short_channel_id: hh.chan_id,
+            short_channel_id: shortChanIDfromInt64(hh.chan_id),
             fee_base: '1000',
             fee_prop: 1,
             cltv_expiry_delta: 40,
@@ -557,29 +557,7 @@ export function greenlightSignMessagePayload(msg:Buffer):string {
   const buf = Buffer.concat([typebuf, lengthbuf, msg], 4 + length)
   return buf.toString('hex')
 }
-/*
-interface ShortChannelId {
-  blockHeight: number,
-  txIndex: number,
-  txPosition: number
-}
-function greenlightChannelIDToShortChannelID(scid:string): string {
-  const arr = scid.split('x')
-  if(arr.length!==3) return ''
-  const chan: ShortChannelId = {
-    blockHeight: parseInt(arr[0]) >> 40,
-    txIndex: (parseInt(arr[1])>>16) & 0xFFFFFF,
-    txPosition: 0
-  }
-  return ''
-}
-function shortChannelIDToSphinxChannel() {
 
-}
-function sphinxChanelIDToGreenlightChannelID() {
-
-}
-*/
 enum GreenlightChannelState {
 	CHANNELD_AWAITING_LOCKIN = 'CHANNELD_AWAITING_LOCKIN',
 	/* Normal operating state. */
@@ -606,12 +584,31 @@ enum GreenlightChannelState {
 	DUALOPEND_AWAITING_LOCKIN = 'DUALOPEND_AWAITING_LOCKIN',
 };
 
-/*
-GREENLIGHT NEEDS
+function shortChanIDfromInt64(int: string): string {
+  if(typeof int!=="string") return ''
+  const l = long.fromString(int, true);
+  var blockHeight = l.shiftRight(40);
+  var txIndex = l.shiftRight(16).and(0xFFFFFF);
+  var txPosition = l.and(0xFFFF);
+  return `${blockHeight.toString()}:${txIndex.toString()}:${txPosition.toString()}`
+}
 
-route hints in Create Invoice
+function shortChanIDtoInt64(cid: string): string {
+  if(typeof cid!=="string") return ''
+  if(!(cid.includes(':') || cid.includes('x'))) return ''
 
-custom TLV fields Pay (for adding data, and doing keysend payments)
+  let a: string[] = []
+  const seps = [':', 'x']
+  for (let sep of seps) {
+      if(cid.includes(sep)) a = cid.split(sep)
+  }
+  if (!a) return ''
+  if (!Array.isArray(a)) return ''
+  if (!(a.length === 3)) return ''
 
-listChannels?
-*/
+  var blockHeight = long.fromString(a[0], true).shiftLeft(40);
+  var txIndex = long.fromString(a[1], true).shiftLeft(16);
+  var txPosition = long.fromString(a[2], true);
+
+  return blockHeight.or(txIndex).or(txPosition).toString()
+}

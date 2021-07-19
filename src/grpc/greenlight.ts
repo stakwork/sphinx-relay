@@ -5,8 +5,14 @@ import { loadConfig } from '../utils/config'
 import * as ByteBuffer from 'bytebuffer'
 import * as crypto from 'crypto'
 import * as interfaces from './interfaces'
+import {loadLightning} from './lightning'
 
 const config = loadConfig()
+
+export async function initGreenlight() {
+  await startGreenlightInit()
+  await streamHsmRequests()
+}
 
 var schedulerClient = <any>null;
 
@@ -44,7 +50,7 @@ interface GreenlightIdentity {
   bolt12_key: string;
 }
 let GID: GreenlightIdentity;
-export async function initGreenlight() {
+export async function startGreenlightInit() {
   try {
     let needToRegister = false;
     const secretPath = config.hsm_secret_path || "./hsm_secret";
@@ -237,4 +243,59 @@ export function recover(pubkey: string, challenge: string, signature: string): P
       reject(e)
     }
   });
+}
+
+interface HsmRequestContext {
+  node_id: Buffer,
+	dbid: string, // uint64
+	capabilities: string, // uint64
+}
+export interface HsmRequest {
+  request_id: number,
+	context: HsmRequestContext,
+	raw: Buffer,
+}
+interface HsmResponse {
+  request_id: number
+	raw: ByteBuffer
+}
+async function streamHsmRequests() {
+  const capabilities_bitset = 1087 // 1 + 2 + 4 + 8 + 16 + 32 + 1024
+  try {
+    const lightning = await loadLightning(true) // try proxy
+		var call = lightning.streamHsmRequests({})
+		call.on('data', async function (response) {
+      console.log("DATA", response)
+      try {
+        let sig = ''
+        if (response.context) {
+          const dbid = parseInt(response.context.dbid)
+          const peer = response.context.node_id.toString('hex')
+          sig = libhsmd.Handle(capabilities_bitset, peer, dbid, response.raw.toString('hex'))
+        } else {
+          sig = libhsmd.Handle(capabilities_bitset, 0, null, response.raw.toString('hex'))
+        }
+        lightning.respondHsmRequest(<HsmResponse>{
+          request_id: response.request_id,
+          raw: ByteBuffer.fromHex(sig)
+        }, (err, response) => {
+          if(err) console.log('[HSMD] error', err)
+          else console.log("[HSMD] success", response)
+        })
+      } catch(e) {
+        console.log("[HSMD] failure", e)
+      }
+		});
+		call.on('status', function (status) {
+			console.log("[HSMD] Status", status.code, status);			
+		})
+		call.on('error', function (err) {
+			console.error('[HSMD] Error', err.code)
+		})
+		call.on('end', function () {
+			console.log(`[HSMD] Closed stream`);
+		})
+  } catch(e) {
+    console.log('[HSMD] last error:', e)
+  }
 }

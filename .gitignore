@@ -35,3 +35,4 @@ connection_string.txt
 testing/greenlight/*.pem
 testing/greenlight/*.crt
 hsm_secret
+testing/scripts/stuff.json

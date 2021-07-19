@@ -5,7 +5,7 @@ const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
 const lightning_1 = require("./lightning");
-// import * as bolt11 from '@boltz/bolt11'
+const long = require("long");
 const config = config_1.loadConfig();
 const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
@@ -90,7 +90,7 @@ function listChannelsResponse(res) {
                     active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
                     remote_pubkey: Buffer.from(p.id).toString("hex"),
                     channel_point: ch.funding_txid + ':' + i,
-                    chan_id: ch.channel_id,
+                    chan_id: shortChanIDtoInt64(ch.channel_id),
                     capacity: greelightNumber(ch.total) + '',
                     local_balance: greelightNumber(ch.spendable) + '',
                     remote_balance: greelightNumber(ch.receivable) + '',
@@ -137,7 +137,7 @@ function keysendRequest(req) {
                 const hops = rh.hop_hints.map(hh => {
                     return {
                         node_id: ByteBuffer.fromHex(hh.node_id),
-                        short_channel_id: hh.chan_id,
+                        short_channel_id: shortChanIDfromInt64(hh.chan_id),
                         fee_base: '1000',
                         fee_prop: 1,
                         cltv_expiry_delta: 40,
@@ -279,29 +279,6 @@ function greenlightSignMessagePayload(msg) {
     return buf.toString('hex');
 }
 exports.greenlightSignMessagePayload = greenlightSignMessagePayload;
-/*
-interface ShortChannelId {
-  blockHeight: number,
-  txIndex: number,
-  txPosition: number
-}
-function greenlightChannelIDToShortChannelID(scid:string): string {
-  const arr = scid.split('x')
-  if(arr.length!==3) return ''
-  const chan: ShortChannelId = {
-    blockHeight: parseInt(arr[0]) >> 40,
-    txIndex: (parseInt(arr[1])>>16) & 0xFFFFFF,
-    txPosition: 0
-  }
-  return ''
-}
-function shortChannelIDToSphinxChannel() {
-
-}
-function sphinxChanelIDToGreenlightChannelID() {
-
-}
-*/
 var GreenlightChannelState;
 (function (GreenlightChannelState) {
     GreenlightChannelState["CHANNELD_AWAITING_LOCKIN"] = "CHANNELD_AWAITING_LOCKIN";
@@ -329,13 +306,35 @@ var GreenlightChannelState;
     GreenlightChannelState["DUALOPEND_AWAITING_LOCKIN"] = "DUALOPEND_AWAITING_LOCKIN";
 })(GreenlightChannelState || (GreenlightChannelState = {}));
 ;
-/*
-GREENLIGHT NEEDS
-
-route hints in Create Invoice
-
-custom TLV fields Pay (for adding data, and doing keysend payments)
-
-listChannels?
-*/
+function shortChanIDfromInt64(int) {
+    if (typeof int !== "string")
+        return '';
+    const l = long.fromString(int, true);
+    var blockHeight = l.shiftRight(40);
+    var txIndex = l.shiftRight(16).and(0xFFFFFF);
+    var txPosition = l.and(0xFFFF);
+    return `${blockHeight.toString()}:${txIndex.toString()}:${txPosition.toString()}`;
+}
+function shortChanIDtoInt64(cid) {
+    if (typeof cid !== "string")
+        return '';
+    if (!(cid.includes(':') || cid.includes('x')))
+        return '';
+    let a = [];
+    const seps = [':', 'x'];
+    for (let sep of seps) {
+        if (cid.includes(sep))
+            a = cid.split(sep);
+    }
+    if (!a)
+        return '';
+    if (!Array.isArray(a))
+        return '';
+    if (!(a.length === 3))
+        return '';
+    var blockHeight = long.fromString(a[0], true).shiftLeft(40);
+    var txIndex = long.fromString(a[1], true).shiftLeft(16);
+    var txPosition = long.fromString(a[2], true);
+    return blockHeight.or(txIndex).or(txPosition).toString();
+}
 //# sourceMappingURL=interfaces.js.map

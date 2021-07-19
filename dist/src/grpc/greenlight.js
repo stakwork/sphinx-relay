@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.initGreenlight = exports.get_greenlight_grpc_uri = exports.loadScheduler = void 0;
+exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.loadScheduler = exports.initGreenlight = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const libhsmd = require("libhsmd");
@@ -17,7 +17,15 @@ const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
 const interfaces = require("./interfaces");
+const lightning_1 = require("./lightning");
 const config = config_1.loadConfig();
+function initGreenlight() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield startGreenlightInit();
+        yield streamHsmRequests();
+    });
+}
+exports.initGreenlight = initGreenlight;
 var schedulerClient = null;
 const loadSchedulerCredentials = () => {
     var glCert = fs.readFileSync(config.scheduler_tls_location);
@@ -42,7 +50,7 @@ function get_greenlight_grpc_uri() {
 }
 exports.get_greenlight_grpc_uri = get_greenlight_grpc_uri;
 let GID;
-function initGreenlight() {
+function startGreenlightInit() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let needToRegister = false;
@@ -82,7 +90,7 @@ function initGreenlight() {
         }
     });
 }
-exports.initGreenlight = initGreenlight;
+exports.startGreenlightInit = startGreenlightInit;
 function schedule(pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -222,4 +230,53 @@ function recover(pubkey, challenge, signature) {
     }));
 }
 exports.recover = recover;
+function streamHsmRequests() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const capabilities_bitset = 1087; // 1 + 2 + 4 + 8 + 16 + 32 + 1024
+        try {
+            const lightning = yield lightning_1.loadLightning(true); // try proxy
+            var call = lightning.streamHsmRequests({});
+            call.on('data', function (response) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    console.log("DATA", response);
+                    try {
+                        let sig = '';
+                        if (response.context) {
+                            const dbid = parseInt(response.context.dbid);
+                            const peer = response.context.node_id.toString('hex');
+                            sig = libhsmd.Handle(capabilities_bitset, peer, dbid, response.raw.toString('hex'));
+                        }
+                        else {
+                            sig = libhsmd.Handle(capabilities_bitset, 0, null, response.raw.toString('hex'));
+                        }
+                        lightning.respondHsmRequest({
+                            request_id: response.request_id,
+                            raw: ByteBuffer.fromHex(sig)
+                        }, (err, response) => {
+                            if (err)
+                                console.log('[HSMD] error', err);
+                            else
+                                console.log("[HSMD] success", response);
+                        });
+                    }
+                    catch (e) {
+                        console.log("[HSMD] failure", e);
+                    }
+                });
+            });
+            call.on('status', function (status) {
+                console.log("[HSMD] Status", status.code, status);
+            });
+            call.on('error', function (err) {
+                console.error('[HSMD] Error', err.code);
+            });
+            call.on('end', function () {
+                console.log(`[HSMD] Closed stream`);
+            });
+        }
+        catch (e) {
+            console.log('[HSMD] last error:', e);
+        }
+    });
+}
 //# sourceMappingURL=greenlight.js.map
