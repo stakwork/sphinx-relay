@@ -17,9 +17,9 @@ export async function initGreenlight() {
 var schedulerClient = <any>null;
 
 const loadSchedulerCredentials = () => {
-  var glCert = fs.readFileSync(config.scheduler_tls_location || './config/scheduler_creds/ca.pem');
-  var glPriv = fs.readFileSync(config.scheduler_key_location || './config/scheduler_creds/device-key.pem');
-  var glChain = fs.readFileSync(config.scheduler_chain_location || './config/scheduler_creds/device.crt');
+  var glCert = fs.readFileSync(config.scheduler_tls_location);
+  var glPriv = fs.readFileSync(config.scheduler_key_location);
+  var glChain = fs.readFileSync(config.scheduler_chain_location);
   return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
 
@@ -53,7 +53,7 @@ let GID: GreenlightIdentity;
 export async function startGreenlightInit() {
   try {
     let needToRegister = false;
-    const secretPath = config.hsm_secret_path || "./hsm_secret";
+    const secretPath = config.hsm_secret_path
     let rootkey:string
     if (!fs.existsSync(secretPath)) {
       needToRegister = true;
@@ -75,7 +75,7 @@ export async function startGreenlightInit() {
     if (needToRegister) {
       await registerGreenlight(GID, rootkey, secretPath);
     }
-    const keyLoc = config.tls_key_location || "./device-key.pem";
+    const keyLoc = config.tls_key_location
     const noNeedToRecover = fs.existsSync(keyLoc)
     if(!noNeedToRecover) {
       await recoverGreenlight(GID)
@@ -124,8 +124,8 @@ async function recoverGreenlight(gid: GreenlightIdentity) {
       challenge,
       signature
     )
-    const keyLoc = config.tls_key_location || "./device-key.pem";
-    const chainLoc = config.tls_chain_location || './device.crt'
+    const keyLoc = config.tls_key_location
+    const chainLoc = config.tls_chain_location
     console.log("RECOVER KEY", keyLoc, res.device_key)
     fs.writeFileSync(keyLoc, res.device_key)
     fs.writeFileSync(chainLoc, res.device_cert)
@@ -136,9 +136,9 @@ async function recoverGreenlight(gid: GreenlightIdentity) {
 }
 
 function writeTlsLocation() {
-  var glCert = fs.readFileSync(config.scheduler_tls_location|| './config/scheduler_creds/ca.pem');
+  var glCert = fs.readFileSync(config.scheduler_tls_location);
   if(glCert) {
-    fs.writeFileSync(config.tls_location || './ca.pem', glCert)
+    fs.writeFileSync(config.tls_location, glCert)
   }
 }
 
@@ -152,8 +152,8 @@ async function registerGreenlight(gid: GreenlightIdentity, rootkey: string, secr
       challenge,
       signature
     )
-    const keyLoc = config.tls_key_location || "./device-key.pem";
-    const chainLoc = config.tls_chain_location || './device.crt'
+    const keyLoc = config.tls_key_location
+    const chainLoc = config.tls_chain_location
     console.log("WRITE KEY", keyLoc, res.device_key)
     fs.writeFileSync(keyLoc, res.device_key)
     fs.writeFileSync(chainLoc, res.device_cert)

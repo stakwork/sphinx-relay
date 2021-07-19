@@ -36,3 +36,6 @@ testing/greenlight/*.pem
 testing/greenlight/*.crt
 hsm_secret
 testing/scripts/stuff.json
+creds/*
+!creds/.gitkeep
+!creds/scheduler_creds

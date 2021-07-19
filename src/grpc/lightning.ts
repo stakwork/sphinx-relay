@@ -42,9 +42,9 @@ export const loadCredentials = (macName?: string) => {
 }
 
 const loadGreenlightCredentials = () => {
-  var glCert = fs.readFileSync(config.tls_location || './ca.pem');
-  var glPriv = fs.readFileSync(config.tls_key_location || "./device-key.pem");
-  var glChain = fs.readFileSync(config.tls_chain_location || './device.crt');
+  var glCert = fs.readFileSync(config.tls_location);
+  var glPriv = fs.readFileSync(config.tls_key_location);
+  var glChain = fs.readFileSync(config.tls_chain_location);
   return grpc.credentials.createSsl(glCert, glPriv, glChain);
 }
 
