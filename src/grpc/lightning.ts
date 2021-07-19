@@ -304,7 +304,7 @@ export const keysend = (opts:KeysendOpts, ownerPubkey?:string) => {
         if(IS_GREENLIGHT) {
           let lightning = await loadLightning(false, ownerPubkey)
           const req = interfaces.keysendRequest(options)
-          console.log("KEYSEND REQ", JSON.stringify(req))
+          // console.log("KEYSEND REQ", JSON.stringify(req))
           lightning.keysend(req, function (err, response) {
             if (err == null) {
               resolve(

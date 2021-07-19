@@ -314,7 +314,7 @@ const keysend = (opts, ownerPubkey) => {
                     if (IS_GREENLIGHT) {
                         let lightning = yield loadLightning(false, ownerPubkey);
                         const req = interfaces.keysendRequest(options);
-                        console.log("KEYSEND REQ", JSON.stringify(req));
+                        // console.log("KEYSEND REQ", JSON.stringify(req))
                         lightning.keysend(req, function (err, response) {
                             if (err == null) {
                                 resolve(interfaces.keysendResponse(response));
