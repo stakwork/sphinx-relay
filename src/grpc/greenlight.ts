@@ -17,9 +17,9 @@ export async function initGreenlight() {
 var schedulerClient = <any>null;
 
 const loadSchedulerCredentials = () => {
-  var glCert = fs.readFileSync(config.scheduler_tls_location);
-  var glPriv = fs.readFileSync(config.scheduler_key_location);
-  var glChain = fs.readFileSync(config.scheduler_chain_location);
+  var glCert = fs.readFileSync(config.scheduler_tls_location || './config/scheduler_creds/ca.pem');
+  var glPriv = fs.readFileSync(config.scheduler_key_location || './config/scheduler_creds/device-key.pem');
+  var glChain = fs.readFileSync(config.scheduler_chain_location || './config/scheduler_creds/device.crt');
   return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
 
