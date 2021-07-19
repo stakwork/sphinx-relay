@@ -129,50 +129,50 @@ function genChannel(req, res) {
     });
 }
 exports.genChannel = genChannel;
+function greenlightConnect(req, res) {
+    fs.readFile("public/index_greenlight.html", function (error, pgResp) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (error) {
+                res.writeHead(404);
+                res.write('Contents you are looking are Not Found');
+            }
+            else {
+                const htmlString = Buffer.from(pgResp).toString();
+                const qr = yield getQR();
+                const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
+                const final = Buffer.from(rep, 'utf8');
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.write(final);
+            }
+            res.end();
+        });
+    });
+}
 function connect(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (IS_GREENLIGHT) {
-            fs.readFile("public/greenlight/index.html", function (error, pgResp) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (error) {
-                        res.writeHead(404);
-                        res.write('Contents you are looking are Not Found');
-                    }
-                    else {
-                        const htmlString = Buffer.from(pgResp).toString();
-                        const qr = yield getQR();
-                        const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
-                        const final = Buffer.from(rep, 'utf8');
-                        res.writeHead(200, { 'Content-Type': 'text/html' });
-                        res.write(final);
-                    }
-                    res.end();
-                });
+        if (IS_GREENLIGHT)
+            return greenlightConnect(req, res);
+        fs.readFile("public/index.html", function (error, pgResp) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (error) {
+                    res.writeHead(404);
+                    res.write('Contents you are looking are Not Found');
+                }
+                else {
+                    const newScript = yield makeVarScript();
+                    const hub_pubkey = yield queries_1.get_hub_pubkey();
+                    const htmlString = Buffer.from(pgResp).toString();
+                    const qr = yield getQR();
+                    const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
+                    const rep2 = rep.replace("<script>var hi='hello';</script>", newScript);
+                    const rep3 = rep2.replace(/SPHINX_HUB_PUBKEY/g, hub_pubkey);
+                    const final = Buffer.from(rep3, 'utf8');
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.write(final);
+                }
+                res.end();
             });
-        }
-        else {
-            fs.readFile("public/index.html", function (error, pgResp) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (error) {
-                        res.writeHead(404);
-                        res.write('Contents you are looking are Not Found');
-                    }
-                    else {
-                        const newScript = yield makeVarScript();
-                        const hub_pubkey = yield queries_1.get_hub_pubkey();
-                        const htmlString = Buffer.from(pgResp).toString();
-                        const qr = yield getQR();
-                        const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
-                        const rep2 = rep.replace("<script>var hi='hello';</script>", newScript);
-                        const rep3 = rep2.replace(/SPHINX_HUB_PUBKEY/g, hub_pubkey);
-                        const final = Buffer.from(rep3, 'utf8');
-                        res.writeHead(200, { 'Content-Type': 'text/html' });
-                        res.write(final);
-                    }
-                    res.end();
-                });
-            });
-        }
+        });
     });
 }
 exports.connect = connect;

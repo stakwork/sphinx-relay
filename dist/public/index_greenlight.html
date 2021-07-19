@@ -87,6 +87,42 @@
 
   <img src="/static/sphinx-logo.png" alt="logo" />
 
+  <div id="qr-wrap">
+    <canvas id="qr"></canvas>
+  </div>
+
+  <pre id="connection-string">
+    CONNECTION_STRING
+  </pre>
+
+  <div>Peer to Sphinx router node:</div>
+
+  <button id="peer">PEER NOW</button>
+
+  <script src="/static/js/qrious.js"></script>
+  <script>
+    (function () {
+      var qr = new QRious({
+        element: document.getElementById('qr'),
+        value: 'CONNECTION_STRING',
+        size: 300
+      });
+    })();
+  </script>
+<script>
+  function get(id){ return document.getElementById(id) }
+  const peer = get('peer')
+  peer.onclick = async function() {
+    console.log("PEER NOW")
+    const r = await fetch('/connect_peer', {
+      method: 'POST'
+    })
+    const j = await r.json()
+    console.log(j)
+  }
+</script>
+  
 </body>
+
 
 </html>
