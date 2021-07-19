@@ -260,12 +260,7 @@ function connectPeerResponse(res) {
     if (IS_LND)
         return res;
     if (IS_GREENLIGHT) {
-        const r = res;
-        return {
-            payment_request: r.bolt11,
-            r_hash: r.payment_hash,
-            add_index: 0
-        };
+        return {};
     }
     return {};
 }

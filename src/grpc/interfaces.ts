@@ -540,23 +540,17 @@ export function connectPeerRequest(req: ConnectPeerArgs): ConnectPeerArgs | Gree
   }
   return <ConnectPeerArgs>{};
 }
-interface ConnectPeerResponse {
-
-}
+interface ConnectPeerResponse {}
 interface GreenlightConnectPeerResponse {
-  
+  node_id: string
+	features: string
 }
 export function connectPeerResponse(
   res: ConnectPeerResponse | GreenlightConnectPeerResponse
 ): ConnectPeerResponse {
   if (IS_LND) return res as ConnectPeerResponse;
   if (IS_GREENLIGHT) {
-    const r = res as GreenlightInvoice
-    return <GreenlightConnectPeerResponse>{
-      payment_request: r.bolt11,
-      r_hash: r.payment_hash,
-      add_index: 0
-    };
+    return <GreenlightConnectPeerResponse>{};
   }
   return <ConnectPeerResponse>{};
 }
