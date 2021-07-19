@@ -768,7 +768,8 @@ function connectPeer(args) {
         log('connectPeer');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning();
-            lightning.connectPeer(args, function (err, response) {
+            const req = interfaces.connectPeerRequest(args);
+            lightning.connectPeer(req, function (err, response) {
                 if (err == null) {
                     resolve(response);
                 }

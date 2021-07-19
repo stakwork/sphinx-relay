@@ -709,18 +709,12 @@ export async function pendingChannels(ownerPubkey?:string): Promise<{ [k: string
   })
 }
 
-interface Addr {
-  pubkey: string
-  host: string
-}
-interface ConnectPeerArgs {
-  addr: Addr
-}
-export async function connectPeer(args: ConnectPeerArgs): Promise<{ [k: string]: any }> {
+export async function connectPeer(args: interfaces.ConnectPeerArgs): Promise<{ [k: string]: any }> {
   log('connectPeer')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
-    lightning.connectPeer(args, function (err, response) {
+    const req = interfaces.connectPeerRequest(args)
+    lightning.connectPeer(req, function (err, response) {
       if (err == null) {
         resolve(response)
       } else {

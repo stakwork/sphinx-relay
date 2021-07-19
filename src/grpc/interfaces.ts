@@ -519,6 +519,48 @@ export function subscribeResponse(res: Invoice|GreenlightIncomingPayment): Invoi
   return <Invoice>{}
 }
 
+export interface Addr {
+  pubkey: string
+  host: string
+}
+export interface ConnectPeerArgs {
+  addr: Addr
+}
+interface GreenlightConnectPeerArgs {
+  node_id: string
+	addr: string
+}
+export function connectPeerRequest(req: ConnectPeerArgs): ConnectPeerArgs | GreenlightConnectPeerArgs {
+  if (IS_LND) return req;
+  if (IS_GREENLIGHT) {
+    return <GreenlightConnectPeerArgs>{
+      node_id: req.addr.pubkey,
+      addr: req.addr.host,
+    };
+  }
+  return <ConnectPeerArgs>{};
+}
+interface ConnectPeerResponse {
+
+}
+interface GreenlightConnectPeerResponse {
+  
+}
+export function connectPeerResponse(
+  res: ConnectPeerResponse | GreenlightConnectPeerResponse
+): ConnectPeerResponse {
+  if (IS_LND) return res as ConnectPeerResponse;
+  if (IS_GREENLIGHT) {
+    const r = res as GreenlightInvoice
+    return <GreenlightConnectPeerResponse>{
+      payment_request: r.bolt11,
+      r_hash: r.payment_hash,
+      add_index: 0
+    };
+  }
+  return <ConnectPeerResponse>{};
+}
+
 interface AmountsRes {
   satoshi: string,
   millisatoshi: string

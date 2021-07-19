@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.greenlightSignMessagePayload = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
+exports.greenlightSignMessagePayload = exports.connectPeerResponse = exports.connectPeerRequest = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
@@ -244,6 +244,32 @@ function subscribeResponse(res) {
     return {};
 }
 exports.subscribeResponse = subscribeResponse;
+function connectPeerRequest(req) {
+    if (IS_LND)
+        return req;
+    if (IS_GREENLIGHT) {
+        return {
+            node_id: req.addr.pubkey,
+            addr: req.addr.host,
+        };
+    }
+    return {};
+}
+exports.connectPeerRequest = connectPeerRequest;
+function connectPeerResponse(res) {
+    if (IS_LND)
+        return res;
+    if (IS_GREENLIGHT) {
+        const r = res;
+        return {
+            payment_request: r.bolt11,
+            r_hash: r.payment_hash,
+            add_index: 0
+        };
+    }
+    return {};
+}
+exports.connectPeerResponse = connectPeerResponse;
 function greenlightAmoutToAmounts(a) {
     let satoshi = '';
     let millisatoshi = '';
