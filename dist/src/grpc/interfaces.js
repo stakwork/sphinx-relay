@@ -313,6 +313,9 @@ function shortChanIDfromInt64(int) {
     var blockHeight = l.shiftRight(40);
     var txIndex = l.shiftRight(16).and(0xFFFFFF);
     var txPosition = l.and(0xFFFF);
+    if (IS_GREENLIGHT) {
+        return `${blockHeight.toString()}x${txIndex.toString()}x${txPosition.toString()}`;
+    }
     return `${blockHeight.toString()}:${txIndex.toString()}:${txPosition.toString()}`;
 }
 function shortChanIDtoInt64(cid) {
