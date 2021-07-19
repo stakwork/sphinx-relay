@@ -12,9 +12,9 @@ const DEFAULT_HSM_SECRET_PATH = './creds/hsm_secret';
 const DEFAULT_TLS_LOCATION = "./creds/ca.pem";
 const DEFAULT_TLS_KEY_LOCATION = "./creds/device-key.pem";
 const DEFAULT_TLS_CHAIN_LOCAION = './creds/device.crt';
-const DEFAULT_SCHEDULER_TLS_LOCATION = './config/scheduler_creds/ca.pem';
-const DEFAULT_SCHEDULER_KEY_LOCATION = './config/scheduler_creds/device-key.pem';
-const DEFAULT_SCHEDULER_CHAIN_LOCATION = './config/scheduler_creds/device.crt';
+const DEFAULT_SCHEDULER_TLS_LOCATION = './creds/scheduler_creds/ca.pem';
+const DEFAULT_SCHEDULER_KEY_LOCATION = './creds/scheduler_creds/device-key.pem';
+const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt';
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
     const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
@@ -31,7 +31,6 @@ function loadConfig() {
         scheduler_tls_location: ENV.SCHEDULER_TLS_LOCATION || config.scheduler_tls_location || DEFAULT_SCHEDULER_TLS_LOCATION,
         scheduler_key_location: ENV.SCHEDULER_KEY_LOCATION || config.scheduler_key_location || DEFAULT_SCHEDULER_KEY_LOCATION,
         scheduler_chain_location: ENV.SCHEDULER_CHAIN_LOCATION || config.scheduler_chain_location || DEFAULT_SCHEDULER_CHAIN_LOCATION,
-        scheduler_default_pubkey: ENV.SCHEDULER_DEFAULT_PUBKEY || config.scheduler_default_pubkey,
         hsm_secret_path: ENV.HSM_SECRET_PATH || config.hsm_secret_path || DEFAULT_HSM_SECRET_PATH,
         lnd_log_location: ENV.LND_LOG_LOCATION || config.lnd_log_location,
         node_ip: ENV.NODE_IP || config.node_ip,
