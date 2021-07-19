@@ -77,7 +77,7 @@ function startGreenlightInit() {
             if (needToRegister) {
                 yield registerGreenlight(GID, rootkey, secretPath);
             }
-            const keyLoc = config.tls_key_location;
+            const keyLoc = config.tls_key_location || "./device-key.pem";
             const noNeedToRecover = fs.existsSync(keyLoc);
             if (!noNeedToRecover) {
                 yield recoverGreenlight(GID);
@@ -125,11 +125,18 @@ function recoverGreenlight(gid) {
             console.log("RECOVER KEY", keyLoc, res.device_key);
             fs.writeFileSync(keyLoc, res.device_key);
             fs.writeFileSync(chainLoc, res.device_cert);
+            writeTlsLocation();
         }
         catch (e) {
             console.log('Greenlight register error', e);
         }
     });
+}
+function writeTlsLocation() {
+    var glCert = fs.readFileSync(config.scheduler_tls_location || './config/scheduler_creds/ca.pem');
+    if (glCert) {
+        fs.writeFileSync(config.tls_location || './ca.pem', glCert);
+    }
 }
 function registerGreenlight(gid, rootkey, secretPath) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -139,9 +146,10 @@ function registerGreenlight(gid, rootkey, secretPath) {
             const res = yield register(gid.node_id, gid.bip32_key + gid.bolt12_key, challenge, signature);
             const keyLoc = config.tls_key_location || "./device-key.pem";
             const chainLoc = config.tls_chain_location || './device.crt';
-            console.log("WITE KEY", keyLoc, res.device_key);
+            console.log("WRITE KEY", keyLoc, res.device_key);
             fs.writeFileSync(keyLoc, res.device_key);
             fs.writeFileSync(chainLoc, res.device_cert);
+            writeTlsLocation();
             // after registered successfully
             fs.writeFileSync(secretPath, rootkey);
         }
