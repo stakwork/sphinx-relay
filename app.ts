@@ -79,7 +79,6 @@ function setupApp() {
 		app.get('/app', (req, res) => res.send('INDEX'))
 		if (config.connect_ui) {
 			app.get('/connect', connect.connect)
-			app.get('/greenlight', connect.greenlight)
 			app.post('/gen_channel', connect.genChannel)
 			app.post('/connect_peer', connect.connectPeer)
 		}

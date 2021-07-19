@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.greenlight = exports.connect = exports.genChannel = exports.connectPeer = exports.getQR = void 0;
+exports.connect = exports.genChannel = exports.connectPeer = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
 const Lightning = require("../grpc/lightning");
@@ -19,6 +19,7 @@ const queries_1 = require("../controllers/queries");
 const res_1 = require("./res");
 const fs = require('fs');
 const config = config_1.loadConfig();
+const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
 function getQR() {
     return __awaiter(this, void 0, void 0, function* () {
         let theIP;
@@ -130,52 +131,51 @@ function genChannel(req, res) {
 exports.genChannel = genChannel;
 function connect(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        fs.readFile("public/index.html", function (error, pgResp) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (error) {
-                    res.writeHead(404);
-                    res.write('Contents you are looking are Not Found');
-                }
-                else {
-                    const newScript = yield makeVarScript();
-                    const hub_pubkey = yield queries_1.get_hub_pubkey();
-                    const htmlString = Buffer.from(pgResp).toString();
-                    const qr = yield getQR();
-                    const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
-                    const rep2 = rep.replace("<script>var hi='hello';</script>", newScript);
-                    const rep3 = rep2.replace(/SPHINX_HUB_PUBKEY/g, hub_pubkey);
-                    const final = Buffer.from(rep3, 'utf8');
-                    res.writeHead(200, { 'Content-Type': 'text/html' });
-                    res.write(final);
-                }
-                res.end();
+        if (IS_GREENLIGHT) {
+            fs.readFile("public/greenlight/index.html", function (error, pgResp) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (error) {
+                        res.writeHead(404);
+                        res.write('Contents you are looking are Not Found');
+                    }
+                    else {
+                        const htmlString = Buffer.from(pgResp).toString();
+                        const qr = yield getQR();
+                        const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
+                        const final = Buffer.from(rep, 'utf8');
+                        res.writeHead(200, { 'Content-Type': 'text/html' });
+                        res.write(final);
+                    }
+                    res.end();
+                });
             });
-        });
+        }
+        else {
+            fs.readFile("public/index.html", function (error, pgResp) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (error) {
+                        res.writeHead(404);
+                        res.write('Contents you are looking are Not Found');
+                    }
+                    else {
+                        const newScript = yield makeVarScript();
+                        const hub_pubkey = yield queries_1.get_hub_pubkey();
+                        const htmlString = Buffer.from(pgResp).toString();
+                        const qr = yield getQR();
+                        const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
+                        const rep2 = rep.replace("<script>var hi='hello';</script>", newScript);
+                        const rep3 = rep2.replace(/SPHINX_HUB_PUBKEY/g, hub_pubkey);
+                        const final = Buffer.from(rep3, 'utf8');
+                        res.writeHead(200, { 'Content-Type': 'text/html' });
+                        res.write(final);
+                    }
+                    res.end();
+                });
+            });
+        }
     });
 }
 exports.connect = connect;
-function greenlight(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        fs.readFile("public/greenlight/index.html", function (error, pgResp) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (error) {
-                    res.writeHead(404);
-                    res.write('Contents you are looking are Not Found');
-                }
-                else {
-                    const htmlString = Buffer.from(pgResp).toString();
-                    const qr = yield getQR();
-                    const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
-                    const final = Buffer.from(rep, 'utf8');
-                    res.writeHead(200, { 'Content-Type': 'text/html' });
-                    res.write(final);
-                }
-                res.end();
-            });
-        });
-    });
-}
-exports.greenlight = greenlight;
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {
