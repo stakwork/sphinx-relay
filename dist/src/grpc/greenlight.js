@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.loadScheduler = exports.initGreenlight = void 0;
+exports.streamHsmRequests = exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.loadScheduler = exports.initGreenlight = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const libhsmd = require("libhsmd");
@@ -22,7 +22,7 @@ const config = config_1.loadConfig();
 function initGreenlight() {
     return __awaiter(this, void 0, void 0, function* () {
         yield startGreenlightInit();
-        yield streamHsmRequests();
+        // await streamHsmRequests()
     });
 }
 exports.initGreenlight = initGreenlight;
@@ -279,4 +279,5 @@ function streamHsmRequests() {
         }
     });
 }
+exports.streamHsmRequests = streamHsmRequests;
 //# sourceMappingURL=greenlight.js.map

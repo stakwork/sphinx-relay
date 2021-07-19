@@ -11,7 +11,7 @@ const config = loadConfig()
 
 export async function initGreenlight() {
   await startGreenlightInit()
-  await streamHsmRequests()
+  // await streamHsmRequests()
 }
 
 var schedulerClient = <any>null;
@@ -259,7 +259,7 @@ interface HsmResponse {
   request_id: number
 	raw: ByteBuffer
 }
-async function streamHsmRequests() {
+export async function streamHsmRequests() {
   const capabilities_bitset = 1087 // 1 + 2 + 4 + 8 + 16 + 32 + 1024
   try {
     const lightning = await loadLightning(true) // try proxy
