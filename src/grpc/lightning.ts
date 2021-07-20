@@ -12,7 +12,7 @@ import {logging} from '../utils/logger'
 import * as interfaces from './interfaces'
 import * as zbase32 from "../utils/zbase32";
 import * as secp256k1 from 'secp256k1'
-import * as libhsmd from 'libhsmd'
+import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight';
 
 // var protoLoader = require('@grpc/proto-loader')

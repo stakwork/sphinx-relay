@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.streamHsmRequests = exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.loadScheduler = exports.initGreenlight = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
-const libhsmd = require("libhsmd");
+const libhsmd_1 = require("./libhsmd");
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
@@ -63,7 +63,7 @@ function startGreenlightInit() {
             else {
                 rootkey = fs.readFileSync(secretPath).toString();
             }
-            const msgHex = libhsmd.Init(rootkey, "bitcoin");
+            const msgHex = libhsmd_1.default.Init(rootkey, "bitcoin");
             const msg = Buffer.from(msgHex, "hex");
             // console.log("INIT MSG LENGTH", msg.length)
             const node_id = msg.subarray(2, 35);
@@ -182,7 +182,7 @@ function get_challenge(node_id) {
 exports.get_challenge = get_challenge;
 function sign_challenge(challenge) {
     const pld = interfaces.greenlightSignMessagePayload(Buffer.from(challenge, 'hex'));
-    const sig = libhsmd.Handle(1024, 0, null, pld);
+    const sig = libhsmd_1.default.Handle(1024, 0, null, pld);
     const sigBuf = Buffer.from(sig, 'hex');
     const sigBytes = sigBuf.subarray(2, 66);
     return sigBytes.toString('hex');
@@ -252,10 +252,10 @@ function streamHsmRequests() {
                         if (response.context) {
                             const dbid = parseInt(response.context.dbid);
                             const peer = response.context.node_id.toString('hex');
-                            sig = libhsmd.Handle(capabilities_bitset, peer, dbid, response.raw.toString('hex'));
+                            sig = libhsmd_1.default.Handle(capabilities_bitset, peer, dbid, response.raw.toString('hex'));
                         }
                         else {
-                            sig = libhsmd.Handle(capabilities_bitset, 0, null, response.raw.toString('hex'));
+                            sig = libhsmd_1.default.Handle(capabilities_bitset, 0, null, response.raw.toString('hex'));
                         }
                         lightning.respondHsmRequest({
                             request_id: response.request_id,

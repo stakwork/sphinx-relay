@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as grpc from 'grpc'
-import * as libhsmd from 'libhsmd'
+import libhsmd from './libhsmd'
 import { loadConfig } from '../utils/config'
 import * as ByteBuffer from 'bytebuffer'
 import * as crypto from 'crypto'

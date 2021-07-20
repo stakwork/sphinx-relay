@@ -24,7 +24,7 @@ const logger_1 = require("../utils/logger");
 const interfaces = require("./interfaces");
 const zbase32 = require("../utils/zbase32");
 const secp256k1 = require("secp256k1");
-const libhsmd = require("libhsmd");
+const libhsmd_1 = require("./libhsmd");
 const greenlight_1 = require("./greenlight");
 // var protoLoader = require('@grpc/proto-loader')
 const config = config_1.loadConfig();
@@ -585,7 +585,7 @@ function signBuffer(msg, ownerPubkey) {
         try {
             if (IS_GREENLIGHT) {
                 const pld = interfaces.greenlightSignMessagePayload(msg);
-                const sig = libhsmd.Handle(1024, 0, null, pld);
+                const sig = libhsmd_1.default.Handle(1024, 0, null, pld);
                 const sigBuf = Buffer.from(sig, 'hex');
                 const sigBytes = sigBuf.subarray(2, 66);
                 const recidBytes = sigBuf.subarray(66, 67);
