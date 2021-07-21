@@ -9,15 +9,33 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env]
 const ENV = process.env
 
+type LightningProvider = 'LND' | 'GREENLIGHT'
+
+const DEFAULT_HSM_SECRET_PATH = './creds/hsm_secret'
+const DEFAULT_TLS_LOCATION = "./creds/ca.pem"
+const DEFAULT_TLS_KEY_LOCATION = "./creds/device-key.pem"
+const DEFAULT_TLS_CHAIN_LOCAION = './creds/device.crt'
+const DEFAULT_SCHEDULER_TLS_LOCATION = './creds/scheduler_creds/ca.pem'
+const DEFAULT_SCHEDULER_KEY_LOCATION = './creds/scheduler_creds/device-key.pem'
+const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt'
+
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
+  const provider: LightningProvider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND'
   return {
+    lightning_provider: provider,
     logging: logg || 'LIGHTNING,TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY',
     senza_url: ENV.SENZA_URL || config.senza_url,
     macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
     router_macaroon_location: ENV.ROUTER_MACAROON_LOCATION || config.router_macaroon_location,
     signer_macaroon_location: ENV.SIGNER_MACAROON_LOCATION || config.signer_macaroon_location,
-    tls_location: ENV.TLS_LOCATION || config.tls_location,
+    tls_location: ENV.TLS_LOCATION || config.tls_location || DEFAULT_TLS_LOCATION,
+    tls_key_location: ENV.TLS_KEY_LOCATION || config.tls_key_location || DEFAULT_TLS_KEY_LOCATION,
+    tls_chain_location: ENV.TLS_CHAIN_LOCATION || config.tls_chain_location || DEFAULT_TLS_CHAIN_LOCAION,
+    scheduler_tls_location: ENV.SCHEDULER_TLS_LOCATION || config.scheduler_tls_location || DEFAULT_SCHEDULER_TLS_LOCATION,
+    scheduler_key_location: ENV.SCHEDULER_KEY_LOCATION || config.scheduler_key_location || DEFAULT_SCHEDULER_KEY_LOCATION,
+    scheduler_chain_location: ENV.SCHEDULER_CHAIN_LOCATION || config.scheduler_chain_location || DEFAULT_SCHEDULER_CHAIN_LOCATION,
+    hsm_secret_path: ENV.HSM_SECRET_PATH || config.hsm_secret_path || DEFAULT_HSM_SECRET_PATH,
     lnd_log_location: ENV.LND_LOG_LOCATION || config.lnd_log_location,
     node_ip: ENV.NODE_IP || config.node_ip,
     lnd_ip: ENV.LND_IP || config.lnd_ip,

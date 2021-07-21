@@ -1,9 +1,5 @@
-import {
-  loadLightning,
-  queryRoute,
-  channelBalance,
-  listChannels,
-} from "../utils/lightning";
+
+import * as Lightning from "../grpc/lightning";
 import { success, failure } from "../utils/res";
 import * as readLastLines from "read-last-lines";
 import { nodeinfo } from "../utils/nodeinfo";
@@ -38,7 +34,7 @@ export const checkRoute = async (req, res) => {
   const owner = req.owner;
   try {
     const amt = parseInt(amount) || constants.min_sat_amount;
-    const r = await queryRoute(pubkey, amt, route_hint || "", owner.publicKey);
+    const r = await Lightning.queryRoute(pubkey, amt, route_hint || "", owner.publicKey);
     success(res, r);
   } catch (e) {
     failure(res, e);
@@ -79,7 +75,7 @@ export const checkRouteByContactOrChat = async (req, res) => {
   const owner = req.owner;
   try {
     const amt = parseInt(amount) || constants.min_sat_amount;
-    const r = await queryRoute(pubkey, amt, routeHint || "", owner.publicKey);
+    const r = await Lightning.queryRoute(pubkey, amt, routeHint || "", owner.publicKey);
     success(res, r);
   } catch (e) {
     failure(res, e);
@@ -113,43 +109,32 @@ export async function getLogsSince(req, res) {
   else failure(res, err);
 }
 
-export const getInfo = async (req, res) => {
+export const getLightningInfo = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
 
-  const lightning = await loadLightning(true, req.owner.publicKey);
-  var request = {};
-  lightning.getInfo(request, function (err, response) {
-    res.status(200);
-    if (err == null) {
-      res.json({ success: true, response });
-    } else {
-      res.json({ success: false });
-    }
-    res.end();
-  });
+  res.status(200);
+  try {
+    const response = await Lightning.getInfo()
+    res.json({ success: true, response });
+  } catch(e) {
+    res.json({ success: false });
+  }
+  res.end();
 };
 
 export const getChannels = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
 
-  const lightning = await loadLightning(true, req.owner.publicKey); // try proxy
-  var request = {};
-  lightning.listChannels(request, function (err, response) {
-    res.status(200);
-    if (err == null) {
-      res.json({ success: true, response });
-    } else {
-      res.json({ success: false });
-    }
-    res.end();
-  });
+  res.status(200);
+  try {
+    const response = await Lightning.listChannels({})
+    res.json({ success: true, response });
+  } catch(err) {
+    res.json({ success: false });
+  }
+  res.end();
 };
 
-interface BalanceRes {
-  pending_open_balance: number;
-  balance: number;
-  reserve: number;
-}
 export const getBalance = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
   const tenant: number = req.owner.id;
@@ -161,24 +146,11 @@ export const getBalance = async (req, res) => {
 
   res.status(200);
   try {
-    const response = await channelBalance(owner.publicKey);
-    // console.log("=> balance response", response)
-    const channelList = await listChannels({}, owner.publicKey);
-    const { channels } = channelList;
-    // console.log("=> balance channels", channels)
-    const reserve = channels.reduce(
-      (a, chan) => a + parseInt(chan.local_chan_reserve_sat),
-      0
-    );
+    const blcs = await Lightning.complexBalances(owner.publicKey);
     res.json({
       success: true,
-      response: <BalanceRes>{
-        reserve,
-        full_balance: Math.max(0, parseInt(response.balance)),
-        balance: Math.max(0, parseInt(response.balance) - reserve),
-        pending_open_balance: parseInt(response.pending_open_balance),
-      },
-    });
+      response: blcs
+    })
   } catch (e) {
     console.log("ERROR getBalance", e);
     res.json({ success: false });
@@ -188,35 +160,32 @@ export const getBalance = async (req, res) => {
 
 export const getLocalRemoteBalance = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
-  const lightning = await loadLightning(true, req.owner.publicKey); // try proxy
-  lightning.listChannels({}, (err, channelList) => {
+  res.status(200);
+  try {
+    const channelList = await Lightning.listChannels({})
     const { channels } = channelList;
 
-    const localBalances = channels.map((c) => c.local_balance);
-    const remoteBalances = channels.map((c) => c.remote_balance);
+    const localBalances: number[] = channels.map((c) => parseInt(c.local_balance));
+    const remoteBalances: number[] = channels.map((c) => parseInt(c.remote_balance));
     const totalLocalBalance = localBalances.reduce(
-      (a, b) => parseInt(a) + parseInt(b),
+      (a, b) => a + b,
       0
     );
     const totalRemoteBalance = remoteBalances.reduce(
-      (a, b) => parseInt(a) + parseInt(b),
+      (a, b) => a + b,
       0
     );
-
-    res.status(200);
-    if (err == null) {
-      res.json({
-        success: true,
-        response: {
-          local_balance: totalLocalBalance,
-          remote_balance: totalRemoteBalance,
-        },
-      });
-    } else {
-      res.json({ success: false });
-    }
-    res.end();
-  });
+    res.json({
+      success: true,
+      response: {
+        local_balance: totalLocalBalance,
+        remote_balance: totalRemoteBalance,
+      },
+    });
+  } catch(err) {
+    res.json({ success: false });
+  }
+  res.end();
 };
 
 export const getNodeInfo = async (req, res) => {

@@ -40,7 +40,7 @@ function decrypt(privateKey, enc){
     })
     return finalDec
   } catch(e) {
-    console.log('RSA decrypt ERROR',enc)
+    console.log('RSA decrypt ERROR',e)
     return ''
   }
 }

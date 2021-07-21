@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadPublicPic = exports.deletePersonProfile = exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.getContactsForChat = exports.getContacts = void 0;
+exports.uploadPublicPic = exports.deletePersonProfile = exports.createPeopleProfile = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -144,6 +144,34 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
     res_1.success(res, { contacts: finalContacts });
 });
 exports.getContactsForChat = getContactsForChat;
+function generateOwnerWithExternalSigner(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!proxy_1.isProxy()) {
+            return res_1.failure(res, 'only proxy');
+        }
+        const { pubkey, sig } = req.body;
+        const where = { isOwner: true, publicKey: pubkey };
+        const owner = yield models_1.models.Contact.findOne({ where });
+        if (owner) {
+            return res_1.failure(res, 'owner already exists');
+        }
+        const generated = yield proxy_1.generateNewExternalUser(pubkey, sig);
+        if (!generated) {
+            return res_1.failure(res, 'generate failed');
+        }
+        const contact = {
+            publicKey: generated.publicKey,
+            routeHint: generated.routeHint,
+            isOwner: true,
+            authToken: null
+        };
+        const created = yield models_1.models.Contact.create(contact);
+        // set tenant to self!
+        created.update({ tenant: created.id });
+        res_1.success(res, { id: (created && created.id) || 0 });
+    });
+}
+exports.generateOwnerWithExternalSigner = generateOwnerWithExternalSigner;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("=> generateToken called", {
         body: req.body,
@@ -529,6 +557,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.getLatestContacts = getLatestContacts;
 // accessed from people.sphinx.chat website
+// U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)

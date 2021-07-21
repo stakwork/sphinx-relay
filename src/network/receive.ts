@@ -1,8 +1,8 @@
-import * as lndService from "../grpc";
-import * as lightning from "../utils/lightning";
+import * as lndService from "../grpc/subscribe";
+import * as Lightning from "../grpc/lightning";
+import * as Greenlight from '../grpc/greenlight'
 import { ACTIONS } from "../controllers";
 import * as tribes from "../utils/tribes";
-import { SPHINX_CUSTOM_RECORD_KEY, decodePayReq } from "../utils/lightning";
 import * as signer from "../utils/signer";
 import { models } from "../models";
 import { sendMessage } from "./send";
@@ -19,7 +19,10 @@ import { sendNotification } from "../hub";
 import constants from "../constants";
 import * as jsonUtils from "../utils/json";
 import { isProxy } from "../utils/proxy";
+import * as bolt11 from '@boltz/bolt11'
+import {loadConfig} from '../utils/config'
 
+const config = loadConfig()
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -369,9 +372,13 @@ async function forwardMessageToTribe(
 
 export async function initGrpcSubscriptions() {
   try {
-    await lightning.getInfo(true); // try proxy
+    if(config.lightning_provider==='GREENLIGHT') {
+      await Greenlight.initGreenlight()
+    }
+    await Lightning.getInfo(true); // try proxy
     await lndService.subscribeInvoices(parseKeysendInvoice);
   } catch (e) {
+    console.log(e)
     throw e;
   }
 }
@@ -420,7 +427,7 @@ async function parseAndVerifyPayload(data) {
         v = await signer.verifyAscii(msg, sig, payload.sender.pub_key);
       }
       if (sig.length === 104) {
-        v = await lightning.verifyAscii(msg, sig);
+        v = await Lightning.verifyAscii(msg, sig);
       }
       if (v && v.valid) {
         return payload;
@@ -481,11 +488,10 @@ export async function parseKeysendInvoice(i) {
   let owner;
   if (isProxy()) {
     try {
-      const invoice: any = await decodePayReq(i.payment_request);
-      if (!invoice) return console.log("couldn't decode pay req");
-      if (!invoice.destination)
+      const invoice = bolt11.decode(i.payment_request)
+      if (!invoice.payeeNodeKey)
         return console.log("cant get dest from pay req");
-      dest = invoice.destination;
+      dest = invoice.payeeNodeKey;
       owner = await models.Contact.findOne({
         where: { isOwner: true, publicKey: dest },
       });
@@ -502,7 +508,7 @@ export async function parseKeysendInvoice(i) {
     return;
   }
 
-  const buf = recs && recs[SPHINX_CUSTOM_RECORD_KEY];
+  const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];
   const data = buf && buf.toString();
   const value = i && i.value && parseInt(i.value);
 

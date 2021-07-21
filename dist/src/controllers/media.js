@@ -16,7 +16,7 @@ const jsonUtils = require("../utils/json");
 const resUtils = require("../utils/res");
 const helpers = require("../helpers");
 const hub_1 = require("../hub");
-const lightning_1 = require("../utils/lightning");
+const Lightning = require("../grpc/lightning");
 const rp = require("request-promise");
 const ldat_1 = require("../utils/ldat");
 const meme = require("../utils/meme");
@@ -496,7 +496,7 @@ function signer(req, res) {
         if (!req.params.challenge)
             return resUtils.failure(res, "no challenge");
         try {
-            const sig = yield lightning_1.signBuffer(Buffer.from(req.params.challenge, "base64"), req.owner.publicKey);
+            const sig = yield Lightning.signBuffer(Buffer.from(req.params.challenge, "base64"), req.owner.publicKey);
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
             resUtils.success(res, {
@@ -512,7 +512,7 @@ exports.signer = signer;
 function verifier(msg, sig) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const res = yield lightning_1.verifyMessage(msg, sig);
+            const res = yield Lightning.verifyMessage(msg, sig);
             return res;
         }
         catch (e) {

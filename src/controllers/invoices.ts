@@ -1,8 +1,9 @@
 import { models } from "../models";
-import * as LND from "../utils/lightning";
+import * as Lightning from "../grpc/lightning";
+import * as interfaces from "../grpc/interfaces";
 import * as socket from "../utils/socket";
 import * as jsonUtils from "../utils/json";
-import * as decodeUtils from "../utils/decode";
+import {decodePaymentRequest} from "../utils/decode";
 import * as helpers from "../helpers";
 import { sendNotification } from "../hub";
 import { success, failure } from "../utils/res";
@@ -10,6 +11,7 @@ import { sendConfirmation } from "./confirmations";
 import * as network from "../network";
 import * as short from "short-uuid";
 import constants from "../constants";
+import * as bolt11 from '@boltz/bolt11'
 
 function stripLightningPrefix(s) {
   if (s.toLowerCase().startsWith("lightning:")) return s.substring(10);
@@ -32,7 +34,7 @@ export const payInvoice = async (req, res) => {
   console.log(`[pay invoice] ${payment_request}`);
 
   try {
-    const response = await LND.sendPayment(
+    const response = await Lightning.sendPayment(
       payment_request,
       req.owner.publicKey
     );
@@ -118,11 +120,10 @@ export const cancelInvoice = (req, res) => {
 export const createInvoice = async (req, res) => {
   if(!req.owner) return failure(res, 'no owner')
   const tenant:number = req.owner.id
-  const lightning = await LND.loadLightning(true, req.owner.publicKey); // try proxy
 
   const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
 
-  var request: { [k: string]: any } = {
+  var request: interfaces.AddInvoiceRequest = {
     value: amount,
     memo: remote_memo || memo,
   };
@@ -143,93 +144,75 @@ export const createInvoice = async (req, res) => {
     res.json({ err: "no amount specified" });
     res.end();
   } else {
-    lightning.addInvoice(request, async function (err, response) {
-      console.log({ err, response });
+    try {
+      const response = await Lightning.addInvoice(request, req.owner.publicKey)
+      const { payment_request } = response;
 
-      if (err == null) {
-        const { payment_request } = response;
-
-        if (!contact_id && !chat_id) {
-          // if no contact
-          success(res, {
-            invoice: payment_request,
-          });
-          return; // end here
-        }
-
-        const lightning2 = await LND.loadLightning(false);
-        lightning2.decodePayReq(
-          { pay_req: payment_request },
-          async (error, invoice) => {
-            if (res) {
-              console.log("decoded pay req", { invoice });
-
-              const owner = req.owner
-
-              const chat = await helpers.findOrCreateChat({
-                chat_id,
-                owner_id: owner.id,
-                recipient_id: contact_id,
-              });
-		          if(!chat) return failure(res, 'counldnt findOrCreateChat')
-
-              let timestamp = parseInt(invoice.timestamp + "000");
-              let expiry = parseInt(invoice.expiry + "000");
-
-              if (error) {
-                res.status(200);
-                res.json({ success: false, error });
-                res.end();
-              } else {
-                const message = await models.Message.create({
-                  chatId: chat.id,
-                  uuid: short.generate(),
-                  sender: owner.id,
-                  type: constants.message_types.invoice,
-                  amount: parseInt(invoice.num_satoshis),
-                  amountMsat: parseInt(invoice.num_satoshis) * 1000,
-                  paymentHash: invoice.payment_hash,
-                  paymentRequest: payment_request,
-                  date: new Date(timestamp),
-                  expirationDate: new Date(timestamp + expiry),
-                  messageContent: memo,
-                  remoteMessageContent: remote_memo,
-                  status: constants.statuses.pending,
-                  createdAt: new Date(timestamp),
-                  updatedAt: new Date(timestamp),
-                  tenant,
-                });
-                success(res, jsonUtils.messageToJson(message, chat));
-
-                network.sendMessage({
-                  chat: chat,
-                  sender: owner,
-                  type: constants.message_types.invoice,
-                  message: {
-                    id: message.id,
-                    invoice: message.paymentRequest,
-                  },
-                });
-              }
-            } else {
-              console.log("error decoding pay req", { err, res });
-              res.status(500);
-              res.json({ err, res });
-              res.end();
-            }
-          }
-        );
-      } else {
-        console.log({ err, response });
+      if (!contact_id && !chat_id) {
+        // if no contact
+        return success(res, {
+          invoice: payment_request,
+        });
       }
-    });
+
+      const invoice = bolt11.decode(payment_request)
+      if (invoice) {
+        const paymentHash = invoice.tags.find(t=>t.tagName==='payment_hash')?.data || ''
+
+        console.log("decoded pay req", { invoice });
+
+        const owner = req.owner
+
+        const chat = await helpers.findOrCreateChat({
+          chat_id,
+          owner_id: owner.id,
+          recipient_id: contact_id,
+        });
+        if(!chat) return failure(res, 'counldnt findOrCreateChat')
+
+        let timestamp = parseInt(invoice.timestamp + "000");
+        let expiry = parseInt(invoice.timeExpireDate + "000");
+
+        const message = await models.Message.create({
+          chatId: chat.id,
+          uuid: short.generate(),
+          sender: owner.id,
+          type: constants.message_types.invoice,
+          amount: invoice.satoshis || 0,
+          amountMsat: parseInt(invoice.millisatoshis||'0') * 1000,
+          paymentHash: paymentHash,
+          paymentRequest: payment_request,
+          date: new Date(timestamp),
+          expirationDate: new Date(expiry),
+          messageContent: memo,
+          remoteMessageContent: remote_memo,
+          status: constants.statuses.pending,
+          createdAt: new Date(timestamp),
+          updatedAt: new Date(timestamp),
+          tenant,
+        });
+        success(res, jsonUtils.messageToJson(message, chat));
+
+        network.sendMessage({
+          chat: chat,
+          sender: owner,
+          type: constants.message_types.invoice,
+          message: {
+            id: message.id,
+            invoice: message.paymentRequest,
+          },
+        });
+      }
+    } catch(err) {
+      console.log('addInvoice error:', err)
+    }
   }
 };
 
 export const listInvoices = async (req, res) => {
   if (!req.owner) return failure(res, "no owner");
 
-  const lightning = await LND.loadLightning();
+  const lightning = await Lightning.loadLightning();
 
   lightning.listInvoices({}, (err, response) => {
     console.log({ err, response });
@@ -317,39 +300,3 @@ export const receiveInvoice = async (payload) => {
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 };
 
-// lnd invoice stuff
-
-function decodePaymentRequest(paymentRequest) {
-  var decodedPaymentRequest: any = decodeUtils.decode(paymentRequest);
-  var expirationSeconds = 3600;
-  var paymentHash = "";
-  var memo = "";
-
-  for (var i = 0; i < decodedPaymentRequest.data.tags.length; i++) {
-    let tag = decodedPaymentRequest.data.tags[i];
-    if (tag) {
-      if (tag.description == "payment_hash") {
-        paymentHash = tag.value;
-      } else if (tag.description == "description") {
-        memo = tag.value;
-      } else if (tag.description == "expiry") {
-        expirationSeconds = tag.value;
-      }
-    }
-  }
-
-  expirationSeconds = parseInt(expirationSeconds.toString() + "000");
-  let invoiceDate = parseInt(
-    decodedPaymentRequest.data.time_stamp.toString() + "000"
-  );
-
-  let amount = decodedPaymentRequest["human_readable_part"]["amount"];
-  var msat = 0;
-  var sat = 0;
-  if (Number.isInteger(amount)) {
-    msat = amount;
-    sat = amount / 1000;
-  }
-
-  return { sat, msat, paymentHash, invoiceDate, expirationSeconds, memo };
-}

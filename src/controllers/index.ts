@@ -66,6 +66,7 @@ export async function set(app) {
   app.post("/profile", contacts.createPeopleProfile)
   app.delete("/profile", contacts.deletePersonProfile)
   app.post("/public_pic", contacts.uploadPublicPic)
+  app.post("/generate_external", contacts.generateOwnerWithExternalSigner)
 
   app.get("/msgs", messages.getMsgs);
   app.get("/allmessages", messages.getAllMessages);
@@ -109,7 +110,7 @@ export async function set(app) {
   app.get("/channels", details.getChannels);
   app.get("/balance", details.getBalance);
   app.get("/balance/all", details.getLocalRemoteBalance);
-  app.get("/getinfo", details.getInfo);
+  app.get("/getinfo", details.getLightningInfo);
   app.get("/logs", details.getLogsSince);
   app.get("/info", details.getNodeInfo);
   app.get("/route", details.checkRoute);

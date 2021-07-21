@@ -5,7 +5,7 @@ import * as socket from "./utils/socket";
 import * as jsonUtils from "./utils/json";
 import * as helpers from "./helpers";
 import { nodeinfo, proxynodeinfo } from "./utils/nodeinfo";
-import * as LND from "./utils/lightning";
+import * as Lightning from "./grpc/lightning";
 import constants from "./constants";
 import { loadConfig } from "./utils/config";
 import * as https from "https";
@@ -258,7 +258,7 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
 
 async function payInviteInvoice(invoice, pubkey: string, onSuccess, onFailure) {
   try {
-    const res = LND.sendPayment(invoice, pubkey);
+    const res = Lightning.sendPayment(invoice, pubkey);
     onSuccess(res);
   } catch (e) {
     onFailure(e);

@@ -1,0 +1,33 @@
+
+FROM node:15.1-alpine
+
+RUN apk add --no-cache python make gcc g++ libmcrypt-dev
+# RUN apk update && apk add python make g++
+# gcc also?
+
+ENV NODE_ENV development
+ENV NODE_SCHEME http
+
+WORKDIR /relay/
+
+# COPY package.json ./
+
+COPY . .
+
+ENV PATH /relay/node_modules/.bin:$PATH
+
+# RUN npm install -g node-gyp
+
+RUN npm i -g @mapbox/node-pre-gyp
+RUN npm update --force
+RUN npm install sqlite3 --build-from-source
+RUN npm install bcrypt
+RUN npm install
+# If you are building your code for production
+# RUN npm ci --only=production
+
+# Bundle app source
+COPY . .
+
+EXPOSE 80
+ENTRYPOINT [ "npm", "run", "prod" ]

@@ -22,9 +22,10 @@ const connect = require("./src/utils/connect");
 const socket = require("./src/utils/socket");
 const network = require("./src/network");
 const auth_1 = require("./src/auth");
-const grpc = require("./src/grpc");
+const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
+// import * as lightning from './src/grpc/lightning'
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
@@ -48,8 +49,8 @@ start();
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setupApp(); // setup routes
-        grpc.reconnectToLND(Math.random(), function () {
-            console.log(">> FINISH SETUP");
+        grpc.reconnectToLightning(Math.random(), function () {
+            console.log(">>> FINISH SETUP");
             finishSetup();
         }); // recursive
     });
@@ -86,6 +87,7 @@ function setupApp() {
         if (config.connect_ui) {
             app.get('/connect', connect.connect);
             app.post('/gen_channel', connect.genChannel);
+            app.post('/connect_peer', connect.connectPeer);
         }
         let server;
         if ('ssl' in config && config.ssl.enabled) {

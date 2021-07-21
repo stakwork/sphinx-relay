@@ -15,7 +15,7 @@ const models_1 = require("../models");
 const network = require("../network");
 const constants_1 = require("../constants");
 const short = require("short-uuid");
-const lightning = require("../utils/lightning");
+const lightning = require("../grpc/lightning");
 const wallet_1 = require("../utils/wallet");
 const jsonUtils = require("../utils/json");
 const sequelize_1 = require("sequelize");
@@ -204,9 +204,9 @@ function checkChannelsAndKeysend(rec) {
                     type: constants_1.default.message_types.keysend,
                 };
                 const extraAmount = 2000;
-                const localReserve = parseInt(chan.local_chan_reserve_sat || 0);
-                const remoteReserve = parseInt(chan.remote_chan_reserve_sat || 0);
-                const commitFee = parseInt(chan.commit_fee || 0);
+                const localReserve = parseInt(chan.local_chan_reserve_sat) || 0;
+                const remoteReserve = parseInt(chan.remote_chan_reserve_sat) || 0;
+                const commitFee = parseInt(chan.commit_fee) || 0;
                 const amount = rec.amount - localReserve - remoteReserve - commitFee - extraAmount;
                 console.log("[WATCH] amt to final keysend", amount);
                 helpers.performKeysendMessage({

@@ -73,7 +73,8 @@ CREATE TABLE bots (
   updated timestamptz,
   member_count BIGINT,
   unlisted boolean,
-  deleted boolean
+  deleted boolean,
+  owner_route_hint TEXT
 );
 
 ALTER TABLE bots ADD COLUMN tsv tsvector;

@@ -3,6 +3,8 @@
     "senza_url": "http://localhost:3000/api/v2",
     "node_ip": "127.0.0.1",
     "lnd_ip": "127.0.0.1",
+    "macaroon_location": "/Users/evanfeenstra/.polar/networks/1/volumes/lnd/alice/data/chain/bitcoin/regtest/admin.macaroon",
+    "tls_location": "/Users/evanfeenstra/.polar/networks/1/volumes/lnd/alice/tls.cert",
     "lnd_port": "10001",
     "node_http_protocol": "http",
     "node_http_port": "3001",

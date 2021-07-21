@@ -3,7 +3,7 @@ import { models } from "../models";
 import * as network from "../network";
 import constants from "../constants";
 import * as short from "short-uuid";
-import * as lightning from "../utils/lightning";
+import * as lightning from "../grpc/lightning";
 import { listUnspent, UTXO } from "../utils/wallet";
 import * as jsonUtils from "../utils/json";
 import { Op } from "sequelize";
@@ -201,9 +201,9 @@ async function checkChannelsAndKeysend(rec: Accounting) {
         type: constants.message_types.keysend,
       };
       const extraAmount = 2000;
-      const localReserve = parseInt(chan.local_chan_reserve_sat || 0);
-      const remoteReserve = parseInt(chan.remote_chan_reserve_sat || 0);
-      const commitFee = parseInt(chan.commit_fee || 0);
+      const localReserve = parseInt(chan.local_chan_reserve_sat) || 0;
+      const remoteReserve = parseInt(chan.remote_chan_reserve_sat) || 0;
+      const commitFee = parseInt(chan.commit_fee) || 0;
       const amount =
         rec.amount - localReserve - remoteReserve - commitFee - extraAmount;
       console.log("[WATCH] amt to final keysend", amount);

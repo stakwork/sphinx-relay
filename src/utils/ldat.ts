@@ -1,5 +1,5 @@
 import * as zbase32 from './zbase32'
-import { signBuffer } from './lightning'
+import * as Lightning from '../grpc/lightning'
 import {loadConfig} from './config'
 
 const config = loadConfig()
@@ -28,7 +28,7 @@ async function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey }) {
 
     const ldat = startLDAT(theHost, muid, pubkey64, exp, meta)
     if (pubkey != '') {
-        const sig = await signBuffer(ldat.bytes, ownerPubkey)
+        const sig = await Lightning.signBuffer(ldat.bytes, ownerPubkey)
         const sigBytes = zbase32.decode(sig)
         return ldat.terms + "." + urlBase64FromBytes(sigBytes)
     } else {

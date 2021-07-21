@@ -1,5 +1,5 @@
 import { models } from "../models";
-import * as LND from "../utils/lightning";
+import * as LND from "../grpc/lightning";
 import { personalizeMessage, decryptMessage } from "../utils/msg";
 import * as tribes from "../utils/tribes";
 import { tribeOwnerAutoConfirmation } from "../controllers/confirmations";

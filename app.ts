@@ -11,9 +11,10 @@ import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
 import { ownerMiddleware, unlocker } from './src/auth'
-import * as grpc from './src/grpc'
+import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import {loadConfig} from './src/utils/config'
+// import * as lightning from './src/grpc/lightning'
 
 const env = process.env.NODE_ENV || 'development';
 const config = loadConfig()
@@ -38,9 +39,10 @@ async function start() {
 start()
 
 async function mainSetup() {
+
 	await setupApp() // setup routes
-	grpc.reconnectToLND(Math.random(), function () {
-		console.log(">> FINISH SETUP")
+	grpc.reconnectToLightning(Math.random(), function () {
+		console.log(">>> FINISH SETUP")
 		finishSetup()
 	}) // recursive
 }
@@ -78,6 +80,7 @@ function setupApp() {
 		if (config.connect_ui) {
 			app.get('/connect', connect.connect)
 			app.post('/gen_channel', connect.genChannel)
+			app.post('/connect_peer', connect.connectPeer)
 		}
 
 		let server;
@@ -119,3 +122,4 @@ function setupApp() {
 
 	})
 }
+

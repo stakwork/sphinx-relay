@@ -1,6 +1,6 @@
 import * as moment from "moment";
 import * as zbase32 from "./zbase32";
-import * as LND from "./lightning";
+import * as LND from "../grpc/lightning";
 import * as mqtt from "mqtt";
 import { IClientSubscribeOptions } from "mqtt";
 import fetch from "node-fetch";

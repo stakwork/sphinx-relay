@@ -1,0 +1,7 @@
+{
+    "development": {
+      "dialect": "sqlite",
+      "storage": "/Users/Shared/sphinx-orange-greenlight.db"
+    }
+  }
+  

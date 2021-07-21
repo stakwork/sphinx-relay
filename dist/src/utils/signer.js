@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyAscii = exports.signAscii = exports.signBuffer = exports.signMessage = exports.loadSigner = void 0;
 const grpc = require("grpc");
-const lightning_1 = require("./lightning");
+const Lightning = require("../grpc/lightning");
 const ByteBuffer = require("bytebuffer");
 const config_1 = require("./config");
 // var protoLoader = require('@grpc/proto-loader')
@@ -24,7 +24,7 @@ const loadSigner = () => {
     }
     else {
         try {
-            var credentials = lightning_1.loadCredentials('signer.macaroon');
+            var credentials = Lightning.loadCredentials('signer.macaroon');
             var lnrpcDescriptor = grpc.load("proto/signer.proto");
             var signer = lnrpcDescriptor.signrpc;
             signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Sphinx Relay</title>
+  <link rel="icon" href="/static/sphinx-logo.png">
+  <style>
+    html {
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+    }
+
+    body {
+      background: #292a2d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #qr-wrap {
+      background: white;
+      width: 300px;
+      height: 300px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    canvas {
+      height: 280px;
+      width: 280px;
+    }
+
+    pre {
+      margin-top: 8px;
+      border-radius: 10px;
+      max-width: 250px;
+      padding: 18px 25px 0px 25px;
+      border: 1px solid tan;
+      background: white;
+      overflow: hidden;
+      overflow-wrap: break-word;
+      display: block;
+      white-space: pre-wrap;
+      color:darkslategray;
+    }
+
+    img {
+      height: 100px;
+      width: 100px;
+      margin-top: 20px;
+    }
+
+    p {
+      margin-top: 30px;
+      max-width: 300px;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      max-width:333px;
+    }
+
+    li {
+      margin-top: 8px;
+    }
+
+    input[type="checkbox"] {
+      pointer-events: none;
+    }
+
+    a{
+      color:#628aff;
+      font-weight: bold;
+    }
+    a:visited{
+      color:#628aff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <img src="/static/sphinx-logo.png" alt="logo" />
+
+  <div id="qr-wrap">
+    <canvas id="qr"></canvas>
+  </div>
+
+  <pre id="connection-string">
+    CONNECTION_STRING
+  </pre>
+
+  <div>Peer to Sphinx router node:</div>
+
+  <button id="peer">PEER NOW</button>
+
+  <script src="/static/js/qrious.js"></script>
+  <script>
+    (function () {
+      var qr = new QRious({
+        element: document.getElementById('qr'),
+        value: 'CONNECTION_STRING',
+        size: 300
+      });
+    })();
+  </script>
+<script>
+  function get(id){ return document.getElementById(id) }
+  const peer = get('peer')
+  peer.onclick = async function() {
+    console.log("PEER NOW")
+    const r = await fetch('/connect_peer', {
+      method: 'POST'
+    })
+    const j = await r.json()
+    console.log(j)
+  }
+</script>
+  
+</body>
+
+
+</html>

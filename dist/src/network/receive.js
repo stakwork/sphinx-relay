@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
-const lndService = require("../grpc");
-const lightning = require("../utils/lightning");
+const lndService = require("../grpc/subscribe");
+const Lightning = require("../grpc/lightning");
+const Greenlight = require("../grpc/greenlight");
 const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
-const lightning_1 = require("../utils/lightning");
 const signer = require("../utils/signer");
 const models_1 = require("../models");
 const send_1 = require("./send");
@@ -27,6 +27,9 @@ const hub_1 = require("../hub");
 const constants_1 = require("../constants");
 const jsonUtils = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
+const bolt11 = require("@boltz/bolt11");
+const config_1 = require("../utils/config");
+const config = config_1.loadConfig();
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -353,10 +356,14 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield lightning.getInfo(true); // try proxy
+            if (config.lightning_provider === 'GREENLIGHT') {
+                yield Greenlight.initGreenlight();
+            }
+            yield Lightning.getInfo(true); // try proxy
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
+            console.log(e);
             throw e;
         }
     });
@@ -412,7 +419,7 @@ function parseAndVerifyPayload(data) {
                     v = yield signer.verifyAscii(msg, sig, payload.sender.pub_key);
                 }
                 if (sig.length === 104) {
-                    v = yield lightning.verifyAscii(msg, sig);
+                    v = yield Lightning.verifyAscii(msg, sig);
                 }
                 if (v && v.valid) {
                     return payload;
@@ -475,12 +482,10 @@ function parseKeysendInvoice(i) {
         let owner;
         if (proxy_1.isProxy()) {
             try {
-                const invoice = yield lightning_1.decodePayReq(i.payment_request);
-                if (!invoice)
-                    return console.log("couldn't decode pay req");
-                if (!invoice.destination)
+                const invoice = bolt11.decode(i.payment_request);
+                if (!invoice.payeeNodeKey)
                     return console.log("cant get dest from pay req");
-                dest = invoice.destination;
+                dest = invoice.payeeNodeKey;
                 owner = yield models_1.models.Contact.findOne({
                     where: { isOwner: true, publicKey: dest },
                 });
@@ -498,7 +503,7 @@ function parseKeysendInvoice(i) {
             console.log("=> parseKeysendInvoice ERROR: cant find owner");
             return;
         }
-        const buf = recs && recs[lightning_1.SPHINX_CUSTOM_RECORD_KEY];
+        const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
         // "keysend" type is NOT encrypted

@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as grpc from 'grpc'
 import { loadConfig } from './config'
-import {loadCredentials} from './lightning'
+import * as Lightning from '../grpc/lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import {logging} from './logger'
@@ -82,6 +82,24 @@ export async function generateNewUser(rootpk: string){
   }
 }
 
+export async function generateNewExternalUser(pubkey: string, sig: string){
+  try {
+    const r = await fetch(adminURL + 'create_external', {
+      method:'POST',
+      body: JSON.stringify({pubkey, sig}),
+      headers:{'x-admin-token':config.proxy_admin_token}
+    })
+    const j = await r.json()
+    const rootpk = await getProxyRootPubkey()
+    return {
+      publicKey: j.pubkey,
+      routeHint: `${rootpk}:${j.channel}`,
+    }
+  } catch(e) {
+    console.log('=> could not gen new external user', e)
+  }
+}
+
 // "total" is in msats
 export async function getProxyTotalBalance(){
   try {
@@ -141,7 +159,7 @@ function getProxyRootPubkey(): Promise<string> {
       return
     }
     // normal client, to get pubkey of LND
-    var credentials = loadCredentials()
+    var credentials = Lightning.loadCredentials()
     var lnrpcDescriptor = grpc.load("proto/rpc.proto");
     var lnrpc: any = lnrpcDescriptor.lnrpc
     var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
@@ -159,7 +177,7 @@ function getProxyRootPubkey(): Promise<string> {
 function getProxyLNDBalance(): Promise<number> {
   return new Promise((resolve,reject)=>{
     // normal client, to get pubkey of LND
-    var credentials = loadCredentials()
+    var credentials = Lightning.loadCredentials()
     var lnrpcDescriptor = grpc.load("proto/rpc.proto");
     var lnrpc: any = lnrpcDescriptor.lnrpc
     var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);

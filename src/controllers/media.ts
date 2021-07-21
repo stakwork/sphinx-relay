@@ -4,7 +4,7 @@ import * as jsonUtils from "../utils/json";
 import * as resUtils from "../utils/res";
 import * as helpers from "../helpers";
 import { sendNotification } from "../hub";
-import { signBuffer, verifyMessage } from "../utils/lightning";
+import * as Lightning from "../grpc/lightning";
 import * as rp from "request-promise";
 import { parseLDAT, tokenFromTerms, urlBase64FromBytes } from "../utils/ldat";
 import * as meme from "../utils/meme";
@@ -582,7 +582,7 @@ export async function signer(req, res) {
   // const tenant:number = req.owner.id
   if (!req.params.challenge) return resUtils.failure(res, "no challenge");
   try {
-    const sig = await signBuffer(
+    const sig = await Lightning.signBuffer(
       Buffer.from(req.params.challenge, "base64"),
       req.owner.publicKey
     );
@@ -598,7 +598,7 @@ export async function signer(req, res) {
 
 export async function verifier(msg, sig) {
   try {
-    const res = await verifyMessage(msg, sig);
+    const res = await Lightning.verifyMessage(msg, sig);
     return res;
   } catch (e) {
     console.log(e);

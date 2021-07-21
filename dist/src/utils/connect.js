@@ -9,16 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connect = exports.genChannel = exports.getQR = void 0;
+exports.connect = exports.genChannel = exports.connectPeer = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
-const LND = require("./lightning");
+const Lightning = require("../grpc/lightning");
 const nodeinfo_1 = require("./nodeinfo");
 const config_1 = require("./config");
 const queries_1 = require("../controllers/queries");
 const res_1 = require("./res");
 const fs = require('fs');
 const config = config_1.loadConfig();
+const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
 function getQR() {
     return __awaiter(this, void 0, void 0, function* () {
         let theIP;
@@ -47,7 +48,7 @@ function makeVarScript() {
     return __awaiter(this, void 0, void 0, function* () {
         const clean = yield nodeinfo_1.isClean();
         const isSignedUp = clean ? false : true;
-        const channelList = yield LND.listChannels({});
+        const channelList = yield Lightning.listChannels({});
         const { channels } = channelList;
         if (!channels || channels.length === 0) {
             return `<script>
@@ -57,13 +58,13 @@ function makeVarScript() {
   window.isSignedUp=${isSignedUp};
 </script>`;
         }
-        const remoteBalances = channels.map((c) => c.remote_balance);
-        const totalRemoteBalance = remoteBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+        const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
+        const totalRemoteBalance = remoteBalances.reduce((a, b) => a + b, 0);
         const hasRemoteBalance = totalRemoteBalance > 0 ? true : false;
         let channelFeesBaseZero = false;
         const policies = ['node1_policy', 'node2_policy'];
         yield asyncForEach(channels, (chan) => __awaiter(this, void 0, void 0, function* () {
-            const info = yield LND.getChanInfo(chan.chan_id);
+            const info = yield Lightning.getChanInfo(chan.chan_id);
             if (!info)
                 return;
             policies.forEach(p => {
@@ -83,25 +84,44 @@ function makeVarScript() {
 </script>`;
     });
 }
+function connectPeer(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield Lightning.connectPeer({
+                addr: {
+                    pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
+                    host: '54.159.193.149:9735'
+                }
+            });
+            res_1.success(res, 'ok');
+        }
+        catch (e) {
+            console.log('=> connect peer failed', e);
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.connectPeer = connectPeer;
 function genChannel(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount } = req.body;
         if (!amount)
             return res_1.failure(res, 'no amount');
         try {
-            yield LND.connectPeer({
+            yield Lightning.connectPeer({
                 addr: {
                     pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
                     host: '54.159.193.149:9735'
                 }
             });
             const sat_per_byte = yield queries_1.getSuggestedSatPerByte();
-            yield LND.openChannel({
+            yield Lightning.openChannel({
                 node_pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
                 local_funding_amount: amount,
                 push_sat: Math.round(amount * 0.02),
                 sat_per_byte,
             });
+            res_1.success(res, 'ok');
         }
         catch (e) {
             console.log('=> connect failed', e);
@@ -109,8 +129,29 @@ function genChannel(req, res) {
     });
 }
 exports.genChannel = genChannel;
+function greenlightConnect(req, res) {
+    fs.readFile("public/index_greenlight.html", function (error, pgResp) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (error) {
+                res.writeHead(404);
+                res.write('Contents you are looking are Not Found');
+            }
+            else {
+                const htmlString = Buffer.from(pgResp).toString();
+                const qr = yield getQR();
+                const rep = htmlString.replace(/CONNECTION_STRING/g, qr);
+                const final = Buffer.from(rep, 'utf8');
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.write(final);
+            }
+            res.end();
+        });
+    });
+}
 function connect(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (IS_GREENLIGHT)
+            return greenlightConnect(req, res);
         fs.readFile("public/index.html", function (error, pgResp) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (error) {

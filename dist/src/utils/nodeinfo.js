@@ -9,25 +9,32 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isClean = exports.nodeinfo = exports.proxynodeinfo = void 0;
-const LND = require("../utils/lightning");
+exports.isClean = exports.nodeinfo = exports.proxynodeinfo = exports.NodeType = void 0;
+const Lightning = require("../grpc/lightning");
 const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
+const config_1 = require("./config");
+const config = config_1.loadConfig();
+const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
+var NodeType;
+(function (NodeType) {
+    NodeType["NODE_PUBLIC"] = "node_public";
+    NodeType["NODE_VIRTUAL"] = "node_virtual";
+    NodeType["NODE_GREENLIGHT"] = "node_greenlight";
+})(NodeType = exports.NodeType || (exports.NodeType = {}));
 function proxynodeinfo(pk) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        const lightning = yield LND.loadLightning(true, pk); // dont try proxy
-        lightning.listChannels({}, (err, channelList) => {
-            if (err)
-                console.log(err);
+        try {
+            const channelList = yield Lightning.listChannels({});
             if (!channelList)
                 return;
             const { channels } = channelList;
-            const localBalances = channels.map(c => c.local_balance);
-            const remoteBalances = channels.map(c => c.remote_balance);
+            const localBalances = channels.map(c => parseInt(c.local_balance));
+            const remoteBalances = channels.map(c => parseInt(c.remote_balance));
             const largestLocalBalance = Math.max(...localBalances);
             const largestRemoteBalance = Math.max(...remoteBalances);
-            const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+            const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
             resolve({
                 pubkey: pk,
                 number_channels: channels.length,
@@ -35,9 +42,13 @@ function proxynodeinfo(pk) {
                 largest_local_balance: largestLocalBalance,
                 largest_remote_balance: largestRemoteBalance,
                 total_local_balance: totalLocalBalance,
-                node_type: 'node_virtual'
+                // node_type: 'node_virtual'
+                node_type: NodeType.NODE_VIRTUAL
             });
-        });
+        }
+        catch (e) {
+            return;
+        }
     }));
 }
 exports.proxynodeinfo = proxynodeinfo;
@@ -45,9 +56,10 @@ function nodeinfo() {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const nzp = yield listNonZeroPolicies();
         let owner_pubkey;
+        let info;
         try {
             const tryProxy = false;
-            const info = yield LND.getInfo(tryProxy);
+            info = yield Lightning.getInfo(tryProxy);
             if (info.identity_pubkey)
                 owner_pubkey = info.identity_pubkey;
         }
@@ -95,62 +107,52 @@ function nodeinfo() {
         const tag = yield gitinfo_1.checkTag();
         const clean = yield isClean();
         const latest_message = yield latestMessage();
-        const lightning = yield LND.loadLightning(false); // dont try proxy
         try {
-            lightning.listChannels({}, (err, channelList) => {
-                if (err)
-                    console.log(err);
-                if (!channelList)
-                    return;
-                const { channels } = channelList;
-                const localBalances = channels.map(c => c.local_balance);
-                const remoteBalances = channels.map(c => c.remote_balance);
-                const largestLocalBalance = Math.max(...localBalances);
-                const largestRemoteBalance = Math.max(...remoteBalances);
-                const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
-                lightning.pendingChannels({}, (err, pendingChannels) => {
-                    if (err)
-                        console.log(err);
-                    lightning.getInfo({}, (err, info) => {
-                        if (err)
-                            console.log(err);
-                        if (!err && info) {
-                            const node = {
-                                node_alias: process.env.NODE_ALIAS,
-                                ip: process.env.NODE_IP,
-                                lnd_port: process.env.NODE_LND_PORT,
-                                relay_commit: commitHash,
-                                public_ip: public_ip,
-                                pubkey: owner.publicKey,
-                                route_hint: owner.routeHint,
-                                number_channels: channels.length,
-                                number_active_channels: info.num_active_channels,
-                                number_pending_channels: info.num_pending_channels,
-                                number_peers: info.num_peers,
-                                largest_local_balance: largestLocalBalance,
-                                largest_remote_balance: largestRemoteBalance,
-                                total_local_balance: totalLocalBalance,
-                                lnd_version: info.version,
-                                relay_version: tag,
-                                payment_channel: '',
-                                hosting_provider: '',
-                                open_channel_data: channels,
-                                pending_channel_data: pendingChannels,
-                                synced_to_chain: info.synced_to_chain,
-                                synced_to_graph: info.synced_to_graph,
-                                best_header_timestamp: info.best_header_timestamp,
-                                testnet: info.testnet,
-                                clean,
-                                latest_message,
-                                last_active: lastActive,
-                                wallet_locked: false,
-                                non_zero_policies: nzp
-                            };
-                            resolve(node);
-                        }
-                    });
-                });
-            });
+            const channelList = yield Lightning.listChannels({});
+            if (!channelList)
+                return;
+            const { channels } = channelList;
+            const localBalances = channels.map(c => parseInt(c.local_balance));
+            const remoteBalances = channels.map(c => parseInt(c.remote_balance));
+            const largestLocalBalance = Math.max(...localBalances);
+            const largestRemoteBalance = Math.max(...remoteBalances);
+            const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
+            const pendingChannels = yield Lightning.pendingChannels();
+            if (!info)
+                return;
+            const node = {
+                node_alias: process.env.NODE_ALIAS,
+                ip: process.env.NODE_IP,
+                lnd_port: process.env.NODE_LND_PORT,
+                relay_commit: commitHash,
+                public_ip: public_ip,
+                pubkey: owner.publicKey,
+                route_hint: owner.routeHint,
+                number_channels: channels.length,
+                number_active_channels: info.num_active_channels,
+                number_pending_channels: info.num_pending_channels,
+                number_peers: info.num_peers,
+                largest_local_balance: largestLocalBalance,
+                largest_remote_balance: largestRemoteBalance,
+                total_local_balance: totalLocalBalance,
+                lnd_version: info.version,
+                relay_version: tag,
+                payment_channel: '',
+                hosting_provider: '',
+                open_channel_data: channels,
+                pending_channel_data: pendingChannels,
+                synced_to_chain: info.synced_to_chain,
+                synced_to_graph: info.synced_to_graph,
+                best_header_timestamp: info.best_header_timestamp,
+                testnet: info.testnet,
+                clean,
+                latest_message,
+                last_active: lastActive,
+                wallet_locked: false,
+                non_zero_policies: nzp,
+                node_type: IS_GREENLIGHT ? NodeType.NODE_GREENLIGHT : NodeType.NODE_PUBLIC,
+            };
+            resolve(node);
         }
         catch (e) {
             console.log('=>', e);
@@ -191,40 +193,38 @@ const policies = ['node1_policy', 'node2_policy'];
 function listNonZeroPolicies() {
     return __awaiter(this, void 0, void 0, function* () {
         const ret = [];
-        const lightning = yield LND.loadLightning(false); // dont try proxy
-        lightning.listChannels({}, (err, channelList) => __awaiter(this, void 0, void 0, function* () {
-            if (err)
-                return ret;
+        try {
+            const channelList = yield Lightning.listChannels({});
             if (!channelList)
                 return ret;
             if (!channelList.channels)
                 return ret;
             const { channels } = channelList;
             yield asyncForEach(channels, (chan) => __awaiter(this, void 0, void 0, function* () {
-                try {
-                    const tryProxy = false;
-                    const info = yield LND.getChanInfo(chan.chan_id, tryProxy);
-                    if (!info)
-                        return;
-                    policies.forEach(p => {
-                        if (info[p]) {
-                            const fee_base_msat = parseInt(info[p].fee_base_msat);
-                            const disabled = info[p].disabled;
-                            if (fee_base_msat > 0 || disabled) {
-                                ret.push({
-                                    node: p,
-                                    fee_base_msat,
-                                    chan_id: chan.chan_id,
-                                    disabled
-                                });
-                            }
+                const tryProxy = false;
+                const info = yield Lightning.getChanInfo(chan.chan_id, tryProxy);
+                if (!info)
+                    return;
+                policies.forEach(p => {
+                    if (info[p]) {
+                        const fee_base_msat = parseInt(info[p].fee_base_msat);
+                        const disabled = info[p].disabled;
+                        if (fee_base_msat > 0 || disabled) {
+                            ret.push({
+                                node: p,
+                                fee_base_msat,
+                                chan_id: chan.chan_id,
+                                disabled
+                            });
                         }
-                    });
-                }
-                catch (e) { }
+                    }
+                });
             }));
+        }
+        catch (e) {
             return ret;
-        }));
+        }
+        return ret;
     });
 }
 function asyncForEach(array, callback) {

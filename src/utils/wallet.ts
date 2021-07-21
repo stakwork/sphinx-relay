@@ -1,7 +1,7 @@
 
 
 import * as grpc from 'grpc'
-import { loadCredentials } from './lightning'
+import * as Lightning from '../grpc/lightning'
 import {loadConfig} from './config'
 
 const config = loadConfig()
@@ -14,7 +14,7 @@ export const loadWalletKit = () => {
     return walletClient
   } else {
     try {
-      var credentials = loadCredentials()
+      var credentials = Lightning.loadCredentials()
       var lnrpcDescriptor = grpc.load("proto/walletkit.proto");
       var walletkit: any = lnrpcDescriptor.walletrpc
       walletClient = new walletkit.WalletKit(LND_IP + ':' + config.lnd_port, credentials);

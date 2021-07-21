@@ -9,8 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getInfo = exports.getLogsSince = exports.checkRouteByContactOrChat = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
-const lightning_1 = require("../utils/lightning");
+exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getLightningInfo = exports.getLogsSince = exports.checkRouteByContactOrChat = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
+const Lightning = require("../grpc/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
 const nodeinfo_1 = require("../utils/nodeinfo");
@@ -48,7 +48,7 @@ const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const owner = req.owner;
     try {
         const amt = parseInt(amount) || constants_1.default.min_sat_amount;
-        const r = yield lightning_1.queryRoute(pubkey, amt, route_hint || "", owner.publicKey);
+        const r = yield Lightning.queryRoute(pubkey, amt, route_hint || "", owner.publicKey);
         res_1.success(res, r);
     }
     catch (e) {
@@ -95,7 +95,7 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
     const owner = req.owner;
     try {
         const amt = parseInt(amount) || constants_1.default.min_sat_amount;
-        const r = yield lightning_1.queryRoute(pubkey, amt, routeHint || "", owner.publicKey);
+        const r = yield Lightning.queryRoute(pubkey, amt, routeHint || "", owner.publicKey);
         res_1.success(res, r);
     }
     catch (e) {
@@ -135,38 +135,32 @@ function getLogsSince(req, res) {
     });
 }
 exports.getLogsSince = getLogsSince;
-const getInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getLightningInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
-    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey);
-    var request = {};
-    lightning.getInfo(request, function (err, response) {
-        res.status(200);
-        if (err == null) {
-            res.json({ success: true, response });
-        }
-        else {
-            res.json({ success: false });
-        }
-        res.end();
-    });
+    res.status(200);
+    try {
+        const response = yield Lightning.getInfo();
+        res.json({ success: true, response });
+    }
+    catch (e) {
+        res.json({ success: false });
+    }
+    res.end();
 });
-exports.getInfo = getInfo;
+exports.getLightningInfo = getLightningInfo;
 const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
-    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
-    var request = {};
-    lightning.listChannels(request, function (err, response) {
-        res.status(200);
-        if (err == null) {
-            res.json({ success: true, response });
-        }
-        else {
-            res.json({ success: false });
-        }
-        res.end();
-    });
+    res.status(200);
+    try {
+        const response = yield Lightning.listChannels({});
+        res.json({ success: true, response });
+    }
+    catch (err) {
+        res.json({ success: false });
+    }
+    res.end();
 });
 exports.getChannels = getChannels;
 const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -179,20 +173,10 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     owner.update({ lastActive: date });
     res.status(200);
     try {
-        const response = yield lightning_1.channelBalance(owner.publicKey);
-        // console.log("=> balance response", response)
-        const channelList = yield lightning_1.listChannels({}, owner.publicKey);
-        const { channels } = channelList;
-        // console.log("=> balance channels", channels)
-        const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
+        const blcs = yield Lightning.complexBalances(owner.publicKey);
         res.json({
             success: true,
-            response: {
-                reserve,
-                full_balance: Math.max(0, parseInt(response.balance)),
-                balance: Math.max(0, parseInt(response.balance) - reserve),
-                pending_open_balance: parseInt(response.pending_open_balance),
-            },
+            response: blcs
         });
     }
     catch (e) {
@@ -205,28 +189,26 @@ exports.getBalance = getBalance;
 const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, "no owner");
-    const lightning = yield lightning_1.loadLightning(true, req.owner.publicKey); // try proxy
-    lightning.listChannels({}, (err, channelList) => {
+    res.status(200);
+    try {
+        const channelList = yield Lightning.listChannels({});
         const { channels } = channelList;
-        const localBalances = channels.map((c) => c.local_balance);
-        const remoteBalances = channels.map((c) => c.remote_balance);
-        const totalLocalBalance = localBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
-        const totalRemoteBalance = remoteBalances.reduce((a, b) => parseInt(a) + parseInt(b), 0);
-        res.status(200);
-        if (err == null) {
-            res.json({
-                success: true,
-                response: {
-                    local_balance: totalLocalBalance,
-                    remote_balance: totalRemoteBalance,
-                },
-            });
-        }
-        else {
-            res.json({ success: false });
-        }
-        res.end();
-    });
+        const localBalances = channels.map((c) => parseInt(c.local_balance));
+        const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
+        const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
+        const totalRemoteBalance = remoteBalances.reduce((a, b) => a + b, 0);
+        res.json({
+            success: true,
+            response: {
+                local_balance: totalLocalBalance,
+                remote_balance: totalRemoteBalance,
+            },
+        });
+    }
+    catch (err) {
+        res.json({ success: false });
+    }
+    res.end();
 });
 exports.getLocalRemoteBalance = getLocalRemoteBalance;
 const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
