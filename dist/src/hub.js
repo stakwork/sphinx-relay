@@ -25,6 +25,7 @@ const proxy_1 = require("./utils/proxy");
 const notify_1 = require("./notify");
 Object.defineProperty(exports, "sendNotification", { enumerable: true, get: function () { return notify_1.sendNotification; } });
 Object.defineProperty(exports, "resetNotifyTribeCount", { enumerable: true, get: function () { return notify_1.resetNotifyTribeCount; } });
+const logger_1 = require("./utils/logger");
 const pingAgent = new https.Agent({
     keepAlive: true,
 });
@@ -145,7 +146,17 @@ function massPingHubFromProxies(rn) {
             const clean = o.authToken === null || o.authToken === "";
             nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet, ip: rn.ip, public_ip: rn.public_ip, node_alias: rn.node_alias }));
         }));
-        sendHubCall({ nodes }, true);
+        if (logger_1.logging.Proxy) {
+            const cleanNodes = nodes.filter(n => n.clean);
+            console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`);
+        }
+        // split into chunks of 50
+        const size = 50;
+        for (let i = 0; i < nodes.length; i += size) {
+            yield sendHubCall({
+                nodes: nodes.slice(i, i + size)
+            }, true);
+        }
     });
 }
 function sendHubCall(body, mass) {

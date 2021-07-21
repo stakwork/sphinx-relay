@@ -563,7 +563,22 @@ export const getLatestContacts = async (req, res) => {
     const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
     const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
     const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
-    const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
+    // const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
+    const chatIds = chats.map(c=> c.id)
+    const pendingMembers = await models.ChatMember.findAll({
+      where: {
+        status: constants.chat_statuses.pending,
+        tenant,
+        chatId: {[Op.in]: chatIds}
+      },
+    });
+    const chatsResponse = chats.map((chat) => {
+      const theChat = chat.dataValues || chat;
+      if (!pendingMembers) return jsonUtils.chatToJson(theChat);
+      const membs = pendingMembers.filter((m) => m.chatId === chat.id) || [];
+      theChat.pendingContactIds = membs.map((m) => m.contactId);
+      return jsonUtils.chatToJson(theChat);
+    });
 
     success(res, {
       contacts: contactsResponse,

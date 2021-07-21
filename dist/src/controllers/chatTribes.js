@@ -204,6 +204,11 @@ function receiveMemberRequest(payload) {
                 lastAlias: senderAlias,
                 tenant,
             });
+            // also update the chat
+            const theChat = yield models_1.models.Chat.findOne({ where: { id: chat.id } });
+            if (theChat) {
+                yield theChat.update({ updatedAt: date });
+            }
         }
         catch (e) { }
         const msg = {

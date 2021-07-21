@@ -33,6 +33,7 @@ const LND_IP = config.lnd_ip || 'localhost';
 const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
+const FEE_LIMIT_SAT = 10000;
 var lightningClient = null;
 var walletUnlocker = null;
 var routerClient = null;
@@ -212,7 +213,7 @@ function sendPayment(payment_request, ownerPubkey) {
             if (proxy_1.isProxy()) {
                 const opts = {
                     payment_request,
-                    fee_limit: { fixed: 10 }
+                    fee_limit: { fixed: FEE_LIMIT_SAT }
                 };
                 lightning.sendPaymentSync(opts, (err, response) => {
                     if (err) {
@@ -266,7 +267,6 @@ const keysend = (opts, ownerPubkey) => {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const FEE_LIMIT_SAT = 10;
                 const randoStr = crypto.randomBytes(32).toString('hex');
                 const preimage = ByteBuffer.fromHex(randoStr);
                 const options = {

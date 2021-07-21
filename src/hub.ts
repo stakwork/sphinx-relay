@@ -11,6 +11,7 @@ import { loadConfig } from "./utils/config";
 import * as https from "https";
 import { isProxy } from "./utils/proxy";
 import {sendNotification, resetNotifyTribeCount} from './notify'
+import {logging} from './utils/logger'
 
 const pingAgent = new https.Agent({
   keepAlive: true,
@@ -166,7 +167,17 @@ async function massPingHubFromProxies(rn) {
       node_alias: rn.node_alias,
     });
   });
-  sendHubCall({ nodes }, true);
+  if(logging.Proxy) {
+    const cleanNodes = nodes.filter(n=>n.clean)
+    console.log(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`)
+  }
+  // split into chunks of 50
+  const size = 50; 
+  for (let i=0; i<nodes.length; i+=size) {
+    await sendHubCall({
+      nodes: nodes.slice(i,i+size)
+    }, true)
+  }
 }
 
 async function sendHubCall(body, mass?: boolean) {

@@ -24,6 +24,8 @@ const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
 export const LND_KEYSEND_KEY = 5482373484
 export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
+const FEE_LIMIT_SAT = 10000
+
 var lightningClient = <any>null;
 var walletUnlocker = <any>null;
 var routerClient = <any>null;
@@ -203,7 +205,7 @@ export async function sendPayment(payment_request:string, ownerPubkey?:string) {
     if(isProxy()) {
       const opts = {
         payment_request,
-        fee_limit: {fixed:10}
+        fee_limit: { fixed: FEE_LIMIT_SAT }
       }
       lightning.sendPaymentSync(opts, (err, response) => {
         if(err) {
@@ -258,7 +260,6 @@ export const keysend = (opts:KeysendOpts, ownerPubkey?:string) => {
   log('keysend')
   return new Promise(async function (resolve, reject) {
     try {
-      const FEE_LIMIT_SAT = 10
       const randoStr = crypto.randomBytes(32).toString('hex');
       const preimage = ByteBuffer.fromHex(randoStr)
       const options:interfaces.KeysendRequest = {

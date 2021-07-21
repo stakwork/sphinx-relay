@@ -38,7 +38,9 @@ export async function generateNewUsers(){
   const n1 = NEW_USER_NUM-newusers.length
 
   const virtualBal = await getProxyTotalBalance()
+  if(logging.Proxy) console.log('[proxy] total balance', virtualBal)
   const realBal = await getProxyLNDBalance()
+  if(logging.Proxy) console.log('[proxy] LND balance', virtualBal)
 
   let availableBalance = realBal - virtualBal
   if(availableBalance<SATS_PER_USER) availableBalance=1
@@ -49,7 +51,7 @@ export async function generateNewUsers(){
     if(logging.Proxy) console.log("[proxy] not enough sats");
     return
   }
-  console.log('=> gen new users:', n)
+  if(logging.Proxy) console.log('=> gen new users:', n)
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
   await asyncForEach(arr, async ()=>{
@@ -74,7 +76,7 @@ export async function generateNewUser(rootpk: string){
     const created = await models.Contact.create(contact)
     // set tenant to self!
     created.update({tenant:created.id})
-    console.log("=> CREATED OWNER:", created.dataValues)
+    if(logging.Proxy) console.log("=> CREATED OWNER:", created.dataValues.publicKey)
   } catch(e) {
     console.log('=> could not gen new user', e)
   }

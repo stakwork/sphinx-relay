@@ -100,7 +100,7 @@ function init() {
                         const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                         if (!(chat && chat.id))
                             return console.log("=> motherbot no chat");
-                        bots_1.installBotAsTribeAdmin(chat.dataValues, bot);
+                        bots_1.installBotAsTribeAdmin(chat, bot);
                     }
                     else {
                         const embed = new Sphinx.MessageEmbed()

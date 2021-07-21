@@ -39,3 +39,4 @@ testing/scripts/stuff.json
 creds/*
 !creds/.gitkeep
 !creds/scheduler_creds
+hsm_secret
