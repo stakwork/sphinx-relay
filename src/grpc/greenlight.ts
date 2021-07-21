@@ -279,9 +279,11 @@ export async function streamHsmRequests() {
         let sig = ''
         if (response.context) {
           const dbid = parseInt(response.context.dbid)
-          const peer = response.context.node_id.toString('hex')
-          sig = libhsmd.Handle(capabilities_bitset, peer, dbid, response.raw.toString('hex'))
+          const peer = dbid ? response.context.node_id.toString('hex') : null
+          sig = libhsmd.Handle(capabilities_bitset, dbid, peer, response.raw.toString('hex'))
         } else {
+          console.log("RAW ====== ")
+          console.log(response.raw.toString('hex'))
           sig = libhsmd.Handle(capabilities_bitset, 0, null, response.raw.toString('hex'))
         }
         lightning.respondHsmRequest(<HsmResponse>{

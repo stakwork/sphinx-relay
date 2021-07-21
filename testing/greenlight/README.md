@@ -26,3 +26,20 @@ https://github.com/ElementsProject/lightning/blob/8167af553e3c9c95142caecc22030f
 https://github.com/ElementsProject/lightning/blob/8167af553e3c9c95142caecc22030f78eacd6fca/plugins/bcli.c#L612-L617
 
 
+
+
+./lightning
+
+make
+
+./configure
+
+cd contrib/libhsmd_node
+
+change to "Darwin" in the Makefile
+
+make
+
+change the npm install to "node-gyp rebuild binding-Darwin.gyp"
+
+in relay, "npm link ../lightning/contrib/libhsmd_node"
