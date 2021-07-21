@@ -69,6 +69,8 @@ index 0b994ac55..51daea0ce 100644
 
 `git checkout greenlight`
 
+`npm install ../lightning/contrib/libhsmd_node`
+
 `npm install`
 
 `cd config`
