@@ -223,7 +223,7 @@ export async function newAddress(
 export async function sendPayment(
   payment_request: string,
   ownerPubkey?: string
-) {
+): Promise<any> {
   log('sendPayment')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy

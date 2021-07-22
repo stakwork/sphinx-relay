@@ -2,7 +2,7 @@ import { Lsat } from 'lsat-js'
 import { models } from '../models'
 import { logging } from '../utils/logger'
 import { failure, success } from '../utils/res'
-import * as LND from '../utils/lightning'
+import * as Lightning from '../grpc/lightning'
 import { Response } from 'express'
 
 export async function payForLsat(
@@ -16,7 +16,7 @@ export async function payForLsat(
 
   console.log(`[pay invoice] ${paymentRequest}`)
 
-  const response: { payment_preimage: string } = await LND.sendPayment(
+  const response: { payment_preimage: string } = await Lightning.sendPayment(
     paymentRequest
   )
 
