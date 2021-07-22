@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connect = exports.genChannel = exports.connectPeer = exports.getQR = void 0;
+exports.connect = exports.genChannel = exports.connectPeer = exports.checkPeered = exports.getQR = void 0;
 const publicIp = require("public-ip");
 const password_1 = require("./password");
 const Lightning = require("../grpc/lightning");
@@ -84,9 +84,35 @@ function makeVarScript() {
 </script>`;
     });
 }
+function checkPeered(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const default_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f';
+        const pubkey = req.body.pubkey || default_pubkey;
+        try {
+            let peered = false;
+            let active = false;
+            let channel_point = '';
+            const chans = yield Lightning.listChannels();
+            chans.channels.forEach(ch => {
+                if (ch.remote_pubkey === pubkey) {
+                    peered = true;
+                    if (ch.active)
+                        active = true;
+                    else
+                        channel_point = ch.channel_point;
+                }
+            });
+            res_1.success(res, { peered, active, channel_point });
+        }
+        catch (e) {
+            console.log('=> checkPeered failed', e);
+            res_1.failure(res, e);
+        }
+    });
+}
+exports.checkPeered = checkPeered;
 function connectPeer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> CONNECT PEER');
         try {
             yield Lightning.connectPeer({
                 addr: {

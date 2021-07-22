@@ -8,6 +8,8 @@ node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/green
 
 node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/orange.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/orange-db.json"
 
+node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/new.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/new-db.json"
+
 sqlite3 /Users/Shared/sphinx-alice-greenlight.db
 
 ```

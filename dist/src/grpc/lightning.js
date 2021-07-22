@@ -776,14 +776,11 @@ function connectPeer(args) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning();
             const req = interfaces.connectPeerRequest(args);
-            console.log("CONN PEER REQ", req);
             lightning.connectPeer(req, function (err, response) {
                 if (err == null) {
-                    console.log('CONN PEER res ==>', response);
                     resolve(response);
                 }
                 else {
-                    console.log('CONN PEER err ==>', err);
                     reject(err);
                 }
             });
