@@ -74,6 +74,7 @@ async function makeVarScript(): Promise<string> {
 }
 
 export async function connectPeer(req, res) {
+  console.log('=> CONNECT PEER')
   try {
     await Lightning.connectPeer({
       addr: {

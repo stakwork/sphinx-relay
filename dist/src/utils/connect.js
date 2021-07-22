@@ -86,6 +86,7 @@ function makeVarScript() {
 }
 function connectPeer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> CONNECT PEER');
         try {
             yield Lightning.connectPeer({
                 addr: {
