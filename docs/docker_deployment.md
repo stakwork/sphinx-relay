@@ -3,6 +3,7 @@
 Install docker-compose: https://medium.com/@techiebouncer/install-docker-and-docker-compose-on-raspberry-pi-4-raspbian-buster-c5b78b9a0d08
 
 Clone this repo.
+
 ```
 git clone https://github.com/stakwork/sphinx-relay.git
 ```
@@ -55,20 +56,22 @@ docker-compose exec lnd lncli unlock
 
 NOTE: All lncli commands need to be prepended with `docker-compose exec lnd`, this tells docker to execute **something** on the lnd container.
 
-
 ### Configure
 
 Make sure your LND is running with the `--accept-keysend` flag! If you are using lnd.conf file, add `accept-keysend=1`, if necessary
 
 Edit the "production" section of config/app.json:
- - Change `macaroon_location` to the location of your LND admin macaroon
- - Change `tls_location` to the location of your LND cert
+
+- Change `macaroon_location` to the location of your LND admin macaroon
+- Change `tls_location` to the location of your LND cert
 
 Edit the "production" section of config/config.json
- - Update "storage" to point to where you want your DB file to live
+
+- Update "storage" to point to where you want your DB file to live
 
 To connect to your app
- - edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
+
+- edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
 ### run
 

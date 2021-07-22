@@ -1,8 +1,6 @@
-
-
 import * as grpc from 'grpc'
 import * as Lightning from '../grpc/lightning'
-import {loadConfig} from './config'
+import { loadConfig } from './config'
 
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
@@ -15,9 +13,12 @@ export const loadWalletKit = () => {
   } else {
     try {
       var credentials = Lightning.loadCredentials()
-      var lnrpcDescriptor = grpc.load("proto/walletkit.proto");
+      var lnrpcDescriptor = grpc.load('proto/walletkit.proto')
       var walletkit: any = lnrpcDescriptor.walletrpc
-      walletClient = new walletkit.WalletKit(LND_IP + ':' + config.lnd_port, credentials);
+      walletClient = new walletkit.WalletKit(
+        LND_IP + ':' + config.lnd_port,
+        credentials
+      )
       return walletClient
     } catch (e) {
       throw e
@@ -36,19 +37,19 @@ export interface UTXO {
   outpoint: Outpoint
 }
 
-export async function listUnspent():Promise<UTXO[]> {
+export async function listUnspent(): Promise<UTXO[]> {
   return new Promise(async (resolve, reject) => {
     let walletkit = await loadWalletKit()
     try {
-      const opts = {min_confs:0,max_confs:10000}
-      walletkit.listUnspent(opts, function(err, res){
-        if (err || !(res&&res.utxos)) {
+      const opts = { min_confs: 0, max_confs: 10000 }
+      walletkit.listUnspent(opts, function (err, res) {
+        if (err || !(res && res.utxos)) {
           reject(err)
         } else {
           resolve(res.utxos)
         }
       })
-    } catch(e) {
+    } catch (e) {
       reject(e)
     }
   })

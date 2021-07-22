@@ -1,66 +1,66 @@
-import { models } from "../models";
-import * as Lightning from "../grpc/lightning";
-import * as interfaces from "../grpc/interfaces";
-import * as socket from "../utils/socket";
-import * as jsonUtils from "../utils/json";
-import {decodePaymentRequest} from "../utils/decode";
-import * as helpers from "../helpers";
-import { sendNotification } from "../hub";
-import { success, failure } from "../utils/res";
-import { sendConfirmation } from "./confirmations";
-import * as network from "../network";
-import * as short from "short-uuid";
-import constants from "../constants";
+import { models } from '../models'
+import * as Lightning from '../grpc/lightning'
+import * as interfaces from '../grpc/interfaces'
+import * as socket from '../utils/socket'
+import * as jsonUtils from '../utils/json'
+import { decodePaymentRequest } from '../utils/decode'
+import * as helpers from '../helpers'
+import { sendNotification } from '../hub'
+import { success, failure } from '../utils/res'
+import { sendConfirmation } from './confirmations'
+import * as network from '../network'
+import * as short from 'short-uuid'
+import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
 
 function stripLightningPrefix(s) {
-  if (s.toLowerCase().startsWith("lightning:")) return s.substring(10);
-  return s;
+  if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)
+  return s
 }
 
 export const payInvoice = async (req, res) => {
-  if (!req.owner) return failure(res, "no owner");
-  const tenant: number = req.owner.id;
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
 
-  const payment_request = stripLightningPrefix(req.body.payment_request);
+  const payment_request = stripLightningPrefix(req.body.payment_request)
 
   if (!payment_request) {
-    console.log('[pay invoice] "payment_request" is empty');
-    res.status(400);
-    res.json({ success: false, error: "payment_request is empty" });
-    res.end();
-    return;
+    console.log('[pay invoice] "payment_request" is empty')
+    res.status(400)
+    res.json({ success: false, error: 'payment_request is empty' })
+    res.end()
+    return
   }
-  console.log(`[pay invoice] ${payment_request}`);
+  console.log(`[pay invoice] ${payment_request}`)
 
   try {
     const response = await Lightning.sendPayment(
       payment_request,
       req.owner.publicKey
-    );
+    )
 
-    console.log("[pay invoice data]", response);
+    console.log('[pay invoice data]', response)
 
     const message = await models.Message.findOne({
       where: { payment_request, tenant },
-    });
+    })
     if (!message) {
       // invoice still paid
-      anonymousInvoice(res, payment_request, tenant);
-      return;
+      anonymousInvoice(res, payment_request, tenant)
+      return
     }
 
-    message.status = constants.statuses.confirmed;
-    message.save();
+    message.status = constants.statuses.confirmed
+    message.save()
 
-    var date = new Date();
-    date.setMilliseconds(0);
+    var date = new Date()
+    date.setMilliseconds(0)
 
     const chat = await models.Chat.findOne({
       where: { id: message.chatId, tenant },
-    });
-    const contactIds = JSON.parse(chat.contactIds);
-    const senderId = contactIds.find((id) => id != message.sender);
+    })
+    const contactIds = JSON.parse(chat.contactIds)
+    const senderId = contactIds.find((id) => id != message.sender)
 
     const paidMessage = await models.Message.create({
       chatId: message.chatId,
@@ -76,21 +76,20 @@ export const payInvoice = async (req, res) => {
       createdAt: date,
       updatedAt: date,
       tenant,
-    });
-    console.log("[pay invoice] stored message", paidMessage);
-    success(res, jsonUtils.messageToJson(paidMessage, chat));
+    })
+    console.log('[pay invoice] stored message', paidMessage)
+    success(res, jsonUtils.messageToJson(paidMessage, chat))
   } catch (e) {
-    console.log("ERR paying invoice", e);
-    return failure(res, "could not pay invoice");
+    console.log('ERR paying invoice', e)
+    return failure(res, 'could not pay invoice')
   }
-};
+}
 
 async function anonymousInvoice(res, payment_request: string, tenant: number) {
-  const { memo, sat, msat, paymentHash, invoiceDate } = decodePaymentRequest(
-    payment_request
-  );
-  var date = new Date();
-  date.setMilliseconds(0);
+  const { memo, sat, msat, paymentHash, invoiceDate } =
+    decodePaymentRequest(payment_request)
+  var date = new Date()
+  date.setMilliseconds(0)
   models.Message.create({
     chatId: 0,
     type: constants.message_types.payment,
@@ -104,62 +103,63 @@ async function anonymousInvoice(res, payment_request: string, tenant: number) {
     createdAt: date,
     updatedAt: date,
     tenant,
-  });
+  })
   return success(res, {
     success: true,
     response: { payment_request },
-  });
+  })
 }
 
 export const cancelInvoice = (req, res) => {
-  res.status(200);
-  res.json({ success: false });
-  res.end();
-};
+  res.status(200)
+  res.json({ success: false })
+  res.end()
+}
 
 export const createInvoice = async (req, res) => {
-  if(!req.owner) return failure(res, 'no owner')
-  const tenant:number = req.owner.id
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
 
-  const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
+  const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body
 
   var request: interfaces.AddInvoiceRequest = {
     value: amount,
     memo: remote_memo || memo,
-  };
-  if (req.owner && req.owner.routeHint && req.owner.routeHint.includes(":")) {
-    const arr = req.owner.routeHint.split(":");
-    const node_id = arr[0];
-    const chan_id = arr[1];
+  }
+  if (req.owner && req.owner.routeHint && req.owner.routeHint.includes(':')) {
+    const arr = req.owner.routeHint.split(':')
+    const node_id = arr[0]
+    const chan_id = arr[1]
     request.route_hints = [
       {
         hop_hints: [{ node_id, chan_id }],
       },
-    ];
+    ]
   }
-  if (expiry) request.expiry = expiry;
+  if (expiry) request.expiry = expiry
 
   if (amount == null) {
-    res.status(200);
-    res.json({ err: "no amount specified" });
-    res.end();
+    res.status(200)
+    res.json({ err: 'no amount specified' })
+    res.end()
   } else {
     try {
       const response = await Lightning.addInvoice(request, req.owner.publicKey)
-      const { payment_request } = response;
+      const { payment_request } = response
 
       if (!contact_id && !chat_id) {
         // if no contact
         return success(res, {
           invoice: payment_request,
-        });
+        })
       }
 
       const invoice = bolt11.decode(payment_request)
       if (invoice) {
-        const paymentHash = invoice.tags.find(t=>t.tagName==='payment_hash')?.data || ''
+        const paymentHash =
+          invoice.tags.find((t) => t.tagName === 'payment_hash')?.data || ''
 
-        console.log("decoded pay req", { invoice });
+        console.log('decoded pay req', { invoice })
 
         const owner = req.owner
 
@@ -167,11 +167,11 @@ export const createInvoice = async (req, res) => {
           chat_id,
           owner_id: owner.id,
           recipient_id: contact_id,
-        });
-        if(!chat) return failure(res, 'counldnt findOrCreateChat')
+        })
+        if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
-        let timestamp = parseInt(invoice.timestamp + "000");
-        let expiry = parseInt(invoice.timeExpireDate + "000");
+        let timestamp = parseInt(invoice.timestamp + '000')
+        let expiry = parseInt(invoice.timeExpireDate + '000')
 
         const message = await models.Message.create({
           chatId: chat.id,
@@ -179,7 +179,7 @@ export const createInvoice = async (req, res) => {
           sender: owner.id,
           type: constants.message_types.invoice,
           amount: invoice.satoshis || 0,
-          amountMsat: parseInt(invoice.millisatoshis||'0') * 1000,
+          amountMsat: parseInt(invoice.millisatoshis || '0') * 1000,
           paymentHash: paymentHash,
           paymentRequest: payment_request,
           date: new Date(timestamp),
@@ -190,8 +190,8 @@ export const createInvoice = async (req, res) => {
           createdAt: new Date(timestamp),
           updatedAt: new Date(timestamp),
           tenant,
-        });
-        success(res, jsonUtils.messageToJson(message, chat));
+        })
+        success(res, jsonUtils.messageToJson(message, chat))
 
         network.sendMessage({
           chat: chat,
@@ -201,40 +201,40 @@ export const createInvoice = async (req, res) => {
             id: message.id,
             invoice: message.paymentRequest,
           },
-        });
+        })
       }
-    } catch(err) {
+    } catch (err) {
       console.log('addInvoice error:', err)
     }
   }
-};
+}
 
 export const listInvoices = async (req, res) => {
-  if (!req.owner) return failure(res, "no owner");
+  if (!req.owner) return failure(res, 'no owner')
 
-  const lightning = await Lightning.loadLightning();
+  const lightning = await Lightning.loadLightning()
 
   lightning.listInvoices({}, (err, response) => {
-    console.log({ err, response });
+    console.log({ err, response })
     if (err == null) {
-      res.status(200);
-      res.json(response);
-      res.end();
+      res.status(200)
+      res.json(response)
+      res.end()
     } else {
-      console.log({ err, response });
+      console.log({ err, response })
     }
-  });
-};
+  })
+}
 
 export const receiveInvoice = async (payload) => {
-  console.log("received invoice", payload);
+  console.log('received invoice', payload)
 
-  const total_spent = 1;
-  const dat = payload.content || payload;
-  const payment_request = dat.message.invoice;
-  const network_type = dat.network_type || 0;
-  var date = new Date();
-  date.setMilliseconds(0);
+  const total_spent = 1
+  const dat = payload.content || payload
+  const payment_request = dat.message.invoice
+  const network_type = dat.network_type || 0
+  var date = new Date()
+  date.setMilliseconds(0)
 
   const {
     owner,
@@ -245,20 +245,14 @@ export const receiveInvoice = async (payload) => {
     sender_alias,
     msg_uuid,
     sender_photo_url,
-  } = await helpers.parseReceiveParams(payload);
+  } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
-    return console.log("=> no group chat!");
+    return console.log('=> no group chat!')
   }
-  const tenant: number = owner.id;
+  const tenant: number = owner.id
 
-  const {
-    memo,
-    sat,
-    msat,
-    paymentHash,
-    invoiceDate,
-    expirationSeconds,
-  } = decodePaymentRequest(payment_request);
+  const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } =
+    decodePaymentRequest(payment_request)
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -278,25 +272,24 @@ export const receiveInvoice = async (payload) => {
     updatedAt: date,
     network_type: network_type,
     tenant,
-  };
-  const isTribe = chat_type === constants.chat_types.tribe;
-  if (isTribe) {
-    msg.senderAlias = sender_alias;
-    msg.senderPic = sender_photo_url;
   }
-  const message = await models.Message.create(msg);
-  console.log("received keysend invoice message", message.id);
+  const isTribe = chat_type === constants.chat_types.tribe
+  if (isTribe) {
+    msg.senderAlias = sender_alias
+    msg.senderPic = sender_photo_url
+  }
+  const message = await models.Message.create(msg)
+  console.log('received keysend invoice message', message.id)
 
   socket.sendJson(
     {
-      type: "invoice",
+      type: 'invoice',
       response: jsonUtils.messageToJson(message, chat, sender),
     },
     tenant
-  );
+  )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, "message", owner);
+  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 
-  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
-};
-
+  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+}

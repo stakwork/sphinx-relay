@@ -1,6 +1,6 @@
-import {createJWT, scopes} from "../utils/jwt";
-import { success, failure } from "../utils/res";
-import * as tribes from "../utils/tribes";
+import { createJWT, scopes } from '../utils/jwt'
+import { success, failure } from '../utils/res'
+import * as tribes from '../utils/tribes'
 
 interface MeInfo {
   pubkey: string
@@ -13,11 +13,11 @@ interface MeInfo {
 }
 
 export async function verifyAuthRequest(req, res) {
-  if (!req.owner) return failure(res, "no owner");
+  if (!req.owner) return failure(res, 'no owner')
   try {
     const sc = [scopes.PERSONAL]
     const jot = createJWT(req.owner.publicKey, sc)
-    const bod:MeInfo = {
+    const bod: MeInfo = {
       pubkey: req.owner.publicKey,
       alias: req.owner.alias,
       photo_url: req.owner.photoUrl,
@@ -29,7 +29,7 @@ export async function verifyAuthRequest(req, res) {
     const token = await tribes.genSignedTimestamp(req.owner.publicKey)
     success(res, {
       info: bod,
-      token
+      token,
     })
     // const protocol = j.host.includes("localhost") ? "http" : "https";
     // await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
@@ -40,25 +40,25 @@ export async function verifyAuthRequest(req, res) {
     //   },
     // });
     // success(res, 'ok')
-  } catch(e) {
+  } catch (e) {
     failure(res, e)
   }
 }
 
 export async function requestExternalTokens(req, res) {
-  if (!req.owner) return failure(res, "no owner");
+  if (!req.owner) return failure(res, 'no owner')
   try {
-    const result:MeInfo = {
+    const result: MeInfo = {
       pubkey: req.owner.publicKey,
       alias: req.owner.alias,
       photo_url: req.owner.photoUrl,
       route_hint: req.owner.routeHint,
       contact_key: req.owner.contactKey,
       price_to_meet: req.owner.priceToMeet,
-      jwt: ''
+      jwt: '',
     }
     success(res, result)
   } catch (e) {
-    failure(res, e);
+    failure(res, e)
   }
 }

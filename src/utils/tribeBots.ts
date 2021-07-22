@@ -2,22 +2,37 @@ import { models } from '../models'
 import { getHost } from './tribes'
 import fetch from 'node-fetch'
 
-export async function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint }) {
+export async function declare_bot({
+  uuid,
+  name,
+  description,
+  tags,
+  img,
+  price_per_use,
+  owner_pubkey,
+  unlisted,
+  deleted,
+  owner_route_hint,
+}) {
   const host = getHost()
   try {
     let protocol = 'https'
-    if(host.includes('localhost')) protocol='http'
+    if (host.includes('localhost')) protocol = 'http'
     const r = await fetch(protocol + '://' + host + '/bots', {
       method: 'POST',
       body: JSON.stringify({
-        uuid, owner_pubkey,
-        name, description, tags, img: img || '',
+        uuid,
+        owner_pubkey,
+        name,
+        description,
+        tags,
+        img: img || '',
         price_per_use: price_per_use || 0,
         unlisted: unlisted || false,
         deleted: deleted || false,
-        owner_route_hint: owner_route_hint || ''
+        owner_route_hint: owner_route_hint || '',
       }),
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     })
     const j = await r.json()
     console.log('=> bot created:', j)
@@ -30,12 +45,12 @@ export async function declare_bot({ uuid, name, description, tags, img, price_pe
 export async function makeBotsJSON(tribeID) {
   const bots = await models.ChatBot.findAll({
     where: {
-      chatId: tribeID
-    }
+      chatId: tribeID,
+    },
   })
   if (!bots) return []
   if (!bots.length) return []
-  return bots.map(b => {
+  return bots.map((b) => {
     const bot = b.dataValues
     if (bot.botPrefix === '/loopout') {
       return loopoutBotJSON()
@@ -52,30 +67,32 @@ export async function makeBotsJSON(tribeID) {
 }
 
 interface BotJSON {
-  prefix: string,
-  price: number,
-  commands: BotCommand[] | null,
+  prefix: string
+  price: number
+  commands: BotCommand[] | null
 }
 interface BotCommand {
-  command: string,
-  price: number,
-  min_price: number,
-  max_price: number,
-  price_index: number,
-  admin_only: boolean,
+  command: string
+  price: number
+  min_price: number
+  max_price: number
+  price_index: number
+  admin_only: boolean
 }
 function loopoutBotJSON(): BotJSON {
   return <BotJSON>{
     prefix: '/loopout',
     price: 0,
-    commands: [{
-      command: '*',
-      price: 0,
-      min_price: 250000,
-      max_price: 16777215,
-      price_index: 2,
-      admin_only: false
-    }]
+    commands: [
+      {
+        command: '*',
+        price: 0,
+        min_price: 250000,
+        max_price: 16777215,
+        price_index: 2,
+        admin_only: false,
+      },
+    ],
   }
 }
 
@@ -83,13 +100,15 @@ function testBotJSON(): BotJSON {
   return <BotJSON>{
     prefix: '/testbot',
     price: 0,
-    commands: [{
-      command: '*',
-      price: 0,
-      min_price: 20,
-      max_price: 50,
-      price_index: 1,
-      admin_only: false
-    }]
+    commands: [
+      {
+        command: '*',
+        price: 0,
+        min_price: 20,
+        max_price: 50,
+        price_index: 1,
+        admin_only: false,
+      },
+    ],
   }
 }

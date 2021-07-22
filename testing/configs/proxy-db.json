@@ -6,7 +6,7 @@
   "postgres": {
     "dialect": "postgres",
     "dialectOptions": {
-        "connectionString": "postgres://localhost"
+      "connectionString": "postgres://localhost"
     }
   }
 }

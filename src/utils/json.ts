@@ -12,7 +12,7 @@ function chatToJson(c) {
   delete chat.groupPrivateKey
   return toSnake({
     ...chat,
-    contactIds
+    contactIds,
   })
 }
 
@@ -30,7 +30,7 @@ function messageToJson(msg, chat, contact?) {
     amountMsat: message.amountMsat ? parseInt(message.amountMsat) : 0,
     statusMap,
     chat: chat ? chatToJson(chat) : null,
-    contact: contact ? contactToJson(contact) : null
+    contact: contact ? contactToJson(contact) : null,
   })
 }
 
@@ -66,5 +66,5 @@ export {
   chatToJson,
   subscriptionToJson,
   botToJson,
-  accountingToJson
+  accountingToJson,
 }

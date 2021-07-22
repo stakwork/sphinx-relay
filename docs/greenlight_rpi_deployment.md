@@ -91,7 +91,7 @@ index 79a01b68..fe5758af 100644
    }
 ```
 
-Also make the following modifications to `app.json` 
+Also make the following modifications to `app.json`
 
 ( Get the IP address of your raspberry pi to put in the `public_url` field with `hostname -I` )
 
@@ -123,7 +123,6 @@ index 8255a2b5..07879e40 100644
        "enabled": false,
 ```
 
-Finally, while still standing in the `config` directory, run 
+Finally, while still standing in the `config` directory, run
 
 `npm run prod`
-

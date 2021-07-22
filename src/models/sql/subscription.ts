@@ -1,13 +1,12 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType } from 'sequelize-typescript'
 
 @Table({ tableName: 'sphinx_subscriptions', underscored: true })
 export default class Subscription extends Model<Subscription> {
-
   @Column({
     type: DataType.BIGINT,
     primaryKey: true,
     unique: true,
-    autoIncrement: true
+    autoIncrement: true,
   })
   id: number
 

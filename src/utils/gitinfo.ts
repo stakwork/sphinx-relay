@@ -7,14 +7,18 @@ function checkCommitHash() {
       return resolve(commitHash)
     }
     try {
-      exec(`git log -1 --pretty=format:%h`, { timeout: 999 }, (error, stdout, stderr) => {
-        if (stdout) {
-          commitHash = stdout.trim()
-          return resolve(commitHash)
-        } else {
-          resolve('')
+      exec(
+        `git log -1 --pretty=format:%h`,
+        { timeout: 999 },
+        (error, stdout, stderr) => {
+          if (stdout) {
+            commitHash = stdout.trim()
+            return resolve(commitHash)
+          } else {
+            resolve('')
+          }
         }
-      })
+      )
     } catch (e) {
       console.log(e)
       resolve('')
@@ -29,14 +33,18 @@ function checkTag() {
       return resolve(tag)
     }
     try {
-      exec(`git describe --abbrev=0 --tags`, { timeout: 999 }, (error, stdout, stderr) => {
-        if (stdout) {
-          tag = stdout.trim()
-          return resolve(tag)
-        } else {
-          resolve('')
+      exec(
+        `git describe --abbrev=0 --tags`,
+        { timeout: 999 },
+        (error, stdout, stderr) => {
+          if (stdout) {
+            tag = stdout.trim()
+            return resolve(tag)
+          } else {
+            resolve('')
+          }
         }
-      })
+      )
     } catch (e) {
       console.log(e)
       resolve('')
@@ -44,6 +52,4 @@ function checkTag() {
   })
 }
 
-export {
-  checkCommitHash, checkTag
-}
+export { checkCommitHash, checkTag }

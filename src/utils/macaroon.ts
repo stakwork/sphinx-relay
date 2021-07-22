@@ -1,11 +1,11 @@
 import * as fs from 'fs'
-import {loadConfig} from './config'
+import { loadConfig } from './config'
 
 const config = loadConfig()
 
-let inMemoryMacaroon: string = ''; // hex encoded
+let inMemoryMacaroon: string = '' // hex encoded
 
-export function getMacaroon(macName?:string) {
+export function getMacaroon(macName?: string) {
   if (config.unlock) {
     return inMemoryMacaroon
   } else {
@@ -15,7 +15,7 @@ export function getMacaroon(macName?:string) {
       macLocation = location || macLocation.replace('admin.macaroon', macName)
     }
     const m = fs.readFileSync(macLocation)
-    return m.toString('hex');
+    return m.toString('hex')
   }
 }
 
