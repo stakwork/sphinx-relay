@@ -59,7 +59,7 @@ export async function startGreenlightInit() {
       needToRegister = true
       rootkey = crypto.randomBytes(32).toString('hex')
     } else {
-      rootkey = fs.readFileSync(secretPath).toString()
+      rootkey = fs.readFileSync(secretPath).toString('hex')
     }
     const msgHex = libhsmd.Init(rootkey, 'bitcoin')
     const msg = Buffer.from(msgHex, 'hex')
@@ -159,7 +159,7 @@ async function registerGreenlight(
     fs.writeFileSync(chainLoc, res.device_cert)
     writeTlsLocation()
     // after registered successfully
-    fs.writeFileSync(secretPath, rootkey)
+    fs.writeFileSync(secretPath, Buffer.from(rootkey, 'hex'))
   } catch (e) {
     console.log('Greenlight register error', e)
   }

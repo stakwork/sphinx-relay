@@ -88,6 +88,7 @@ function setupApp() {
       app.get('/connect', connect.connect)
       app.post('/gen_channel', connect.genChannel)
       app.post('/connect_peer', connect.connectPeer)
+      app.get('/peered', connect.checkPeered)
     }
 
     let server

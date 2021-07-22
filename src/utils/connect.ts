@@ -73,6 +73,28 @@ async function makeVarScript(): Promise<string> {
 </script>`
 }
 
+export async function checkPeered(req, res) {
+  const default_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
+  const pubkey = req.body.pubkey || default_pubkey
+  try {
+    let peered = false
+    let active = false
+    let channel_point = ''
+    const chans = await Lightning.listChannels()
+    chans.channels.forEach(ch=> {
+      if(ch.remote_pubkey===pubkey) {
+        peered = true
+        if(ch.active) active = true
+        else channel_point = ch.channel_point
+      }
+    })
+    success(res, {peered, active, channel_point})
+  } catch(e) {
+    console.log('=> checkPeered failed', e)
+    failure(res, e)
+  }
+}
+
 export async function connectPeer(req, res) {
   try {
     await Lightning.connectPeer({

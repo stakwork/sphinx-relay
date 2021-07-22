@@ -85,7 +85,8 @@ function ownerMiddleware(req, res, next) {
             req.path.startsWith('/static') ||
             req.path == '/contacts/set_dev' ||
             req.path == '/connect' ||
-            req.path == '/connect_peer') {
+            req.path == '/connect_peer' ||
+            req.path == '/peered') {
             next();
             return;
         }

@@ -79,24 +79,40 @@
         color: #628aff;
         font-weight: bold;
       }
+      button {
+        margin-top:15px;
+        padding:10px 20px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #628aff;
+        color:white;
+      }
+      #chanpoint {
+        word-break: break-all;
+      }
     </style>
   </head>
 
   <body>
     <img src="/static/sphinx-logo.png" alt="logo" />
 
+    <p>Scan this QR code with your Sphinx app:</p>
     <div id="qr-wrap">
       <canvas id="qr"></canvas>
     </div>
 
     <pre id="connection-string">
-    CONNECTION_STRING
-  </pre
-    >
+      CONNECTION_STRING
+    </pre>
 
     <div>Peer to Sphinx router node:</div>
 
     <button id="peer">PEER NOW</button>
+
+    <p id="conn">You are connected to a Sphinx Routing Node!</p>
+    <p id="pending">You are connected to a Sphinx Routing Node! Opening channel now...</p>
+    <p id="chanpoint"></p>
 
     <script src="/static/js/qrious.js"></script>
     <script>
@@ -113,6 +129,12 @@
         return document.getElementById(id)
       }
       const peer = get('peer')
+      const conn = get('conn')
+      const pending = get('pending')
+      const chanpoint = get('chanpoint')
+      peer.style.display = 'none'
+      conn.style.display = 'none'
+      pending.style.display = 'none'
       peer.onclick = async function () {
         console.log('PEER NOW')
         const r = await fetch('/connect_peer', {
@@ -121,6 +143,24 @@
         const j = await r.json()
         console.log(j)
       }
+      async function startup() {
+        const r = await fetch('/peered')
+        const j = await r.json()
+        console.log(j)
+        if(j && j.success && j.response && j.response.peered===false) {
+          peer.style.display = 'block'
+        }
+        if(j && j.success && j.response && j.response.peered && j.response.active===false) {
+          pending.style.display = 'block'
+        }
+        if(j && j.success && j.response && j.response.peered && j.response.active) {
+          conn.style.display = 'block'
+        }
+        if(j && j.success && j.response && j.response.peered && j.response.active===false && j.response.channel_point) {
+          chanpoint.innerHTML = 'TXID: ' + j.response.channel_point.split(':')[0]
+        }
+      }
+      startup()
     </script>
   </body>
 </html>
