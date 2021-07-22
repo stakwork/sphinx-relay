@@ -272,8 +272,8 @@ export async function streamHsmRequests() {
   const capabilities_bitset = 1087 // 1 + 2 + 4 + 8 + 16 + 32 + 1024
   try {
     const lightning = await loadLightning(true) // try proxy
-		var call = lightning.streamHsmRequests({})
-		call.on('data', async function (response) {
+    var call = lightning.streamHsmRequests({})
+    call.on('data', async function (response) {
       console.log("DATA", response)
       try {
         let sig = ''
@@ -296,16 +296,16 @@ export async function streamHsmRequests() {
       } catch(e) {
         console.log("[HSMD] failure", e)
       }
-		});
-		call.on('status', function (status) {
-			console.log("[HSMD] Status", status.code, status);			
-		})
-		call.on('error', function (err) {
-			console.error('[HSMD] Error', err.code)
-		})
-		call.on('end', function () {
-			console.log(`[HSMD] Closed stream`);
-		})
+    });
+    call.on('status', function (status) {
+      console.log("[HSMD] Status", status.code, status);			
+    })
+    call.on('error', function (err) {
+      console.error('[HSMD] Error', err.code)
+    })
+    call.on('end', function () {
+      console.log(`[HSMD] Closed stream`);
+    })
   } catch(e) {
     console.log('[HSMD] last error:', e)
   }
