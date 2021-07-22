@@ -1,7 +1,6 @@
 import { sequelize } from '../models'
 
 export default async function migrate() {
-
   addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT')
   addTableColumn('sphinx_contacts', 'unmet', 'BOOLEAN')
 
@@ -39,7 +38,7 @@ export default async function migrate() {
       created_at DATETIME,
       updated_at DATETIME
     )`)
-  } catch (e) { }
+  } catch (e) {}
 
   addTableColumn('sphinx_accountings', 'funding_txid')
 
@@ -79,11 +78,13 @@ export default async function migrate() {
       created_at DATETIME,
       updated_at DATETIME
     )`)
-  } catch (e) { }
+  } catch (e) {}
 
   try {
-    await sequelize.query(`CREATE UNIQUE INDEX chat_bot_index ON sphinx_chat_bots(chat_id, bot_uuid);`)
-  } catch (e) { }
+    await sequelize.query(
+      `CREATE UNIQUE INDEX chat_bot_index ON sphinx_chat_bots(chat_id, bot_uuid);`
+    )
+  } catch (e) {}
 
   addTableColumn('sphinx_bots', 'webhook')
   addTableColumn('sphinx_bots', 'uuid')
@@ -99,7 +100,7 @@ export default async function migrate() {
       created_at DATETIME,
       updated_at DATETIME
     )`)
-  } catch (e) { }
+  } catch (e) {}
 
   addTableColumn('sphinx_bot_members', 'bot_id')
 
@@ -114,14 +115,16 @@ export default async function migrate() {
       created_at DATETIME,
       updated_at DATETIME
     )`)
-  } catch (e) { }
+  } catch (e) {}
 
   addTableColumn('sphinx_chats', 'app_url')
   addTableColumn('sphinx_chats', 'feed_url')
 
   try {
-    await sequelize.query(`CREATE UNIQUE INDEX chat_member_index ON sphinx_chat_members(chat_id, contact_id);`)
-  } catch (e) { }
+    await sequelize.query(
+      `CREATE UNIQUE INDEX chat_member_index ON sphinx_chat_members(chat_id, contact_id);`
+    )
+  } catch (e) {}
 
   addTableColumn('sphinx_chats', 'private', 'BOOLEAN')
   addTableColumn('sphinx_chats', 'unlisted', 'BOOLEAN')
@@ -130,8 +133,10 @@ export default async function migrate() {
   addTableColumn('sphinx_chats', 'seen', 'BOOLEAN')
 
   try {
-    await sequelize.query(`CREATE INDEX idx_messages_sender ON sphinx_messages (sender);`)
-  } catch (e) { }
+    await sequelize.query(
+      `CREATE INDEX idx_messages_sender ON sphinx_messages (sender);`
+    )
+  } catch (e) {}
 
   addTableColumn('sphinx_contacts', 'notification_sound')
   addTableColumn('sphinx_contacts', 'from_group', 'BOOLEAN')
@@ -153,11 +158,15 @@ export default async function migrate() {
   //   } catch(e){}
 }
 
-async function addTenant(tableName){
+async function addTenant(tableName) {
   await addTableColumn(tableName, 'tenant', 'BIGINT')
   try {
-    await sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`)
-  } catch (e) { console.log(e) }
+    await sequelize.query(
+      `update ${tableName} set tenant=1 where tenant IS NULL`
+    )
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 async function addTableColumn(table: string, column: string, type = 'TEXT') {

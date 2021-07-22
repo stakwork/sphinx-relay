@@ -1,4 +1,3 @@
-
 import * as grpc from 'grpc'
 import * as Lightning from '../grpc/lightning'
 import * as ByteBuffer from 'bytebuffer'
@@ -8,7 +7,7 @@ import { loadConfig } from './config'
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 
-var signerClient = <any>null;
+var signerClient = <any>null
 
 export const loadSigner = () => {
   if (signerClient) {
@@ -16,9 +15,12 @@ export const loadSigner = () => {
   } else {
     try {
       var credentials = Lightning.loadCredentials('signer.macaroon')
-      var lnrpcDescriptor = grpc.load("proto/signer.proto");
+      var lnrpcDescriptor = grpc.load('proto/signer.proto')
       var signer: any = lnrpcDescriptor.signrpc
-      signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
+      signerClient = new signer.Signer(
+        LND_IP + ':' + config.lnd_port,
+        credentials
+      )
       return signerClient
     } catch (e) {
       throw e
@@ -38,7 +40,7 @@ export const signMessage = (msg) => {
         if (err || !sig.signature) {
           reject(err)
         } else {
-          const buf = ByteBuffer.wrap(sig.signature);
+          const buf = ByteBuffer.wrap(sig.signature)
           resolve(buf.toBase64())
         }
       })
@@ -57,7 +59,7 @@ export const signBuffer = (msg) => {
         if (err || !sig.signature) {
           reject(err)
         } else {
-          const buf = ByteBuffer.wrap(sig.signature);
+          const buf = ByteBuffer.wrap(sig.signature)
           resolve(buf.toBase64())
         }
       })
@@ -107,7 +109,11 @@ export async function signAscii(ascii) {
   }
 }
 
-export async function verifyAscii(ascii: string, sig: Buffer, pubkey: string): Promise<{ [k: string]: any }> {
+export async function verifyAscii(
+  ascii: string,
+  sig: Buffer,
+  pubkey: string
+): Promise<{ [k: string]: any }> {
   try {
     const r = await verifyMessage(ascii_to_hexa(ascii), sig, pubkey)
     return r
@@ -117,10 +123,10 @@ export async function verifyAscii(ascii: string, sig: Buffer, pubkey: string): P
 }
 
 function ascii_to_hexa(str) {
-  var arr1 = <string[]>[];
+  var arr1 = <string[]>[]
   for (var n = 0, l = str.length; n < l; n++) {
-    var hex = Number(str.charCodeAt(n)).toString(16);
-    arr1.push(hex);
+    var hex = Number(str.charCodeAt(n)).toString(16)
+    arr1.push(hex)
   }
-  return arr1.join('');
+  return arr1.join('')
 }

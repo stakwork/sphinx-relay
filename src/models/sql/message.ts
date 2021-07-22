@@ -1,13 +1,12 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType } from 'sequelize-typescript'
 
 @Table({ tableName: 'sphinx_messages', underscored: true })
 export default class Message extends Model<Message> {
-
   @Column({
     type: DataType.BIGINT,
     primaryKey: true,
     unique: true,
-    autoIncrement: true
+    autoIncrement: true,
   })
   id: number
 
@@ -74,7 +73,7 @@ export default class Message extends Model<Message> {
   @Column({
     type: DataType.BOOLEAN,
     defaultValue: false,
-    allowNull: false
+    allowNull: false,
   })
   seen: boolean
 

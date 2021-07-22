@@ -3,15 +3,15 @@ type: docker
 name: default
 
 steps:
-- name: prepare-test-build
-  image: node
-  volumes:
-  # - name: cache
-  #   path: /artifacts
-  commands:
-  - npm install
-  - npm run test
-  - npm run build
+  - name: prepare-test-build
+    image: node
+    volumes:
+    # - name: cache
+    #   path: /artifacts
+    commands:
+      - npm install
+      - npm run test
+      - npm run build
 
 # - name: build-image
 #   image: node
@@ -35,8 +35,8 @@ steps:
 
 trigger:
   repo:
-  - stakwork/sphinx-relay
-  - daniel-ro/sphinx-relay
+    - stakwork/sphinx-relay
+    - daniel-ro/sphinx-relay
   branch:
-  - drone
-  - master
+    - drone
+    - master

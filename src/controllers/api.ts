@@ -1,12 +1,12 @@
-import * as network from "../network";
-import { models } from "../models";
-import * as short from "short-uuid";
-import * as rsa from "../crypto/rsa";
-import * as jsonUtils from "../utils/json";
-import * as socket from "../utils/socket";
-import { success, failure } from "../utils/res";
-import constants from "../constants";
-import { getTribeOwnersChatByUUID } from "../utils/tribes";
+import * as network from '../network'
+import { models } from '../models'
+import * as short from 'short-uuid'
+import * as rsa from '../crypto/rsa'
+import * as jsonUtils from '../utils/json'
+import * as socket from '../utils/socket'
+import { success, failure } from '../utils/res'
+import constants from '../constants'
+import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -14,65 +14,58 @@ hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 
 export interface Action {
-  action: string;
-  chat_uuid: string;
-  bot_id: string;
-  bot_name?: string;
-  amount?: number;
-  pubkey?: string;
-  content?: string;
-  route_hint?: string;
+  action: string
+  chat_uuid: string
+  bot_id: string
+  bot_name?: string
+  amount?: number
+  pubkey?: string
+  content?: string
+  route_hint?: string
 }
 
 export async function processAction(req, res) {
-  console.log("=> processAction", req.body);
-  let body = req.body;
-  if (body.data && typeof body.data === "string" && body.data[1] === "'") {
+  console.log('=> processAction', req.body)
+  let body = req.body
+  if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
     try {
       // parse out body from "data" for github webhook action
-      const dataBody = JSON.parse(body.data.replace(/'/g, '"'));
-      if (dataBody) body = dataBody;
+      const dataBody = JSON.parse(body.data.replace(/'/g, '"'))
+      if (dataBody) body = dataBody
     } catch (e) {
-      console.log(e);
-      return failure(res, "failed to parse webhook body json");
+      console.log(e)
+      return failure(res, 'failed to parse webhook body json')
     }
   }
-  const {
-    action,
-    bot_id,
-    bot_secret,
-    pubkey,
-    amount,
-    content,
-    chat_uuid,
-  } = body;
+  const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid } =
+    body
 
-  if (!bot_id) return failure(res, "no bot_id");
-  const bot = await models.Bot.findOne({ where: { id: bot_id } });
-  if (!bot) return failure(res, "no bot");
+  if (!bot_id) return failure(res, 'no bot_id')
+  const bot = await models.Bot.findOne({ where: { id: bot_id } })
+  if (!bot) return failure(res, 'no bot')
 
   if (!(bot.secret && bot.secret === bot_secret)) {
-    return failure(res, "wrong secret");
+    return failure(res, 'wrong secret')
   }
   if (!action) {
-    return failure(res, "no action");
+    return failure(res, 'no action')
   }
 
   const a: Action = {
     bot_id,
     action,
-    pubkey: pubkey || "",
-    content: content || "",
+    pubkey: pubkey || '',
+    content: content || '',
     amount: amount || 0,
     bot_name: bot.name,
-    chat_uuid: chat_uuid || "",
-  };
+    chat_uuid: chat_uuid || '',
+  }
 
   try {
-    const r = await finalAction(a);
-    success(res, r);
+    const r = await finalAction(a)
+    success(res, r)
   } catch (e) {
-    failure(res, e);
+    failure(res, e)
   }
 }
 
@@ -86,22 +79,22 @@ export async function finalAction(a: Action) {
     content,
     bot_name,
     chat_uuid,
-  } = a;
+  } = a
 
-  let myBot;
+  let myBot
   // not for tribe admin, for bot maker
   if (bot_id) {
     myBot = await models.Bot.findOne({
       where: {
         id: bot_id,
       },
-    });
+    })
   }
 
   // console.log("=> ACTION HIT", a);
   if (myBot) {
     // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-    const owner = await models.Contact.findOne({ where: { id: myBot.tenant } });
+    const owner = await models.Contact.findOne({ where: { id: myBot.tenant } })
     // THIS is a bot member cmd res (i am bot maker)
     const botMember = await models.BotMember.findOne({
       where: {
@@ -109,12 +102,12 @@ export async function finalAction(a: Action) {
         botId: bot_id,
         tenant: owner.id,
       },
-    });
-    if (!botMember) return console.log("no botMember");
+    })
+    if (!botMember) return console.log('no botMember')
 
-    const dest = botMember.memberPubkey;
-    if (!dest) return console.log("no dest to send to");
-    const topic = `${dest}/${myBot.uuid}`;
+    const dest = botMember.memberPubkey
+    if (!dest) return console.log('no dest to send to')
+    const topic = `${dest}/${myBot.uuid}`
     const data = <network.Msg>{
       action,
       bot_id,
@@ -128,17 +121,17 @@ export async function finalAction(a: Action) {
         role: 0,
         route_hint,
       }, // for verify sig
-    };
-    try {
-      await network.signAndSend({ dest, data, route_hint }, owner, topic);
-    } catch (e) {
-      console.log("=> couldnt mqtt publish");
     }
-    return; // done
+    try {
+      await network.signAndSend({ dest, data, route_hint }, owner, topic)
+    } catch (e) {
+      console.log('=> couldnt mqtt publish')
+    }
+    return // done
   }
 
-  if (action === "keysend") {
-    return console.log("=> BOT KEYSEND to", pubkey);
+  if (action === 'keysend') {
+    return console.log('=> BOT KEYSEND to', pubkey)
     // if (!(pubkey && pubkey.length === 66 && amount)) {
     //     throw 'wrong params'
     // }
@@ -154,26 +147,26 @@ export async function finalAction(a: Action) {
     // } catch (e) {
     //     throw e
     // }
-  } else if (action === "broadcast") {
-    console.log("=> BOT BROADCAST");
-    if (!content) return console.log("no content");
-    if (!chat_uuid) return console.log("no chat_uuid");
-    const theChat = await getTribeOwnersChatByUUID(chat_uuid);
-    if (!(theChat && theChat.id)) return console.log("no chat");
+  } else if (action === 'broadcast') {
+    console.log('=> BOT BROADCAST')
+    if (!content) return console.log('no content')
+    if (!chat_uuid) return console.log('no chat_uuid')
+    const theChat = await getTribeOwnersChatByUUID(chat_uuid)
+    if (!(theChat && theChat.id)) return console.log('no chat')
     if (theChat.type !== constants.chat_types.tribe)
-      return console.log("not a tribe");
+      return console.log('not a tribe')
     const owner = await models.Contact.findOne({
       where: { id: theChat.tenant },
-    });
-    const tenant: number = owner.id;
+    })
+    const tenant: number = owner.id
 
-    const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
-    const encryptedText = rsa.encrypt(theChat.groupKey, content);
-    const textMap = { chat: encryptedText };
-    var date = new Date();
-    date.setMilliseconds(0);
-    const alias = bot_name || "Bot";
-    const botContactId = -1;
+    const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
+    const encryptedText = rsa.encrypt(theChat.groupKey, content)
+    const textMap = { chat: encryptedText }
+    var date = new Date()
+    date.setMilliseconds(0)
+    const alias = bot_name || 'Bot'
+    const botContactId = -1
 
     const msg: { [k: string]: any } = {
       chatId: theChat.id,
@@ -189,15 +182,15 @@ export async function finalAction(a: Action) {
       updatedAt: date,
       senderAlias: alias,
       tenant,
-    };
-    const message = await models.Message.create(msg);
+    }
+    const message = await models.Message.create(msg)
     socket.sendJson(
       {
-        type: "message",
+        type: 'message',
         response: jsonUtils.messageToJson(message, theChat, owner),
       },
       tenant
-    );
+    )
     // console.log("BOT BROADCASE SENDER", owner.dataValues)
     await network.sendMessage({
       chat: theChat,
@@ -211,11 +204,11 @@ export async function finalAction(a: Action) {
       type: constants.message_types.bot_res,
       success: () => ({ success: true }),
       failure: (e) => {
-        return console.log(e);
+        return console.log(e)
       },
       isForwarded: true,
-    });
+    })
   } else {
-    return console.log("no action");
+    return console.log('no action')
   }
 }

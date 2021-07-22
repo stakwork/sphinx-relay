@@ -1,4 +1,3 @@
-
 ### clear out proxy things
 
 rm /Users/evanfeenstra/code/sphinx-proxy/badger/000000.vlog
@@ -12,11 +11,11 @@ delete from sphinx_contacts where id!=tenant;
 
 ### singup proxy nodes
 
-*proxy*
+_proxy_
 
 node ./scripts/signup --pubkey=XXX
 
-*alice*
+_alice_
 
 node ./scripts/signup --port=3001 --pubkey=028a3a60f23793238d6a03becb7b746d7558c4ee30d9b2d8babb460a8a6b8ea21a
 

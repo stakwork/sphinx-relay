@@ -1,5 +1,3 @@
-
-
 export interface SequelizeFields {
-    update?: Function
+  update?: Function
 }

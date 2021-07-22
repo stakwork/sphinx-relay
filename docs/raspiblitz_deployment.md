@@ -1,14 +1,16 @@
 # Deployment to Raspiblitz
 
-This guide is focused on installing Sphinx-relay on top of ***raspiblitz***. Information about myNode can be found at: https://raspiblitz.com/.
+This guide is focused on installing Sphinx-relay on top of **_raspiblitz_**. Information about myNode can be found at: https://raspiblitz.com/.
 
 ### Preparations
 
-* Be able to connect with your node through SSH.
-* Connect to **raspiblitz** as `admin`:
+- Be able to connect with your node through SSH.
+- Connect to **raspiblitz** as `admin`:
+
 ```sh
 $ ssh admin@mynode.local
 ```
+
 Use password `raspiblitz` unless you have already changed it.
 
 ### Install dependencies
@@ -22,11 +24,14 @@ python2 (if not present): `$ sudo apt install python2`
 **note**: This port can be whatever number you want. You can edit it in config/app.json in the `node_http_port` setting
 
 Open up a console window with SSH. And log in as root
+
 ```sh
 $ sudo su
 ```
+
 Open up port 3001 on your machine and make sure it has been added to the list.
-```sh 
+
+```sh
 # ufw allow 3001 comment 'allow Sphinx-Chat'
 # ufw status
 
@@ -40,27 +45,33 @@ Open up port 3001 on your machine and make sure it has been added to the list.
 ### Download
 
 login as user bitcoin.
+
 ```sh
 $ sudo su bitcoin
 $ cd
 ```
+
 Clone the repository from Github and install the package.
-```sh 
+
+```sh
 $ git clone https://github.com/stakwork/sphinx-relay
 $ cd sphinx-relay
 $ npm install
 ```
 
 ### Configure
+
 Edit the "production" section of config/app.json.
-```sh 
+
+```sh
 $ cd
 $ cd sphinx-relay/config/
 $ nano app.json
 ```
+
 Change the following 4 lines:
 
-``` 
+```
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
@@ -74,13 +85,17 @@ Save and exit:
 `Enter`
 
 Edit the "production" section of config/config.json
-```sh 
+
+```sh
 $ nano config.json
 ```
+
 Change the following line to:
-``` 
+
+```
 "storage": "/home/bitcoin/sphinx.db"
 ```
+
 Save and exit:
 `Ctrl + X`
 
@@ -97,8 +112,8 @@ Edit the `public_url` in config/app.json to equal your local IP
 ```
 {"success":true,"response":{"seen":false,"id":393,"chat_id":1,"uuid":"iJ8xow2hhR4AvLj8SGg3Eu","type":0,"sender":1,"amount":0,"date":"2020-09-15T20:49:36.000Z","message_content":"edNsPx6GmrXlM2jPwphOMaGPblpRxvkrYJcvuK2TEZDCTdFp3dFqKeZaWZS64vd/AlQCK9NQ754PWqwQHON1Ox3MMIb8SiD87WRlYSIWqAKy3PsipGiq99qDr/U5Cky7T+VKbAQyjGl4KtFo0ZWNJmzSykkjeaqj1xtsipHCAlcDIzE5KV1bomUh6z9/P22nxRfxXALCKQ7TANU0yAVqnoocvVrXNaFC77Q7t9G/zxbnf+fGU8gBEt9R/3AncpTvY7xd/bCe0EjTASj13/P9ZzZBb60LM+MEp4vxMpEwLkLCwREVBUYbac+gtznNOCoYb8u15zz9DwP9qZ49/xZwCw==","remote_message_content":"{\"3\":\"EUlLtTGQToo5MsUxsbyLDnC7jzrDX3vZjLxH48r2Fnqnyi1XWZyf9+PA84934KzqOtUXvmqmV8E5QlNtTXh1pYpOWVuO1yX+0by03BQOuoJaoHRWrRTIHZP2xOff8VufcNmb57M4PgXQaH38V+iFWQkQaBaKmagh74jVfg7kH+ZsqdTBYw7CnFSUKXdc6E8JYeEwIRuCMOHdDB9STyUVdVTm8WtEa2pB6Yagkcx4rsWJY/vbEkjYhSRGb8dO2DESB3KtYtO+J7Xs/Z/Djolk3iFcMb59XVKoIqBbxg+KZPK7Vrv06TtSr4OFSgiSnkyxm+r6TDxiNxVaisAXFWB9cg==\"}","status":0,"created_at":"2020-09-15T20:49:36.000Z","updated_at":"2020-09-15T20:49:36.555Z","status_m
 ```
-*Message payloads are encrypted with **sphinx cypher**, but all metadata is transmitted in cleartext.*
 
+_Message payloads are encrypted with **sphinx cypher**, but all metadata is transmitted in cleartext._
 
 #### If you want to connect to your Sphinx-Relay from outside of your local network
 
@@ -109,9 +124,11 @@ Edit the `public_url` in config/app.json to equal your public IP or fully qualif
 Make sure that port 3001 forwarding is properly set up.
 
 For extra security:
+
 ```sh
 $ export USE_PASSWORD=true
 ```
+
 As noted in the previous section, you might want to protect communications between your Sphinx client and **sphinx-relay** with SSL.
 
 In order to do that, obtain a domain and an SSL certificate for your **sphinx-relay** server and set up a reverse proxy with NGINX (or a more lightweight alternative).
@@ -125,35 +142,37 @@ $ sudo apt install nginx
 
 sudo nano /etc/nginx/sites-available/YOUR-DOMAIN
 ```
+
 Use the following NGINX config:
+
 ```
 server {
   listen 53001 ssl;
 
-  server_name YOUR-DOMAIN;                                               
+  server_name YOUR-DOMAIN;
   # Edit the above _YOUR-DOMAIN_ to your domain name
-   
-  ssl_certificate /etc/letsencrypt/live/YOUR-DOMAIN/fullchain.pem;       
-  # If you use Lets Encrypt, you should just need to change the domain. 
+
+  ssl_certificate /etc/letsencrypt/live/YOUR-DOMAIN/fullchain.pem;
+  # If you use Lets Encrypt, you should just need to change the domain.
   # Otherwise, change this to the path to full path to your domains public certificate file.
-   
-  ssl_certificate_key /etc/letsencrypt/live/YOUR-DOMAIN/privkey.pem;     
+
+  ssl_certificate_key /etc/letsencrypt/live/YOUR-DOMAIN/privkey.pem;
   # If you use Let's Encrypt, you should just need to change the domain.
   # Otherwise, change this to the direct path to your domains private key certificate file.
-   
-  ssl_session_cache builtin:1000 shared:SSL:10m;                        
+
+  ssl_session_cache builtin:1000 shared:SSL:10m;
   # Defining option to share SSL Connection with Passed Proxy
-   
-  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;                                  
-  # Defining used protocol versions. 
-   
-  ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4; 
-  # Defining ciphers to use. 
-   
-  ssl_prefer_server_ciphers on;                                         
+
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+  # Defining used protocol versions.
+
+  ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
+  # Defining ciphers to use.
+
+  ssl_prefer_server_ciphers on;
   # Enabling ciphers
-   
-  access_log /var/log/nginx/access.log;                                 
+
+  access_log /var/log/nginx/access.log;
   # Log Location. the Nginx User must have R/W permissions. Usually by ownership.
 
   location / {
@@ -167,6 +186,7 @@ server {
 
 } # Don't leave this out! It "closes" the server block we started this file with.
 ```
+
 Save and exit:
 `Ctrl + X`
 
@@ -175,11 +195,13 @@ Save and exit:
 `Enter`
 
 To make the file active, we will need to link the file in the sites-available folder to a location within the sites-enabled folder. Again, change YOUR-DOMAIN here with the actual name of the file you created earlier.
+
 ```sh
 ln -s /etc/nginx/sites-avaialable/YOUR-DOMAIN /etc/nginx/sites-enabled/YOUR-DOMAIN.conf
 ```
 
 To test your NGINX configuration:
+
 ```sh
 $ nginx -t
 ```
@@ -192,7 +214,7 @@ $ sudo systemctl restart nginx
 
 ### Activate keysend
 
-We need LND to run with keysend activated. First, we check if it is already enabled on your node. 
+We need LND to run with keysend activated. First, we check if it is already enabled on your node.
 
 Go to raspiblitz menu, or:
 
@@ -206,26 +228,33 @@ Find menu "Services" item and activate Keysend.
 
 Now it's time to run the software.
 
-```sh 
+```sh
 $ cd
 $ cd sphinx-relay/config/
 $ npm run prod
 ```
+
 When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android or iOS) to connect!
 
 ### To make relay run continuously (also after a restart).
+
 Before you start this part, make sure your app is connected and that you are able to send & receive messages.
 
 Login as admin.
-```sh 
+
+```sh
 $ sudo su admin
 ```
+
 Create a file named sphinx-relay.service
-```sh 
+
+```sh
 $ sudo nano /etc/systemd/system/sphinx-relay.service
 ```
+
 Copy and paste the following text to add it to the file:
-```sh 
+
+```sh
 [Unit]
 Description=Sphinx Relay Service
 After=network.target
@@ -244,6 +273,7 @@ SyslogIdentifier=sphinx-relay
 [Install]
 WantedBy=multi-user.target
 ```
+
 Save and exit:
 `Ctrl + X`
 
@@ -252,23 +282,30 @@ Save and exit:
 `Enter`
 
 Let's run!
-```sh 
+
+```sh
 $ sudo systemctl enable sphinx-relay
 $ sudo systemctl start sphinx-relay
 ```
+
 Check if Relay successfully started.
-```sh 
+
+```sh
 $ sudo systemctl status sphinx-relay
 ```
+
 ### To stop the program
-```sh 
+
+```sh
 $ sudo systemctl stop sphinx-relay
 ```
 
 # To update Sphinx-Relay
 
 ### fast method:
+
 You can pull directly from git to update your relay. If you have only changed your config files, the following should work:
+
 - `systemctl stop sphinx-relay`
 - cd into your sphinx-relay directory (`cd sphinx-relay`)
 - `git stash && git checkout master && git pull && git stash pop`
@@ -277,38 +314,50 @@ You can pull directly from git to update your relay. If you have only changed yo
 
 ### full reset method:
 
-> This probably is not the most efficient way to update. But it works, so we got that going, which is nice. Feel free to optimize the process and contribute. :) 
+> This probably is not the most efficient way to update. But it works, so we got that going, which is nice. Feel free to optimize the process and contribute. :)
 
 Login as `admin` and stop the program.
-```sh 
+
+```sh
 $ sudo systemctl stop sphinx-relay.service
 ```
+
 login as user `bitcoin`.
+
 ```sh
 $ sudo su bitcoin
 $ cd
 ```
+
 ## Remove the old version
+
 ```sh
 $ rm -rf sphinx-relay
 ```
+
 ## Download the new version
+
 Clone the repository from Github and install the package.
-```sh 
+
+```sh
 $ git clone https://github.com/stakwork/sphinx-relay
 $ cd sphinx-relay
 $ npm install
 ```
+
 ### Configure
+
 Edit the "production" section of config/app.json.
-```sh 
+
+```sh
 $ cd
 $ cd sphinx-relay/config/
 $ nano app.json
 ```
+
 Change the following 4 lines:
 
-``` 
+```
 "macaroon_location": "/home/bitcoin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 "tls_location": "/mnt/hdd/lnd/tls.cert",
 "lnd_log_location": "/home/bitcoin/.lnd/logs/bitcoin/mainnet/lnd.log",
@@ -325,13 +374,17 @@ Save and exit:
 `Enter`
 
 Edit the "production" section of config/config.json
-```sh 
+
+```sh
 $ nano config.json
 ```
+
 Change to following line to:
-``` 
+
+```
 "storage": "/home/bitcoin/sphinx.db"
 ```
+
 Save and exit:
 `Ctrl + X`
 
@@ -340,23 +393,28 @@ Save and exit:
 `Enter`
 
 ### Turn on the service.
+
 Login as admin.
-```sh 
+
+```sh
 $ su admin
 ```
+
 Or
-```sh 
+
+```sh
 $ exit
 ```
+
 Turn the service on and check the status.
-```sh 
+
+```sh
 $ sudo systemctl enable sphinx-relay
 $ sudo systemctl start sphinx-relay
 ```
 
-### tail logs 
+### tail logs
 
 `journalctl -u sphinx-relay -f`
-
 
 [Back to README](https://github.com/dimaatmelodromru/sphinx-relay/tree/docs-edit#connecting-a-mobile-client)
