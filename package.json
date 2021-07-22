@@ -105,5 +105,10 @@
       "dist/config/*"
     ]
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
   "bin": "dist/app.js"
 }

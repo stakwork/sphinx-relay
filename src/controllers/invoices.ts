@@ -53,7 +53,7 @@ export const payInvoice = async (req, res) => {
     message.status = constants.statuses.confirmed
     message.save()
 
-    var date = new Date()
+    const date = new Date()
     date.setMilliseconds(0)
 
     const chat = await models.Chat.findOne({
@@ -88,7 +88,7 @@ export const payInvoice = async (req, res) => {
 async function anonymousInvoice(res, payment_request: string, tenant: number) {
   const { memo, sat, msat, paymentHash, invoiceDate } =
     decodePaymentRequest(payment_request)
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   models.Message.create({
     chatId: 0,
@@ -122,7 +122,7 @@ export const createInvoice = async (req, res) => {
 
   const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body
 
-  var request: interfaces.AddInvoiceRequest = {
+  const request: interfaces.AddInvoiceRequest = {
     value: amount,
     memo: remote_memo || memo,
   }
@@ -170,8 +170,8 @@ export const createInvoice = async (req, res) => {
         })
         if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
-        let timestamp = parseInt(invoice.timestamp + '000')
-        let expiry = parseInt(invoice.timeExpireDate + '000')
+        const timestamp = parseInt(invoice.timestamp + '000')
+        const expiry = parseInt(invoice.timeExpireDate + '000')
 
         const message = await models.Message.create({
           chatId: chat.id,
@@ -233,7 +233,7 @@ export const receiveInvoice = async (payload) => {
   const dat = payload.content || payload
   const payment_request = dat.message.invoice
   const network_type = dat.network_type || 0
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {
