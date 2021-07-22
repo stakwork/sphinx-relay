@@ -27,7 +27,8 @@ function lazyToken(pubkey, host) {
         if (tokens[pubkey] && tokens[pubkey][host]) {
             const ts = tokens[pubkey][host].ts;
             const now = moment().unix();
-            if (ts > now - 604700) { // in the last week
+            if (ts > now - 604700) {
+                // in the last week
                 return tokens[pubkey][host].token;
             }
         }
@@ -37,43 +38,43 @@ function lazyToken(pubkey, host) {
                 tokens[pubkey] = {};
             tokens[pubkey][host] = {
                 token: t,
-                ts: moment().unix()
+                ts: moment().unix(),
             };
             return t;
         }
         catch (e) {
             if (logger_1.logging.Meme)
-                console.log("[meme] error getting token", e);
+                console.log('[meme] error getting token', e);
         }
     });
 }
 exports.lazyToken = lazyToken;
-const mediaURL = "http://" + config.media_host + "/";
+const mediaURL = 'http://' + config.media_host + '/';
 function getMediaToken(ownerPubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log("[meme] gET MEDIA TOEKN", ownerPubkey)
-        const theURL = host ? "http://" + host + "/" : mediaURL;
+        const theURL = host ? 'http://' + host + '/' : mediaURL;
         yield helpers.sleep(300);
         try {
-            const res = yield rp.get(theURL + "ask");
+            const res = yield rp.get(theURL + 'ask');
             const r = JSON.parse(res);
             if (!(r && r.challenge && r.id)) {
-                throw new Error("no challenge");
+                throw new Error('no challenge');
             }
-            const sig = yield Lightning.signBuffer(Buffer.from(r.challenge, "base64"), ownerPubkey);
+            const sig = yield Lightning.signBuffer(Buffer.from(r.challenge, 'base64'), ownerPubkey);
             if (!sig)
-                throw new Error("no signature");
+                throw new Error('no signature');
             let pubkey = ownerPubkey;
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
             if (logger_1.logging.Meme)
                 console.log('[meme] verify', pubkey);
-            const bod = yield rp.post(theURL + "verify", {
+            const bod = yield rp.post(theURL + 'verify', {
                 form: { id: r.id, sig: sigBase64, pubkey },
             });
             const body = JSON.parse(bod);
             if (!(body && body.token)) {
-                throw new Error("no token");
+                throw new Error('no token');
             }
             return body.token;
         }

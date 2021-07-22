@@ -50,9 +50,9 @@ __decorate([
 ], ChatMember.prototype, "tenant", void 0);
 ChatMember = __decorate([
     sequelize_typescript_1.Table({
-        tableName: 'sphinx_chat_members', underscored: true, indexes: [
-            { unique: true, fields: ['chat_id', 'contact_id'] }
-        ]
+        tableName: 'sphinx_chat_members',
+        underscored: true,
+        indexes: [{ unique: true, fields: ['chat_id', 'contact_id'] }],
     })
 ], ChatMember);
 exports.default = ChatMember;

@@ -45,7 +45,7 @@ exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         if (logger_1.logging.Network) {
-            console.log("=> received confirmation", payload.message && payload.message.id);
+            console.log('=> received confirmation', payload.message && payload.message.id);
         }
         const dat = payload.content || payload;
         const chat_uuid = dat.chat.uuid;
@@ -61,7 +61,7 @@ function receiveConfirmation(payload) {
         });
         // new confirmation logic
         if (msg_id) {
-            lock_1.default.acquire("confirmation", function (done) {
+            lock_1.default.acquire('confirmation', function (done) {
                 return __awaiter(this, void 0, void 0, function* () {
                     // console.log("update status map")
                     const message = yield models_1.models.Message.findOne({
@@ -70,7 +70,7 @@ function receiveConfirmation(payload) {
                     if (message) {
                         let statusMap = {};
                         try {
-                            statusMap = JSON.parse(message.statusMap || "{}");
+                            statusMap = JSON.parse(message.statusMap || '{}');
                         }
                         catch (e) { }
                         statusMap[sender.id] = constants_1.default.statuses.received;
@@ -79,7 +79,7 @@ function receiveConfirmation(payload) {
                             statusMap: JSON.stringify(statusMap),
                         });
                         socket.sendJson({
-                            type: "confirmation",
+                            type: 'confirmation',
                             response: jsonUtils.messageToJson(message, chat, sender),
                         }, tenant);
                     }
@@ -102,12 +102,12 @@ function receiveConfirmation(payload) {
                     status: constants_1.default.statuses.pending,
                     tenant,
                 },
-                order: [["createdAt", "desc"]],
+                order: [['createdAt', 'desc']],
             });
             const message = messages[0];
             message.update({ status: constants_1.default.statuses.received });
             socket.sendJson({
-                type: "confirmation",
+                type: 'confirmation',
                 response: jsonUtils.messageToJson(message, chat, sender),
             }, tenant);
         }
@@ -127,16 +127,16 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
         if (message) {
             let statusMap = {};
             try {
-                statusMap = JSON.parse(message.statusMap || "{}");
+                statusMap = JSON.parse(message.statusMap || '{}');
             }
             catch (e) { }
-            statusMap["chat"] = constants_1.default.statuses.received;
+            statusMap['chat'] = constants_1.default.statuses.received;
             yield message.update({
                 status: constants_1.default.statuses.received,
                 statusMap: JSON.stringify(statusMap),
             });
             socket.sendJson({
-                type: "confirmation",
+                type: 'confirmation',
                 response: jsonUtils.messageToJson(message, chat, null),
             }, tenant);
         }
@@ -146,7 +146,7 @@ exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
 function receiveHeartbeat(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         if (logger_1.logging.Network)
-            console.log("=> received heartbeat");
+            console.log('=> received heartbeat');
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_route_hint = dat.sender.route_hint;
@@ -154,15 +154,15 @@ function receiveHeartbeat(payload) {
         const owner = dat.owner;
         // const tenant:number = owner.id
         if (!(sender_pub_key && sender_pub_key.length === 66))
-            return console.log("no sender");
+            return console.log('no sender');
         if (!receivedAmount)
-            return console.log("no amount");
+            return console.log('no amount');
         const amount = Math.round(receivedAmount / 2);
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
             amt,
             dest: sender_pub_key,
-            route_hint: sender_route_hint || "",
+            route_hint: sender_route_hint || '',
             data: {
                 type: constants_1.default.message_types.heartbeat_confirmation,
                 message: { amount: amt },
@@ -183,11 +183,11 @@ let heartbeats = {};
 function healthcheck(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         // const tenant:number = req.owner.id
         const pubkey = req.query.pubkey;
         if (!(pubkey && pubkey.length === 66)) {
-            return res_1.failure200(res, "missing pubkey");
+            return res_1.failure200(res, 'missing pubkey');
         }
         const routeHint = req.query.route_hint;
         const owner = req.owner;
@@ -195,7 +195,7 @@ function healthcheck(req, res) {
         const opts = {
             amt,
             dest: pubkey,
-            route_hint: routeHint || "",
+            route_hint: routeHint || '',
             data: {
                 type: constants_1.default.message_types.heartbeat,
                 message: {
@@ -216,11 +216,11 @@ function healthcheck(req, res) {
             if (i >= 15) {
                 clearInterval(interval);
                 delete heartbeats[pubkey];
-                res_1.failure200(res, "no confimration received");
+                res_1.failure200(res, 'no confimration received');
                 return;
             }
             if (heartbeats[pubkey]) {
-                res_1.success(res, "success");
+                res_1.success(res, 'success');
                 clearInterval(interval);
                 delete heartbeats[pubkey];
                 return;
@@ -233,7 +233,7 @@ exports.healthcheck = healthcheck;
 function receiveHeartbeatConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         if (logger_1.logging.Network)
-            console.log("=> received heartbeat confirmation");
+            console.log('=> received heartbeat confirmation');
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         heartbeats[sender_pub_key] = true;

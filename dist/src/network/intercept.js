@@ -24,7 +24,7 @@ function isBotMsg(msg, sentByMe, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = sender.id;
         if (!tenant) {
-            console.log("no tenant in isBotMsg");
+            console.log('no tenant in isBotMsg');
             return false;
         }
         // console.log('=> isBotMsg', msg)
@@ -42,7 +42,7 @@ function isBotMsg(msg, sentByMe, sender) {
         if (!chat)
             return false;
         let didEmit = false;
-        if (txt && txt.startsWith("/bot ")) {
+        if (txt && txt.startsWith('/bot ')) {
             builtin_1.builtinBotEmit(msg);
             didEmit = true;
         }
@@ -91,7 +91,7 @@ function emitMessageToBot(msg, botInTribe, sender) {
         // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
         const tenant = sender.id;
         if (!tenant) {
-            console.log("=> no tenant in emitMessageToBot");
+            console.log('=> no tenant in emitMessageToBot');
             return false;
         }
         switch (botInTribe.botType) {

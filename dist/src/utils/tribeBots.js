@@ -13,7 +13,7 @@ exports.makeBotsJSON = exports.declare_bot = void 0;
 const models_1 = require("../models");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
-function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint }) {
+function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = tribes_1.getHost();
         try {
@@ -23,14 +23,18 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
             const r = yield node_fetch_1.default(protocol + '://' + host + '/bots', {
                 method: 'POST',
                 body: JSON.stringify({
-                    uuid, owner_pubkey,
-                    name, description, tags, img: img || '',
+                    uuid,
+                    owner_pubkey,
+                    name,
+                    description,
+                    tags,
+                    img: img || '',
                     price_per_use: price_per_use || 0,
                     unlisted: unlisted || false,
                     deleted: deleted || false,
-                    owner_route_hint: owner_route_hint || ''
+                    owner_route_hint: owner_route_hint || '',
                 }),
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             });
             const j = yield r.json();
             console.log('=> bot created:', j);
@@ -46,14 +50,14 @@ function makeBotsJSON(tribeID) {
     return __awaiter(this, void 0, void 0, function* () {
         const bots = yield models_1.models.ChatBot.findAll({
             where: {
-                chatId: tribeID
-            }
+                chatId: tribeID,
+            },
         });
         if (!bots)
             return [];
         if (!bots.length)
             return [];
-        return bots.map(b => {
+        return bots.map((b) => {
             const bot = b.dataValues;
             if (bot.botPrefix === '/loopout') {
                 return loopoutBotJSON();
@@ -74,28 +78,32 @@ function loopoutBotJSON() {
     return {
         prefix: '/loopout',
         price: 0,
-        commands: [{
+        commands: [
+            {
                 command: '*',
                 price: 0,
                 min_price: 250000,
                 max_price: 16777215,
                 price_index: 2,
-                admin_only: false
-            }]
+                admin_only: false,
+            },
+        ],
     };
 }
 function testBotJSON() {
     return {
         prefix: '/testbot',
         price: 0,
-        commands: [{
+        commands: [
+            {
                 command: '*',
                 price: 0,
                 min_price: 20,
                 max_price: 50,
                 price_index: 1,
-                admin_only: false
-            }]
+                admin_only: false,
+            },
+        ],
     };
 }
 //# sourceMappingURL=tribeBots.js.map

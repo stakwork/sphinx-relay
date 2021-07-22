@@ -23,23 +23,33 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     date.setMilliseconds(0);
     // console.log("findOrCreateChat", chat_id, typeof chat_id, owner_id, typeof owner_id)
     if (chat_id) {
-        chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant: owner_id } });
+        chat = yield models_1.models.Chat.findOne({
+            where: { id: chat_id, tenant: owner_id },
+        });
         // console.log('findOrCreateChat: chat_id exists')
     }
     else {
         if (!owner_id || !recipient_id)
             return null;
-        console.log("chat does not exists, create new");
+        console.log('chat does not exists, create new');
         const owner = yield models_1.models.Contact.findOne({ where: { id: owner_id } });
-        const recipient = yield models_1.models.Contact.findOne({ where: { id: recipient_id, tenant: owner_id } });
-        const uuid = md5([owner.publicKey, recipient.publicKey].sort().join("-"));
+        const recipient = yield models_1.models.Contact.findOne({
+            where: { id: recipient_id, tenant: owner_id },
+        });
+        const uuid = md5([owner.publicKey, recipient.publicKey].sort().join('-'));
         // find by uuid
-        chat = yield models_1.models.Chat.findOne({ where: { uuid, tenant: owner_id, deleted: false } });
-        if (!chat) { // no chat! create new
-            console.log("=> no chat! create new");
+        chat = yield models_1.models.Chat.findOne({
+            where: { uuid, tenant: owner_id, deleted: false },
+        });
+        if (!chat) {
+            // no chat! create new
+            console.log('=> no chat! create new');
             chat = yield models_1.models.Chat.create({
                 uuid: uuid,
-                contactIds: JSON.stringify([parseInt(owner_id), parseInt(recipient_id)]),
+                contactIds: JSON.stringify([
+                    parseInt(owner_id),
+                    parseInt(recipient_id),
+                ]),
                 createdAt: date,
                 updatedAt: date,
                 type: constants_1.default.chat_types.conversation,
@@ -50,9 +60,10 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     return chat;
 });
 exports.findOrCreateChat = findOrCreateChat;
-const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey, routeHint }) => __awaiter(void 0, void 0, void 0, function* () {
+const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey, routeHint, }) => __awaiter(void 0, void 0, void 0, function* () {
     const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey || false);
-    if (contactPubKey) { // dont use ids here
+    if (contactPubKey) {
+        // dont use ids here
         exports.performKeysendMessage({
             sender,
             destination_key: contactPubKey,
@@ -60,7 +71,7 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
             msg,
             route_hint: routeHint,
             success,
-            failure
+            failure,
         });
         return;
     }
@@ -90,7 +101,7 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
             },
             failure: (error) => {
                 no = error;
-            }
+            },
         });
         yield sleep(1000);
     }));
@@ -102,12 +113,12 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
     }
 });
 exports.sendContactKeys = sendContactKeys;
-const performKeysendMessage = ({ destination_key, route_hint, amount, msg, success, failure, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+const performKeysendMessage = ({ destination_key, route_hint, amount, msg, success, failure, sender, }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
         data: msg || {},
         amt: Math.max(amount, 3),
-        route_hint
+        route_hint,
     };
     try {
         const r = yield network.signAndSend(opts, sender);
@@ -117,7 +128,7 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
     }
     catch (e) {
         if (logger_1.logging.Network) {
-            console.log("KEYSEND MESSAGE ERROR to", destination_key, e, opts);
+            console.log('KEYSEND MESSAGE ERROR to', destination_key, e, opts);
         }
         if (failure)
             failure(e);
@@ -126,7 +137,9 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
 exports.performKeysendMessage = performKeysendMessage;
 function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, senderAlias, owner, realAmount) {
     return __awaiter(this, void 0, void 0, function* () {
-        let sender = yield models_1.models.Contact.findOne({ where: { publicKey: senderPubKey, tenant: owner.id } });
+        let sender = yield models_1.models.Contact.findOne({
+            where: { publicKey: senderPubKey, tenant: owner.id },
+        });
         if (!sender) {
             let unmet = false;
             if (owner.priceToMeet) {
@@ -136,10 +149,10 @@ function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, 
             sender = yield models_1.models.Contact.create({
                 publicKey: senderPubKey,
                 routeHint: senderRouteHint || '',
-                alias: senderAlias || "Unknown",
+                alias: senderAlias || 'Unknown',
                 status: 1,
                 tenant: owner.id,
-                unmet
+                unmet,
             });
             exports.sendContactKeys({
                 contactIds: [sender.id],
@@ -148,7 +161,8 @@ function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, 
             });
         }
         else {
-            if (sender.unmet) { // update "unmet" if they pay enough second time
+            if (sender.unmet) {
+                // update "unmet" if they pay enough second time
                 if (owner.priceToMeet && realAmount >= owner.priceToMeet) {
                     yield sender.update({ unmet: false });
                 }
@@ -160,7 +174,9 @@ function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, 
 exports.findOrCreateContactByPubkeyAndRouteHint = findOrCreateContactByPubkeyAndRouteHint;
 function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        let chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant, deleted: false } });
+        let chat = yield models_1.models.Chat.findOne({
+            where: { uuid: chat_uuid, tenant, deleted: false },
+        });
         if (!chat) {
             var date = new Date();
             date.setMilliseconds(0);
@@ -170,7 +186,7 @@ function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
                 createdAt: date,
                 updatedAt: date,
                 type: 0,
-                tenant
+                tenant,
             });
         }
         return chat;
@@ -179,7 +195,7 @@ function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
 exports.findOrCreateChatByUUID = findOrCreateChatByUUID;
 function sleep(ms) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     });
 }
 exports.sleep = sleep;
@@ -218,7 +234,9 @@ function parseReceiveParams(payload) {
         let chat;
         let owner = dat.owner;
         if (!owner) {
-            const ownerRecord = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: dest } });
+            const ownerRecord = yield models_1.models.Contact.findOne({
+                where: { isOwner: true, publicKey: dest },
+            });
             owner = ownerRecord.dataValues;
         }
         if (!owner)
@@ -227,19 +245,56 @@ function parseReceiveParams(payload) {
             const realAmount = network_type === constants_1.default.network_types.lightning ? amount : 0;
             sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner.dataValues, realAmount);
             chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id);
-            if (sender.fromGroup) { // if a private msg received, update the contact
+            if (sender.fromGroup) {
+                // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });
             }
         }
-        else { // group
-            sender = yield models_1.models.Contact.findOne({ where: { publicKey: sender_pub_key, tenant: owner.id } });
+        else {
+            // group
+            sender = yield models_1.models.Contact.findOne({
+                where: { publicKey: sender_pub_key, tenant: owner.id },
+            });
             // inject a "sender" with an alias
             if (!sender && chat_type == constants_1.default.chat_types.tribe) {
                 sender = { id: 0, alias: sender_alias };
             }
-            chat = yield models_1.models.Chat.findOne({ where: { uuid: chat_uuid, tenant: owner.id } });
+            chat = yield models_1.models.Chat.findOne({
+                where: { uuid: chat_uuid, tenant: owner.id },
+            });
         }
-        return { dest, owner, sender, chat, sender_pub_key, sender_route_hint, sender_alias, isTribeOwner, chat_uuid, amount, content, mediaToken, mediaKey, mediaType, originalMuid, chat_type, msg_id, chat_members, chat_name, chat_host, chat_key, remote_content, msg_uuid, date_string, reply_uuid, skip_payment_processing, purchaser_id, sender_photo_url, network_type, message_status };
+        return {
+            dest,
+            owner,
+            sender,
+            chat,
+            sender_pub_key,
+            sender_route_hint,
+            sender_alias,
+            isTribeOwner,
+            chat_uuid,
+            amount,
+            content,
+            mediaToken,
+            mediaKey,
+            mediaType,
+            originalMuid,
+            chat_type,
+            msg_id,
+            chat_members,
+            chat_name,
+            chat_host,
+            chat_key,
+            remote_content,
+            msg_uuid,
+            date_string,
+            reply_uuid,
+            skip_payment_processing,
+            purchaser_id,
+            sender_photo_url,
+            network_type,
+            message_status,
+        };
     });
 }
 exports.parseReceiveParams = parseReceiveParams;
@@ -254,7 +309,7 @@ function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {
         type: type,
-        sender: Object.assign(Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, sender.routeHint && { route_hint: sender.routeHint }), !dontActuallySendContactKey && { contact_key: sender.contactKey }), sender.alias && { alias: sender.alias }), includePhotoUrl && { photo_url: sender.photoUrl })
+        sender: Object.assign(Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), (!dontActuallySendContactKey && { contact_key: sender.contactKey })), (sender.alias && { alias: sender.alias })), (includePhotoUrl && { photo_url: sender.photoUrl })),
     };
 }
 //# sourceMappingURL=helpers.js.map

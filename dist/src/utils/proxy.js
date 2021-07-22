@@ -22,31 +22,40 @@ const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost';
 function isProxy() {
-    return (config.proxy_lnd_port && config.proxy_macaroons_dir && config.proxy_tls_location) ? true : false;
+    return config.proxy_lnd_port &&
+        config.proxy_macaroons_dir &&
+        config.proxy_tls_location
+        ? true
+        : false;
 }
 exports.isProxy = isProxy;
 function genUsersInterval(ms) {
     if (!isProxy())
         return;
     setTimeout(() => {
+        // so it starts a bit later than pingHub
         setInterval(generateNewUsers, ms);
     }, 2000);
 }
 exports.genUsersInterval = genUsersInterval;
-const NEW_USER_NUM = (config.proxy_new_nodes || config.proxy_new_nodes === 0) ? config.proxy_new_nodes : 2;
+const NEW_USER_NUM = config.proxy_new_nodes || config.proxy_new_nodes === 0
+    ? config.proxy_new_nodes
+    : 2;
 const SATS_PER_USER = config.proxy_initial_sats || 5000;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
         if (!isProxy()) {
             if (logger_1.logging.Proxy)
-                console.log("[proxy] not proxy");
+                console.log('[proxy] not proxy');
             return;
         }
-        const newusers = yield models_1.models.Contact.findAll({ where: { isOwner: true, authToken: null } });
+        const newusers = yield models_1.models.Contact.findAll({
+            where: { isOwner: true, authToken: null },
+        });
         if (newusers.length >= NEW_USER_NUM) {
             if (logger_1.logging.Proxy)
-                console.log("[proxy] already have new users");
+                console.log('[proxy] already have new users');
             return; // we already have the mimimum
         }
         const n1 = NEW_USER_NUM - newusers.length;
@@ -63,7 +72,7 @@ function generateNewUsers() {
         const n = Math.min(n1, n2);
         if (!n) {
             if (logger_1.logging.Proxy)
-                console.log("[proxy] not enough sats");
+                console.log('[proxy] not enough sats');
             return;
         }
         if (logger_1.logging.Proxy)
@@ -76,26 +85,28 @@ function generateNewUsers() {
     });
 }
 exports.generateNewUsers = generateNewUsers;
-const adminURL = config.proxy_admin_url ? (config.proxy_admin_url + '/') : 'http://localhost:5555/';
+const adminURL = config.proxy_admin_url
+    ? config.proxy_admin_url + '/'
+    : 'http://localhost:5555/';
 function generateNewUser(rootpk) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const r = yield node_fetch_1.default(adminURL + 'generate', {
                 method: 'POST',
-                headers: { 'x-admin-token': config.proxy_admin_token }
+                headers: { 'x-admin-token': config.proxy_admin_token },
             });
             const j = yield r.json();
             const contact = {
                 publicKey: j.pubkey,
                 routeHint: `${rootpk}:${j.channel}`,
                 isOwner: true,
-                authToken: null
+                authToken: null,
             };
             const created = yield models_1.models.Contact.create(contact);
             // set tenant to self!
             created.update({ tenant: created.id });
             if (logger_1.logging.Proxy)
-                console.log("=> CREATED OWNER:", created.dataValues.publicKey);
+                console.log('=> CREATED OWNER:', created.dataValues.publicKey);
         }
         catch (e) {
             console.log('=> could not gen new user', e);
@@ -109,7 +120,7 @@ function generateNewExternalUser(pubkey, sig) {
             const r = yield node_fetch_1.default(adminURL + 'create_external', {
                 method: 'POST',
                 body: JSON.stringify({ pubkey, sig }),
-                headers: { 'x-admin-token': config.proxy_admin_token }
+                headers: { 'x-admin-token': config.proxy_admin_token },
             });
             const j = yield r.json();
             const rootpk = yield getProxyRootPubkey();
@@ -130,7 +141,7 @@ function getProxyTotalBalance() {
         try {
             const r = yield node_fetch_1.default(adminURL + 'balances', {
                 method: 'GET',
-                headers: { 'x-admin-token': config.proxy_admin_token }
+                headers: { 'x-admin-token': config.proxy_admin_token },
             });
             const j = yield r.json();
             return j.total ? Math.floor(j.total / 1000) : 0;
@@ -165,17 +176,16 @@ function loadProxyLightning(ownerPubkey) {
                 try {
                     macname = yield getProxyRootPubkey();
                 }
-                catch (e) {
-                }
+                catch (e) { }
             }
             var credentials = loadProxyCredentials(macname);
-            var lnrpcDescriptor = grpc.load("proto/rpc_proxy.proto");
+            var lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto');
             var lnrpc = lnrpcDescriptor.lnrpc_proxy;
             const the = new lnrpc.Lightning(PROXY_LND_IP + ':' + config.proxy_lnd_port, credentials);
             return the;
         }
         catch (e) {
-            console.log("ERROR in loadProxyLightning", e);
+            console.log('ERROR in loadProxyLightning', e);
         }
     });
 }
@@ -189,7 +199,7 @@ function getProxyRootPubkey() {
         }
         // normal client, to get pubkey of LND
         var credentials = Lightning.loadCredentials();
-        var lnrpcDescriptor = grpc.load("proto/rpc.proto");
+        var lnrpcDescriptor = grpc.load('proto/rpc.proto');
         var lnrpc = lnrpcDescriptor.lnrpc;
         var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
         lc.getInfo({}, function (err, response) {
@@ -198,7 +208,7 @@ function getProxyRootPubkey() {
                 resolve(proxyRootPubkey);
             }
             else {
-                reject("CANT GET ROOT KEY");
+                reject('CANT GET ROOT KEY');
             }
         });
     });
@@ -207,7 +217,7 @@ function getProxyLNDBalance() {
     return new Promise((resolve, reject) => {
         // normal client, to get pubkey of LND
         var credentials = Lightning.loadCredentials();
-        var lnrpcDescriptor = grpc.load("proto/rpc.proto");
+        var lnrpcDescriptor = grpc.load('proto/rpc.proto');
         var lnrpc = lnrpcDescriptor.lnrpc;
         var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
         lc.channelBalance({}, function (err, response) {

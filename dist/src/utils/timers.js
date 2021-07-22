@@ -29,26 +29,35 @@ function removeTimerByMsgId(msgId) {
 exports.removeTimerByMsgId = removeTimerByMsgId;
 function removeTimersByContactId(contactId, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const ts = yield models_1.models.Timer.findAll({ where: { receiver: contactId, tenant } });
-        ts.forEach(t => clearTimer(t));
+        const ts = yield models_1.models.Timer.findAll({
+            where: { receiver: contactId, tenant },
+        });
+        ts.forEach((t) => clearTimer(t));
         models_1.models.Timer.destroy({ where: { receiver: contactId, tenant } });
     });
 }
 exports.removeTimersByContactId = removeTimersByContactId;
 function removeTimersByContactIdChatId(contactId, chatId, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const ts = yield models_1.models.Timer.findAll({ where: { receiver: contactId, chatId, tenant } });
-        ts.forEach(t => clearTimer(t));
+        const ts = yield models_1.models.Timer.findAll({
+            where: { receiver: contactId, chatId, tenant },
+        });
+        ts.forEach((t) => clearTimer(t));
         models_1.models.Timer.destroy({ where: { receiver: contactId, chatId, tenant } });
     });
 }
 exports.removeTimersByContactIdChatId = removeTimersByContactIdChatId;
-function addTimer({ amount, millis, receiver, msgId, chatId, tenant }) {
+function addTimer({ amount, millis, receiver, msgId, chatId, tenant, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const now = new Date().valueOf();
         const when = now + millis;
         const t = yield models_1.models.Timer.create({
-            amount, millis: when, receiver, msgId, chatId, tenant
+            amount,
+            millis: when,
+            receiver,
+            msgId,
+            chatId,
+            tenant,
         });
         setTimer(makeName(t), when, () => __awaiter(this, void 0, void 0, function* () {
             payBack(t);
@@ -75,20 +84,23 @@ function makeName(t) {
 function reloadTimers() {
     return __awaiter(this, void 0, void 0, function* () {
         const timers = yield models_1.models.Timer.findAll();
-        timers && timers.forEach((t, i) => {
-            const name = makeName(t);
-            setTimer(name, t.millis, () => __awaiter(this, void 0, void 0, function* () {
-                setTimeout(() => {
-                    payBack(t);
-                }, i * 999); // dont do all at once
-            }));
-        });
+        timers &&
+            timers.forEach((t, i) => {
+                const name = makeName(t);
+                setTimer(name, t.millis, () => __awaiter(this, void 0, void 0, function* () {
+                    setTimeout(() => {
+                        payBack(t);
+                    }, i * 999); // dont do all at once
+                }));
+            });
     });
 }
 exports.reloadTimers = reloadTimers;
 function payBack(t) {
     return __awaiter(this, void 0, void 0, function* () {
-        const chat = yield models_1.models.Chat.findOne({ where: { id: t.chatId, tenant: t.tenant } });
+        const chat = yield models_1.models.Chat.findOne({
+            where: { id: t.chatId, tenant: t.tenant },
+        });
         const owner = yield models_1.models.Contact.findOne({ where: { id: t.tenant } });
         if (!chat) {
             models_1.models.Timer.destroy({ where: { id: t.id } });
@@ -116,9 +128,9 @@ function payBack(t) {
                     updatedAt: date,
                     status: constants_1.default.statuses.received,
                     network_type: constants_1.default.network_types.lightning,
-                    tenant: t.tenant
+                    tenant: t.tenant,
                 });
-            }
+            },
         });
         models_1.models.Timer.destroy({ where: { id: t.id } });
     });

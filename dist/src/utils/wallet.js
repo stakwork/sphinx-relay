@@ -23,7 +23,7 @@ const loadWalletKit = () => {
     else {
         try {
             var credentials = Lightning.loadCredentials();
-            var lnrpcDescriptor = grpc.load("proto/walletkit.proto");
+            var lnrpcDescriptor = grpc.load('proto/walletkit.proto');
             var walletkit = lnrpcDescriptor.walletrpc;
             walletClient = new walletkit.WalletKit(LND_IP + ':' + config.lnd_port, credentials);
             return walletClient;

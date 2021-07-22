@@ -58,7 +58,8 @@ function encryptTribeBroadcast(full, contact, isTribeOwner) {
         if (!message || !(chat && chat.type && chat.uuid))
             return full;
         const obj = {};
-        if (isTribeOwner) { // has been previously decrypted
+        if (isTribeOwner) {
+            // has been previously decrypted
             if (message.content) {
                 const encContent = yield rsa.encrypt(contact.contactKey, message.content);
                 obj.content = encContent;
@@ -81,7 +82,8 @@ function addInMediaKey(full, contactId, isTribe) {
     if (!(typeof m.mediaKey === 'object'))
         return full;
     if (isTribe) {
-        if (m.mediaKey['chat']) { // "chat" is the key for tribes
+        if (m.mediaKey['chat']) {
+            // "chat" is the key for tribes
             const tribeMediaKey = m.mediaTerms.skipSigning ? '' : m.mediaKey['chat'];
             return fillmsg(full, { mediaKey: tribeMediaKey });
         }
@@ -105,7 +107,7 @@ function finishTermsAndReceipt(full, destkey, senderPubkey) {
             ttl: t.skipSigning ? 0 : t.ttl,
             pubkey: t.skipSigning ? '' : destkey,
             meta,
-            ownerPubkey: senderPubkey
+            ownerPubkey: senderPubkey,
         });
         const fullmsg = fillmsg(full, { mediaToken });
         delete fullmsg.message.mediaTerms;

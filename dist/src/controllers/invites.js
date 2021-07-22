@@ -38,9 +38,9 @@ const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.finishInvite = finishInvite;
 const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
-    const invite_string = req.params["invite_string"];
+    const invite_string = req.params['invite_string'];
     const dbInvite = yield models_1.models.Invite.findOne({
         where: { inviteString: invite_string, tenant },
     });
@@ -51,7 +51,7 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // 	dbInvite.update({ status: invite.invite_status })
         // }
         if (response.payment_error) {
-            console.log("=> payInvite ERROR", response.payment_error);
+            console.log('=> payInvite ERROR', response.payment_error);
             res.status(200);
             res.json({ success: false, error: response.payment_error });
             res.end();
@@ -66,7 +66,7 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
     });
     const onFailure = (response) => {
-        console.log("=> payInvite ERROR", response);
+        console.log('=> payInvite ERROR', response);
         res.status(200);
         res.json({ success: false });
         res.end();
@@ -77,7 +77,7 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.payInvite = payInvite;
 const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { nickname, welcome_message } = req.body;
     const owner = req.owner;
@@ -88,11 +88,11 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             route_hint: owner.routeHint,
             contact_nickname: nickname,
             message: welcome_message,
-            pin: crypto.randomBytes(20).toString("hex"),
+            pin: crypto.randomBytes(20).toString('hex'),
         },
     };
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
-        console.log("response", response);
+        console.log('response', response);
         const inviteCreated = response.object;
         const contact = yield models_1.models.Contact.create({
             alias: nickname,

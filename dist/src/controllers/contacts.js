@@ -32,15 +32,16 @@ const node_fetch_1 = require("node-fetch");
 const config = config_1.loadConfig();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
-    const dontIncludeFromGroup = req.query.from_group && req.query.from_group === "false";
-    const includeUnmet = req.query.unmet && req.query.unmet === "include";
+    const dontIncludeFromGroup = req.query.from_group && req.query.from_group === 'false';
+    const includeUnmet = req.query.unmet && req.query.unmet === 'include';
     const where = { deleted: false, tenant };
     if (dontIncludeFromGroup) {
         where.fromGroup = { [sequelize_1.Op.or]: [false, null] };
     }
-    if (!includeUnmet) { // this is the default
+    if (!includeUnmet) {
+        // this is the default
         where.unmet = { [sequelize_1.Op.or]: [false, null] };
     }
     const contacts = yield models_1.models.Contact.findAll({
@@ -89,21 +90,21 @@ exports.getContacts = getContacts;
 const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = parseInt(req.params.chat_id);
     if (!chat_id)
-        return res_1.failure(res, "no chat id");
+        return res_1.failure(res, 'no chat id');
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const chat = yield models_1.models.Chat.findOne({
         where: { id: chat_id, tenant },
     });
     if (!chat)
-        return res_1.failure(res, "chat not found");
+        return res_1.failure(res, 'chat not found');
     let contactIDs;
     try {
-        contactIDs = JSON.parse(chat.contactIds || "[]");
+        contactIDs = JSON.parse(chat.contactIds || '[]');
     }
     catch (e) {
-        return res_1.failure(res, "no contact ids");
+        return res_1.failure(res, 'no contact ids');
     }
     const pendingMembers = yield models_1.models.ChatMember.findAll({
         where: {
@@ -113,24 +114,24 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         },
     });
     if (!contactIDs || !contactIDs.length)
-        return res_1.failure(res, "no contact ids length");
+        return res_1.failure(res, 'no contact ids length');
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const contacts = yield models_1.models.Contact.findAll({
         where: { id: { [sequelize_1.Op.in]: contactIDs }, tenant },
         limit,
         offset,
-        order: [["alias", "asc"]],
+        order: [['alias', 'asc']],
     });
     if (!contacts)
-        return res_1.failure(res, "no contacts found");
+        return res_1.failure(res, 'no contacts found');
     const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
     let finalContacts = contactsRet;
     if (offset === 0) {
         const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
         const pendingContacts = yield models_1.models.Contact.findAll({
             where: { id: { [sequelize_1.Op.in]: pendingContactIDs }, tenant },
-            order: [["alias", "asc"]],
+            order: [['alias', 'asc']],
         });
         if (pendingContacts) {
             const pendingContactsRet = pendingContacts.map((c) => {
@@ -163,7 +164,7 @@ function generateOwnerWithExternalSigner(req, res) {
             publicKey: generated.publicKey,
             routeHint: generated.routeHint,
             isOwner: true,
-            authToken: null
+            authToken: null,
         };
         const created = yield models_1.models.Contact.create(contact);
         // set tenant to self!
@@ -173,38 +174,38 @@ function generateOwnerWithExternalSigner(req, res) {
 }
 exports.generateOwnerWithExternalSigner = generateOwnerWithExternalSigner;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("=> generateToken called", {
+    console.log('=> generateToken called', {
         body: req.body,
         params: req.params,
         query: req.query,
     });
     const where = { isOwner: true };
-    const pubkey = req.body["pubkey"];
+    const pubkey = req.body['pubkey'];
     if (proxy_1.isProxy()) {
         if (!pubkey) {
-            return res_1.failure(res, "no pubkey");
+            return res_1.failure(res, 'no pubkey');
         }
         where.publicKey = pubkey;
     }
     const owner = yield models_1.models.Contact.findOne({ where });
     if (!owner) {
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     }
     const pwd = password_1.default;
-    if (process.env.USE_PASSWORD === "true") {
+    if (process.env.USE_PASSWORD === 'true') {
         if (pwd !== req.query.pwd) {
-            res_1.failure(res, "Wrong Password");
+            res_1.failure(res, 'Wrong Password');
             return;
         }
         else {
-            console.log("PASSWORD ACCEPTED!");
+            console.log('PASSWORD ACCEPTED!');
         }
     }
-    const token = req.body["token"];
+    const token = req.body['token'];
     if (!token) {
         return res_1.failure(res, 'no token in body');
     }
-    const hash = crypto.createHash("sha256").update(token).digest("base64");
+    const hash = crypto.createHash('sha256').update(token).digest('base64');
     if (owner.authToken) {
         if (owner.authToken !== hash) {
             return res_1.failure(res, 'invalid token');
@@ -222,10 +223,10 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     if (logger_1.logging.Network) {
-        console.log("=> updateContact called", {
+        console.log('=> updateContact called', {
             body: req.body,
             params: req.params,
             query: req.query,
@@ -236,17 +237,17 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         where: { id: req.params.id, tenant },
     });
     if (!contact) {
-        return res_1.failure(res, "no contact found");
+        return res_1.failure(res, 'no contact found');
     }
-    const contactKeyChanged = attrs["contact_key"] && contact.contactKey !== attrs["contact_key"];
-    const aliasChanged = attrs["alias"] && contact.alias !== attrs["alias"];
-    const photoChanged = attrs["photo_url"] && contact.photoUrl !== attrs["photo_url"];
+    const contactKeyChanged = attrs['contact_key'] && contact.contactKey !== attrs['contact_key'];
+    const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias'];
+    const photoChanged = attrs['photo_url'] && contact.photoUrl !== attrs['photo_url'];
     // update contact
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     res_1.success(res, jsonUtils.contactToJson(owner));
     if (!contact.isOwner)
         return;
-    if (!(attrs["contact_key"] || attrs["alias"] || attrs["photo_url"])) {
+    if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
         return; // skip if not at least one of these
     }
     if (!(contactKeyChanged || aliasChanged || photoChanged)) {
@@ -260,7 +261,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         .map((c) => c.id);
     if (contactIds.length == 0)
         return;
-    console.log("=> send contact_key to", contactIds);
+    console.log('=> send contact_key to', contactIds);
     helpers.sendContactKeys({
         contactIds: contactIds,
         sender: owner,
@@ -271,9 +272,9 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.updateContact = updateContact;
 const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
-    console.log("=> exchangeKeys called", {
+    console.log('=> exchangeKeys called', {
         body: req.body,
         params: req.params,
         query: req.query,
@@ -292,10 +293,10 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.exchangeKeys = exchangeKeys;
 const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     if (logger_1.logging.Network) {
-        console.log("=> createContact called", {
+        console.log('=> createContact called', {
             body: req.body,
             params: req.params,
             query: req.query,
@@ -303,19 +304,19 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     let attrs = extractAttrs(req.body);
     const owner = req.owner;
-    const existing = attrs["public_key"] &&
+    const existing = attrs['public_key'] &&
         (yield models_1.models.Contact.findOne({
-            where: { publicKey: attrs["public_key"], tenant },
+            where: { publicKey: attrs['public_key'], tenant },
         }));
     if (existing) {
         const updateObj = { fromGroup: false };
-        if (attrs["alias"])
-            updateObj.alias = attrs["alias"];
+        if (attrs['alias'])
+            updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);
         return res_1.success(res, jsonUtils.contactToJson(existing));
     }
-    if (attrs["public_key"].length > 66)
-        attrs["public_key"] = attrs["public_key"].substring(0, 66);
+    if (attrs['public_key'].length > 66)
+        attrs['public_key'] = attrs['public_key'].substring(0, 66);
     attrs.tenant = tenant;
     const createdContact = yield models_1.models.Contact.create(attrs);
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
@@ -329,11 +330,11 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createContact = createContact;
 const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
-    const id = parseInt(req.params.id || "0");
+    const id = parseInt(req.params.id || '0');
     if (!id || id === tenant) {
-        res_1.failure(res, "Cannot delete self");
+        res_1.failure(res, 'Cannot delete self');
         return;
     }
     const contact = yield models_1.models.Contact.findOne({ where: { id, tenant } });
@@ -369,10 +370,10 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (okToDelete) {
         yield contact.update({
             deleted: true,
-            publicKey: "",
-            photoUrl: "",
-            alias: "Unknown",
-            contactKey: "",
+            publicKey: '',
+            photoUrl: '',
+            alias: 'Unknown',
+            contactKey: '',
         });
     }
     // find and destroy chat & messages
@@ -385,9 +386,9 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             if (contactIds.includes(id)) {
                 yield chat.update({
                     deleted: true,
-                    uuid: "",
-                    contactIds: "[]",
-                    name: "",
+                    uuid: '',
+                    contactIds: '[]',
+                    name: '',
                 });
                 yield models_1.models.Message.destroy({ where: { chatId: chat.id, tenant } });
             }
@@ -403,14 +404,14 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     const sender_pub_key = dat.sender.pub_key;
     const sender_route_hint = dat.sender.route_hint;
     const sender_contact_key = dat.sender.contact_key;
-    const sender_alias = dat.sender.alias || "Unknown";
+    const sender_alias = dat.sender.alias || 'Unknown';
     const sender_photo_url = dat.sender.photo_url;
     const owner = payload.owner;
     const tenant = owner.id;
     if (logger_1.logging.Network)
-        console.log("=> received contact key from", sender_pub_key, tenant);
+        console.log('=> received contact key from', sender_pub_key, tenant);
     if (!sender_pub_key) {
-        return console.log("no pubkey!");
+        return console.log('no pubkey!');
     }
     const sender = yield models_1.models.Contact.findOne({
         where: {
@@ -435,12 +436,12 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
             yield sender.update(objToUpdate);
         }
         socket.sendJson({
-            type: "contact",
+            type: 'contact',
             response: jsonUtils.contactToJson(sender),
         }, tenant);
     }
     else {
-        console.log("DID NOT FIND SENDER");
+        console.log('DID NOT FIND SENDER');
     }
     if (msgIncludedContactKey) {
         helpers.sendContactKeys({
@@ -458,12 +459,12 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_contact_key = dat.sender.contact_key;
-    const sender_alias = dat.sender.alias || "Unknown";
+    const sender_alias = dat.sender.alias || 'Unknown';
     const sender_photo_url = dat.sender.photo_url;
     const owner = dat.owner;
     const tenant = owner.id;
     if (!sender_pub_key) {
-        return console.log("no pubkey!");
+        return console.log('no pubkey!');
     }
     const sender = yield models_1.models.Contact.findOne({
         where: {
@@ -482,7 +483,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
             objToUpdate.photoUrl = sender_photo_url;
         yield sender.update(objToUpdate);
         socket.sendJson({
-            type: "contact",
+            type: 'contact',
             response: jsonUtils.contactToJson(sender),
         }, tenant);
     }
@@ -490,19 +491,19 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
 exports.receiveConfirmContactKey = receiveConfirmContactKey;
 function extractAttrs(body) {
     let fields_to_update = [
-        "public_key",
-        "node_alias",
-        "alias",
-        "photo_url",
-        "device_id",
-        "status",
-        "contact_key",
-        "from_group",
-        "private_photo",
-        "notification_sound",
-        "tip_amount",
-        "route_hint",
-        "price_to_meet"
+        'public_key',
+        'node_alias',
+        'alias',
+        'photo_url',
+        'device_id',
+        'status',
+        'contact_key',
+        'from_group',
+        'private_photo',
+        'notification_sound',
+        'tip_amount',
+        'route_hint',
+        'price_to_meet',
     ];
     let attrs = {};
     Object.keys(body).forEach((key) => {
@@ -514,12 +515,15 @@ function extractAttrs(body) {
 }
 const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const dateToReturn = decodeURI(req.query.date);
         const local = moment.utc(dateToReturn).local().toDate();
-        const where = { updatedAt: { [sequelize_1.Op.gte]: local }, tenant };
+        const where = {
+            updatedAt: { [sequelize_1.Op.gte]: local },
+            tenant,
+        };
         const contacts = yield models_1.models.Contact.findAll({ where });
         const invites = yield models_1.models.Invite.findAll({ where });
         const chats = yield models_1.models.Chat.findAll({ where });
@@ -528,12 +532,12 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
         const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
         const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
         // const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
-        const chatIds = chats.map(c => c.id);
+        const chatIds = chats.map((c) => c.id);
         const pendingMembers = yield models_1.models.ChatMember.findAll({
             where: {
                 status: constants_1.default.chat_statuses.pending,
                 tenant,
-                chatId: { [sequelize_1.Op.in]: chatIds }
+                chatId: { [sequelize_1.Op.in]: chatIds },
             },
         });
         const chatsResponse = chats.map((chat) => {
@@ -561,11 +565,13 @@ exports.getLatestContacts = getLatestContacts;
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         const priceToMeet = req.body.price_to_meet || 0;
         try {
-            const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
+            const owner = yield models_1.models.Contact.findOne({
+                where: { tenant, isOwner: true },
+            });
             const { id, host, 
             // pubkey,
             owner_alias, description, img, tags, extras, } = req.body;
@@ -583,7 +589,7 @@ function createPeopleProfile(req, res) {
                 owner_pubkey: owner.publicKey,
                 owner_route_hint: owner.routeHint,
                 owner_contact_key: owner.contactKey,
-                extras: extras || {}
+                extras: extras || {},
             }, id || null);
             yield owner.update({ priceToMeet: priceToMeet || 0 });
             res_1.success(res, jsonUtils.contactToJson(owner));
@@ -598,11 +604,13 @@ exports.createPeopleProfile = createPeopleProfile;
 function deletePersonProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         try {
-            const owner = yield models_1.models.Contact.findOne({ where: { tenant, isOwner: true } });
-            const { id, host, } = req.body;
+            const owner = yield models_1.models.Contact.findOne({
+                where: { tenant, isOwner: true },
+            });
+            const { id, host } = req.body;
             if (!id) {
                 return res_1.failure(res, 'no id');
             }
@@ -619,7 +627,7 @@ exports.deletePersonProfile = deletePersonProfile;
 function uploadPublicPic(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         const { img_base64, img_type } = req.body;
         let imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type;
         try {
@@ -628,12 +636,12 @@ function uploadPublicPic(req, res) {
             if (img_base64.indexOf(',') > -1) {
                 imageBase64 = img_base64.substr(img_base64.indexOf(',') + 1);
             }
-            var encImgBuffer = Buffer.from(imageBase64, "base64");
+            var encImgBuffer = Buffer.from(imageBase64, 'base64');
             const token = yield meme.lazyToken(req.owner.publicKey, host);
             const form = new FormData();
-            form.append("file", encImgBuffer, {
-                contentType: imgType || "image/jpg",
-                filename: "Profile.jpg",
+            form.append('file', encImgBuffer, {
+                contentType: imgType || 'image/jpg',
+                filename: 'Profile.jpg',
                 knownLength: encImgBuffer.length,
             });
             const formHeaders = form.getHeaders();
@@ -641,7 +649,7 @@ function uploadPublicPic(req, res) {
             if (host.includes('localhost'))
                 protocol = 'http';
             const resp = yield node_fetch_1.default(`${protocol}://${host}/public`, {
-                method: "POST",
+                method: 'POST',
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
                 body: form,
             });
@@ -649,7 +657,7 @@ function uploadPublicPic(req, res) {
             if (!json.muid)
                 return res_1.failure(res, 'no muid');
             res_1.success(res, {
-                img: `${protocol}://${host}/public/${json.muid}`
+                img: `${protocol}://${host}/public/${json.muid}`,
             });
         }
         catch (e) {

@@ -21,11 +21,26 @@ const minimist = require("minimist");
 const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
 const argv = minimist(process.argv.slice(2));
-const configFile = argv.db ? argv.db : path.join(__dirname, '../../config/config.json');
+const configFile = argv.db
+    ? argv.db
+    : path.join(__dirname, '../../config/config.json');
 const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env];
 const appConfig = config_1.loadConfig();
-const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_log === 'true' ? console.log : false, models: [chat_1.default, contact_1.default, invite_1.default, message_1.default, subscription_1.default, mediaKey_1.default, chatMember_1.default, timer_1.default, bot_1.default, chatBot_1.default, botMember_1.default, accounting_1.default] });
+const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_log === 'true' ? console.log : false, models: [
+        chat_1.default,
+        contact_1.default,
+        invite_1.default,
+        message_1.default,
+        subscription_1.default,
+        mediaKey_1.default,
+        chatMember_1.default,
+        timer_1.default,
+        bot_1.default,
+        chatBot_1.default,
+        botMember_1.default,
+        accounting_1.default,
+    ] });
 if (proxy_1.isProxy()) {
     opts.pool = {
         max: 7,

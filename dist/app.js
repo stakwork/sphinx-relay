@@ -25,13 +25,13 @@ const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
-// import * as lightning from './src/grpc/lightning'
 const env = process.env.NODE_ENV || 'development';
 const config = config_1.loadConfig();
 const port = process.env.PORT || config.node_http_port || 3001;
-console.log("=> env:", env);
+console.log('=> env:', env);
 // console.log('=> config: ',config)
-process.env.GRPC_SSL_CIPHER_SUITES = 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384';
+process.env.GRPC_SSL_CIPHER_SUITES =
+    'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384';
 process.env.NODE_EXTRA_CA_CERTS = config.tls_location;
 // START SETUP!
 function start() {
@@ -50,7 +50,7 @@ function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield setupApp(); // setup routes
         grpc.reconnectToLightning(Math.random(), function () {
-            console.log(">>> FINISH SETUP");
+            console.log('>>> FINISH SETUP');
             finishSetup();
         }); // recursive
     });
@@ -62,7 +62,8 @@ function finishSetup() {
         if (config.hub_api_url) {
             hub_1.checkInvitesHubInterval(5000);
         }
-        if (config.unlock) { // IF UNLOCK, start this only after unlocked!
+        if (config.unlock) {
+            // IF UNLOCK, start this only after unlocked!
             hub_1.pingHubInterval(15000);
         }
         setup_1.setupDone();
@@ -78,7 +79,13 @@ function setupApp() {
             app.use(logger_1.default);
         }
         app.use(cors({
-            allowedHeaders: ['X-Requested-With', 'Content-Type', 'Accept', 'x-user-token', 'x-jwt']
+            allowedHeaders: [
+                'X-Requested-With',
+                'Content-Type',
+                'Accept',
+                'x-user-token',
+                'x-jwt',
+            ],
         }));
         app.use(cookieParser());
         app.use(auth_1.ownerMiddleware);
@@ -93,18 +100,22 @@ function setupApp() {
         if ('ssl' in config && config.ssl.enabled) {
             try {
                 var certData = yield cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save);
-                var credentials = { key: certData === null || certData === void 0 ? void 0 : certData.privateKey.toString(), ca: certData === null || certData === void 0 ? void 0 : certData.caBundle, cert: certData === null || certData === void 0 ? void 0 : certData.certificate };
-                server = require("https").createServer(credentials, app);
+                var credentials = {
+                    key: certData === null || certData === void 0 ? void 0 : certData.privateKey.toString(),
+                    ca: certData === null || certData === void 0 ? void 0 : certData.caBundle,
+                    cert: certData === null || certData === void 0 ? void 0 : certData.certificate,
+                };
+                server = require('https').createServer(credentials, app);
             }
             catch (e) {
-                console.log("getCertificate ERROR", e);
+                console.log('getCertificate ERROR', e);
             }
         }
         else {
-            server = require("http").Server(app);
+            server = require('http').Server(app);
         }
         if (!server)
-            return console.log("=> FAILED to create server");
+            return console.log('=> FAILED to create server');
         server.listen(port, (err) => {
             if (err)
                 throw err;

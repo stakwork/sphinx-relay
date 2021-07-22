@@ -49,14 +49,16 @@ exports.decrypt = decrypt;
 function genKeys() {
     return new Promise((resolve, reject) => {
         crypto.generateKeyPair('rsa', {
-            modulusLength: 2048
+            modulusLength: 2048,
         }, (err, publicKey, privKey) => {
             const pubPEM = publicKey.export({
-                type: 'pkcs1', format: 'pem'
+                type: 'pkcs1',
+                format: 'pem',
             });
             const pubBase64 = cert.unpub(pubPEM);
             const privPEM = privKey.export({
-                type: 'pkcs1', format: 'pem'
+                type: 'pkcs1',
+                format: 'pem',
             });
             const privBase64 = cert.unpriv(privPEM);
             resolve({
@@ -69,20 +71,22 @@ function genKeys() {
 exports.genKeys = genKeys;
 function testRSA() {
     crypto.generateKeyPair('rsa', {
-        modulusLength: 2048
+        modulusLength: 2048,
     }, (err, publicKey, privateKey) => {
         const pubPEM = publicKey.export({
-            type: 'pkcs1', format: 'pem'
+            type: 'pkcs1',
+            format: 'pem',
         });
         const pub = cert.unpub(pubPEM);
         const msg = 'hi';
         const enc = encrypt(pub, msg);
         const privPEM = privateKey.export({
-            type: 'pkcs1', format: 'pem'
+            type: 'pkcs1',
+            format: 'pem',
         });
         const priv = cert.unpriv(privPEM);
         const dec = decrypt(priv, enc);
-        console.log("SUCESS:", msg === dec);
+        console.log('SUCESS:', msg === dec);
     });
 }
 exports.testRSA = testRSA;
@@ -100,14 +104,16 @@ const cert = {
         return s.replace(/[\r\n]+/gm, '');
     },
     pub: function (key) {
-        return '-----BEGIN RSA PUBLIC KEY-----\n' +
-            key + '\n' +
-            '-----END RSA PUBLIC KEY-----';
+        return ('-----BEGIN RSA PUBLIC KEY-----\n' +
+            key +
+            '\n' +
+            '-----END RSA PUBLIC KEY-----');
     },
     priv: function (key) {
-        return '-----BEGIN RSA PRIVATE KEY-----\n' +
-            key + '\n' +
-            '-----END RSA PRIVATE KEY-----';
-    }
+        return ('-----BEGIN RSA PRIVATE KEY-----\n' +
+            key +
+            '\n' +
+            '-----END RSA PRIVATE KEY-----');
+    },
 };
 //# sourceMappingURL=rsa.js.map

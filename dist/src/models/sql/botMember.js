@@ -20,7 +20,7 @@ __decorate([
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
-        autoIncrement: true
+        autoIncrement: true,
     }),
     __metadata("design:type", Number)
 ], BotMember.prototype, "id", void 0);

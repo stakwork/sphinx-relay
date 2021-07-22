@@ -19,7 +19,7 @@ const queries_1 = require("../controllers/queries");
 const res_1 = require("./res");
 const fs = require('fs');
 const config = config_1.loadConfig();
-const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
+const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 function getQR() {
     return __awaiter(this, void 0, void 0, function* () {
         let theIP;
@@ -67,7 +67,7 @@ function makeVarScript() {
             const info = yield Lightning.getChanInfo(chan.chan_id);
             if (!info)
                 return;
-            policies.forEach(p => {
+            policies.forEach((p) => {
                 if (info[p]) {
                     const fee_base_msat = parseInt(info[p].fee_base_msat);
                     if (fee_base_msat === 0) {
@@ -90,8 +90,8 @@ function connectPeer(req, res) {
             yield Lightning.connectPeer({
                 addr: {
                     pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
-                    host: '54.159.193.149:9735'
-                }
+                    host: '54.159.193.149:9735',
+                },
             });
             res_1.success(res, 'ok');
         }
@@ -111,8 +111,8 @@ function genChannel(req, res) {
             yield Lightning.connectPeer({
                 addr: {
                     pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
-                    host: '54.159.193.149:9735'
-                }
+                    host: '54.159.193.149:9735',
+                },
             });
             const sat_per_byte = yield queries_1.getSuggestedSatPerByte();
             yield Lightning.openChannel({
@@ -130,7 +130,7 @@ function genChannel(req, res) {
 }
 exports.genChannel = genChannel;
 function greenlightConnect(req, res) {
-    fs.readFile("public/index_greenlight.html", function (error, pgResp) {
+    fs.readFile('public/index_greenlight.html', function (error, pgResp) {
         return __awaiter(this, void 0, void 0, function* () {
             if (error) {
                 res.writeHead(404);
@@ -152,7 +152,7 @@ function connect(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (IS_GREENLIGHT)
             return greenlightConnect(req, res);
-        fs.readFile("public/index.html", function (error, pgResp) {
+        fs.readFile('public/index.html', function (error, pgResp) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (error) {
                     res.writeHead(404);

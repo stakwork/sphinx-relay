@@ -25,7 +25,7 @@ const loadSigner = () => {
     else {
         try {
             var credentials = Lightning.loadCredentials('signer.macaroon');
-            var lnrpcDescriptor = grpc.load("proto/signer.proto");
+            var lnrpcDescriptor = grpc.load('proto/signer.proto');
             var signer = lnrpcDescriptor.signrpc;
             signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
             return signerClient;

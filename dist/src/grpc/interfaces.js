@@ -7,8 +7,8 @@ const crypto = require("crypto");
 const lightning_1 = require("./lightning");
 const long = require("long");
 const config = config_1.loadConfig();
-const IS_LND = config.lightning_provider === "LND";
-const IS_GREENLIGHT = config.lightning_provider === "GREENLIGHT";
+const IS_LND = config.lightning_provider === 'LND';
+const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 function getInfoResponse(res) {
     if (IS_LND) {
         // LND
@@ -18,7 +18,7 @@ function getInfoResponse(res) {
         // greenlight
         const r = res;
         return {
-            identity_pubkey: Buffer.from(r.node_id).toString("hex"),
+            identity_pubkey: Buffer.from(r.node_id).toString('hex'),
             version: r.version,
             alias: r.alias,
             color: r.color,
@@ -36,7 +36,7 @@ function getInfoResponse(res) {
 }
 exports.getInfoResponse = getInfoResponse;
 function makeLabel() {
-    return crypto.randomBytes(16).toString("hex").toUpperCase();
+    return crypto.randomBytes(16).toString('hex').toUpperCase();
 }
 function addInvoiceRequest(req) {
     if (IS_LND)
@@ -73,7 +73,7 @@ function addInvoiceResponse(res) {
         return {
             payment_request: r.bolt11,
             r_hash: r.payment_hash,
-            add_index: 0
+            add_index: 0,
         };
     }
     return {};
@@ -88,7 +88,7 @@ function listChannelsResponse(res) {
             p.channels.forEach((ch, i) => {
                 chans.push({
                     active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
-                    remote_pubkey: Buffer.from(p.id).toString("hex"),
+                    remote_pubkey: Buffer.from(p.id).toString('hex'),
                     channel_point: ch.funding_txid + ':' + i,
                     chan_id: shortChanIDtoInt64(ch.channel_id),
                     capacity: greelightNumber(ch.total) + '',
@@ -133,8 +133,8 @@ function keysendRequest(req) {
             label: makeLabel(),
         };
         if (req.route_hints) {
-            r.routehints = req.route_hints.map(rh => {
-                const hops = rh.hop_hints.map(hh => {
+            r.routehints = req.route_hints.map((rh) => {
+                const hops = rh.hop_hints.map((hh) => {
                     return {
                         node_id: ByteBuffer.fromHex(hh.node_id),
                         short_channel_id: shortChanIDfromInt64(hh.chan_id),
@@ -217,7 +217,7 @@ function subscribeResponse(res) {
         const custom_records = {};
         let is_keysend = false;
         if (r.extratlvs) {
-            r.extratlvs.forEach(tlv => {
+            r.extratlvs.forEach((tlv) => {
                 // console.log("TLV TYPE", tlv.type, typeof tlv.type, `${LND_KEYSEND_KEY}`)
                 // if(tlv.type===`${LND_KEYSEND_KEY}`) is_keysend=true
                 custom_records[tlv.type] = tlv.value;
@@ -270,7 +270,7 @@ function greenlightAmoutToAmounts(a) {
     let millisatoshi = '';
     if (a.unit === 'satoshi') {
         satoshi = a.satoshi || '0';
-        millisatoshi = (parseInt(a.satoshi || '0') * 1000) + '';
+        millisatoshi = parseInt(a.satoshi || '0') * 1000 + '';
     }
     else if (a.unit === 'millisatoshi') {
         satoshi = Math.floor(parseInt(a.millisatoshi || '0') / 1000) + '';
@@ -326,21 +326,20 @@ var GreenlightChannelState;
     /* Dual-funded channel, waiting for lock-in */
     GreenlightChannelState["DUALOPEND_AWAITING_LOCKIN"] = "DUALOPEND_AWAITING_LOCKIN";
 })(GreenlightChannelState || (GreenlightChannelState = {}));
-;
 function shortChanIDfromInt64(int) {
-    if (typeof int !== "string")
+    if (typeof int !== 'string')
         return '';
     const l = long.fromString(int, true);
     var blockHeight = l.shiftRight(40);
-    var txIndex = l.shiftRight(16).and(0xFFFFFF);
-    var txPosition = l.and(0xFFFF);
+    var txIndex = l.shiftRight(16).and(0xffffff);
+    var txPosition = l.and(0xffff);
     if (IS_GREENLIGHT) {
         return `${blockHeight.toString()}x${txIndex.toString()}x${txPosition.toString()}`;
     }
     return `${blockHeight.toString()}:${txIndex.toString()}:${txPosition.toString()}`;
 }
 function shortChanIDtoInt64(cid) {
-    if (typeof cid !== "string")
+    if (typeof cid !== 'string')
         return '';
     if (!(cid.includes(':') || cid.includes('x')))
         return '';

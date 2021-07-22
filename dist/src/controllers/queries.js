@@ -25,11 +25,11 @@ const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 let queries = {};
 const POLL_MINS = 10;
-let hub_pubkey = "";
-const hub_url = "https://hub.sphinx.chat/api/v1/";
+let hub_pubkey = '';
+const hub_url = 'https://hub.sphinx.chat/api/v1/';
 function get_hub_pubkey() {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = yield node_fetch_1.default(hub_url + "/routingnode");
+        const r = yield node_fetch_1.default(hub_url + '/routingnode');
         const j = yield r.json();
         if (j && j.pubkey) {
             // console.log("=> GOT HUB PUBKEY", j.pubkey)
@@ -68,7 +68,7 @@ function getPendingAccountings() {
         accountings.forEach((a) => {
             const utxo = utxos.find((u) => u.address === a.onchainAddress);
             if (utxo) {
-                console.log("[WATCH] UTXO", utxo);
+                console.log('[WATCH] UTXO', utxo);
                 const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str;
                 ret.push({
                     id: a.id,
@@ -101,7 +101,7 @@ function getSuggestedSatPerByte() {
     return __awaiter(this, void 0, void 0, function* () {
         const MAX_AMT = 250;
         try {
-            const r = yield node_fetch_1.default("https://mempool.space/api/v1/fees/recommended");
+            const r = yield node_fetch_1.default('https://mempool.space/api/v1/fees/recommended');
             const j = yield r.json();
             return Math.min(MAX_AMT, j.halfHourFee);
         }
@@ -114,9 +114,9 @@ exports.getSuggestedSatPerByte = getSuggestedSatPerByte;
 // https://mempool.space/api/v1/fees/recommended
 function genChannelAndConfirmAccounting(acc) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("[WATCH]=> genChannelAndConfirmAccounting");
+        console.log('[WATCH]=> genChannelAndConfirmAccounting');
         const sat_per_byte = yield getSuggestedSatPerByte();
-        console.log("[WATCH]=> sat_per_byte", sat_per_byte);
+        console.log('[WATCH]=> sat_per_byte', sat_per_byte);
         try {
             const r = yield lightning.openChannel({
                 node_pubkey: acc.pubkey,
@@ -124,11 +124,11 @@ function genChannelAndConfirmAccounting(acc) {
                 push_sat: 0,
                 sat_per_byte,
             });
-            console.log("[WATCH]=> CHANNEL OPENED!", r);
-            const fundingTxidRev = Buffer.from(r.funding_txid_bytes).toString("hex");
+            console.log('[WATCH]=> CHANNEL OPENED!', r);
+            const fundingTxidRev = Buffer.from(r.funding_txid_bytes).toString('hex');
             const fundingTxid = fundingTxidRev.match(/.{2}/g)
                 .reverse()
-                .join("");
+                .join('');
             yield models_1.models.Accounting.update({
                 status: constants_1.default.statuses.received,
                 fundingTxid: fundingTxid,
@@ -137,10 +137,10 @@ function genChannelAndConfirmAccounting(acc) {
             }, {
                 where: { id: acc.id },
             });
-            console.log("[WATCH]=> ACCOUNTINGS UPDATED to received!", acc.id);
+            console.log('[WATCH]=> ACCOUNTINGS UPDATED to received!', acc.id);
         }
         catch (e) {
-            console.log("[ACCOUNTING] error creating channel", e);
+            console.log('[ACCOUNTING] error creating channel', e);
             const existing = yield models_1.models.Accounting.findOne({ where: { id: acc.id } });
             if (existing) {
                 if (!existing.amount) {
@@ -193,13 +193,13 @@ function checkChannelsAndKeysend(rec) {
             active_only: true,
             peer: rec.pubkey,
         });
-        console.log("[WATCH] chans for pubkey:", rec.pubkey, chans);
+        console.log('[WATCH] chans for pubkey:', rec.pubkey, chans);
         if (!(chans && chans.channels))
             return;
         chans.channels.forEach((chan) => {
             // find by txid
             if (chan.channel_point.includes(rec.fundingTxid)) {
-                console.log("[WATCH] found channel to keysend!", chan);
+                console.log('[WATCH] found channel to keysend!', chan);
                 const msg = {
                     type: constants_1.default.message_types.keysend,
                 };
@@ -208,7 +208,7 @@ function checkChannelsAndKeysend(rec) {
                 const remoteReserve = parseInt(chan.remote_chan_reserve_sat) || 0;
                 const commitFee = parseInt(chan.commit_fee) || 0;
                 const amount = rec.amount - localReserve - remoteReserve - commitFee - extraAmount;
-                console.log("[WATCH] amt to final keysend", amount);
+                console.log('[WATCH] amt to final keysend', amount);
                 helpers.performKeysendMessage({
                     sender: owner,
                     destination_key: rec.pubkey,
@@ -216,7 +216,7 @@ function checkChannelsAndKeysend(rec) {
                     amount,
                     msg,
                     success: function () {
-                        console.log("[WATCH] complete! Updating accounting, id:", rec.id);
+                        console.log('[WATCH] complete! Updating accounting, id:', rec.id);
                         models_1.models.Accounting.update({
                             status: constants_1.default.statuses.confirmed,
                             chanId: chan.chan_id,
@@ -229,7 +229,7 @@ function checkChannelsAndKeysend(rec) {
                         });
                     },
                     failure: function () {
-                        console.log("[WATCH] failed final keysend");
+                        console.log('[WATCH] failed final keysend');
                     },
                 });
             }
@@ -243,16 +243,16 @@ exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         // const tenant:number = req.owner.id
-        console.log("=> queryOnchainAddress");
+        console.log('=> queryOnchainAddress');
         if (!hub_pubkey)
-            return console.log("=> NO ROUTING NODE PUBKEY SET");
+            return console.log('=> NO ROUTING NODE PUBKEY SET');
         const uuid = short.generate();
         const owner = req.owner;
         const app = req.params.app;
         const query = {
-            type: "onchain_address",
+            type: 'onchain_address',
             uuid,
             app,
         };
@@ -279,7 +279,7 @@ function queryOnchainAddress(req, res) {
             if (i >= 15) {
                 clearInterval(interval);
                 delete queries[uuid];
-                res_1.failure(res, "no response received");
+                res_1.failure(res, 'no response received');
                 return;
             }
             if (queries[uuid]) {
@@ -301,20 +301,20 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     const sender_route_hint = dat.sender.route_hint;
     // const tenant:number = owner.id
     if (!sender_pub_key || !content || !owner) {
-        return console.log("=> wrong query format");
+        return console.log('=> wrong query format');
     }
     let q;
     try {
         q = JSON.parse(content);
     }
     catch (e) {
-        console.log("=> ERROR receiveQuery,", e);
+        console.log('=> ERROR receiveQuery,', e);
         return;
     }
-    console.log("=> query received", q);
-    let result = "";
+    console.log('=> query received', q);
+    let result = '';
     switch (q.type) {
-        case "onchain_address":
+        case 'onchain_address':
             const addy = yield lightning.newAddress(lightning.NESTED_PUBKEY_HASH);
             const acc = {
                 date: new Date(),
@@ -323,7 +323,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
                 amount: 0,
                 sourceApp: q.app,
                 status: constants_1.default.statuses.pending,
-                error: "",
+                error: '',
                 routeHint: sender_route_hint,
             };
             yield models_1.models.Accounting.create(acc);
@@ -351,14 +351,14 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         yield network.signAndSend(opts, owner);
     }
     catch (e) {
-        console.log("FAILED TO SEND QUERY_RESPONSE");
+        console.log('FAILED TO SEND QUERY_RESPONSE');
         return;
     }
 });
 exports.receiveQuery = receiveQuery;
 const receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (logger_1.logging.Network)
-        console.log("=> receiveQueryResponse");
+        console.log('=> receiveQueryResponse');
     const dat = payload.content || payload;
     // const sender_pub_key = dat.sender.pub_key
     const content = dat.message.content;
@@ -367,7 +367,7 @@ const receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, func
         queries[q.uuid] = q;
     }
     catch (e) {
-        console.log("=> ERROR receiveQueryResponse,", e);
+        console.log('=> ERROR receiveQueryResponse,', e);
     }
 });
 exports.receiveQueryResponse = receiveQueryResponse;

@@ -43,9 +43,10 @@ function subscribeInvoices(parseKeysendInvoice) {
             });
         });
         call.on('status', function (status) {
-            console.log("[lightning] Status", status.code, status);
+            console.log('[lightning] Status', status.code, status);
             // The server is unavailable, trying to reconnect.
-            if (status.code == ERR_CODE_UNAVAILABLE || status.code == ERR_CODE_STREAM_REMOVED) {
+            if (status.code == ERR_CODE_UNAVAILABLE ||
+                status.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
                 waitAndReconnect();
             }
@@ -56,7 +57,8 @@ function subscribeInvoices(parseKeysendInvoice) {
         call.on('error', function (err) {
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
             console.error('[lightning] Error', now, err.code);
-            if (err.code == ERR_CODE_UNAVAILABLE || err.code == ERR_CODE_STREAM_REMOVED) {
+            if (err.code == ERR_CODE_UNAVAILABLE ||
+                err.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
                 waitAndReconnect();
             }
@@ -100,7 +102,9 @@ function reconnectToLightning(innerCtx, callback) {
                 yield unlock_1.tryToUnlockLND();
             }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                if (ctx === innerCtx) { // if another retry fires, then this will not run
+                // retry each 2 secs
+                if (ctx === innerCtx) {
+                    // if another retry fires, then this will not run
                     yield reconnectToLightning(innerCtx, callback);
                 }
             }), 2000);

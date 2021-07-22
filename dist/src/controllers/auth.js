@@ -16,7 +16,7 @@ const tribes = require("../utils/tribes");
 function verifyAuthRequest(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         try {
             const sc = [jwt_1.scopes.PERSONAL];
             const jot = jwt_1.createJWT(req.owner.publicKey, sc);
@@ -32,7 +32,7 @@ function verifyAuthRequest(req, res) {
             const token = yield tribes.genSignedTimestamp(req.owner.publicKey);
             res_1.success(res, {
                 info: bod,
-                token
+                token,
             });
             // const protocol = j.host.includes("localhost") ? "http" : "https";
             // await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
@@ -53,7 +53,7 @@ exports.verifyAuthRequest = verifyAuthRequest;
 function requestExternalTokens(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         try {
             const result = {
                 pubkey: req.owner.publicKey,
@@ -62,7 +62,7 @@ function requestExternalTokens(req, res) {
                 route_hint: req.owner.routeHint,
                 contact_key: req.owner.contactKey,
                 price_to_meet: req.owner.priceToMeet,
-                jwt: ''
+                jwt: '',
             };
             res_1.success(res, result);
         }

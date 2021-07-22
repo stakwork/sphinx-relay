@@ -13,7 +13,7 @@ exports.sendJson = exports.send = exports.connect = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 // import * as WebSocket from 'ws'
-const socketio = require("socket.io");
+const socketio = require('socket.io');
 // { ownerID: [client1, client2] }
 const CLIENTS = {};
 let io;
@@ -23,13 +23,13 @@ function connect(server) {
     io = socketio(server, {
         handlePreflightRequest: (req, res) => {
             const headers = {
-                "Access-Control-Allow-Headers": "Content-Type, Accept, x-user-token, X-Requested-With",
-                "Access-Control-Allow-Origin": req.headers.origin,
-                "Access-Control-Allow-Credentials": true
+                'Access-Control-Allow-Headers': 'Content-Type, Accept, x-user-token, X-Requested-With',
+                'Access-Control-Allow-Origin': req.headers.origin,
+                'Access-Control-Allow-Credentials': true,
             };
             res.writeHead(200, headers);
             res.end();
-        }
+        },
     });
     io.use((client, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = client.handshake.headers['x-user-token'];
@@ -41,7 +41,7 @@ function connect(server) {
         return next(new Error('authentication error'));
     }));
     io.on('connection', (client) => {
-        console.log("=> [socket.io] connected!", client.ownerID);
+        console.log('=> [socket.io] connected!', client.ownerID);
         addClient(client.ownerID, client);
         client.on('disconnect', (reason) => {
             removeClientById(client.ownerID, client.id);
@@ -65,7 +65,7 @@ function removeClientById(id, clientID) {
         return;
     if (!existing.length)
         return;
-    const idx = existing.findIndex(c => c.id === clientID);
+    const idx = existing.findIndex((c) => c.id === clientID);
     if (idx > -1) {
         CLIENTS[id].splice(idx, 1);
     }
@@ -75,7 +75,9 @@ function getOwnerFromToken(token) {
         if (!token)
             return null;
         const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-        const owner = yield models_1.models.Contact.findOne({ where: { authToken: hashedToken, isOwner: true } });
+        const owner = yield models_1.models.Contact.findOne({
+            where: { authToken: hashedToken, isOwner: true },
+        });
         if (owner && owner.id) {
             return owner.dataValues; // failed
         }
@@ -88,7 +90,7 @@ const send = (body, tenant) => {
     const clients = CLIENTS[tenant];
     if (!clients)
         return;
-    clients.forEach(c => c.emit('message', body));
+    clients.forEach((c) => c.emit('message', body));
 };
 exports.send = send;
 const sendJson = (object, tenant) => {

@@ -10,15 +10,12 @@ var scopes;
     scopes["MEME"] = "meme";
 })(scopes = exports.scopes || (exports.scopes = {}));
 exports.routes = {
-    [scopes.PERSONAL]: [
-        '/profile',
-        '/public_pic'
-    ],
+    [scopes.PERSONAL]: ['/profile', '/public_pic'],
 };
 function allowedJwtRoutes(jwt, path) {
     const scopes = jwt.scope.split(',');
     let ok = false;
-    scopes.forEach(sc => {
+    scopes.forEach((sc) => {
         if (exports.routes[sc] && exports.routes[sc].includes(path))
             ok = true;
     });

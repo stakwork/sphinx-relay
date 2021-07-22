@@ -17,7 +17,7 @@ __decorate([
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
-        autoIncrement: true
+        autoIncrement: true,
     }),
     __metadata("design:type", Number)
 ], Contact.prototype, "id", void 0);
@@ -53,7 +53,7 @@ __decorate([
     sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
-        allowNull: false
+        allowNull: false,
     }),
     __metadata("design:type", Boolean)
 ], Contact.prototype, "deleted", void 0);

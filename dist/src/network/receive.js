@@ -74,26 +74,26 @@ const botMakerTypes = [
 function onReceive(payload, dest) {
     return __awaiter(this, void 0, void 0, function* () {
         if (dest) {
-            if (typeof dest !== "string" || dest.length !== 66)
-                return console.log("INVALID DEST", dest);
+            if (typeof dest !== 'string' || dest.length !== 66)
+                return console.log('INVALID DEST', dest);
         }
         payload.dest = dest; // add "dest" into payload
         // console.log("===> onReceive", JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
-            return console.log("no payload.type");
+            return console.log('no payload.type');
         let owner = yield models_1.models.Contact.findOne({
             where: { isOwner: true, publicKey: dest },
         });
         if (!owner)
-            return console.log("=> RECEIVE: owner not found");
+            return console.log('=> RECEIVE: owner not found');
         const tenant = owner.id;
         const ownerDataValues = owner || owner.dataValues;
         if (botTypes.includes(payload.type)) {
             // if is admin on tribe? or is bot maker?
-            console.log("=> got bot msg type!!!!");
+            console.log('=> got bot msg type!!!!');
             if (botMakerTypes.includes(payload.type)) {
                 if (!payload.bot_uuid)
-                    return console.log("bot maker type: no bot uuid");
+                    return console.log('bot maker type: no bot uuid');
             }
             payload.owner = ownerDataValues;
             return controllers_1.ACTIONS[payload.type](payload);
@@ -210,12 +210,12 @@ function onReceive(payload, dest) {
             if (doAction)
                 forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner);
             else
-                console.log("=> insufficient payment for this action");
+                console.log('=> insufficient payment for this action');
         }
         if (isTribeOwner && payload.type === msgtypes.purchase) {
             const mt = payload.message.mediaToken;
-            const host = mt && mt.split(".").length && mt.split(".")[0];
-            const muid = mt && mt.split(".").length && mt.split(".")[1];
+            const host = mt && mt.split('.').length && mt.split('.')[0];
+            const muid = mt && mt.split('.').length && mt.split('.')[1];
             const myAttachmentMessage = yield models_1.models.Message.findOne({
                 where: {
                     mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
@@ -274,7 +274,7 @@ function doTheAction(data, owner) {
             controllers_1.ACTIONS[payload.type](payload);
         }
         else {
-            console.log("Incorrect payload type:", payload.type);
+            console.log('Incorrect payload type:', payload.type);
         }
     });
 }
@@ -342,7 +342,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         send_1.sendMessage({
             type,
             message,
-            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || "", photoUrl: (payload.sender && payload.sender.photo_url) || "", role: constants_1.default.chat_roles.reader }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader }),
             amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,
@@ -378,7 +378,7 @@ function receiveMqttMessage(topic, message) {
             if (!payload)
                 return; // skip it if not parsed
             payload.network_type = constants_1.default.network_types.mqtt;
-            const arr = topic.split("/");
+            const arr = topic.split('/');
             const dest = arr[0];
             onReceive(payload, dest);
         }
@@ -393,11 +393,11 @@ function initTribesSubscriptions() {
 }
 exports.initTribesSubscriptions = initTribesSubscriptions;
 function parsePayload(data) {
-    const li = data.lastIndexOf("}");
+    const li = data.lastIndexOf('}');
     const msg = data.substring(0, li + 1);
     try {
         const payload = JSON.parse(msg);
-        return payload || "";
+        return payload || '';
     }
     catch (e) {
         throw e;
@@ -407,7 +407,7 @@ function parsePayload(data) {
 function parseAndVerifyPayload(data) {
     return __awaiter(this, void 0, void 0, function* () {
         let payload;
-        const li = data.lastIndexOf("}");
+        const li = data.lastIndexOf('}');
         const msg = data.substring(0, li + 1);
         const sig = data.substring(li + 1);
         try {
@@ -429,7 +429,7 @@ function parseAndVerifyPayload(data) {
                 }
             }
             else {
-                console.log("no sender.pub_key");
+                console.log('no sender.pub_key');
                 return null;
             }
         }
@@ -460,9 +460,9 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
             sender,
             amount,
             amountMsat: amount * 1000,
-            paymentHash: "",
+            paymentHash: '',
             date: date,
-            messageContent: memo || "",
+            messageContent: memo || '',
             status: constants_1.default.statuses.confirmed,
             createdAt: date,
             updatedAt: date,
@@ -470,7 +470,7 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
             tenant,
         });
         socket.sendJson({
-            type: "keysend",
+            type: 'keysend',
             response: jsonUtils.messageToJson(msg, null),
         }, tenant);
     });
@@ -478,20 +478,20 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
-        let dest = "";
+        let dest = '';
         let owner;
         if (proxy_1.isProxy()) {
             try {
                 const invoice = bolt11.decode(i.payment_request);
                 if (!invoice.payeeNodeKey)
-                    return console.log("cant get dest from pay req");
+                    return console.log('cant get dest from pay req');
                 dest = invoice.payeeNodeKey;
                 owner = yield models_1.models.Contact.findOne({
                     where: { isOwner: true, publicKey: dest },
                 });
             }
             catch (e) {
-                console.log("FAILURE TO DECODE PAY REQ", e);
+                console.log('FAILURE TO DECODE PAY REQ', e);
             }
         }
         else {
@@ -500,7 +500,7 @@ function parseKeysendInvoice(i) {
             dest = owner.publicKey;
         }
         if (!owner || !dest) {
-            console.log("=> parseKeysendInvoice ERROR: cant find owner");
+            console.log('=> parseKeysendInvoice ERROR: cant find owner');
             return;
         }
         const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];
@@ -509,7 +509,7 @@ function parseKeysendInvoice(i) {
         // "keysend" type is NOT encrypted
         // and should be saved even if there is NO content
         let isKeysendType = false;
-        let memo = "";
+        let memo = '';
         let sender_pubkey;
         if (data) {
             try {
@@ -527,13 +527,13 @@ function parseKeysendInvoice(i) {
         }
         if (isKeysendType) {
             if (!memo) {
-                hub_1.sendNotification(-1, "", "keysend", owner, value || 0);
+                hub_1.sendNotification(-1, '', 'keysend', owner, value || 0);
             }
             saveAnonymousKeysend(i, memo, sender_pubkey, owner.id);
             return;
         }
         let payload;
-        if (data[0] === "{") {
+        if (data[0] === '{') {
             try {
                 payload = yield parseAndVerifyPayload(data);
             }
@@ -557,18 +557,18 @@ function parseKeysendInvoice(i) {
 exports.parseKeysendInvoice = parseKeysendInvoice;
 const chunks = {};
 function weave(p) {
-    const pa = p.split("_");
+    const pa = p.split('_');
     if (pa.length < 4)
         return;
     const ts = pa[0];
     const i = pa[1];
     const n = pa[2];
-    const m = pa.filter((u, i) => i > 2).join("_");
+    const m = pa.filter((u, i) => i > 2).join('_');
     chunks[ts] = chunks[ts] ? [...chunks[ts], { i, n, m }] : [{ i, n, m }];
     if (chunks[ts].length === parseInt(n)) {
         // got em all!
         const all = chunks[ts];
-        let payload = "";
+        let payload = '';
         all
             .slice()
             .sort((a, b) => a.i - b.i)

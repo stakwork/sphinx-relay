@@ -10,15 +10,15 @@ module.exports = {
             return 'error';
         }
         return {
-            'human_readable_part': this.decodeHumanReadablePart(humanReadablePart),
-            'data': this.decodeData(data, humanReadablePart),
-            'checksum': checksum
+            human_readable_part: this.decodeHumanReadablePart(humanReadablePart),
+            data: this.decodeData(data, humanReadablePart),
+            checksum: checksum,
         };
     },
     decodeHumanReadablePart: function (humanReadablePart) {
         let prefixes = ['lnbc', 'lntb', 'lnbcrt'];
         let prefix;
-        prefixes.forEach(value => {
+        prefixes.forEach((value) => {
             if (humanReadablePart.substring(0, value.length) === value) {
                 prefix = value;
             }
@@ -27,8 +27,8 @@ module.exports = {
             return 'error'; // A reader MUST fail if it does not understand the prefix.
         let amount = this.decodeAmount(humanReadablePart.substring(prefix.length, humanReadablePart.length));
         return {
-            'prefix': prefix,
-            'amount': amount
+            prefix: prefix,
+            amount: amount,
         };
     },
     decodeData: function (data, humanReadablePart) {
@@ -41,10 +41,10 @@ module.exports = {
         value = this.fiveBitArrayTo8BitArray(value, true);
         value = this.textToHexString(humanReadablePart).concat(this.byteArrayToHexString(value));
         return {
-            'time_stamp': dateEpoch,
-            'tags': decodedTags,
-            'signature': this.decodeSignature(signature),
-            'signing_data': value
+            time_stamp: dateEpoch,
+            tags: decodedTags,
+            signature: this.decodeSignature(signature),
+            signing_data: value,
         };
     },
     decodeSignature: function (signature) {
@@ -53,9 +53,9 @@ module.exports = {
         let r = this.byteArrayToHexString(data.slice(0, 32));
         let s = this.byteArrayToHexString(data.slice(32, data.length - 1));
         return {
-            'r': r,
-            's': s,
-            'recovery_flag': recoveryFlag
+            r: r,
+            s: s,
+            recovery_flag: recoveryFlag,
         };
     },
     decodeAmount: function (str) {
@@ -87,7 +87,7 @@ module.exports = {
     decodeTags: function (tagData) {
         let tags = this.extractTags(tagData);
         let decodedTags = [];
-        tags.forEach(value => decodedTags.push(this.decodeTag(value.type, value.length, value.data)));
+        tags.forEach((value) => decodedTags.push(this.decodeTag(value.type, value.length, value.data)));
         return decodedTags;
     },
     extractTags: function (str) {
@@ -97,9 +97,9 @@ module.exports = {
             let dataLength = this.bech32ToInt(str.substring(1, 3));
             let data = str.substring(3, dataLength + 3);
             tags.push({
-                'type': type,
-                'length': dataLength,
-                'data': data
+                type: type,
+                length: dataLength,
+                data: data,
             });
             str = str.substring(3 + dataLength, str.length);
         }
@@ -111,49 +111,49 @@ module.exports = {
                 if (length !== 52)
                     break; // A reader MUST skip over a 'p' field that does not have data_length 52
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'payment_hash',
-                    'value': this.byteArrayToHexString(this.fiveBitArrayTo8BitArray(this.bech32ToFiveBitArray(data)))
+                    type: type,
+                    length: length,
+                    description: 'payment_hash',
+                    value: this.byteArrayToHexString(this.fiveBitArrayTo8BitArray(this.bech32ToFiveBitArray(data))),
                 };
             case 'd':
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'description',
-                    'value': this.bech32ToUTF8String(data)
+                    type: type,
+                    length: length,
+                    description: 'description',
+                    value: this.bech32ToUTF8String(data),
                 };
             case 'n':
                 if (length !== 53)
                     break; // A reader MUST skip over a 'n' field that does not have data_length 53
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'payee_public_key',
-                    'value': this.byteArrayToHexString(this.fiveBitArrayTo8BitArray(this.bech32ToFiveBitArray(data)))
+                    type: type,
+                    length: length,
+                    description: 'payee_public_key',
+                    value: this.byteArrayToHexString(this.fiveBitArrayTo8BitArray(this.bech32ToFiveBitArray(data))),
                 };
             case 'h':
                 if (length !== 52)
                     break; // A reader MUST skip over a 'h' field that does not have data_length 52
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'description_hash',
-                    'value': data
+                    type: type,
+                    length: length,
+                    description: 'description_hash',
+                    value: data,
                 };
             case 'x':
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'expiry',
-                    'value': this.bech32ToInt(data)
+                    type: type,
+                    length: length,
+                    description: 'expiry',
+                    value: this.bech32ToInt(data),
                 };
             case 'c':
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'min_final_cltv_expiry',
-                    'value': this.bech32ToInt(data)
+                    type: type,
+                    length: length,
+                    description: 'min_final_cltv_expiry',
+                    value: this.bech32ToInt(data),
                 };
             case 'f':
                 let version = this.bech32ToFiveBitArray(data.charAt(0))[0];
@@ -161,13 +161,13 @@ module.exports = {
                     break; // a reader MUST skip over an f field with unknown version.
                 data = data.substring(1, data.length);
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'fallback_address',
-                    'value': {
-                        'version': version,
-                        'fallback_address': data
-                    }
+                    type: type,
+                    length: length,
+                    description: 'fallback_address',
+                    value: {
+                        version: version,
+                        fallback_address: data,
+                    },
                 };
             case 'r':
                 data = this.fiveBitArrayTo8BitArray(this.bech32ToFiveBitArray(data));
@@ -177,16 +177,16 @@ module.exports = {
                 let feeProportionalMillionths = data.slice(45, 49);
                 let cltvExpiryDelta = data.slice(49, 51);
                 return {
-                    'type': type,
-                    'length': length,
-                    'description': 'routing_information',
-                    'value': {
-                        'public_key': this.byteArrayToHexString(pubkey),
-                        'short_channel_id': this.byteArrayToHexString(shortChannelId),
-                        'fee_base_msat': this.byteArrayToInt(feeBaseMsat),
-                        'fee_proportional_millionths': this.byteArrayToInt(feeProportionalMillionths),
-                        'cltv_expiry_delta': this.byteArrayToInt(cltvExpiryDelta)
-                    }
+                    type: type,
+                    length: length,
+                    description: 'routing_information',
+                    value: {
+                        public_key: this.byteArrayToHexString(pubkey),
+                        short_channel_id: this.byteArrayToHexString(shortChannelId),
+                        fee_base_msat: this.byteArrayToInt(feeBaseMsat),
+                        fee_proportional_millionths: this.byteArrayToInt(feeProportionalMillionths),
+                        cltv_expiry_delta: this.byteArrayToInt(cltvExpiryDelta),
+                    },
                 };
             default:
             // reader MUST skip over unknown fields
@@ -196,8 +196,8 @@ module.exports = {
         let GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
         let chk = 1;
         values.forEach((value) => {
-            let b = (chk >> 25);
-            chk = (chk & 0x1ffffff) << 5 ^ value;
+            let b = chk >> 25;
+            chk = ((chk & 0x1ffffff) << 5) ^ value;
             for (let i = 0; i < 5; i++) {
                 if (((b >> i) & 1) === 1) {
                     chk ^= GEN[i];
@@ -256,12 +256,12 @@ module.exports = {
             buffer = (buffer << 5) + value;
             count += 5;
             if (count >= 8) {
-                byteArray.push(buffer >> (count - 8) & 255);
+                byteArray.push((buffer >> (count - 8)) & 255);
                 count -= 8;
             }
         });
         if (includeOverflow && count > 0) {
-            byteArray.push(buffer << (8 - count) & 255);
+            byteArray.push((buffer << (8 - count)) & 255);
         }
         return byteArray;
     },
@@ -275,9 +275,11 @@ module.exports = {
         return decodeURIComponent(utf8String);
     },
     byteArrayToHexString: function (byteArray) {
-        return Array.prototype.map.call(byteArray, function (byte) {
-            return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-        }).join('');
+        return Array.prototype.map
+            .call(byteArray, function (byte) {
+            return ('0' + (byte & 0xff).toString(16)).slice(-2);
+        })
+            .join('');
     },
     textToHexString: function (text) {
         let hexString = '';
@@ -289,6 +291,6 @@ module.exports = {
     epochToDate: function (int) {
         let date = new Date(int * 1000);
         return date.toUTCString();
-    }
+    },
 };
 //# sourceMappingURL=decode.js.map

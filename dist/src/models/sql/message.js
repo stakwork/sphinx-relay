@@ -17,7 +17,7 @@ __decorate([
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
-        autoIncrement: true
+        autoIncrement: true,
     }),
     __metadata("design:type", Number)
 ], Message.prototype, "id", void 0);
@@ -105,7 +105,7 @@ __decorate([
     sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
-        allowNull: false
+        allowNull: false,
     }),
     __metadata("design:type", Boolean)
 ], Message.prototype, "seen", void 0);
@@ -147,5 +147,5 @@ Message = __decorate([
 exports.default = Message;
 /*
 ALTER TABLE sphinx_invites ALTER COLUMN invoice TYPE text;
-*/ 
+*/
 //# sourceMappingURL=message.js.map

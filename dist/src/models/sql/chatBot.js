@@ -20,7 +20,7 @@ __decorate([
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
-        autoIncrement: true
+        autoIncrement: true,
     }),
     __metadata("design:type", Number)
 ], ChatBot.prototype, "id", void 0);
@@ -74,9 +74,9 @@ __decorate([
 ], ChatBot.prototype, "tenant", void 0);
 ChatBot = __decorate([
     sequelize_typescript_1.Table({
-        tableName: 'sphinx_chat_bots', underscored: true, indexes: [
-            { unique: true, fields: ['chat_id', 'bot_uuid'] }
-        ]
+        tableName: 'sphinx_chat_bots',
+        underscored: true,
+        indexes: [{ unique: true, fields: ['chat_id', 'bot_uuid'] }],
     })
 ], ChatBot);
 exports.default = ChatBot;

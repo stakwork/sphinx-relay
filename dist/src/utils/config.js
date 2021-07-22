@@ -4,13 +4,15 @@ exports.loadConfig = void 0;
 const path = require("path");
 const minimist = require("minimist");
 const argv = minimist(process.argv.slice(2));
-const configFile = argv.config ? argv.config : path.join(__dirname, '../../config/app.json');
+const configFile = argv.config
+    ? argv.config
+    : path.join(__dirname, '../../config/app.json');
 const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env];
 const ENV = process.env;
 const DEFAULT_HSM_SECRET_PATH = './creds/hsm_secret';
-const DEFAULT_TLS_LOCATION = "./creds/ca.pem";
-const DEFAULT_TLS_KEY_LOCATION = "./creds/device-key.pem";
+const DEFAULT_TLS_LOCATION = './creds/ca.pem';
+const DEFAULT_TLS_KEY_LOCATION = './creds/device-key.pem';
 const DEFAULT_TLS_CHAIN_LOCAION = './creds/device.crt';
 const DEFAULT_SCHEDULER_TLS_LOCATION = './creds/scheduler_creds/ca.pem';
 const DEFAULT_SCHEDULER_KEY_LOCATION = './creds/scheduler_creds/device-key.pem';
@@ -26,11 +28,21 @@ function loadConfig() {
         router_macaroon_location: ENV.ROUTER_MACAROON_LOCATION || config.router_macaroon_location,
         signer_macaroon_location: ENV.SIGNER_MACAROON_LOCATION || config.signer_macaroon_location,
         tls_location: ENV.TLS_LOCATION || config.tls_location || DEFAULT_TLS_LOCATION,
-        tls_key_location: ENV.TLS_KEY_LOCATION || config.tls_key_location || DEFAULT_TLS_KEY_LOCATION,
-        tls_chain_location: ENV.TLS_CHAIN_LOCATION || config.tls_chain_location || DEFAULT_TLS_CHAIN_LOCAION,
-        scheduler_tls_location: ENV.SCHEDULER_TLS_LOCATION || config.scheduler_tls_location || DEFAULT_SCHEDULER_TLS_LOCATION,
-        scheduler_key_location: ENV.SCHEDULER_KEY_LOCATION || config.scheduler_key_location || DEFAULT_SCHEDULER_KEY_LOCATION,
-        scheduler_chain_location: ENV.SCHEDULER_CHAIN_LOCATION || config.scheduler_chain_location || DEFAULT_SCHEDULER_CHAIN_LOCATION,
+        tls_key_location: ENV.TLS_KEY_LOCATION ||
+            config.tls_key_location ||
+            DEFAULT_TLS_KEY_LOCATION,
+        tls_chain_location: ENV.TLS_CHAIN_LOCATION ||
+            config.tls_chain_location ||
+            DEFAULT_TLS_CHAIN_LOCAION,
+        scheduler_tls_location: ENV.SCHEDULER_TLS_LOCATION ||
+            config.scheduler_tls_location ||
+            DEFAULT_SCHEDULER_TLS_LOCATION,
+        scheduler_key_location: ENV.SCHEDULER_KEY_LOCATION ||
+            config.scheduler_key_location ||
+            DEFAULT_SCHEDULER_KEY_LOCATION,
+        scheduler_chain_location: ENV.SCHEDULER_CHAIN_LOCATION ||
+            config.scheduler_chain_location ||
+            DEFAULT_SCHEDULER_CHAIN_LOCATION,
         hsm_secret_path: ENV.HSM_SECRET_PATH || config.hsm_secret_path || DEFAULT_HSM_SECRET_PATH,
         lnd_log_location: ENV.LND_LOG_LOCATION || config.lnd_log_location,
         node_ip: ENV.NODE_IP || config.node_ip,
@@ -49,14 +61,14 @@ function loadConfig() {
         public_url: ENV.PUBLIC_URL || config.public_url,
         connection_string_path: ENV.CONNECTION_STRING_PATH || config.connection_string_path,
         ssl: {
-            enabled: (ENV.SSL_ENABLED || (config.ssl && config.ssl.enabled)) ? true : false,
-            save: (ENV.SSL_SAVE || (config.ssl && config.ssl.save)) ? true : false,
-            port: ENV.SSL_PORT || (config.ssl && config.ssl.port)
+            enabled: ENV.SSL_ENABLED || (config.ssl && config.ssl.enabled) ? true : false,
+            save: ENV.SSL_SAVE || (config.ssl && config.ssl.save) ? true : false,
+            port: ENV.SSL_PORT || (config.ssl && config.ssl.port),
         },
         encrypted_macaroon_path: ENV.ENCRYPTED_MACAROON_PATH || config.encrypted_macaroon_path,
         loop_macaroon_location: ENV.LOOP_MACAROON_LOCATION || config.loop_macaroon_location,
         log_file: ENV.LOG_FILE || config.log_file,
-        unlock: (ENV.unlock || config.unlock) ? true : false,
+        unlock: ENV.unlock || config.unlock ? true : false,
         lnd_pwd_path: ENV.LND_PWD_PATH || config.lnd_pwd_path,
         connect_ui: ENV.CONNECT_UI || config.connect_ui,
         proxy_macaroons_dir: ENV.PROXY_MACAROONS_DIR || config.proxy_macaroons_dir,

@@ -21,9 +21,9 @@ const constants_1 = require("../constants");
 const tribes_1 = require("../utils/tribes");
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("=> processAction", req.body);
+        console.log('=> processAction', req.body);
         let body = req.body;
-        if (body.data && typeof body.data === "string" && body.data[1] === "'") {
+        if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try {
                 // parse out body from "data" for github webhook action
                 const dataBody = JSON.parse(body.data.replace(/'/g, '"'));
@@ -32,29 +32,29 @@ function processAction(req, res) {
             }
             catch (e) {
                 console.log(e);
-                return res_1.failure(res, "failed to parse webhook body json");
+                return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid } = body;
         if (!bot_id)
-            return res_1.failure(res, "no bot_id");
+            return res_1.failure(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
         if (!bot)
-            return res_1.failure(res, "no bot");
+            return res_1.failure(res, 'no bot');
         if (!(bot.secret && bot.secret === bot_secret)) {
-            return res_1.failure(res, "wrong secret");
+            return res_1.failure(res, 'wrong secret');
         }
         if (!action) {
-            return res_1.failure(res, "no action");
+            return res_1.failure(res, 'no action');
         }
         const a = {
             bot_id,
             action,
-            pubkey: pubkey || "",
-            content: content || "",
+            pubkey: pubkey || '',
+            content: content || '',
             amount: amount || 0,
             bot_name: bot.name,
-            chat_uuid: chat_uuid || "",
+            chat_uuid: chat_uuid || '',
         };
         try {
             const r = yield finalAction(a);
@@ -91,10 +91,10 @@ function finalAction(a) {
                 },
             });
             if (!botMember)
-                return console.log("no botMember");
+                return console.log('no botMember');
             const dest = botMember.memberPubkey;
             if (!dest)
-                return console.log("no dest to send to");
+                return console.log('no dest to send to');
             const topic = `${dest}/${myBot.uuid}`;
             const data = {
                 action,
@@ -114,12 +114,12 @@ function finalAction(a) {
                 yield network.signAndSend({ dest, data, route_hint }, owner, topic);
             }
             catch (e) {
-                console.log("=> couldnt mqtt publish");
+                console.log('=> couldnt mqtt publish');
             }
             return; // done
         }
-        if (action === "keysend") {
-            return console.log("=> BOT KEYSEND to", pubkey);
+        if (action === 'keysend') {
+            return console.log('=> BOT KEYSEND to', pubkey);
             // if (!(pubkey && pubkey.length === 66 && amount)) {
             //     throw 'wrong params'
             // }
@@ -136,17 +136,17 @@ function finalAction(a) {
             //     throw e
             // }
         }
-        else if (action === "broadcast") {
-            console.log("=> BOT BROADCAST");
+        else if (action === 'broadcast') {
+            console.log('=> BOT BROADCAST');
             if (!content)
-                return console.log("no content");
+                return console.log('no content');
             if (!chat_uuid)
-                return console.log("no chat_uuid");
+                return console.log('no chat_uuid');
             const theChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
             if (!(theChat && theChat.id))
-                return console.log("no chat");
+                return console.log('no chat');
             if (theChat.type !== constants_1.default.chat_types.tribe)
-                return console.log("not a tribe");
+                return console.log('not a tribe');
             const owner = yield models_1.models.Contact.findOne({
                 where: { id: theChat.tenant },
             });
@@ -156,7 +156,7 @@ function finalAction(a) {
             const textMap = { chat: encryptedText };
             var date = new Date();
             date.setMilliseconds(0);
-            const alias = bot_name || "Bot";
+            const alias = bot_name || 'Bot';
             const botContactId = -1;
             const msg = {
                 chatId: theChat.id,
@@ -175,7 +175,7 @@ function finalAction(a) {
             };
             const message = yield models_1.models.Message.create(msg);
             socket.sendJson({
-                type: "message",
+                type: 'message',
                 response: jsonUtils.messageToJson(message, theChat, owner),
             }, tenant);
             // console.log("BOT BROADCASE SENDER", owner.dataValues)
@@ -192,7 +192,7 @@ function finalAction(a) {
             });
         }
         else {
-            return console.log("no action");
+            return console.log('no action');
         }
     });
 }

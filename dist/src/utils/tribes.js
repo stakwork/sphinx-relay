@@ -36,7 +36,7 @@ function connect(onMessage) {
 exports.connect = connect;
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        const isOwner = proxy_1.isProxy() ? "'t'" : "1";
+        const isOwner = proxy_1.isProxy() ? "'t'" : '1';
         try {
             const r = yield models_1.sequelize.query(`
       SELECT sphinx_chats.* FROM sphinx_chats
@@ -75,44 +75,46 @@ function initializeClient(pubkey, host, onMessage) {
                             reconnectPeriod: 0,
                         });
                         if (logger_1.logging.Tribes)
-                            console.log("[tribes] try to connect:", url);
-                        cl.on("connect", function () {
+                            console.log('[tribes] try to connect:', url);
+                        cl.on('connect', function () {
                             return __awaiter(this, void 0, void 0, function* () {
                                 // first check if its already connected to this host (in case it takes a long time)
                                 connected = true;
-                                if (clients[pubkey] && clients[pubkey][host] && clients[pubkey][host].connected) {
+                                if (clients[pubkey] &&
+                                    clients[pubkey][host] &&
+                                    clients[pubkey][host].connected) {
                                     resolve(clients[pubkey][host]);
                                     return;
                                 }
                                 if (logger_1.logging.Tribes)
-                                    console.log("[tribes] connected!");
+                                    console.log('[tribes] connected!');
                                 if (!clients[pubkey])
                                     clients[pubkey] = {};
                                 clients[pubkey][host] = cl; // ADD TO MAIN STATE
-                                cl.on("close", function (e) {
+                                cl.on('close', function (e) {
                                     if (logger_1.logging.Tribes)
-                                        console.log("[tribes] CLOSE", e);
+                                        console.log('[tribes] CLOSE', e);
                                     // setTimeout(() => reconnect(), 2000);
                                     connected = false;
                                     if (clients[pubkey] && clients[pubkey][host]) {
                                         delete clients[pubkey][host];
                                     }
                                 });
-                                cl.on("error", function (e) {
+                                cl.on('error', function (e) {
                                     if (logger_1.logging.Tribes)
-                                        console.log("[tribes] error: ", e.message || e);
+                                        console.log('[tribes] error: ', e.message || e);
                                 });
-                                cl.on("message", function (topic, message) {
+                                cl.on('message', function (topic, message) {
                                     // console.log("============>>>>> GOT A MSG", topic, message)
                                     if (onMessage)
                                         onMessage(topic, message);
                                 });
                                 cl.subscribe(`${pubkey}/#`, function (err) {
                                     if (err)
-                                        console.log("[tribes] error subscribing", err);
+                                        console.log('[tribes] error subscribing', err);
                                     else {
                                         if (logger_1.logging.Tribes)
-                                            console.log("[tribes] subscribed!", `${pubkey}/#`);
+                                            console.log('[tribes] subscribed!', `${pubkey}/#`);
                                         resolve(cl);
                                     }
                                 });
@@ -136,7 +138,9 @@ function initializeClient(pubkey, host, onMessage) {
 }
 function lazyClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (clients[pubkey] && clients[pubkey][host] && clients[pubkey][host].connected) {
+        if (clients[pubkey] &&
+            clients[pubkey][host] &&
+            clients[pubkey][host].connected) {
             return clients[pubkey][host];
         }
         const cl = yield initializeClient(pubkey, host, onMessage);
@@ -171,7 +175,7 @@ function initAndSubscribeTopics(onMessage) {
             }
         }
         catch (e) {
-            console.log("TRIBES ERROR", e);
+            console.log('TRIBES ERROR', e);
         }
     });
 }
@@ -194,7 +198,7 @@ function subExtraHostsForTenant(tenant, pubkey, onMessage) {
             const client = yield lazyClient(pubkey, host, onMessage);
             client.subscribe(`${pubkey}/#`, optz, function (err) {
                 if (err)
-                    console.log("[tribes] subscribe error 2", err);
+                    console.log('[tribes] subscribe error 2', err);
             });
         }));
     });
@@ -226,17 +230,17 @@ function addExtraHost(pubkey, host, onMessage) {
 exports.addExtraHost = addExtraHost;
 // if host includes colon, remove it
 function mqttURL(host) {
-    if (host.includes(":")) {
-        const arr = host.split(":");
+    if (host.includes(':')) {
+        const arr = host.split(':');
         host = arr[0];
     }
-    let port = "8883";
-    let protocol = "tls";
+    let port = '8883';
+    let protocol = 'tls';
     if (config.tribes_mqtt_port) {
         port = config.tribes_mqtt_port;
     }
     if (config.tribes_insecure) {
-        protocol = "tcp";
+        protocol = 'tcp';
     }
     return `${protocol}://${host}:${port}`;
 }
@@ -273,7 +277,7 @@ function updateTribeStats(myPubkey) {
 }
 function subscribe(topic, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        const pubkey = topic.split("/")[0];
+        const pubkey = topic.split('/')[0];
         if (pubkey.length !== 66)
             return;
         const host = getHost();
@@ -281,7 +285,7 @@ function subscribe(topic, onMessage) {
         if (client)
             client.subscribe(topic, function () {
                 if (logger_1.logging.Tribes)
-                    console.log("[tribes] added sub", host, topic);
+                    console.log('[tribes] added sub', host, topic);
             });
     });
 }
@@ -295,7 +299,7 @@ function publish(topic, msg, ownerPubkey, cb) {
         if (client)
             client.publish(topic, msg, optz, function (err) {
                 if (err)
-                    console.log("[tribes] error publishing", err);
+                    console.log('[tribes] error publishing', err);
                 else if (cb)
                     cb();
             });
@@ -305,18 +309,18 @@ exports.publish = publish;
 function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, owner_route_hint, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let protocol = "https";
+            let protocol = 'https';
             if (config.tribes_insecure)
-                protocol = "http";
-            const r = yield node_fetch_1.default(protocol + "://" + host + "/tribes", {
-                method: "POST",
+                protocol = 'http';
+            const r = yield node_fetch_1.default(protocol + '://' + host + '/tribes', {
+                method: 'POST',
                 body: JSON.stringify({
                     uuid,
                     group_key,
                     name,
                     description,
                     tags,
-                    img: img || "",
+                    img: img || '',
                     price_per_message: price_per_message || 0,
                     price_to_join: price_to_join || 0,
                     owner_alias,
@@ -325,11 +329,11 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     escrow_millis: escrow_millis || 0,
                     unlisted: unlisted || false,
                     private: is_private || false,
-                    app_url: app_url || "",
-                    feed_url: feed_url || "",
-                    owner_route_hint: owner_route_hint || "",
+                    app_url: app_url || '',
+                    feed_url: feed_url || '',
+                    owner_route_hint: owner_route_hint || '',
                 }),
-                headers: { "Content-Type": "application/json" },
+                headers: { 'Content-Type': 'application/json' },
             });
             if (!r.ok) {
                 throw 'failed to create tribe ' + r.status;
@@ -337,7 +341,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
             // const j = await r.json()
         }
         catch (e) {
-            console.log("[tribes] unauthorized to declare");
+            console.log('[tribes] unauthorized to declare');
             throw e;
         }
     });
@@ -347,17 +351,17 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp(owner_pubkey);
-            let protocol = "https";
+            let protocol = 'https';
             if (config.tribes_insecure)
-                protocol = "http";
-            const r = yield node_fetch_1.default(protocol + "://" + host + "/tribe?token=" + token, {
-                method: "PUT",
+                protocol = 'http';
+            const r = yield node_fetch_1.default(protocol + '://' + host + '/tribe?token=' + token, {
+                method: 'PUT',
                 body: JSON.stringify({
                     uuid,
                     name,
                     description,
                     tags,
-                    img: img || "",
+                    img: img || '',
                     price_per_message: price_per_message || 0,
                     price_to_join: price_to_join || 0,
                     escrow_amount: escrow_amount || 0,
@@ -366,11 +370,11 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     unlisted: unlisted || false,
                     private: is_private || false,
                     deleted: deleted || false,
-                    app_url: app_url || "",
-                    feed_url: feed_url || "",
-                    owner_route_hint: owner_route_hint || "",
+                    app_url: app_url || '',
+                    feed_url: feed_url || '',
+                    owner_route_hint: owner_route_hint || '',
                 }),
-                headers: { "Content-Type": "application/json" },
+                headers: { 'Content-Type': 'application/json' },
             });
             if (!r.ok) {
                 throw 'failed to edit tribe ' + r.status;
@@ -378,7 +382,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
             // const j = await r.json()
         }
         catch (e) {
-            console.log("[tribes] unauthorized to edit");
+            console.log('[tribes] unauthorized to edit');
             throw e;
         }
     });
@@ -389,11 +393,11 @@ function delete_tribe(uuid, owner_pubkey) {
         const host = getHost();
         try {
             const token = yield genSignedTimestamp(owner_pubkey);
-            let protocol = "https";
+            let protocol = 'https';
             if (config.tribes_insecure)
-                protocol = "http";
+                protocol = 'http';
             const r = yield node_fetch_1.default(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
-                method: "DELETE",
+                method: 'DELETE',
             });
             if (!r.ok) {
                 throw 'failed to delete tribe ' + r.status;
@@ -401,7 +405,7 @@ function delete_tribe(uuid, owner_pubkey) {
             // const j = await r.json()
         }
         catch (e) {
-            console.log("[tribes] unauthorized to delete");
+            console.log('[tribes] unauthorized to delete');
             throw e;
         }
     });
@@ -411,16 +415,16 @@ function putActivity(uuid, host, owner_pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp(owner_pubkey);
-            let protocol = "https";
+            let protocol = 'https';
             if (config.tribes_insecure)
-                protocol = "http";
+                protocol = 'http';
             yield node_fetch_1.default(`${protocol}://${host}/tribeactivity/${uuid}?token=` + token, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
             });
         }
         catch (e) {
-            console.log("[tribes] unauthorized to putActivity");
+            console.log('[tribes] unauthorized to putActivity');
             throw e;
         }
     });
@@ -433,21 +437,21 @@ function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
         const bots = yield tribeBots_1.makeBotsJSON(chatId);
         try {
             const token = yield genSignedTimestamp(owner_pubkey);
-            let protocol = "https";
+            let protocol = 'https';
             if (config.tribes_insecure)
-                protocol = "http";
-            yield node_fetch_1.default(protocol + "://" + host + "/tribestats?token=" + token, {
-                method: "PUT",
+                protocol = 'http';
+            yield node_fetch_1.default(protocol + '://' + host + '/tribestats?token=' + token, {
+                method: 'PUT',
                 body: JSON.stringify({
                     uuid,
                     member_count,
                     bots: JSON.stringify(bots || []),
                 }),
-                headers: { "Content-Type": "application/json" },
+                headers: { 'Content-Type': 'application/json' },
             });
         }
         catch (e) {
-            console.log("[tribes] unauthorized to putstats");
+            console.log('[tribes] unauthorized to putstats');
             throw e;
         }
     });
@@ -458,7 +462,7 @@ function genSignedTimestamp(ownerPubkey) {
         // console.log('genSignedTimestamp')
         try {
             const now = moment().unix();
-            const tsBytes = Buffer.from(now.toString(16), "hex");
+            const tsBytes = Buffer.from(now.toString(16), 'hex');
             const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
             const sigBytes = zbase32.decode(sig);
             const totalLength = tsBytes.length + sigBytes.length;
@@ -473,7 +477,7 @@ function genSignedTimestamp(ownerPubkey) {
 exports.genSignedTimestamp = genSignedTimestamp;
 function verifySignedTimestamp(stsBase64) {
     return __awaiter(this, void 0, void 0, function* () {
-        const stsBuf = Buffer.from(stsBase64, "base64");
+        const stsBuf = Buffer.from(stsBase64, 'base64');
         const sig = stsBuf.subarray(4, 92);
         const sigZbase32 = zbase32.encode(sig);
         const r = yield LND.verifyBytes(stsBuf.subarray(0, 4), sigZbase32); // sig needs to be zbase32 :(
@@ -487,11 +491,11 @@ function verifySignedTimestamp(stsBase64) {
 }
 exports.verifySignedTimestamp = verifySignedTimestamp;
 function getHost() {
-    return config.tribes_host || "";
+    return config.tribes_host || '';
 }
 exports.getHost = getHost;
 function urlBase64(buf) {
-    return buf.toString("base64").replace(/\//g, "_").replace(/\+/g, "-");
+    return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
 }
 function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {

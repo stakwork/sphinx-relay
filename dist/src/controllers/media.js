@@ -49,7 +49,7 @@ purchase_deny returns the sats
 */
 const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     // try {
     //   schemas.attachment.validateSync(req.body)
@@ -58,7 +58,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     // }
     const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, // IF AMOUNT>0 THEN do NOT sign or send receipt
     reply_uuid, } = req.body;
-    console.log("[send attachment]", req.body);
+    console.log('[send attachment]', req.body);
     const owner = req.owner;
     const chat = yield helpers.findOrCreateChat({
         chat_id,
@@ -78,15 +78,15 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     const myMediaToken = yield ldat_1.tokenFromTerms({
         muid,
         ttl: TTL,
-        host: "",
+        host: '',
         pubkey: owner.publicKey,
         meta: Object.assign(Object.assign({}, (amt && { amt })), { ttl }),
         ownerPubkey: owner.publicKey,
     });
     const date = new Date();
     date.setMilliseconds(0);
-    const myMediaKey = (media_key_map && media_key_map[owner.id]) || "";
-    const mediaType = media_type || "";
+    const myMediaKey = (media_key_map && media_key_map[owner.id]) || '';
+    const mediaType = media_type || '';
     const remoteMessageContent = remote_text_map
         ? JSON.stringify(remote_text_map)
         : remote_text;
@@ -98,7 +98,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         type: constants_1.default.message_types.attachment,
         status: constants_1.default.statuses.pending,
         amount: amount || 0,
-        messageContent: text || file_name || "",
+        messageContent: text || file_name || '',
         remoteMessageContent,
         mediaToken: myMediaToken,
         mediaKey: myMediaKey,
@@ -111,7 +111,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     if (reply_uuid)
         mm.replyUuid = reply_uuid;
     const message = yield models_1.models.Message.create(mm);
-    console.log("saved attachment msg from me", message.id);
+    console.log('saved attachment msg from me', message.id);
     saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant);
     const mediaTerms = {
         muid,
@@ -123,7 +123,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         mediaTerms,
         id: message.id,
         uuid: uuid,
-        content: remote_text_map || remote_text || text || file_name || "",
+        content: remote_text_map || remote_text || text || file_name || '',
         mediaKey: media_key_map,
         mediaType: mediaType,
     };
@@ -136,7 +136,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         amount: amount || 0,
         message: msg,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log("attachment sent", { data });
+            console.log('attachment sent', { data });
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => resUtils.failure(res, error.message),
@@ -144,8 +144,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
 });
 exports.sendAttachmentMessage = sendAttachmentMessage;
 function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) {
-    if (typeof mediaKeyMap !== "object") {
-        console.log("wrong type for mediaKeyMap");
+    if (typeof mediaKeyMap !== 'object') {
+        console.log('wrong type for mediaKeyMap');
         return;
     }
     var date = new Date();
@@ -169,7 +169,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) 
 exports.saveMediaKeys = saveMediaKeys;
 const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { chat_id, contact_id, amount, media_token } = req.body;
     var date = new Date();
@@ -216,7 +216,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         message: msg,
         amount: amount,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log("purchase sent!");
+            console.log('purchase sent!');
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => resUtils.failure(res, error.message),
@@ -226,12 +226,12 @@ exports.purchase = purchase;
 /* RECEIVERS */
 const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (logger_1.logging.Network)
-        console.log("=> received purchase", { payload });
+        console.log('=> received purchase', { payload });
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id, network_type, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log("=> group chat not found!");
+        return console.log('=> group chat not found!');
     }
     const tenant = owner.id;
     const message = yield models_1.models.Message.create({
@@ -249,24 +249,24 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         tenant,
     });
     socket.sendJson({
-        type: "purchase",
+        type: 'purchase',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     // if sats forwarded from tribe owner, for the >1 time
     // dont need to send back token, because admin already has it
     if (isTribe && skip_payment_processing) {
-        return console.log("=> skip payment processing");
+        return console.log('=> skip payment processing');
     }
-    const muid = mediaToken && mediaToken.split(".").length && mediaToken.split(".")[1];
+    const muid = mediaToken && mediaToken.split('.').length && mediaToken.split('.')[1];
     if (!muid) {
-        return console.log("no muid");
+        return console.log('no muid');
     }
     const ogMessage = yield models_1.models.Message.findOne({
         where: { mediaToken, tenant },
     });
     if (!ogMessage) {
-        return console.log("no original message");
+        return console.log('no original message');
     }
     // find mediaKey for who sent
     const mediaKey = yield models_1.models.MediaKey.findOne({
@@ -285,7 +285,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     let price = terms.meta && terms.meta.amt;
     if (!TTL || !price) {
         const media = yield getMediaInfo(muid, owner.publicKey);
-        console.log("GOT MEDIA", media);
+        console.log('GOT MEDIA', media);
         if (media) {
             TTL = media.ttl && parseInt(media.ttl);
             price = media.price;
@@ -303,9 +303,9 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             sender: owner,
             amount: amount,
             type: constants_1.default.message_types.purchase_deny,
-            message: { amount, content: "Payment Denied", mediaToken },
+            message: { amount, content: 'Payment Denied', mediaToken },
             success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-                console.log("purchase_deny sent");
+                console.log('purchase_deny sent');
                 const denyMsg = yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
@@ -317,17 +317,17 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
                     tenant,
                 });
                 socket.sendJson({
-                    type: "purchase_deny",
+                    type: 'purchase_deny',
                     response: jsonUtils.messageToJson(denyMsg, chat, sender),
                 }, tenant);
             }),
-            failure: (error) => console.log("=> couldnt send purcahse deny", error),
+            failure: (error) => console.log('=> couldnt send purcahse deny', error),
         });
     }
     const theMediaToken = yield ldat_1.tokenFromTerms({
         muid,
         ttl: TTL,
-        host: "",
+        host: '',
         meta: { amt: amount },
         pubkey: sender.publicKey,
         ownerPubkey: owner.publicKey,
@@ -345,7 +345,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         type: constants_1.default.message_types.purchase_accept,
         message: msgToSend,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log("purchase_accept sent!");
+            console.log('purchase_accept sent!');
             const acceptMsg = yield models_1.models.Message.create({
                 chatId: chat.id,
                 sender: owner.id,
@@ -357,29 +357,29 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
                 tenant,
             });
             socket.sendJson({
-                type: "purchase_accept",
+                type: 'purchase_accept',
                 response: jsonUtils.messageToJson(acceptMsg, chat, sender),
             }, tenant);
         }),
-        failure: (error) => console.log("=> couldnt send purchase accept", error),
+        failure: (error) => console.log('=> couldnt send purchase accept', error),
     });
 });
 exports.receivePurchase = receivePurchase;
 const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (logger_1.logging.Network)
-        console.log("=> receivePurchaseAccept");
+        console.log('=> receivePurchaseAccept');
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid, network_type, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log("=> no group chat!");
+        return console.log('=> no group chat!');
     }
     const tenant = owner.id;
-    const termsArray = mediaToken.split(".");
+    const termsArray = mediaToken.split('.');
     // const host = termsArray[0]
     const muid = termsArray[1];
     if (!muid) {
-        return console.log("wtf no muid");
+        return console.log('wtf no muid');
     }
     // const attachmentMessage = await models.Message.findOne({where:{
     //   mediaToken: {$like: `${host}.${muid}%`}
@@ -398,7 +398,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
         mediaToken,
         mediaKey,
         mediaType,
-        originalMuid: originalMuid || "",
+        originalMuid: originalMuid || '',
         date: date,
         createdAt: date,
         updatedAt: date,
@@ -406,19 +406,19 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
         tenant,
     });
     socket.sendJson({
-        type: "purchase_accept",
+        type: 'purchase_accept',
         response: jsonUtils.messageToJson(msg, chat, sender),
     }, tenant);
 });
 exports.receivePurchaseAccept = receivePurchaseAccept;
 const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (logger_1.logging.Network)
-        console.log("=> receivePurchaseDeny");
+        console.log('=> receivePurchaseDeny');
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, mediaToken, network_type, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, mediaToken, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log("=> no group chat!");
+        return console.log('=> no group chat!');
     }
     const tenant = owner.id;
     const msg = yield models_1.models.Message.create({
@@ -426,7 +426,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
         sender: sender.id,
         type: constants_1.default.message_types.purchase_deny,
         status: constants_1.default.statuses.received,
-        messageContent: "Purchase has been denied and sats returned to you",
+        messageContent: 'Purchase has been denied and sats returned to you',
         amount: amount,
         amountMsat: parseFloat(amount) * 1000,
         mediaToken,
@@ -437,7 +437,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
         tenant,
     });
     socket.sendJson({
-        type: "purchase_deny",
+        type: 'purchase_deny',
         response: jsonUtils.messageToJson(msg, chat, sender),
     }, tenant);
 });
@@ -448,7 +448,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     date.setMilliseconds(0);
     const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log("=> no group chat!");
+        return console.log('=> no group chat!');
     }
     const tenant = owner.id;
     const msg = {
@@ -481,22 +481,22 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved attachment', message.dataValues)
     socket.sendJson({
-        type: "attachment",
+        type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, "message", owner);
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
     confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveAttachment = receiveAttachment;
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         // const tenant:number = req.owner.id
         if (!req.params.challenge)
-            return resUtils.failure(res, "no challenge");
+            return resUtils.failure(res, 'no challenge');
         try {
-            const sig = yield Lightning.signBuffer(Buffer.from(req.params.challenge, "base64"), req.owner.publicKey);
+            const sig = yield Lightning.signBuffer(Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey);
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
             resUtils.success(res, {
@@ -525,11 +525,11 @@ function getMediaInfo(muid, pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield meme.lazyToken(pubkey, config.media_host);
-            const mediaURL = "http://" + config.media_host + "/";
-            const res = yield rp.get(mediaURL + "mymedia/" + muid, {
+            const mediaURL = 'http://' + config.media_host + '/';
+            const res = yield rp.get(mediaURL + 'mymedia/' + muid, {
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                 },
                 json: true,
             });

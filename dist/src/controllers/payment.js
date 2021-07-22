@@ -24,13 +24,13 @@ const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
-    console.log("[send payment]", req.body);
+    console.log('[send payment]', req.body);
     const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
-        feed_1.anonymousKeysend(owner, destination_key, route_hint, amount || "", text || "", function (body) {
+        feed_1.anonymousKeysend(owner, destination_key, route_hint, amount || '', text || '', function (body) {
             res_1.success(res, body);
         }, function (error) {
             res.status(200);
@@ -71,14 +71,14 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (muid) {
         const myMediaToken = yield ldat_1.tokenFromTerms({
             meta: { dim: dimensions },
-            host: "",
+            host: '',
             muid,
             ttl: null,
             pubkey: owner.publicKey,
             ownerPubkey: owner.publicKey,
         });
         msg.mediaToken = myMediaToken;
-        msg.mediaType = media_type || "";
+        msg.mediaType = media_type || '';
     }
     const message = yield models_1.models.Message.create(msg);
     const msgToSend = {
@@ -87,7 +87,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         amount,
     };
     if (muid) {
-        msgToSend.mediaType = media_type || "image/jpeg";
+        msgToSend.mediaType = media_type || 'image/jpeg';
         msgToSend.mediaTerms = { muid, meta: { dim: dimensions } };
     }
     if (remote_text)
@@ -125,12 +125,12 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.sendPayment = sendPayment;
 const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("received payment", { payload });
+    console.log('received payment', { payload });
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log("=> no group chat!");
+        return console.log('=> no group chat!');
     }
     const tenant = owner.id;
     const msg = {
@@ -162,15 +162,15 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved message', message.dataValues)
     socket.sendJson({
-        type: "direct_payment",
+        type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, "message", owner);
+    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
@@ -207,7 +207,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 ],
                 tenant,
             },
-            order: [["createdAt", "desc"]],
+            order: [['createdAt', 'desc']],
             limit,
             offset,
         });
@@ -215,7 +215,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res_1.success(res, ret.map((message) => jsonUtils.messageToJson(message, null)));
     }
     catch (e) {
-        res_1.failure(res, "cant find payments");
+        res_1.failure(res, 'cant find payments');
     }
 });
 exports.listPayments = listPayments;

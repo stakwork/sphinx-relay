@@ -42,7 +42,7 @@ function sendMessage(params) {
             // console.log("NO SENDER?????");
             return;
         }
-        let contactIds = (typeof chat.contactIds === "string"
+        let contactIds = (typeof chat.contactIds === 'string'
             ? JSON.parse(chat.contactIds)
             : chat.contactIds) || [];
         // console.log('-> contactIds 1', contactIds)
@@ -62,7 +62,7 @@ function sendMessage(params) {
                     return; // dont send confs for tribe if not owner
             }
             if (isTribeOwner) {
-                networkType = "mqtt"; // broadcast to all
+                networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield msg_1.decryptMessage(msg, chat);
                 // console.log("SEND.TS isBotMsg")
@@ -84,7 +84,7 @@ function sendMessage(params) {
         let yes = true;
         let no = null;
         if (logger_1.logging.Network) {
-            console.log("=> sending to", contactIds.length, "contacts");
+            console.log('=> sending to', contactIds.length, 'contacts');
         }
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
             // console.log("=> TENANT", tenant)
@@ -112,14 +112,14 @@ function sendMessage(params) {
                 return; // skip (for tribe owner broadcasting, not back to the sender)
             }
             // console.log('-> sending to ', contact.id, destkey)
-            let mqttTopic = networkType === "mqtt" ? `${destkey}/${chatUUID}` : "";
+            let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
             // sending a payment to one subscriber, buying a pic from OG poster
             // or boost to og poster
             // console.log("=> istribeOwner", isTribeOwner)
             // console.log("=> amount", amount)
             // console.log("=> realSatsContactId", realSatsContactId, contactId)
             if (isTribeOwner && amount && realSatsContactId === contactId) {
-                mqttTopic = ""; // FORCE KEYSEND!!!
+                mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
             // console.log('-> personalized msg',m)
@@ -127,7 +127,7 @@ function sendMessage(params) {
                 dest: destkey,
                 data: m,
                 amt: Math.max(amount || 0, constants_1.default.min_sat_amount),
-                route_hint: contact.routeHint || "",
+                route_hint: contact.routeHint || '',
             };
             // console.log("==> SENDER",sender)
             // console.log("==> OK SIGN AND SEND", opts);
@@ -136,7 +136,7 @@ function sendMessage(params) {
                 yes = r;
             }
             catch (e) {
-                console.log("KEYSEND ERROR", e);
+                console.log('KEYSEND ERROR', e);
                 no = e;
             }
             yield sleep(10);
@@ -158,11 +158,11 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
     const ownerID = owner.id;
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!opts || typeof opts !== "object") {
-                return reject("object plz");
+            if (!opts || typeof opts !== 'object') {
+                return reject('object plz');
             }
             if (!opts.dest) {
-                return reject("no dest pubkey");
+                return reject('no dest pubkey');
             }
             let data = JSON.stringify(opts.data || {});
             opts.amt = opts.amt || 0;
@@ -210,7 +210,7 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
         !sender.privatePhoto &&
         chat &&
         chat.type === constants_1.default.chat_types.tribe;
-    let photoUrlToInclude = sender.photoUrl || "";
+    let photoUrlToInclude = sender.photoUrl || '';
     if (!isForwarded && includePhotoUrl && chat.myPhotoUrl) {
         photoUrlToInclude = chat.myPhotoUrl;
     }
@@ -221,7 +221,7 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, (chat.name && { name: chat.name })), ((chat.type || chat.type === 0) && { type: chat.type })), (chat.members && { members: chat.members })), (includeGroupKey && chat.groupKey && { groupKey: chat.groupKey })), (includeGroupKey && chat.host && { host: chat.host })),
         message: message,
-        sender: Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), { alias: includeAlias ? aliasToInclude : "", role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
+        sender: Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
     };
 }
 exports.newmsg = newmsg;

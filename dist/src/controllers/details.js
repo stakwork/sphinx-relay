@@ -34,21 +34,21 @@ function getAppVersions(req, res) {
             res_1.success(res, vs);
         }
         else {
-            res_1.failure(res, "Could not load app versions");
+            res_1.failure(res, 'Could not load app versions');
         }
     });
 }
 exports.getAppVersions = getAppVersions;
 const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const { pubkey, amount, route_hint } = req.query;
     if (!(pubkey && pubkey.length === 66))
-        return res_1.failure(res, "wrong pubkey");
+        return res_1.failure(res, 'wrong pubkey');
     const owner = req.owner;
     try {
         const amt = parseInt(amount) || constants_1.default.min_sat_amount;
-        const r = yield Lightning.queryRoute(pubkey, amt, route_hint || "", owner.publicKey);
+        const r = yield Lightning.queryRoute(pubkey, amt, route_hint || '', owner.publicKey);
         res_1.success(res, r);
     }
     catch (e) {
@@ -58,18 +58,18 @@ const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.checkRoute = checkRoute;
 const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const chatID = req.query.chat_id;
     const contactID = req.query.contact_id;
     if (!chatID && !contactID)
-        return res_1.failure(res, "no chat_id or contact_id");
-    let pubkey = "";
-    let routeHint = "";
+        return res_1.failure(res, 'no chat_id or contact_id');
+    let pubkey = '';
+    let routeHint = '';
     if (contactID) {
         const contactId = parseInt(contactID);
         const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
         if (!contact)
-            return res_1.failure(res, "cant find contact");
+            return res_1.failure(res, 'cant find contact');
         pubkey = contact.publicKey;
         routeHint = contact.routeHint;
     }
@@ -77,25 +77,25 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
         const chatId = parseInt(chatID);
         const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
         if (!chat)
-            return res_1.failure(res, "cant find chat");
+            return res_1.failure(res, 'cant find chat');
         if (!chat.ownerPubkey)
-            return res_1.failure(res, "cant find owern_pubkey");
+            return res_1.failure(res, 'cant find owern_pubkey');
         pubkey = chat.ownerPubkey;
         const chatowner = yield models_1.models.Contact.findOne({
             where: { publicKey: chat.ownerPubkey },
         });
         if (!chatowner)
-            return res_1.failure(res, "cant find chat owner");
+            return res_1.failure(res, 'cant find chat owner');
         if (chatowner.routeHint)
             routeHint = chatowner.routeHint;
     }
     if (!(pubkey && pubkey.length === 66))
-        return res_1.failure(res, "wrong pubkey");
+        return res_1.failure(res, 'wrong pubkey');
     const amount = req.query.amount;
     const owner = req.owner;
     try {
         const amt = parseInt(amount) || constants_1.default.min_sat_amount;
-        const r = yield Lightning.queryRoute(pubkey, amt, routeHint || "", owner.publicKey);
+        const r = yield Lightning.queryRoute(pubkey, amt, routeHint || '', owner.publicKey);
         res_1.success(res, r);
     }
     catch (e) {
@@ -104,9 +104,9 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
 });
 exports.checkRouteByContactOrChat = checkRouteByContactOrChat;
 const defaultLogFiles = [
-    "/var/log/supervisor/relay.log",
-    "/home/lnd/.pm2/logs/app-error.log",
-    "/var/log/syslog",
+    '/var/log/supervisor/relay.log',
+    '/home/lnd/.pm2/logs/app-error.log',
+    '/var/log/syslog',
 ];
 function getLogsSince(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -118,9 +118,9 @@ function getLogsSince(req, res) {
                 try {
                     const lines = yield readLastLines.read(filepath, 500);
                     if (lines) {
-                        var linesArray = lines.split("\n");
+                        var linesArray = lines.split('\n');
                         linesArray.reverse();
-                        txt = linesArray.join("\n");
+                        txt = linesArray.join('\n');
                     }
                 }
                 catch (e) {
@@ -137,7 +137,7 @@ function getLogsSince(req, res) {
 exports.getLogsSince = getLogsSince;
 const getLightningInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     res.status(200);
     try {
         const response = yield Lightning.getInfo();
@@ -151,7 +151,7 @@ const getLightningInfo = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getLightningInfo = getLightningInfo;
 const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     res.status(200);
     try {
         const response = yield Lightning.listChannels({});
@@ -165,7 +165,7 @@ const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getChannels = getChannels;
 const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     var date = new Date();
     date.setMilliseconds(0);
@@ -176,11 +176,11 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const blcs = yield Lightning.complexBalances(owner.publicKey);
         res.json({
             success: true,
-            response: blcs
+            response: blcs,
         });
     }
     catch (e) {
-        console.log("ERROR getBalance", e);
+        console.log('ERROR getBalance', e);
         res.json({ success: false });
     }
     res.end();
@@ -188,7 +188,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getBalance = getBalance;
 const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, "no owner");
+        return res_1.failure(res, 'no owner');
     res.status(200);
     try {
         const channelList = yield Lightning.listChannels({});
@@ -213,7 +213,7 @@ const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, fu
 exports.getLocalRemoteBalance = getLocalRemoteBalance;
 const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var ipOfSource = req.connection.remoteAddress;
-    if (!(ipOfSource.includes("127.0.0.1") || ipOfSource.includes("localhost"))) {
+    if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
         res.status(401);
         res.end();
         return;
@@ -234,13 +234,13 @@ function asyncForEach(array, callback) {
 function clearForTesting(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, "no owner");
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         if (!config.allow_test_clearing) {
-            return res_1.failure(res, "nope");
+            return res_1.failure(res, 'nope');
         }
-        if (config.allow_test_clearing !== "true") {
-            return res_1.failure(res, "nope");
+        if (config.allow_test_clearing !== 'true') {
+            return res_1.failure(res, 'nope');
         }
         try {
             yield models_1.models.Chat.destroy({ truncate: true, where: { tenant } });
@@ -263,11 +263,11 @@ function clearForTesting(req, res) {
                 where: { isOwner: true, tenant },
             });
             yield me.update({
-                authToken: "",
-                photoUrl: "",
-                contactKey: "",
-                alias: "",
-                deviceId: "",
+                authToken: '',
+                photoUrl: '',
+                contactKey: '',
+                alias: '',
+                deviceId: '',
             });
             res_1.success(res, { clean: true });
         }

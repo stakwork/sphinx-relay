@@ -3,7 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.toCamel = exports.toSnake = void 0;
 const changeCase = require("change-case");
 const dateKeys = ['date', 'createdAt', 'updatedAt', 'created_at', 'updated_at'];
-const boolKeys = ['fromGroup', 'isOwner', 'deleted', 'seen', 'isMuted', 'unlisted', 'private', 'privatePhoto', 'skipBroadcastJoins'];
+const boolKeys = [
+    'fromGroup',
+    'isOwner',
+    'deleted',
+    'seen',
+    'isMuted',
+    'unlisted',
+    'private',
+    'privatePhoto',
+    'skipBroadcastJoins',
+];
 function toSnake(obj) {
     const ret = {};
     for (let [key, value] of Object.entries(obj)) {
@@ -15,7 +25,7 @@ function toSnake(obj) {
             ret[changeCase.snakeCase(key)] = d.toISOString();
         }
         else if (boolKeys.includes(key)) {
-            ret[changeCase.snakeCase(key)] = (!value || value === '0') ? 0 : 1;
+            ret[changeCase.snakeCase(key)] = !value || value === '0' ? 0 : 1;
         }
         else {
             ret[changeCase.snakeCase(key)] = value;

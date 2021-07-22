@@ -22,15 +22,15 @@ function init() {
         return;
     initted = true;
     const client = new Sphinx.Client();
-    client.login("_", api_1.finalAction);
+    client.login('_', api_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        const arr = (message.content && message.content.split(" ")) || [];
+        const arr = (message.content && message.content.split(' ')) || [];
         // console.log("message.type", message.type);
         const isGroupJoin = message.type === constants_1.default.message_types.group_join;
         // console.log("isGroupJoin", isGroupJoin);
         if (arr.length < 2 && !isGroupJoin)
             return;
-        if (arr[0] !== "/welcome" && !isGroupJoin)
+        if (arr[0] !== '/welcome' && !isGroupJoin)
             return;
         const cmd = arr[1];
         if (isGroupJoin) {
@@ -38,24 +38,24 @@ function init() {
                 const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                 // console.log("=> WelcomeBot chat", chat);
                 if (!(chat && chat.id))
-                    return console.log("=> welcomebot no chat");
+                    return console.log('=> welcomebot no chat');
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
                         chatId: chat.id,
-                        botPrefix: "/welcome",
+                        botPrefix: '/welcome',
                         botType: constants_1.default.bot_types.builtin,
                         tenant: chat.tenant,
                     },
                 });
                 if (!chatBot)
                     return;
-                let meta = "Welcome to the tribe!";
+                let meta = 'Welcome to the tribe!';
                 if (chatBot && chatBot.meta) {
                     meta = chatBot.meta;
                 }
                 // console.log("=> WELCOMEMETA", meta);
                 const resEmbed = new Sphinx.MessageEmbed()
-                    .setAuthor("WelcomeBot")
+                    .setAuthor('WelcomeBot')
                     .setDescription(meta);
                 setTimeout(() => {
                     message.channel.send({ embed: resEmbed });
@@ -63,47 +63,47 @@ function init() {
                 return;
             }
             catch (e) {
-                console.log("WELCOME BOT ERROR", e);
+                console.log('WELCOME BOT ERROR', e);
             }
         }
-        const isAdmin = message.member.roles.find((role) => role.name === "Admin");
+        const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
         if (!isAdmin)
             return;
         switch (cmd) {
-            case "setmessage":
+            case 'setmessage':
                 if (arr.length < 3)
                     return;
-                console.log("setmsg", arr[2]);
+                console.log('setmsg', arr[2]);
                 const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
                 if (!(chat && chat.id))
-                    return console.log("=> welcomebot no chat");
+                    return console.log('=> welcomebot no chat');
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
                         chatId: chat.id,
-                        botPrefix: "/welcome",
+                        botPrefix: '/welcome',
                         botType: constants_1.default.bot_types.builtin,
                         tenant: chat.tenant,
                     },
                 });
                 if (!chatBot)
                     return;
-                const meta = arr.slice(2, arr.length).join(" ");
+                const meta = arr.slice(2, arr.length).join(' ');
                 yield chatBot.update({ meta });
                 const resEmbed = new Sphinx.MessageEmbed()
-                    .setAuthor("WelcomeBot")
-                    .setDescription("Your welcome message has been updated");
+                    .setAuthor('WelcomeBot')
+                    .setDescription('Your welcome message has been updated');
                 message.channel.send({ embed: resEmbed });
                 return;
             default:
                 const embed = new Sphinx.MessageEmbed()
-                    .setAuthor("WelcomeBot")
-                    .setTitle("Bot Commands:")
+                    .setAuthor('WelcomeBot')
+                    .setTitle('Bot Commands:')
                     .addFields([
                     {
-                        name: "Set welcome message",
-                        value: "/welcome setmessage {MESSAGE}",
+                        name: 'Set welcome message',
+                        value: '/welcome setmessage {MESSAGE}',
                     },
-                    { name: "Help", value: "/welcome help" },
+                    { name: 'Help', value: '/welcome help' },
                 ])
                     .setThumbnail(botSVG);
                 message.channel.send({ embed });

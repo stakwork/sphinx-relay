@@ -17,7 +17,7 @@ __decorate([
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
-        autoIncrement: true
+        autoIncrement: true,
     }),
     __metadata("design:type", Number)
 ], Chat.prototype, "id", void 0);
@@ -61,7 +61,7 @@ __decorate([
     sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
-        allowNull: false
+        allowNull: false,
     }),
     __metadata("design:type", Boolean)
 ], Chat.prototype, "deleted", void 0);
@@ -95,6 +95,7 @@ __decorate([
 ], Chat.prototype, "escrowMillis", void 0);
 __decorate([
     sequelize_typescript_1.Column({
+        // dont show on tribes list
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
     }),
@@ -112,7 +113,7 @@ __decorate([
     sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
-        allowNull: false
+        allowNull: false,
     }),
     __metadata("design:type", Boolean)
 ], Chat.prototype, "seen", void 0);
@@ -144,7 +145,7 @@ __decorate([
     sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
-        allowNull: true
+        allowNull: true,
     }),
     __metadata("design:type", Boolean)
 ], Chat.prototype, "skipBroadcastJoins", void 0);

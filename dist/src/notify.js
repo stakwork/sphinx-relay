@@ -17,32 +17,32 @@ const sequelize_1 = require("sequelize");
 const constants_1 = require("./constants");
 const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
     if (!owner)
-        return console.log("=> sendNotification error: no owner");
+        return console.log('=> sendNotification error: no owner');
     let message = `You have a new message from ${name}`;
-    if (type === "invite") {
+    if (type === 'invite') {
         message = `Your invite to ${name} is ready`;
     }
-    if (type === "group_join") {
+    if (type === 'group_join') {
         message = `Someone joined ${name}`;
     }
-    if (type === "group_leave") {
+    if (type === 'group_leave') {
         message = `Someone left ${name}`;
     }
-    if (type === "reject") {
+    if (type === 'reject') {
         message = `The admin has declined your request to join "${name}"`;
     }
-    if (type === "keysend") {
+    if (type === 'keysend') {
         message = `You have received a payment of ${amount} sats`;
     }
     // group
-    if (type === "message" &&
+    if (type === 'message' &&
         chat.type == constants_1.default.chat_types.group &&
         chat.name &&
         chat.name.length) {
         message += ` in ${chat.name}`;
     }
     // tribe
-    if ((type === "message" || type === "boost") &&
+    if ((type === 'message' || type === 'boost') &&
         chat.type === constants_1.default.chat_types.tribe) {
         message = `You have a new ${type}`;
         if (chat.name && chat.name.length) {
@@ -51,7 +51,7 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     }
     if (!owner.deviceId) {
         if (logger_1.logging.Notification)
-            console.log("[send notification] skipping. owner.deviceId not set.");
+            console.log('[send notification] skipping. owner.deviceId not set.');
         return;
     }
     const device_id = owner.deviceId;
@@ -60,11 +60,11 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     const params = { device_id };
     const notification = {
         chat_id: chat.id,
-        sound: "",
+        sound: '',
     };
-    if (type !== "badge" && !chat.isMuted) {
+    if (type !== 'badge' && !chat.isMuted) {
         notification.message = message;
-        notification.sound = owner.notificationSound || "default";
+        notification.sound = owner.notificationSound || 'default';
     }
     else {
         if (isAndroid)
@@ -72,11 +72,11 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     }
     params.notification = notification;
     const isTribeOwner = chat.ownerPubkey === owner.publicKey;
-    if (type === "message" && chat.type == constants_1.default.chat_types.tribe) {
+    if (type === 'message' && chat.type == constants_1.default.chat_types.tribe) {
         debounce(() => {
-            const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + " " : "";
+            const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : '';
             params.notification.message = chat.isMuted
-                ? ""
+                ? ''
                 : `You have ${count}new messages in ${chat.name}`;
             finalNotification(owner.id, params, isTribeOwner);
         }, chat.id, 30000);
@@ -95,12 +95,12 @@ function finalNotification(ownerID, params, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         if (params.notification.message) {
             if (logger_1.logging.Notification)
-                console.log("[send notification]", params.notification);
+                console.log('[send notification]', params.notification);
         }
         const mutedChats = yield models_1.models.Chat.findAll({
             where: { isMuted: true },
         });
-        const mutedChatIds = (mutedChats && mutedChats.map(mc => mc.id)) || [];
+        const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || [];
         mutedChatIds.push(0); // no msgs in non chat (anon keysends)
         const where = {
             sender: { [sequelize_1.Op.ne]: ownerID },
@@ -116,20 +116,20 @@ function finalNotification(ownerID, params, isTribeOwner) {
         });
         // if(!unseenMessages) return
         if (!unseenMessages) {
-            params.notification.message = "";
-            params.notification.sound = "";
+            params.notification.message = '';
+            params.notification.sound = '';
         }
         params.notification.badge = unseenMessages;
         triggerNotification(params);
     });
 }
 function triggerNotification(params) {
-    node_fetch_1.default("https://hub.sphinx.chat/api/v1/nodes/notify", {
-        method: "POST",
+    node_fetch_1.default('https://hub.sphinx.chat/api/v1/nodes/notify', {
+        method: 'POST',
         body: JSON.stringify(params),
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
     }).catch((error) => {
-        console.log("[hub error]: triggerNotification", error);
+        console.log('[hub error]: triggerNotification', error);
     });
 }
 const bounceTimeouts = {};

@@ -35,12 +35,12 @@ const loadSchedulerCredentials = () => {
 };
 function loadScheduler() {
     // 35.236.110.178:2601
-    var descriptor = grpc.load("proto/scheduler.proto");
+    var descriptor = grpc.load('proto/scheduler.proto');
     var scheduler = descriptor.scheduler;
     var options = {
-        "grpc.ssl_target_name_override": "localhost",
+        'grpc.ssl_target_name_override': 'localhost',
     };
-    schedulerClient = new scheduler.Scheduler("35.236.110.178:2601", loadSchedulerCredentials(), options);
+    schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
     return schedulerClient;
 }
 exports.loadScheduler = loadScheduler;
@@ -58,21 +58,21 @@ function startGreenlightInit() {
             let rootkey;
             if (!fs.existsSync(secretPath)) {
                 needToRegister = true;
-                rootkey = crypto.randomBytes(32).toString("hex");
+                rootkey = crypto.randomBytes(32).toString('hex');
             }
             else {
                 rootkey = fs.readFileSync(secretPath).toString();
             }
-            const msgHex = libhsmd_1.default.Init(rootkey, "bitcoin");
-            const msg = Buffer.from(msgHex, "hex");
+            const msgHex = libhsmd_1.default.Init(rootkey, 'bitcoin');
+            const msg = Buffer.from(msgHex, 'hex');
             // console.log("INIT MSG LENGTH", msg.length)
             const node_id = msg.subarray(2, 35);
             const bip32_key = msg.subarray(35, msg.length - 32);
             const bolt12_key = msg.subarray(msg.length - 32, msg.length);
             GID = {
-                node_id: node_id.toString("hex"),
-                bip32_key: bip32_key.toString("hex"),
-                bolt12_key: bolt12_key.toString("hex"),
+                node_id: node_id.toString('hex'),
+                bip32_key: bip32_key.toString('hex'),
+                bolt12_key: bolt12_key.toString('hex'),
             };
             if (needToRegister) {
                 yield registerGreenlight(GID, rootkey, secretPath);
@@ -122,7 +122,7 @@ function recoverGreenlight(gid) {
             const res = yield recover(gid.node_id, challenge, signature);
             const keyLoc = config.tls_key_location;
             const chainLoc = config.tls_chain_location;
-            console.log("RECOVER KEY", keyLoc, res.device_key);
+            console.log('RECOVER KEY', keyLoc, res.device_key);
             fs.writeFileSync(keyLoc, res.device_key);
             fs.writeFileSync(chainLoc, res.device_cert);
             writeTlsLocation();
@@ -146,7 +146,7 @@ function registerGreenlight(gid, rootkey, secretPath) {
             const res = yield register(gid.node_id, gid.bip32_key + gid.bolt12_key, challenge, signature);
             const keyLoc = config.tls_key_location;
             const chainLoc = config.tls_chain_location;
-            console.log("WRITE KEY", keyLoc, res.device_key);
+            console.log('WRITE KEY', keyLoc, res.device_key);
             fs.writeFileSync(keyLoc, res.device_key);
             fs.writeFileSync(chainLoc, res.device_cert);
             writeTlsLocation();
@@ -195,7 +195,7 @@ function register(pubkey, bip32_key, challenge, signature) {
             s.register({
                 node_id: ByteBuffer.fromHex(pubkey),
                 bip32_key: ByteBuffer.fromHex(bip32_key),
-                network: "bitcoin",
+                network: 'bitcoin',
                 challenge: ByteBuffer.fromHex(challenge),
                 signature: ByteBuffer.fromHex(signature),
             }, (err, response) => {
@@ -246,7 +246,7 @@ function streamHsmRequests() {
             var call = lightning.streamHsmRequests({});
             call.on('data', function (response) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    console.log("DATA", response);
+                    console.log('DATA', response);
                     try {
                         let sig = '';
                         if (response.context) {
@@ -255,27 +255,27 @@ function streamHsmRequests() {
                             sig = libhsmd_1.default.Handle(capabilities_bitset, dbid, peer, response.raw.toString('hex'));
                         }
                         else {
-                            console.log("RAW ====== ");
+                            console.log('RAW ====== ');
                             console.log(response.raw.toString('hex'));
                             sig = libhsmd_1.default.Handle(capabilities_bitset, 0, null, response.raw.toString('hex'));
                         }
                         lightning.respondHsmRequest({
                             request_id: response.request_id,
-                            raw: ByteBuffer.fromHex(sig)
+                            raw: ByteBuffer.fromHex(sig),
                         }, (err, response) => {
                             if (err)
                                 console.log('[HSMD] error', err);
                             else
-                                console.log("[HSMD] success", response);
+                                console.log('[HSMD] success', response);
                         });
                     }
                     catch (e) {
-                        console.log("[HSMD] failure", e);
+                        console.log('[HSMD] failure', e);
                     }
                 });
             });
             call.on('status', function (status) {
-                console.log("[HSMD] Status", status.code, status);
+                console.log('[HSMD] Status', status.code, status);
             });
             call.on('error', function (err) {
                 console.error('[HSMD] Error', err.code);

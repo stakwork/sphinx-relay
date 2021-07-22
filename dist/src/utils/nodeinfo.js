@@ -30,8 +30,8 @@ function proxynodeinfo(pk) {
             if (!channelList)
                 return;
             const { channels } = channelList;
-            const localBalances = channels.map(c => parseInt(c.local_balance));
-            const remoteBalances = channels.map(c => parseInt(c.remote_balance));
+            const localBalances = channels.map((c) => parseInt(c.local_balance));
+            const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
             const largestLocalBalance = Math.max(...localBalances);
             const largestRemoteBalance = Math.max(...remoteBalances);
             const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
@@ -43,7 +43,7 @@ function proxynodeinfo(pk) {
                 largest_remote_balance: largestRemoteBalance,
                 total_local_balance: totalLocalBalance,
                 // node_type: 'node_virtual'
-                node_type: NodeType.NODE_VIRTUAL
+                node_type: NodeType.NODE_VIRTUAL,
             });
         }
         catch (e) {
@@ -63,7 +63,8 @@ function nodeinfo() {
             if (info.identity_pubkey)
                 owner_pubkey = info.identity_pubkey;
         }
-        catch (e) { // no LND
+        catch (e) {
+            // no LND
             let owner;
             try {
                 owner = yield models_1.models.Contact.findOne({ where: { id: 1 } });
@@ -80,14 +81,16 @@ function nodeinfo() {
             const node = {
                 pubkey: owner.publicKey,
                 wallet_locked: true,
-                last_active: lastActive
+                last_active: lastActive,
             };
             resolve(node);
             return;
         }
         let owner;
         try {
-            owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, publicKey: owner_pubkey } });
+            owner = yield models_1.models.Contact.findOne({
+                where: { isOwner: true, publicKey: owner_pubkey },
+            });
         }
         catch (e) {
             return; // just skip in SQLITE not open yet
@@ -98,7 +101,7 @@ function nodeinfo() {
         if (!lastActive) {
             lastActive = new Date();
         }
-        let public_ip = "";
+        let public_ip = '';
         try {
             public_ip = yield publicIp.v4();
         }
@@ -112,8 +115,8 @@ function nodeinfo() {
             if (!channelList)
                 return;
             const { channels } = channelList;
-            const localBalances = channels.map(c => parseInt(c.local_balance));
-            const remoteBalances = channels.map(c => parseInt(c.remote_balance));
+            const localBalances = channels.map((c) => parseInt(c.local_balance));
+            const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
             const largestLocalBalance = Math.max(...localBalances);
             const largestRemoteBalance = Math.max(...remoteBalances);
             const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
@@ -150,7 +153,9 @@ function nodeinfo() {
                 last_active: lastActive,
                 wallet_locked: false,
                 non_zero_policies: nzp,
-                node_type: IS_GREENLIGHT ? NodeType.NODE_GREENLIGHT : NodeType.NODE_PUBLIC,
+                node_type: IS_GREENLIGHT
+                    ? NodeType.NODE_GREENLIGHT
+                    : NodeType.NODE_PUBLIC,
             };
             resolve(node);
         }
@@ -163,7 +168,9 @@ exports.nodeinfo = nodeinfo;
 function isClean() {
     return __awaiter(this, void 0, void 0, function* () {
         // has owner but with no auth token (id=1?)
-        const cleanOwner = yield models_1.models.Contact.findOne({ where: { id: 1, isOwner: true, authToken: null } });
+        const cleanOwner = yield models_1.models.Contact.findOne({
+            where: { id: 1, isOwner: true, authToken: null },
+        });
         const msgs = yield models_1.models.Message.count();
         const allContacts = yield models_1.models.Contact.count();
         const noMsgs = msgs === 0;
@@ -178,7 +185,7 @@ function latestMessage() {
     return __awaiter(this, void 0, void 0, function* () {
         const lasts = yield models_1.models.Message.findAll({
             limit: 1,
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
         });
         const last = lasts && lasts[0];
         if (last) {
@@ -205,7 +212,7 @@ function listNonZeroPolicies() {
                 const info = yield Lightning.getChanInfo(chan.chan_id, tryProxy);
                 if (!info)
                     return;
-                policies.forEach(p => {
+                policies.forEach((p) => {
                     if (info[p]) {
                         const fee_base_msat = parseInt(info[p].fee_base_msat);
                         const disabled = info[p].disabled;
@@ -214,7 +221,7 @@ function listNonZeroPolicies() {
                                 node: p,
                                 fee_base_msat,
                                 chan_id: chan.chan_id,
-                                disabled
+                                disabled,
                             });
                         }
                     }

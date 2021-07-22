@@ -33,11 +33,11 @@ const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield models_1.sequelize.sync();
         if (logger_1.logging.DB)
-            console.log("=> [db] done syncing");
+            console.log('=> [db] done syncing');
     }
     catch (e) {
         if (logger_1.logging.DB)
-            console.log("[db] sync failed", e);
+            console.log('[db] sync failed', e);
     }
     yield migrate_1.default();
     if (logger_1.logging.DB)
@@ -55,11 +55,15 @@ function setVersion() {
     });
 }
 const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
-    const owner = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
+    const owner = yield models_1.models.Contact.findOne({
+        where: { isOwner: true, id: 1 },
+    });
     if (!owner) {
         try {
             const info = yield Lightning.getInfo();
-            const one = yield models_1.models.Contact.findOne({ where: { isOwner: true, id: 1 } });
+            const one = yield models_1.models.Contact.findOne({
+                where: { isOwner: true, id: 1 },
+            });
             if (!one) {
                 let authToken = null;
                 let tenant = null;
@@ -75,7 +79,7 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                     publicKey: info.identity_pubkey,
                     isOwner: true,
                     authToken,
-                    tenant
+                    tenant,
                 });
                 console.log('[db] created node owner contact, id:', contact.id);
             }

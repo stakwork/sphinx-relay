@@ -31,7 +31,7 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender, owner) {
             return fillmsg(payload, ret); // key is re-encrypted later
         }
         catch (e) {
-            console.log("[modify] error", e);
+            console.log('[modify] error', e);
             return payload;
         }
     });
@@ -45,7 +45,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
             return;
         const mt = payload.message && payload.message.mediaToken;
         const amount = payload.message.amount;
-        const muid = mt && mt.split(".").length && mt.split(".")[1];
+        const muid = mt && mt.split('.').length && mt.split('.')[1];
         if (!muid)
             return;
         const mediaKey = yield models_1.models.MediaKey.findOne({
@@ -61,7 +61,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
             const mediaTerms = {
                 muid: mediaKey.muid,
                 ttl: 31536000,
-                host: "",
+                host: '',
                 meta: Object.assign({}, (amount && { amt: amount })),
             };
             // send full new key and token
@@ -127,7 +127,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         const purchaserID = payload.message && payload.message.purchaser;
         if (!mt)
             return;
-        const muid = mt && mt.split(".").length && mt.split(".")[1];
+        const muid = mt && mt.split('.').length && mt.split('.')[1];
         if (!muid)
             return;
         const existingMediaKey = yield models_1.models.MediaKey.findOne({
@@ -182,7 +182,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
         // console.log('[modify] ==> downloadAndUploadAndSaveReturningTermsAndKey', owner)
         const tenant = owner.id;
         const ownerPubkey = owner.publicKey;
-        const ogmuid = mt && mt.split(".").length && mt.split(".")[1];
+        const ogmuid = mt && mt.split('.').length && mt.split('.')[1];
         const terms = ldat_1.parseLDAT(mt);
         if (!terms.host)
             return payload;
@@ -201,33 +201,33 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
             const buf = yield r.buffer();
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key);
             // console.log('[modify] about to decrypt', buf.length, decMediaKey)
-            const imgBuf = RNCryptor.Decrypt(buf.toString("base64"), decMediaKey);
-            const newKey = crypto.randomBytes(20).toString("hex");
+            const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), decMediaKey);
+            const newKey = crypto.randomBytes(20).toString('hex');
             // console.log('[modify] about to encrypt', imgBuf.length, newKey)
             const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey);
-            var encImgBuffer = Buffer.from(encImgBase64, "base64");
+            var encImgBuffer = Buffer.from(encImgBase64, 'base64');
             const form = new FormData();
-            form.append("file", encImgBuffer, {
-                contentType: typ || "image/jpg",
-                filename: "Image.jpg",
+            form.append('file', encImgBuffer, {
+                contentType: typ || 'image/jpg',
+                filename: 'Image.jpg',
                 knownLength: encImgBuffer.length,
             });
             const formHeaders = form.getHeaders();
             const resp = yield node_fetch_1.default(`${protocol}://${terms.host}/file`, {
-                method: "POST",
+                method: 'POST',
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
                 body: form,
             });
             let json = yield resp.json();
             if (!json.muid)
-                throw new Error("no muid");
+                throw new Error('no muid');
             // PUT NEW TERMS, to finish in personalizeMessage
             const amt = (terms.meta && terms.meta.amt) || injectedAmount;
             const ttl = terms.meta && terms.meta.ttl;
             const mediaTerms = {
                 muid: json.muid,
                 ttl: ttl || 31536000,
-                host: "",
+                host: '',
                 meta: Object.assign({}, (amt && { amt })),
             };
             const encKey = rsa.encrypt(chat.groupKey, newKey.slice());
