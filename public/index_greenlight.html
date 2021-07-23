@@ -97,7 +97,7 @@
   <body>
     <img src="/static/sphinx-logo.png" alt="logo" />
 
-    <p>Scan this QR code with your Sphinx app:</p>
+    <p id="pp">Scan this QR code with your Sphinx app:</p>
     <div id="qr-wrap">
       <canvas id="qr"></canvas>
     </div>
@@ -106,7 +106,7 @@
       CONNECTION_STRING
     </pre>
 
-    <div>Peer to Sphinx router node:</div>
+    <div style="margin-top:10px;">Peer to Sphinx router node:</div>
 
     <button id="peer">PEER NOW</button>
 
@@ -128,10 +128,16 @@
       function get(id) {
         return document.getElementById(id)
       }
+      const qr = get('qr-wrap')
+      const string = get('connection-string')
+      const pp = get('pp')
       const peer = get('peer')
       const conn = get('conn')
       const pending = get('pending')
       const chanpoint = get('chanpoint')
+      pp.style.display = 'none'
+      qr.style.display = 'none'
+      string.style.display = 'none'
       peer.style.display = 'none'
       conn.style.display = 'none'
       pending.style.display = 'none'
@@ -155,6 +161,9 @@
         }
         if(j && j.success && j.response && j.response.peered && j.response.active) {
           conn.style.display = 'block'
+          qr.style.display = 'flex'
+          string.style.display = 'block'
+          pp.style.display = 'block'
         }
         if(j && j.success && j.response && j.response.peered && j.response.active===false && j.response.channel_point) {
           chanpoint.innerHTML = 'TXID: ' + j.response.channel_point.split(':')[0]
