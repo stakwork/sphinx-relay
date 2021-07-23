@@ -70,14 +70,15 @@ export function subscribeInvoices(parseKeysendInvoice) {
 }
 
 function waitAndReconnect() {
-  setTimeout(() => reconnectToLightning(Math.random()), 2000)
+  setTimeout(() => reconnectToLightning(Math.random(), null, true), 2000)
 }
 
 var i = 0
 var ctx = 0
 export async function reconnectToLightning(
   innerCtx: number,
-  callback?: Function
+  callback?: Function | null,
+  noCache?: boolean
 ) {
   ctx = innerCtx
   i++
@@ -96,7 +97,7 @@ export async function reconnectToLightning(
       // retry each 2 secs
       if (ctx === innerCtx) {
         // if another retry fires, then this will not run
-        await reconnectToLightning(innerCtx, callback)
+        await reconnectToLightning(innerCtx, callback, noCache)
       }
     }, 2000)
   }

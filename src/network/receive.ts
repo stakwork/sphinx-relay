@@ -365,12 +365,12 @@ async function forwardMessageToTribe(
   })
 }
 
-export async function initGrpcSubscriptions() {
+export async function initGrpcSubscriptions(noCache?: boolean) {
   try {
     if (config.lightning_provider === 'GREENLIGHT') {
       await Greenlight.initGreenlight()
     }
-    await Lightning.getInfo(true) // try proxy
+    await Lightning.getInfo(true, noCache) // try proxy
     await lndService.subscribeInvoices(parseKeysendInvoice)
   } catch (e) {
     console.log(e)

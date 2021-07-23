@@ -80,11 +80,11 @@ function subscribeInvoices(parseKeysendInvoice) {
 }
 exports.subscribeInvoices = subscribeInvoices;
 function waitAndReconnect() {
-    setTimeout(() => reconnectToLightning(Math.random()), 2000);
+    setTimeout(() => reconnectToLightning(Math.random(), null, true), 2000);
 }
 var i = 0;
 var ctx = 0;
-function reconnectToLightning(innerCtx, callback) {
+function reconnectToLightning(innerCtx, callback, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         ctx = innerCtx;
         i++;
@@ -105,7 +105,7 @@ function reconnectToLightning(innerCtx, callback) {
                 // retry each 2 secs
                 if (ctx === innerCtx) {
                     // if another retry fires, then this will not run
-                    yield reconnectToLightning(innerCtx, callback);
+                    yield reconnectToLightning(innerCtx, callback, noCache);
                 }
             }), 2000);
         }

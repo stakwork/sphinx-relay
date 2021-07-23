@@ -353,13 +353,13 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         });
     });
 }
-function initGrpcSubscriptions() {
+function initGrpcSubscriptions(noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (config.lightning_provider === 'GREENLIGHT') {
                 yield Greenlight.initGreenlight();
             }
-            yield Lightning.getInfo(true); // try proxy
+            yield Lightning.getInfo(true, noCache); // try proxy
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

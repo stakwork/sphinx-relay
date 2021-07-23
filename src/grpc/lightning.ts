@@ -52,13 +52,13 @@ const loadGreenlightCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
-export async function loadLightning(tryProxy?: boolean, ownerPubkey?: string) {
+export async function loadLightning(tryProxy?: boolean, ownerPubkey?: string, noCache?: boolean) {
   // only if specified AND available
-  if (tryProxy && isProxy()) {
+  if (tryProxy && isProxy() && ownerPubkey) {
     const pl = await loadProxyLightning(ownerPubkey)
     return pl
   }
-  if (lightningClient) {
+  if (lightningClient && !noCache) {
     return lightningClient
   }
 
@@ -688,11 +688,16 @@ export async function verifyAscii(
 }
 
 export async function getInfo(
-  tryProxy?: boolean
+  tryProxy?: boolean,
+  noCache?: boolean,
 ): Promise<interfaces.GetInfoResponse> {
   // log('getInfo')
   return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(tryProxy === false ? false : true) // try proxy
+    const lightning = await loadLightning(
+      tryProxy === false ? false : true, 
+      undefined,
+      noCache
+    ) // try proxy
     lightning.getInfo({}, function (err, response) {
       if (err == null) {
         resolve(interfaces.getInfoResponse(response))
