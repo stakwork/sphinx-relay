@@ -258,8 +258,8 @@ export function listChannelsResponse(
 ): ListChannelsResponse {
   if (IS_LND) return res as ListChannelsResponse
   if (IS_GREENLIGHT) {
-    const chans: Channel[] = [];
-    (res as GreenlightListPeersResponse).peers.forEach((p: GreenlightPeer) => {
+    const chans: Channel[] = []
+    ;(res as GreenlightListPeersResponse).peers.forEach((p: GreenlightPeer) => {
       p.channels.forEach((ch: GreenlightChannel, i: number) => {
         chans.push(<Channel>{
           active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
@@ -313,30 +313,38 @@ export function listPeersRequest(args?: ListPeersArgs): {
 }
 
 interface Peer {
-  pub_key: string,
-  address: string, // eg `127.0.0.1:10011`
+  pub_key: string
+  address: string // eg `127.0.0.1:10011`
 }
 export interface ListPeersResponse {
   peers: Peer[]
 }
-export function listPeersResponse(res: ListPeersResponse | GreenlightListPeersResponse): ListPeersResponse {
+export function listPeersResponse(
+  res: ListPeersResponse | GreenlightListPeersResponse
+): ListPeersResponse {
   if (IS_LND) return res as ListPeersResponse
   if (IS_GREENLIGHT) {
     return <ListPeersResponse>{
-      peers: (res as GreenlightListPeersResponse).peers.map((p:GreenlightPeer)=> {
-        const addy = p.addresses[0]
-        const peer: Peer = {
-          pub_key: Buffer.from(p.id).toString('hex'),
-          address: addy ? (addy.port ? `${addy.addr}:${addy.port}` : addy.addr) : ''
+      peers: (res as GreenlightListPeersResponse).peers.map(
+        (p: GreenlightPeer) => {
+          const addy = p.addresses[0]
+          const peer: Peer = {
+            pub_key: Buffer.from(p.id).toString('hex'),
+            address: addy
+              ? addy.port
+                ? `${addy.addr}:${addy.port}`
+                : addy.addr
+              : '',
+          }
+          return peer
         }
-        return peer
-      })
+      ),
     }
   }
   return <ListPeersResponse>{}
 }
 
-type Buf = Buffer | ByteBuffer | ArrayBuffer
+export type Buf = Buffer | ByteBuffer | ArrayBuffer
 type DestCustomRecords = { [key: string]: Buf }
 export interface KeysendRequest {
   amt: number
@@ -634,9 +642,9 @@ function greelightNumber(s: string): number {
 export function greenlightSignMessagePayload(msg: Buffer): string {
   const type = 23
   const length = msg.length
-  let typebuf = Buffer.allocUnsafe(2)
+  const typebuf = Buffer.allocUnsafe(2)
   typebuf.writeUInt16BE(type, 0)
-  let lengthbuf = Buffer.allocUnsafe(2)
+  const lengthbuf = Buffer.allocUnsafe(2)
   lengthbuf.writeUInt16BE(length, 0)
   const buf = Buffer.concat([typebuf, lengthbuf, msg], 4 + length)
   return buf.toString('hex')
@@ -671,9 +679,9 @@ enum GreenlightChannelState {
 function shortChanIDfromInt64(int: string): string {
   if (typeof int !== 'string') return ''
   const l = long.fromString(int, true)
-  var blockHeight = l.shiftRight(40)
-  var txIndex = l.shiftRight(16).and(0xffffff)
-  var txPosition = l.and(0xffff)
+  const blockHeight = l.shiftRight(40)
+  const txIndex = l.shiftRight(16).and(0xffffff)
+  const txPosition = l.and(0xffff)
   if (IS_GREENLIGHT) {
     return `${blockHeight.toString()}x${txIndex.toString()}x${txPosition.toString()}`
   }
@@ -686,16 +694,16 @@ function shortChanIDtoInt64(cid: string): string {
 
   let a: string[] = []
   const seps = [':', 'x']
-  for (let sep of seps) {
+  for (const sep of seps) {
     if (cid.includes(sep)) a = cid.split(sep)
   }
   if (!a) return ''
   if (!Array.isArray(a)) return ''
   if (!(a.length === 3)) return ''
 
-  var blockHeight = long.fromString(a[0], true).shiftLeft(40)
-  var txIndex = long.fromString(a[1], true).shiftLeft(16)
-  var txPosition = long.fromString(a[2], true)
+  const blockHeight = long.fromString(a[0], true).shiftLeft(40)
+  const txIndex = long.fromString(a[1], true).shiftLeft(16)
+  const txPosition = long.fromString(a[2], true)
 
   return blockHeight.or(txIndex).or(txPosition).toString()
 }

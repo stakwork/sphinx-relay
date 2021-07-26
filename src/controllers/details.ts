@@ -105,7 +105,7 @@ export async function getLogsSince(req, res) {
       try {
         const lines = await readLastLines.read(filepath, 500)
         if (lines) {
-          var linesArray = lines.split('\n')
+          const linesArray = lines.split('\n')
           linesArray.reverse()
           txt = linesArray.join('\n')
         }
@@ -120,7 +120,6 @@ export async function getLogsSince(req, res) {
 
 export const getLightningInfo = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
-
   res.status(200)
   try {
     const response = await Lightning.getInfo()
@@ -148,7 +147,7 @@ export const getBalance = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const owner = await models.Contact.findOne({ where: { id: tenant } })
   owner.update({ lastActive: date })
@@ -196,7 +195,8 @@ export const getLocalRemoteBalance = async (req, res) => {
 }
 
 export const getNodeInfo = async (req, res) => {
-  var ipOfSource = req.connection.remoteAddress
+  const ipOfSource = req.connection.remoteAddress
+  console.log('here i am!')
   if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
     res.status(401)
     res.end()

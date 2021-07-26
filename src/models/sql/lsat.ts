@@ -48,8 +48,11 @@ export default class Lsat extends Model<Lsat> {
   @Column
   paths: string
 
+  // opting to leave this open-ended for now
+  // and can be up to consumer to determine what types it's expecting
+  // and what to do with it based on the type (e.g. image url, json blob)
   @Column
-  photoUrl: string
+  metadata: string
 
   @Column
   tenant: number
