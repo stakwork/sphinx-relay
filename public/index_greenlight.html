@@ -182,11 +182,14 @@
         const j = await r.json()
         console.log(j)
         await sleep(1000)
-        startup() // refresh
+        startup(true) // refresh
+        setInterval(function() {
+          startup(false)
+        }, 5000)
       }
 
-      async function startup() {
-        initial_state() // HIDE ALL
+      async function startup(reset) {
+        if(reset) initial_state() // HIDE ALL
         const r = await fetch('/peered')
         const j = await r.json()
         console.log(j)
@@ -211,7 +214,7 @@
           scan.style.display = 'block'
         }
       }
-      startup()
+      startup(true)
 
       async function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms))
