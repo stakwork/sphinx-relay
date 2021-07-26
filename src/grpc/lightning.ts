@@ -727,6 +727,24 @@ export async function addInvoice(
   })
 }
 
+export async function listPeers(
+  args?: interfaces.ListPeersArgs,
+  ownerPubkey?: string
+): Promise<interfaces.ListPeersResponse> {
+  log('listChannels')
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning(true, ownerPubkey)
+    const opts = interfaces.listPeersRequest(args)
+    lightning.listPeers(opts, function (err, response) {
+      if (err == null) {
+        resolve(interfaces.listPeersResponse(response))
+      } else {
+        reject(err)
+      }
+    })
+  })
+}
+
 export async function listChannels(
   args?: interfaces.ListChannelsArgs,
   ownerPubkey?: string

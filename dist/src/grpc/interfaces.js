@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.greenlightSignMessagePayload = exports.connectPeerResponse = exports.connectPeerRequest = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
+exports.greenlightSignMessagePayload = exports.connectPeerResponse = exports.connectPeerRequest = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listPeersResponse = exports.listPeersRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
@@ -123,6 +123,32 @@ function listChannelsRequest(args) {
     return opts;
 }
 exports.listChannelsRequest = listChannelsRequest;
+function listPeersRequest(args) {
+    const opts = args || {};
+    if (IS_GREENLIGHT && args && args.node_id) {
+        opts.node_id = ByteBuffer.fromHex(args.node_id);
+    }
+    return opts;
+}
+exports.listPeersRequest = listPeersRequest;
+function listPeersResponse(res) {
+    if (IS_LND)
+        return res;
+    if (IS_GREENLIGHT) {
+        return {
+            peers: res.peers.map((p) => {
+                const addy = p.addresses[0];
+                const peer = {
+                    pub_key: Buffer.from(p.id).toString('hex'),
+                    address: addy ? (addy.port ? `${addy.addr}:${addy.port}` : addy.addr) : ''
+                };
+                return peer;
+            })
+        };
+    }
+    return {};
+}
+exports.listPeersResponse = listPeersResponse;
 function keysendRequest(req) {
     if (IS_LND)
         return req;

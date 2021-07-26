@@ -25,9 +25,6 @@
         "port": "80"
       },
       "connect_ui": true,
-      "scheduler_tls_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/scheduler_creds/ca.pem",
-      "scheduler_key_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/scheduler_creds/device-key.pem",
-      "scheduler_chain_location": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/scheduler_creds/device.crt",
       "hsm_secret_path": "/Users/evanfeenstra/code/sphinx-relay/testing/greenlight/new_creds/hsm_secret"
     },
     "production": {

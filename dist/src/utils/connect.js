@@ -92,10 +92,14 @@ function checkPeered(req, res) {
             let peered = false;
             let active = false;
             let channel_point = '';
+            const peers = yield Lightning.listPeers();
+            peers.peers.forEach(p => {
+                if (p.pub_key === pubkey)
+                    peered = true;
+            });
             const chans = yield Lightning.listChannels();
             chans.channels.forEach(ch => {
                 if (ch.remote_pubkey === pubkey) {
-                    peered = true;
                     if (ch.active)
                         active = true;
                     else

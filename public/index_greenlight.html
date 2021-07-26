@@ -83,6 +83,7 @@
         margin-top:15px;
         padding:10px 20px;
         cursor: pointer;
+        max-height: 42px;
       }
       button:hover {
         background-color: #628aff;
@@ -91,13 +92,33 @@
       #chanpoint {
         word-break: break-all;
       }
+      @keyframes spin {
+        from {
+          transform:rotate(0deg);
+        }
+        to {
+          transform:rotate(360deg);
+        }
+      }
+      svg {
+        animation-name: spin;
+        animation-duration: 600ms;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear; 
+      }
+      #peer svg {
+        display: none;
+      }
+      #peer:disabled svg {
+        display: inline-block;
+      }
     </style>
   </head>
 
   <body>
     <img src="/static/sphinx-logo.png" alt="logo" />
 
-    <p id="pp">Scan this QR code with your Sphinx app:</p>
+    <p id="scan">Scan this QR code with your Sphinx app:</p>
     <div id="qr-wrap">
       <canvas id="qr"></canvas>
     </div>
@@ -108,10 +129,15 @@
 
     <div style="margin-top:10px;">Peer to Sphinx router node:</div>
 
-    <button id="peer">PEER NOW</button>
+    <button id="peer">
+      <svg height="16" width="16" viewbox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <path fill="white" stroke="grey" d="M988 548c-19.9 0-36-16.1-36-36 0-59.4-11.6-117-34.6-171.3a440.45 440.45 0 0 0-94.3-139.9 437.71 437.71 0 0 0-139.9-94.3C629 83.6 571.4 72 512 72c-19.9 0-36-16.1-36-36s16.1-36 36-36c69.1 0 136.2 13.5 199.3 40.3C772.3 66 827 103 874 150c47 47 83.9 101.8 109.7 162.7 26.7 63.1 40.2 130.2 40.2 199.3.1 19.9-16 36-35.9 36z" />
+      </svg>
+      <span style="margin:0 8px;">PEER NOW</span>
+    </button>
 
     <p id="conn">You are connected to a Sphinx Routing Node!</p>
-    <p id="pending">You are connected to a Sphinx Routing Node! Opening channel now...</p>
+    <p id="pending">You are connected to a Sphinx Routing Node! Please wait for channel to open and confirm...</p>
     <p id="chanpoint"></p>
 
     <script src="/static/js/qrious.js"></script>
@@ -128,48 +154,65 @@
       function get(id) {
         return document.getElementById(id)
       }
+
       const qr = get('qr-wrap')
       const string = get('connection-string')
-      const pp = get('pp')
+      const scan = get('scan')
       const peer = get('peer')
       const conn = get('conn')
       const pending = get('pending')
       const chanpoint = get('chanpoint')
-      pp.style.display = 'none'
+
+      peer.disabled = true
+      peer.style.display = 'none'
+      scan.style.display = 'none'
       qr.style.display = 'none'
       string.style.display = 'none'
-      peer.style.display = 'none'
       conn.style.display = 'none'
       pending.style.display = 'none'
+
       peer.onclick = async function () {
         console.log('PEER NOW')
+        peer.disabled = true
         const r = await fetch('/connect_peer', {
           method: 'POST',
         })
         const j = await r.json()
         console.log(j)
+        await sleep(1000)
+        startup() // refresh
       }
+
       async function startup() {
         const r = await fetch('/peered')
         const j = await r.json()
         console.log(j)
+        // NOT PEERED
         if(j && j.success && j.response && j.response.peered===false) {
           peer.style.display = 'block'
+          peer.disabled = true
         }
+        // PEERED BUT NOT ACTIVE
         if(j && j.success && j.response && j.response.peered && j.response.active===false) {
           pending.style.display = 'block'
+          // CHANNEL CREATED
+          if (j.response.channel_point) {
+            chanpoint.innerHTML = 'TXID: ' + j.response.channel_point.split(':')[0]
+          }
         }
+        // PEERED AND ACTIVE
         if(j && j.success && j.response && j.response.peered && j.response.active) {
           conn.style.display = 'block'
           qr.style.display = 'flex'
           string.style.display = 'block'
-          pp.style.display = 'block'
-        }
-        if(j && j.success && j.response && j.response.peered && j.response.active===false && j.response.channel_point) {
-          chanpoint.innerHTML = 'TXID: ' + j.response.channel_point.split(':')[0]
+          scan.style.display = 'block'
         }
       }
       startup()
+
+      async function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+      }
     </script>
   </body>
 </html>

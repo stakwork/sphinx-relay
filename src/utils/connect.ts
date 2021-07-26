@@ -80,10 +80,13 @@ export async function checkPeered(req, res) {
     let peered = false
     let active = false
     let channel_point = ''
+    const peers = await Lightning.listPeers()
+    peers.peers.forEach(p=>{
+      if (p.pub_key===pubkey) peered=true
+    })
     const chans = await Lightning.listChannels()
     chans.channels.forEach(ch=> {
       if(ch.remote_pubkey===pubkey) {
-        peered = true
         if(ch.active) active = true
         else channel_point = ch.channel_point
       }

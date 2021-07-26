@@ -258,8 +258,8 @@ export function listChannelsResponse(
 ): ListChannelsResponse {
   if (IS_LND) return res as ListChannelsResponse
   if (IS_GREENLIGHT) {
-    const chans: Channel[] = []
-    ;(res as GreenlightListPeersResponse).peers.forEach((p: GreenlightPeer) => {
+    const chans: Channel[] = [];
+    (res as GreenlightListPeersResponse).peers.forEach((p: GreenlightPeer) => {
       p.channels.forEach((ch: GreenlightChannel, i: number) => {
         chans.push(<Channel>{
           active: ch.state === GreenlightChannelState.CHANNELD_NORMAL,
@@ -297,6 +297,43 @@ export function listChannelsRequest(args?: ListChannelsArgs): {
     if (IS_GREENLIGHT) opts.node_id = args.peer
   }
   return opts
+}
+
+export interface ListPeersArgs {
+  node_id?: string
+}
+export function listPeersRequest(args?: ListPeersArgs): {
+  [k: string]: any
+} {
+  const opts: { [k: string]: any } = args || {}
+  if (IS_GREENLIGHT && args && args.node_id) {
+    opts.node_id = ByteBuffer.fromHex(args.node_id)
+  }
+  return opts
+}
+
+interface Peer {
+  pub_key: string,
+  address: string, // eg `127.0.0.1:10011`
+}
+export interface ListPeersResponse {
+  peers: Peer[]
+}
+export function listPeersResponse(res: ListPeersResponse | GreenlightListPeersResponse): ListPeersResponse {
+  if (IS_LND) return res as ListPeersResponse
+  if (IS_GREENLIGHT) {
+    return <ListPeersResponse>{
+      peers: (res as GreenlightListPeersResponse).peers.map((p:GreenlightPeer)=> {
+        const addy = p.addresses[0]
+        const peer: Peer = {
+          pub_key: Buffer.from(p.id).toString('hex'),
+          address: addy ? (addy.port ? `${addy.addr}:${addy.port}` : addy.addr) : ''
+        }
+        return peer
+      })
+    }
+  }
+  return <ListPeersResponse>{}
 }
 
 type Buf = Buffer | ByteBuffer | ArrayBuffer
