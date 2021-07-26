@@ -190,7 +190,7 @@
         // NOT PEERED
         if(j && j.success && j.response && j.response.peered===false) {
           peer.style.display = 'block'
-          peer.disabled = true
+          peer.disabled = false
         }
         // PEERED BUT NOT ACTIVE
         if(j && j.success && j.response && j.response.peered && j.response.active===false) {
