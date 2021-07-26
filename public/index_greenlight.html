@@ -163,13 +163,15 @@
       const pending = get('pending')
       const chanpoint = get('chanpoint')
 
-      peer.disabled = true
-      peer.style.display = 'none'
-      scan.style.display = 'none'
-      qr.style.display = 'none'
-      string.style.display = 'none'
-      conn.style.display = 'none'
-      pending.style.display = 'none'
+      function initial_state() {
+        peer.disabled = true
+        peer.style.display = 'none'
+        scan.style.display = 'none'
+        qr.style.display = 'none'
+        string.style.display = 'none'
+        conn.style.display = 'none'
+        pending.style.display = 'none'
+      }
 
       peer.onclick = async function () {
         console.log('PEER NOW')
@@ -184,6 +186,7 @@
       }
 
       async function startup() {
+        initial_state() // HIDE ALL
         const r = await fetch('/peered')
         const j = await r.json()
         console.log(j)
