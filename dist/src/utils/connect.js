@@ -28,8 +28,8 @@ function getQR() {
         if (public_url)
             theIP = public_url;
         if (!theIP) {
-            const ip = process.env.NODE_IP;
-            if (!ip) {
+            theIP = process.env.NODE_IP;
+            if (!theIP) {
                 try {
                     if (IS_GREENLIGHT) {
                         theIP = localip.address();
@@ -41,7 +41,7 @@ function getQR() {
                 catch (e) { }
             }
             const port = config.node_http_port;
-            theIP = port ? `${ip}:${port}` : ip;
+            theIP = port ? `${theIP}:${port}` : theIP;
         }
         return Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
     });
