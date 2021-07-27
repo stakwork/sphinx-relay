@@ -27,10 +27,9 @@ export async function getQR(): Promise<string> {
           theIP = await publicIp.v4()
         }
       } catch (e) {}
-    } else {
-      const port = config.node_http_port
-      theIP = port ? `${ip}:${port}` : ip
     }
+    const port = config.node_http_port
+    theIP = port ? `${ip}:${port}` : ip
   }
   return Buffer.from(`ip::${theIP}::${password || ''}`).toString('base64')
 }
