@@ -35,9 +35,8 @@ function getQR() {
                 catch (e) { }
             }
             else {
-                // const port = config.node_http_port
-                // theIP = port ? `${ip}:${port}` : ip
-                theIP = ip;
+                const port = config.node_http_port;
+                theIP = port ? `${ip}:${port}` : ip;
             }
         }
         return Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
