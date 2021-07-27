@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = exports.genChannel = exports.connectPeer = exports.checkPeered = exports.getQR = void 0;
 const publicIp = require("public-ip");
+const localip = require("ip");
 const password_1 = require("./password");
 const Lightning = require("../grpc/lightning");
 const nodeinfo_1 = require("./nodeinfo");
@@ -30,7 +31,12 @@ function getQR() {
             const ip = process.env.NODE_IP;
             if (!ip) {
                 try {
-                    theIP = yield publicIp.v4();
+                    if (IS_GREENLIGHT) {
+                        theIP = localip.address();
+                    }
+                    else {
+                        theIP = yield publicIp.v4();
+                    }
                 }
                 catch (e) { }
             }
@@ -92,12 +98,12 @@ function checkPeered(req, res) {
             let active = false;
             let channel_point = '';
             const peers = yield Lightning.listPeers();
-            peers.peers.forEach(p => {
+            peers.peers.forEach((p) => {
                 if (p.pub_key === pubkey)
                     peered = true;
             });
             const chans = yield Lightning.listChannels();
-            chans.channels.forEach(ch => {
+            chans.channels.forEach((ch) => {
                 if (ch.remote_pubkey === pubkey) {
                     if (ch.active)
                         active = true;

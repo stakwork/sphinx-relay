@@ -61,3 +61,8 @@
 - `--skip=bob` skip a node
 - `--only=proxy,virtual-esp` only run nodes
 - `--hardware` config proxy for external signing on hardware
+
+
+
+**alice**
+node ./dist/app.js --config="/Users/evanfeenstra/code/sphinx-relay/testing/cluster/alice.json" --db="/Users/evanfeenstra/code/sphinx-relay/testing/cluster/alice-db.json"

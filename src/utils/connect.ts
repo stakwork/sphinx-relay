@@ -1,4 +1,5 @@
 import * as publicIp from 'public-ip'
+import * as localip from 'ip'
 import password from './password'
 import * as Lightning from '../grpc/lightning'
 import { isClean } from './nodeinfo'
@@ -20,7 +21,11 @@ export async function getQR(): Promise<string> {
     const ip = process.env.NODE_IP
     if (!ip) {
       try {
-        theIP = await publicIp.v4()
+        if (IS_GREENLIGHT) {
+          theIP = localip.address()
+        } else {
+          theIP = await publicIp.v4()
+        }
       } catch (e) {}
     } else {
       const port = config.node_http_port
@@ -73,25 +78,26 @@ async function makeVarScript(): Promise<string> {
 }
 
 export async function checkPeered(req, res) {
-  const default_pubkey = '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
+  const default_pubkey =
+    '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
   const pubkey = req.body.pubkey || default_pubkey
   try {
     let peered = false
     let active = false
     let channel_point = ''
     const peers = await Lightning.listPeers()
-    peers.peers.forEach(p=>{
-      if (p.pub_key===pubkey) peered=true
+    peers.peers.forEach((p) => {
+      if (p.pub_key === pubkey) peered = true
     })
     const chans = await Lightning.listChannels()
-    chans.channels.forEach(ch=> {
-      if(ch.remote_pubkey===pubkey) {
-        if(ch.active) active = true
+    chans.channels.forEach((ch) => {
+      if (ch.remote_pubkey === pubkey) {
+        if (ch.active) active = true
         else channel_point = ch.channel_point
       }
     })
-    success(res, {peered, active, channel_point})
-  } catch(e) {
+    success(res, { peered, active, channel_point })
+  } catch (e) {
     console.log('=> checkPeered failed', e)
     failure(res, e)
   }
