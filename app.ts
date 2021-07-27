@@ -40,15 +40,16 @@ start()
 
 async function mainSetup() {
   await setupApp() // setup routes
-  grpc.reconnectToLightning(Math.random(), function () {
-    console.log('>>> FINISH SETUP')
-    finishSetup()
-  }) // recursive
+  finishSetup()
+  // grpc.reconnectToLightning(Math.random(), function () {
+  //   console.log('>>> FINISH SETUP')
+  //   finishSetup()
+  // }) // recursive
 }
 
 async function finishSetup() {
   setupOwnerContact()
-  await network.initTribesSubscriptions()
+  // await network.initTribesSubscriptions()
   if (config.hub_api_url) {
     checkInvitesHubInterval(5000)
   }

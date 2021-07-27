@@ -80,6 +80,7 @@ export async function loadLightning(tryProxy?: boolean, ownerPubkey?: string, no
     var credentials = loadCredentials()
     var lnrpcDescriptor = grpc.load('proto/rpc.proto')
     var lnrpc: any = lnrpcDescriptor.lnrpc
+    console.log("====> COONNNNNN", LND_IP + ':' + config.lnd_port)
     lightningClient = new lnrpc.Lightning(
       LND_IP + ':' + config.lnd_port,
       credentials
