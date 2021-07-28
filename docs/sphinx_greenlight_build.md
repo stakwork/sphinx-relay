@@ -4,7 +4,9 @@
 
 `cd ~`
 
-`sudo apt-get update`
+`sudo apt update`
+
+`sudo apt upgrade`
 
 ```
 sudo apt-get install -y \
@@ -12,6 +14,10 @@ sudo apt-get install -y \
   libsqlite3-dev python3 python3-mako net-tools zlib1g-dev libsodium-dev \
   gettext
 ```
+
+`curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -`
+
+`sudo apt-get install -y nodejs`
 
 `git clone https://github.com/cdecker/lightning.git`
 
@@ -21,41 +27,11 @@ sudo apt-get install -y \
 
 `cd contrib/libhsmd_node`
 
-`git clone --recursive ../../ src`
-
-`cd src; ./configure && make; cd ..`
-
-`cd ~`
-
-`curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -`
-
-`sudo apt-get install -y nodejs`
-
-`cd lightning/contrib/libhsmd_node`
+`sudo npm install -g node-gyp`
 
 `npm install node-addon-api bindings`
 
-`sudo npm install -g node-gyp`
-
-`node-gyp configure binding-Linux.gyp`
-
-Use your favorite editor to make the following edit to the `package.json` file in `lightning/contrib/libhsmd_node`
-
-```diff
-diff --git a/contrib/libhsmd_node/package.json b/contrib/libhsmd_node/package.json
-index 0b994ac55..51daea0ce 100644
---- a/contrib/libhsmd_node/package.json
-+++ b/contrib/libhsmd_node/package.json
-@@ -5,7 +5,7 @@
-   "main": "index.js",
-   "scripts": {
-     "test": "echo \"Error: no test specified\" && exit 1",
--    "install": "node-gyp rebuild"
-+    "install": "node-gyp rebuild binding-Linux.gyp"
-   },
-   "author": "Christian Decker",
-   "license": "ISC",
-```
+`make all`
 
 ## Sphinx-Relay
 
@@ -67,11 +43,9 @@ index 0b994ac55..51daea0ce 100644
 
 `cd sphinx-relay`
 
-`git checkout greenlight`
-
-`npm install ../lightning/contrib/libhsmd_node`
-
 `npm install`
+
+`sudo npm link ../lightning/contrib/libhsmd_node`
 
 `cd config`
 
