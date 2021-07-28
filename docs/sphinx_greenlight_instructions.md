@@ -8,7 +8,9 @@
 2. Follow the instructions [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md) to set up your raspberry pi's connection if you are connecting to a wireless network.
 3. Place your sd card into the raspberry pi, and plug the pi into a power source.
 4. Wait around 5 minutes.
-5. Load the page `http://raspberrypi.local` on your computer, and follow the instructions there.
+5. Load the page `http://raspberrypi.local:3001/connect` on your computer, and follow the instructions there.
+
+When you can, SSH into your raspberry pi using the username `pi` and the password `raspberry`, and change the password with the command `passwd`
 
 ## Backing Up Your Funds and Data
 
@@ -20,26 +22,11 @@ Unlike a lightning node, these files do not backup the state of your channels - 
 
 Here's how you can connect your sphinx chat app to your raspberry pi at home.
 
-1. Tell your router to forward all traffic on port 3001 to your raspberry pi.
-2. Set up a dynamic DNS service and point it to your router.
-3. SSH into your raspberry pi using the username `pi` and the password `raspberry` - take the opportunity to change it using the command `passwd`.
-4. Edit the `public_url` field of the production section of the file `~/sphinx-relay/config/app.json` with the domain name provided by your DNS service as shown below:
-
-```diff
-     "hub_check_invite_url": "https://hub.sphinx.chat/check_invite",
-     "media_host": "memes.sphinx.chat",
-     "tribes_host": "tribes.sphinx.chat",
--    "public_url": "",
-+    "public_url": "http://www.example.com:3001",
-     "connection_string_path": "connection_string.txt",
-     "ssl": {
-       "enabled": false,
-```
-
-5. On your computer, connect to an external network, and load the page `http://www.[your domain name]:3001/connect`.
-6. Uninstall your app from your phone ( don't worry, your messages and keys are all backed up on your raspberry pi, so you won't lose anything ).
-7. Reinstall the app, and scan the qr code shown in step 5.
-8. Done! Congratulations, you are now able to use your sphinx chat app wherever you go!
+1. Before anything, note that your app talks to your raspberry pi over http. All message payloads are encrypted, but the metadata is sent in plaintext to sphinx-relay. So if you'd like to set up https, you can find instructions [here](./raspiblitz_deployment.md).
+2. Tell your router to forward all traffic on port 3001 to your raspberry pi.
+3. Set up a dynamic DNS service and point it to your router. We like to use [dynDNS](https://account.dyn.com/).
+4. Go to the advanced page in your sphinx chat app, and point the server setting to the domain name provided by your dynamic DNS service.
+5. Done! Congratulations, you are now able to use your sphinx chat app wherever you go!
 
 ## File Integrity
 
