@@ -43,6 +43,12 @@ function getQR() {
             const port = config.node_http_port;
             theIP = port ? `${theIP}:${port}` : theIP;
         }
+        if (!theIP.includes('://')) {
+            // no protocol
+            if (config.node_http_protocol) {
+                theIP = `${config.node_http_protocol}://${theIP}`;
+            }
+        }
         return Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
     });
 }
