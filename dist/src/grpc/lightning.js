@@ -83,6 +83,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             var credentials = exports.loadCredentials();
             var lnrpcDescriptor = grpc.load('proto/rpc.proto');
             var lnrpc = lnrpcDescriptor.lnrpc;
+            console.log("====> COONNNNNN", LND_IP + ':' + config.lnd_port);
             lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
             return lightningClient;
         }

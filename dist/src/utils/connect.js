@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = exports.genChannel = exports.connectPeer = exports.checkPeered = exports.getQR = void 0;
 const publicIp = require("public-ip");
+const localip = require("ip");
 const password_1 = require("./password");
 const Lightning = require("../grpc/lightning");
 const nodeinfo_1 = require("./nodeinfo");
@@ -27,17 +28,20 @@ function getQR() {
         if (public_url)
             theIP = public_url;
         if (!theIP) {
-            const ip = process.env.NODE_IP;
-            if (!ip) {
+            theIP = process.env.NODE_IP;
+            if (!theIP) {
                 try {
-                    theIP = yield publicIp.v4();
+                    if (IS_GREENLIGHT) {
+                        theIP = localip.address();
+                    }
+                    else {
+                        theIP = yield publicIp.v4();
+                    }
                 }
                 catch (e) { }
             }
-            else {
-                const port = config.node_http_port;
-                theIP = port ? `${ip}:${port}` : ip;
-            }
+            const port = config.node_http_port;
+            theIP = port ? `${theIP}:${port}` : theIP;
         }
         return Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
     });
@@ -92,12 +96,12 @@ function checkPeered(req, res) {
             let active = false;
             let channel_point = '';
             const peers = yield Lightning.listPeers();
-            peers.peers.forEach(p => {
+            peers.peers.forEach((p) => {
                 if (p.pub_key === pubkey)
                     peered = true;
             });
             const chans = yield Lightning.listChannels();
-            chans.channels.forEach(ch => {
+            chans.channels.forEach((ch) => {
                 if (ch.remote_pubkey === pubkey) {
                     if (ch.active)
                         active = true;
