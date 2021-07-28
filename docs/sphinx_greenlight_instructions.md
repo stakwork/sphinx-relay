@@ -4,7 +4,7 @@
 
 ## Getting Started
 
-1. Flash our installer onto your raspberry pi using your preferred method. We like to use balena echer, which you can download [here](https://www.balena.io/etcher/).
+1. Flash our installer onto your raspberry pi using your preferred method. We like to use balena etcher, which you can download [here](https://www.balena.io/etcher/).
 2. Follow the instructions [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md) to set up your raspberry pi's connection if you are connecting to a wireless network.
 3. Place your sd card into the raspberry pi, and plug the pi into a power source.
 4. Wait around 5 minutes.
@@ -30,9 +30,12 @@ Here's how you can connect your sphinx chat app to your raspberry pi at home.
 
 ## File Integrity
 
-The sha256 of the zip file you will download from us this the following:
+The sha256 of the zip files you will download from us are the following:
 
-`87079b8a0ff8ff5911ef68d66d46364c5dc71ec07b744d85e4bf9cdbc63375ee`
+```
+87079b8a0ff8ff5911ef68d66d46364c5dc71ec07b744d85e4bf9cdbc63375ee  sphinx_greenlight_0_1.img.zip
+a67ba94bcc6db3d94785d1eff4d29c0ff37d782d9a3e76b3a04827b270ba56c8  sphinx_greenlight_0_2.img.zip
+```
 
 On macOS, you can check it by running this command in the directory where you have the file:
 
