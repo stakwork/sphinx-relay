@@ -8,7 +8,7 @@
 2. Follow the instructions [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md) to set up your raspberry pi's connection if you are connecting to a wireless network.
 3. Place your sd card into the raspberry pi, and plug the pi into a power source.
 4. Wait around 5 minutes.
-5. Load the page `http://raspberrypi.local:3001/connect` on your computer, and follow the instructions there.
+5. If you are on Linux/MacOS load the page `http://raspberrypi.local:3001/connect` and if you are on Windows, load the page `http://raspberrypi:3001/connect`. Follow the instructions there.
 
 When you can, SSH into your raspberry pi using the username `pi` and the password `raspberry`, and change the password with the command `passwd`
 
