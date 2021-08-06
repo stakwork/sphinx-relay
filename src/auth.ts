@@ -71,6 +71,7 @@ export async function unlocker(req, res): Promise<boolean> {
 export async function ownerMiddleware(req, res, next) {
   if (
     req.path == '/app' ||
+    req.path == '/is_setup' ||
     req.path == '/' ||
     req.path == '/unlock' ||
     req.path == '/info' ||
@@ -80,7 +81,7 @@ export async function ownerMiddleware(req, res, next) {
     req.path.startsWith('/static') ||
     req.path == '/contacts/set_dev' ||
     req.path == '/connect' ||
-    req.path == '/connect_peer' || 
+    req.path == '/connect_peer' ||
     req.path == '/peered'
   ) {
     next()

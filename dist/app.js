@@ -48,10 +48,11 @@ function start() {
 start();
 function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield setupApp(); // setup routes
+        const app = yield setupApp(); // setup routes
         grpc.reconnectToLightning(Math.random(), function () {
             console.log('>>> FINISH SETUP');
             finishSetup();
+            app.get('/is_setup', (req, res) => res.send(true));
         }); // recursive
     });
 }
@@ -127,7 +128,7 @@ function setupApp() {
         if (!config.unlock) {
             controllers.set(app);
             socket.connect(server);
-            resolve(true);
+            resolve(app);
         }
         else {
             app.post('/unlock', function (req, res) {
@@ -137,7 +138,7 @@ function setupApp() {
                         console.log('=> relay unlocked!');
                         controllers.set(app);
                         socket.connect(server);
-                        resolve(true);
+                        resolve(app);
                     }
                 });
             });

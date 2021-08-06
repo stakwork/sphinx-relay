@@ -91,7 +91,7 @@ function reconnectToLightning(innerCtx, callback, noCache) {
         const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
         console.log(`=> ${now} [lightning] reconnecting... attempt #${i}`);
         try {
-            yield network.initGrpcSubscriptions();
+            yield network.initGrpcSubscriptions(true);
             const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
             console.log(`=> [lightning] connected! ${now}`);
             if (callback)
@@ -99,6 +99,7 @@ function reconnectToLightning(innerCtx, callback, noCache) {
         }
         catch (e) {
             if (e.code === ERR_CODE_UNIMPLEMENTED) {
+                console.log(`[lightning] LOCKED ${now}`);
                 yield unlock_1.tryToUnlockLND();
             }
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {

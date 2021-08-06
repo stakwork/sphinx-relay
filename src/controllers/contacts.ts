@@ -700,6 +700,7 @@ export async function uploadPublicPic(req, res) {
     const formHeaders = form.getHeaders()
     let protocol = 'https'
     if (host.includes('localhost')) protocol = 'http'
+    if (host.includes('meme.sphinx:5555')) protocol = 'http'
     const resp = await fetch(`${protocol}://${host}/public`, {
       method: 'POST',
       headers: {

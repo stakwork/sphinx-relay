@@ -49,11 +49,21 @@ function lazyToken(pubkey, host) {
     });
 }
 exports.lazyToken = lazyToken;
-const mediaURL = 'http://' + config.media_host + '/';
+let mediaProtocol = 'https';
+if (config.media_host.includes('localhost'))
+    mediaProtocol = 'http';
+if (config.media_host.includes('meme.sphinx:5555'))
+    mediaProtocol = 'http';
+let mediaURL = mediaProtocol + '://' + config.media_host + '/';
 function getMediaToken(ownerPubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log("[meme] gET MEDIA TOEKN", ownerPubkey)
-        const theURL = host ? 'http://' + host + '/' : mediaURL;
+        let protocol = 'https';
+        if (host === null || host === void 0 ? void 0 : host.includes('localhost'))
+            protocol = 'http';
+        if (host === null || host === void 0 ? void 0 : host.includes('meme.sphinx:5555'))
+            protocol = 'http';
+        const theURL = host ? `${protocol}://${host}/` : mediaURL;
         yield helpers.sleep(300);
         try {
             const res = yield rp.get(theURL + 'ask');

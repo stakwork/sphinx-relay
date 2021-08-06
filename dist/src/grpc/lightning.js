@@ -38,15 +38,20 @@ var lightningClient = null;
 var walletUnlocker = null;
 var routerClient = null;
 const loadCredentials = (macName) => {
-    var lndCert = fs.readFileSync(config.tls_location);
-    var sslCreds = grpc.credentials.createSsl(lndCert);
-    var macaroon = macaroon_1.getMacaroon(macName);
-    var metadata = new grpc.Metadata();
-    metadata.add('macaroon', macaroon);
-    var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
-        callback(null, metadata);
-    });
-    return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
+    try {
+        var lndCert = fs.readFileSync(config.tls_location);
+        var sslCreds = grpc.credentials.createSsl(lndCert);
+        var macaroon = macaroon_1.getMacaroon(macName);
+        var metadata = new grpc.Metadata();
+        metadata.add('macaroon', macaroon);
+        var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
+            callback(null, metadata);
+        });
+        return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
+    }
+    catch (e) {
+        throw 'cannot read macaroon file';
+    }
 };
 exports.loadCredentials = loadCredentials;
 const loadGreenlightCredentials = () => {
@@ -83,7 +88,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             var credentials = exports.loadCredentials();
             var lnrpcDescriptor = grpc.load('proto/rpc.proto');
             var lnrpc = lnrpcDescriptor.lnrpc;
-            console.log("====> COONNNNNN", LND_IP + ':' + config.lnd_port);
+            // console.log("====> COONNNNNN", LND_IP + ':' + config.lnd_port)
             lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
             return lightningClient;
         }
@@ -98,8 +103,8 @@ const loadWalletUnlocker = () => {
         return walletUnlocker;
     }
     else {
-        var credentials = exports.loadCredentials();
         try {
+            var credentials = exports.loadCredentials();
             var lnrpcDescriptor = grpc.load('proto/walletunlocker.proto');
             var lnrpc = lnrpcDescriptor.lnrpc;
             walletUnlocker = new lnrpc.WalletUnlocker(LND_IP + ':' + config.lnd_port, credentials);
@@ -701,15 +706,20 @@ function getInfo(tryProxy, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         // log('getInfo')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache); // try proxy
-            lightning.getInfo({}, function (err, response) {
-                if (err == null) {
-                    resolve(interfaces.getInfoResponse(response));
-                }
-                else {
-                    reject(err);
-                }
-            });
+            try {
+                const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache); // try proxy
+                lightning.getInfo({}, function (err, response) {
+                    if (err == null) {
+                        resolve(interfaces.getInfoResponse(response));
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
+            }
+            catch (e) {
+                reject(e);
+            }
         }));
     });
 }

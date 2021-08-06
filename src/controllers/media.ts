@@ -602,7 +602,11 @@ export async function verifier(msg, sig) {
 export async function getMediaInfo(muid, pubkey: string) {
   try {
     const token = await meme.lazyToken(pubkey, config.media_host)
-    const mediaURL = 'http://' + config.media_host + '/'
+    const host = config.media_host
+    let protocol = 'https'
+    if (host.includes('localhost')) protocol = 'http'
+    if (host.includes('meme.sphinx:5555')) protocol = 'http'
+    const mediaURL = `${protocol}://${host}/`
     const res = await rp.get(mediaURL + 'mymedia/' + muid, {
       headers: {
         Authorization: `Bearer ${token}`,

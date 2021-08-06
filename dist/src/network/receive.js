@@ -363,7 +363,7 @@ function initGrpcSubscriptions(noCache) {
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
-            console.log(e);
+            // console.log(e)
             throw e;
         }
     });

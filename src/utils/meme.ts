@@ -40,11 +40,17 @@ export async function lazyToken(pubkey: string, host: string) {
   }
 }
 
-const mediaURL = 'http://' + config.media_host + '/'
+let mediaProtocol = 'https'
+if (config.media_host.includes('localhost')) mediaProtocol = 'http'
+if (config.media_host.includes('meme.sphinx:5555')) mediaProtocol = 'http'
+let mediaURL = mediaProtocol + '://' + config.media_host + '/'
 
 export async function getMediaToken(ownerPubkey: string, host?: string) {
   // console.log("[meme] gET MEDIA TOEKN", ownerPubkey)
-  const theURL = host ? 'http://' + host + '/' : mediaURL
+  let protocol = 'https'
+  if (host?.includes('localhost')) protocol = 'http'
+  if (host?.includes('meme.sphinx:5555')) protocol = 'http'
+  const theURL = host ? `${protocol}://${host}/` : mediaURL
   await helpers.sleep(300)
   try {
     const res = await rp.get(theURL + 'ask')

@@ -39,10 +39,11 @@ async function start() {
 start()
 
 async function mainSetup() {
-  await setupApp() // setup routes
+  const app: any = await setupApp() // setup routes
   grpc.reconnectToLightning(Math.random(), function () {
     console.log('>>> FINISH SETUP')
     finishSetup()
+    app.get('/is_setup', (req, res) => res.send(true))
   }) // recursive
 }
 
@@ -123,7 +124,7 @@ function setupApp() {
     if (!config.unlock) {
       controllers.set(app)
       socket.connect(server)
-      resolve(true)
+      resolve(app)
     } else {
       app.post('/unlock', async function (req, res) {
         const ok = await unlocker(req, res)
@@ -131,7 +132,7 @@ function setupApp() {
           console.log('=> relay unlocked!')
           controllers.set(app)
           socket.connect(server)
-          resolve(true)
+          resolve(app)
         }
       })
     }

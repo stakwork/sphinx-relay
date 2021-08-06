@@ -85,12 +85,13 @@ export async function reconnectToLightning(
   const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
   console.log(`=> ${now} [lightning] reconnecting... attempt #${i}`)
   try {
-    await network.initGrpcSubscriptions()
+    await network.initGrpcSubscriptions(true)
     const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
     console.log(`=> [lightning] connected! ${now}`)
     if (callback) callback()
   } catch (e) {
     if (e.code === ERR_CODE_UNIMPLEMENTED) {
+      console.log(`[lightning] LOCKED ${now}`)
       await tryToUnlockLND()
     }
     setTimeout(async () => {

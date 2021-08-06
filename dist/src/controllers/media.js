@@ -525,7 +525,13 @@ function getMediaInfo(muid, pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield meme.lazyToken(pubkey, config.media_host);
-            const mediaURL = 'http://' + config.media_host + '/';
+            const host = config.media_host;
+            let protocol = 'https';
+            if (host.includes('localhost'))
+                protocol = 'http';
+            if (host.includes('meme.sphinx:5555'))
+                protocol = 'http';
+            const mediaURL = `${protocol}://${host}/`;
             const res = yield rp.get(mediaURL + 'mymedia/' + muid, {
                 headers: {
                     Authorization: `Bearer ${token}`,
