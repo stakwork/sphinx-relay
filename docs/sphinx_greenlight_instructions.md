@@ -4,9 +4,9 @@
 
 ## Getting Started
 
-1. Grab our installer zip file from [here](https://drive.google.com/file/d/1jPNxa3qkE0vYwj2un14K7j-6R4QQ_kJ_/view?usp=sharing). See the file integrity section below if you'd like to cross check this file.
+1. Grab our installer zip file from [here](https://drive.google.com/file/d/1fhS1M0gY8Xn15G7v5Yb_D4n-m7Fjpxo9/view?usp=sharing). See the file integrity section below if you'd like to cross check this file.
 2. Flash our installer onto your raspberry pi using your preferred method. We like to use balena etcher, which you can download [here](https://www.balena.io/etcher/).
-3. Follow the instructions [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md) to set up your raspberry pi's connection if you are connecting to a wireless network.
+3. Follow the instructions [here](https://www.raspberrypi.org/documentation/computers/configuration.html#setting-up-a-headless-raspberry-pi) to set up your raspberry pi's connection if you are connecting to a wireless network.
 4. Place your sd card into the raspberry pi, and plug the pi into a power source.
 5. Wait around 5 minutes.
 6. If you are on Linux/MacOS load the page `http://raspberrypi.local:3001/connect` and if you are on Windows, load the page `http://raspberrypi:3001/connect`. Follow the instructions there.
@@ -18,12 +18,12 @@ When you can, SSH into your raspberry pi using the username `pi` and the passwor
 The sha256 of the zip file you will download from us is the following:
 
 ```
-a67ba94bcc6db3d94785d1eff4d29c0ff37d782d9a3e76b3a04827b270ba56c8
+393f380476c09fc74261e1b8ade1424e913a287ba926b8a1c0de79c1bf241d0a
 ```
 
 On macOS, you can check it by running this command in the directory where you have the file:
 
-`shasum -a 256 sphinx_greenlight_0_2.img.zip`
+`shasum -a 256 sphinx_greenlight_0_3.img.zip`
 
 ## Backing Up Your Funds and Data
 
