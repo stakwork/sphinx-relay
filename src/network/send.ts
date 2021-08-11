@@ -73,12 +73,20 @@ export async function sendMessage(params) {
       // decrypt message.content and message.mediaKey w groupKey
       msg = await decryptMessage(msg, chat)
       // console.log("SEND.TS isBotMsg")
+      if (logging.Network) {
+        console.log('[Network] => isTribeAdmin msg sending...', msg)
+      }
       const isBotMsg = await intercept.isBotMsg(msg, true, sender)
       if (isBotMsg === true) {
+        if (logging.Network) {
+          console.log('[Network] => isBotMsg')
+        }
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
-      // post last_active to tribes server
-      tribes.putActivity(chat.uuid, chat.host, sender.publicKey)
+      try {
+        // post last_active to tribes server
+        tribes.putActivity(chat.uuid, chat.host, sender.publicKey)
+      } catch (e) {}
     } else {
       // if tribe, send to owner only
       const tribeOwner = await models.Contact.findOne({

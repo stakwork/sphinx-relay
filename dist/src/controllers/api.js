@@ -77,6 +77,12 @@ function finalAction(a) {
                     id: bot_id,
                 },
             });
+            if (chat_uuid) {
+                const myChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
+                // ACTUALLY ITS A LOCAL (FOR MY TRIBE) message! kill myBot
+                if (myChat)
+                    myBot = null;
+            }
         }
         // console.log("=> ACTION HIT", a);
         if (myBot) {

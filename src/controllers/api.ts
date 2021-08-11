@@ -89,6 +89,11 @@ export async function finalAction(a: Action) {
         id: bot_id,
       },
     })
+    if (chat_uuid) {
+      const myChat = await getTribeOwnersChatByUUID(chat_uuid)
+      // ACTUALLY ITS A LOCAL (FOR MY TRIBE) message! kill myBot
+      if (myChat) myBot = null
+    }
   }
 
   // console.log("=> ACTION HIT", a);

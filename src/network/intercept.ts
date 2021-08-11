@@ -4,6 +4,7 @@ import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
 import * as SphinxBot from 'sphinx-bot'
 import constants from '../constants'
+import { logging } from '../utils/logger'
 
 /*
 default show or not
@@ -50,7 +51,7 @@ export async function isBotMsg(
       tenant,
     },
   })
-  // console.log('=> botsInTribe', botsInTribe)
+  if (logging.Network) console.log('=> botsInTribe', botsInTribe) //, payload)
 
   if (!(botsInTribe && botsInTribe.length)) return false
 
@@ -84,6 +85,8 @@ export async function isBotMsg(
 
 async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
   // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
+  if (logging.Network) console.log('=> emitMessageToBot', msg) //, payload)
+
   const tenant: number = sender.id
   if (!tenant) {
     console.log('=> no tenant in emitMessageToBot')

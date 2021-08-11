@@ -15,6 +15,7 @@ const builtin_1 = require("../builtin");
 const bots_1 = require("../controllers/bots");
 const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 /*
 default show or not
 restrictions (be able to toggle, or dont show chat)
@@ -54,7 +55,8 @@ function isBotMsg(msg, sentByMe, sender) {
                 tenant,
             },
         });
-        // console.log('=> botsInTribe', botsInTribe)
+        if (logger_1.logging.Network)
+            console.log('=> botsInTribe', botsInTribe); //, payload)
         if (!(botsInTribe && botsInTribe.length))
             return false;
         yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
@@ -89,6 +91,8 @@ exports.isBotMsg = isBotMsg;
 function emitMessageToBot(msg, botInTribe, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
+        if (logger_1.logging.Network)
+            console.log('=> emitMessageToBot', msg); //, payload)
         const tenant = sender.id;
         if (!tenant) {
             console.log('=> no tenant in emitMessageToBot');

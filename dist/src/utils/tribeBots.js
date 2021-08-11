@@ -13,12 +13,14 @@ exports.makeBotsJSON = exports.declare_bot = void 0;
 const models_1 = require("../models");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
+const config_1 = require("./config");
+const config = config_1.loadConfig();
 function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = tribes_1.getHost();
         try {
             let protocol = 'https';
-            if (host.includes('localhost'))
+            if (config.tribes_insecure)
                 protocol = 'http';
             const r = yield node_fetch_1.default(protocol + '://' + host + '/bots', {
                 method: 'POST',
@@ -40,7 +42,7 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
             console.log('=> bot created:', j);
         }
         catch (e) {
-            console.log('[tribes] unauthorized to declare');
+            console.log('[tribes] unauthorized to declare bot', e);
             throw e;
         }
     });

@@ -286,10 +286,18 @@ function receiveBotCmd(payload) {
 exports.receiveBotCmd = receiveBotCmd;
 function postToBotServer(msg, bot, route) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!bot)
+        if (logger_1.logging.Network)
+            console.log('=> postToBotServer'); //, payload)
+        if (!bot) {
+            if (logger_1.logging.Network)
+                console.log('=> no bot'); //, payload)
             return false;
-        if (!bot.webhook || !bot.secret)
+        }
+        if (!bot.webhook || !bot.secret) {
+            if (logger_1.logging.Network)
+                console.log('=> no bot webook or secret'); //, payload)
             return false;
+        }
         let url = bot.webhook;
         if (url.charAt(url.length - 1) === '/') {
             url += route;
@@ -297,15 +305,26 @@ function postToBotServer(msg, bot, route) {
         else {
             url += '/' + route;
         }
-        const r = yield node_fetch_1.default(url, {
-            method: 'POST',
-            body: JSON.stringify(buildBotPayload(msg)),
-            headers: {
-                'x-secret': bot.secret,
-                'Content-Type': 'application/json',
-            },
-        });
-        return r.ok;
+        if (logger_1.logging.Network)
+            console.log('=> post to bot server now!', url, JSON.stringify(buildBotPayload(msg))); //, payload)
+        try {
+            const r = yield node_fetch_1.default(url, {
+                method: 'POST',
+                body: JSON.stringify(buildBotPayload(msg)),
+                headers: {
+                    'x-secret': bot.secret,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (logger_1.logging.Network)
+                console.log('=> bot post:', r.status);
+            return r.ok;
+        }
+        catch (e) {
+            if (logger_1.logging.Network)
+                console.log('=> bot post failed', e);
+            return false;
+        }
     });
 }
 exports.postToBotServer = postToBotServer;

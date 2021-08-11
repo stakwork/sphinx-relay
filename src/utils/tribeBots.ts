@@ -1,6 +1,9 @@
 import { models } from '../models'
 import { getHost } from './tribes'
 import fetch from 'node-fetch'
+import { loadConfig } from './config'
+
+const config = loadConfig()
 
 export async function declare_bot({
   uuid,
@@ -17,7 +20,7 @@ export async function declare_bot({
   const host = getHost()
   try {
     let protocol = 'https'
-    if (host.includes('localhost')) protocol = 'http'
+    if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(protocol + '://' + host + '/bots', {
       method: 'POST',
       body: JSON.stringify({
@@ -37,7 +40,7 @@ export async function declare_bot({
     const j = await r.json()
     console.log('=> bot created:', j)
   } catch (e) {
-    console.log('[tribes] unauthorized to declare')
+    console.log('[tribes] unauthorized to declare bot', e)
     throw e
   }
 }

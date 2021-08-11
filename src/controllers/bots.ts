@@ -303,23 +303,42 @@ export async function postToBotServer(
   bot,
   route: string
 ): Promise<boolean> {
-  if (!bot) return false
-  if (!bot.webhook || !bot.secret) return false
+  if (logging.Network) console.log('=> postToBotServer') //, payload)
+  if (!bot) {
+    if (logging.Network) console.log('=> no bot') //, payload)
+    return false
+  }
+  if (!bot.webhook || !bot.secret) {
+    if (logging.Network) console.log('=> no bot webook or secret') //, payload)
+    return false
+  }
   let url = bot.webhook
   if (url.charAt(url.length - 1) === '/') {
     url += route
   } else {
     url += '/' + route
   }
-  const r = await fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(buildBotPayload(msg)),
-    headers: {
-      'x-secret': bot.secret,
-      'Content-Type': 'application/json',
-    },
-  })
-  return r.ok
+  if (logging.Network)
+    console.log(
+      '=> post to bot server now!',
+      url,
+      JSON.stringify(buildBotPayload(msg))
+    ) //, payload)
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(buildBotPayload(msg)),
+      headers: {
+        'x-secret': bot.secret,
+        'Content-Type': 'application/json',
+      },
+    })
+    if (logging.Network) console.log('=> bot post:', r.status)
+    return r.ok
+  } catch (e) {
+    if (logging.Network) console.log('=> bot post failed', e)
+    return false
+  }
 }
 
 export function buildBotPayload(msg: Msg): SphinxBot.Message {
