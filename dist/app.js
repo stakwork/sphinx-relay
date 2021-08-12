@@ -50,15 +50,17 @@ function mainSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = yield setupApp(); // setup routes
         grpc.reconnectToLightning(Math.random(), function () {
-            console.log('>>> FINISH SETUP');
-            finishSetup();
-            app.get('/is_setup', (req, res) => res.send(true));
+            return __awaiter(this, void 0, void 0, function* () {
+                console.log('>>> FINISH SETUP');
+                yield finishSetup();
+                app.get('/is_setup', (req, res) => res.send(true));
+            });
         }); // recursive
     });
 }
 function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
-        setup_1.setupOwnerContact();
+        yield setup_1.setupOwnerContact();
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             hub_1.checkInvitesHubInterval(5000);
