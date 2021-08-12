@@ -658,8 +658,11 @@ function uploadPublicPic(req, res) {
             let json = yield resp.json();
             if (!json.muid)
                 return res_1.failure(res, 'no muid');
+            let theHost = host;
+            if (host === 'meme.sphinx:5555')
+                theHost = 'localhost:5555';
             res_1.success(res, {
-                img: `${protocol}://${host}/public/${json.muid}`,
+                img: `${protocol}://${theHost}/public/${json.muid}`,
             });
         }
         catch (e) {
