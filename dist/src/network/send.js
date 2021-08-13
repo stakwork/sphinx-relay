@@ -45,12 +45,11 @@ function sendMessage(params) {
         let contactIds = (typeof chat.contactIds === 'string'
             ? JSON.parse(chat.contactIds)
             : chat.contactIds) || [];
-        // console.log('-> contactIds 1', contactIds)
+        let justMe = false;
         if (contactIds.length === 1) {
             if (contactIds[0] === tenant) {
-                if (success)
-                    success(true);
-                return; // if no contacts thats fine (like create public tribe)
+                // JUST ME!
+                justMe = true;
             }
         }
         let networkType = undefined;
@@ -76,6 +75,14 @@ function sendMessage(params) {
                     }
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
+            }
+            // stop here if just me
+            if (justMe) {
+                if (success)
+                    success(true);
+                return; // if no contacts thats fine (like create public tribe)
+            }
+            if (isTribeOwner) {
                 try {
                     // post last_active to tribes server
                     tribes.putActivity(chat.uuid, chat.host, sender.publicKey);
@@ -88,6 +95,14 @@ function sendMessage(params) {
                     where: { publicKey: chat.ownerPubkey, tenant },
                 });
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
+            }
+        }
+        else {
+            // not a tribe
+            if (justMe) {
+                if (success)
+                    success(true);
+                return;
             }
         }
         let yes = true;
