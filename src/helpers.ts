@@ -135,12 +135,23 @@ export const performKeysendMessage = async ({
   success,
   failure,
   sender,
+  extra_tlv,
+}: {
+  destination_key: string
+  route_hint?: string
+  amount: number
+  msg: { [k: string]: any }
+  success?: Function
+  failure?: Function
+  sender: any
+  extra_tlv?: { [k: string]: any }
 }) => {
   const opts = {
     dest: destination_key,
     data: msg || {},
     amt: Math.max(amount, 3),
     route_hint,
+    extra_tlv,
   }
   try {
     const r = await network.signAndSend(opts, sender)

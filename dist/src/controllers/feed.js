@@ -57,15 +57,19 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                     return;
                 if (d.address === owner.publicKey)
                     return; // dont send to self
+                const extra_tlv = {};
+                if (d.custom_key && d.custom_key) {
+                    extra_tlv[d.custom_key] = d.custom_value;
+                }
                 const amt = Math.max(Math.round((d.split / 100) * amount), 1);
-                yield anonymousKeysend(owner, d.address, d.routeHint, amt, text, function () { }, function () { });
+                yield anonymousKeysend(owner, d.address, d.route_hint, amt, text, function () { }, function () { }, extra_tlv);
             }
         }));
     }
     res_1.success(res, {});
 });
 exports.streamFeed = streamFeed;
-function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSuccess, onFailure) {
+function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSuccess, onFailure, extra_tlv) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = owner.id;
         const msg = {
@@ -102,6 +106,7 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
             failure: (error) => {
                 onFailure(error);
             },
+            extra_tlv,
         });
     });
 }

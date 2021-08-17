@@ -48,7 +48,8 @@ export const sendPayment = async (req, res) => {
         res.status(200)
         res.json({ success: false, error })
         res.end()
-      }
+      },
+      {}
     )
     return
   }

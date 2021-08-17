@@ -1,6 +1,7 @@
 export interface Msg {
   type: number
   message: {
+    uuid: string
     content: string
     amount: number
   }

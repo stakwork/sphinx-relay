@@ -35,7 +35,8 @@ function processAction(req, res) {
                 return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, } = body;
+        console.log('=> incoming', msg_uuid, reply_uuid);
         if (!bot_id)
             return res_1.failure(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
@@ -68,7 +69,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, } = a;
+        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, } = a;
         let myBot;
         // not for tribe admin, for bot maker
         if (bot_id) {
@@ -107,8 +108,12 @@ function finalAction(a) {
                 bot_id,
                 bot_name,
                 type: constants_1.default.message_types.bot_res,
-                message: { content: a.content, amount: amount || 0 },
-                chat: { uuid: chat_uuid },
+                message: {
+                    content: content || '',
+                    amount: amount || 0,
+                    uuid: msg_uuid || '',
+                },
+                chat: { uuid: chat_uuid || '' },
                 sender: {
                     pub_key: String(owner.publicKey),
                     alias: bot_name,

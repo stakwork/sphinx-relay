@@ -36,7 +36,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(200);
             res.json({ success: false, error });
             res.end();
-        });
+        }, {});
         return;
     }
     const chat = yield helpers.findOrCreateChat({

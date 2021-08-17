@@ -281,6 +281,7 @@ interface KeysendOpts {
   dest: string
   data?: string
   route_hint?: string
+  extra_tlv?: { [k: string]: string }
 }
 export const keysend = (opts: KeysendOpts, ownerPubkey?: string) => {
   log('keysend')
@@ -288,13 +289,19 @@ export const keysend = (opts: KeysendOpts, ownerPubkey?: string) => {
     try {
       const randoStr = crypto.randomBytes(32).toString('hex')
       const preimage = ByteBuffer.fromHex(randoStr)
+      const dest_custom_records = {
+        [`${LND_KEYSEND_KEY}`]: preimage,
+      }
+      if (opts.extra_tlv) {
+        Object.entries(opts.extra_tlv).forEach(([k, v]) => {
+          dest_custom_records[k] = ByteBuffer.fromUTF8(v)
+        })
+      }
       const options: interfaces.KeysendRequest = {
         amt: Math.max(opts.amt, constants.min_sat_amount || 3),
         final_cltv_delta: 10,
         dest: ByteBuffer.fromHex(opts.dest),
-        dest_custom_records: {
-          [`${LND_KEYSEND_KEY}`]: preimage,
-        },
+        dest_custom_records,
         payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
         dest_features: [9],
       }

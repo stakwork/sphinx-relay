@@ -21,6 +21,8 @@ export interface Action {
   amount?: number
   pubkey?: string
   content?: string
+  msg_uuid?: string
+  reply_uuid?: string
   route_hint?: string
 }
 
@@ -37,8 +39,19 @@ export async function processAction(req, res) {
       return failure(res, 'failed to parse webhook body json')
     }
   }
-  const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid } =
-    body
+  const {
+    action,
+    bot_id,
+    bot_secret,
+    pubkey,
+    amount,
+    content,
+    chat_uuid,
+    msg_uuid,
+    reply_uuid,
+  } = body
+
+  console.log('=> incoming', msg_uuid, reply_uuid)
 
   if (!bot_id) return failure(res, 'no bot_id')
   const bot = await models.Bot.findOne({ where: { id: bot_id } })
@@ -79,6 +92,7 @@ export async function finalAction(a: Action) {
     content,
     bot_name,
     chat_uuid,
+    msg_uuid,
   } = a
 
   let myBot
@@ -118,8 +132,12 @@ export async function finalAction(a: Action) {
       bot_id,
       bot_name,
       type: constants.message_types.bot_res,
-      message: { content: a.content, amount: amount || 0 },
-      chat: { uuid: chat_uuid },
+      message: {
+        content: content || '',
+        amount: amount || 0,
+        uuid: msg_uuid || '',
+      },
+      chat: { uuid: chat_uuid || '' },
       sender: {
         pub_key: String(owner.publicKey),
         alias: bot_name,

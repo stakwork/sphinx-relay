@@ -113,12 +113,13 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
     }
 });
 exports.sendContactKeys = sendContactKeys;
-const performKeysendMessage = ({ destination_key, route_hint, amount, msg, success, failure, sender, }) => __awaiter(void 0, void 0, void 0, function* () {
+const performKeysendMessage = ({ destination_key, route_hint, amount, msg, success, failure, sender, extra_tlv, }) => __awaiter(void 0, void 0, void 0, function* () {
     const opts = {
         dest: destination_key,
         data: msg || {},
         amt: Math.max(amount, 3),
         route_hint,
+        extra_tlv,
     };
     try {
         const r = yield network.signAndSend(opts, sender);

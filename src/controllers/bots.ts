@@ -11,6 +11,7 @@ import * as SphinxBot from 'sphinx-bot'
 import { Msg } from '../network/interfaces'
 import constants from '../constants'
 import { logging } from '../utils/logger'
+import * as short from 'short-uuid'
 
 export const getBots = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
@@ -121,7 +122,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
         <network.Msg>{
           type: constants.message_types.bot_install,
           bot_uuid: myBot.uuid,
-          message: { content: '', amount: 0 },
+          message: { content: '', amount: 0, uuid: short.generate() },
           sender: {
             pub_key: owner.publicKey,
             alias: owner.alias,
@@ -201,7 +202,7 @@ export async function botKeysend(
       type: msg_type,
       bot_uuid,
       chat: { uuid: chat_uuid },
-      message: { content: content || '', amount: amt },
+      message: { content: content || '', amount: amt, uuid: short.generate() },
       sender: {
         pub_key: owner.publicKey,
         alias: owner.alias,
@@ -344,6 +345,7 @@ export async function postToBotServer(
 export function buildBotPayload(msg: Msg): SphinxBot.Message {
   const chat_uuid = msg.chat && msg.chat.uuid
   const m = <SphinxBot.Message>{
+    id: msg.message.uuid,
     channel: {
       id: chat_uuid,
       send: function () {},

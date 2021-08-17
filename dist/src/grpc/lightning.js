@@ -280,13 +280,19 @@ const keysend = (opts, ownerPubkey) => {
             try {
                 const randoStr = crypto.randomBytes(32).toString('hex');
                 const preimage = ByteBuffer.fromHex(randoStr);
+                const dest_custom_records = {
+                    [`${exports.LND_KEYSEND_KEY}`]: preimage,
+                };
+                if (opts.extra_tlv) {
+                    Object.entries(opts.extra_tlv).forEach(([k, v]) => {
+                        dest_custom_records[k] = ByteBuffer.fromUTF8(v);
+                    });
+                }
                 const options = {
                     amt: Math.max(opts.amt, constants_1.default.min_sat_amount || 3),
                     final_cltv_delta: 10,
                     dest: ByteBuffer.fromHex(opts.dest),
-                    dest_custom_records: {
-                        [`${exports.LND_KEYSEND_KEY}`]: preimage,
-                    },
+                    dest_custom_records,
                     payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
                     dest_features: [9],
                 };

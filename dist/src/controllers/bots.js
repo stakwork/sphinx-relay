@@ -22,6 +22,7 @@ const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const short = require("short-uuid");
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return res_1.failure(res, 'no owner');
@@ -135,7 +136,7 @@ function installBotAsTribeAdmin(chat, bot_json) {
                 postToBotServer({
                     type: constants_1.default.message_types.bot_install,
                     bot_uuid: myBot.uuid,
-                    message: { content: '', amount: 0 },
+                    message: { content: '', amount: 0, uuid: short.generate() },
                     sender: {
                         pub_key: owner.publicKey,
                         alias: owner.alias,
@@ -186,7 +187,7 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
                 type: msg_type,
                 bot_uuid,
                 chat: { uuid: chat_uuid },
-                message: { content: content || '', amount: amt },
+                message: { content: content || '', amount: amt, uuid: short.generate() },
                 sender: {
                     pub_key: owner.publicKey,
                     alias: owner.alias,
@@ -331,6 +332,7 @@ exports.postToBotServer = postToBotServer;
 function buildBotPayload(msg) {
     const chat_uuid = msg.chat && msg.chat.uuid;
     const m = {
+        id: msg.message.uuid,
         channel: {
             id: chat_uuid,
             send: function () { },
