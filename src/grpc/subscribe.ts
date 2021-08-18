@@ -94,6 +94,7 @@ export async function reconnectToLightning(
       console.log(`[lightning] LOCKED ${now}`)
       await tryToUnlockLND()
     }
+    console.log(`[lightning] ERROR ${e}`)
     setTimeout(async () => {
       // retry each 2 secs
       if (ctx === innerCtx) {

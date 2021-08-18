@@ -102,6 +102,7 @@ function reconnectToLightning(innerCtx, callback, noCache) {
                 console.log(`[lightning] LOCKED ${now}`);
                 yield unlock_1.tryToUnlockLND();
             }
+            console.log(`[lightning] ERROR ${e}`);
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 // retry each 2 secs
                 if (ctx === innerCtx) {

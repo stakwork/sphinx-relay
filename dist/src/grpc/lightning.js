@@ -50,7 +50,8 @@ const loadCredentials = (macName) => {
         return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
     }
     catch (e) {
-        throw 'cannot read macaroon file';
+        // console.log(e)
+        throw 'cannot read LND macaroon or cert';
     }
 };
 exports.loadCredentials = loadCredentials;
