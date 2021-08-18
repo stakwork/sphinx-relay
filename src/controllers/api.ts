@@ -72,6 +72,7 @@ export async function processAction(req, res) {
     amount: amount || 0,
     bot_name: bot.name,
     chat_uuid: chat_uuid || '',
+    reply_uuid: reply_uuid || '',
   }
 
   try {
@@ -93,6 +94,7 @@ export async function finalAction(a: Action) {
     bot_name,
     chat_uuid,
     msg_uuid,
+    reply_uuid,
   } = a
 
   let myBot
@@ -144,6 +146,9 @@ export async function finalAction(a: Action) {
         role: 0,
         route_hint,
       }, // for verify sig
+    }
+    if (reply_uuid) {
+      data.message.replyUuid = reply_uuid
     }
     try {
       await network.signAndSend({ dest, data, route_hint }, owner, topic)

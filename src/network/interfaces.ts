@@ -4,6 +4,7 @@ export interface Msg {
     uuid: string
     content: string
     amount: number
+    replyUuid?: string
   }
   chat: {
     uuid: string

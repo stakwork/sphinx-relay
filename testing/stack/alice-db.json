@@ -1,0 +1,6 @@
+{
+  "development": {
+    "dialect": "sqlite",
+    "storage": "/Users/evanfeenstra/code/sphinx-stack/relay/db/alice.db"
+  }
+}

@@ -56,6 +56,7 @@ function processAction(req, res) {
             amount: amount || 0,
             bot_name: bot.name,
             chat_uuid: chat_uuid || '',
+            reply_uuid: reply_uuid || '',
         };
         try {
             const r = yield finalAction(a);
@@ -69,7 +70,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, } = a;
+        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, } = a;
         let myBot;
         // not for tribe admin, for bot maker
         if (bot_id) {
@@ -121,6 +122,9 @@ function finalAction(a) {
                     route_hint,
                 },
             };
+            if (reply_uuid) {
+                data.message.replyUuid = reply_uuid;
+            }
             try {
                 yield network.signAndSend({ dest, data, route_hint }, owner, topic);
             }

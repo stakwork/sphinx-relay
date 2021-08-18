@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "types": ["node"],
     "outDir": "dist",
     "allowJs": true,
     "target": "es6",
