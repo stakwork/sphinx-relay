@@ -183,6 +183,7 @@ function finalAction(a) {
                 messageContent: encryptedForMeText,
                 remoteMessageContent: JSON.stringify(textMap),
                 status: constants_1.default.statuses.confirmed,
+                replyUuid: reply_uuid || '',
                 createdAt: date,
                 updatedAt: date,
                 senderAlias: alias,
@@ -193,11 +194,17 @@ function finalAction(a) {
                 type: 'message',
                 response: jsonUtils.messageToJson(message, theChat, owner),
             }, tenant);
-            // console.log("BOT BROADCASE SENDER", owner.dataValues)
+            // console.log("BOT BROADCASE MSG", owner.dataValues)
+            // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
             yield network.sendMessage({
                 chat: theChat,
                 sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }),
-                message: { content: textMap, id: message.id, uuid: message.uuid },
+                message: {
+                    content: textMap,
+                    id: message.id,
+                    uuid: message.uuid,
+                    replyUuid: message.replyUuid,
+                },
                 type: constants_1.default.message_types.bot_res,
                 success: () => ({ success: true }),
                 failure: (e) => {

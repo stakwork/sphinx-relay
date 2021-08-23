@@ -7,6 +7,7 @@ import { typesToForward } from './receive'
 import * as intercept from './intercept'
 import constants from '../constants'
 import { logging } from '../utils/logger'
+import { Msg } from './interfaces'
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
@@ -21,6 +22,7 @@ export async function sendMessage(params) {
     failure,
     skipPubKey,
     isForwarded,
+    forwardedFromContactId,
     realSatsContactId,
   } = params
   if (!chat || !sender) return
@@ -76,7 +78,12 @@ export async function sendMessage(params) {
       if (logging.Network) {
         console.log('[Network] => isTribeAdmin msg sending...', msg)
       }
-      const isBotMsg = await intercept.isBotMsg(msg, true, sender)
+      const isBotMsg = await intercept.isBotMsg(
+        msg,
+        true,
+        sender,
+        forwardedFromContactId
+      )
       if (isBotMsg === true) {
         if (logging.Network) {
           console.log('[Network] => isBotMsg')
@@ -158,7 +165,7 @@ export async function sendMessage(params) {
     }
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
-    // console.log('-> personalized msg',m)
+    // console.log('-> personalized msg', m)
     const opts = {
       dest: destkey,
       data: m,
@@ -240,7 +247,7 @@ export function newmsg(
   message,
   isForwarded: boolean,
   includeStatus?: boolean
-) {
+): Msg {
   const includeGroupKey =
     type === constants.message_types.group_create ||
     type === constants.message_types.group_invite

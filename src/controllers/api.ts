@@ -206,6 +206,7 @@ export async function finalAction(a: Action) {
       messageContent: encryptedForMeText,
       remoteMessageContent: JSON.stringify(textMap),
       status: constants.statuses.confirmed,
+      replyUuid: reply_uuid || '',
       createdAt: date,
       updatedAt: date,
       senderAlias: alias,
@@ -219,7 +220,8 @@ export async function finalAction(a: Action) {
       },
       tenant
     )
-    // console.log("BOT BROADCASE SENDER", owner.dataValues)
+    // console.log("BOT BROADCASE MSG", owner.dataValues)
+    // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
     await network.sendMessage({
       chat: theChat,
       sender: {
@@ -228,7 +230,12 @@ export async function finalAction(a: Action) {
         id: botContactId,
         role: constants.chat_roles.reader,
       },
-      message: { content: textMap, id: message.id, uuid: message.uuid },
+      message: {
+        content: textMap,
+        id: message.id,
+        uuid: message.uuid,
+        replyUuid: message.replyUuid,
+      },
       type: constants.message_types.bot_res,
       success: () => ({ success: true }),
       failure: (e) => {

@@ -117,13 +117,13 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
       },
     })
     if (myBot) {
-      await models.ChatBot.create(chatBot)
-      postToBotServer(
+      const success = await postToBotServer(
         <network.Msg>{
           type: constants.message_types.bot_install,
           bot_uuid: myBot.uuid,
           message: { content: '', amount: 0, uuid: short.generate() },
           sender: {
+            id: owner.id,
             pub_key: owner.publicKey,
             alias: owner.alias,
             role: constants.chat_roles.owner,
@@ -133,6 +133,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
         myBot,
         SphinxBot.MSG_TYPE.INSTALL
       )
+      if (success) await models.ChatBot.create(chatBot)
     }
   } else {
     // keysend to bot maker
@@ -346,16 +347,16 @@ export function buildBotPayload(msg: Msg): SphinxBot.Message {
   const chat_uuid = msg.chat && msg.chat.uuid
   const m = <SphinxBot.Message>{
     id: msg.message.uuid,
+    reply_id: msg.message.replyUuid,
     channel: {
       id: chat_uuid,
       send: function () {},
     },
-    reply: function () {},
     content: msg.message.content,
     amount: msg.message.amount,
     type: msg.type,
     member: {
-      id: msg.sender.pub_key,
+      id: msg.sender.id + '' || '0',
       nickname: msg.sender.alias,
       roles: [],
     },

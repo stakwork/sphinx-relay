@@ -132,18 +132,20 @@ function installBotAsTribeAdmin(chat, bot_json) {
                 },
             });
             if (myBot) {
-                yield models_1.models.ChatBot.create(chatBot);
-                postToBotServer({
+                const success = yield postToBotServer({
                     type: constants_1.default.message_types.bot_install,
                     bot_uuid: myBot.uuid,
                     message: { content: '', amount: 0, uuid: short.generate() },
                     sender: {
+                        id: owner.id,
                         pub_key: owner.publicKey,
                         alias: owner.alias,
                         role: constants_1.default.chat_roles.owner,
                     },
                     chat: { uuid: chat_uuid },
                 }, myBot, SphinxBot.MSG_TYPE.INSTALL);
+                if (success)
+                    yield models_1.models.ChatBot.create(chatBot);
             }
         }
         else {
@@ -333,16 +335,16 @@ function buildBotPayload(msg) {
     const chat_uuid = msg.chat && msg.chat.uuid;
     const m = {
         id: msg.message.uuid,
+        reply_id: msg.message.replyUuid,
         channel: {
             id: chat_uuid,
             send: function () { },
         },
-        reply: function () { },
         content: msg.message.content,
         amount: msg.message.amount,
         type: msg.type,
         member: {
-            id: msg.sender.pub_key,
+            id: msg.sender.id + '' || '0',
             nickname: msg.sender.alias,
             roles: [],
         },

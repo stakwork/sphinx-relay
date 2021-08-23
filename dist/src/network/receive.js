@@ -118,6 +118,7 @@ function onReceive(payload, dest) {
         }
         if (isTribeOwner)
             toAddIn.isTribeOwner = true;
+        let forwardedFromContactId = 0;
         if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
             const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
             // CHECK THEY ARE IN THE GROUP if message
@@ -126,6 +127,7 @@ function onReceive(payload, dest) {
             });
             // if (!senderContact) return console.log("=> no sender contact")
             const senderContactId = senderContact && senderContact.id;
+            forwardedFromContactId = senderContactId;
             if (needsPricePerMessage && senderContactId) {
                 const senderMember = yield models_1.models.ChatMember.findOne({
                     where: { contactId: senderContactId, chatId: chat.id, tenant },
@@ -208,7 +210,7 @@ function onReceive(payload, dest) {
             // make sure alias is unique among chat members
             payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
             if (doAction)
-                forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner);
+                forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner, forwardedFromContactId);
             else
                 console.log('=> insufficient payment for this action');
         }
@@ -316,7 +318,7 @@ function uniqueifyAlias(payload, sender, chat, owner) {
         return payload;
     });
 }
-function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId, owner) {
+function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId, owner, forwardedFromContactId) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('forwardMessageToTribe')
         const tenant = owner.id;
@@ -350,6 +352,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
             success: () => { },
             receive: () => { },
             isForwarded: true,
+            forwardedFromContactId,
         });
     });
 }

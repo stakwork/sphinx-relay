@@ -113,6 +113,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
     isTribeOwner = owner.publicKey === tribeOwnerPubKey
   }
   if (isTribeOwner) toAddIn.isTribeOwner = true
+  let forwardedFromContactId = 0
   if (isTribeOwner && typesToForward.includes(payload.type)) {
     const needsPricePerMessage = typesThatNeedPricePerMessage.includes(
       payload.type
@@ -123,6 +124,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
     })
     // if (!senderContact) return console.log("=> no sender contact")
     const senderContactId = senderContact && senderContact.id
+    forwardedFromContactId = senderContactId
     if (needsPricePerMessage && senderContactId) {
       const senderMember = await models.ChatMember.findOne({
         where: { contactId: senderContactId, chatId: chat.id, tenant },
@@ -213,7 +215,8 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
         senderContact,
         realSatsContactId,
         amtToForward,
-        owner
+        owner,
+        forwardedFromContactId
       )
     else console.log('=> insufficient payment for this action')
   }
@@ -322,7 +325,8 @@ async function forwardMessageToTribe(
   sender,
   realSatsContactId,
   amtToForwardToRealSatsContactId,
-  owner
+  owner,
+  forwardedFromContactId
 ) {
   // console.log('forwardMessageToTribe')
   const tenant = owner.id
@@ -362,6 +366,7 @@ async function forwardMessageToTribe(
     success: () => {},
     receive: () => {},
     isForwarded: true,
+    forwardedFromContactId,
   })
 }
 

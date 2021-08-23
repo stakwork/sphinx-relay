@@ -21,7 +21,7 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 function sendMessage(params) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, realSatsContactId, } = params;
+        const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, forwardedFromContactId, realSatsContactId, } = params;
         if (!chat || !sender)
             return;
         const tenant = sender.id;
@@ -68,7 +68,7 @@ function sendMessage(params) {
                 if (logger_1.logging.Network) {
                     console.log('[Network] => isTribeAdmin msg sending...', msg);
                 }
-                const isBotMsg = yield intercept.isBotMsg(msg, true, sender);
+                const isBotMsg = yield intercept.isBotMsg(msg, true, sender, forwardedFromContactId);
                 if (isBotMsg === true) {
                     if (logger_1.logging.Network) {
                         console.log('[Network] => isBotMsg');
@@ -146,7 +146,7 @@ function sendMessage(params) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
-            // console.log('-> personalized msg',m)
+            // console.log('-> personalized msg', m)
             const opts = {
                 dest: destkey,
                 data: m,
@@ -195,6 +195,7 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
             // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
             try {
                 if (mqttTopic) {
+                    console.log('TTTTTTRRIIIII PUBLICSH', data);
                     yield tribes.publish(mqttTopic, data, ownerPubkey, function (err) {
                         if (!replayingHistory) {
                             if (mqttTopic)

@@ -10,6 +10,7 @@ export interface Msg {
     uuid: string
   }
   sender: {
+    id?: number
     pub_key: string
     alias: string
     role: number
