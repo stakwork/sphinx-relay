@@ -67,6 +67,9 @@ function makeBotsJSON(tribeID) {
             if (bot.botPrefix === '/testbot') {
                 return testBotJSON();
             }
+            if (bot.botPrefix === '/bet') {
+                return betBotJSON();
+            }
             return {
                 prefix: bot.botPrefix,
                 price: bot.pricePerUse || 0,
@@ -103,6 +106,22 @@ function testBotJSON() {
                 min_price: 20,
                 max_price: 50,
                 price_index: 1,
+                admin_only: false,
+            },
+        ],
+    };
+}
+function betBotJSON() {
+    return {
+        prefix: '/bet',
+        price: 0,
+        commands: [
+            {
+                command: '*',
+                price: 0,
+                min_price: 10,
+                max_price: 100000,
+                price_index: 3,
                 admin_only: false,
             },
         ],

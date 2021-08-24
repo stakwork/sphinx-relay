@@ -51,8 +51,6 @@ export async function processAction(req, res) {
     reply_uuid,
   } = body
 
-  console.log('=> incoming', msg_uuid, reply_uuid)
-
   if (!bot_id) return failure(res, 'no bot_id')
   const bot = await models.Bot.findOne({ where: { id: bot_id } })
   if (!bot) return failure(res, 'no bot')
@@ -72,6 +70,7 @@ export async function processAction(req, res) {
     amount: amount || 0,
     bot_name: bot.name,
     chat_uuid: chat_uuid || '',
+    msg_uuid: msg_uuid || '',
     reply_uuid: reply_uuid || '',
   }
 
@@ -198,7 +197,7 @@ export async function finalAction(a: Action) {
 
     const msg: { [k: string]: any } = {
       chatId: theChat.id,
-      uuid: short.generate(),
+      uuid: msg_uuid || short.generate(),
       type: constants.message_types.bot_res,
       sender: botContactId,
       amount: amount || 0,

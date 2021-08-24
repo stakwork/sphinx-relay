@@ -36,7 +36,6 @@ function processAction(req, res) {
             }
         }
         const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, } = body;
-        console.log('=> incoming', msg_uuid, reply_uuid);
         if (!bot_id)
             return res_1.failure(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
@@ -56,6 +55,7 @@ function processAction(req, res) {
             amount: amount || 0,
             bot_name: bot.name,
             chat_uuid: chat_uuid || '',
+            msg_uuid: msg_uuid || '',
             reply_uuid: reply_uuid || '',
         };
         try {
@@ -175,7 +175,7 @@ function finalAction(a) {
             const botContactId = -1;
             const msg = {
                 chatId: theChat.id,
-                uuid: short.generate(),
+                uuid: msg_uuid || short.generate(),
                 type: constants_1.default.message_types.bot_res,
                 sender: botContactId,
                 amount: amount || 0,
