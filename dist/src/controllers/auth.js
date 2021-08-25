@@ -19,7 +19,7 @@ function verifyAuthRequest(req, res) {
             return res_1.failure(res, 'no owner');
         try {
             const sc = [jwt_1.scopes.PERSONAL];
-            const jot = jwt_1.createJWT(req.owner.publicKey, sc);
+            const jot = jwt_1.createJWT(req.owner.publicKey, sc, 10080); // one week
             const bod = {
                 pubkey: req.owner.publicKey,
                 alias: req.owner.alias,

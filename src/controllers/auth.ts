@@ -16,7 +16,7 @@ export async function verifyAuthRequest(req, res) {
   if (!req.owner) return failure(res, 'no owner')
   try {
     const sc = [scopes.PERSONAL]
-    const jot = createJWT(req.owner.publicKey, sc)
+    const jot = createJWT(req.owner.publicKey, sc, 10080) // one week
     const bod: MeInfo = {
       pubkey: req.owner.publicKey,
       alias: req.owner.alias,
