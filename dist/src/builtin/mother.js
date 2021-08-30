@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.init = void 0;
 // import * as SphinxBot from '../../../sphinx-bot'
 const Sphinx = require("sphinx-bot");
-const api_1 = require("../controllers/api");
+const botapi_1 = require("../controllers/botapi");
 const bots_1 = require("../controllers/bots");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
@@ -34,7 +34,7 @@ const builtInBotNames = {
 };
 function init() {
     const client = new Sphinx.Client();
-    client.login('_', api_1.finalAction);
+    client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         // console.log("MOTHERBOT GOT A MESSAGE", message);
         const arr = (message.content && message.content.split(' ')) || [];

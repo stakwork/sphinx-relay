@@ -12,7 +12,7 @@ import * as payments from './payment'
 import * as subcriptions from './subscriptions'
 import * as uploads from './uploads'
 import * as confirmations from './confirmations'
-import * as actions from './api'
+import * as actions from './botapi'
 import * as queries from './queries'
 import { checkTag } from '../utils/gitinfo'
 import * as timers from '../utils/timers'
@@ -21,6 +21,7 @@ import constants from '../constants'
 import * as feed from './feed'
 import { failure } from '../utils/res'
 import * as auth from './auth'
+import * as personal from './api/personal'
 
 export async function set(app) {
   builtInBots.init()
@@ -63,9 +64,10 @@ export async function set(app) {
   app.post('/contacts', contacts.createContact)
   app.delete('/contacts/:id', contacts.deleteContact)
   app.get('/latest_contacts', contacts.getLatestContacts)
-  app.post('/profile', contacts.createPeopleProfile)
-  app.delete('/profile', contacts.deletePersonProfile)
-  app.post('/public_pic', contacts.uploadPublicPic)
+  app.post('/profile', personal.createPeopleProfile)
+  app.delete('/profile', personal.deletePersonProfile)
+  app.post('/public_pic', personal.uploadPublicPic)
+  app.get('/refresh_jwt', personal.refreshJWT)
   app.post('/generate_external', contacts.generateOwnerWithExternalSigner)
 
   app.get('/msgs', messages.getMsgs)

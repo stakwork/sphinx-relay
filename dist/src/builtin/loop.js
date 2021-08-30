@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.init = void 0;
 const Sphinx = require("sphinx-bot");
-const api_1 = require("../controllers/api");
+const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
 const child_process_1 = require("child_process");
@@ -27,7 +27,7 @@ function init() {
         return;
     initted = true;
     const client = new Sphinx.Client();
-    client.login('_', api_1.finalAction);
+    client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         if (!message.content)
             return;

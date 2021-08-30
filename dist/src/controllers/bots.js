@@ -16,7 +16,7 @@ const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const network = require("../network");
-const api_1 = require("./api");
+const botapi_1 = require("./botapi");
 const socket = require("../utils/socket");
 const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
@@ -395,7 +395,7 @@ function receiveBotRes(payload) {
             // IF IS TRIBE ADMIN forward to the tribe
             // received the entire action?
             const bot_id = payload.bot_id;
-            api_1.finalAction({
+            botapi_1.finalAction({
                 bot_id,
                 action,
                 bot_name,

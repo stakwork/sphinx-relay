@@ -1,12 +1,10 @@
-import * as network from '../network'
-import { models } from '../models'
-import * as short from 'short-uuid'
-import * as rsa from '../crypto/rsa'
-import * as jsonUtils from '../utils/json'
-import * as socket from '../utils/socket'
-import { success, failure } from '../utils/res'
-import constants from '../constants'
-import { getTribeOwnersChatByUUID } from '../utils/tribes'
+import * as network from '../../network'
+import { models } from '../../models'
+import { success, failure } from '../../utils/res'
+import constants from '../../constants'
+import { getTribeOwnersChatByUUID } from '../../utils/tribes'
+import broadcast from './broadcast'
+import pay from './pay'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -24,6 +22,7 @@ export interface Action {
   msg_uuid?: string
   reply_uuid?: string
   route_hint?: string
+  recipient_id?: number
 }
 
 export async function processAction(req, res) {
@@ -49,6 +48,7 @@ export async function processAction(req, res) {
     chat_uuid,
     msg_uuid,
     reply_uuid,
+    recipient_id,
   } = body
 
   if (!bot_id) return failure(res, 'no bot_id')
@@ -72,6 +72,7 @@ export async function processAction(req, res) {
     chat_uuid: chat_uuid || '',
     msg_uuid: msg_uuid || '',
     reply_uuid: reply_uuid || '',
+    recipient_id: recipient_id ? parseInt(recipient_id) : 0,
   }
 
   try {
@@ -174,75 +175,11 @@ export async function finalAction(a: Action) {
     // } catch (e) {
     //     throw e
     // }
+  } else if (action === 'pay') {
+    pay(a)
   } else if (action === 'broadcast') {
-    console.log('=> BOT BROADCAST')
-    if (!content) return console.log('no content')
-    if (!chat_uuid) return console.log('no chat_uuid')
-    const theChat = await getTribeOwnersChatByUUID(chat_uuid)
-    if (!(theChat && theChat.id)) return console.log('no chat')
-    if (theChat.type !== constants.chat_types.tribe)
-      return console.log('not a tribe')
-    const owner = await models.Contact.findOne({
-      where: { id: theChat.tenant },
-    })
-    const tenant: number = owner.id
-
-    const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
-    const encryptedText = rsa.encrypt(theChat.groupKey, content)
-    const textMap = { chat: encryptedText }
-    var date = new Date()
-    date.setMilliseconds(0)
-    const alias = bot_name || 'Bot'
-    const botContactId = -1
-
-    const msg: { [k: string]: any } = {
-      chatId: theChat.id,
-      uuid: msg_uuid || short.generate(),
-      type: constants.message_types.bot_res,
-      sender: botContactId,
-      amount: amount || 0,
-      date: date,
-      messageContent: encryptedForMeText,
-      remoteMessageContent: JSON.stringify(textMap),
-      status: constants.statuses.confirmed,
-      replyUuid: reply_uuid || '',
-      createdAt: date,
-      updatedAt: date,
-      senderAlias: alias,
-      tenant,
-    }
-    const message = await models.Message.create(msg)
-    socket.sendJson(
-      {
-        type: 'message',
-        response: jsonUtils.messageToJson(message, theChat, owner),
-      },
-      tenant
-    )
-    // console.log("BOT BROADCASE MSG", owner.dataValues)
-    // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
-    await network.sendMessage({
-      chat: theChat,
-      sender: {
-        ...owner.dataValues,
-        alias,
-        id: botContactId,
-        role: constants.chat_roles.reader,
-      },
-      message: {
-        content: textMap,
-        id: message.id,
-        uuid: message.uuid,
-        replyUuid: message.replyUuid,
-      },
-      type: constants.message_types.bot_res,
-      success: () => ({ success: true }),
-      failure: (e) => {
-        return console.log(e)
-      },
-      isForwarded: true,
-    })
+    broadcast(a)
   } else {
-    return console.log('no action')
+    return console.log('invalid action')
   }
 }

@@ -10,15 +10,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.finalAction = exports.processAction = void 0;
-const network = require("../network");
-const models_1 = require("../models");
-const short = require("short-uuid");
-const rsa = require("../crypto/rsa");
-const jsonUtils = require("../utils/json");
-const socket = require("../utils/socket");
-const res_1 = require("../utils/res");
-const constants_1 = require("../constants");
-const tribes_1 = require("../utils/tribes");
+const network = require("../../network");
+const models_1 = require("../../models");
+const res_1 = require("../../utils/res");
+const constants_1 = require("../../constants");
+const tribes_1 = require("../../utils/tribes");
+const broadcast_1 = require("./broadcast");
+const pay_1 = require("./pay");
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> processAction', req.body);
@@ -35,7 +33,7 @@ function processAction(req, res) {
                 return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, } = body;
         if (!bot_id)
             return res_1.failure(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
@@ -57,6 +55,7 @@ function processAction(req, res) {
             chat_uuid: chat_uuid || '',
             msg_uuid: msg_uuid || '',
             reply_uuid: reply_uuid || '',
+            recipient_id: recipient_id ? parseInt(recipient_id) : 0,
         };
         try {
             const r = yield finalAction(a);
@@ -151,72 +150,16 @@ function finalAction(a) {
             //     throw e
             // }
         }
+        else if (action === 'pay') {
+            pay_1.default(a);
+        }
         else if (action === 'broadcast') {
-            console.log('=> BOT BROADCAST');
-            if (!content)
-                return console.log('no content');
-            if (!chat_uuid)
-                return console.log('no chat_uuid');
-            const theChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
-            if (!(theChat && theChat.id))
-                return console.log('no chat');
-            if (theChat.type !== constants_1.default.chat_types.tribe)
-                return console.log('not a tribe');
-            const owner = yield models_1.models.Contact.findOne({
-                where: { id: theChat.tenant },
-            });
-            const tenant = owner.id;
-            const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
-            const encryptedText = rsa.encrypt(theChat.groupKey, content);
-            const textMap = { chat: encryptedText };
-            var date = new Date();
-            date.setMilliseconds(0);
-            const alias = bot_name || 'Bot';
-            const botContactId = -1;
-            const msg = {
-                chatId: theChat.id,
-                uuid: msg_uuid || short.generate(),
-                type: constants_1.default.message_types.bot_res,
-                sender: botContactId,
-                amount: amount || 0,
-                date: date,
-                messageContent: encryptedForMeText,
-                remoteMessageContent: JSON.stringify(textMap),
-                status: constants_1.default.statuses.confirmed,
-                replyUuid: reply_uuid || '',
-                createdAt: date,
-                updatedAt: date,
-                senderAlias: alias,
-                tenant,
-            };
-            const message = yield models_1.models.Message.create(msg);
-            socket.sendJson({
-                type: 'message',
-                response: jsonUtils.messageToJson(message, theChat, owner),
-            }, tenant);
-            // console.log("BOT BROADCASE MSG", owner.dataValues)
-            // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
-            yield network.sendMessage({
-                chat: theChat,
-                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }),
-                message: {
-                    content: textMap,
-                    id: message.id,
-                    uuid: message.uuid,
-                    replyUuid: message.replyUuid,
-                },
-                type: constants_1.default.message_types.bot_res,
-                success: () => ({ success: true }),
-                failure: (e) => {
-                    return console.log(e);
-                },
-                isForwarded: true,
-            });
+            broadcast_1.default(a);
         }
         else {
-            return console.log('no action');
+            return console.log('invalid action');
         }
     });
 }
 exports.finalAction = finalAction;
-//# sourceMappingURL=api.js.map
+//# sourceMappingURL=index.js.map

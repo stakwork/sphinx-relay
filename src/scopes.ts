@@ -7,7 +7,7 @@ export enum scopes {
 }
 
 export const routes = {
-  [scopes.PERSONAL]: ['/profile', '/public_pic'],
+  [scopes.PERSONAL]: ['/profile', '/public_pic', '/refresh_jwt'],
 }
 
 export function allowedJwtRoutes(jwt, path): boolean {

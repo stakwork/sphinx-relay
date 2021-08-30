@@ -1,6 +1,6 @@
 // import * as SphinxBot from '../../../sphinx-bot'
 import * as Sphinx from 'sphinx-bot'
-import { finalAction } from '../controllers/api'
+import { finalAction } from '../controllers/botapi'
 import { installBotAsTribeAdmin } from '../controllers/bots'
 import { models } from '../models'
 import fetch from 'node-fetch'

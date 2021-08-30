@@ -24,7 +24,7 @@ const payments = require("./payment");
 const subcriptions = require("./subscriptions");
 const uploads = require("./uploads");
 const confirmations = require("./confirmations");
-const actions = require("./api");
+const actions = require("./botapi");
 const queries = require("./queries");
 const gitinfo_1 = require("../utils/gitinfo");
 const timers = require("../utils/timers");
@@ -33,6 +33,7 @@ const constants_1 = require("../constants");
 const feed = require("./feed");
 const res_1 = require("../utils/res");
 const auth = require("./auth");
+const personal = require("./api/personal");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -64,9 +65,10 @@ function set(app) {
         app.post('/contacts', contacts.createContact);
         app.delete('/contacts/:id', contacts.deleteContact);
         app.get('/latest_contacts', contacts.getLatestContacts);
-        app.post('/profile', contacts.createPeopleProfile);
-        app.delete('/profile', contacts.deletePersonProfile);
-        app.post('/public_pic', contacts.uploadPublicPic);
+        app.post('/profile', personal.createPeopleProfile);
+        app.delete('/profile', personal.deletePersonProfile);
+        app.post('/public_pic', personal.uploadPublicPic);
+        app.get('/refresh_jwt', personal.refreshJWT);
         app.post('/generate_external', contacts.generateOwnerWithExternalSigner);
         app.get('/msgs', messages.getMsgs);
         app.get('/allmessages', messages.getAllMessages);

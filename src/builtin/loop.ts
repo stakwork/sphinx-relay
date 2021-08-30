@@ -1,5 +1,5 @@
 import * as Sphinx from 'sphinx-bot'
-import { finalAction } from '../controllers/api'
+import { finalAction } from '../controllers/botapi'
 import { models } from '../models'
 import constants from '../constants'
 import { spawn } from 'child_process'

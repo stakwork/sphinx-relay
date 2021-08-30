@@ -129,7 +129,7 @@ function betBotJSON(): BotJSON {
         price: 0,
         min_price: 10,
         max_price: 100000,
-        price_index: 3,
+        price_index: 2,
         admin_only: false,
       },
     ],
