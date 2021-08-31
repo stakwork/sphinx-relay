@@ -7,7 +7,7 @@ import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 
 export default async function pay(a) {
-  const { amount, chat_uuid, msg_uuid, reply_uuid, recipient_id } = a
+  const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id } = a
 
   console.log('=> BOT PAY', JSON.stringify(a, null, 2))
   if (!recipient_id) return console.log('no recipient_id')
@@ -20,7 +20,8 @@ export default async function pay(a) {
     where: { id: theChat.tenant },
   })
   const tenant: number = owner.id
-  const alias = owner.alias
+  const alias = bot_name || owner.alias
+  const botContactId = -1
 
   var date = new Date()
   date.setMilliseconds(0)
@@ -28,7 +29,7 @@ export default async function pay(a) {
     chatId: theChat.id,
     uuid: msg_uuid || short.generate(),
     type: constants.message_types.boost,
-    sender: tenant, // tribe owner is escrow holder
+    sender: botContactId, // tribe owner is escrow holder
     amount: amount || 0,
     date: date,
     status: constants.statuses.confirmed,
@@ -51,6 +52,8 @@ export default async function pay(a) {
     chat: theChat,
     sender: {
       ...owner.dataValues,
+      alias,
+      id: botContactId,
       role: constants.chat_roles.owner,
     },
     message: {

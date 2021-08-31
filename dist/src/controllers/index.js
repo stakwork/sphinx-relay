@@ -65,11 +65,11 @@ function set(app) {
         app.post('/contacts', contacts.createContact);
         app.delete('/contacts/:id', contacts.deleteContact);
         app.get('/latest_contacts', contacts.getLatestContacts);
+        app.post('/generate_external', contacts.generateOwnerWithExternalSigner);
         app.post('/profile', personal.createPeopleProfile);
         app.delete('/profile', personal.deletePersonProfile);
         app.post('/public_pic', personal.uploadPublicPic);
         app.get('/refresh_jwt', personal.refreshJWT);
-        app.post('/generate_external', contacts.generateOwnerWithExternalSigner);
         app.get('/msgs', messages.getMsgs);
         app.get('/allmessages', messages.getAllMessages);
         app.get('/messages', messages.getMessages);

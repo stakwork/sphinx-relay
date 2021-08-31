@@ -207,19 +207,19 @@ export async function addExtraHost(
   client.subscribe(`${pubkey}/#`, optz)
 }
 
-// if host includes colon, remove it
-function mqttURL(host) {
-  if (host.includes(':')) {
-    const arr = host.split(':')
-    host = arr[0]
+function mqttURL(h) {
+  let host = config.mqtt_host || h
+  let protocol = 'tls'
+  if (config.tribes_insecure) {
+    protocol = 'tcp'
   }
   let port = '8883'
-  let protocol = 'tls'
   if (config.tribes_mqtt_port) {
     port = config.tribes_mqtt_port
   }
-  if (config.tribes_insecure) {
-    protocol = 'tcp'
+  if (host.includes(':')) {
+    const arr = host.split(':')
+    host = arr[0]
   }
   return `${protocol}://${host}:${port}`
 }
