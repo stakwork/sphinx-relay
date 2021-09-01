@@ -70,7 +70,7 @@ export async function saveLsat(
 
   let lsat: Lsat
   try {
-    lsat = Lsat.fromMacaron(macaroon, paymentRequest)
+    lsat = Lsat.fromMacaroon(macaroon, paymentRequest)
   } catch (e) {
     if (logging.Lsat) {
       console.error('[save lsat] Problem getting Lsat:', e.message)
@@ -80,8 +80,17 @@ export async function saveLsat(
   }
 
   const lsatIdentifier = lsat.id
+  let preimage
 
-  const preimage = await payForLsat(paymentRequest)
+  try {
+    preimage = await payForLsat(paymentRequest)
+  } catch (e) {
+    if (logging.Lsat)
+      console.error('[pay for lsat] Problem paying for lsat:', e)
+
+    res.status(500)
+    return failure(res, 'Could not pay for lsat')
+  }
 
   if (!preimage) {
     res.status(400)

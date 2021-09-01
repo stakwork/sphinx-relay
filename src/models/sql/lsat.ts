@@ -10,7 +10,7 @@ import {
 @Table({
   tableName: 'sphinx_lsats',
   underscored: true,
-  indexes: [{ unique: true, fields: ['lsat_id', 'lsat_identifier'] }],
+  indexes: [{ unique: true, fields: ['id', 'lsat_identifier'] }],
 })
 export default class Lsat extends Model<Lsat> {
   @Column({
@@ -18,7 +18,7 @@ export default class Lsat extends Model<Lsat> {
     primaryKey: true,
     autoIncrement: true,
   })
-  lsatId: number
+  id: number
 
   @Column({
     type: DataType.STRING,
@@ -29,7 +29,7 @@ export default class Lsat extends Model<Lsat> {
   createdAt: Date
 
   @UpdatedAt
-  updatedOn: Date
+  updatedAt: Date
 
   @Column
   macaroon: string
