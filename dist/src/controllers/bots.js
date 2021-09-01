@@ -169,16 +169,17 @@ function keysendBotInstall(b, chat_uuid, owner) {
     });
 }
 exports.keysendBotInstall = keysendBotInstall;
-function keysendBotCmd(msg, b, owner) {
+function keysendBotCmd(msg, b, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         const amount = msg.message.amount || 0;
         const amt = Math.max(amount, b.pricePerUse);
-        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, owner, msg.message.content, msg.sender && msg.sender.role, b.botMakerRouteHint);
+        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, sender, msg.message.content, msg.sender && msg.sender.role, b.botMakerRouteHint, msg.message.uuid || '', msg.message.replyUuid || '', sender.id);
     });
 }
 exports.keysendBotCmd = keysendBotCmd;
-function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owner, content, sender_role, botmaker_route_hint) {
+function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, sender, content, sender_role, botmaker_route_hint, msg_uuid, reply_uuid, sender_id) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('====> BOT KEYSEND SENDER ID', sender_id);
         const dest = botmaker_pubkey;
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
@@ -189,17 +190,27 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, owne
                 type: msg_type,
                 bot_uuid,
                 chat: { uuid: chat_uuid },
-                message: { content: content || '', amount: amt, uuid: short.generate() },
+                message: {
+                    content: content || '',
+                    amount: amt,
+                    uuid: msg_uuid || short.generate(),
+                },
                 sender: {
-                    pub_key: owner.publicKey,
-                    alias: owner.alias,
+                    pub_key: sender.publicKey,
+                    alias: sender.alias,
                     role: sender_role || constants_1.default.chat_roles.reader,
-                    route_hint: owner.routeHint || '',
+                    route_hint: sender.routeHint || '',
                 },
             },
         };
+        if (sender_id) {
+            opts.data.sender.id = sender_id;
+        }
+        if (reply_uuid) {
+            opts.data.message.replyUuid = reply_uuid;
+        }
         try {
-            yield network.signAndSend(opts, owner);
+            yield network.signAndSend(opts, sender);
             return true;
         }
         catch (e) {
@@ -240,11 +251,17 @@ function receiveBotInstall(payload) {
             console.log('CREATE bot MEMBER', botMember);
             yield models_1.models.BotMember.create(botMember);
         }
-        //- need to pub back MQTT bot_install??
-        //- and if the pubkey=the botOwnerPubkey, confirm chatbot?
-        // NO - send a /guildjoin msg to BOT lib!
-        // and add routes to lib express with the strings for MSG_TYPE
-        // and here - postToBotServer /install (also do this for /uninstall)
+        const contact = yield models_1.models.Contact.findOne({
+            where: {
+                tenant,
+                publicKey: sender_pub_key,
+            },
+        });
+        if (!contact) {
+            return console.log('=> receiveBotInstall no contact');
+        }
+        // sender id needs to be in the msg
+        payload.sender.id = contact.id;
         postToBotServer(payload, bot, SphinxBot.MSG_TYPE.INSTALL);
     });
 }
@@ -253,11 +270,12 @@ exports.receiveBotInstall = receiveBotInstall;
 function receiveBotCmd(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         if (logger_1.logging.Network)
-            console.log('=> receiveBotCmd', payload);
+            console.log('=> receiveBotCmd');
         const dat = payload.content || payload;
-        // const sender_pub_key = dat.sender.pub_key
+        const sender_pub_key = dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
         const chat_uuid = dat.chat && dat.chat.uuid;
+        const sender_id = dat.sender && dat.sender.id;
         const owner = dat.owner;
         const tenant = owner.id;
         if (!chat_uuid)
@@ -281,6 +299,18 @@ function receiveBotCmd(payload) {
         if (!botMember)
             return;
         botMember.update({ msgCount: (botMember || 0) + 1 });
+        const contact = yield models_1.models.Contact.findOne({
+            where: {
+                tenant,
+                publicKey: sender_pub_key,
+            },
+        });
+        if (!contact) {
+            return console.log('=> receiveBotInstall no contact');
+        }
+        // sender id needs to be in the msg
+        console.log('=====> THE SENDER ID!!!~', sender_id);
+        payload.sender.id = sender_id || '0';
         console.log('=> post to remote BOT!!!!! bot owner');
         postToBotServer(payload, bot, SphinxBot.MSG_TYPE.MESSAGE);
         // forward to the entire Action back over MQTT
@@ -344,7 +374,7 @@ function buildBotPayload(msg) {
         amount: msg.message.amount,
         type: msg.type,
         member: {
-            id: msg.sender.id + '' || '0',
+            id: msg.sender.id ? msg.sender.id + '' : '0',
             nickname: msg.sender.alias,
             roles: [],
         },
@@ -372,6 +402,7 @@ function receiveBotRes(payload) {
         const sender_pub_key = dat.sender.pub_key;
         const amount = dat.message.amount || 0;
         const msg_uuid = dat.message.uuid || '';
+        const reply_uuid = dat.message.replyUuid || '';
         const content = dat.message.content;
         const action = dat.action;
         const bot_name = dat.bot_name;
@@ -402,6 +433,8 @@ function receiveBotRes(payload) {
                 chat_uuid,
                 content,
                 amount,
+                reply_uuid,
+                msg_uuid,
             });
         }
         else {
@@ -423,6 +456,7 @@ function receiveBotRes(payload) {
             const msg = {
                 chatId: chat.id,
                 uuid: msg_uuid,
+                replyUuid: reply_uuid,
                 type: constants_1.default.message_types.bot_res,
                 sender: (sender && sender.id) || 0,
                 amount: amount || 0,
