@@ -35,7 +35,8 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
             if (!r.ok) {
                 throw 'failed to create or edit person ' + r.status;
             }
-            // const j = await r.json()
+            const person = yield r.json();
+            return person;
         }
         catch (e) {
             console.log('[tribes] unauthorized to create person');

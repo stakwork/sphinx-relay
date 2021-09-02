@@ -37,7 +37,7 @@ export async function createPeopleProfile(req, res) {
     //   return
     // }
 
-    await people.createOrEditPerson(
+    const person = await people.createOrEditPerson(
       {
         host: host || config.tribes_host,
         owner_alias: owner_alias || owner.alias,
@@ -55,7 +55,7 @@ export async function createPeopleProfile(req, res) {
 
     await owner.update({ priceToMeet: priceToMeet || 0 })
 
-    success(res, jsonUtils.contactToJson(owner))
+    success(res, person)
   } catch (e) {
     failure(res, e)
   }

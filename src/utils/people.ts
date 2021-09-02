@@ -42,7 +42,8 @@ export async function createOrEditPerson(
     if (!r.ok) {
       throw 'failed to create or edit person ' + r.status
     }
-    // const j = await r.json()
+    const person = await r.json()
+    return person
   } catch (e) {
     console.log('[tribes] unauthorized to create person')
     throw e
