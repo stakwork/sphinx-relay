@@ -39,7 +39,7 @@ function createPeopleProfile(req, res) {
             //   failure(res, 'mismatched pubkey')
             //   return
             // }
-            yield people.createOrEditPerson({
+            const person = yield people.createOrEditPerson({
                 host: host || config.tribes_host,
                 owner_alias: owner_alias || owner.alias,
                 description: description || '',
@@ -52,7 +52,7 @@ function createPeopleProfile(req, res) {
                 extras: extras || {},
             }, id || null);
             yield owner.update({ priceToMeet: priceToMeet || 0 });
-            res_1.success(res, jsonUtils.contactToJson(owner));
+            res_1.success(res, person);
         }
         catch (e) {
             res_1.failure(res, e);

@@ -173,7 +173,7 @@ function keysendBotCmd(msg, b, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         const amount = msg.message.amount || 0;
         const amt = Math.max(amount, b.pricePerUse);
-        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, sender, msg.message.content, msg.sender && msg.sender.role, b.botMakerRouteHint, msg.message.uuid || '', msg.message.replyUuid || '', sender.id);
+        return yield botKeysend(constants_1.default.message_types.bot_cmd, b.botUuid, b.botMakerPubkey, amt, msg.chat.uuid, sender, msg.message.content, msg.sender && msg.sender.role, b.botMakerRouteHint, msg.message.uuid || '', msg.message.replyUuid || '', msg.sender && msg.sender.id);
     });
 }
 exports.keysendBotCmd = keysendBotCmd;

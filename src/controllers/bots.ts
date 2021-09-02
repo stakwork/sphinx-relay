@@ -181,7 +181,7 @@ export async function keysendBotCmd(msg, b, sender): Promise<boolean> {
     b.botMakerRouteHint,
     msg.message.uuid || '',
     msg.message.replyUuid || '',
-    sender.id
+    msg.sender && msg.sender.id
   )
 }
 
