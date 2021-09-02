@@ -7,6 +7,7 @@ import { loadConfig } from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
 import { failure, success } from './res'
 const fs = require('fs')
+const net = require('net')
 
 const config = loadConfig()
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
@@ -28,8 +29,12 @@ export async function getQR(): Promise<string> {
         }
       } catch (e) {}
     }
-    const port = config.node_http_port
-    theIP = port ? `${theIP}:${port}` : theIP
+    const isIP = net.isIP(theIP)
+    if (isIP) {
+      // add port if its an IP address
+      const port = config.node_http_port
+      theIP = port ? `${theIP}:${port}` : theIP
+    }
   }
   if (!theIP.includes('://')) {
     // no protocol

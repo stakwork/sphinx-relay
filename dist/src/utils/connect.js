@@ -19,6 +19,7 @@ const config_1 = require("./config");
 const queries_1 = require("../controllers/queries");
 const res_1 = require("./res");
 const fs = require('fs');
+const net = require('net');
 const config = config_1.loadConfig();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 function getQR() {
@@ -40,8 +41,12 @@ function getQR() {
                 }
                 catch (e) { }
             }
-            const port = config.node_http_port;
-            theIP = port ? `${theIP}:${port}` : theIP;
+            const isIP = net.isIP(theIP);
+            if (isIP) {
+                // add port if its an IP address
+                const port = config.node_http_port;
+                theIP = port ? `${theIP}:${port}` : theIP;
+            }
         }
         if (!theIP.includes('://')) {
             // no protocol
