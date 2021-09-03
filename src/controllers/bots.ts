@@ -160,8 +160,6 @@ export async function keysendBotInstall(
     b.pricePerUse,
     chat_uuid,
     owner,
-    '',
-    undefined,
     b.botMakerRouteHint
   )
 }
@@ -176,12 +174,8 @@ export async function keysendBotCmd(msg, b, sender): Promise<boolean> {
     amt,
     msg.chat.uuid,
     sender,
-    msg.message.content,
-    msg.sender && msg.sender.role,
     b.botMakerRouteHint,
-    msg.message.uuid || '',
-    msg.message.replyUuid || '',
-    msg.sender && msg.sender.id
+    msg
   )
 }
 
@@ -192,14 +186,17 @@ export async function botKeysend(
   amount,
   chat_uuid: string,
   sender,
-  content?: string,
-  sender_role?: number,
   botmaker_route_hint?: string,
-  msg_uuid?: string,
-  reply_uuid?: string,
-  sender_id?: number
+  msg?: Msg
 ): Promise<boolean> {
-  console.log('====> BOT KEYSEND SENDER ID', sender_id)
+  const content = (msg && msg.message.content) || ''
+  const sender_role =
+    (msg && msg.sender && msg.sender.role) || constants.chat_roles.reader
+  const msg_uuid = (msg && msg.message.uuid) || short.generate()
+
+  const sender_id = (msg && msg.sender && msg.sender.id) || sender.id
+  const reply_uuid = msg && msg.message.replyUuid
+
   const dest = botmaker_pubkey
   const amt = Math.max(amount || constants.min_sat_amount)
   const opts = {
@@ -211,14 +208,14 @@ export async function botKeysend(
       bot_uuid,
       chat: { uuid: chat_uuid },
       message: {
-        content: content || '',
+        content: content,
         amount: amt,
-        uuid: msg_uuid || short.generate(),
+        uuid: msg_uuid,
       },
       sender: {
         pub_key: sender.publicKey,
         alias: sender.alias,
-        role: sender_role || constants.chat_roles.reader,
+        role: sender_role,
         route_hint: sender.routeHint || '',
       },
     },
@@ -229,6 +226,7 @@ export async function botKeysend(
   if (reply_uuid) {
     opts.data.message.replyUuid = reply_uuid
   }
+  console.log('BOT MSG TO SEND!!!', opts.data)
   try {
     await network.signAndSend(opts, sender)
     return true
@@ -330,10 +328,8 @@ export async function receiveBotCmd(payload) {
   }
 
   // sender id needs to be in the msg
-  console.log('=====> THE SENDER ID!!!~', sender_id)
   payload.sender.id = sender_id || '0'
 
-  console.log('=> post to remote BOT!!!!! bot owner')
   postToBotServer(payload, bot, SphinxBot.MSG_TYPE.MESSAGE)
   // forward to the entire Action back over MQTT
 }
@@ -358,12 +354,6 @@ export async function postToBotServer(
   } else {
     url += '/' + route
   }
-  if (logging.Network)
-    console.log(
-      '=> post to bot server now!',
-      url,
-      JSON.stringify(buildBotPayload(msg))
-    ) //, payload)
   try {
     const r = await fetch(url, {
       method: 'POST',
@@ -448,6 +438,7 @@ export async function receiveBotRes(payload) {
     // IF IS TRIBE ADMIN forward to the tribe
     // received the entire action?
     const bot_id = payload.bot_id
+    const recipient_id = payload.recipient_id
     finalAction(<Action>{
       bot_id,
       action,
@@ -457,6 +448,7 @@ export async function receiveBotRes(payload) {
       amount,
       reply_uuid,
       msg_uuid,
+      recipient_id,
     })
   } else {
     const theChat = await models.Chat.findOne({

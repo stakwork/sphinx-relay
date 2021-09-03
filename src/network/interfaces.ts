@@ -16,4 +16,8 @@ export interface Msg {
     role: number
     route_hint?: string
   }
+  bot_id?: any
+  bot_name?: string
+  recipient_id?: any
+  action?: string
 }

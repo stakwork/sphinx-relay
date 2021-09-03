@@ -69,7 +69,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, } = a;
+        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id, } = a;
         let myBot;
         // not for tribe admin, for bot maker
         if (bot_id) {
@@ -116,11 +116,14 @@ function finalAction(a) {
                 chat: { uuid: chat_uuid || '' },
                 sender: {
                     pub_key: String(owner.publicKey),
-                    alias: bot_name,
+                    alias: bot_name || '',
                     role: 0,
                     route_hint,
                 },
             };
+            if (recipient_id) {
+                data.recipient_id = recipient_id;
+            }
             if (reply_uuid) {
                 data.message.replyUuid = reply_uuid;
             }
