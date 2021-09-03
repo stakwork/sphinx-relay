@@ -95,6 +95,7 @@ export async function finalAction(a: Action) {
     chat_uuid,
     msg_uuid,
     reply_uuid,
+    recipient_id,
   } = a
 
   let myBot
@@ -129,7 +130,7 @@ export async function finalAction(a: Action) {
     const dest = botMember.memberPubkey
     if (!dest) return console.log('no dest to send to')
     const topic = `${dest}/${myBot.uuid}`
-    const data = <network.Msg>{
+    const data: network.Msg = {
       action,
       bot_id,
       bot_name,
@@ -142,10 +143,13 @@ export async function finalAction(a: Action) {
       chat: { uuid: chat_uuid || '' },
       sender: {
         pub_key: String(owner.publicKey),
-        alias: bot_name,
+        alias: bot_name || '',
         role: 0,
         route_hint,
       }, // for verify sig
+    }
+    if (recipient_id) {
+      data.recipient_id = recipient_id
     }
     if (reply_uuid) {
       data.message.replyUuid = reply_uuid
