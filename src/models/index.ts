@@ -22,7 +22,7 @@ import { isProxy } from '../utils/proxy'
 const argv = minimist(process.argv.slice(2))
 
 const configFile = argv.db
-  ? argv.db
+  ? path.resolve(process.cwd(), argv.db)
   : path.join(__dirname, '../../config/config.json')
 
 const env = process.env.NODE_ENV || 'development'

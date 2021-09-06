@@ -3,8 +3,12 @@ import * as minimist from 'minimist'
 
 const argv = minimist(process.argv.slice(2))
 
+if (!argv.config && process.env.RELAY_CONFIG) {
+  argv.config = process.env.RELAY_CONFIG
+}
+
 const configFile = argv.config
-  ? argv.config
+  ? path.resolve(process.cwd(), argv.config)
   : path.join(__dirname, '../../config/app.json')
 
 const env = process.env.NODE_ENV || 'development'

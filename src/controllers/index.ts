@@ -155,10 +155,10 @@ export async function set(app) {
   })
 
   app.get('/lsats', lsats.listLsats)
-  app.get('/lsats/:id', lsats.getLsat)
+  app.get('/lsats/:identifier', lsats.getLsat)
   app.post('/lsats', lsats.saveLsat)
-  app.put('/lsats/:id', lsats.updateLsat)
-  app.delete('/lsats/:id', lsats.deleteLsat)
+  app.put('/lsats/:identifier', lsats.updateLsat)
+  app.delete('/lsats/:identifier', lsats.deleteLsat)
 }
 
 const msgtypes = constants.message_types

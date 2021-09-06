@@ -196,7 +196,6 @@ export const getLocalRemoteBalance = async (req, res) => {
 
 export const getNodeInfo = async (req, res) => {
   const ipOfSource = req.connection.remoteAddress
-  console.log('here i am!')
   if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
     res.status(401)
     res.end()

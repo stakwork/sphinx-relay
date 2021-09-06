@@ -4,17 +4,16 @@ import { logging } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import { Response, Request } from 'express'
-import { Buf } from '../grpc/interfaces'
 
-interface LsatRequestBody {
+export interface LsatRequestBody {
   paymentRequest: string
   macaroon: string
   issuer: string
-  paths: string
-  metadata: string
+  paths?: string
+  metadata?: string
 }
 
-interface RelayRequest extends Request {
+export interface RelayRequest extends Request {
   owner: { id: number }
   body: LsatRequestBody
 }
@@ -35,9 +34,23 @@ const lsatResponseAttributes = [
   'preimage',
   'issuer',
   'metadata',
+  'lsatIdentifier',
 ]
 
-export async function payForLsat(paymentRequest: string): Promise<Buf | void> {
+async function lsatAlreadyExists(lsat): Promise<boolean> {
+  const lsatIdentifier = lsat.id
+  const model = await models.Lsat.findOne({
+    where: { lsatIdentifier },
+    attributes: lsatResponseAttributes,
+  })
+
+  if (model) return true
+  return false
+}
+
+export async function payForLsat(
+  paymentRequest: string
+): Promise<string | void> {
   if (!paymentRequest) {
     if (logging.Lightning)
       console.log('[pay invoice] "payment_request" is empty')
@@ -50,8 +63,7 @@ export async function payForLsat(paymentRequest: string): Promise<Buf | void> {
 
   console.log('[pay invoice data]', response)
 
-  // TODO: confirm there is a response.payment_preimage
-  return response.payment_preimage
+  return response.payment_preimage.toString('hex')
 }
 
 export async function saveLsat(
@@ -80,7 +92,14 @@ export async function saveLsat(
   }
 
   const lsatIdentifier = lsat.id
-  let preimage
+
+  if (await lsatAlreadyExists(lsat)) {
+    if (logging.Lsat)
+      console.error('[pay for lsat] Lsat already exists: ', lsatIdentifier)
+    return failure(res, `Could not save lsat. Already exists`)
+  }
+
+  let preimage: string | void
 
   try {
     preimage = await payForLsat(paymentRequest)
@@ -98,9 +117,10 @@ export async function saveLsat(
   }
 
   try {
-    lsat.setPreimage(preimage.toString('hex'))
+    lsat.setPreimage(preimage)
 
     await models.Lsat.create({
+      macaroon,
       lsatIdentifier,
       paymentRequest,
       preimage,
@@ -121,7 +141,7 @@ export async function getLsat(
   res: Response
 ): Promise<void | Response> {
   const tenant = req.owner.id
-  const lsatIdentifier = req.params.identifer
+  const lsatIdentifier = req.params.identifier
 
   if (logging.Express) console.log(`=> getLsat`)
 
@@ -165,7 +185,7 @@ export async function updateLsat(
   res: Response
 ): Promise<void | Response> {
   const tenant = req.owner.id
-  const lsatIdentifier = req.params.id
+  const lsatIdentifier = req.params.identifier
   const body = req.body
   if (logging.Express) console.log(`=> updateLsat ${lsatIdentifier}`)
   try {
@@ -186,7 +206,7 @@ export async function deleteLsat(
   res: Response
 ): Promise<void | Response> {
   const tenant = req.owner.id
-  const lsatIdentifier = req.params.id
+  const lsatIdentifier = req.params.identifier
   if (logging.Express) console.log(`=> deleteLsat ${lsatIdentifier}`)
   try {
     await models.Lsat.destroy({
