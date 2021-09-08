@@ -82,7 +82,17 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
         }, chat.id, 30000);
     }
     else {
-        finalNotification(owner.id, params, isTribeOwner);
+        try {
+            const cids = JSON.parse(chat.contactIds || '[]');
+            const notme = cids.find((id) => id !== 1);
+            const other = models_1.models.Contact.findOne({ where: { id: notme } });
+            if (other.blocked)
+                return;
+            finalNotification(owner.id, params, isTribeOwner);
+        }
+        catch (e) {
+            console.log('=> notify conversation err', e);
+        }
     }
 });
 exports.sendNotification = sendNotification;

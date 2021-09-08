@@ -97,7 +97,15 @@ const sendNotification = async (
       30000
     )
   } else {
-    finalNotification(owner.id, params, isTribeOwner)
+    try {
+      const cids = JSON.parse(chat.contactIds || '[]')
+      const notme = cids.find((id) => id !== 1)
+      const other = models.Contact.findOne({ where: { id: notme } })
+      if (other.blocked) return
+      finalNotification(owner.id, params, isTribeOwner)
+    } catch (e) {
+      console.log('=> notify conversation err', e)
+    }
   }
 }
 
