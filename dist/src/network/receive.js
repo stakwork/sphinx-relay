@@ -518,6 +518,8 @@ function parseKeysendInvoice(i) {
             try {
                 const payload = parsePayload(data);
                 if (payload && payload.type === constants_1.default.message_types.keysend) {
+                    console.log('====> IS KEYSEND TYPE');
+                    console.log('====> MEMOOOO', i.memo);
                     isKeysendType = true;
                     memo = payload.message && payload.message.content;
                     sender_pubkey = payload.sender && payload.sender.pub_key;
