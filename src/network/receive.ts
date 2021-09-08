@@ -511,6 +511,7 @@ export async function parseKeysendInvoice(i) {
   const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY]
   const data = buf && buf.toString()
   const value = i && i.value && parseInt(i.value)
+  console.log('===> ALL RECS', JSON.stringify(recs))
 
   // "keysend" type is NOT encrypted
   // and should be saved even if there is NO content
