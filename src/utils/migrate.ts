@@ -1,6 +1,8 @@
 import { sequelize } from '../models'
 
 export default async function migrate() {
+  addTableColumn('sphinx_contacts', 'blocked', 'BOOLEAN')
+
   addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT')
   addTableColumn('sphinx_contacts', 'unmet', 'BOOLEAN')
 

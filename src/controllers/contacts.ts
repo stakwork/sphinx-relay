@@ -591,3 +591,30 @@ export const getLatestContacts = async (req, res) => {
     failure(res, e)
   }
 }
+
+async function switchBlock(
+  res: any,
+  tenant: number,
+  id: number,
+  blocked: boolean
+) {
+  const contact = await models.Contact.findOne({
+    where: { id, tenant },
+  })
+  if (!contact) {
+    return failure(res, 'no contact found')
+  }
+  // update contact
+  const updated = await contact.update({ blocked })
+  success(res, jsonUtils.contactToJson(updated))
+}
+
+export const blockContact = async (req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  switchBlock(res, req.owner.id, req.params.contact_id, true)
+}
+
+export const unblockContact = async (req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  switchBlock(res, req.owner.id, req.params.contact_id, false)
+}

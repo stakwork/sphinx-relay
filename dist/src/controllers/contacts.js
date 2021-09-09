@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
+exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -554,4 +554,29 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getLatestContacts = getLatestContacts;
+function switchBlock(res, tenant, id, blocked) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const contact = yield models_1.models.Contact.findOne({
+            where: { id, tenant },
+        });
+        if (!contact) {
+            return res_1.failure(res, 'no contact found');
+        }
+        // update contact
+        const updated = yield contact.update({ blocked });
+        res_1.success(res, jsonUtils.contactToJson(updated));
+    });
+}
+const blockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    switchBlock(res, req.owner.id, req.params.contact_id, true);
+});
+exports.blockContact = blockContact;
+const unblockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return res_1.failure(res, 'no owner');
+    switchBlock(res, req.owner.id, req.params.contact_id, false);
+});
+exports.unblockContact = unblockContact;
 //# sourceMappingURL=contacts.js.map

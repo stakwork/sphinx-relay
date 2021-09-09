@@ -79,4 +79,7 @@ export default class Contact extends Model<Contact> {
 
   @Column
   unmet: boolean
+
+  @Column
+  blocked: boolean
 }

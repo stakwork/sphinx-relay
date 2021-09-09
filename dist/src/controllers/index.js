@@ -61,6 +61,8 @@ function set(app) {
         app.get('/contacts', contacts.getContacts);
         app.get('/contacts/:chat_id', contacts.getContactsForChat);
         app.put('/contacts/:id', contacts.updateContact);
+        app.put('/block/:contact_id', contacts.blockContact);
+        app.put('/unblock/:contact_id', contacts.unblockContact);
         app.post('/contacts/:id/keys', contacts.exchangeKeys);
         app.post('/contacts', contacts.createContact);
         app.delete('/contacts/:id', contacts.deleteContact);

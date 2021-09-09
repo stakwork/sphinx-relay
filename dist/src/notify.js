@@ -59,7 +59,7 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     const isAndroid = !isIOS;
     const params = { device_id };
     const notification = {
-        chat_id: chat.id,
+        chat_id: chat.id || 0,
         sound: '',
     };
     if (type !== 'badge' && !chat.isMuted) {
@@ -80,6 +80,19 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
                 : `You have ${count}new messages in ${chat.name}`;
             finalNotification(owner.id, params, isTribeOwner);
         }, chat.id, 30000);
+    }
+    else if (chat.type == constants_1.default.chat_types.conversation) {
+        try {
+            const cids = JSON.parse(chat.contactIds || '[]');
+            const notme = cids.find((id) => id !== 1);
+            const other = models_1.models.Contact.findOne({ where: { id: notme } });
+            if (other.blocked)
+                return;
+            finalNotification(owner.id, params, isTribeOwner);
+        }
+        catch (e) {
+            console.log('=> notify conversation err', e);
+        }
     }
     else {
         finalNotification(owner.id, params, isTribeOwner);

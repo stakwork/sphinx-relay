@@ -509,6 +509,7 @@ function parseKeysendInvoice(i) {
         const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
+        // console.log('===> ALL RECS', JSON.stringify(recs))
         // "keysend" type is NOT encrypted
         // and should be saved even if there is NO content
         let isKeysendType = false;
@@ -518,6 +519,8 @@ function parseKeysendInvoice(i) {
             try {
                 const payload = parsePayload(data);
                 if (payload && payload.type === constants_1.default.message_types.keysend) {
+                    // console.log('====> IS KEYSEND TYPE')
+                    // console.log('====> MEMOOOO', i.memo)
                     isKeysendType = true;
                     memo = payload.message && payload.message.content;
                     sender_pubkey = payload.sender && payload.sender.pub_key;
@@ -530,7 +533,7 @@ function parseKeysendInvoice(i) {
         }
         if (isKeysendType) {
             if (!memo) {
-                hub_1.sendNotification(-1, '', 'keysend', owner, value || 0);
+                hub_1.sendNotification({}, '', 'keysend', owner, value || 0);
             }
             saveAnonymousKeysend(i, memo, sender_pubkey, owner.id);
             return;
