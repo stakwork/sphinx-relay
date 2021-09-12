@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/app.js",
   "scripts": {
+    "test": "ava --watch",
     "docker-dev": "nodemon ./app.js",
     "build": "tsc",
     "start-ts": "ts-node ./app.ts",
@@ -100,6 +101,7 @@
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
     "ava": "^3.15.0",
+    "ava-http": "^1.0.0",
     "eslint": "^7.30.0",
     "eslint-config-prettier": "^8.3.0",
     "husky": "^7.0.1",
