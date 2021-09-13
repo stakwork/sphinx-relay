@@ -120,6 +120,14 @@ function setupApp() {
       console.log(`Node listening on ${port}.`)
     })
 
+    process.on('SIGTERM', () => {
+      server.close()
+    })
+
+    process.on('exit', () => {
+      server.close()
+    })
+
     // start all routes!
     if (!config.unlock) {
       controllers.set(app)
