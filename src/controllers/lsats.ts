@@ -11,6 +11,7 @@ export interface LsatRequestBody {
   issuer: string
   paths?: string
   metadata?: string
+  [key: string]: string | undefined
 }
 
 export interface RelayRequest extends Request {
@@ -34,13 +35,13 @@ const lsatResponseAttributes = [
   'preimage',
   'issuer',
   'metadata',
-  'lsatIdentifier',
+  'identifier',
 ]
 
 async function lsatAlreadyExists(lsat): Promise<boolean> {
-  const lsatIdentifier = lsat.id
+  const identifier = lsat.id
   const model = await models.Lsat.findOne({
-    where: { lsatIdentifier },
+    where: { identifier },
     attributes: lsatResponseAttributes,
   })
 
@@ -91,11 +92,11 @@ export async function saveLsat(
     return res.json({ success: false, error: 'invalid lsat macaroon' })
   }
 
-  const lsatIdentifier = lsat.id
+  const identifier = lsat.id
 
   if (await lsatAlreadyExists(lsat)) {
     if (logging.Lsat)
-      console.error('[pay for lsat] Lsat already exists: ', lsatIdentifier)
+      console.error('[pay for lsat] Lsat already exists: ', identifier)
     return failure(res, `Could not save lsat. Already exists`)
   }
 
@@ -113,7 +114,7 @@ export async function saveLsat(
 
   if (!preimage) {
     res.status(400)
-    return res.json({ success: false, error: 'invoice could not be paid' })
+    return failure(res, 'invoice could not be paid')
   }
 
   try {
@@ -121,7 +122,7 @@ export async function saveLsat(
 
     await models.Lsat.create({
       macaroon,
-      lsatIdentifier,
+      identifier,
       paymentRequest,
       preimage,
       issuer,
@@ -130,7 +131,7 @@ export async function saveLsat(
       tenant,
     })
 
-    return success(res, { success: true, response: { lsat: lsat.toToken() } })
+    return success(res, { lsat: lsat.toToken() })
   } catch (e) {
     return failure(res, `failed to save lsat: ${e.message || e}`)
   }
@@ -141,21 +142,23 @@ export async function getLsat(
   res: Response
 ): Promise<void | Response> {
   const tenant = req.owner.id
-  const lsatIdentifier = req.params.identifier
+  const identifier = req.params.identifier
 
   if (logging.Express) console.log(`=> getLsat`)
 
   try {
     const lsat: LsatResponse = await models.Lsat.findOne({
-      where: { tenant, lsatIdentifier },
+      where: { tenant, identifier },
       attributes: lsatResponseAttributes,
     })
-    return success(res, {
-      success: true,
-      response: lsat,
-    })
+    if (!lsat)
+      return res.status(404).json({
+        success: false,
+        error: `LSAT with identifier ${identifier} not found`,
+      })
+    return success(res, { lsat })
   } catch (e) {
-    return failure(res, `could not retrieve lsat of id ${lsatIdentifier}`)
+    return failure(res, `could not retrieve lsat of id ${identifier}`)
   }
 }
 
@@ -171,10 +174,7 @@ export async function listLsats(
       where: { tenant },
       attributes: lsatResponseAttributes,
     })
-    return success(res, {
-      success: true,
-      response: lsats,
-    })
+    return success(res, { lsats })
   } catch (e) {
     return failure(res, `could not retrieve lsats`)
   }
@@ -185,19 +185,16 @@ export async function updateLsat(
   res: Response
 ): Promise<void | Response> {
   const tenant = req.owner.id
-  const lsatIdentifier = req.params.identifier
+  const identifier = req.params.identifier
   const body = req.body
-  if (logging.Express) console.log(`=> updateLsat ${lsatIdentifier}`)
+  if (logging.Express) console.log(`=> updateLsat ${identifier}`)
   try {
     await models.Lsat.update(body, {
-      where: { tenant, lsatIdentifier },
+      where: { tenant, identifier },
     })
-    return success(res, {
-      success: true,
-      response: 'lsat successfully updated',
-    })
+    return success(res, 'lsat successfully updated')
   } catch (e) {
-    return failure(res, `could not update lsat`)
+    return failure(res, `could not update lsat: ${e.message}`)
   }
 }
 
@@ -206,16 +203,13 @@ export async function deleteLsat(
   res: Response
 ): Promise<void | Response> {
   const tenant = req.owner.id
-  const lsatIdentifier = req.params.identifier
-  if (logging.Express) console.log(`=> deleteLsat ${lsatIdentifier}`)
+  const identifier = req.params.identifier
+  if (logging.Express) console.log(`=> deleteLsat ${identifier}`)
   try {
     await models.Lsat.destroy({
-      where: { tenant, lsatIdentifier },
+      where: { tenant, identifier },
     })
-    return success(res, {
-      success: true,
-      response: 'lsat successfully deleted',
-    })
+    return success(res, 'lsat successfully deleted')
   } catch (e) {
     return failure(res, `could not delete lsat`)
   }

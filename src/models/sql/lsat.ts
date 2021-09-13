@@ -10,7 +10,7 @@ import {
 @Table({
   tableName: 'sphinx_lsats',
   underscored: true,
-  indexes: [{ unique: true, fields: ['id', 'lsat_identifier'] }],
+  indexes: [{ unique: true, fields: ['id', 'identifier'] }],
 })
 export default class Lsat extends Model<Lsat> {
   @Column({
@@ -23,7 +23,7 @@ export default class Lsat extends Model<Lsat> {
   @Column({
     type: DataType.STRING,
   })
-  lsatIdentifier: string
+  identifier: string
 
   @CreatedAt
   createdAt: Date

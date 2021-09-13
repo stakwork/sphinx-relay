@@ -21,6 +21,10 @@
   "author": "",
   "license": "ISC",
   "ava": {
+    "files": [
+      "!src/tests/utils/**",
+      "!src/tests/types"
+    ],
     "extensions": [
       "ts"
     ],
@@ -62,6 +66,7 @@
     "lodash": "^4.17.21",
     "long": "^3.2.0",
     "lsat-js": "^2.0.0",
+    "macaroon": "^3.0.4",
     "md5": "^2.2.1",
     "minimist": "^1.2.5",
     "mqtt": "^4.2.8",
