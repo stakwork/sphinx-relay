@@ -23,8 +23,7 @@ export const payInvoice = async (
     sendingNode.external_ip + '/invoices',
     makeArgs(sendingNode, v)
   )
-  // console.log("PAYMENT REQUEST === ", JSON.stringify(payment_request))
-  // console.log("INVOICE === ", JSON.stringify(r))
+
   t.true(r.success, 'Put method should have succeeded')
   const paymentHash = r.response.payment_hash
   t.truthy(paymentHash, 'paymentHash should exist')
