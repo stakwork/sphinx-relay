@@ -21,6 +21,7 @@ const logger_1 = require("./logger");
 const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost';
+const check_proxy_balance = false;
 function isProxy() {
     return config.proxy_lnd_port &&
         config.proxy_macaroons_dir &&
@@ -59,21 +60,27 @@ function generateNewUsers() {
             return; // we already have the mimimum
         }
         const n1 = NEW_USER_NUM - newusers.length;
-        const virtualBal = yield getProxyTotalBalance();
-        if (logger_1.logging.Proxy)
-            console.log('[proxy] total balance', virtualBal);
-        const realBal = yield getProxyLNDBalance();
-        if (logger_1.logging.Proxy)
-            console.log('[proxy] LND balance', virtualBal);
-        let availableBalance = realBal - virtualBal;
-        if (availableBalance < SATS_PER_USER)
-            availableBalance = 1;
-        const n2 = Math.floor(availableBalance / SATS_PER_USER);
-        const n = Math.min(n1, n2);
-        if (!n) {
+        let n; // the number of new users to create
+        if (check_proxy_balance) {
+            const virtualBal = yield getProxyTotalBalance();
             if (logger_1.logging.Proxy)
-                console.log('[proxy] not enough sats');
-            return;
+                console.log('[proxy] total balance', virtualBal);
+            const realBal = yield getProxyLNDBalance();
+            if (logger_1.logging.Proxy)
+                console.log('[proxy] LND balance', virtualBal);
+            let availableBalance = realBal - virtualBal;
+            if (availableBalance < SATS_PER_USER)
+                availableBalance = 1;
+            const n2 = Math.floor(availableBalance / SATS_PER_USER);
+            const n = Math.min(n1, n2);
+            if (!n) {
+                if (logger_1.logging.Proxy)
+                    console.log('[proxy] not enough sats');
+                return;
+            }
+        }
+        else {
+            n = n1;
         }
         if (logger_1.logging.Proxy)
             console.log('=> gen new users:', n);

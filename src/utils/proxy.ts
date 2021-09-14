@@ -11,6 +11,8 @@ const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost'
 
+const check_proxy_balance = false
+
 export function isProxy(): boolean {
   return config.proxy_lnd_port &&
     config.proxy_macaroons_dir &&
@@ -46,20 +48,24 @@ export async function generateNewUsers() {
     return // we already have the mimimum
   }
   const n1 = NEW_USER_NUM - newusers.length
+  let n // the number of new users to create
+  if (check_proxy_balance) {
+    const virtualBal = await getProxyTotalBalance()
+    if (logging.Proxy) console.log('[proxy] total balance', virtualBal)
+    const realBal = await getProxyLNDBalance()
+    if (logging.Proxy) console.log('[proxy] LND balance', virtualBal)
 
-  const virtualBal = await getProxyTotalBalance()
-  if (logging.Proxy) console.log('[proxy] total balance', virtualBal)
-  const realBal = await getProxyLNDBalance()
-  if (logging.Proxy) console.log('[proxy] LND balance', virtualBal)
+    let availableBalance = realBal - virtualBal
+    if (availableBalance < SATS_PER_USER) availableBalance = 1
+    const n2 = Math.floor(availableBalance / SATS_PER_USER)
+    const n = Math.min(n1, n2)
 
-  let availableBalance = realBal - virtualBal
-  if (availableBalance < SATS_PER_USER) availableBalance = 1
-  const n2 = Math.floor(availableBalance / SATS_PER_USER)
-  const n = Math.min(n1, n2)
-
-  if (!n) {
-    if (logging.Proxy) console.log('[proxy] not enough sats')
-    return
+    if (!n) {
+      if (logging.Proxy) console.log('[proxy] not enough sats')
+      return
+    }
+  } else {
+    n = n1
   }
   if (logging.Proxy) console.log('=> gen new users:', n)
   const arr = new Array(n)
