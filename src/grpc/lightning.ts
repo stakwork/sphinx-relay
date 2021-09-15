@@ -63,7 +63,7 @@ export async function loadLightning(
   noCache?: boolean
 ) {
   // only if specified AND available
-  if (tryProxy && isProxy()) {
+  if (tryProxy && isProxy() && ownerPubkey) {
     const pl = await loadProxyLightning(ownerPubkey)
     return pl
   }

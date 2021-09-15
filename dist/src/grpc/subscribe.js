@@ -16,12 +16,17 @@ const moment = require("moment");
 const unlock_1 = require("../utils/unlock");
 const regular_1 = require("./regular");
 const interfaces = require("./interfaces");
+const proxy_1 = require("../utils/proxy");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        const lightning = yield lightning_1.loadLightning(true); // try proxy
+        let ownerPubkey = '';
+        if (proxy_1.isProxy()) {
+            ownerPubkey = yield proxy_1.getProxyRootPubkey();
+        }
+        const lightning = yield lightning_1.loadLightning(true, ownerPubkey); // try proxy
         const cmd = interfaces.subscribeCommand();
         var call = lightning[cmd]();
         call.on('data', function (response) {

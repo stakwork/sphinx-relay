@@ -176,7 +176,7 @@ export async function loadProxyLightning(ownerPubkey?: string) {
 
 var proxyRootPubkey = ''
 
-function getProxyRootPubkey(): Promise<string> {
+export function getProxyRootPubkey(): Promise<string> {
   return new Promise((resolve, reject) => {
     if (proxyRootPubkey) {
       resolve(proxyRootPubkey)
