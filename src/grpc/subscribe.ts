@@ -4,6 +4,7 @@ import * as moment from 'moment'
 import { tryToUnlockLND } from '../utils/unlock'
 import { receiveNonKeysend } from './regular'
 import * as interfaces from './interfaces'
+import { isProxy, getProxyRootPubkey } from '../utils/proxy'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
@@ -11,7 +12,11 @@ const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
 export function subscribeInvoices(parseKeysendInvoice) {
   return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true) // try proxy
+    let ownerPubkey: string = ''
+    if (isProxy()) {
+      ownerPubkey = await getProxyRootPubkey()
+    }
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
 
     const cmd = interfaces.subscribeCommand()
     var call = lightning[cmd]()

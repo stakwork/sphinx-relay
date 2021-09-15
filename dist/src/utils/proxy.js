@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
+exports.getProxyRootPubkey = exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const config_1 = require("./config");
@@ -220,6 +220,7 @@ function getProxyRootPubkey() {
         });
     });
 }
+exports.getProxyRootPubkey = getProxyRootPubkey;
 function getProxyLNDBalance() {
     return new Promise((resolve, reject) => {
         // normal client, to get pubkey of LND
