@@ -64,7 +64,7 @@ const loadGreenlightCredentials = () => {
 function loadLightning(tryProxy, ownerPubkey, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         // only if specified AND available
-        if (tryProxy && proxy_1.isProxy() && ownerPubkey) {
+        if (tryProxy && proxy_1.isProxy()) {
             const pl = yield proxy_1.loadProxyLightning(ownerPubkey);
             return pl;
         }
