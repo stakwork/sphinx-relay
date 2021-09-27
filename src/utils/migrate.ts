@@ -147,17 +147,26 @@ export default async function migrate() {
   addTableColumn('sphinx_chats', 'escrow_amount', 'BIGINT')
   addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT')
 
-  //   try{
-  //     await sequelize.query(`
-  // CREATE TABLE sphinx_timers (
-  //   id BIGINT,
-  //   chat_id BIGINT,
-  //   receiver BIGINT,
-  //   millis BIGINT,
-  //   msg_id BIGINT,
-  //   amount DECIMAL
-  // )`)
-  //   } catch(e){}
+  // add LSAT table
+  try {
+    console.log('adding lsat table')
+    await sequelize.query(`
+    CREATE TABLE sphinx_relay_lsats (
+      id BIGINT NOT NULL PRIMARY KEY,
+      lsat_identifier TEXT,
+      created_at DATETIME,
+      updated_at DATETIME,
+      macaroon TEXT,
+      payment_request TEXT,
+      preimage TEXT,
+      issuer TEXT,
+      paths TEXT,
+      metadata TEXT,
+      tenant BIGINT
+    )`)
+  } catch (e) {
+    console.error('problem adding lsat table:', e.message)
+  }
 }
 
 async function addTenant(tableName) {

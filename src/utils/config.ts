@@ -3,8 +3,12 @@ import * as minimist from 'minimist'
 
 const argv = minimist(process.argv.slice(2))
 
+if (!argv.config && process.env.RELAY_CONFIG) {
+  argv.config = process.env.RELAY_CONFIG
+}
+
 const configFile = argv.config
-  ? argv.config
+  ? path.resolve(process.cwd(), argv.config)
   : path.join(__dirname, '../../config/app.json')
 
 const env = process.env.NODE_ENV || 'development'
@@ -28,7 +32,8 @@ export function loadConfig() {
   return {
     lightning_provider: provider,
     logging:
-      logg || 'LIGHTNING,TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY',
+      logg ||
+      'LIGHTNING,TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT',
     senza_url: ENV.SENZA_URL || config.senza_url,
     macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
     router_macaroon_location:

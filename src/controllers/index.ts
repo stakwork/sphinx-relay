@@ -22,6 +22,7 @@ import * as feed from './feed'
 import { failure } from '../utils/res'
 import * as auth from './auth'
 import * as personal from './api/personal'
+import * as lsats from './lsats'
 
 export async function set(app) {
   builtInBots.init()
@@ -152,6 +153,12 @@ export async function set(app) {
       res.status(200).send(last.createdAt)
     }
   })
+
+  app.get('/lsats', lsats.listLsats)
+  app.get('/lsats/:identifier', lsats.getLsat)
+  app.post('/lsats', lsats.saveLsat)
+  app.put('/lsats/:identifier', lsats.updateLsat)
+  app.delete('/lsats/:identifier', lsats.deleteLsat)
 }
 
 const msgtypes = constants.message_types

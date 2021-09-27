@@ -26,18 +26,18 @@ export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
 const FEE_LIMIT_SAT = 10000
 
-var lightningClient = <any>null
-var walletUnlocker = <any>null
-var routerClient = <any>null
+let lightningClient = <any>null
+let walletUnlocker = <any>null
+let routerClient = <any>null
 
 export const loadCredentials = (macName?: string) => {
   try {
-    var lndCert = fs.readFileSync(config.tls_location)
-    var sslCreds = grpc.credentials.createSsl(lndCert)
-    var macaroon = getMacaroon(macName)
-    var metadata = new grpc.Metadata()
+    const lndCert = fs.readFileSync(config.tls_location)
+    const sslCreds = grpc.credentials.createSsl(lndCert)
+    const macaroon = getMacaroon(macName)
+    const metadata = new grpc.Metadata()
     metadata.add('macaroon', macaroon)
-    var macaroonCreds = grpc.credentials.createFromMetadataGenerator(
+    const macaroonCreds = grpc.credentials.createFromMetadataGenerator(
       (_args, callback) => {
         callback(null, metadata)
       }
@@ -51,9 +51,9 @@ export const loadCredentials = (macName?: string) => {
 }
 
 const loadGreenlightCredentials = () => {
-  var glCert = fs.readFileSync(config.tls_location)
-  var glPriv = fs.readFileSync(config.tls_key_location)
-  var glChain = fs.readFileSync(config.tls_chain_location)
+  const glCert = fs.readFileSync(config.tls_location)
+  const glPriv = fs.readFileSync(config.tls_key_location)
+  const glChain = fs.readFileSync(config.tls_chain_location)
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
@@ -73,9 +73,9 @@ export async function loadLightning(
 
   if (IS_GREENLIGHT) {
     var credentials = loadGreenlightCredentials()
-    var descriptor = grpc.load('proto/greenlight.proto')
-    var greenlight: any = descriptor.greenlight
-    var options = {
+    const descriptor = grpc.load('proto/greenlight.proto')
+    const greenlight: any = descriptor.greenlight
+    const options = {
       'grpc.ssl_target_name_override': 'localhost',
     }
     const uri = get_greenlight_grpc_uri().split('//')
@@ -87,9 +87,8 @@ export async function loadLightning(
   try {
     // LND
     var credentials = loadCredentials()
-    var lnrpcDescriptor = grpc.load('proto/rpc.proto')
-    var lnrpc: any = lnrpcDescriptor.lnrpc
-    // console.log("====> COONNNNNN", LND_IP + ':' + config.lnd_port)
+    const lnrpcDescriptor = grpc.load('proto/rpc.proto')
+    const lnrpc: any = lnrpcDescriptor.lnrpc
     lightningClient = new lnrpc.Lightning(
       LND_IP + ':' + config.lnd_port,
       credentials
@@ -105,9 +104,9 @@ export const loadWalletUnlocker = () => {
     return walletUnlocker
   } else {
     try {
-      var credentials = loadCredentials()
-      var lnrpcDescriptor = grpc.load('proto/walletunlocker.proto')
-      var lnrpc: any = lnrpcDescriptor.lnrpc
+      const credentials = loadCredentials()
+      const lnrpcDescriptor = grpc.load('proto/walletunlocker.proto')
+      const lnrpc: any = lnrpcDescriptor.lnrpc
       walletUnlocker = new lnrpc.WalletUnlocker(
         LND_IP + ':' + config.lnd_port,
         credentials
@@ -121,7 +120,7 @@ export const loadWalletUnlocker = () => {
 
 export const unlockWallet = async (pwd: string) => {
   return new Promise(async function (resolve, reject) {
-    let wu = await loadWalletUnlocker()
+    const wu = await loadWalletUnlocker()
     wu.unlockWallet(
       { wallet_password: ByteBuffer.fromUTF8(pwd) },
       (err, response) => {
@@ -142,7 +141,7 @@ export const getHeaders = (req) => {
   }
 }
 
-var isLocked = false
+let isLocked = false
 let lockTimeout: ReturnType<typeof setTimeout>
 export const getLock = () => isLocked
 export const setLock = (value) => {
@@ -174,7 +173,7 @@ export async function queryRoute(
     }
   }
   return new Promise(async function (resolve, reject) {
-    let lightning = await loadLightning(true, ownerPubkey) // try proxy
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
     const options: { [k: string]: any } = { pub_key, amt }
     if (route_hint && route_hint.includes(':')) {
       const arr = route_hint.split(':')
@@ -205,7 +204,7 @@ export async function newAddress(
   type: NewAddressType = NESTED_PUBKEY_HASH
 ): Promise<string> {
   return new Promise(async function (resolve, reject) {
-    let lightning = await loadLightning()
+    const lightning = await loadLightning()
     lightning.newAddress({ type }, (err, response) => {
       if (err) {
         reject(err)
@@ -224,10 +223,10 @@ export async function newAddress(
 export async function sendPayment(
   payment_request: string,
   ownerPubkey?: string
-) {
+): Promise<interfaces.SendPaymentResponse> {
   log('sendPayment')
   return new Promise(async (resolve, reject) => {
-    let lightning = await loadLightning(true, ownerPubkey) // try proxy
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
     if (isProxy()) {
       const opts = {
         payment_request,
@@ -260,7 +259,7 @@ export async function sendPayment(
           }
         )
       } else {
-        var call = lightning.sendPayment({ payment_request })
+        const call = lightning.sendPayment({ payment_request })
         call.on('data', async (response) => {
           if (response.payment_error) {
             reject(response.payment_error)
@@ -325,7 +324,7 @@ export const keysend = (opts: KeysendOpts, ownerPubkey?: string) => {
       if (isProxy()) {
         // console.log("SEND sendPaymentSync", options)
         options.fee_limit = { fixed: FEE_LIMIT_SAT }
-        let lightning = await loadLightning(true, ownerPubkey) // try proxy
+        const lightning = await loadLightning(true, ownerPubkey) // try proxy
         lightning.sendPaymentSync(options, (err, response) => {
           if (err) {
             reject(err)
@@ -339,7 +338,7 @@ export const keysend = (opts: KeysendOpts, ownerPubkey?: string) => {
         })
       } else {
         if (IS_GREENLIGHT) {
-          let lightning = await loadLightning(false, ownerPubkey)
+          const lightning = await loadLightning(false, ownerPubkey)
           const req = interfaces.keysendRequest(options)
           // console.log("KEYSEND REQ", JSON.stringify(req))
           lightning.keysend(req, function (err, response) {
@@ -388,9 +387,9 @@ export const loadRouter = () => {
     return routerClient
   } else {
     try {
-      var credentials = loadCredentials('router.macaroon')
-      var descriptor = grpc.load('proto/router.proto')
-      var router: any = descriptor.routerrpc
+      const credentials = loadCredentials('router.macaroon')
+      const descriptor = grpc.load('proto/router.proto')
+      const router: any = descriptor.routerrpc
       routerClient = new router.Router(
         LND_IP + ':' + config.lnd_port,
         credentials
@@ -602,7 +601,7 @@ export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
         const finalSig = Buffer.concat([finalRecid, sigBytes], 65)
         resolve(zbase32.encode(finalSig))
       } else {
-        let lightning = await loadLightning(true, ownerPubkey) // try proxy
+        const lightning = await loadLightning(true, ownerPubkey) // try proxy
         const options = { msg }
         lightning.signMessage(options, function (err, sig) {
           if (err || !sig.signature) {
@@ -672,7 +671,7 @@ export function verifyMessage(
           pubkey: recoveredPubkey.toString('hex'),
         })
       } else {
-        let lightning = await loadLightning(true, ownerPubkey) // try proxy
+        const lightning = await loadLightning(true, ownerPubkey) // try proxy
         const options = {
           msg: ByteBuffer.fromHex(msg),
           signature: sig, // zbase32 encoded string
@@ -921,9 +920,9 @@ export async function getChanInfo(
 }
 
 function ascii_to_hexa(str) {
-  var arr1 = <string[]>[]
-  for (var n = 0, l = str.length; n < l; n++) {
-    var hex = Number(str.charCodeAt(n)).toString(16)
+  const arr1 = <string[]>[]
+  for (let n = 0, l = str.length; n < l; n++) {
+    const hex = Number(str.charCodeAt(n)).toString(16)
     arr1.push(hex)
   }
   return arr1.join('')
@@ -941,7 +940,7 @@ function ascii_to_hexa(str) {
 //     return lightningClient
 //   }
 // }
-let yeslog = logging.Lightning
+const yeslog = logging.Lightning
 function log(a?, b?, c?) {
   if (!yeslog) return
   console.log('[lightning]', [...arguments])

@@ -33,7 +33,7 @@ export async function unlocker(req, res): Promise<boolean> {
   let hexMac: string
 
   try {
-    var encMac = fs.readFileSync(config.encrypted_macaroon_path, 'utf8')
+    const encMac = fs.readFileSync(config.encrypted_macaroon_path, 'utf8')
     if (!encMac) {
       failure(res, 'no macaroon')
       return false

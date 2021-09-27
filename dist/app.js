@@ -103,8 +103,8 @@ function setupApp() {
         let server;
         if ('ssl' in config && config.ssl.enabled) {
             try {
-                var certData = yield cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save);
-                var credentials = {
+                const certData = yield cert.getCertificate(config.public_url, config.ssl.port, config.ssl.save);
+                const credentials = {
                     key: certData === null || certData === void 0 ? void 0 : certData.privateKey.toString(),
                     ca: certData === null || certData === void 0 ? void 0 : certData.caBundle,
                     cert: certData === null || certData === void 0 ? void 0 : certData.certificate,
@@ -125,6 +125,12 @@ function setupApp() {
                 throw err;
             /* eslint-disable no-console */
             console.log(`Node listening on ${port}.`);
+        });
+        process.on('SIGTERM', () => {
+            server.close();
+        });
+        process.on('exit', () => {
+            server.close();
         });
         // start all routes!
         if (!config.unlock) {

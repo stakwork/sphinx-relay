@@ -118,7 +118,7 @@ function getLogsSince(req, res) {
                 try {
                     const lines = yield readLastLines.read(filepath, 500);
                     if (lines) {
-                        var linesArray = lines.split('\n');
+                        const linesArray = lines.split('\n');
                         linesArray.reverse();
                         txt = linesArray.join('\n');
                     }
@@ -167,7 +167,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     if (!req.owner)
         return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
     owner.update({ lastActive: date });
@@ -212,7 +212,7 @@ const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, fu
 });
 exports.getLocalRemoteBalance = getLocalRemoteBalance;
 const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var ipOfSource = req.connection.remoteAddress;
+    const ipOfSource = req.connection.remoteAddress;
     if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
         res.status(401);
         res.end();

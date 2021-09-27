@@ -34,6 +34,7 @@ const feed = require("./feed");
 const res_1 = require("../utils/res");
 const auth = require("./auth");
 const personal = require("./api/personal");
+const lsats = require("./lsats");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -141,6 +142,11 @@ function set(app) {
                 }
             });
         });
+        app.get('/lsats', lsats.listLsats);
+        app.get('/lsats/:identifier', lsats.getLsat);
+        app.post('/lsats', lsats.saveLsat);
+        app.put('/lsats/:identifier', lsats.updateLsat);
+        app.delete('/lsats/:identifier', lsats.deleteLsat);
     });
 }
 exports.set = set;

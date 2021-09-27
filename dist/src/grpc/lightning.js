@@ -34,17 +34,17 @@ const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
 const FEE_LIMIT_SAT = 10000;
-var lightningClient = null;
-var walletUnlocker = null;
-var routerClient = null;
+let lightningClient = null;
+let walletUnlocker = null;
+let routerClient = null;
 const loadCredentials = (macName) => {
     try {
-        var lndCert = fs.readFileSync(config.tls_location);
-        var sslCreds = grpc.credentials.createSsl(lndCert);
-        var macaroon = macaroon_1.getMacaroon(macName);
-        var metadata = new grpc.Metadata();
+        const lndCert = fs.readFileSync(config.tls_location);
+        const sslCreds = grpc.credentials.createSsl(lndCert);
+        const macaroon = macaroon_1.getMacaroon(macName);
+        const metadata = new grpc.Metadata();
         metadata.add('macaroon', macaroon);
-        var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
+        const macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
             callback(null, metadata);
         });
         return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
@@ -56,9 +56,9 @@ const loadCredentials = (macName) => {
 };
 exports.loadCredentials = loadCredentials;
 const loadGreenlightCredentials = () => {
-    var glCert = fs.readFileSync(config.tls_location);
-    var glPriv = fs.readFileSync(config.tls_key_location);
-    var glChain = fs.readFileSync(config.tls_chain_location);
+    const glCert = fs.readFileSync(config.tls_location);
+    const glPriv = fs.readFileSync(config.tls_key_location);
+    const glChain = fs.readFileSync(config.tls_chain_location);
     return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
 function loadLightning(tryProxy, ownerPubkey, noCache) {
@@ -73,9 +73,9 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
         }
         if (IS_GREENLIGHT) {
             var credentials = loadGreenlightCredentials();
-            var descriptor = grpc.load('proto/greenlight.proto');
-            var greenlight = descriptor.greenlight;
-            var options = {
+            const descriptor = grpc.load('proto/greenlight.proto');
+            const greenlight = descriptor.greenlight;
+            const options = {
                 'grpc.ssl_target_name_override': 'localhost',
             };
             const uri = greenlight_1.get_greenlight_grpc_uri().split('//');
@@ -87,9 +87,8 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
         try {
             // LND
             var credentials = exports.loadCredentials();
-            var lnrpcDescriptor = grpc.load('proto/rpc.proto');
-            var lnrpc = lnrpcDescriptor.lnrpc;
-            // console.log("====> COONNNNNN", LND_IP + ':' + config.lnd_port)
+            const lnrpcDescriptor = grpc.load('proto/rpc.proto');
+            const lnrpc = lnrpcDescriptor.lnrpc;
             lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
             return lightningClient;
         }
@@ -105,9 +104,9 @@ const loadWalletUnlocker = () => {
     }
     else {
         try {
-            var credentials = exports.loadCredentials();
-            var lnrpcDescriptor = grpc.load('proto/walletunlocker.proto');
-            var lnrpc = lnrpcDescriptor.lnrpc;
+            const credentials = exports.loadCredentials();
+            const lnrpcDescriptor = grpc.load('proto/walletunlocker.proto');
+            const lnrpc = lnrpcDescriptor.lnrpc;
             walletUnlocker = new lnrpc.WalletUnlocker(LND_IP + ':' + config.lnd_port, credentials);
             return walletUnlocker;
         }
@@ -120,7 +119,7 @@ exports.loadWalletUnlocker = loadWalletUnlocker;
 const unlockWallet = (pwd) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            let wu = yield exports.loadWalletUnlocker();
+            const wu = yield exports.loadWalletUnlocker();
             wu.unlockWallet({ wallet_password: ByteBuffer.fromUTF8(pwd) }, (err, response) => {
                 if (err) {
                     reject(err);
@@ -139,7 +138,7 @@ const getHeaders = (req) => {
     };
 };
 exports.getHeaders = getHeaders;
-var isLocked = false;
+let isLocked = false;
 let lockTimeout;
 const getLock = () => isLocked;
 exports.getLock = getLock;
@@ -166,7 +165,7 @@ function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
         }
         return new Promise(function (resolve, reject) {
             return __awaiter(this, void 0, void 0, function* () {
-                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
                 const options = { pub_key, amt };
                 if (route_hint && route_hint.includes(':')) {
                     const arr = route_hint.split(':');
@@ -198,7 +197,7 @@ function newAddress(type = exports.NESTED_PUBKEY_HASH) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise(function (resolve, reject) {
             return __awaiter(this, void 0, void 0, function* () {
-                let lightning = yield loadLightning();
+                const lightning = yield loadLightning();
                 lightning.newAddress({ type }, (err, response) => {
                     if (err) {
                         reject(err);
@@ -220,7 +219,7 @@ function sendPayment(payment_request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         log('sendPayment');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             if (proxy_1.isProxy()) {
                 const opts = {
                     payment_request,
@@ -255,7 +254,7 @@ function sendPayment(payment_request, ownerPubkey) {
                     });
                 }
                 else {
-                    var call = lightning.sendPayment({ payment_request });
+                    const call = lightning.sendPayment({ payment_request });
                     call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
                         if (response.payment_error) {
                             reject(response.payment_error);
@@ -316,7 +315,7 @@ const keysend = (opts, ownerPubkey) => {
                 if (proxy_1.isProxy()) {
                     // console.log("SEND sendPaymentSync", options)
                     options.fee_limit = { fixed: FEE_LIMIT_SAT };
-                    let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                    const lightning = yield loadLightning(true, ownerPubkey); // try proxy
                     lightning.sendPaymentSync(options, (err, response) => {
                         if (err) {
                             reject(err);
@@ -333,7 +332,7 @@ const keysend = (opts, ownerPubkey) => {
                 }
                 else {
                     if (IS_GREENLIGHT) {
-                        let lightning = yield loadLightning(false, ownerPubkey);
+                        const lightning = yield loadLightning(false, ownerPubkey);
                         const req = interfaces.keysendRequest(options);
                         // console.log("KEYSEND REQ", JSON.stringify(req))
                         lightning.keysend(req, function (err, response) {
@@ -391,9 +390,9 @@ const loadRouter = () => {
     }
     else {
         try {
-            var credentials = exports.loadCredentials('router.macaroon');
-            var descriptor = grpc.load('proto/router.proto');
-            var router = descriptor.routerrpc;
+            const credentials = exports.loadCredentials('router.macaroon');
+            const descriptor = grpc.load('proto/router.proto');
+            const router = descriptor.routerrpc;
             routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials);
             return routerClient;
         }
@@ -618,7 +617,7 @@ function signBuffer(msg, ownerPubkey) {
                 resolve(zbase32.encode(finalSig));
             }
             else {
-                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
                 const options = { msg };
                 lightning.signMessage(options, function (err, sig) {
                     if (err || !sig.signature) {
@@ -675,7 +674,7 @@ function verifyMessage(msg, sig, ownerPubkey) {
                 });
             }
             else {
-                let lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
                 const options = {
                     msg: ByteBuffer.fromHex(msg),
                     signature: sig,
@@ -912,9 +911,9 @@ function getChanInfo(chan_id, tryProxy) {
 }
 exports.getChanInfo = getChanInfo;
 function ascii_to_hexa(str) {
-    var arr1 = [];
-    for (var n = 0, l = str.length; n < l; n++) {
-        var hex = Number(str.charCodeAt(n)).toString(16);
+    const arr1 = [];
+    for (let n = 0, l = str.length; n < l; n++) {
+        const hex = Number(str.charCodeAt(n)).toString(16);
         arr1.push(hex);
     }
     return arr1.join('');
@@ -931,7 +930,7 @@ function ascii_to_hexa(str) {
 //     return lightningClient
 //   }
 // }
-let yeslog = logger_1.logging.Lightning;
+const yeslog = logger_1.logging.Lightning;
 function log(a, b, c) {
     if (!yeslog)
         return;

@@ -39,7 +39,7 @@ function unlocker(req, res) {
         }
         let hexMac;
         try {
-            var encMac = fs.readFileSync(config.encrypted_macaroon_path, 'utf8');
+            const encMac = fs.readFileSync(config.encrypted_macaroon_path, 'utf8');
             if (!encMac) {
                 res_1.failure(res, 'no macaroon');
                 return false;

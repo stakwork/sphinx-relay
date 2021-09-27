@@ -140,10 +140,14 @@ function listPeersResponse(res) {
                 const addy = p.addresses[0];
                 const peer = {
                     pub_key: Buffer.from(p.id).toString('hex'),
-                    address: addy ? (addy.port ? `${addy.addr}:${addy.port}` : addy.addr) : ''
+                    address: addy
+                        ? addy.port
+                            ? `${addy.addr}:${addy.port}`
+                            : addy.addr
+                        : '',
                 };
                 return peer;
-            })
+            }),
         };
     }
     return {};
@@ -318,9 +322,9 @@ function greelightNumber(s) {
 function greenlightSignMessagePayload(msg) {
     const type = 23;
     const length = msg.length;
-    let typebuf = Buffer.allocUnsafe(2);
+    const typebuf = Buffer.allocUnsafe(2);
     typebuf.writeUInt16BE(type, 0);
-    let lengthbuf = Buffer.allocUnsafe(2);
+    const lengthbuf = Buffer.allocUnsafe(2);
     lengthbuf.writeUInt16BE(length, 0);
     const buf = Buffer.concat([typebuf, lengthbuf, msg], 4 + length);
     return buf.toString('hex');
@@ -356,9 +360,9 @@ function shortChanIDfromInt64(int) {
     if (typeof int !== 'string')
         return '';
     const l = long.fromString(int, true);
-    var blockHeight = l.shiftRight(40);
-    var txIndex = l.shiftRight(16).and(0xffffff);
-    var txPosition = l.and(0xffff);
+    const blockHeight = l.shiftRight(40);
+    const txIndex = l.shiftRight(16).and(0xffffff);
+    const txPosition = l.and(0xffff);
     if (IS_GREENLIGHT) {
         return `${blockHeight.toString()}x${txIndex.toString()}x${txPosition.toString()}`;
     }
@@ -371,7 +375,7 @@ function shortChanIDtoInt64(cid) {
         return '';
     let a = [];
     const seps = [':', 'x'];
-    for (let sep of seps) {
+    for (const sep of seps) {
         if (cid.includes(sep))
             a = cid.split(sep);
     }
@@ -381,9 +385,9 @@ function shortChanIDtoInt64(cid) {
         return '';
     if (!(a.length === 3))
         return '';
-    var blockHeight = long.fromString(a[0], true).shiftLeft(40);
-    var txIndex = long.fromString(a[1], true).shiftLeft(16);
-    var txPosition = long.fromString(a[2], true);
+    const blockHeight = long.fromString(a[0], true).shiftLeft(40);
+    const txIndex = long.fromString(a[1], true).shiftLeft(16);
+    const txPosition = long.fromString(a[2], true);
     return blockHeight.or(txIndex).or(txPosition).toString();
 }
 //# sourceMappingURL=interfaces.js.map

@@ -17,12 +17,13 @@ const bot_1 = require("./sql/bot");
 const chatBot_1 = require("./sql/chatBot");
 const botMember_1 = require("./sql/botMember");
 const accounting_1 = require("./sql/accounting");
+const lsat_1 = require("./sql/lsat");
 const minimist = require("minimist");
 const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
 const argv = minimist(process.argv.slice(2));
 const configFile = argv.db
-    ? argv.db
+    ? path.resolve(process.cwd(), argv.db)
     : path.join(__dirname, '../../config/config.json');
 const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env];
@@ -40,6 +41,7 @@ const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_l
         chatBot_1.default,
         botMember_1.default,
         accounting_1.default,
+        lsat_1.default,
     ] });
 if (proxy_1.isProxy()) {
     opts.pool = {

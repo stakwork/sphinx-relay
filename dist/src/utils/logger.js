@@ -32,6 +32,7 @@ const logging = {
     Network: config.logging && config.logging.includes('NETWORK'),
     DB: config.logging && config.logging.includes('DB'),
     Proxy: config.logging && config.logging.includes('PROXY'),
+    Lsat: config === null || config === void 0 ? void 0 : config.logging.includes('LSAT'),
 };
 exports.logging = logging;
 //# sourceMappingURL=logger.js.map
