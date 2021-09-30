@@ -41,3 +41,5 @@ creds/*
 !creds/scheduler_creds
 hsm_secret
 
+src/tests/configs/*
+src/tests/configs/nodes.json

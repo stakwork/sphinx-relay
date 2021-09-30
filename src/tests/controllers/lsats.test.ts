@@ -1,8 +1,8 @@
 import test, { ExecutionContext } from 'ava'
 import { Lsat } from 'lsat-js'
 import { NodeConfig } from '../types'
-import * as nodes from '../configs/nodes.json'
 import { makeRelayRequest } from '../utils/helpers'
+import * as nodes from '../nodes'
 
 import { saveLsat } from '../utils/save'
 import { getLsat } from '../utils/get'

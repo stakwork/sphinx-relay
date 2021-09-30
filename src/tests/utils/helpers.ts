@@ -25,3 +25,17 @@ export const makeRelayRequest = async (
   )
   return response
 }
+
+export function randomText() {
+  const text = Math.random()
+    .toString(36)
+    .replace(/[^a-z]+/g, '')
+    .substr(0, 5)
+  return text
+}
+
+export async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array)
+  }
+}
