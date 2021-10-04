@@ -1,3 +1,5 @@
+export * from './jsonModels'
+
 export interface NodeConfig {
   pubkey: string
   ip: string

@@ -1,5 +1,13 @@
-const name = 'nodes'
+import { NodeConfig } from './types'
+
+const name = 'evan'
 
 var nodes = require(`./configs/${name}.json`)
 
-export default nodes
+const configs: NodeConfig[] = []
+
+for (const n of nodes) {
+  configs.push(n)
+}
+
+export default configs

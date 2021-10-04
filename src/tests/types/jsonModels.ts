@@ -23,3 +23,21 @@ export interface Contact {
   price_to_meet: number
   unmet: boolean
 }
+
+export interface Message {
+  id: number
+  message_content: string
+  seen: number
+  chat_id: number
+  uuid: string
+  sender: number
+  amount: number
+  date: string
+  remote_message_content: string
+  status: boolean
+  created_at: string
+  updated_at: string
+  network_type: number
+  tenant: number
+  amount_msat: number
+}
