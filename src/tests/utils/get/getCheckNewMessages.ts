@@ -1,8 +1,13 @@
 import * as http from 'ava-http'
 import { makeArgs } from '../helpers'
-import { Message } from '../../types'
+import { Message, NodeConfig } from '../../types'
+import { Assertions } from 'ava'
 
-export function getCheckNewMsgs(t, node, msgUuid): Promise<Message> {
+export function getCheckNewMsgs(
+  t: Assertions,
+  node: NodeConfig,
+  msgUuid: string
+): Promise<Message> {
   return new Promise((resolve, reject) => {
     let i = 0
     const interval = setInterval(async () => {

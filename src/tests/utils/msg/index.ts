@@ -1,1 +1,1 @@
-export { sendMessage } from './sendMessage'
+export { sendMessageAndCheckDecryption } from './sendMessageAndCheckDecryption'

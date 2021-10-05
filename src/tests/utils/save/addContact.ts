@@ -1,9 +1,14 @@
 import { Assertions } from 'ava'
 import * as http from 'ava-http'
 import { makeArgs } from '../helpers'
-import { getCheckContacts } from '../get'
+import { getContactAndCheckKeyExchange } from '../get'
+import { NodeConfig } from '../../types'
 
-export async function addContact(t: Assertions, node1, node2) {
+export async function addContact(
+  t: Assertions,
+  node1: NodeConfig,
+  node2: NodeConfig
+): Promise<boolean> {
   //object of node2node for adding as contact
   const body = {
     alias: `${node2.alias}`,
@@ -24,7 +29,11 @@ export async function addContact(t: Assertions, node1, node2) {
   t.true(typeof node2id === 'number', 'node1id should be a number')
 
   //await contact_key
-  const [n1contactP1, n2contactP1] = await getCheckContacts(t, node1, node2)
+  const [n1contactP1, n2contactP1] = await getContactAndCheckKeyExchange(
+    t,
+    node1,
+    node2
+  )
 
   //make sure node 2 has the contact_key
   t.true(

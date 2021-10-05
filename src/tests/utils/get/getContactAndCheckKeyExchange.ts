@@ -2,7 +2,7 @@ import { getContacts } from './getContacts'
 import { Assertions } from 'ava'
 import { Contact, NodeConfig } from '../../types'
 
-export function getCheckContacts(
+export function getContactAndCheckKeyExchange(
   t: Assertions,
   node1: NodeConfig,
   node2: NodeConfig
@@ -18,7 +18,7 @@ export function getCheckContacts(
       }
       if (i >= 15) {
         clearInterval(interval)
-        reject('failed to getCheckContacts')
+        reject('failed to getContactAndCheckKeyExchange')
       }
     }, 1000)
   })
