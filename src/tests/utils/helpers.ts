@@ -39,3 +39,24 @@ export async function asyncForEach(array, callback) {
     await callback(array[index], index, array)
   }
 }
+
+export async function iterate(
+  nodes: NodeConfig[],
+  callback: (node1: NodeConfig, node2: NodeConfig) => Promise<void>
+): Promise<void> {
+  const already: string[] = []
+  await asyncForEach(nodes, async (n1: NodeConfig) => {
+    await asyncForEach(nodes, async (n2: NodeConfig) => {
+      if (n1.pubkey !== n2.pubkey) {
+        if (
+          !already.find((a) => {
+            a.includes(n1.pubkey) && a.includes(n2.pubkey)
+          })
+        ) {
+          already.push(`${n1.pubkey}-${n2.pubkey}`)
+          await callback(n1, n2)
+        }
+      }
+    })
+  })
+}
