@@ -7,7 +7,10 @@ import { NodeConfig } from '../types'
 import { config } from '../config'
 
 /*
-  npx ava src/tests/controllers/contacts.test.ts --verbose --serial --timeout=2m
+npx ava src/tests/controllers/contacts.test.ts --verbose --serial --timeout=2m
+*/
+/*
+sqlite3 /Users/evanfeenstra/code/sphinx/sphinx-stack/relay/db/bob.db
 */
 
 interface Context {}
