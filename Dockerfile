@@ -8,6 +8,9 @@ RUN apt-get update
 
 RUN apt install -y make python-minimal
 RUN apt install -y g++ gcc libmcrypt-dev
+RUN apt-get -y install git
+
+RUN rm ./package-lock.json
 
 RUN npm install bcrypt
 RUN npm install
