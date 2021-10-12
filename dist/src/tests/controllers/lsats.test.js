@@ -11,8 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const ava_1 = require("ava");
 const lsat_js_1 = require("lsat-js");
-const nodes = require("../configs/nodes.json");
 const helpers_1 = require("../utils/helpers");
+const nodes = require("../nodes");
 const save_1 = require("../utils/save");
 const get_1 = require("../utils/get");
 const alice = nodes[0];

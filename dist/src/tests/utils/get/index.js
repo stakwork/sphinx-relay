@@ -1,10 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
 Object.defineProperty(exports, "getCheckNewPaidInvoice", { enumerable: true, get: function () { return getCheckNewPaidInvoice_1.getCheckNewPaidInvoice; } });
 var getLsat_1 = require("./getLsat");
 Object.defineProperty(exports, "getLsat", { enumerable: true, get: function () { return getLsat_1.getLsat; } });
+var getSelf_1 = require("./getSelf");
+Object.defineProperty(exports, "getSelf", { enumerable: true, get: function () { return getSelf_1.getSelf; } });
+var getContacts_1 = require("./getContacts");
+Object.defineProperty(exports, "getContacts", { enumerable: true, get: function () { return getContacts_1.getContacts; } });
+var getContactAndCheckKeyExchange_1 = require("./getContactAndCheckKeyExchange");
+Object.defineProperty(exports, "getContactAndCheckKeyExchange", { enumerable: true, get: function () { return getContactAndCheckKeyExchange_1.getContactAndCheckKeyExchange; } });
+var getCheckNewMessages_1 = require("./getCheckNewMessages");
+Object.defineProperty(exports, "getCheckNewMsgs", { enumerable: true, get: function () { return getCheckNewMessages_1.getCheckNewMsgs; } });
+var getChats_1 = require("./getChats");
+Object.defineProperty(exports, "getChats", { enumerable: true, get: function () { return getChats_1.getChats; } });
 //# sourceMappingURL=index.js.map

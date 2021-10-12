@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeRelayRequest = exports.makeArgs = void 0;
+exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
 const http = require("ava-http");
 const makeArgs = (node, body = {}) => {
     return {
@@ -26,4 +26,38 @@ const makeRelayRequest = (method, path, node, body
     return response;
 });
 exports.makeRelayRequest = makeRelayRequest;
+function randomText() {
+    const text = Math.random()
+        .toString(36)
+        .replace(/[^a-z]+/g, '')
+        .substr(0, 5);
+    return text;
+}
+exports.randomText = randomText;
+function asyncForEach(array, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let index = 0; index < array.length; index++) {
+            yield callback(array[index], index, array);
+        }
+    });
+}
+exports.asyncForEach = asyncForEach;
+function iterate(nodes, callback) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const already = [];
+        yield asyncForEach(nodes, (n1) => __awaiter(this, void 0, void 0, function* () {
+            yield asyncForEach(nodes, (n2) => __awaiter(this, void 0, void 0, function* () {
+                if (n1.pubkey !== n2.pubkey) {
+                    if (!already.find((a) => {
+                        a.includes(n1.pubkey) && a.includes(n2.pubkey);
+                    })) {
+                        already.push(`${n1.pubkey}-${n2.pubkey}`);
+                        yield callback(n1, n2);
+                    }
+                }
+            }));
+        }));
+    });
+}
+exports.iterate = iterate;
 //# sourceMappingURL=helpers.js.map

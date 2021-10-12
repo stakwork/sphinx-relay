@@ -354,7 +354,7 @@ export const sendMessage = async (req, res) => {
 }
 
 export const receiveMessage = async (payload) => {
-  // console.log('received message', { payload })
+  console.log('received message', { payload })
 
   const {
     owner,
