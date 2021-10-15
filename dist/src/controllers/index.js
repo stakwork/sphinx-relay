@@ -119,14 +119,14 @@ function set(app) {
         app.get('/healthcheck', confirmations.healthcheck);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
-                const version = yield gitinfo_1.checkTag();
+                const version = yield (0, gitinfo_1.checkTag)();
                 res.send({ version });
             });
         });
         app.get('/latest', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!req.owner)
-                    return res_1.failure(res, 'no owner');
+                    return (0, res_1.failure)(res, 'no owner');
                 const tenant = req.owner.id;
                 const lasts = yield models_1.models.Message.findAll({
                     limit: 1,

@@ -26,16 +26,16 @@ const logger_1 = require("../utils/logger");
 function updateChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         console.log('=> updateChat');
         const id = parseInt(req.params.id);
         if (!id) {
-            return res_1.failure(res, 'missing id');
+            return (0, res_1.failure)(res, 'missing id');
         }
         const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
         if (!chat) {
-            return res_1.failure(res, 'chat not found');
+            return (0, res_1.failure)(res, 'chat not found');
         }
         const { name, photo_url, meta, my_alias, my_photo_url } = req.body;
         const obj = {};
@@ -52,19 +52,19 @@ function updateChat(req, res) {
         if (Object.keys(obj).length > 0) {
             yield chat.update(obj);
         }
-        res_1.success(res, jsonUtils.chatToJson(chat));
+        (0, res_1.success)(res, jsonUtils.chatToJson(chat));
     });
 }
 exports.updateChat = updateChat;
 function kickChatMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const chatId = parseInt(req.params['chat_id']);
         const contactId = parseInt(req.params['contact_id']);
         if (!chatId || !contactId) {
-            return res_1.failure(res, 'missing param');
+            return (0, res_1.failure)(res, 'missing param');
         }
         // remove chat.contactIds
         let chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
@@ -88,7 +88,7 @@ function kickChatMember(req, res) {
         });
         // delete all timers for this member
         timers.removeTimersByContactIdChatId(contactId, chatId, tenant);
-        res_1.success(res, jsonUtils.chatToJson(chat));
+        (0, res_1.success)(res, jsonUtils.chatToJson(chat));
     });
 }
 exports.kickChatMember = kickChatMember;
@@ -143,33 +143,33 @@ exports.receiveGroupKick = receiveGroupKick;
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const chats = yield models_1.models.Chat.findAll({
             where: { deleted: false, tenant },
             raw: true,
         });
         const c = chats.map((chat) => jsonUtils.chatToJson(chat));
-        res_1.success(res, c);
+        (0, res_1.success)(res, c);
     });
 }
 exports.getChats = getChats;
 function mute(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const chatId = req.params['chat_id'];
         const mute = req.params['mute_unmute'];
         if (!['mute', 'unmute'].includes(mute)) {
-            return res_1.failure(res, 'invalid option for mute');
+            return (0, res_1.failure)(res, 'invalid option for mute');
         }
         const chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
         if (!chat) {
-            return res_1.failure(res, 'chat not found');
+            return (0, res_1.failure)(res, 'chat not found');
         }
         chat.update({ isMuted: mute == 'mute' });
-        res_1.success(res, jsonUtils.chatToJson(chat));
+        (0, res_1.success)(res, jsonUtils.chatToJson(chat));
     });
 }
 exports.mute = mute;
@@ -178,7 +178,7 @@ exports.mute = mute;
 function createGroupChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { name, is_tribe, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
         const contact_ids = req.body.contact_ids || [];
@@ -200,7 +200,7 @@ function createGroupChat(req, res) {
         let chatParams = null;
         let okToCreate = true;
         if (is_tribe) {
-            chatParams = yield chatTribes_1.createTribeChatParams(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url, tenant);
+            chatParams = yield (0, chatTribes_1.createTribeChatParams)(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url, tenant);
             if (chatParams.uuid) {
                 // publish to tribe server
                 try {
@@ -237,7 +237,7 @@ function createGroupChat(req, res) {
             chatParams = createGroupChatParams(owner, contact_ids, members, name);
         }
         if (!okToCreate) {
-            return res_1.failure(res, 'could not create tribe');
+            return (0, res_1.failure)(res, 'could not create tribe');
         }
         network.sendMessage({
             chat: Object.assign(Object.assign({}, chatParams), { members }),
@@ -245,7 +245,7 @@ function createGroupChat(req, res) {
             type: constants_1.default.message_types.group_create,
             message: {},
             failure: function (e) {
-                res_1.failure(res, e);
+                (0, res_1.failure)(res, e);
             },
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -265,7 +265,7 @@ function createGroupChat(req, res) {
                             console.log('=> createGroupChat failed to UPSERT', e);
                         }
                     }
-                    res_1.success(res, jsonUtils.chatToJson(chat));
+                    (0, res_1.success)(res, jsonUtils.chatToJson(chat));
                 });
             },
         });
@@ -276,7 +276,7 @@ exports.createGroupChat = createGroupChat;
 function addGroupMembers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { contact_ids } = req.body;
         const { id } = req.params;
@@ -310,7 +310,7 @@ function addGroupMembers(req, res) {
                     members[contact.publicKey].role = member.role;
             }
         }));
-        res_1.success(res, jsonUtils.chatToJson(chat));
+        (0, res_1.success)(res, jsonUtils.chatToJson(chat));
         network.sendMessage({
             // send ONLY to new members
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: contact_ids, members }),
@@ -323,13 +323,13 @@ function addGroupMembers(req, res) {
 exports.addGroupMembers = addGroupMembers;
 const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { id } = req.params;
     const owner = req.owner;
     const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
     if (!chat) {
-        return res_1.failure(res, 'you are not in this group');
+        return (0, res_1.failure)(res, 'you are not in this group');
     }
     const tribeOwnerPubKey = chat.ownerPubkey;
     if (owner.publicKey === tribeOwnerPubKey) {
@@ -344,7 +344,7 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 tribes.delete_tribe(chat.uuid, owner.publicKey);
             },
             failure: function () {
-                res_1.failure(res, 'failed to send tribe_delete message');
+                (0, res_1.failure)(res, 'failed to send tribe_delete message');
                 notOK = true;
             },
         });
@@ -376,7 +376,7 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
     yield models_1.models.Message.destroy({ where: { chatId: id, tenant } });
     yield models_1.models.ChatMember.destroy({ where: { chatId: id, tenant } });
-    res_1.success(res, { chat_id: id });
+    (0, res_1.success)(res, { chat_id: id });
 });
 exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
@@ -456,7 +456,7 @@ function receiveGroupJoin(payload) {
                     console.log('=> groupJoin could not upsert ChatMember');
                 }
                 setTimeout(() => {
-                    chatTribes_1.replayChatHistory(chat, theSender, owner);
+                    (0, chatTribes_1.replayChatHistory)(chat, theSender, owner);
                 }, 2000);
                 tribes.putstats({
                     chatId: chat.id,
@@ -485,7 +485,7 @@ function receiveGroupJoin(payload) {
             msg.senderPic = sender_photo_url;
         }
         const message = yield models_1.models.Message.create(msg);
-        const theChat = yield chatTribes_1.addPendingContactIdsToChat(chat, tenant);
+        const theChat = yield (0, chatTribes_1.addPendingContactIdsToChat)(chat, tenant);
         socket.sendJson({
             type: 'group_join',
             response: {
@@ -495,7 +495,7 @@ function receiveGroupJoin(payload) {
             },
         }, tenant);
         if (isTribeOwner) {
-            hub_1.sendNotification(chat, chat_name, 'group_join', owner);
+            (0, hub_1.sendNotification)(chat, chat_name, 'group_join', owner);
         }
     });
 }
@@ -569,7 +569,7 @@ function receiveGroupLeave(payload) {
             },
         }, tenant);
         if (isTribeOwner) {
-            hub_1.sendNotification(chat, chat_name, 'group_leave', owner);
+            (0, hub_1.sendNotification)(chat, chat_name, 'group_leave', owner);
         }
     });
 }

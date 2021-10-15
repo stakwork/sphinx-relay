@@ -15,7 +15,7 @@ const publicIp = require("public-ip");
 const gitinfo_1 = require("../utils/gitinfo");
 const models_1 = require("../models");
 const config_1 = require("./config");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 var NodeType;
 (function (NodeType) {
@@ -106,8 +106,8 @@ function nodeinfo() {
             public_ip = yield publicIp.v4();
         }
         catch (e) { }
-        const commitHash = yield gitinfo_1.checkCommitHash();
-        const tag = yield gitinfo_1.checkTag();
+        const commitHash = yield (0, gitinfo_1.checkCommitHash)();
+        const tag = yield (0, gitinfo_1.checkTag)();
         const clean = yield isClean();
         const latest_message = yield latestMessage();
         try {

@@ -6,7 +6,7 @@ const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
 const lightning_1 = require("./lightning");
 const long = require("long");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const IS_LND = config.lightning_provider === 'LND';
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 function getInfoResponse(res) {

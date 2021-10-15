@@ -13,7 +13,7 @@ exports.urlBase64FromHex = exports.testLDAT = exports.urlBase64FromBytes = expor
 const zbase32 = require("./zbase32");
 const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 /*
 Lightning Data Access Token
 Base64 strings separated by dots:

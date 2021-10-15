@@ -30,20 +30,20 @@ function processAction(req, res) {
             }
             catch (e) {
                 console.log(e);
-                return res_1.failure(res, 'failed to parse webhook body json');
+                return (0, res_1.failure)(res, 'failed to parse webhook body json');
             }
         }
         const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, } = body;
         if (!bot_id)
-            return res_1.failure(res, 'no bot_id');
+            return (0, res_1.failure)(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
         if (!bot)
-            return res_1.failure(res, 'no bot');
+            return (0, res_1.failure)(res, 'no bot');
         if (!(bot.secret && bot.secret === bot_secret)) {
-            return res_1.failure(res, 'wrong secret');
+            return (0, res_1.failure)(res, 'wrong secret');
         }
         if (!action) {
-            return res_1.failure(res, 'no action');
+            return (0, res_1.failure)(res, 'no action');
         }
         const a = {
             bot_id,
@@ -59,10 +59,10 @@ function processAction(req, res) {
         };
         try {
             const r = yield finalAction(a);
-            res_1.success(res, r);
+            (0, res_1.success)(res, r);
         }
         catch (e) {
-            res_1.failure(res, e);
+            (0, res_1.failure)(res, e);
         }
     });
 }
@@ -79,7 +79,7 @@ function finalAction(a) {
                 },
             });
             if (chat_uuid) {
-                const myChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
+                const myChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
                 // ACTUALLY ITS A LOCAL (FOR MY TRIBE) message! kill myBot
                 if (myChat)
                     myBot = null;
@@ -119,7 +119,7 @@ function finalAction(a) {
                     alias: bot_name || '',
                     role: 0,
                     route_hint,
-                },
+                }, // for verify sig
             };
             if (recipient_id) {
                 data.recipient_id = recipient_id;
@@ -154,10 +154,10 @@ function finalAction(a) {
             // }
         }
         else if (action === 'pay') {
-            pay_1.default(a);
+            (0, pay_1.default)(a);
         }
         else if (action === 'broadcast') {
-            broadcast_1.default(a);
+            (0, broadcast_1.default)(a);
         }
         else {
             return console.log('invalid action');

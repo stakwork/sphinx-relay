@@ -25,22 +25,22 @@ const logger_1 = require("../utils/logger");
 const short = require("short-uuid");
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const bots = yield models_1.models.Bot.findAll({ where: { tenant } });
-        res_1.success(res, {
+        (0, res_1.success)(res, {
             bots: bots.map((b) => jsonUtils.botToJson(b)),
         });
     }
     catch (e) {
-        res_1.failure(res, 'no bots');
+        (0, res_1.failure)(res, 'no bots');
     }
 });
 exports.getBots = getBots;
 const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { name, webhook, price_per_use, img, description, tags } = req.body;
     const uuid = yield tribes.genSignedTimestamp(req.owner.publicKey);
@@ -68,27 +68,27 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             deleted: false,
             owner_route_hint: req.owner.routeHint || '',
         });
-        res_1.success(res, jsonUtils.botToJson(theBot));
+        (0, res_1.success)(res, jsonUtils.botToJson(theBot));
     }
     catch (e) {
-        res_1.failure(res, 'bot creation failed');
+        (0, res_1.failure)(res, 'bot creation failed');
     }
 });
 exports.createBot = createBot;
 const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const id = req.params.id;
     if (!id)
         return;
     try {
         models_1.models.Bot.destroy({ where: { id, tenant } });
-        res_1.success(res, true);
+        (0, res_1.success)(res, true);
     }
     catch (e) {
         console.log('ERROR deleteBot', e);
-        res_1.failure(res, e);
+        (0, res_1.failure)(res, e);
     }
 });
 exports.deleteBot = deleteBot;
@@ -342,7 +342,7 @@ function postToBotServer(msg, bot, route) {
             url += '/' + route;
         }
         try {
-            const r = yield node_fetch_1.default(url, {
+            const r = yield (0, node_fetch_1.default)(url, {
                 method: 'POST',
                 body: JSON.stringify(buildBotPayload(msg)),
                 headers: {
@@ -370,6 +370,7 @@ function buildBotPayload(msg) {
         channel: {
             id: chat_uuid,
             send: function () { },
+            pay: function () { },
         },
         content: msg.message.content,
         amount: msg.message.amount,
@@ -428,7 +429,7 @@ function receiveBotRes(payload) {
             // received the entire action?
             const bot_id = payload.bot_id;
             const recipient_id = payload.recipient_id;
-            botapi_1.finalAction({
+            (0, botapi_1.finalAction)({
                 bot_id,
                 action,
                 bot_name,

@@ -15,6 +15,10 @@ const md5 = require("md5");
 const network = require("./network");
 const constants_1 = require("./constants");
 const logger_1 = require("./utils/logger");
+const config_1 = require("./utils/config");
+const Lightning = require("./grpc/lightning");
+const config = (0, config_1.loadConfig)();
+const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
@@ -61,10 +65,24 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.findOrCreateChat = findOrCreateChat;
 const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActuallySendContactKey, contactPubKey, routeHint, }) => __awaiter(void 0, void 0, void 0, function* () {
-    const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey || false);
+    const theSender = sender.dataValues || sender;
+    // if greenlight, create the route hint on the fly
+    if (IS_GREENLIGHT) {
+        try {
+            const channelList = yield Lightning.listChannels({});
+            const { channels } = channelList;
+            const first = channels.length ? channels[0] : null;
+            if (first && first.remote_pubkey && first.chan_id) {
+                const rh = first.remote_pubkey + ':' + first.chan_id;
+                theSender.routeHint = rh;
+            }
+        }
+        catch (e) { }
+    }
+    const msg = newkeyexchangemsg(type, theSender, dontActuallySendContactKey || false);
     if (contactPubKey) {
         // dont use ids here
-        exports.performKeysendMessage({
+        (0, exports.performKeysendMessage)({
             sender,
             destination_key: contactPubKey,
             amount: 3,
@@ -87,10 +105,10 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
         if (!(contact && contact.publicKey))
             return;
         destination_key = contact.publicKey;
-        const route_hint = contact.routeHint;
+        let route_hint = contact.routeHint;
         // console.log("=> KEY EXCHANGE", msg)
         // console.log("=> TO", destination_key, route_hint)
-        yield exports.performKeysendMessage({
+        yield (0, exports.performKeysendMessage)({
             sender,
             destination_key,
             amount: 3,
@@ -155,7 +173,7 @@ function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, 
                 tenant: owner.id,
                 unmet,
             });
-            exports.sendContactKeys({
+            (0, exports.sendContactKeys)({
                 contactIds: [sender.id],
                 sender: owner,
                 type: constants_1.default.message_types.contact_key,

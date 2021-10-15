@@ -23,7 +23,7 @@ const migrate_1 = require("./migrate");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const USER_VERSION = 7;
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     if (logger_1.logging.DB)
         console.log('=> [db] starting setup...');
@@ -39,7 +39,7 @@ const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         if (logger_1.logging.DB)
             console.log('[db] sync failed', e);
     }
-    yield migrate_1.default();
+    yield (0, migrate_1.default)();
     if (logger_1.logging.DB)
         console.log('=> [db] setup done');
 });
@@ -68,7 +68,7 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                 let authToken = null;
                 let tenant = null;
                 // dont allow "signup" on root contact of proxy node
-                if (proxy_1.isProxy()) {
+                if ((0, proxy_1.isProxy)()) {
                     authToken = '_';
                 }
                 else {
@@ -92,7 +92,7 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
 exports.setupOwnerContact = setupOwnerContact;
 const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     yield new Promise((resolve, reject) => {
-        const migration = child_process_1.exec('node_modules/.bin/sequelize db:migrate', { env: process.env }, (err, stdout, stderr) => {
+        const migration = (0, child_process_1.exec)('node_modules/.bin/sequelize db:migrate', { env: process.env }, (err, stdout, stderr) => {
             if (err) {
                 reject(err);
             }
@@ -115,21 +115,21 @@ function setupDone() {
 exports.setupDone = setupDone;
 function printGitInfo() {
     return __awaiter(this, void 0, void 0, function* () {
-        const commitHash = yield gitinfo_1.checkCommitHash();
-        const tag = yield gitinfo_1.checkTag();
+        const commitHash = yield (0, gitinfo_1.checkCommitHash)();
+        const tag = yield (0, gitinfo_1.checkTag)();
         console.log(`=> Relay version: ${tag}, commit: ${commitHash}`);
     });
 }
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
-        const b64 = yield connect_1.getQR();
+        const b64 = yield (0, connect_1.getQR)();
         if (!b64) {
             console.log('=> no public IP provided');
             return '';
         }
         console.log('>>', b64);
         connectionStringFile(b64);
-        const clean = yield nodeinfo_1.isClean();
+        const clean = yield (0, nodeinfo_1.isClean)();
         if (!clean)
             return; // skip it if already setup!
         console.log('Scan this QR in Sphinx app:');

@@ -57,7 +57,7 @@ function saveLsat(req, res) {
             console.log(`=> saveLsat`);
         const { paymentRequest, macaroon, issuer, paths, metadata } = req.body;
         if (!paymentRequest || !macaroon || !issuer) {
-            return res_1.failure(res, 'Missing required LSAT data');
+            return (0, res_1.failure)(res, 'Missing required LSAT data');
         }
         let lsat;
         try {
@@ -74,7 +74,7 @@ function saveLsat(req, res) {
         if (yield lsatAlreadyExists(lsat)) {
             if (logger_1.logging.Lsat)
                 console.error('[pay for lsat] Lsat already exists: ', identifier);
-            return res_1.failure(res, `Could not save lsat. Already exists`);
+            return (0, res_1.failure)(res, `Could not save lsat. Already exists`);
         }
         let preimage;
         try {
@@ -84,11 +84,11 @@ function saveLsat(req, res) {
             if (logger_1.logging.Lsat)
                 console.error('[pay for lsat] Problem paying for lsat:', e);
             res.status(500);
-            return res_1.failure(res, 'Could not pay for lsat');
+            return (0, res_1.failure)(res, 'Could not pay for lsat');
         }
         if (!preimage) {
             res.status(400);
-            return res_1.failure(res, 'invoice could not be paid');
+            return (0, res_1.failure)(res, 'invoice could not be paid');
         }
         try {
             lsat.setPreimage(preimage);
@@ -102,10 +102,10 @@ function saveLsat(req, res) {
                 metadata,
                 tenant,
             });
-            return res_1.success(res, { lsat: lsat.toToken() });
+            return (0, res_1.success)(res, { lsat: lsat.toToken() });
         }
         catch (e) {
-            return res_1.failure(res, `failed to save lsat: ${e.message || e}`);
+            return (0, res_1.failure)(res, `failed to save lsat: ${e.message || e}`);
         }
     });
 }
@@ -126,10 +126,10 @@ function getLsat(req, res) {
                     success: false,
                     error: `LSAT with identifier ${identifier} not found`,
                 });
-            return res_1.success(res, { lsat });
+            return (0, res_1.success)(res, { lsat });
         }
         catch (e) {
-            return res_1.failure(res, `could not retrieve lsat of id ${identifier}`);
+            return (0, res_1.failure)(res, `could not retrieve lsat of id ${identifier}`);
         }
     });
 }
@@ -144,10 +144,10 @@ function listLsats(req, res) {
                 where: { tenant },
                 attributes: lsatResponseAttributes,
             });
-            return res_1.success(res, { lsats });
+            return (0, res_1.success)(res, { lsats });
         }
         catch (e) {
-            return res_1.failure(res, `could not retrieve lsats`);
+            return (0, res_1.failure)(res, `could not retrieve lsats`);
         }
     });
 }
@@ -163,10 +163,10 @@ function updateLsat(req, res) {
             yield models_1.models.Lsat.update(body, {
                 where: { tenant, identifier },
             });
-            return res_1.success(res, 'lsat successfully updated');
+            return (0, res_1.success)(res, 'lsat successfully updated');
         }
         catch (e) {
-            return res_1.failure(res, `could not update lsat: ${e.message}`);
+            return (0, res_1.failure)(res, `could not update lsat: ${e.message}`);
         }
     });
 }
@@ -181,10 +181,10 @@ function deleteLsat(req, res) {
             yield models_1.models.Lsat.destroy({
                 where: { tenant, identifier },
             });
-            return res_1.success(res, 'lsat successfully deleted');
+            return (0, res_1.success)(res, 'lsat successfully deleted');
         }
         catch (e) {
-            return res_1.failure(res, `could not delete lsat`);
+            return (0, res_1.failure)(res, `could not delete lsat`);
         }
     });
 }

@@ -26,7 +26,7 @@ const logger_1 = require("../utils/logger");
 const moment = require("moment");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const dontIncludeFromGroup = req.query.from_group && req.query.from_group === 'false';
     const includeUnmet = req.query.unmet && req.query.unmet === 'include';
@@ -74,7 +74,7 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         theChat.pendingContactIds = membs.map((m) => m.contactId);
         return jsonUtils.chatToJson(theChat);
     });
-    res_1.success(res, {
+    (0, res_1.success)(res, {
         contacts: contactsResponse,
         chats: chatsResponse,
         subscriptions: subsResponse,
@@ -84,21 +84,21 @@ exports.getContacts = getContacts;
 const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = parseInt(req.params.chat_id);
     if (!chat_id)
-        return res_1.failure(res, 'no chat id');
+        return (0, res_1.failure)(res, 'no chat id');
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const chat = yield models_1.models.Chat.findOne({
         where: { id: chat_id, tenant },
     });
     if (!chat)
-        return res_1.failure(res, 'chat not found');
+        return (0, res_1.failure)(res, 'chat not found');
     let contactIDs;
     try {
         contactIDs = JSON.parse(chat.contactIds || '[]');
     }
     catch (e) {
-        return res_1.failure(res, 'no contact ids');
+        return (0, res_1.failure)(res, 'no contact ids');
     }
     const pendingMembers = yield models_1.models.ChatMember.findAll({
         where: {
@@ -108,7 +108,7 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         },
     });
     if (!contactIDs || !contactIDs.length)
-        return res_1.failure(res, 'no contact ids length');
+        return (0, res_1.failure)(res, 'no contact ids length');
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const contacts = yield models_1.models.Contact.findAll({
@@ -118,7 +118,7 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         order: [['alias', 'asc']],
     });
     if (!contacts)
-        return res_1.failure(res, 'no contacts found');
+        return (0, res_1.failure)(res, 'no contacts found');
     const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
     let finalContacts = contactsRet;
     if (offset === 0) {
@@ -136,23 +136,23 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
             finalContacts = pendingContactsRet.concat(contactsRet);
         }
     }
-    res_1.success(res, { contacts: finalContacts });
+    (0, res_1.success)(res, { contacts: finalContacts });
 });
 exports.getContactsForChat = getContactsForChat;
 function generateOwnerWithExternalSigner(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!proxy_1.isProxy()) {
-            return res_1.failure(res, 'only proxy');
+        if (!(0, proxy_1.isProxy)()) {
+            return (0, res_1.failure)(res, 'only proxy');
         }
         const { pubkey, sig } = req.body;
         const where = { isOwner: true, publicKey: pubkey };
         const owner = yield models_1.models.Contact.findOne({ where });
         if (owner) {
-            return res_1.failure(res, 'owner already exists');
+            return (0, res_1.failure)(res, 'owner already exists');
         }
-        const generated = yield proxy_1.generateNewExternalUser(pubkey, sig);
+        const generated = yield (0, proxy_1.generateNewExternalUser)(pubkey, sig);
         if (!generated) {
-            return res_1.failure(res, 'generate failed');
+            return (0, res_1.failure)(res, 'generate failed');
         }
         const contact = {
             publicKey: generated.publicKey,
@@ -163,7 +163,7 @@ function generateOwnerWithExternalSigner(req, res) {
         const created = yield models_1.models.Contact.create(contact);
         // set tenant to self!
         created.update({ tenant: created.id });
-        res_1.success(res, { id: (created && created.id) || 0 });
+        (0, res_1.success)(res, { id: (created && created.id) || 0 });
     });
 }
 exports.generateOwnerWithExternalSigner = generateOwnerWithExternalSigner;
@@ -175,20 +175,20 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
     const where = { isOwner: true };
     const pubkey = req.body['pubkey'];
-    if (proxy_1.isProxy()) {
+    if ((0, proxy_1.isProxy)()) {
         if (!pubkey) {
-            return res_1.failure(res, 'no pubkey');
+            return (0, res_1.failure)(res, 'no pubkey');
         }
         where.publicKey = pubkey;
     }
     const owner = yield models_1.models.Contact.findOne({ where });
     if (!owner) {
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     }
     const pwd = password_1.default;
     if (process.env.USE_PASSWORD === 'true') {
         if (pwd !== req.query.pwd) {
-            res_1.failure(res, 'Wrong Password');
+            (0, res_1.failure)(res, 'Wrong Password');
             return;
         }
         else {
@@ -197,27 +197,27 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     const token = req.body['token'];
     if (!token) {
-        return res_1.failure(res, 'no token in body');
+        return (0, res_1.failure)(res, 'no token in body');
     }
     const hash = crypto.createHash('sha256').update(token).digest('base64');
     if (owner.authToken) {
         if (owner.authToken !== hash) {
-            return res_1.failure(res, 'invalid token');
+            return (0, res_1.failure)(res, 'invalid token');
         }
     }
     else {
         // done!
-        if (proxy_1.isProxy()) {
+        if ((0, proxy_1.isProxy)()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
         owner.update({ authToken: hash });
     }
-    res_1.success(res, { id: (owner && owner.id) || 0 });
+    (0, res_1.success)(res, { id: (owner && owner.id) || 0 });
 });
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     if (logger_1.logging.Network) {
         console.log('=> updateContact called', {
@@ -231,14 +231,14 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         where: { id: req.params.id, tenant },
     });
     if (!contact) {
-        return res_1.failure(res, 'no contact found');
+        return (0, res_1.failure)(res, 'no contact found');
     }
     const contactKeyChanged = attrs['contact_key'] && contact.contactKey !== attrs['contact_key'];
     const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias'];
     const photoChanged = attrs['photo_url'] && contact.photoUrl !== attrs['photo_url'];
     // update contact
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
-    res_1.success(res, jsonUtils.contactToJson(owner));
+    (0, res_1.success)(res, jsonUtils.contactToJson(owner));
     if (!contact.isOwner)
         return;
     if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
@@ -266,7 +266,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.updateContact = updateContact;
 const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     console.log('=> exchangeKeys called', {
         body: req.body,
@@ -277,7 +277,7 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         where: { id: req.params.id, tenant },
     });
     const owner = req.owner;
-    res_1.success(res, jsonUtils.contactToJson(contact));
+    (0, res_1.success)(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
         contactIds: [contact.id],
         sender: owner,
@@ -287,7 +287,7 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.exchangeKeys = exchangeKeys;
 const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     if (logger_1.logging.Network) {
         console.log('=> createContact called', {
@@ -307,14 +307,14 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (attrs['alias'])
             updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);
-        return res_1.success(res, jsonUtils.contactToJson(existing));
+        return (0, res_1.success)(res, jsonUtils.contactToJson(existing));
     }
     if (attrs['public_key'].length > 66)
         attrs['public_key'] = attrs['public_key'].substring(0, 66);
     attrs.tenant = tenant;
     const createdContact = yield models_1.models.Contact.create(attrs);
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
-    res_1.success(res, jsonUtils.contactToJson(contact));
+    (0, res_1.success)(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
         contactIds: [contact.id],
         sender: owner,
@@ -324,11 +324,11 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createContact = createContact;
 const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const id = parseInt(req.params.id || '0');
     if (!id || id === tenant) {
-        res_1.failure(res, 'Cannot delete self');
+        (0, res_1.failure)(res, 'Cannot delete self');
         return;
     }
     const contact = yield models_1.models.Contact.findOne({ where: { id, tenant } });
@@ -390,7 +390,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }));
     yield models_1.models.Invite.destroy({ where: { contactId: id, tenant } });
     yield models_1.models.Subscription.destroy({ where: { contactId: id, tenant } });
-    res_1.success(res, {});
+    (0, res_1.success)(res, {});
 });
 exports.deleteContact = deleteContact;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -509,7 +509,7 @@ function extractAttrs(body) {
 }
 const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const dateToReturn = decodeURI(req.query.date);
@@ -542,7 +542,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             theChat.pendingContactIds = membs.map((m) => m.contactId);
             return jsonUtils.chatToJson(theChat);
         });
-        res_1.success(res, {
+        (0, res_1.success)(res, {
             contacts: contactsResponse,
             invites: invitesResponse,
             chats: chatsResponse,
@@ -550,7 +550,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
     }
     catch (e) {
-        res_1.failure(res, e);
+        (0, res_1.failure)(res, e);
     }
 });
 exports.getLatestContacts = getLatestContacts;
@@ -560,22 +560,22 @@ function switchBlock(res, tenant, id, blocked) {
             where: { id, tenant },
         });
         if (!contact) {
-            return res_1.failure(res, 'no contact found');
+            return (0, res_1.failure)(res, 'no contact found');
         }
         // update contact
         const updated = yield contact.update({ blocked });
-        res_1.success(res, jsonUtils.contactToJson(updated));
+        (0, res_1.success)(res, jsonUtils.contactToJson(updated));
     });
 }
 const blockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     switchBlock(res, req.owner.id, req.params.contact_id, true);
 });
 exports.blockContact = blockContact;
 const unblockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     switchBlock(res, req.owner.id, req.params.contact_id, false);
 });
 exports.unblockContact = unblockContact;

@@ -13,15 +13,15 @@ exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, }, id) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const token = yield tribes_1.genSignedTimestamp(owner_pubkey);
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(protocol + '://' + host + '/person?token=' + token, {
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/person?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify(Object.assign(Object.assign({}, (id && { id })), { // id optional (for editing)
                     owner_alias,
@@ -48,11 +48,11 @@ exports.createOrEditPerson = createOrEditPerson;
 function deletePerson(host, id, owner_pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const token = yield tribes_1.genSignedTimestamp(owner_pubkey);
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(`${protocol}://${host}/person/${id}?token=${token}`, {
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/person/${id}?token=${token}`, {
                 method: 'DELETE',
             });
             if (!r.ok) {

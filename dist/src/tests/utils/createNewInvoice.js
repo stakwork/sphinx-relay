@@ -13,7 +13,7 @@ exports.createNewInvoice = void 0;
 const http = require("ava-http");
 const helpers_1 = require("./helpers");
 const createNewInvoice = (t, receivingNode, amount) => __awaiter(void 0, void 0, void 0, function* () {
-    const r = yield http.post(receivingNode.external_ip + '/invoices', helpers_1.makeArgs(receivingNode, {
+    const r = yield http.post(receivingNode.external_ip + '/invoices', (0, helpers_1.makeArgs)(receivingNode, {
         amount,
     }));
     t.true(r.success, 'invoice should have been posted');

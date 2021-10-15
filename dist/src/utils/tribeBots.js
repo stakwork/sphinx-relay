@@ -14,15 +14,15 @@ const models_1 = require("../models");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const config_1 = require("./config");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint, }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const host = tribes_1.getHost();
+        const host = (0, tribes_1.getHost)();
         try {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(protocol + '://' + host + '/bots', {
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/bots', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid,

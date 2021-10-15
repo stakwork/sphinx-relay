@@ -3,6 +3,12 @@ import * as md5 from 'md5'
 import * as network from './network'
 import constants from './constants'
 import { logging } from './utils/logger'
+import { loadConfig } from './utils/config'
+import * as Lightning from './grpc/lightning'
+
+const config = loadConfig()
+
+const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
 
 export const findOrCreateChat = async (params) => {
   const { chat_id, owner_id, recipient_id } = params
@@ -68,9 +74,23 @@ export const sendContactKeys = async ({
   contactPubKey?: string
   routeHint?: string
 }) => {
+  const theSender = sender.dataValues || sender
+  // if greenlight, create the route hint on the fly
+  if (IS_GREENLIGHT) {
+    try {
+      const channelList = await Lightning.listChannels({})
+      const { channels } = channelList
+      const first = channels.length ? channels[0] : null
+      if (first && first.remote_pubkey && first.chan_id) {
+        const rh = first.remote_pubkey + ':' + first.chan_id
+        theSender.routeHint = rh
+      }
+    } catch (e) {}
+  }
+
   const msg = newkeyexchangemsg(
     type,
-    sender,
+    theSender,
     dontActuallySendContactKey || false
   )
 
@@ -100,7 +120,7 @@ export const sendContactKeys = async ({
     const contact = await models.Contact.findOne({ where: { id: contactId } })
     if (!(contact && contact.publicKey)) return
     destination_key = contact.publicKey
-    const route_hint = contact.routeHint
+    let route_hint = contact.routeHint
 
     // console.log("=> KEY EXCHANGE", msg)
     // console.log("=> TO", destination_key, route_hint)

@@ -18,7 +18,7 @@ const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
 const interfaces = require("./interfaces");
 const lightning_1 = require("./lightning");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 function initGreenlight() {
     return __awaiter(this, void 0, void 0, function* () {
         yield startGreenlightInit();
@@ -242,7 +242,7 @@ function streamHsmRequests() {
     return __awaiter(this, void 0, void 0, function* () {
         const capabilities_bitset = 1087; // 1 + 2 + 4 + 8 + 16 + 32 + 1024
         try {
-            const lightning = yield lightning_1.loadLightning(true); // try proxy
+            const lightning = yield (0, lightning_1.loadLightning)(true); // try proxy
             var call = lightning.streamHsmRequests({});
             call.on('data', function (response) {
                 return __awaiter(this, void 0, void 0, function* () {

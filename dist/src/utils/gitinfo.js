@@ -9,7 +9,7 @@ function checkCommitHash() {
             return resolve(commitHash);
         }
         try {
-            child_process_1.exec(`git log -1 --pretty=format:%h`, { timeout: 999 }, (error, stdout, stderr) => {
+            (0, child_process_1.exec)(`git log -1 --pretty=format:%h`, { timeout: 999 }, (error, stdout, stderr) => {
                 if (stdout) {
                     commitHash = stdout.trim();
                     return resolve(commitHash);
@@ -33,7 +33,7 @@ function checkTag() {
             return resolve(tag);
         }
         try {
-            child_process_1.exec(`git describe --abbrev=0 --tags`, { timeout: 999 }, (error, stdout, stderr) => {
+            (0, child_process_1.exec)(`git describe --abbrev=0 --tags`, { timeout: 999 }, (error, stdout, stderr) => {
                 if (stdout) {
                     tag = stdout.trim();
                     return resolve(tag);
