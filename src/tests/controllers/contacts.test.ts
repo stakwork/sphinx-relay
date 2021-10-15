@@ -15,16 +15,21 @@ sqlite3 /Users/evanfeenstra/code/sphinx/sphinx-stack/relay/db/bob.db
 
 interface Context {}
 
-test.serial('checkContacts', async (t: ExecutionContext<Context>) => {
-  t.true(Array.isArray(nodes))
-  if (config.iterate) {
-    await iterate(nodes, async (node1, node2) => {
-      await checkContact(t, node1, node2)
-    })
-  } else {
-    await checkContact(t, nodes[0], nodes[1])
-  }
-})
+for (let i = 0; i < nodes.length; i++) {
+	for (let j = 0; j < nodes.length; j++) {
+
+        test.serial(`checkContacts for ${nodes[i].alias} to ${nodes[j].alias}`, async (t: ExecutionContext<Context>) => {
+          t.true(Array.isArray(nodes))
+          if (config.iterate) {
+            await iterate(nodes, async (node1, node2) => {
+              await checkContact(t, node1, node2)
+            })
+          } else {
+            await checkContact(t, nodes[i], nodes[j])
+          }
+        })
+    }
+}
 
 async function checkContact(
   t: ExecutionContext<Context>,
