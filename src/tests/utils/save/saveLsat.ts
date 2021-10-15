@@ -35,6 +35,7 @@ export const saveLsat = async (
   payer: NodeConfig,
   receiver: NodeConfig
 ): Promise<string> => {
+  console.log(payer.pubkey, receiver.pubkey)
   const { invoice } = await createNewInvoice(t, receiver, 500)
   const macaroon = macaroonFromInvoice(t, invoice)
 

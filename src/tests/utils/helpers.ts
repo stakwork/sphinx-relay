@@ -1,5 +1,6 @@
 import http = require('ava-http')
 import { NodeConfig, RequestArgs, RequestBody } from '../types'
+import { config } from '../config'
 
 export const makeArgs = (
   node: NodeConfig,
@@ -44,15 +45,19 @@ export async function iterate(
   nodes: NodeConfig[],
   callback: (node1: NodeConfig, node2: NodeConfig) => Promise<void>
 ): Promise<void> {
+  // dont iterate
+  if (!config.iterate) {
+    return callback(nodes[0], nodes[1])
+  }
+  // iterate through all node combinations
   const already: string[] = []
   await asyncForEach(nodes, async (n1: NodeConfig) => {
     await asyncForEach(nodes, async (n2: NodeConfig) => {
       if (n1.pubkey !== n2.pubkey) {
-        if (
-          !already.find((a) => {
-            a.includes(n1.pubkey) && a.includes(n2.pubkey)
-          })
-        ) {
+        const has = already.find((a) => {
+          return a.includes(n1.pubkey) && a.includes(n2.pubkey)
+        })
+        if (!has) {
           already.push(`${n1.pubkey}-${n2.pubkey}`)
           await callback(n1, n2)
         }

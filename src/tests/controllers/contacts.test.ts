@@ -4,7 +4,6 @@ import { addContact } from '../utils/save'
 import { randomText, iterate } from '../utils/helpers'
 import { sendMessageAndCheckDecryption } from '../utils/msg'
 import { NodeConfig } from '../types'
-import { config } from '../config'
 
 /*
 npx ava src/tests/controllers/contacts.test.ts --verbose --serial --timeout=2m
@@ -17,13 +16,9 @@ interface Context {}
 
 test.serial('checkContacts', async (t: ExecutionContext<Context>) => {
   t.true(Array.isArray(nodes))
-  if (config.iterate) {
-    await iterate(nodes, async (node1, node2) => {
-      await checkContact(t, node1, node2)
-    })
-  } else {
-    await checkContact(t, nodes[0], nodes[1])
-  }
+  await iterate(nodes, async (node1, node2) => {
+    await checkContact(t, node1, node2)
+  })
 })
 
 async function checkContact(

@@ -2,7 +2,7 @@ import test, { ExecutionContext } from 'ava'
 import { Lsat } from 'lsat-js'
 import { NodeConfig } from '../types'
 import { makeRelayRequest } from '../utils/helpers'
-import * as nodes from '../nodes'
+import nodes from '../nodes'
 
 import { saveLsat } from '../utils/save'
 import { getLsat } from '../utils/get'
@@ -43,7 +43,7 @@ test.after.always('cleanup lsats', async (t: ExecutionContext<Context>) => {
 })
 
 test.serial('saveLsat', async (t: ExecutionContext<Context>) => {
-  const token = await saveLsat(t, alice, bob)
+  const token = await saveLsat(t, nodes[0], nodes[1])
 
   t.assert(token.length, 'expected an lsat token in response')
   addLsatToContext(t, token)

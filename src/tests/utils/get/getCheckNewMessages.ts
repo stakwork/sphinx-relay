@@ -17,6 +17,7 @@ export function getCheckNewMsgs(
         makeArgs(node)
       )
       if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
+        // console.log('===>', msgRes.response.new_messages, msgUuid)
         const lastMessage = msgRes.response.new_messages.find(
           (msg) => msg.uuid === msgUuid
         )

@@ -1,7 +1,9 @@
 import test, { ExecutionContext } from 'ava'
-import { asyncForEach } from '../utils/helpers'
 import nodes from '../nodes'
-import { getSelf } from '../utils/get'
+import { iterate } from '../utils/helpers'
+import { NodeConfig } from '../types'
+import * as http from 'ava-http'
+import { makeArgs } from '../utils/helpers'
 
 /*
     npx ava src/tests/controllers/queryRoutes.test.ts --verbose --serial --timeout=2m
@@ -9,20 +11,38 @@ import { getSelf } from '../utils/get'
 
 interface Context {}
 
-test.serial('queryRoutes', async (t: ExecutionContext<Context>) => {
+test.serial('checkContacts', async (t: ExecutionContext<Context>) => {
   t.true(Array.isArray(nodes))
-  await asyncForEach(nodes, async (node) => {
-    if (!node) return
-
-    //get list of contacts as node
-    var me = await getSelf(t, node)
-    //check that the structure object
-    t.true(typeof me === 'object') // json object by default
-    //check that first contact public_key === node pubkey
-    t.true(
-      me.public_key === node.pubkey,
-      'pubkey of first contact should be pubkey of node'
-    )
-    console.log(`${node.alias}: ${me.public_key}`)
+  await iterate(nodes, async (node1, node2) => {
+    await queryRoutes(t, node1, node2)
   })
 })
+
+async function queryRoutes(
+  t: ExecutionContext<Context>,
+  node1: NodeConfig,
+  node2: NodeConfig
+) {
+  console.log(`=> queryRoutes ${node1.alias} -> ${node2.alias}`)
+
+  let q = `pubkey=${node2.pubkey}`
+  if (node2.routeHint) {
+    q += `&route_hint=${node2.routeHint}`
+  }
+  var route = await http.get(node1.external_ip + `/route?${q}`, makeArgs(node1))
+  t.truthy(
+    route.response.success_prob,
+    'route response success prob should exist'
+  )
+  t.true(
+    typeof route.response.success_prob === 'number',
+    'route response success prob should be a number'
+  )
+  t.true(
+    route.response.success_prob > 0,
+    'route response should be greater than 0'
+  )
+  console.log(
+    `${node1.alias} success prob to ${node2.alias}: ${route.response.success_prob}`
+  )
+}

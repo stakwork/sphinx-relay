@@ -1,5 +1,5 @@
 import { Assertions } from 'ava'
-import http = require('ava-http')
+import * as http from 'ava-http'
 import { NodeConfig } from '../../types'
 import { makeArgs } from '../helpers'
 

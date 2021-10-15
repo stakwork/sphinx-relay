@@ -1,6 +1,6 @@
 import { NodeConfig } from './types'
 
-const name = 'nodes'
+const name = 'evan'
 
 var nodes = require(`./configs/${name}.json`)
 
