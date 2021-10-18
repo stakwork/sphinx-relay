@@ -41,3 +41,28 @@ export interface Message {
   tenant: number
   amount_msat: number
 }
+
+export interface Chat {
+  id: number
+  uuid: string
+  name: string
+  photo_url: string
+  type: number
+  status: number
+  contact_ids: number[]
+  is_muted: boolean
+  created_at: string
+  updatet_at: string
+  deleted: boolean
+  group_key: string
+  host: string
+  price_to_join: number
+  price_per_message: number
+  escrow_amount: number
+  escrow_millis: number
+  unlisted: boolean
+  private: boolean // joining requires approval of admin
+  owner_pubkey: string
+  app_url: string
+  feed_url: string
+}

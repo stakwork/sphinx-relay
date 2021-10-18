@@ -28,4 +28,7 @@ async function timeout(i, node, paymentHash, resolve, reject) {
   if (i > 10) {
     return reject(['failed to getCheckNewPaidMsgs'])
   }
+  setTimeout(() => {
+    timeout(i + 1, node, paymentHash, resolve, reject)
+  }, 1000)
 }
