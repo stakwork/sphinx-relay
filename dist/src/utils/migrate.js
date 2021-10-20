@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_chats', 'feed_type', 'INT');
         addTableColumn('sphinx_contacts', 'blocked', 'BOOLEAN');
         addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT');
         addTableColumn('sphinx_contacts', 'unmet', 'BOOLEAN');

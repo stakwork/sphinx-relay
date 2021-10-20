@@ -23,6 +23,7 @@ export interface Chat {
   seen: boolean
   appUrl: string
   feedUrl: string
+  feedType: number
   meta: string
   myPhotoUrl: string
   myAlias: string

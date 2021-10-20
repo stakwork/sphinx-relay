@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Contact = class Contact extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -50,7 +50,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Contact.prototype, "isOwner", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
         allowNull: false,
@@ -62,15 +62,15 @@ __decorate([
     __metadata("design:type", String)
 ], Contact.prototype, "authToken", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Contact.prototype, "remoteId", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Contact.prototype, "status", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Contact.prototype, "contactKey", void 0);
 __decorate([
@@ -98,7 +98,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Contact.prototype, "lastActive", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Contact.prototype, "tipAmount", void 0);
 __decorate([
@@ -118,7 +118,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Contact.prototype, "blocked", void 0);
 Contact = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_contacts', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_contacts', underscored: true })
 ], Contact);
 exports.default = Contact;
 //# sourceMappingURL=contact.js.map

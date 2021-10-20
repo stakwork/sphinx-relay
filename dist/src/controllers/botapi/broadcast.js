@@ -25,7 +25,7 @@ function broadcast(a) {
             return console.log('no content');
         if (!chat_uuid)
             return console.log('no chat_uuid');
-        const theChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
+        const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
         if (!(theChat && theChat.id))
             return console.log('no chat');
         if (theChat.type !== constants_1.default.chat_types.tribe)

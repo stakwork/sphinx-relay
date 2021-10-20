@@ -128,11 +128,11 @@ function downloadCert(id, apiKey) {
 }
 function getCertificate(domain, port, save_ssl) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (fs_1.existsSync(__dirname + '/zerossl/tls.cert') &&
-            fs_1.existsSync(__dirname + '/zerossl/tls.key')) {
-            var certificate = fs_1.readFileSync(__dirname + '/zerossl/tls.cert', 'utf-8').toString();
-            var caBundle = fs_1.readFileSync(__dirname + '/zerossl/ca.cert', 'utf-8').toString();
-            var privateKey = fs_1.readFileSync(__dirname + '/zerossl/tls.key', 'utf-8').toString();
+        if ((0, fs_1.existsSync)(__dirname + '/zerossl/tls.cert') &&
+            (0, fs_1.existsSync)(__dirname + '/zerossl/tls.key')) {
+            var certificate = (0, fs_1.readFileSync)(__dirname + '/zerossl/tls.cert', 'utf-8').toString();
+            var caBundle = (0, fs_1.readFileSync)(__dirname + '/zerossl/ca.cert', 'utf-8').toString();
+            var privateKey = (0, fs_1.readFileSync)(__dirname + '/zerossl/tls.key', 'utf-8').toString();
             return {
                 privateKey: privateKey,
                 certificate: certificate,
@@ -153,22 +153,22 @@ function getCertificate(domain, port, save_ssl) {
         yield validateCert(port, res, endpoint, apiKey);
         var certData = yield downloadCert(res.id, apiKey);
         if (save_ssl === true) {
-            if (!fs_1.existsSync(__dirname + '/zerossl')) {
-                yield fs_1.mkdirSync(__dirname + '/zerossl');
+            if (!(0, fs_1.existsSync)(__dirname + '/zerossl')) {
+                yield (0, fs_1.mkdirSync)(__dirname + '/zerossl');
             }
-            yield fs_1.writeFile(__dirname + '/zerossl/tls.cert', certData['certificate.crt'], function (err) {
+            yield (0, fs_1.writeFile)(__dirname + '/zerossl/tls.cert', certData['certificate.crt'], function (err) {
                 if (err) {
                     return console.log(err);
                 }
                 console.log('=> [ssl] wrote tls certificate');
             });
-            yield fs_1.writeFile(__dirname + '/zerossl/ca.cert', certData['ca_bundle.crt'], function (err) {
+            yield (0, fs_1.writeFile)(__dirname + '/zerossl/ca.cert', certData['ca_bundle.crt'], function (err) {
                 if (err) {
                     return console.log(err);
                 }
                 console.log('=> [ssl] wrote tls ca bundle');
             });
-            yield fs_1.writeFile(__dirname + '/zerossl/tls.key', forge.pki.privateKeyToPem(keys.privateKey), function (err) {
+            yield (0, fs_1.writeFile)(__dirname + '/zerossl/tls.key', forge.pki.privateKeyToPem(keys.privateKey), function (err) {
                 if (err) {
                     return console.log(err);
                 }

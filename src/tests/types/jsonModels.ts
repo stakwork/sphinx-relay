@@ -65,5 +65,6 @@ export interface Chat {
   owner_pubkey: string
   app_url: string
   feed_url: string
+  feed_type: number
   owner_route_hint?: string
 }

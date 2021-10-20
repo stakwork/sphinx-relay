@@ -15,7 +15,7 @@ const helpers_1 = require("../helpers");
 function getChats(t, node1) {
     return __awaiter(this, void 0, void 0, function* () {
         //get list of contacts from node1 perspective
-        const res = yield http.get(node1.external_ip + '/contacts', helpers_1.makeArgs(node1));
+        const res = yield http.get(node1.external_ip + '/contacts', (0, helpers_1.makeArgs)(node1));
         t.truthy(res.response.chats);
         return res.response.chats;
     });

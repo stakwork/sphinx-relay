@@ -27,11 +27,11 @@ const logger_1 = require("../utils/logger");
 // import { date } from "yup/lib/locale";
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
-        return exports.getAllMessages(req, res);
+        return (0, exports.getAllMessages)(req, res);
     }
     if (logger_1.logging.Express)
         console.log(dateToReturn);
@@ -86,7 +86,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             where: { deleted: false, id: chatIds, tenant },
         })
         : [];
-    const chatsById = underscore_1.indexBy(chats, 'id');
+    const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     res.json({
         success: true,
         response: {
@@ -101,7 +101,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getMessages = getMessages;
 const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
@@ -129,9 +129,9 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         })
         : [];
     // console.log("=> found all chats", chats && chats.length);
-    const chatsById = underscore_1.indexBy(chats, 'id');
+    const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     // console.log("=> indexed chats");
-    res_1.success(res, {
+    (0, res_1.success)(res, {
         new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
         confirmed_messages: [],
     });
@@ -139,13 +139,13 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getAllMessages = getAllMessages;
 const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const limit = req.query.limit && parseInt(req.query.limit);
     const offset = req.query.offset && parseInt(req.query.offset);
     const dateToReturn = req.query.date;
     if (!dateToReturn) {
-        return exports.getAllMessages(req, res);
+        return (0, exports.getAllMessages)(req, res);
     }
     if (logger_1.logging.Express) {
         console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`);
@@ -176,8 +176,8 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             where: { deleted: false, id: chatIds, tenant },
         })
         : [];
-    const chatsById = underscore_1.indexBy(chats, 'id');
-    res_1.success(res, {
+    const chatsById = (0, underscore_1.indexBy)(chats, 'id');
+    (0, res_1.success)(res, {
         new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
     });
 });
@@ -185,7 +185,7 @@ exports.getMsgs = getMsgs;
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         const message = yield models_1.models.Message.findOne({ where: { id, tenant } });
@@ -196,9 +196,9 @@ function deleteMessage(req, res) {
         if (chat_id) {
             chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
         }
-        res_1.success(res, jsonUtils.messageToJson(message, chat));
+        (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
         if (!chat) {
-            return res_1.failure(res, 'no Chat');
+            return (0, res_1.failure)(res, 'no Chat');
         }
         const isTribe = chat.type === constants_1.default.chat_types.tribe;
         const owner = req.owner;
@@ -217,7 +217,7 @@ function deleteMessage(req, res) {
 exports.deleteMessage = deleteMessage;
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     // try {
     // 	schemas.message.validateSync(req.body)
@@ -237,11 +237,11 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         recipient_id: contact_id,
     });
     if (!chat)
-        return res_1.failure(res, 'counldnt findOrCreateChat');
+        return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
     let realSatsContactId;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
     if (!chat) {
-        return res_1.failure(res, 'no Chat');
+        return (0, res_1.failure)(res, 'no Chat');
     }
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
@@ -290,7 +290,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.replyUuid = reply_uuid;
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
-    res_1.success(res, jsonUtils.messageToJson(message, chat));
+    (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
     const msgToSend = {
         id: message.id,
         uuid: message.uuid,
@@ -357,8 +357,8 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
-    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
+    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -403,13 +403,13 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         type: 'boost',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
+    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
     if (msg.replyUuid) {
         const ogMsg = yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid, tenant },
         });
         if (ogMsg && ogMsg.sender === tenant) {
-            hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner);
+            (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'boost', owner);
         }
     }
 });
@@ -472,7 +472,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
 exports.receiveDeleteMessage = receiveDeleteMessage;
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const chat_id = req.params.chat_id;
     const owner = req.owner;
     const tenant = owner.id;
@@ -488,26 +488,26 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     });
     const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
     if (chat) {
-        hub_1.resetNotifyTribeCount(parseInt(chat_id));
+        (0, hub_1.resetNotifyTribeCount)(parseInt(chat_id));
         yield chat.update({ seen: true });
-        res_1.success(res, {});
-        hub_1.sendNotification(chat, '', 'badge', owner);
+        (0, res_1.success)(res, {});
+        (0, hub_1.sendNotification)(chat, '', 'badge', owner);
         socket.sendJson({
             type: 'chat_seen',
             response: jsonUtils.chatToJson(chat),
         }, tenant);
     }
     else {
-        res_1.failure(res, 'no chat');
+        (0, res_1.failure)(res, 'no chat');
     }
 });
 exports.readMessages = readMessages;
 const clearMessages = (req, res) => {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     models_1.models.Message.destroy({ where: { tenant }, truncate: true });
-    res_1.success(res, {});
+    (0, res_1.success)(res, {});
 };
 exports.clearMessages = clearMessages;
 //# sourceMappingURL=messages.js.map

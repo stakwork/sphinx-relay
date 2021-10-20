@@ -292,6 +292,7 @@ export async function declare({
   is_private,
   app_url,
   feed_url,
+  feed_type,
   owner_route_hint,
 }) {
   try {
@@ -316,6 +317,7 @@ export async function declare({
         private: is_private || false,
         app_url: app_url || '',
         feed_url: feed_url || '',
+        feed_type: feed_type || 0,
         owner_route_hint: owner_route_hint || '',
       }),
       headers: { 'Content-Type': 'application/json' },
@@ -346,6 +348,7 @@ export async function edit({
   is_private,
   app_url,
   feed_url,
+  feed_type,
   deleted,
   owner_route_hint,
   owner_pubkey,
@@ -372,6 +375,7 @@ export async function edit({
         deleted: deleted || false,
         app_url: app_url || '',
         feed_url: feed_url || '',
+        feed_type: feed_type || 0,
         owner_route_hint: owner_route_hint || '',
       }),
       headers: { 'Content-Type': 'application/json' },

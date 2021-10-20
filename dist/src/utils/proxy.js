@@ -18,7 +18,7 @@ const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
 // var protoLoader = require('@grpc/proto-loader')
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost';
 const check_proxy_balance = false;
@@ -98,7 +98,7 @@ const adminURL = config.proxy_admin_url
 function generateNewUser(rootpk) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(adminURL + 'generate', {
+            const r = yield (0, node_fetch_1.default)(adminURL + 'generate', {
                 method: 'POST',
                 headers: { 'x-admin-token': config.proxy_admin_token },
             });
@@ -124,7 +124,7 @@ exports.generateNewUser = generateNewUser;
 function generateNewExternalUser(pubkey, sig) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(adminURL + 'create_external', {
+            const r = yield (0, node_fetch_1.default)(adminURL + 'create_external', {
                 method: 'POST',
                 body: JSON.stringify({ pubkey, sig }),
                 headers: { 'x-admin-token': config.proxy_admin_token },
@@ -146,7 +146,7 @@ exports.generateNewExternalUser = generateNewExternalUser;
 function getProxyTotalBalance() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(adminURL + 'balances', {
+            const r = yield (0, node_fetch_1.default)(adminURL + 'balances', {
                 method: 'GET',
                 headers: { 'x-admin-token': config.proxy_admin_token },
             });

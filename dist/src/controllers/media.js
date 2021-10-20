@@ -29,7 +29,7 @@ const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 /*
 
 TODO line 233: parse that from token itself, dont use getMediaInfo at all
@@ -49,7 +49,7 @@ purchase_deny returns the sats
 */
 const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     // try {
     //   schemas.attachment.validateSync(req.body)
@@ -66,7 +66,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         recipient_id: contact_id,
     });
     if (!chat)
-        return res_1.failure(res, 'counldnt findOrCreateChat');
+        return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
     let TTL = ttl;
     if (ttl) {
         TTL = parseInt(ttl);
@@ -75,7 +75,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         TTL = 31536000; // default year
     const amt = price || 0;
     // generate media token for self!
-    const myMediaToken = yield ldat_1.tokenFromTerms({
+    const myMediaToken = yield (0, ldat_1.tokenFromTerms)({
         muid,
         ttl: TTL,
         host: '',
@@ -117,7 +117,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         muid,
         ttl: TTL,
         meta: Object.assign({}, (amt && { amt })),
-        skipSigning: amt ? true : false,
+        skipSigning: amt ? true : false, // only sign if its free
     };
     const msg = {
         mediaTerms,
@@ -169,7 +169,7 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) 
 exports.saveMediaKeys = saveMediaKeys;
 const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { chat_id, contact_id, amount, media_token } = req.body;
     var date = new Date();
@@ -187,7 +187,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         recipient_id: contact_id,
     });
     if (!chat)
-        return res_1.failure(res, 'counldnt findOrCreateChat');
+        return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
     const message = yield models_1.models.Message.create({
         chatId: chat.id,
         uuid: short.generate(),
@@ -206,7 +206,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         mediaToken: media_token,
         id: message.id,
         uuid: message.uuid,
-        purchaser: owner.id,
+        purchaser: owner.id, // for tribe, knows who sent
     };
     network.sendMessage({
         chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
@@ -279,7 +279,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     // console.log('mediaKey found!',mediaKey.dataValues)
     if (!mediaKey)
         return; // this is from another person (admin is forwarding)
-    const terms = ldat_1.parseLDAT(mediaToken);
+    const terms = (0, ldat_1.parseLDAT)(mediaToken);
     // get info
     let TTL = terms.meta && terms.meta.ttl;
     let price = terms.meta && terms.meta.amt;
@@ -324,7 +324,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
             failure: (error) => console.log('=> couldnt send purcahse deny', error),
         });
     }
-    const theMediaToken = yield ldat_1.tokenFromTerms({
+    const theMediaToken = yield (0, ldat_1.tokenFromTerms)({
         muid,
         ttl: TTL,
         host: '',
@@ -484,21 +484,21 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
-    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
+    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveAttachment = receiveAttachment;
 function signer(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         // const tenant:number = req.owner.id
         if (!req.params.challenge)
             return resUtils.failure(res, 'no challenge');
         try {
             const sig = yield Lightning.signBuffer(Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey);
             const sigBytes = zbase32.decode(sig);
-            const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
+            const sigBase64 = (0, ldat_1.urlBase64FromBytes)(sigBytes);
             resUtils.success(res, {
                 sig: sigBase64,
             });

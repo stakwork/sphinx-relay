@@ -141,7 +141,7 @@ export async function ownerMiddleware(req, res, next) {
   if (jwt) {
     const parsed = jwtUtils.verifyJWT(jwt)
     if (parsed) {
-      const publicKey = parsed.body.pubkey
+      const publicKey = (parsed.body as any).pubkey
       const allowed = allowedJwtRoutes(parsed.body, req.path)
       if (allowed && publicKey) {
         owner = await models.Contact.findOne({

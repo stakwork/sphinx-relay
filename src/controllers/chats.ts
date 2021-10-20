@@ -182,6 +182,7 @@ export async function createGroupChat(req, res) {
     unlisted,
     app_url,
     feed_url,
+    feed_type,
   } = req.body
   const contact_ids = req.body.contact_ids || []
 
@@ -218,6 +219,7 @@ export async function createGroupChat(req, res) {
       req.body.private,
       app_url,
       feed_url,
+      feed_type,
       tenant
     )
     if (chatParams.uuid) {
@@ -241,6 +243,7 @@ export async function createGroupChat(req, res) {
           is_private: req.body.private || false,
           app_url,
           feed_url,
+          feed_type,
           owner_route_hint: owner.routeHint || '',
         })
       } catch (e) {

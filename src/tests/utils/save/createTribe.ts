@@ -29,6 +29,7 @@ export async function createTribe(
     private: privacy || false,
     app_url: '',
     feed_url: '',
+    feed_type: 0,
   }
 
   //node1 creates new tribe

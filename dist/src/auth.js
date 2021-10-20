@@ -20,7 +20,7 @@ const proxy_1 = require("./utils/proxy");
 const jwtUtils = require("./utils/jwt");
 const scopes_1 = require("./scopes");
 const fs = require('fs');
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 /*
 "unlock": true,
 "encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
@@ -29,45 +29,45 @@ function unlocker(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { password } = req.body;
         if (!password) {
-            res_1.failure(res, 'no password');
+            (0, res_1.failure)(res, 'no password');
             return false;
         }
         const encMacPath = config.encrypted_macaroon_path;
         if (!encMacPath) {
-            res_1.failure(res, 'no macaroon path');
+            (0, res_1.failure)(res, 'no macaroon path');
             return false;
         }
         let hexMac;
         try {
             const encMac = fs.readFileSync(config.encrypted_macaroon_path, 'utf8');
             if (!encMac) {
-                res_1.failure(res, 'no macaroon');
+                (0, res_1.failure)(res, 'no macaroon');
                 return false;
             }
             const decMac = decryptMacaroon(password, encMac);
             if (!decMac) {
-                res_1.failure(res, 'failed to decrypt macaroon');
+                (0, res_1.failure)(res, 'failed to decrypt macaroon');
                 return false;
             }
             const isBase64 = b64regex.test(decMac);
             if (!isBase64) {
-                res_1.failure(res, 'failed to decode macaroon');
+                (0, res_1.failure)(res, 'failed to decode macaroon');
                 return false;
             }
             hexMac = base64ToHex(decMac);
         }
         catch (e) {
-            res_1.failure(res, e);
+            (0, res_1.failure)(res, e);
             return false;
         }
         if (hexMac) {
-            macaroon_1.setInMemoryMacaroon(hexMac);
-            res_1.success(res, 'success!');
+            (0, macaroon_1.setInMemoryMacaroon)(hexMac);
+            (0, res_1.success)(res, 'success!');
             yield sleep(100);
             return true;
         }
         else {
-            res_1.failure(res, 'failed to set macaroon in memory');
+            (0, res_1.failure)(res, 'failed to set macaroon in memory');
             return false;
         }
     });
@@ -106,7 +106,7 @@ function ownerMiddleware(req, res, next) {
                     req.owner = owner.dataValues;
                 }
             }
-            else if (!proxy_1.isProxy()) {
+            else if (!(0, proxy_1.isProxy)()) {
                 const owner2 = yield models_1.models.Contact.findOne({
                     where: { isOwner: true },
                 });
@@ -142,7 +142,7 @@ function ownerMiddleware(req, res, next) {
             const parsed = jwtUtils.verifyJWT(jwt);
             if (parsed) {
                 const publicKey = parsed.body.pubkey;
-                const allowed = scopes_1.allowedJwtRoutes(parsed.body, req.path);
+                const allowed = (0, scopes_1.allowedJwtRoutes)(parsed.body, req.path);
                 if (allowed && publicKey) {
                     owner = yield models_1.models.Contact.findOne({
                         where: { publicKey, isOwner: true },

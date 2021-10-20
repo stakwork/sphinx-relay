@@ -19,13 +19,13 @@ const jsonUtils = require("../../utils/json");
 const res_1 = require("../../utils/res");
 const config_1 = require("../../utils/config");
 const jwt_1 = require("../../utils/jwt");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 // accessed from people.sphinx.chat website
 // U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const priceToMeet = req.body.price_to_meet || 0;
         try {
@@ -52,10 +52,10 @@ function createPeopleProfile(req, res) {
                 extras: extras || {},
             }, id || null);
             yield owner.update({ priceToMeet: priceToMeet || 0 });
-            res_1.success(res, person);
+            (0, res_1.success)(res, person);
         }
         catch (e) {
-            res_1.failure(res, e);
+            (0, res_1.failure)(res, e);
         }
     });
 }
@@ -64,7 +64,7 @@ exports.createPeopleProfile = createPeopleProfile;
 function deletePersonProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         try {
             const owner = yield models_1.models.Contact.findOne({
@@ -72,14 +72,14 @@ function deletePersonProfile(req, res) {
             });
             const { id, host } = req.body;
             if (!id) {
-                return res_1.failure(res, 'no id');
+                return (0, res_1.failure)(res, 'no id');
             }
             yield people.deletePerson(host || config.tribes_host, id, owner.publicKey);
             yield owner.update({ priceToMeet: 0 });
-            res_1.success(res, jsonUtils.contactToJson(owner));
+            (0, res_1.success)(res, jsonUtils.contactToJson(owner));
         }
         catch (e) {
-            res_1.failure(res, e);
+            (0, res_1.failure)(res, e);
         }
     });
 }
@@ -87,7 +87,7 @@ exports.deletePersonProfile = deletePersonProfile;
 function uploadPublicPic(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const { img_base64, img_type } = req.body;
         let imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type;
         try {
@@ -110,23 +110,23 @@ function uploadPublicPic(req, res) {
                 protocol = 'http';
             if (host.includes('meme.sphinx:5555'))
                 protocol = 'http';
-            const resp = yield node_fetch_1.default(`${protocol}://${host}/public`, {
+            const resp = yield (0, node_fetch_1.default)(`${protocol}://${host}/public`, {
                 method: 'POST',
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
                 body: form,
             });
             let json = yield resp.json();
             if (!json.muid)
-                return res_1.failure(res, 'no muid');
+                return (0, res_1.failure)(res, 'no muid');
             let theHost = host;
             if (host === 'meme.sphinx:5555')
                 theHost = 'localhost:5555';
-            res_1.success(res, {
+            (0, res_1.success)(res, {
                 img: `${protocol}://${theHost}/public/${json.muid}`,
             });
         }
         catch (e) {
-            res_1.failure(res, e);
+            (0, res_1.failure)(res, e);
         }
     });
 }
@@ -134,10 +134,10 @@ exports.uploadPublicPic = uploadPublicPic;
 function refreshJWT(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const sc = [jwt_1.scopes.PERSONAL];
-        const jot = jwt_1.createJWT(req.owner.publicKey, sc, 10080); // one week
-        res_1.success(res, {
+        const jot = (0, jwt_1.createJWT)(req.owner.publicKey, sc, 10080); // one week
+        (0, res_1.success)(res, {
             jwt: jot,
         });
     });

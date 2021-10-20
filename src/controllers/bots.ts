@@ -379,6 +379,7 @@ export function buildBotPayload(msg: Msg): SphinxBot.Message {
     channel: {
       id: chat_uuid,
       send: function () {},
+      pay: function () {},
     },
     content: msg.message.content,
     amount: msg.message.amount,

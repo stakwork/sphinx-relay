@@ -48,7 +48,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                 return false;
             let didEmit = false;
             if (txt && txt.startsWith('/bot ')) {
-                builtin_1.builtinBotEmit(msg);
+                (0, builtin_1.builtinBotEmit)(msg);
                 didEmit = true;
             }
             if (didEmit)
@@ -129,7 +129,7 @@ function emitMessageToBot(msg, botInTribe, sender) {
         }
         switch (botInTribe.botType) {
             case constants_1.default.bot_types.builtin:
-                builtin_1.builtinBotEmit(msg);
+                (0, builtin_1.builtinBotEmit)(msg);
                 return true;
             case constants_1.default.bot_types.local:
                 const bot = yield models_1.models.Bot.findOne({
@@ -138,9 +138,9 @@ function emitMessageToBot(msg, botInTribe, sender) {
                         tenant,
                     },
                 });
-                return bots_1.postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
+                return (0, bots_1.postToBotServer)(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
             case constants_1.default.bot_types.remote:
-                return bots_1.keysendBotCmd(msg, botInTribe, sender);
+                return (0, bots_1.keysendBotCmd)(msg, botInTribe, sender);
             default:
                 return false;
         }

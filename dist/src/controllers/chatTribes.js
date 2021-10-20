@@ -26,7 +26,7 @@ const logger_1 = require("../utils/logger");
 function joinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         if (logger_1.logging.Express)
             console.log('=> joinTribe');
@@ -37,11 +37,11 @@ function joinTribe(req, res) {
         const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
         if (existing) {
             console.log('[tribes] u are already in this tribe');
-            return res_1.failure(res, 'cant find tribe');
+            return (0, res_1.failure)(res, 'cant find tribe');
         }
         if (!owner_pubkey || !group_key || !uuid) {
             console.log('[tribes] missing required params');
-            return res_1.failure(res, 'missing required params');
+            return (0, res_1.failure)(res, 'missing required params');
         }
         const ownerPubKey = owner_pubkey;
         // verify signature here?
@@ -123,7 +123,7 @@ function joinTribe(req, res) {
             message: {},
             type: typeToSend,
             failure: function (e) {
-                res_1.failure(res, e);
+                (0, res_1.failure)(res, e);
             },
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -139,7 +139,7 @@ function joinTribe(req, res) {
                     });
                     // console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
                     tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
-                    res_1.success(res, jsonUtils.chatToJson(chat));
+                    (0, res_1.success)(res, jsonUtils.chatToJson(chat));
                 });
             },
         });
@@ -244,15 +244,15 @@ exports.receiveMemberRequest = receiveMemberRequest;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, } = req.body;
+        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, } = req.body;
         const { id } = req.params;
         if (!id)
-            return res_1.failure(res, 'group id is required');
+            return (0, res_1.failure)(res, 'group id is required');
         const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
         if (!chat) {
-            return res_1.failure(res, 'cant find chat');
+            return (0, res_1.failure)(res, 'cant find chat');
         }
         const owner = req.owner;
         let okToUpdate = true;
@@ -274,6 +274,7 @@ function editTribe(req, res) {
                     is_private: req.body.private,
                     app_url,
                     feed_url,
+                    feed_type,
                     deleted: false,
                     owner_route_hint: owner.routeHint || '',
                     owner_pubkey: owner.publicKey,
@@ -303,15 +304,17 @@ function editTribe(req, res) {
                 obj.appUrl = app_url;
             if (feed_url)
                 obj.feedUrl = feed_url;
+            if (feed_type)
+                obj.feedType = feed_type;
             if (req.body.private || req.body.private === false)
                 obj.private = req.body.private;
             if (Object.keys(obj).length > 0) {
                 yield chat.update(obj);
             }
-            res_1.success(res, jsonUtils.chatToJson(chat));
+            (0, res_1.success)(res, jsonUtils.chatToJson(chat));
         }
         else {
-            res_1.failure(res, 'failed to update tribe');
+            (0, res_1.failure)(res, 'failed to update tribe');
         }
     });
 }
@@ -319,7 +322,7 @@ exports.editTribe = editTribe;
 function approveOrRejectMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         console.log('=> approve or reject tribe member');
         const msgId = parseInt(req.params['messageId']);
@@ -327,15 +330,15 @@ function approveOrRejectMember(req, res) {
         const status = req.params['status'];
         const msg = yield models_1.models.Message.findOne({ where: { id: msgId, tenant } });
         if (!msg)
-            return res_1.failure(res, 'no message');
+            return (0, res_1.failure)(res, 'no message');
         const chatId = msg.chatId;
         const chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
         if (!chat)
-            return res_1.failure(res, 'no chat');
+            return (0, res_1.failure)(res, 'no chat');
         if (!msgId ||
             !contactId ||
             !(status === 'approved' || status === 'rejected')) {
-            return res_1.failure(res, 'incorrect status');
+            return (0, res_1.failure)(res, 'incorrect status');
         }
         let memberStatus = constants_1.default.chat_statuses.rejected;
         let msgType = constants_1.default.message_types.member_reject;
@@ -352,7 +355,7 @@ function approveOrRejectMember(req, res) {
             where: { contactId, chatId },
         });
         if (!member) {
-            return res_1.failure(res, 'cant find chat member');
+            return (0, res_1.failure)(res, 'cant find chat member');
         }
         if (status === 'approved') {
             // update ChatMember status
@@ -373,7 +376,7 @@ function approveOrRejectMember(req, res) {
             type: msgType,
         });
         const theChat = yield addPendingContactIdsToChat(chat, tenant);
-        res_1.success(res, {
+        (0, res_1.success)(res, {
             chat: jsonUtils.chatToJson(theChat),
             message: jsonUtils.messageToJson(msg, theChat),
         });
@@ -467,7 +470,7 @@ function receiveMemberReject(payload) {
                 chat: jsonUtils.chatToJson(chat),
             },
         }, tenant);
-        hub_1.sendNotification(chat, chat_name, 'reject', owner);
+        (0, hub_1.sendNotification)(chat, chat_name, 'reject', owner);
     });
 }
 exports.receiveMemberReject = receiveMemberReject;
@@ -567,8 +570,8 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 const isForwarded = m.sender !== tenant;
                 const includeStatus = true;
                 let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, status: m.status, amount: m.amount }, (mediaKeyMap && { mediaKey: mediaKeyMap })), (newMediaTerms && { mediaToken: newMediaTerms })), (m.mediaType && { mediaType: m.mediaType })), (dateString && { date: dateString })), isForwarded, includeStatus);
-                msg = yield msg_1.decryptMessage(msg, chat);
-                const data = yield msg_1.personalizeMessage(msg, contact, true);
+                msg = yield (0, msg_1.decryptMessage)(msg, chat);
+                const data = yield (0, msg_1.personalizeMessage)(msg, contact, true);
                 const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
                 const replayingHistory = true;
                 // console.log("-> HISTORY DATA:",data)
@@ -585,7 +588,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, tenant) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         let date = new Date();
         date.setMilliseconds(0);
@@ -618,6 +621,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             private: is_private || false,
             appUrl: app_url || '',
             feedUrl: feed_url || '',
+            feedType: feed_type || 0,
             tenant,
         };
     });

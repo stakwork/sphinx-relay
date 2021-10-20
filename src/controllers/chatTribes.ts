@@ -273,6 +273,7 @@ export async function editTribe(req, res) {
     unlisted,
     app_url,
     feed_url,
+    feed_type,
   } = req.body
   const { id } = req.params
 
@@ -304,6 +305,7 @@ export async function editTribe(req, res) {
         is_private: req.body.private,
         app_url,
         feed_url,
+        feed_type,
         deleted: false,
         owner_route_hint: owner.routeHint || '',
         owner_pubkey: owner.publicKey,
@@ -325,6 +327,7 @@ export async function editTribe(req, res) {
     if (unlisted || unlisted === false) obj.unlisted = unlisted
     if (app_url) obj.appUrl = app_url
     if (feed_url) obj.feedUrl = feed_url
+    if (feed_type) obj.feedType = feed_type
     if (req.body.private || req.body.private === false)
       obj.private = req.body.private
     if (Object.keys(obj).length > 0) {
@@ -659,6 +662,7 @@ export async function createTribeChatParams(
   is_private,
   app_url,
   feed_url,
+  feed_type,
   tenant
 ): Promise<{ [k: string]: any }> {
   let date = new Date()
@@ -693,6 +697,7 @@ export async function createTribeChatParams(
     private: is_private || false,
     appUrl: app_url || '',
     feedUrl: feed_url || '',
+    feedType: feed_type || 0,
     tenant,
   }
 }
