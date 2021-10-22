@@ -180,12 +180,7 @@
           method: 'POST',
         })
         const j = await r.json()
-        console.log(j)
-        await sleep(1000)
-        startup(true) // refresh
-        setInterval(function() {
-          startup(false)
-        }, 20000)
+        console.log(j)        
       }
 
       async function startup(reset) {
@@ -193,24 +188,24 @@
         const r = await fetch('/peered')
         const j = await r.json()
         console.log(j)
-	txid = ''
-	confirmations = 0
-	if (j.response.channel_point) {
-	  txid = j.response.channel_point.split(':')[0]
+        txid = ''
+        confirmations = 0
+        if (j.response.channel_point) {
+          txid = j.response.channel_point.split(':')[0]
 
-	  const tip_height_res = await fetch('https://mempool.space/api/blocks/tip/height')
-	  const tip_height = await tip_height_res.json()
+          const tip_height_res = await fetch('https://mempool.space/api/blocks/tip/height')
+          const tip_height = await tip_height_res.json()
 
-	  const txid_status_res = await fetch('https://mempool.space/api/tx/' + txid + '/status')
-	  const txid_status = await txid_status_res.json()
-	  if (txid_status.confirmed) {
-	    const txid_confs = txid_status.block_height
-	    confirmations = tip_height - txid_confs + 1
+          const txid_status_res = await fetch('https://mempool.space/api/tx/' + txid + '/status')
+          const txid_status = await txid_status_res.json()
+          if (txid_status.confirmed) {
+            const txid_confs = txid_status.block_height
+            confirmations = tip_height - txid_confs + 1
           }
-	}
-	console.log(j.response)
-	console.log(j.response.channel_point)
-	console.log(confirmations)
+        }
+        console.log(j.response)
+        console.log(j.response.channel_point)
+        console.log(confirmations)
 
         // NOT PEERED
         if (j && j.success && j.response && j.response.peered==false) {
@@ -231,7 +226,10 @@
           scan.style.display = 'block'
         }
       }
-      startup(true)
+      startup(true) // refresh
+      setInterval(function() {
+        startup(false)
+      }, 20000)
 
       async function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms))
