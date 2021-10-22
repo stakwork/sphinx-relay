@@ -180,7 +180,9 @@
           method: 'POST',
         })
         const j = await r.json()
-        console.log(j)        
+        console.log(j)  
+        await sleep(1000)
+        startup(true)      
       }
 
       async function startup(reset) {
