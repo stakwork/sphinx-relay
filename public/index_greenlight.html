@@ -185,7 +185,7 @@
         startup(true) // refresh
         setInterval(function() {
           startup(false)
-        }, 5000)
+        }, 20000)
       }
 
       async function startup(reset) {
@@ -193,21 +193,38 @@
         const r = await fetch('/peered')
         const j = await r.json()
         console.log(j)
+	txid = ''
+	confirmations = 0
+	if (j.response.channel_point) {
+	  txid = j.response.channel_point.split(':')[0]
+
+	  const tip_height_res = await fetch('https://mempool.space/api/blocks/tip/height')
+	  const tip_height = await tip_height_res.json()
+
+	  const txid_status_res = await fetch('https://mempool.space/api/tx/' + txid + '/status')
+	  const txid_status = await txid_status_res.json()
+	  if (txid_status.confirmed) {
+	    const txid_confs = txid_status.block_height
+	    confirmations = tip_height - txid_confs + 1
+          }
+	}
+	console.log(j.response)
+	console.log(j.response.channel_point)
+	console.log(confirmations)
+
         // NOT PEERED
-        if(j && j.success && j.response && j.response.peered===false) {
+        if (j && j.success && j.response && j.response.peered==false) {
           peer.style.display = 'block'
           peer.disabled = false
         }
         // PEERED BUT NOT ACTIVE
-        if(j && j.success && j.response && j.response.peered && j.response.active===false) {
+        if (j && j.success && j.response && j.response.peered && j.response.active==false && confirmations < 8) {
           pending.style.display = 'block'
           // CHANNEL CREATED
           if (j.response.channel_point) {
-            chanpoint.innerHTML = 'TXID: ' + j.response.channel_point.split(':')[0]
+            chanpoint.innerHTML = 'TXID: ' + txid + '\n Confirmations: ' + confirmations + '/8'
           }
-        }
-        // PEERED AND ACTIVE
-        if(j && j.success && j.response && j.response.peered && j.response.active) {
+        } else if (j && j.success && j.response && j.response.peered && j.response.active) {
           conn.style.display = 'block'
           qr.style.display = 'flex'
           string.style.display = 'block'
