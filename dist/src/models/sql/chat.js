@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Chat = class Chat extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -34,11 +34,11 @@ __decorate([
     __metadata("design:type", String)
 ], Chat.prototype, "photoUrl", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Chat.prototype, "type", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Chat.prototype, "status", void 0);
 __decorate([
@@ -58,7 +58,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Chat.prototype, "updatedAt", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
         allowNull: false,
@@ -66,11 +66,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Chat.prototype, "deleted", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Chat.prototype, "groupKey", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Chat.prototype, "groupPrivateKey", void 0);
 __decorate([
@@ -86,18 +86,19 @@ __decorate([
     __metadata("design:type", Number)
 ], Chat.prototype, "pricePerMessage", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Chat.prototype, "escrowAmount", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Chat.prototype, "escrowMillis", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         // dont show on tribes list
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
+        // allowNull: false
     }),
     __metadata("design:type", Boolean)
 ], Chat.prototype, "unlisted", void 0);
@@ -110,7 +111,7 @@ __decorate([
     __metadata("design:type", String)
 ], Chat.prototype, "ownerPubkey", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
         allowNull: false,
@@ -142,7 +143,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Chat.prototype, "tenant", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
         allowNull: true,
@@ -150,7 +151,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Chat.prototype, "skipBroadcastJoins", void 0);
 Chat = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_chats', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);
 exports.default = Chat;
 //# sourceMappingURL=chat.js.map

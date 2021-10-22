@@ -63,7 +63,7 @@ function sendMessage(params) {
             if (isTribeOwner) {
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
-                msg = yield msg_1.decryptMessage(msg, chat);
+                msg = yield (0, msg_1.decryptMessage)(msg, chat);
                 // console.log("SEND.TS isBotMsg")
                 if (logger_1.logging.Network) {
                     console.log('[Network] => isTribeAdmin msg sending...', msg);
@@ -145,7 +145,7 @@ function sendMessage(params) {
             if (isTribeOwner && amount && realSatsContactId === contactId) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
-            const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
+            const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
             // console.log('-> personalized msg', m)
             const opts = {
                 dest: destkey,
@@ -219,7 +219,7 @@ function checkIfAutoConfirm(data, tenant) {
         if (data.type === constants_1.default.message_types.delete) {
             return; // dont auto confirm delete msg
         }
-        confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid, tenant);
+        (0, confirmations_1.tribeOwnerAutoConfirmation)(data.message.id, data.chat.uuid, tenant);
     }
 }
 function newmsg(type, chat, sender, message, isForwarded, includeStatus) {

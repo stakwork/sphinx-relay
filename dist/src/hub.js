@@ -33,7 +33,7 @@ const checkInvitesAgent = new https.Agent({
     keepAlive: true,
 });
 const env = process.env.NODE_ENV || 'development';
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () {
     if (env != 'production') {
         return;
@@ -52,7 +52,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
     if (inviteStrings.length === 0) {
         return; // skip if no invites
     }
-    node_fetch_1.default(config.hub_api_url + '/invites/check', {
+    (0, node_fetch_1.default)(config.hub_api_url + '/invites/check', {
         agent: checkInvitesAgent,
         method: 'POST',
         body: JSON.stringify({ invite_strings: inviteStrings }),
@@ -88,7 +88,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                         response: jsonUtils.inviteToJson(dbInvite),
                     }, owner.id);
                     if (dbInvite.status == constants_1.default.invite_statuses.ready && contact) {
-                        notify_1.sendNotification(-1, contact.alias, 'invite', owner);
+                        (0, notify_1.sendNotification)(-1, contact.alias, 'invite', owner);
                     }
                 }
                 if (pubkey &&
@@ -124,9 +124,9 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
     if (env != 'production' || config.dont_ping_hub === 'true') {
         return;
     }
-    const node = yield nodeinfo_1.nodeinfo();
+    const node = yield (0, nodeinfo_1.nodeinfo)();
     sendHubCall(Object.assign(Object.assign({}, params), { node }));
-    if (proxy_1.isProxy()) {
+    if ((0, proxy_1.isProxy)()) {
         // send all "clean" nodes
         massPingHubFromProxies(node);
     }
@@ -142,7 +142,7 @@ function massPingHubFromProxies(rn) {
         });
         const nodes = [];
         yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
-            const proxyNodeInfo = yield nodeinfo_1.proxynodeinfo(o.publicKey);
+            const proxyNodeInfo = yield (0, nodeinfo_1.proxynodeinfo)(o.publicKey);
             const clean = o.authToken === null || o.authToken === '';
             nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet, ip: rn.ip, public_ip: rn.public_ip, node_alias: rn.node_alias }));
         }));
@@ -163,7 +163,7 @@ function sendHubCall(body, mass) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // console.log("=> PING BODY", body)
-            const r = yield node_fetch_1.default(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
+            const r = yield (0, node_fetch_1.default)(config.hub_api_url + (mass ? '/mass_ping' : '/ping'), {
                 agent: pingAgent,
                 method: 'POST',
                 body: JSON.stringify(body),
@@ -191,7 +191,7 @@ const checkInvitesHubInterval = (ms) => {
 exports.checkInvitesHubInterval = checkInvitesHubInterval;
 function sendInvoice(payReq, amount) {
     console.log('[hub] sending invoice');
-    node_fetch_1.default(config.hub_api_url + '/invoices', {
+    (0, node_fetch_1.default)(config.hub_api_url + '/invoices', {
         method: 'POST',
         body: JSON.stringify({ invoice: payReq, amount }),
         headers: { 'Content-Type': 'application/json' },
@@ -201,7 +201,7 @@ function sendInvoice(payReq, amount) {
 }
 exports.sendInvoice = sendInvoice;
 const finishInviteInHub = (params, onSuccess, onFailure) => {
-    node_fetch_1.default(config.hub_api_url + '/invites/finish', {
+    (0, node_fetch_1.default)(config.hub_api_url + '/invites/finish', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' },
@@ -218,7 +218,7 @@ const finishInviteInHub = (params, onSuccess, onFailure) => {
 };
 exports.finishInviteInHub = finishInviteInHub;
 const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
-    node_fetch_1.default(config.hub_api_url + '/invites/' + invite_string + '/pay', {
+    (0, node_fetch_1.default)(config.hub_api_url + '/invites/' + invite_string + '/pay', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' },
@@ -249,7 +249,7 @@ function payInviteInvoice(invoice, pubkey, onSuccess, onFailure) {
 }
 exports.payInviteInvoice = payInviteInvoice;
 const createInviteInHub = (params, onSuccess, onFailure) => {
-    node_fetch_1.default(config.hub_api_url + '/invites_new', {
+    (0, node_fetch_1.default)(config.hub_api_url + '/invites_new', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' },
@@ -270,7 +270,7 @@ exports.createInviteInHub = createInviteInHub;
 function getAppVersionsFromHub() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield node_fetch_1.default(config.hub_api_url + '/app_versions', {
+            const r = yield (0, node_fetch_1.default)(config.hub_api_url + '/app_versions', {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });

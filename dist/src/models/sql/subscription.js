@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Subscription = class Subscription extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -22,27 +22,27 @@ __decorate([
     __metadata("design:type", Number)
 ], Subscription.prototype, "id", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Subscription.prototype, "chatId", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Subscription.prototype, "contactId", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Subscription.prototype, "cron", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
 ], Subscription.prototype, "amount", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
 ], Subscription.prototype, "totalPaid", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Subscription.prototype, "endNumber", void 0);
 __decorate([
@@ -50,7 +50,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Subscription.prototype, "endDate", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Subscription.prototype, "count", void 0);
 __decorate([
@@ -74,7 +74,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Subscription.prototype, "tenant", void 0);
 Subscription = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_subscriptions', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_subscriptions', underscored: true })
 ], Subscription);
 exports.default = Subscription;
 //# sourceMappingURL=subscription.js.map

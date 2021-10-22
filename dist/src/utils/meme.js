@@ -18,7 +18,7 @@ const helpers = require("../helpers");
 const config_1 = require("../utils/config");
 const Lightning = require("../grpc/lightning");
 const logger_1 = require("./logger");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 // {pubkey: {host: {token,ts} }}
 const tokens = {};
 function lazyToken(pubkey, host) {
@@ -76,7 +76,7 @@ function getMediaToken(ownerPubkey, host) {
                 throw new Error('no signature');
             let pubkey = ownerPubkey;
             const sigBytes = zbase32.decode(sig);
-            const sigBase64 = ldat_1.urlBase64FromBytes(sigBytes);
+            const sigBase64 = (0, ldat_1.urlBase64FromBytes)(sigBytes);
             if (logger_1.logging.Meme)
                 console.log('[meme] verify', pubkey);
             const bod = yield rp.post(theURL + 'verify', {

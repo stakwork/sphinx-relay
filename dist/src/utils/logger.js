@@ -5,7 +5,7 @@ const expressWinston = require("express-winston");
 const winston = require("winston");
 const moment = require("moment");
 const config_1 = require("./config");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim();
 const logger = expressWinston.logger({
     transports: [new winston.transports.Console()],
@@ -20,7 +20,7 @@ const logger = expressWinston.logger({
         if (req.path.startsWith('/json'))
             return true; // debugger
         return false;
-    },
+    }, // optional: allows to skip some log messages based on request and/or response
 });
 exports.default = logger;
 const logging = {

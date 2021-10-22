@@ -20,7 +20,7 @@ const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const tribes_1 = require("../utils/tribes");
 const msg_types = Sphinx.MSG_TYPE;
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const builtinBots = ['welcome', 'loopout'];
 const builtInBotMsgTypes = {
     welcome: [
@@ -53,7 +53,7 @@ function init() {
                 const botName = arr[2];
                 if (builtinBots.includes(botName)) {
                     console.log('mombot INSTALL', botName);
-                    const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                    const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                     if (!(chat && chat.id))
                         return console.log('=> motherbot no chat');
                     const existing = yield models_1.models.ChatBot.findOne({
@@ -97,10 +97,10 @@ function init() {
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
                         console.log('=> FOUND BOT', bot.unique_name);
-                        const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                        const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                         if (!(chat && chat.id))
                             return console.log('=> motherbot no chat');
-                        bots_1.installBotAsTribeAdmin(chat, bot);
+                        (0, bots_1.installBotAsTribeAdmin)(chat, bot);
                     }
                     else {
                         const embed = new Sphinx.MessageEmbed()
@@ -114,7 +114,7 @@ function init() {
                 if (arr.length < 3)
                     return;
                 const botName2 = arr[2];
-                const chat2 = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                const chat2 = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                 if (!(chat2 && chat2.id))
                     return console.log('=> motherbot no chat');
                 const existing2 = yield models_1.models.ChatBot.findOne({
@@ -186,7 +186,7 @@ function searchBots(q) {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(`${protocol}://${config.tribes_host}/search/bots/${q}`);
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${config.tribes_host}/search/bots/${q}`);
             const j = yield r.json();
             return Array.isArray(j) ? j : [];
         }
@@ -201,7 +201,7 @@ function getBotByName(name) {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(`${protocol}://${config.tribes_host}/bot/${name}`);
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${config.tribes_host}/bot/${name}`);
             const j = yield r.json();
             if (j && j.uuid && j.owner_pubkey) {
                 return j;

@@ -24,14 +24,14 @@ const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
     console.log('[send payment]', req.body);
     const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
-        feed_1.anonymousKeysend(owner, destination_key, route_hint, amount || '', text || '', function (body) {
-            res_1.success(res, body);
+        (0, feed_1.anonymousKeysend)(owner, destination_key, route_hint, amount || '', text || '', function (body) {
+            (0, res_1.success)(res, body);
         }, function (error) {
             res.status(200);
             res.json({ success: false, error });
@@ -45,7 +45,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         recipient_id: contact_id,
     });
     if (!chat)
-        return res_1.failure(res, 'counldnt findOrCreateChat');
+        return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
     var date = new Date();
     date.setMilliseconds(0);
     const msg = {
@@ -69,7 +69,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
     if (muid) {
-        const myMediaToken = yield ldat_1.tokenFromTerms({
+        const myMediaToken = yield (0, ldat_1.tokenFromTerms)({
             meta: { dim: dimensions },
             host: '',
             muid,
@@ -110,7 +110,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         amount: amount,
         success: (data) => __awaiter(void 0, void 0, void 0, function* () {
             // console.log('payment sent', { data })
-            res_1.success(res, jsonUtils.messageToJson(message, chat));
+            (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
             yield message.update({ status: constants_1.default.statuses.failed });
@@ -165,12 +165,12 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    hub_1.sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
@@ -199,7 +199,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                             ],
                         },
                         amount: {
-                            [sequelize_1.Op.gt]: MIN_VAL,
+                            [sequelize_1.Op.gt]: MIN_VAL, // greater than
                         },
                         network_type: constants_1.default.network_types.lightning,
                         status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },
@@ -212,10 +212,10 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             offset,
         });
         const ret = msgs || [];
-        res_1.success(res, ret.map((message) => jsonUtils.messageToJson(message, null)));
+        (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message, null)));
     }
     catch (e) {
-        res_1.failure(res, 'cant find payments');
+        (0, res_1.failure)(res, 'cant find payments');
     }
 });
 exports.listPayments = listPayments;

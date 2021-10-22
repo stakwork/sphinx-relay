@@ -23,10 +23,10 @@ const ERR_CODE_UNIMPLEMENTED = 12; // locked
 function subscribeInvoices(parseKeysendInvoice) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         let ownerPubkey = '';
-        if (proxy_1.isProxy()) {
-            ownerPubkey = yield proxy_1.getProxyRootPubkey();
+        if ((0, proxy_1.isProxy)()) {
+            ownerPubkey = yield (0, proxy_1.getProxyRootPubkey)();
         }
-        const lightning = yield lightning_1.loadLightning(true, ownerPubkey); // try proxy
+        const lightning = yield (0, lightning_1.loadLightning)(true, ownerPubkey); // try proxy
         const cmd = interfaces.subscribeCommand();
         var call = lightning[cmd]();
         call.on('data', function (response) {
@@ -43,7 +43,7 @@ function subscribeInvoices(parseKeysendInvoice) {
                     parseKeysendInvoice(inv);
                 }
                 else {
-                    regular_1.receiveNonKeysend(inv);
+                    (0, regular_1.receiveNonKeysend)(inv);
                 }
             });
         });
@@ -105,7 +105,7 @@ function reconnectToLightning(innerCtx, callback, noCache) {
         catch (e) {
             if (e.code === ERR_CODE_UNIMPLEMENTED) {
                 console.log(`[lightning] LOCKED ${now}`);
-                yield unlock_1.tryToUnlockLND();
+                yield (0, unlock_1.tryToUnlockLND)();
             }
             console.log(`[lightning] ERROR ${e}`);
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {

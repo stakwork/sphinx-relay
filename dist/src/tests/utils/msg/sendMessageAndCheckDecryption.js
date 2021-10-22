@@ -21,7 +21,7 @@ const get_2 = require("../get");
 function sendMessageAndCheckDecryption(t, node1, node2, text, options) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS TEXT MESSAGE TO NODE2
-        const [node1contact, node2contact] = yield get_1.getContactAndCheckKeyExchange(t, node1, node2);
+        const [node1contact, node2contact] = yield (0, get_1.getContactAndCheckKeyExchange)(t, node1, node2);
         //encrypt random string with node1 contact_key
         const encryptedText = rsa.encrypt(node1contact.contact_key, text);
         //encrypt random string with node2 contact_key
@@ -37,13 +37,13 @@ function sendMessageAndCheckDecryption(t, node1, node2, text, options) {
             boost: false,
         };
         //send message from node1 to node2
-        const msg = yield http.post(node1.external_ip + '/messages', helpers_1.makeArgs(node1, v));
+        const msg = yield http.post(node1.external_ip + '/messages', (0, helpers_1.makeArgs)(node1, v));
         //make sure msg exists
         t.true(msg.success, 'msg should exist');
         const msgUuid = msg.response.uuid;
         t.truthy(msg.success, msgUuid);
         // //wait for message to process
-        const lastMessage = yield get_2.getCheckNewMsgs(t, node2, msgUuid);
+        const lastMessage = yield (0, get_2.getCheckNewMsgs)(t, node2, msgUuid);
         t.truthy(lastMessage, 'await message post');
         //decrypt the last message sent to node2 using node2 private key and lastMessage content
         const decrypt = rsa.decrypt(node2.privkey, lastMessage.message_content);

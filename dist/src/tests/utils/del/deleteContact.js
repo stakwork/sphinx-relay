@@ -14,7 +14,7 @@ const http = require("ava-http");
 const helpers_1 = require("../helpers");
 function deleteContact(t, node, contactID) {
     return __awaiter(this, void 0, void 0, function* () {
-        let deletion = yield http.del(node.external_ip + '/contacts/' + contactID, helpers_1.makeArgs(node));
+        let deletion = yield http.del(node.external_ip + '/contacts/' + contactID, (0, helpers_1.makeArgs)(node));
         t.true(deletion.success, 'node should delete the contact');
         return true;
     });

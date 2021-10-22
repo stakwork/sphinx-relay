@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Lsat = class Lsat extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         autoIncrement: true,
@@ -21,7 +21,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Lsat.prototype, "id", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.STRING,
     }),
     __metadata("design:type", String)
@@ -63,7 +63,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Lsat.prototype, "tenant", void 0);
 Lsat = __decorate([
-    sequelize_typescript_1.Table({
+    (0, sequelize_typescript_1.Table)({
         tableName: 'sphinx_lsats',
         underscored: true,
         indexes: [{ unique: true, fields: ['id', 'identifier'] }],

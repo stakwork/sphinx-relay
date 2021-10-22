@@ -27,7 +27,7 @@ const configFile = argv.db
     : path.join(__dirname, '../../config/config.json');
 const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env];
-const appConfig = config_1.loadConfig();
+const appConfig = (0, config_1.loadConfig)();
 const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_log === 'true' ? console.log : false, models: [
         chat_1.default,
         contact_1.default,
@@ -43,7 +43,7 @@ const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_l
         accounting_1.default,
         lsat_1.default,
     ] });
-if (proxy_1.isProxy()) {
+if ((0, proxy_1.isProxy)()) {
     opts.pool = {
         max: 7,
         min: 2,

@@ -103,7 +103,7 @@ export async function checkPeered(req, res) {
     chans.channels.forEach((ch) => {
       if (ch.remote_pubkey === pubkey) {
         if (ch.active) active = true
-        else channel_point = ch.channel_point
+        channel_point = ch.channel_point
       }
     })
     success(res, { peered, active, channel_point })

@@ -51,7 +51,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
         const mediaKey = yield models_1.models.MediaKey.findOne({
             where: { originalMuid: muid, tenant },
         });
-        const terms = ldat_1.parseLDAT(mt);
+        const terms = (0, ldat_1.parseLDAT)(mt);
         let price = terms.meta && terms.meta.amt;
         if (amount < price)
             return; // not enough sats
@@ -71,7 +71,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
                 originalMuid: mediaKey.originalMuid,
                 mediaType: mediaKey.mediaType,
             };
-            send_1.sendMessage({
+            (0, send_1.sendMessage)({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [purchaser.id] }),
                 sender: owner,
                 type: constants_1.default.message_types.purchase_accept,
@@ -80,7 +80,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
                 failure: () => { },
             });
             // PAY THE OG POSTER HERE!!!
-            send_1.sendMessage({
+            (0, send_1.sendMessage)({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [mediaKey.sender] }),
                 sender: owner,
                 type: constants_1.default.message_types.purchase,
@@ -102,7 +102,7 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
                 return;
             // purchase it from creator (send "purchase")
             const msg = { mediaToken: mt, purchaser: purchaser.id };
-            send_1.sendMessage({
+            (0, send_1.sendMessage)({
                 chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogmsg.sender] }),
                 sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), (purchaser && purchaser.alias && { alias: purchaser.alias })), { role: constants_1.default.chat_roles.reader }),
                 type: constants_1.default.message_types.purchase,
@@ -136,7 +136,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         if (existingMediaKey)
             return; // no need, its already been sent
         // const host = mt.split('.')[0]
-        const terms = ldat_1.parseLDAT(mt);
+        const terms = (0, ldat_1.parseLDAT)(mt);
         const ogPurchaser = yield models_1.models.Contact.findOne({
             where: {
                 id: purchaserID,
@@ -152,7 +152,7 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
         // }})
         const termsAndKey = yield downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner, amt);
         // send it to the purchaser
-        send_1.sendMessage({
+        (0, send_1.sendMessage)({
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), (sender && sender.alias && { alias: sender.alias })), { role: constants_1.default.chat_roles.reader }),
             chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [ogPurchaser.id] }),
             type: msgtypes.purchase_accept,
@@ -183,7 +183,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
         const tenant = owner.id;
         const ownerPubkey = owner.publicKey;
         const ogmuid = mt && mt.split('.').length && mt.split('.')[1];
-        const terms = ldat_1.parseLDAT(mt);
+        const terms = (0, ldat_1.parseLDAT)(mt);
         if (!terms.host)
             return payload;
         const token = yield meme.lazyToken(ownerPubkey, terms.host);
@@ -194,7 +194,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
             let protocol = 'https';
             if (terms.host.includes('localhost'))
                 protocol = 'http';
-            const r = yield node_fetch_1.default(`${protocol}://${terms.host}/file/${mt}`, {
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${terms.host}/file/${mt}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             // console.log("[modify] dl RES", r)
@@ -213,7 +213,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
                 knownLength: encImgBuffer.length,
             });
             const formHeaders = form.getHeaders();
-            const resp = yield node_fetch_1.default(`${protocol}://${terms.host}/file`, {
+            const resp = yield (0, node_fetch_1.default)(`${protocol}://${terms.host}/file`, {
                 method: 'POST',
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
                 body: form,
