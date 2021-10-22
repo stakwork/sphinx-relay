@@ -1,25 +1,17 @@
-import * as http from 'ava-http'
-//import { rsa } from '../../../public/electronjs/rsa'
-//import { meme } from '../../../public/electronjs/meme'
-import { encrypt, decrypt } from '../../electronjs/rsa'
-import { uploadMeme } from '../../electronjs/meme'
 import fetch from 'node-fetch'
+import * as http from 'ava-http'
 import * as RNCryptor from 'jscryptor-2'
-//import { getContacts } from '../get/get-contacts'
-//import { getTribeId } from '../get/get-tribe-id'
-import { getChats } from '../get/getChats'
-import { getCheckNewMsgs } from '../get/getCheckNewMessages'
-//import { getCheckContacts } from '../get/getCheckContacts'
-import { getContacts } from '../get/getContacts'
-import { getCheckNewPaidMsgs } from '../get/getCheckNewPaidMsgs'
-
-import { arraysEqual, getToken, makeArgs, memeProtocol } from '../helpers'
+import { uploadMeme } from '../../electronjs/meme'
+import { encrypt, decrypt } from '../../electronjs/rsa'
 import { getSelf } from '../get/getSelf'
+import { getChats } from '../get/getChats'
+import { getContacts } from '../get/getContacts'
+import { getCheckNewMsgs } from '../get/getCheckNewMessages'
+import { getCheckNewPaidMsgs } from '../get/getCheckNewPaidMsgs'
+import { arraysEqual, getToken, makeArgs, memeProtocol } from '../helpers'
 import { config } from '../../config'
 
-//import { r } from '../../test-config'
-
-async function sendImage(t, node1, node2, image, tribe, price) {
+export async function sendImage(t, node1, node2, image, tribe, price) {
 	//NODE1 SENDS AN IMAGE TO NODE2
 
 	var token = await getToken(t, node1)
@@ -190,8 +182,5 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 	// //check equality b64 to b64
 	t.true(dec.toString('base64') === image)
 
-	console.log('HERE')
 	return true
 }
-
-export { sendImage }
