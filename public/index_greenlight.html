@@ -213,14 +213,14 @@
         if (j && j.success && j.response && j.response.peered==false) {
           peer.style.display = 'block'
           peer.disabled = false
-        }
         // PEERED BUT NOT ACTIVE
-        if (j && j.success && j.response && j.response.peered && j.response.active==false && confirmations < 8) {
+        } else if (j && j.success && j.response && j.response.peered && confirmations < 8) {
           pending.style.display = 'block'
           // CHANNEL CREATED
           if (j.response.channel_point) {
             chanpoint.innerHTML = 'TXID: ' + txid + '\n Confirmations: ' + confirmations + '/8'
           }
+        // ACTIVE AFTER 8 CONFS ONLY
         } else if (j && j.success && j.response && j.response.peered && j.response.active) {
           conn.style.display = 'block'
           qr.style.display = 'flex'
