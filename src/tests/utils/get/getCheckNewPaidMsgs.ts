@@ -1,7 +1,7 @@
 import * as http from 'ava-http'
 import { makeArgs } from '../helpers'
 
-function getCheckNewPaidMsgs(t, node, imgMsg) {
+export function getCheckNewPaidMsgs(t, node, imgMsg) {
 	var msgToken = imgMsg.media_token.split('.')[1]
 
 	return new Promise((resolve, reject) => {
@@ -28,5 +28,3 @@ function getCheckNewPaidMsgs(t, node, imgMsg) {
 		}, 1000)
 	})
 }
-
-export { getCheckNewPaidMsgs }
