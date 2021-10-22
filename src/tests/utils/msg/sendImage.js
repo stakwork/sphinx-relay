@@ -13,9 +13,8 @@ import { getCheckNewMsgs } from '../get/getCheckNewMessages'
 import { getContacts } from '../get/getContacts'
 import { getCheckNewPaidMsgs } from '../get/getCheckNewPaidMsgs'
 
-import { arraysEqual } from '../helpers'
+import { arraysEqual, getToken, makeArgs, memeProtocol } from '../helpers'
 import { getSelf } from '../get/getSelf'
-import { getToken, makeArgs, memeProtocol } from '../get/getToken'
 import { config } from '../../config'
 
 //import { r } from '../../test-config'
