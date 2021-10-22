@@ -4,15 +4,17 @@ import * as http from 'ava-http'
 import { encrypt, decrypt } from '../../electronjs/rsa'
 import { uploadMeme } from '../../electronjs/meme'
 import fetch from 'node-fetch'
-//import { RNCryptor } from 'jscryptor-2'
+import * as RNCryptor from 'jscryptor-2'
 //import { getContacts } from '../get/get-contacts'
 //import { getTribeId } from '../get/get-tribe-id'
-//import { getChats } from '../get/get-chats'
+import { getChats } from '../get/getChats'
 import { getCheckNewMsgs } from '../get/getCheckNewMessages'
-//import { getCheckContacts } from '../get/get-check-contacts'
+//import { getCheckContacts } from '../get/getCheckContacts'
 import { getContacts } from '../get/getContacts'
-//import { getCheckNewPaidMsgs } from '../get/get-check-newPaidMsgs'
-//import { getSelf } from '../get/get-self'
+import { getCheckNewPaidMsgs } from '../get/getCheckNewPaidMsgs'
+
+import { arraysEqual } from '../helpers'
+import { getSelf } from '../get/getSelf'
 import { getToken, makeArgs, memeProtocol } from '../get/getToken'
 import { config } from '../../config'
 
@@ -111,7 +113,7 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 		if (tribe) {
 			;[n2contactP2, n1contactP2] = await getContacts(t, node2, node1)
 		} else {
-			;[n2contactP2, n1contactP2] = await getCheckContacts(t, node2, node1)
+			;[n2contactP2, n1contactP2] = await getContacts(t, node2, node1)
 		}
 		let purchContact = n1contactP2.id
 		//create chat_id for purchase message (in tribe and outside tribe)
@@ -123,7 +125,7 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 			const selfie = await getSelf(t, node2)
 			const selfId = selfie.id
 			const sharedChat = chats.find((chat) =>
-				h.arraysEqual(chat.contact_ids, [selfId, parseInt(n1contactP2.id)])
+				arraysEqual(chat.contact_ids, [selfId, parseInt(n1contactP2.id)])
 			)
 			t.truthy(sharedChat, 'there should be a chat with node1 and node2')
 			purchChat = sharedChat.id
@@ -141,8 +143,8 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 
 		//send purchase message from node2 purchasing node1 image
 		const purchased = await http.post(
-			node2.ip + '/purchase',
-			h.makeArgs(node2, p)
+			node2.external_ip + '/purchase',
+			makeArgs(node2, p)
 		)
 		t.true(
 			purchased.success,
@@ -156,8 +158,8 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 		node2MediaKey = paymentMsg.media_key
 		t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist')
 		//create url with media_token
-		const protocol = h.memeProtocol(r.memeHost)
-		url = `${protocol}://${r.memeHost}/file/${paymentMsg.media_token}`
+		const protocol = memeProtocol(config.memeHost)
+		url = `${protocol}://${config.memeHost}/file/${paymentMsg.media_token}`
 	} else {
 		//RECEIVE UNPAID IMAGE ===>
 
@@ -165,8 +167,6 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 		const lastMessage2 = await getCheckNewMsgs(t, node2, imgUuid)
 		//get media_key from received image message
 		node2MediaKey = lastMessage2.media_key
-		console.log(lastMessage2.media_token)
-		console.log('\n')
 		t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist')
 		//create url with media_token
 		const protocol = memeProtocol(config.memeHost)
@@ -177,16 +177,13 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 	decryptMediaKey = decrypt(node2.privkey, node2MediaKey)
 	t.true(typeof decryptMediaKey === 'string', 'decryptMediaKey should exist')
 	var token = await getToken(t, node2)
-	console.log(token)
 	t.true(typeof token === 'string', 'should get media token')
-	console.log(url)
-	console.log('\n')
 	const res2 = await fetch(url, {
-		headers: { method: 'GET', Authorization: `Bearer ${token}` },
+		headers: { Authorization: `Bearer ${token}` },
+		method: 'GET',
 	})
 	t.true(typeof res2 === 'object', 'res2 should exist')
 	const blob = await res2.buffer()
-	console.log(blob.length)
 	t.true(blob.length > 0, 'blob should exist')
 	//media_key needs to be decrypted with your private key
 	const dec = RNCryptor.Decrypt(blob.toString('base64'), decryptMediaKey)
@@ -194,6 +191,7 @@ async function sendImage(t, node1, node2, image, tribe, price) {
 	// //check equality b64 to b64
 	t.true(dec.toString('base64') === image)
 
+	console.log('HERE')
 	return true
 }
 
