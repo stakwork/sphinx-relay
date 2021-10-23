@@ -3,7 +3,7 @@ import * as crypto from 'crypto'
 const BLOCK_SIZE = 256
 const MAX_CHUNK_SIZE = BLOCK_SIZE - 11 // 11 is the PCKS1 padding
 
-function encrypt(key, txt) {
+export function encrypt(key, txt) {
 	try {
 		const buf = Buffer.from(txt)
 		let finalBuf = Buffer.from([])
@@ -27,7 +27,7 @@ function encrypt(key, txt) {
 	}
 }
 
-function decrypt(privateKey, enc) {
+export function decrypt(privateKey, enc) {
 	try {
 		const buf = Buffer.from(enc, 'base64')
 		let finalDec = ''
@@ -51,7 +51,7 @@ function decrypt(privateKey, enc) {
 	}
 }
 
-function genKeys() {
+export function genKeys() {
 	return new Promise((resolve, reject) => {
 		crypto.generateKeyPair(
 			'rsa',
@@ -108,5 +108,3 @@ const cert = {
 		)
 	},
 }
-
-module.exports = { encrypt, decrypt, genKeys }

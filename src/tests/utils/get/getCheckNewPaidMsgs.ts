@@ -1,7 +1,12 @@
 import * as http from 'ava-http'
 import { makeArgs } from '../helpers'
+import { NodeConfig, Message } from '../../types'
 
-export function getCheckNewPaidMsgs(t, node, imgMsg) {
+export function getCheckNewPaidMsgs(
+	t,
+	node: NodeConfig,
+	imgMsg: Message
+): Promise<Message> {
 	var msgToken = imgMsg.media_token.split('.')[1]
 
 	return new Promise((resolve, reject) => {

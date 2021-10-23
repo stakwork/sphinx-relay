@@ -6,7 +6,7 @@ import { NodeConfig } from '../types'
 import { addContact } from '../utils/save/addContact'
 import { getContacts } from '../utils/get'
 import { deleteContact } from '../utils/del/deleteContact'
-import { sendImage } from '../utils/msg/sendImage.js'
+import { sendImage } from '../utils/msg/sendImage'
 
 /*
 npx ava test-03-imageTest.js --verbose --serial --timeout=2m

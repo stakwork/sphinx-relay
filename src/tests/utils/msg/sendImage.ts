@@ -1,3 +1,4 @@
+import { ExecutionContext } from 'ava'
 import fetch from 'node-fetch'
 import * as http from 'ava-http'
 import * as RNCryptor from 'jscryptor-2'
@@ -9,11 +10,23 @@ import {
 	getChats,
 	getContacts,
 	getCheckNewMsgs,
+	getTribeIdFromUUID,
 } from '../get'
 import { arraysEqual, getToken, makeArgs, memeProtocol } from '../helpers'
+import { NodeConfig } from '../../types'
+import { Contact, Chat } from '../../types'
 import { config } from '../../config'
 
-export async function sendImage(t, node1, node2, image, tribe, price) {
+interface Context {}
+
+export async function sendImage(
+	t: ExecutionContext<Context>,
+	node1: NodeConfig,
+	node2: NodeConfig,
+	image: string,
+	tribe?: Chat | null,
+	price?: Number
+) {
 	//NODE1 SENDS AN IMAGE TO NODE2
 
 	var token = await getToken(t, node1)
@@ -35,8 +48,8 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 	t.true(typeof upload.media_key === 'string', 'upload should have media key')
 	t.true(typeof upload.muid === 'string', 'upload should have muid')
 
-	var n1contactP1 = {}
-	var n2contactP1 = {}
+	var n1contactP1: Contact = {} as Contact
+	var n2contactP1: Contact = {} as Contact
 	if (tribe) {
 		n1contactP1 = await getSelf(t, node1)
 	} else {
@@ -46,13 +59,13 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 	//encrypt media_key with node1 contact_key, node1 perspective
 	let encrypted_media_key = encrypt(n1contactP1.contact_key, upload.media_key)
 	let encrypted_media_key2
-	let contactIdP1 = null
-	let tribeIdP1 = null
-	let mediaKeyMap = null
+	let contactIdP1: number | null = null
+	let tribeIdP1: number | null = null
+	let mediaKeyMap: { [x: number]: string; chat?: any } | null = null
 	if (tribe) {
 		//encrypt media_key with tribe group_key
 		encrypted_media_key2 = encrypt(tribe.group_key, upload.media_key)
-		tribeIdP1 = await getTribeId(t, node1, tribe)
+		tribeIdP1 = await getTribeIdFromUUID(t, node1, tribe)
 		mediaKeyMap = {
 			['chat']: encrypted_media_key2,
 			[n1contactP1.id]: encrypted_media_key,
@@ -101,29 +114,24 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 		const lastPrePurchMsg = await getCheckNewMsgs(t, node2, imgUuid)
 
 		//create contact_id for purchase message
-		var n2contactP2 = {}
-		var n1contactP2 = {}
-		if (tribe) {
-			;[n2contactP2, n1contactP2] = await getContacts(t, node2, node1)
-		} else {
-			;[n2contactP2, n1contactP2] = await getContacts(t, node2, node1)
-		}
+		var n1contactP2: Contact = {} as Contact
+		;[, n1contactP2] = await getContacts(t, node2, node1)
 		let purchContact = n1contactP2.id
 
 		//create chat_id for purchase message (in tribe and outside tribe)
-		let purchChat = null
+		let purchChat: number | null | undefined = null
 
 		if (tribe) {
-			purchChat = await getTribeId(t, node2, tribe)
+			purchChat = await getTribeIdFromUUID(t, node2, tribe)
 		} else {
 			const chats = await getChats(t, node2)
 			const selfie = await getSelf(t, node2)
 			const selfId = selfie.id
 			const sharedChat = chats.find((chat) =>
-				arraysEqual(chat.contact_ids, [selfId, parseInt(n1contactP2.id)])
+				arraysEqual(chat.contact_ids, [selfId, n1contactP2.id])
 			)
 			t.truthy(sharedChat, 'there should be a chat with node1 and node2')
-			purchChat = sharedChat.id
+			purchChat = sharedChat?.id
 		}
 
 		//create media_token for purchase message
