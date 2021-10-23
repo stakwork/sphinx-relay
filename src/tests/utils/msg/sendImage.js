@@ -3,11 +3,13 @@ import * as http from 'ava-http'
 import * as RNCryptor from 'jscryptor-2'
 import { uploadMeme } from '../../electronjs/meme'
 import { encrypt, decrypt } from '../../electronjs/rsa'
-import { getSelf } from '../get/getSelf'
-import { getChats } from '../get/getChats'
-import { getContacts } from '../get/getContacts'
-import { getCheckNewMsgs } from '../get/getCheckNewMessages'
-import { getCheckNewPaidMsgs } from '../get/getCheckNewPaidMsgs'
+import {
+	getSelf,
+	getCheckNewPaidMsgs,
+	getChats,
+	getContacts,
+	getCheckNewMsgs,
+} from '../get'
 import { arraysEqual, getToken, makeArgs, memeProtocol } from '../helpers'
 import { config } from '../../config'
 
