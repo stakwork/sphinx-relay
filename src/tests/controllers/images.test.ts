@@ -4,7 +4,8 @@ import { iterate } from '../utils/helpers'
 import { greenSquare, pinkSquare } from '../configs/b64-images'
 import { NodeConfig } from '../types'
 import { addContact } from '../utils/save/addContact'
-//import { deleteContact } from '../utils/del/deleteContact'
+import { getContacts } from '../utils/get'
+import { deleteContact } from '../utils/del/deleteContact'
 import { sendImage } from '../utils/msg/sendImage.js'
 
 /*
@@ -32,7 +33,7 @@ async function imageTest(
 ) {
 	//TWO NODES SEND EACH OTHER IMAGES ===>
 
-	console.log(`${node1.alias} and ${node2.alias}`)
+	console.log(`Testing Sending Image for ${node1.alias} and ${node2.alias}`)
 
 	//NODE1 ADDS NODE2 AS A CONTACT
 	const added = await addContact(t, node1, node2)
@@ -59,10 +60,14 @@ async function imageTest(
 	t.true(paidImageSent2, 'paid image should have been sent')
 
 	//NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
-	/* COMMENTING OUT BECAUSE WE DO THIS IN cleanup.test.ts
-	let deletion = await f.deleteContacts(t, node1, node2.id)
-	t.true(deletion, 'contacts should be deleted')
-	*/
+	const allContacts = await getContacts(t, node1)
+	let deletion
+	for (const contact of allContacts) {
+		if (contact.public_key == node2.pubkey) {
+			deletion = await deleteContact(t, node1, contact.id)
+			t.true(deletion, 'contacts should be deleted')
+		}
+	}
 }
 
 module.exports = imageTest

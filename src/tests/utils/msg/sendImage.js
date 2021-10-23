@@ -107,8 +107,10 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 			;[n2contactP2, n1contactP2] = await getContacts(t, node2, node1)
 		}
 		let purchContact = n1contactP2.id
+
 		//create chat_id for purchase message (in tribe and outside tribe)
 		let purchChat = null
+
 		if (tribe) {
 			purchChat = await getTribeId(t, node2, tribe)
 		} else {
@@ -121,6 +123,7 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 			t.truthy(sharedChat, 'there should be a chat with node1 and node2')
 			purchChat = sharedChat.id
 		}
+
 		//create media_token for purchase message
 		const mediaToken = lastPrePurchMsg.media_token
 
@@ -148,6 +151,7 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 		//(Last message by token.media_key, type 8, purchase message)
 		node2MediaKey = paymentMsg.media_key
 		t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist')
+
 		//create url with media_token
 		const protocol = memeProtocol(config.memeHost)
 		url = `${protocol}://${config.memeHost}/file/${paymentMsg.media_token}`
@@ -156,9 +160,11 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 
 		//Check that image message was received
 		const lastMessage2 = await getCheckNewMsgs(t, node2, imgUuid)
+
 		//get media_key from received image message
 		node2MediaKey = lastMessage2.media_key
 		t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist')
+
 		//create url with media_token
 		const protocol = memeProtocol(config.memeHost)
 		url = `${protocol}://${config.memeHost}/file/${lastMessage2.media_token}`
@@ -167,17 +173,22 @@ export async function sendImage(t, node1, node2, image, tribe, price) {
 	//DECRYPT IMAGE
 	decryptMediaKey = decrypt(node2.privkey, node2MediaKey)
 	t.true(typeof decryptMediaKey === 'string', 'decryptMediaKey should exist')
+
 	var token = await getToken(t, node2)
 	t.true(typeof token === 'string', 'should get media token')
+
 	const res2 = await fetch(url, {
 		headers: { Authorization: `Bearer ${token}` },
 		method: 'GET',
 	})
+
 	t.true(typeof res2 === 'object', 'res2 should exist')
 	const blob = await res2.buffer()
 	t.true(blob.length > 0, 'blob should exist')
+
 	//media_key needs to be decrypted with your private key
 	const dec = RNCryptor.Decrypt(blob.toString('base64'), decryptMediaKey)
+
 	// const b64 = dec.toString('base64')
 	// //check equality b64 to b64
 	t.true(dec.toString('base64') === image)
