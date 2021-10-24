@@ -29,7 +29,7 @@ export async function sendImage(
 ) {
   //NODE1 SENDS AN IMAGE TO NODE2
 
-  let token = await getToken(t, node1)
+  var token = await getToken(t, node1)
   let host = config.memeHost
   let fileBase64 = 'data:image/jpg;base64,' + image
   let typ = 'image/jpg'
@@ -184,7 +184,7 @@ export async function sendImage(
   decryptMediaKey = decrypt(node2.privkey, node2MediaKey)
   t.true(typeof decryptMediaKey === 'string', 'decryptMediaKey should exist')
 
-  let token = await getToken(t, node2)
+  var token = await getToken(t, node2)
   t.true(typeof token === 'string', 'should get media token')
 
   const res2 = await fetch(url, {
