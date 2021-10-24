@@ -53,9 +53,9 @@ async function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
 
 export { uploadMeme }
 
-function dataURLtoBuf(dataurl) {
-  var arr = dataurl.split(','),
-    mime = arr[0].match(/:(.*?);/)[1],
+function dataURLtoBuf(dataurl: string) {
+  let arr = dataurl.split(','),
+    //mime = arr[0].match(/:(.*?);/)[1],
     bstr = decode(arr[1]),
     n = bstr.length,
     u8arr = new Uint8Array(n)
