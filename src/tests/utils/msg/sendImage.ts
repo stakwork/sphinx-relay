@@ -29,12 +29,12 @@ export async function sendImage(
 ) {
   //NODE1 SENDS AN IMAGE TO NODE2
 
-  var token = await getToken(t, node1)
-  var host = config.memeHost
-  var fileBase64 = 'data:image/jpg;base64,' + image
-  var typ = 'image/jpg'
-  var filename = 'Image.jpg'
-  var isPublic = false
+  let token = await getToken(t, node1)
+  let host = config.memeHost
+  let fileBase64 = 'data:image/jpg;base64,' + image
+  let typ = 'image/jpg'
+  let filename = 'Image.jpg'
+  let isPublic = false
 
   const upload = await uploadMeme(
     fileBase64,
@@ -48,8 +48,8 @@ export async function sendImage(
   t.true(typeof upload.media_key === 'string', 'upload should have media key')
   t.true(typeof upload.muid === 'string', 'upload should have muid')
 
-  var n1contactP1: Contact = {} as Contact
-  var n2contactP1: Contact = {} as Contact
+  let n1contactP1: Contact = {} as Contact
+  let n2contactP1: Contact = {} as Contact
   if (tribe) {
     n1contactP1 = await getSelf(t, node1)
   } else {
@@ -104,17 +104,17 @@ export async function sendImage(
   //make sure msg exists
   t.true(img.success, 'sent image should exist')
   const imgMsg = img.response
-  var imgUuid = imgMsg.uuid
-  var url = ''
-  var node2MediaKey = ''
-  var decryptMediaKey = ''
+  let imgUuid = imgMsg.uuid
+  let url = ''
+  let node2MediaKey = ''
+  let decryptMediaKey = ''
 
   if (price) {
     //IF IMAGE HAS A PRICE ===>
     const lastPrePurchMsg = await getCheckNewMsgs(t, node2, imgUuid)
 
     //create contact_id for purchase message
-    var n1contactP2: Contact = {} as Contact
+    let n1contactP2: Contact = {} as Contact
     ;[, n1contactP2] = await getContacts(t, node2, node1)
     let purchContact = n1contactP2.id
 
@@ -155,7 +155,7 @@ export async function sendImage(
       'purchase message should be posted ' + purchased.error
     )
     //get payment accepted message
-    var paymentMsg = await getCheckNewPaidMsgs(t, node2, imgMsg)
+    let paymentMsg = await getCheckNewPaidMsgs(t, node2, imgMsg)
 
     //get media key from payment accepted message
     //(Last message by token.media_key, type 8, purchase message)
@@ -184,7 +184,7 @@ export async function sendImage(
   decryptMediaKey = decrypt(node2.privkey, node2MediaKey)
   t.true(typeof decryptMediaKey === 'string', 'decryptMediaKey should exist')
 
-  var token = await getToken(t, node2)
+  let token = await getToken(t, node2)
   t.true(typeof token === 'string', 'should get media token')
 
   const res2 = await fetch(url, {
