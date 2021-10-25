@@ -121,11 +121,15 @@ function setupApp() {
     })
 
     process.on('SIGTERM', () => {
-      server.close()
+      server.close(function () {
+        process.exit(0)
+      })
     })
 
     process.on('exit', () => {
-      server.close()
+      server.close(function () {
+        process.exit(0)
+      })
     })
 
     // start all routes!
