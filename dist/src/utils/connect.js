@@ -116,8 +116,7 @@ function checkPeered(req, res) {
                 if (ch.remote_pubkey === pubkey) {
                     if (ch.active)
                         active = true;
-                    else
-                        channel_point = ch.channel_point;
+                    channel_point = ch.channel_point;
                 }
             });
             (0, res_1.success)(res, { peered, active, channel_point });

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
+exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
 const http = require("ava-http");
 const config_1 = require("../config");
 const makeArgs = (node, body = {}) => {
@@ -67,4 +67,47 @@ function iterate(nodes, callback) {
     });
 }
 exports.iterate = iterate;
+function arraysEqual(a, b) {
+    if (a === b)
+        return true;
+    if (a == null || b == null)
+        return false;
+    if (a.length !== b.length)
+        return false;
+    for (var i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i])
+            return false;
+    }
+    return true;
+}
+exports.arraysEqual = arraysEqual;
+function getToken(t, node) {
+    return __awaiter(this, void 0, void 0, function* () {
+        //A NODE GETS A SERVER TOKEN FOR POSTING TO MEME SERVER
+        const protocol = memeProtocol(config_1.config.memeHost);
+        //get authentication challenge from meme server
+        const r = yield http.get(`${protocol}://${config_1.config.memeHost}/ask`);
+        t.truthy(r, 'r should exist');
+        t.truthy(r.challenge, 'r.challenge should exist');
+        //call relay server with challenge
+        const r2 = yield http.get(node.external_ip + `/signer/${r.challenge}`, (0, exports.makeArgs)(node));
+        t.true(r2.success, 'r2 should exist');
+        t.truthy(r2.response.sig, 'r2.sig should exist');
+        //get server token
+        const r3 = yield http.post(`${protocol}://${config_1.config.memeHost}/verify`, {
+            form: { id: r.id, sig: r2.response.sig, pubkey: node.pubkey },
+        });
+        t.truthy(r3, 'r3 should exist');
+        t.truthy(r3.token, 'r3.token should exist');
+        return r3.token;
+    });
+}
+exports.getToken = getToken;
+function memeProtocol(host) {
+    let p = 'https';
+    if (host.includes('localhost'))
+        p = 'http';
+    return p;
+}
+exports.memeProtocol = memeProtocol;
 //# sourceMappingURL=helpers.js.map
