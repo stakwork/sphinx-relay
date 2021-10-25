@@ -40,6 +40,8 @@ export interface Message {
   network_type: number
   tenant: number
   amount_msat: number
+  media_token: string
+  media_key: string
 }
 
 export interface Chat {
