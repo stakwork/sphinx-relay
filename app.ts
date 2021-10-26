@@ -120,17 +120,17 @@ function setupApp() {
       console.log(`Node listening on ${port}.`)
     })
 
-    process.on('SIGTERM', () => {
-      server.close(function () {
-        process.exit(0)
-      })
-    })
+    // process.on('SIGTERM', () => {
+    //   server.close(function () {
+    //     process.exit(0)
+    //   })
+    // })
 
-    process.on('exit', () => {
-      server.close(function () {
-        process.exit(0)
-      })
-    })
+    // process.on('exit', () => {
+    //   server.close(function () {
+    //     process.exit(0)
+    //   })
+    // })
 
     // start all routes!
     if (!config.unlock) {
