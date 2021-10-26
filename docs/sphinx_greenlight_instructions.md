@@ -23,7 +23,7 @@ The sha256 of the zip file you will download from us is the following:
 
 On macOS, you can check it by running this command in the directory where you have the file:
 
-`shasum -a 256 sphinx_greenlight_0_3.img.zip`
+`shasum -a 256 sphinx_greenlight_0_5.img.zip`
 
 ## Backing Up Your Funds and Data
 
