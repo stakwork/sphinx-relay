@@ -4,7 +4,7 @@
 
 ## Getting Started
 
-1. Grab our installer zip file from [here](https://drive.google.com/file/d/1fhS1M0gY8Xn15G7v5Yb_D4n-m7Fjpxo9/view?usp=sharing). See the file integrity section below if you'd like to cross check this file.
+1. Grab our installer zip file from [here](https://drive.google.com/file/d/18IADHiNg7Ach3h0O3y5WPfbL5KEgocKE/view?usp=sharing). See the file integrity section below if you'd like to cross check this file.
 2. Flash our installer onto your raspberry pi using your preferred method. We like to use balena etcher, which you can download [here](https://www.balena.io/etcher/).
 3. Follow the instructions [here](https://www.raspberrypi.org/documentation/computers/configuration.html#setting-up-a-headless-raspberry-pi) to set up your raspberry pi's connection if you are connecting to a wireless network.
 4. Place your sd card into the raspberry pi, and plug the pi into a power source.
@@ -18,7 +18,7 @@ When you can, SSH into your raspberry pi using the username `pi` and the passwor
 The sha256 of the zip file you will download from us is the following:
 
 ```
-393f380476c09fc74261e1b8ade1424e913a287ba926b8a1c0de79c1bf241d0a
+7c49c484b2a0e7f8ffe3b6076d2ba5f941b6a665096b984ad9899c7d1d59e491
 ```
 
 On macOS, you can check it by running this command in the directory where you have the file:
