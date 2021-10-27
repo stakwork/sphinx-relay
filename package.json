@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/app.js",
   "scripts": {
-    "test": "ava --watch",
+    "test": "ava",
     "docker-dev": "nodemon ./app.js",
     "build": "tsc",
     "start-ts": "ts-node ./app.ts",

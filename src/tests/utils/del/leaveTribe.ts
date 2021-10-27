@@ -10,7 +10,10 @@ export async function leaveTribe(t: Assertions, node: NodeConfig, tribe: Chat) {
   t.true(typeof tribeId === 'number', 'node should get tribe id')
 
   //node2 leaves tribe
-  const exit = await http.del(node.ip + `/chat/${tribeId}`, makeArgs(node))
+  const exit = await http.del(
+    node.external_ip + `/chat/${tribeId}`,
+    makeArgs(node)
+  )
   //check exit
   t.true(exit.success, 'node should exit test tribe')
 

@@ -14,7 +14,10 @@ export async function deleteTribe(
   t.truthy(tribeId, 'node should get tribe id')
 
   //node deletes the tribe
-  let del = await http.del(node.ip + '/chat/' + tribeId, makeArgs(node))
+  let del = await http.del(
+    node.external_ip + '/chat/' + tribeId,
+    makeArgs(node)
+  )
   t.true(del.success, 'node1 should delete the tribe')
 
   return true

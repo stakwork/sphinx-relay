@@ -33,7 +33,7 @@ export async function createTribe(
   }
 
   //node1 creates new tribe
-  let c = await http.post(node.ip + '/group', makeArgs(node, newTribe))
+  let c = await http.post(node.external_ip + '/group', makeArgs(node, newTribe))
   //check that new tribe was created successfully
   t.true(c.success, 'create tribe should be successful')
 
