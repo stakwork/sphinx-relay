@@ -1,5 +1,5 @@
 var test = require('ava')
-import { getToken, randomText } from '../utils/helpers'
+import { randomText } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
 import { sendTribeMessageAndCheckDecryption } from '../utils/msg'
@@ -15,8 +15,6 @@ test('test-21-boostPayment: create tribe, join tribe, send messages, boost messa
 
 export async function boostPayment(t, index1, index2, index3) {
   //TWO NODES SEND IMAGES WITHIN A TRIBE ===>
-  let a = await getToken(t, nodes[1])
-  console.log(a)
   let node1 = nodes[index1]
   let node2 = nodes[index2]
   let node3 = nodes[index3]
@@ -24,24 +22,20 @@ export async function boostPayment(t, index1, index2, index3) {
 
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
 
-  console.log(node1.external_ip)
   //NODE1 CREATES A TRIBE
   let tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
 
-  console.log('1')
   //NODE2 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
   let join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
 
-  console.log('2')
   //NODE3 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
   let join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
 
-  console.log('3')
   //NODE1 SENDS A MESSAGE IN THE TRIBE
   const text = randomText()
   let tribeMessage1 = await sendTribeMessageAndCheckDecryption(
@@ -58,7 +52,6 @@ export async function boostPayment(t, index1, index2, index3) {
 	t.true(check, 'node2 should have read and decrypted node1 message')
 */
   //NODE2 SENDS A MESSAGE IN THE TRIBE
-  console.log('4')
   /*const text2 = randomText()
 	let tribeMessage2 = await sendTribeMessageAndCheckDecryption(
 		t,
