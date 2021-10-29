@@ -21,7 +21,7 @@ export async function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
   t.truthy(replyUuid, 'replyUuid should exist')
 
   //get tribeId from node1 perspective
-  const tribeId = await getTribeIdFromUUID(t, node1, tribe.uuid)
+  const tribeId = await getTribeIdFromUUID(t, node1, tribe)
   t.truthy(tribeId, 'tribeId should exist')
 
   //create boost message object
