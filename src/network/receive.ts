@@ -374,6 +374,7 @@ export async function initGrpcSubscriptions(noCache?: boolean) {
   try {
     if (config.lightning_provider === 'GREENLIGHT') {
       await Greenlight.initGreenlight()
+      Greenlight.keepalive()
     }
     await Lightning.getInfo(true, noCache) // try proxy
     await lndService.subscribeInvoices(parseKeysendInvoice)

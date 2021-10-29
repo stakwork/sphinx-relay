@@ -6,12 +6,19 @@ import * as ByteBuffer from 'bytebuffer'
 import * as crypto from 'crypto'
 import * as interfaces from './interfaces'
 import { loadLightning } from './lightning'
+import * as Lightning from './lightning'
 
 const config = loadConfig()
 
 export async function initGreenlight() {
   await startGreenlightInit()
   // await streamHsmRequests()
+}
+
+export function keepalive() {
+  setInterval(() => {
+    Lightning.getInfo()
+  }, 59000)
 }
 
 var schedulerClient = <any>null

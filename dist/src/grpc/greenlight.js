@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.streamHsmRequests = exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.loadScheduler = exports.initGreenlight = void 0;
+exports.streamHsmRequests = exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.loadScheduler = exports.keepalive = exports.initGreenlight = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const libhsmd_1 = require("./libhsmd");
@@ -18,6 +18,7 @@ const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
 const interfaces = require("./interfaces");
 const lightning_1 = require("./lightning");
+const Lightning = require("./lightning");
 const config = (0, config_1.loadConfig)();
 function initGreenlight() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -26,6 +27,12 @@ function initGreenlight() {
     });
 }
 exports.initGreenlight = initGreenlight;
+function keepalive() {
+    setInterval(() => {
+        Lightning.getInfo();
+    }, 59000);
+}
+exports.keepalive = keepalive;
 var schedulerClient = null;
 const loadSchedulerCredentials = () => {
     var glCert = fs.readFileSync(config.scheduler_tls_location);

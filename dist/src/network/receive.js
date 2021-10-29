@@ -361,6 +361,7 @@ function initGrpcSubscriptions(noCache) {
         try {
             if (config.lightning_provider === 'GREENLIGHT') {
                 yield Greenlight.initGreenlight();
+                Greenlight.keepalive();
             }
             yield Lightning.getInfo(true, noCache); // try proxy
             yield lndService.subscribeInvoices(parseKeysendInvoice);
