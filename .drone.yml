@@ -4,14 +4,11 @@ name: default
 
 steps:
   - name: prepare-test-build
-    image: node
+    image: sphinx-lightning/sphinx-relay-test 
     volumes:
     # - name: cache
     #   path: /artifacts
-    commands:
-      - npm install
-      - npm run test
-      - npm run build
+    
 
 # - name: build-image
 #   image: node
