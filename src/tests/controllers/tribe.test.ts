@@ -42,7 +42,7 @@ async function tribeTest(
     text,
     tribe
   )
-  t.true(tribeMessage, 'node1 should send message to tribe')
+  t.true(!!tribeMessage, 'node1 should send message to tribe')
 
   //NODE2 SENDS A TEXT MESSAGE IN TRIBE
   const text2 = randomText()
@@ -53,7 +53,7 @@ async function tribeTest(
     text2,
     tribe
   )
-  t.true(tribeMessage2, 'node1 should send message to tribe')
+  t.true(!!tribeMessage2, 'node1 should send message to tribe')
 
   //NODE2 LEAVES THE TRIBE
   let left = await leaveTribe(t, node2, tribe)
