@@ -1,4 +1,4 @@
-var test = require('ava')
+import test from 'ava'
 import { randomText } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
@@ -9,7 +9,7 @@ import nodes from '../nodes'
 npx ava test-21-boostPayment.js --verbose --serial --timeout=2m
 */
 
-test('test-21-boostPayment: create tribe, join tribe, send messages, boost messages, leave tribe, delete tribe', async (t) => {
+test('test boostPayment: create tribe, join tribe, send messages, boost messages, leave tribe, delete tribe', async (t) => {
   await boostPayment(t, 0, 1, 2)
 })
 
@@ -38,7 +38,7 @@ export async function boostPayment(t, index1, index2, index3) {
   let join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
 
-  //NODE1 SENDS A MESSAGE IN THE TRIBE
+  //NODE1 SENDS A MESSAGE IN THE TRIBE AND NODE2 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text = randomText()
   let tribeMessage1 = await sendTribeMessageAndCheckDecryption(
     t,
@@ -49,7 +49,7 @@ export async function boostPayment(t, index1, index2, index3) {
   )
   t.true(!!tribeMessage1, 'node1 should send message to tribe')
 
-  //NODE2 SENDS A MESSAGE IN THE TRIBE
+  //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text2 = randomText()
   let tribeMessage2 = await sendTribeMessageAndCheckDecryption(
     t,
@@ -60,7 +60,7 @@ export async function boostPayment(t, index1, index2, index3) {
   )
   t.true(!!tribeMessage2, 'node2 should send message to tribe')
 
-  //NODE3 SENDS A MESSAGE IN THE TRIBE
+  //NODE3 SENDS A MESSAGE IN THE TRIBE AND NODE1 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text3 = randomText()
   let tribeMessage3 = await sendTribeMessageAndCheckDecryption(
     t,
@@ -72,7 +72,6 @@ export async function boostPayment(t, index1, index2, index3) {
   t.true(!!tribeMessage3, 'node3 should send message to tribe')
 
   //NODE1 SENDS A BOOST ON NODE2'S MESSAGE
-
   const boost = await sendBoost(t, node1, node2, tribeMessage2, 11, tribe)
   t.true(boost.success)
 
