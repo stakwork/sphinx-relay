@@ -47,7 +47,7 @@ export async function boostPayment(t, index1, index2, index3) {
     text,
     tribe
   )
-  t.true(!!tribeMessage1, 'node1 should send message to tribe')
+  t.truthy(tribeMessage1, 'node1 should send message to tribe')
 
   //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text2 = randomText()
@@ -58,7 +58,7 @@ export async function boostPayment(t, index1, index2, index3) {
     text2,
     tribe
   )
-  t.true(!!tribeMessage2, 'node2 should send message to tribe')
+  t.truthy(tribeMessage2, 'node2 should send message to tribe')
 
   //NODE3 SENDS A MESSAGE IN THE TRIBE AND NODE1 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text3 = randomText()
@@ -69,7 +69,7 @@ export async function boostPayment(t, index1, index2, index3) {
     text3,
     tribe
   )
-  t.true(!!tribeMessage3, 'node3 should send message to tribe')
+  t.truthy(tribeMessage3, 'node3 should send message to tribe')
 
   //NODE1 SENDS A BOOST ON NODE2'S MESSAGE
   const boost = await sendBoost(t, node1, node2, tribeMessage2, 11, tribe)

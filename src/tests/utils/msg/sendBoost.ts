@@ -1,10 +1,10 @@
-var http = require('ava-http')
+import * as http from 'ava-http'
 import { makeArgs } from '../helpers'
 import { config } from '../../config'
 import { getBalance, getCheckNewMsgs, getTribeIdFromUUID } from '../get'
 
 export async function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
-  //NODE1 SENDS TEXT MESSAGE TO NODE2
+  //NODE1 SENDS TEXT MESSAGE BOOST TO NODE2
 
   //get balances of both nodes before boost
   const [boosterBalBefore, boosteeBalBefore] = await boostBalances(
@@ -16,6 +16,7 @@ export async function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
   //make sure that node2's message exists from node1 perspective
   const msgExists = await getCheckNewMsgs(t, node1, replyMessage.uuid)
   t.truthy(msgExists, 'message being replied to should exist')
+
   //get uuid from node2's message
   const replyUuid = replyMessage.uuid
   t.truthy(replyUuid, 'replyUuid should exist')
@@ -24,7 +25,7 @@ export async function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
   const tribeId = await getTribeIdFromUUID(t, node1, tribe)
   t.truthy(tribeId, 'tribeId should exist')
 
-  //create boost message object
+  //create boost message object for node2's message which is represented by replyUuid
   const v = {
     boost: true,
     contact_id: null,
@@ -55,12 +56,7 @@ export async function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
     node2
   )
 
-  // console.log("boosterBalBefore === ", boosterBalBefore)
-  // console.log("boosterBalAfter === ", boosterBalAfter)
-  // console.log("boosteeBalBefore === ", boosteeBalBefore)
-  // console.log("boosteeBalAfter === ", boosteeBalAfter)
-
-  //check that node1 sent payment and node2 received payment based on balances
+  // check that node1 sent payment and node2 received payment based on balances
   t.true(
     Math.abs(boosterBalBefore - boosterBalAfter - amount) <= config.allowedFee,
     'booster should have lost amount'
