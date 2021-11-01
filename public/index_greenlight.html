@@ -54,7 +54,7 @@
 
       p {
         margin-top: 30px;
-        max-width: 300px;
+        max-width: 305px;
         text-align: center;
       }
 
@@ -218,7 +218,7 @@
           pending.style.display = 'block'
           // CHANNEL CREATED
           if (j.response.channel_point) {
-            chanpoint.innerHTML = 'TXID: ' + txid + '\n Confirmations: ' + confirmations + '/8'
+            chanpoint.innerHTML = 'TXID: ' + txid + '<br> Confirmations: ' + confirmations + '/8'
           }
         // ACTIVE AFTER 8 CONFS ONLY
         } else if (j && j.success && j.response && j.response.peered && j.response.active) {
