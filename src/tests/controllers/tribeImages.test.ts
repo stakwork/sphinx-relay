@@ -1,4 +1,4 @@
-var test = require('ava')
+import test from 'ava'
 import { iterate } from '../utils/helpers'
 import nodes from '../nodes'
 import { createTribe, joinTribe } from '../utils/save'
