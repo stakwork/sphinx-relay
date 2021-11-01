@@ -6,7 +6,7 @@ import { sendTribeMessageAndCheckDecryption, sendBoost } from '../utils/msg'
 import nodes from '../nodes'
 
 /*
-npx ava test-21-boostPayment.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/boostPayment.test.ts --verbose --serial --timeout=2m
 */
 
 test('test boostPayment: create tribe, join tribe, send messages, boost messages, leave tribe, delete tribe', async (t) => {

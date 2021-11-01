@@ -7,7 +7,7 @@ import { sendImage } from '../utils/msg'
 import { greenSquare, pinkSquare } from '../configs/b64-images'
 
 /*
-npx ava test-05-tribeImages.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribeImages.test.ts --verbose --serial --timeout=2m
 */
 
 test('test tribeImages: create tribe, join tribe, send images, leave tribe, delete tribe', async (t) => {
