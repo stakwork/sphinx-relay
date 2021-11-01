@@ -10,16 +10,16 @@ import { greenSquare, pinkSquare } from '../configs/b64-images'
 npx ava test-05-tribeImages.js --verbose --serial --timeout=2m
 */
 
-test('test-05-tribeImages: create tribe, join tribe, send images, leave tribe, delete tribe', async (t) => {
+test('test tribeImages: create tribe, join tribe, send images, leave tribe, delete tribe', async (t) => {
   await iterate(nodes, async (node1, node2) => {
     await tribeImages(t, node1, node2)
   })
 })
 
-async function tribeImages(t, node1, node2) {
+export async function tribeImages(t, node1, node2) {
   //TWO NODES SEND IMAGES WITHIN A TRIBE ===>
 
-  console.log(`${node1.alias} and ${node2.alias}`)
+  console.log(`Sending Tribe images from ${node1.alias} and ${node2.alias}`)
 
   //NODE1 CREATES A TRIBE
   let tribe = await createTribe(t, node1)
@@ -48,5 +48,3 @@ async function tribeImages(t, node1, node2) {
   let delTribe2 = await deleteTribe(t, node1, tribe)
   t.true(delTribe2, 'node1 should delete tribe')
 }
-
-module.exports = tribeImages
