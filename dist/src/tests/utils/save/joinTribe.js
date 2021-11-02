@@ -17,7 +17,7 @@ function joinTribe(t, node, tribe) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE JOINS TRIBE ===>
         //node joins tribe
-        const join = yield http.post(node.ip + '/tribe', (0, helpers_1.makeArgs)(node, tribe));
+        const join = yield http.post(node.external_ip + '/tribe', (0, helpers_1.makeArgs)(node, tribe));
         //check that join was successful
         t.true(join.success, 'node2 should join test tribe');
         const joinedTribeId = join.response.id;

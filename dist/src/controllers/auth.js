@@ -18,7 +18,7 @@ function verifyAuthRequest(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         try {
-            const sc = [jwt_1.scopes.PERSONAL];
+            const sc = [jwt_1.scopes.PERSONAL, jwt_1.scopes.BOTS];
             const jot = (0, jwt_1.createJWT)(req.owner.publicKey, sc, 10080); // one week
             const bod = {
                 pubkey: req.owner.publicKey,

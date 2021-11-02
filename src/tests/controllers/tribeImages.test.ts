@@ -4,7 +4,7 @@ import nodes from '../nodes'
 import { createTribe, joinTribe } from '../utils/save'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { sendImage } from '../utils/msg'
-import { greenSquare, pinkSquare } from '../configs/b64-images'
+import { greenSquare, pinkSquare } from '../utils/base64images'
 
 /*
 npx ava src/tests/controllers/tribeImages.test.ts --verbose --serial --timeout=2m

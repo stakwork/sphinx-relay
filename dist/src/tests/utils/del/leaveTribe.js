@@ -18,7 +18,7 @@ function leaveTribe(t, node, tribe) {
         const tribeId = yield (0, get_1.getTribeIdFromUUID)(t, node, tribe);
         t.true(typeof tribeId === 'number', 'node should get tribe id');
         //node2 leaves tribe
-        const exit = yield http.del(node.ip + `/chat/${tribeId}`, (0, helpers_1.makeArgs)(node));
+        const exit = yield http.del(node.external_ip + `/chat/${tribeId}`, (0, helpers_1.makeArgs)(node));
         //check exit
         t.true(exit.success, 'node should exit test tribe');
         return true;

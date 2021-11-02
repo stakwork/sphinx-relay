@@ -22,11 +22,11 @@ const get_3 = require("../get");
 function sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe, options) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS TEXT MESSAGE TO NODE2
-        const [node1contact, node2contact] = yield (0, get_1.getContactAndCheckKeyExchange)(t, node1, node2);
+        const node1contact = yield (0, get_1.getSelf)(t, node1);
         //encrypt random string with node1 contact_key
         const encryptedText = rsa.encrypt(node1contact.contact_key, text);
         //encrypt random string with node2 contact_key
-        const remoteText = rsa.encrypt(node2contact.contact_key, text);
+        const remoteText = rsa.encrypt(tribe.group_key, text);
         //create message object with encrypted texts
         const tribeId = yield (0, get_3.getTribeIdFromUUID)(t, node1, tribe);
         t.true(typeof tribeId === 'number', 'node should get tribe id');
