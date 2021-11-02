@@ -14,14 +14,12 @@ exports.routes = {
     [scopes.BOTS]: ['/bots', '/bot', '/bot/*'],
 };
 function allowedJwtRoutes(jwt, path) {
-    console.log('allowedJwtRoutes', jwt, path);
     const scopes = jwt.scope.split(',');
     let ok = false;
     scopes.forEach((sc) => {
         if (exports.routes[sc]) {
             // convert to regex with wildcards
             let rs = exports.routes[sc].map((r) => wildcardToRegExp(r));
-            console.log('rs', rs);
             rs.forEach((r) => {
                 if (path.match(r))
                     ok = true;
