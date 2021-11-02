@@ -41,3 +41,6 @@ Here's how you can connect your sphinx chat app to your raspberry pi at home.
 4. Go to the advanced page in your sphinx chat app, and point the server setting to the domain name provided by your dynamic DNS service.
 5. Done! Congratulations, you are now able to use your sphinx chat app wherever you go!
 
+## Community
+
+Get your questions answered in the Greenlight Tribe right [here](https://tribes.sphinx.chat/t/greenlight)!
