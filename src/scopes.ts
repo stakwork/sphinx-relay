@@ -12,12 +12,14 @@ export const routes: { [k: string]: string[] } = {
 }
 
 export function allowedJwtRoutes(jwt, path): boolean {
+  console.log('allowedJwtRoutes', jwt, path)
   const scopes = jwt.scope.split(',')
   let ok = false
   scopes.forEach((sc) => {
     if (routes[sc]) {
       // convert to regex with wildcards
       let rs = routes[sc].map((r) => wildcardToRegExp(r))
+      console.log('rs', rs)
       rs.forEach((r) => {
         if (path.match(r)) ok = true
       })

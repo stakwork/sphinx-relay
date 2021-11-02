@@ -16,7 +16,7 @@ export function createJWT(
   const claims = {
     iss: 'relay',
     pubkey: ownerPubkey,
-    scope: scopes ? scopes.join(', ') : '',
+    scope: scopes ? scopes.join(',') : '',
   }
   var jwt = nJwt.create(claims, signingKey)
   const mins = minutes || 5
