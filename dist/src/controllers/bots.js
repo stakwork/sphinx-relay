@@ -67,6 +67,7 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             unlisted: false,
             deleted: false,
             owner_route_hint: req.owner.routeHint || '',
+            owner_alias: req.owner.alias || '',
         });
         (0, res_1.success)(res, jsonUtils.botToJson(theBot));
     }

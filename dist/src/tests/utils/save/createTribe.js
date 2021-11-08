@@ -35,7 +35,7 @@ function createTribe(t, node, escrowAmount, escrowMillis, ppm, privacy) {
             feed_type: 0,
         };
         //node1 creates new tribe
-        let c = yield http.post(node.ip + '/group', (0, helpers_1.makeArgs)(node, newTribe));
+        let c = yield http.post(node.external_ip + '/group', (0, helpers_1.makeArgs)(node, newTribe));
         //check that new tribe was created successfully
         t.true(c.success, 'create tribe should be successful');
         //save id of test tribe

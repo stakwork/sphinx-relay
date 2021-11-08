@@ -15,7 +15,7 @@ const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const config_1 = require("./config");
 const config = (0, config_1.loadConfig)();
-function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint, }) {
+function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint, owner_alias, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = (0, tribes_1.getHost)();
         try {
@@ -35,6 +35,7 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
                     unlisted: unlisted || false,
                     deleted: deleted || false,
                     owner_route_hint: owner_route_hint || '',
+                    owner_alias: owner_alias || '',
                 }),
                 headers: { 'Content-Type': 'application/json' },
             });

@@ -16,6 +16,7 @@ export async function declare_bot({
   unlisted,
   deleted,
   owner_route_hint,
+  owner_alias,
 }) {
   const host = getHost()
   try {
@@ -34,6 +35,7 @@ export async function declare_bot({
         unlisted: unlisted || false,
         deleted: deleted || false,
         owner_route_hint: owner_route_hint || '',
+        owner_alias: owner_alias || '',
       }),
       headers: { 'Content-Type': 'application/json' },
     })

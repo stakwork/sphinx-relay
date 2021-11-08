@@ -11,15 +11,28 @@ var scopes;
 })(scopes = exports.scopes || (exports.scopes = {}));
 exports.routes = {
     [scopes.PERSONAL]: ['/profile', '/public_pic', '/refresh_jwt'],
+    [scopes.BOTS]: ['/bots', '/bot', '/bot/*'],
 };
 function allowedJwtRoutes(jwt, path) {
     const scopes = jwt.scope.split(',');
     let ok = false;
     scopes.forEach((sc) => {
-        if (exports.routes[sc] && exports.routes[sc].includes(path))
-            ok = true;
+        if (exports.routes[sc]) {
+            // convert to regex with wildcards
+            let rs = exports.routes[sc].map((r) => wildcardToRegExp(r));
+            rs.forEach((r) => {
+                if (path.match(r))
+                    ok = true;
+            });
+        }
     });
     return ok;
 }
 exports.allowedJwtRoutes = allowedJwtRoutes;
+function wildcardToRegExp(s) {
+    return new RegExp('^' + s.split(/\*+/).map(regExpEscape).join('.*') + '$');
+}
+function regExpEscape(s) {
+    return s.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
+}
 //# sourceMappingURL=scopes.js.map

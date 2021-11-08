@@ -55,6 +55,7 @@ export const createBot = async (req, res) => {
       unlisted: false,
       deleted: false,
       owner_route_hint: req.owner.routeHint || '',
+      owner_alias: req.owner.alias || '',
     })
     success(res, jsonUtils.botToJson(theBot))
   } catch (e) {
