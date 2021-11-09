@@ -5,7 +5,7 @@
 ## Getting Started
 
 1. Grab our installer zip file from [here](https://drive.google.com/file/d/18IADHiNg7Ach3h0O3y5WPfbL5KEgocKE/view?usp=sharing). See the file integrity section below if you'd like to cross check this file.
-2. Flash our installer onto your raspberry pi using your preferred method. We like to use balena etcher, which you can download [here](https://www.balena.io/etcher/).
+2. Flash our installer onto your raspberry pi using your preferred method. We like to use the Raspberry Pi Imager, which you can download [here](https://www.raspberrypi.com/software/).
 3. Follow the instructions [here](https://www.raspberrypi.org/documentation/computers/configuration.html#setting-up-a-headless-raspberry-pi) to set up your raspberry pi's connection if you are connecting to a wireless network.
 4. Place your sd card into the raspberry pi, and plug the pi into a power source.
 5. Wait around 5 minutes.
