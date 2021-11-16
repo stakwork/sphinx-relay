@@ -4,7 +4,7 @@
 
 ## Getting Started
 
-1. Grab our installer zip file from [here](https://drive.google.com/file/d/18IADHiNg7Ach3h0O3y5WPfbL5KEgocKE/view?usp=sharing). See the file integrity section below if you'd like to cross check this file.
+1. Grab our installer zip file from [here](https://sphinx-greenlight.s3.amazonaws.com/sphinx_greenlight_0_6.img.zip). See the file integrity section below if you'd like to cross check this file.
 2. Flash our installer onto your raspberry pi using your preferred method. We like to use the Raspberry Pi Imager, which you can download [here](https://www.raspberrypi.com/software/).
 3. Follow the instructions [here](https://www.raspberrypi.org/documentation/computers/configuration.html#setting-up-a-headless-raspberry-pi) to set up your raspberry pi's connection if you are connecting to a wireless network.
 4. Place your sd card into the raspberry pi, and plug the pi into a power source.
@@ -18,12 +18,12 @@ When you can, SSH into your raspberry pi using the username `pi` and the passwor
 The sha256 of the zip file you will download from us is the following:
 
 ```
-7c49c484b2a0e7f8ffe3b6076d2ba5f941b6a665096b984ad9899c7d1d59e491
+1e36f05be8e25085530d5f466dd2a89e74545af68cd802114edef72e89b49c3e
 ```
 
 On macOS, you can check it by running this command in the directory where you have the file:
 
-`shasum -a 256 sphinx_greenlight_0_5.img.zip`
+`shasum -a 256 sphinx_greenlight_0_6.img.zip`
 
 ## Backing Up Your Funds and Data
 
