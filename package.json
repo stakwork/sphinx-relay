@@ -101,7 +101,8 @@
     "winston": "^3.2.1",
     "ws": "^7.5.3",
     "yup": "^0.32.9",
-    "zbase32": "^1.0.2"
+    "zbase32": "^1.0.2",
+    "sqlite3": "4.1.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.28.2",
@@ -112,8 +113,7 @@
     "eslint-config-prettier": "^8.3.0",
     "husky": "^7.0.1",
     "prettier": "^2.3.2",
-    "pretty-quick": "^3.1.1",
-    "sqlite3": "4.1.1"
+    "pretty-quick": "^3.1.1"
   },
   "pkg": {
     "assets": [
