@@ -144,7 +144,7 @@ As noted in the previous section, you might want to protect communications betwe
 
 In order to do that, obtain a domain and an SSL certificate for your **sphinx-relay** server and set up a reverse proxy with NGINX (or a more lightweight alternative).
 
-We recommend using Let's Encrypt service to obtain a free SSL certificate and [**acme.sh**](https://acme.sh) for setting it up and renewals. Note that acme.sh now has their default issuer set to zerossl which could produce errors. Lets Encrypt meanwhile may include an obsolete certificate in their chain which can also cause problems. If you see either of these, you can use these commands to fix (after installation of `acme.sh`:
+We recommend using Let's Encrypt service to obtain a free SSL certificate and [**acme.sh**](https://acme.sh) for setting it up and renewals. Note that acme.sh now has their default issuer set to zerossl which could produce errors. Lets Encrypt meanwhile may include an obsolete certificate in their chain which can also cause problems. If you see either of these, you can use these commands to fix (after installation of `acme.sh`):
 
 ```sh
 $ acme.sh  --set-default-ca  --server letsencrypt
