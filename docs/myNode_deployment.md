@@ -42,6 +42,19 @@ Open up port 53001 on your machine and make sure it has been added to the list.
 > 53001 (v6)                  ALLOW       Anywhere (v6)              # Sphinx-Chat
 ```
 
+If you plan on setting up forwarding from an external domain using nginx (following instructions further down), we'll want to open the port that nginx will be listening on, which we'll set to 54001 for the rest of this walk-thru.
+
+```sh
+# ufw allow 54001 comment 'allow nginx'
+# ufw status
+
+> Status: active
+>
+> To                         Action      From
+> --                         ------      ----
+> 54001 (v6)                  ALLOW       Anywhere (v6)              # nginx
+```
+
 ### Download
 
 login as user bitcoin.
@@ -123,13 +136,22 @@ _Message payloads are encrypted with **sphinx cypher**, but all metadata is tran
 
 Edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
-Make sure that port 53001 forwarding is properly set up.
+Make sure that port 54001 forwarding is properly set up. The network routing should be sending requests from your domain at port 54001 to your router at port 54001 which is where nginx is listening for requests which it will forward within your local network to sphinx-relay which is running on port 53001. This will look something like this:
+
+`my.domain.dev -> 123.456.7.8 [your local network's IP] -> 192.168.1.xxx:54001 [ip where your mynode is running on your local network] -> nginx (listening on port 54001) -> sphinx-relay (listening on port 53001)`
 
 As noted in the previous section, you might want to protect communications between your Sphinx client and **sphinx-relay** with SSL.
 
 In order to do that, obtain a domain and an SSL certificate for your **sphinx-relay** server and set up a reverse proxy with NGINX (or a more lightweight alternative).
 
-We recommend using Let's Encrypt service to obtain a free SSL certificate and [**acme.sh**](https://acme.sh) for setting it up and renewals.
+We recommend using Let's Encrypt service to obtain a free SSL certificate and [**acme.sh**](https://acme.sh) for setting it up and renewals. Note that acme.sh now has their default issuer set to zerossl which could produce errors. Lets Encrypt meanwhile may include an obsolete certificate in their chain which can also cause problems. If you see either of these, you can use these commands to fix (after installation of `acme.sh`):
+
+```sh
+$ acme.sh  --set-default-ca  --server letsencrypt
+$ acme.sh  --set-default-chain  --preferred-chain  ISRG  --server letsencrypt
+```
+
+The rest of the `acme.sh` instructions should work as is.
 
 To configure NGINX as an SSL reverse proxy:
 
@@ -143,7 +165,7 @@ Use the following NGINX config:
 
 ```
 server {
-  listen 53001 ssl;
+  listen 54001 ssl; # listening on port 54001 to forward to sphinx-relay at 53001 
 
   server_name YOUR-DOMAIN;
   # Edit the above _YOUR-DOMAIN_ to your domain name
