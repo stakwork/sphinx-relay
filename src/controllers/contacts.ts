@@ -314,7 +314,7 @@ export const createContact = async (req, res) => {
     (await models.Contact.findOne({
       where: { publicKey: attrs['public_key'], tenant },
     }))
-  if (existing) {
+  if (existing && jsonUtils.contactToJson(existing).contact_key != null) {
     const updateObj: { [k: string]: any } = { fromGroup: false }
     if (attrs['alias']) updateObj.alias = attrs['alias']
     await existing.update(updateObj)
@@ -324,6 +324,7 @@ export const createContact = async (req, res) => {
   if (attrs['public_key'].length > 66)
     attrs['public_key'] = attrs['public_key'].substring(0, 66)
   attrs.tenant = tenant
+
   const createdContact = await models.Contact.create(attrs)
   const contact = await createdContact.update(jsonUtils.jsonToContact(attrs))
 
