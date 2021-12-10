@@ -307,6 +307,14 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (attrs['alias'])
             updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);
+        // retry the key exchange
+        if (!existing.contactKey) {
+            helpers.sendContactKeys({
+                contactIds: [existing.id],
+                sender: owner,
+                type: constants_1.default.message_types.contact_key,
+            });
+        }
         return (0, res_1.success)(res, jsonUtils.contactToJson(existing));
     }
     if (attrs['public_key'].length > 66)

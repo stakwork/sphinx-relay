@@ -318,6 +318,14 @@ export const createContact = async (req, res) => {
     const updateObj: { [k: string]: any } = { fromGroup: false }
     if (attrs['alias']) updateObj.alias = attrs['alias']
     await existing.update(updateObj)
+    // retry the key exchange
+    if (!existing.contactKey) {
+      helpers.sendContactKeys({
+        contactIds: [existing.id],
+        sender: owner,
+        type: constants.message_types.contact_key,
+      })
+    }
     return success(res, jsonUtils.contactToJson(existing))
   }
 
