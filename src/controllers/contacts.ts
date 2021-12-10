@@ -314,7 +314,7 @@ export const createContact = async (req, res) => {
     (await models.Contact.findOne({
       where: { publicKey: attrs['public_key'], tenant },
     }))
-  if (existing && jsonUtils.contactToJson(existing).contact_key != null) {
+  if (existing) {
     const updateObj: { [k: string]: any } = { fromGroup: false }
     if (attrs['alias']) updateObj.alias = attrs['alias']
     await existing.update(updateObj)
