@@ -68,8 +68,6 @@ export async function chatInvoice(t, node1, node2) {
   t.true(payInvoice2, 'Node1 should have paid node2 invoice')
 
   //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
-  //  let deletion = await deleteContact(t, node1, node2)
-  // t.true(deletion, 'contacts should be deleted')
   const allContacts = await getContacts(t, node1)
   let deletion
   for (const contact of allContacts) {
