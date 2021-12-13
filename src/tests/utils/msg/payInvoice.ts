@@ -1,8 +1,8 @@
 import { Assertions } from 'ava'
 import http = require('ava-http')
-import { NodeConfig } from '../types'
-import { getCheckNewPaidInvoice, getBalance } from './get'
-import { makeArgs } from './helpers'
+import { NodeConfig } from '../../types'
+import { getCheckNewPaidInvoice, getBalance } from '../get'
+import { makeArgs } from '../helpers'
 
 export const payInvoice = async (
   t: Assertions,
