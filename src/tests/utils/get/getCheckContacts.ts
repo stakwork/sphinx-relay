@@ -18,8 +18,6 @@ async function timeout(
   reject
 ) {
   const [node1contact, node2contact] = await getContacts(t, node1, node2)
-  // console.log("NODE1 CONTACT == ", node1contact)
-  // console.log("NODE2 CONTACT == ", node2contact)
   if (node1contact.contact_key && node2contact.contact_key) {
     return resolve([node1contact, node2contact])
   }
