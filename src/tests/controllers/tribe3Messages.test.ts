@@ -3,7 +3,7 @@ import test from 'ava'
 import { randomText } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
-import { sendTribeMessage, checkDecryption } from '../utils/msg'
+import { sendTribeMessage, checkMessageDecryption } from '../utils/msg'
 
 import nodes from '../nodes'
 
@@ -21,12 +21,6 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   t.truthy(node3, 'this test requires three nodes')
 
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
-  /*
-  const node1bal = await getBalance(t, node1)
-  const node2bal = await getBalance(t, node2)
-  const node3bal = await getBalance(t, node3)
-  // console.log("balances === ", node1bal, node2bal, node3bal)
-*/
 
   //NODE1 CREATES A TRIBE
   let tribe = await createTribe(t, node1)
@@ -47,11 +41,21 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   let tribeMessage = await sendTribeMessage(t, node1, tribe, text)
 
   //CHECK THAT NODE1'S DECRYPTED MESSAGE IS SAME AS INPUT
-  const n2check = await checkDecryption(t, node2, tribeMessage.uuid, text)
+  const n2check = await checkMessageDecryption(
+    t,
+    node2,
+    tribeMessage.uuid,
+    text
+  )
   t.true(n2check, 'node2 should have read and decrypted node1 message')
 
   //CHECK THAT NODE1'S DECRYPTED MESSAGE IS SAME AS INPUT
-  const n3check = await checkDecryption(t, node3, tribeMessage.uuid, text)
+  const n3check = await checkMessageDecryption(
+    t,
+    node3,
+    tribeMessage.uuid,
+    text
+  )
   t.true(n3check, 'node3 should have read and decrypted node1 message')
 
   //NODE2 SENDS A TEXT MESSAGE IN TRIBE
@@ -59,11 +63,21 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   let tribeMessage2 = await sendTribeMessage(t, node2, tribe, text2)
 
   //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
-  const n1check = await checkDecryption(t, node1, tribeMessage2.uuid, text2)
+  const n1check = await checkMessageDecryption(
+    t,
+    node1,
+    tribeMessage2.uuid,
+    text2
+  )
   t.true(n1check, 'node1 should have read and decrypted node2 message')
 
   //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
-  const n3check2 = await checkDecryption(t, node3, tribeMessage2.uuid, text2)
+  const n3check2 = await checkMessageDecryption(
+    t,
+    node3,
+    tribeMessage2.uuid,
+    text2
+  )
   t.true(n3check2, 'node3 should have read and decrypted node2 message')
 
   //NODE3 SENDS A TEXT MESSAGE IN TRIBE
@@ -71,11 +85,21 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   let tribeMessage3 = await sendTribeMessage(t, node3, tribe, text3)
 
   //CHECK THAT NODE3'S DECRYPTED MESSAGE IS SAME AS INPUT
-  const n1check2 = await checkDecryption(t, node1, tribeMessage3.uuid, text3)
+  const n1check2 = await checkMessageDecryption(
+    t,
+    node1,
+    tribeMessage3.uuid,
+    text3
+  )
   t.true(n1check2, 'node1 should have read and decrypted node3 message')
 
   //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
-  const n2check2 = await checkDecryption(t, node2, tribeMessage3.uuid, text3)
+  const n2check2 = await checkMessageDecryption(
+    t,
+    node2,
+    tribeMessage3.uuid,
+    text3
+  )
   t.true(n2check2, 'node2 should have read and decrypted node3 message')
 
   //NODE2 LEAVES THE TRIBE
