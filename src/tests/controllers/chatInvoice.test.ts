@@ -12,7 +12,7 @@ import { getContacts } from '../utils/get'
 import nodes from '../nodes'
 
 /*
-npx ava test-09-chatInvoice.js --verbose --serial --timeout=2m
+  npx ava src/tests/controllers/chatInvoice.test.ts --verbose --serial --timeout=2m
 */
 
 interface Context {}
