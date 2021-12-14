@@ -3,3 +3,4 @@ export { sendTribeMessageAndCheckDecryption } from './sendTribeMessageAndCheckDe
 export { sendBoost } from './sendBoost'
 export { sendImage } from './sendImage'
 export { sendPayment } from './sendPayment'
+export { sendEscrowMsg } from './sendEscrowMsg'
