@@ -14,15 +14,12 @@ export async function sendEscrowMsg(t, node, admin, tribe, text) {
 
   const escrowAmount = tribe.escrow_amount
   t.true(escrowAmount != 0, 'escrow amount should not be zero')
-  // console.log("escrowAmount === ", escrowAmount)
 
   const escrowMillis = tribe.escrow_millis
   t.true(escrowMillis != 0, 'escrow time should not be zero')
-  // console.log("escrowMillis === ", escrowMillis)
 
   var pricePerMessage = 0
   if (tribe.price_per_message) pricePerMessage = tribe.price_per_message
-  // console.log("PPM === ", pricePerMessage)
 
   let nodeContact = await getSelf(t, node)
 
@@ -65,13 +62,6 @@ export async function sendEscrowMsg(t, node, admin, tribe, text) {
   await sleep(escrowMillis + 1)
   //get balances AFTER escrow
   const [nodeBalAfter, adminBalAfter] = await escrowBalances(t, node, admin)
-
-  // console.log("adminBalBefore === ", adminBalBefore)
-  // console.log("nodeBalBefore === ", nodeBalBefore)
-  // console.log("adminBalDuring === ", adminBalDuring)
-  // console.log("nodeBalDuring === ", nodeBalDuring)
-  // console.log("adminBalAfter === ", adminBalAfter)
-  // console.log("nodeBalAfter === ", nodeBalAfter)
 
   //ON VOLTAGE NODE:
   //ADMIN LOSES r.allowedFee BETWEEN DURING AND AFTER
