@@ -18,7 +18,7 @@ import {
 import nodes from '../nodes'
 
 /*
-npx ava test-13-tribe3Private.js --verbose --serial --timeout=2m
+ npx ava src/tests/controllers/tribe3Private.test.ts --verbose --serial --timeout=2m
 */
 
 test('test-13-tribe3Private: create private tribe, nodes ask to join, reject and accept, delete tribe', async (t) => {
