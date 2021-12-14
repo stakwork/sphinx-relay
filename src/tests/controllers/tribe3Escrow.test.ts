@@ -3,7 +3,7 @@ import test from 'ava'
 import { randomText } from '../utils/helpers'
 import { createTribe, joinTribe } from '../utils/save'
 import { deleteTribe, leaveTribe } from '../utils/del'
-import { checkMessageDecryption } from '../utils/msg'
+import { checkMessageDecryption, sendEscrowMsg } from '../utils/msg'
 import nodes from '../nodes'
 
 /*
@@ -47,8 +47,8 @@ async function tribe3Escrow(t, node1, node2, node3) {
   const n3check = await checkMessageDecryption(
     t,
     node3,
-    text,
-    escrowMessage.message
+    escrowMessage.message.uuid,
+    text
   )
   t.true(
     n3check,

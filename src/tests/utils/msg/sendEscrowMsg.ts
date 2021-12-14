@@ -49,7 +49,7 @@ export async function sendEscrowMsg(t, node, admin, tribe, text) {
   const [nodeBalBefore, adminBalBefore] = await escrowBalances(t, node, admin)
 
   //send message from node to test tribe
-  const msg = await http.post(node.exteranl_ip + '/messages', makeArgs(node, v))
+  const msg = await http.post(node.external_ip + '/messages', makeArgs(node, v))
   //make sure msg exists
   t.true(msg.success, 'node should send message to tribe')
   const msgUuid = msg.response.uuid
