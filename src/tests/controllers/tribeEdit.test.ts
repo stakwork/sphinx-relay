@@ -11,7 +11,7 @@ npx ava test-15-tribeEdit.js --verbose --serial --timeout=2m
 
 interface Context {}
 
-test.serial('checkContacts', async (t: ExecutionContext<Context>) => {
+test.serial('tribeEdit', async (t: ExecutionContext<Context>) => {
   t.true(Array.isArray(nodes))
   await iterate(nodes, async (node1, node2) => {
     await tribeEdit(t, node1, node2)

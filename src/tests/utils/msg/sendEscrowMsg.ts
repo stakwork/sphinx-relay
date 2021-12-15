@@ -7,7 +7,7 @@ import {
   getBalance,
 } from '../get'
 import { makeArgs, sleep } from '../helpers'
-import { run } from '../../configs/test-config'
+import { config } from '../../config'
 
 export async function sendEscrowMsg(t, node, admin, tribe, text) {
   //NODE POSTS MESSAGE TO TRIBE ===>
@@ -70,32 +70,34 @@ export async function sendEscrowMsg(t, node, admin, tribe, text) {
   //Check admin balances throughout
   t.true(
     Math.abs(adminBalBefore + pricePerMessage - adminBalAfter) <=
-      run.allowedFee,
+      config.allowedFee,
     'admin end balance should increase by ppm'
   )
   t.true(
     Math.abs(
       adminBalBefore + pricePerMessage + escrowAmount - adminBalDuring
-    ) <= run.allowedFee,
+    ) <= config.allowedFee,
     'admin should hold escrowAmount and ppm during escrow'
   )
   t.true(
-    Math.abs(adminBalDuring - escrowAmount - adminBalAfter) <= run.allowedFee,
+    Math.abs(adminBalDuring - escrowAmount - adminBalAfter) <=
+      config.allowedFee,
     'admin should lose escrowAmount after escrowMillis'
   )
 
   //Check node balances throughout
   t.true(
-    Math.abs(nodeBalBefore - pricePerMessage - nodeBalAfter) <= run.allowedFee,
+    Math.abs(nodeBalBefore - pricePerMessage - nodeBalAfter) <=
+      config.allowedFee,
     'node end balance should decrease by ppm'
   )
   t.true(
     Math.abs(nodeBalBefore - pricePerMessage - escrowAmount - nodeBalDuring) <=
-      run.allowedFee,
+      config.allowedFee,
     'node should lose escrowAmount and ppm during escrow'
   )
   t.true(
-    Math.abs(nodeBalDuring + escrowAmount - nodeBalAfter) <= run.allowedFee,
+    Math.abs(nodeBalDuring + escrowAmount - nodeBalAfter) <= config.allowedFee,
     'node should gain escrowAmount after escrowMillis'
   )
 
