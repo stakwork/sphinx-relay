@@ -72,4 +72,5 @@ export interface Chat {
   feed_type: number
   owner_route_hint?: string
   img: string
+  meta: string
 }
