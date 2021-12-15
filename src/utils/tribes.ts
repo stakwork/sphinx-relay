@@ -5,14 +5,14 @@ import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
 import { models, sequelize } from '../models'
-import { makeBotsJSON, declare_bot } from './tribeBots'
+import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
 import { isProxy } from './proxy'
 import { Op } from 'sequelize'
 import { logging } from './logger'
 import { sleep } from '../helpers'
 
-export { declare_bot }
+export { declare_bot, delete_bot }
 
 const config = loadConfig()
 

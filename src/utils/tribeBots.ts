@@ -2,8 +2,28 @@ import { models } from '../models'
 import { getHost } from './tribes'
 import fetch from 'node-fetch'
 import { loadConfig } from './config'
+import { genSignedTimestamp } from './tribes'
 
 const config = loadConfig()
+
+export async function delete_bot({ uuid, owner_pubkey }) {
+  const host = getHost()
+  const token = await genSignedTimestamp(owner_pubkey)
+  try {
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(`${protocol}://${host}/bots/${uuid}?token=${token}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const j = await r.json()
+    console.log('=> bot deleted:', j)
+    return true
+  } catch (e) {
+    console.log('[tribes] unauthorized to delete bot', e)
+    throw e
+  }
+}
 
 export async function declare_bot({
   uuid,

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
+exports.sleep = exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
 const http = require("ava-http");
 const config_1 = require("../config");
 const makeArgs = (node, body = {}) => {
@@ -110,4 +110,10 @@ function memeProtocol(host) {
     return p;
 }
 exports.memeProtocol = memeProtocol;
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    });
+}
+exports.sleep = sleep;
 //# sourceMappingURL=helpers.js.map

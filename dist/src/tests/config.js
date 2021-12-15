@@ -5,6 +5,7 @@ exports.config = void 0;
 exports.config = {
     iterate: true,
     memeHost: 'localhost:5555',
+    tribeHost: 'localhost:13000',
     allowedFee: 4,
 };
 //# sourceMappingURL=config.js.map
