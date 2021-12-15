@@ -84,7 +84,7 @@ export async function payStream(
   const afterChat = await getChats(t, node1)
   t.truthy(afterChat, 'node1 should get chats again')
   const sameChat = afterChat.find((chat) => chat.id === chat_id)
-  t.truthy(sameChat.meta, 'text blob should be in meta')
+  t.truthy(sameChat?.meta, 'text blob should be in meta')
 
   //get and record balances after payment
   const afterBal = await getBalance(t, node1)
