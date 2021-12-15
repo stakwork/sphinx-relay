@@ -13,7 +13,7 @@ exports.sendPayment = void 0;
 const http = require("ava-http");
 const helpers_1 = require("../helpers");
 const rsa_1 = require("../../electronjs/rsa");
-const test_config_1 = require("../../configs/test-config");
+const config_1 = require("../../config");
 const get_1 = require("../get");
 function sendPayment(t, node1, node2, amount, text) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -70,8 +70,10 @@ function sendPayment(t, node1, node2, amount, text) {
         // console.log("NODE1 === ", (node1beforeBalance - node1afterBalance) - amount)
         // console.log("NODE2 === ", (node2afterBalance - node2beforeBalance) -  amount)
         //check that node1 sent payment and node2 received payment based on balances
-        t.true(Math.abs(node1beforeBalance - node1afterBalance - amount) <= test_config_1.run.allowedFee, 'node1 should have paid amount');
-        t.true(Math.abs(node2afterBalance - node2beforeBalance - amount) <= test_config_1.run.allowedFee, 'node2 should have received amount');
+        t.true(Math.abs(node1beforeBalance - node1afterBalance - amount) <=
+            config_1.config.allowedFee, 'node1 should have paid amount');
+        t.true(Math.abs(node2afterBalance - node2beforeBalance - amount) <=
+            config_1.config.allowedFee, 'node2 should have received amount');
         return true;
     });
 }

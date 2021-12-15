@@ -14,7 +14,7 @@ const http = require("ava-http");
 const rsa_1 = require("../../electronjs/rsa");
 const get_1 = require("../get");
 const helpers_1 = require("../helpers");
-const test_config_1 = require("../../configs/test-config");
+const config_1 = require("../../config");
 function sendEscrowMsg(t, node, admin, tribe, text) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE POSTS MESSAGE TO TRIBE ===>
@@ -64,14 +64,16 @@ function sendEscrowMsg(t, node, admin, tribe, text) {
         //NODE LOSES r.allowedFee BETWEEN BEFORE AND DURING
         //Check admin balances throughout
         t.true(Math.abs(adminBalBefore + pricePerMessage - adminBalAfter) <=
-            test_config_1.run.allowedFee, 'admin end balance should increase by ppm');
-        t.true(Math.abs(adminBalBefore + pricePerMessage + escrowAmount - adminBalDuring) <= test_config_1.run.allowedFee, 'admin should hold escrowAmount and ppm during escrow');
-        t.true(Math.abs(adminBalDuring - escrowAmount - adminBalAfter) <= test_config_1.run.allowedFee, 'admin should lose escrowAmount after escrowMillis');
+            config_1.config.allowedFee, 'admin end balance should increase by ppm');
+        t.true(Math.abs(adminBalBefore + pricePerMessage + escrowAmount - adminBalDuring) <= config_1.config.allowedFee, 'admin should hold escrowAmount and ppm during escrow');
+        t.true(Math.abs(adminBalDuring - escrowAmount - adminBalAfter) <=
+            config_1.config.allowedFee, 'admin should lose escrowAmount after escrowMillis');
         //Check node balances throughout
-        t.true(Math.abs(nodeBalBefore - pricePerMessage - nodeBalAfter) <= test_config_1.run.allowedFee, 'node end balance should decrease by ppm');
+        t.true(Math.abs(nodeBalBefore - pricePerMessage - nodeBalAfter) <=
+            config_1.config.allowedFee, 'node end balance should decrease by ppm');
         t.true(Math.abs(nodeBalBefore - pricePerMessage - escrowAmount - nodeBalDuring) <=
-            test_config_1.run.allowedFee, 'node should lose escrowAmount and ppm during escrow');
-        t.true(Math.abs(nodeBalDuring + escrowAmount - nodeBalAfter) <= test_config_1.run.allowedFee, 'node should gain escrowAmount after escrowMillis');
+            config_1.config.allowedFee, 'node should lose escrowAmount and ppm during escrow');
+        t.true(Math.abs(nodeBalDuring + escrowAmount - nodeBalAfter) <= config_1.config.allowedFee, 'node should gain escrowAmount after escrowMillis');
         return { success: true, message: msg.response };
     });
 }

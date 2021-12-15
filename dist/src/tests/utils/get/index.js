@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
@@ -31,4 +31,8 @@ var getCheckNewJoin_1 = require("./getCheckNewJoin");
 Object.defineProperty(exports, "getCheckNewJoin", { enumerable: true, get: function () { return getCheckNewJoin_1.getCheckNewJoin; } });
 var getFailNewMsgs_1 = require("./getFailNewMsgs");
 Object.defineProperty(exports, "getFailNewMsgs", { enumerable: true, get: function () { return getFailNewMsgs_1.getFailNewMsgs; } });
+var getTribeByUuid_1 = require("./getTribeByUuid");
+Object.defineProperty(exports, "getTribeByUuid", { enumerable: true, get: function () { return getTribeByUuid_1.getTribeByUuid; } });
+var getCheckNewStream_1 = require("./getCheckNewStream");
+Object.defineProperty(exports, "getCheckNewStream", { enumerable: true, get: function () { return getCheckNewStream_1.getCheckNewStream; } });
 //# sourceMappingURL=index.js.map
