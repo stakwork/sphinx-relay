@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
@@ -23,4 +23,12 @@ var getTribeIdFromUUID_1 = require("./getTribeIdFromUUID");
 Object.defineProperty(exports, "getTribeIdFromUUID", { enumerable: true, get: function () { return getTribeIdFromUUID_1.getTribeIdFromUUID; } });
 var getCheckNewPaidMsgs_1 = require("./getCheckNewPaidMsgs");
 Object.defineProperty(exports, "getCheckNewPaidMsgs", { enumerable: true, get: function () { return getCheckNewPaidMsgs_1.getCheckNewPaidMsgs; } });
+var getCheckContacts_1 = require("./getCheckContacts");
+Object.defineProperty(exports, "getCheckContacts", { enumerable: true, get: function () { return getCheckContacts_1.getCheckContacts; } });
+var getTribeId_1 = require("./getTribeId");
+Object.defineProperty(exports, "getTribeId", { enumerable: true, get: function () { return getTribeId_1.getTribeId; } });
+var getCheckNewJoin_1 = require("./getCheckNewJoin");
+Object.defineProperty(exports, "getCheckNewJoin", { enumerable: true, get: function () { return getCheckNewJoin_1.getCheckNewJoin; } });
+var getFailNewMsgs_1 = require("./getFailNewMsgs");
+Object.defineProperty(exports, "getFailNewMsgs", { enumerable: true, get: function () { return getFailNewMsgs_1.getFailNewMsgs; } });
 //# sourceMappingURL=index.js.map

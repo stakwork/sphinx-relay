@@ -42,6 +42,8 @@ export interface Message {
   amount_msat: number
   media_token: string
   media_key: string
+  sender_alias: string
+  sender_pic: string
 }
 
 export interface Chat {

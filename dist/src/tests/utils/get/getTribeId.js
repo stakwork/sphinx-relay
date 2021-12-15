@@ -9,19 +9,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTribeMessageAndCheckDecryption = void 0;
-const msg_1 = require("../msg");
-// send a message
-// and decrypt with node2 RSA key
-// and check the text matches
-function sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe, options) {
+exports.getTribeId = void 0;
+const http = require("ava-http");
+const helpers_1 = require("../helpers");
+function getTribeId(t, node, tribe) {
     return __awaiter(this, void 0, void 0, function* () {
-        //send message from node1 to node2
-        const msg = yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
-        const msgUuid = msg.uuid;
-        yield (0, msg_1.checkMessageDecryption)(t, node2, msgUuid, text);
-        return msg;
+        //GET TRIBE ID FROM PERSPECTIVE OF NODE ===>
+        //get list of contacts as node
+        let con = yield http.get(node.external_ip + '/contacts', (0, helpers_1.makeArgs)(node));
+        //get test tribe id as node
+        let findTribe = con.response.chats.find((chat) => chat.uuid === tribe.uuid);
+        t.true(typeof findTribe === 'object', 'tribe object should exist');
+        let tribeId = findTribe.id;
+        t.true(typeof tribeId === 'number', 'there should be a tribe id');
+        return tribeId;
     });
 }
-exports.sendTribeMessageAndCheckDecryption = sendTribeMessageAndCheckDecryption;
-//# sourceMappingURL=sendTribeMessageAndCheckDecryption.js.map
+exports.getTribeId = getTribeId;
+//# sourceMappingURL=getTribeId.js.map

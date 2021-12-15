@@ -9,19 +9,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTribeMessageAndCheckDecryption = void 0;
-const msg_1 = require("../msg");
-// send a message
-// and decrypt with node2 RSA key
-// and check the text matches
-function sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe, options) {
+exports.checkMessageDecryption = void 0;
+const rsa = require("../../../crypto/rsa");
+const get_1 = require("../get");
+function checkMessageDecryption(t, node, msgUuid, text) {
     return __awaiter(this, void 0, void 0, function* () {
-        //send message from node1 to node2
-        const msg = yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
-        const msgUuid = msg.uuid;
-        yield (0, msg_1.checkMessageDecryption)(t, node2, msgUuid, text);
-        return msg;
+        // //wait for message to process
+        const lastMessage = yield (0, get_1.getCheckNewMsgs)(t, node, msgUuid);
+        t.truthy(lastMessage, 'await message post');
+        //decrypt the last message sent to node using node private key and lastMessage content
+        const decrypt = rsa.decrypt(node.privkey, lastMessage.message_content);
+        //the decrypted message should equal the random string input before encryption
+        t.true(decrypt === text, 'decrypted text should equal pre-encryption text');
+        return true;
     });
 }
-exports.sendTribeMessageAndCheckDecryption = sendTribeMessageAndCheckDecryption;
-//# sourceMappingURL=sendTribeMessageAndCheckDecryption.js.map
+exports.checkMessageDecryption = checkMessageDecryption;
+//# sourceMappingURL=checkMessageDecryption.js.map

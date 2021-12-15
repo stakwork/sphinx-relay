@@ -67,9 +67,15 @@ export const deleteBot = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id
-  if (!id) return
+  const owner_pubkey = req.owner.publicKey
+  if (!id || owner_pubkey) return
   try {
-    models.Bot.destroy({ where: { id, tenant } })
+    const bot = await models.Bot.findOne({ where: { id, tenant } })
+    await tribes.delete_bot({
+      uuid: bot.uuid,
+      owner_pubkey,
+    })
+    await models.Bot.destroy({ where: { id, tenant } })
     success(res, true)
   } catch (e) {
     console.log('ERROR deleteBot', e)

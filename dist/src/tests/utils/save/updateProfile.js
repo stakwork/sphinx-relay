@@ -9,19 +9,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTribeMessageAndCheckDecryption = void 0;
-const msg_1 = require("../msg");
-// send a message
-// and decrypt with node2 RSA key
-// and check the text matches
-function sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe, options) {
+exports.updateProfile = void 0;
+const http = require("ava-http");
+const helpers_1 = require("../helpers");
+const get_1 = require("../get");
+function updateProfile(t, node, profileUpdate) {
     return __awaiter(this, void 0, void 0, function* () {
-        //send message from node1 to node2
-        const msg = yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
-        const msgUuid = msg.uuid;
-        yield (0, msg_1.checkMessageDecryption)(t, node2, msgUuid, text);
-        return msg;
+        //NODE UPDATES ITS PROFILE
+        const self = yield (0, get_1.getSelf)(t, node);
+        t.truthy(self, 'own contact should be fetched');
+        const nodeId = self.id;
+        t.truthy(nodeId, 'node should have found id for itself');
+        const add = yield http.put(node.external_ip + `/contacts/${nodeId}`, (0, helpers_1.makeArgs)(node, profileUpdate));
+        t.truthy(add, 'node should have updated its profile');
+        return true;
     });
 }
-exports.sendTribeMessageAndCheckDecryption = sendTribeMessageAndCheckDecryption;
-//# sourceMappingURL=sendTribeMessageAndCheckDecryption.js.map
+exports.updateProfile = updateProfile;
+//# sourceMappingURL=updateProfile.js.map

@@ -9,19 +9,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTribeMessageAndCheckDecryption = void 0;
-const msg_1 = require("../msg");
-// send a message
-// and decrypt with node2 RSA key
-// and check the text matches
-function sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe, options) {
+exports.appRejMember = void 0;
+const http = require("ava-http");
+const helpers_1 = require("../helpers");
+function appRejMember(t, admin, contactID, msgId, status) {
     return __awaiter(this, void 0, void 0, function* () {
-        //send message from node1 to node2
-        const msg = yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
-        const msgUuid = msg.uuid;
-        yield (0, msg_1.checkMessageDecryption)(t, node2, msgUuid, text);
-        return msg;
+        //NODE1 APPROVE OR REJECT NODE2 ===>
+        //status === "approved" or "rejected"
+        //contactID === member awaiting approval
+        //msgId === join message id
+        const appRej = yield http.put(admin.external_ip + `/member/${contactID}/${status}/${msgId}`, (0, helpers_1.makeArgs)(admin));
+        t.truthy(appRej);
+        // console.log("APPREJ === ", JSON.stringify(appRej))
+        return true;
     });
 }
-exports.sendTribeMessageAndCheckDecryption = sendTribeMessageAndCheckDecryption;
-//# sourceMappingURL=sendTribeMessageAndCheckDecryption.js.map
+exports.appRejMember = appRejMember;
+//# sourceMappingURL=appRejMember.js.map

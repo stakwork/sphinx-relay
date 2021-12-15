@@ -81,10 +81,16 @@ const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const id = req.params.id;
-    if (!id)
+    const owner_pubkey = req.owner.publicKey;
+    if (!id || owner_pubkey)
         return;
     try {
-        models_1.models.Bot.destroy({ where: { id, tenant } });
+        const bot = yield models_1.models.Bot.findOne({ where: { id, tenant } });
+        yield tribes.delete_bot({
+            uuid: bot.uuid,
+            owner_pubkey,
+        });
+        yield models_1.models.Bot.destroy({ where: { id, tenant } });
         (0, res_1.success)(res, true);
     }
     catch (e) {

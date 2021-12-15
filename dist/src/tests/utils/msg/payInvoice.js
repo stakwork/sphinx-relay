@@ -11,8 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.payInvoice = void 0;
 const http = require("ava-http");
-const get_1 = require("./get");
-const helpers_1 = require("./helpers");
+const get_1 = require("../get");
+const helpers_1 = require("../helpers");
 const payInvoice = (t, sendingNode, receivingNode, amount, payment_request) => __awaiter(void 0, void 0, void 0, function* () {
     //PAY INVOICE FROM NODE1 TO NODE2 ===>
     //get sendingNode balance before payment
