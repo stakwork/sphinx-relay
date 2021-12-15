@@ -2,7 +2,7 @@ import * as http from 'ava-http'
 import { makeArgs, arraysEqual } from '../helpers'
 
 import { encrypt } from '../../electronjs/rsa'
-import { run } from '../../configs/test-config'
+import { config } from '../../config'
 import { getContacts, getChats, getSelf } from '../get'
 
 export async function sendPayment(t, node1, node2, amount, text) {
@@ -76,11 +76,13 @@ export async function sendPayment(t, node1, node2, amount, text) {
 
   //check that node1 sent payment and node2 received payment based on balances
   t.true(
-    Math.abs(node1beforeBalance - node1afterBalance - amount) <= run.allowedFee,
+    Math.abs(node1beforeBalance - node1afterBalance - amount) <=
+      config.allowedFee,
     'node1 should have paid amount'
   )
   t.true(
-    Math.abs(node2afterBalance - node2beforeBalance - amount) <= run.allowedFee,
+    Math.abs(node2afterBalance - node2beforeBalance - amount) <=
+      config.allowedFee,
     'node2 should have received amount'
   )
 
