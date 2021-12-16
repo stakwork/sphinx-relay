@@ -11,7 +11,7 @@ import { NodeConfig } from '../types'
 import nodes from '../nodes'
 
 /*
-npx ava test-40-latestTest.js --verbose --serial --timeout=2m
+ npx ava src/tests/controllers/latestTest.test.ts --verbose --serial --timeout=2m
 */
 
 test('test-40-latestTest: create timestamp, add contact and chat, get latest, delete contacts', async (t) => {
