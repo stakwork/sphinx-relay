@@ -1,4 +1,5 @@
 import http = require('ava-http')
+import * as moment from 'moment'
 import { NodeConfig, RequestArgs, RequestBody } from '../types'
 import { config } from '../config'
 
@@ -112,4 +113,9 @@ export function memeProtocol(host) {
 
 export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export function getTimestamp() {
+  const dateq = moment().utc().format('YYYY-MM-DD%20HH:mm:ss')
+  return dateq
 }
