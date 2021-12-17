@@ -113,3 +113,10 @@ export function memeProtocol(host) {
 export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
+
+export function makeJwtArgs(jwt, body) {
+  return {
+    headers: { 'x-jwt': jwt },
+    body,
+  }
+}
