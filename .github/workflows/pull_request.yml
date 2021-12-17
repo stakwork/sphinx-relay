@@ -13,7 +13,7 @@ jobs:
         path: relay
     - name: Build Relay
       run: |
-        ./relay && docker build -t sphinxlightning .
+        cd ./relay && docker build -t sphinxlightning .
     - uses: actions/checkout@v2
       with:
         name: stakwork/sphinx-stack
