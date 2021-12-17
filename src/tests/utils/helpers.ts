@@ -119,3 +119,10 @@ export function getTimestamp() {
   const dateq = moment().utc().format('YYYY-MM-DD%20HH:mm:ss')
   return dateq
 }
+
+export function makeJwtArgs(jwt, body) {
+  return {
+    headers: { 'x-jwt': jwt },
+    body,
+  }
+}
