@@ -10,12 +10,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build Relay
-      run: |
+    - run: |
         docker build -t sphinxlightning .
     - uses: actions/checkout@v2
       name: Cloning Stack
       with:
         name: stakwork/sphinx-stack
-      run: |
+    - run: |
         docker-compose up -d
 
