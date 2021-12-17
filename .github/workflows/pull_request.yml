@@ -18,7 +18,7 @@ jobs:
       with:
         name: stakwork/sphinx-stack
         path: stack
-    - name: Cloning Stack
+    - name: Docker stack 
       run: |
-        cd ./stack && docker-compose up -d
+        cd ./stack && docker-compose pull && docker-compose up -d
 
