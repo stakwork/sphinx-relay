@@ -9,13 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      path: /relay
     - name: Build Relay
       run: |
-        docker build -t sphinxlightning .
+        ./relay && docker build -t sphinxlightning .
     - uses: actions/checkout@v2
       with:
         name: stakwork/sphinx-stack
+      path: /stack
     - name: Cloning Stack
       run: |
-        docker-compose up -d
+        cd ./stack && docker-compose up -d
 
