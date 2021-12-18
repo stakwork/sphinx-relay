@@ -20,5 +20,5 @@ jobs:
         path: stack
     - name: Docker stack 
       run: |
-        cd ./stack && docker-compose pull && docker-compose up -d
+        cd ./stack && ls -a && docker-compose pull && docker-compose up -d
 
