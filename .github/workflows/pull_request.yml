@@ -26,7 +26,7 @@ jobs:
         cd ./stack && ls -a && docker-compose pull && docker-compose up -d
     - name: Move NODES over to relay
       run: |
-        ./relay/setup/waitForNODES.sh && cp ./relay/NODES.sh ../relay/src/tests/configs/nodes.json
+        node ./relay/setup/waitForNODES.js && cp ./relay/NODES.sh ../relay/src/tests/configs/nodes.json
     - name: Run tests
       run: |
         cd ../relay && npm run test
