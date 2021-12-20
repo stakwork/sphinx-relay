@@ -75,7 +75,7 @@ WORKDIR /sphinx-keysend/
 ARG sphinx_keysend_checkout="binary"
 
 RUN git checkout $sphinx_keysend_checkout
-RUN npm install
+RUN npm install --dev
 
 WORKDIR /relay/
 
