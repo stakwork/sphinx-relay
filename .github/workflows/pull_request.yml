@@ -18,7 +18,7 @@ jobs:
         cd ./relay && npm install --dev && docker build -t sphinxlightning/sphinx-relay-test . 
     - name: Checkout stack
       run: |
-        cd .. && git clone https://github.com/stakwork/sphinx-stack.git
+        cd .. && git clone https://github.com/stakwork/sphinx-stack.git stack
         #- uses: actions/checkout@v2
         #  with:
         #    name: kevkevinpal/sphinx-stack
@@ -26,7 +26,7 @@ jobs:
         #    branch: relayPRTesting
     - name: Turn on Stack 
       run: |
-        cd /stack && ls -a && docker-compose pull && docker-compose up -d
+        cd stack && ls -a && docker-compose pull && docker-compose up -d
     - name: Move NODES over to relay
       run: |
         node ./relay/setup/waitForNODES.js && cp ./relay/NODES.sh ../relay/src/tests/configs/nodes.json
