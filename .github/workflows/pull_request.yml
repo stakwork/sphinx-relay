@@ -23,6 +23,6 @@ jobs:
     - name: Docker stack 
       run: |
         cd ./stack && ls -a && docker-compose pull && docker-compose up -d
-    - nmae: Run tests
+    - name: Run tests
       run: |
         cd ./relay && npm run test
