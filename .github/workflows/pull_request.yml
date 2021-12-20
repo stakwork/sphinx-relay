@@ -8,12 +8,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        path: relay
-    - name: Build Relay
-      run: |
-        cd ./relay && docker build -t sphinxlightning/sphinx-relay-test .
+            #    - uses: actions/checkout@v2
+            #      with:
+            #        path: relay
+            #    - name: Build Relay
+            #      run: |
+            #        cd ./relay && docker build -t sphinxlightning/sphinx-relay-test .
     - uses: actions/checkout@v2
       with:
         name: stakwork/sphinx-stack
