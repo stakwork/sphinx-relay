@@ -15,7 +15,7 @@ jobs:
         branch: stackOnDrone
     - name: Build Relay
       run: |
-        cd ./relay && docker build -t sphinxlightning/sphinx-relay-test .
+        cd ./relay && npm install --dev && docker build -t sphinxlightning/sphinx-relay-test .
     - uses: actions/checkout@v2
       with:
         name: stakwork/sphinx-stack
