@@ -23,7 +23,7 @@ jobs:
         branch: relayPRTesting
     - name: Turn on Stack 
       run: |
-        cd ../stack && ls -a && docker-compose pull && docker-compose up -d
+        cd .. && cd ./stack && ls -a && docker-compose pull && docker-compose up -d
     - name: Move NODES over to relay
       run: |
         node ./relay/setup/waitForNODES.js && cp ./relay/NODES.sh ../relay/src/tests/configs/nodes.json
