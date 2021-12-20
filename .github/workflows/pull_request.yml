@@ -22,7 +22,7 @@ jobs:
         path: stack
     - name: Docker stack 
       run: |
-        cd ./stack && ls -a && docker-compose pull && docker-compose up -d
+        cd ../stack && ls -a && docker-compose pull && docker-compose up -d
     - name: Run tests
       run: |
-        cd ./relay && npm run test
+        cd ../relay && npm run test
