@@ -51,7 +51,7 @@ RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python jq git
 USER root
 
 RUN rm -rf node_modules/
-RUN npm install
+RUN npm install --dev
 RUN npm install --quiet node-gyp@3.8.0 -g
 RUN npm -g config set user root
 RUN npm install nw-gyp -g
@@ -75,7 +75,7 @@ WORKDIR /sphinx-keysend/
 ARG sphinx_keysend_checkout="binary"
 
 RUN git checkout $sphinx_keysend_checkout
-RUN npm install --dev
+RUN npm install 
 
 WORKDIR /relay/
 
