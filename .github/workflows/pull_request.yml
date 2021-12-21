@@ -27,7 +27,7 @@ jobs:
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
-        ls -a && docker-compose pull && docker-compose up -d && node ./relay/setup/waitForNODES.js && ls -a && cp ./relay/NODES.sh ../relay/src/tests/configs/nodes.json
+        ls -a && docker-compose pull && docker-compose up -d && node ./relay/setup/waitForNODES.js && ls -a && cp relay/NODES.sh ../relay/src/tests/configs/nodes.json
         #- name: Move NODES over to relay
         #  working-directory: ./stack
         #  run: |
