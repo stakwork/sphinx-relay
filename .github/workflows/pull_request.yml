@@ -27,7 +27,7 @@ jobs:
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
-        ls -a && docker-compose pull && docker-compose up -d && node ./relay/setup/waitForNODES.js && ls .. -a && pwd && cp relay/NODES.json ../relay/src/tests/configs/nodes.json
+        ls -a && docker-compose pull && docker-compose up -d && node ./relay/setup/waitForNODES.js && ls ../relay -a && pwd && cp relay/NODES.json /home/runner/work/sphinx-relay/sphinx-relay/relay/src/tests/configs/nodes.json
         #- name: Move NODES over to relay
         #  working-directory: ./stack
         #  run: |
