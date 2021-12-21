@@ -25,11 +25,14 @@ jobs:
         #    path: stack
         #    branch: relayPRTesting
     - name: Turn on Stack 
+      working-directory: ./stack
       run: |
         ls -a && docker-compose pull && docker-compose up -d
     - name: Move NODES over to relay
+      working-directory: ./stack
       run: |
         node ./relay/setup/waitForNODES.js && cp ./relay/NODES.sh ../relay/src/tests/configs/nodes.json
     - name: Run tests
+      working-directory: ./relay
       run: |
-        cd ../relay && npm run test
+        npm run test
