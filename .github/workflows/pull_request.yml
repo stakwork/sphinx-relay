@@ -31,7 +31,7 @@ jobs:
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-        docker wait stack_relaysetup_1 
+        sleep 120; docker logs stack_relaysetup_1; docker wait stack_relaysetup_1 
     - name: Run tests
       working-directory: ./relay
       run: |
