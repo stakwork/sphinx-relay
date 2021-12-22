@@ -27,7 +27,7 @@ jobs:
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
-        ls -a && docker-compose pull && docker-compose up -d 
+        ls -a && docker-compose pull && export COMPOSE_HTTP_TIMEOUT=120 docker-compose up -d 
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
