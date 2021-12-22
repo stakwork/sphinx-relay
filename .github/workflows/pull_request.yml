@@ -31,7 +31,7 @@ jobs:
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-        sleep 120; node ./relay/setup/waitForNODES.js
+        docker wait sphinx-stack_relaysetup_1
     - name: Run tests
       working-directory: ./relay
       run: |
