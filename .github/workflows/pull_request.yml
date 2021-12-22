@@ -18,7 +18,7 @@ jobs:
         cd ./relay && npm install --dev && docker build -t sphinxlightning/sphinx-relay-test . 
     - name: Enable docker.host.internal for Ubuntu
       run: |
-        echo "172.17.0.1 host.docker.internal" >> /etc/hosts
+        sudo echo "172.17.0.1 host.docker.internal" >> /etc/hosts
     - name: Checkout stack
       run: |
         git clone -b relayPRTesting https://github.com/kevkevinpal/sphinx-stack.git stack
