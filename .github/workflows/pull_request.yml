@@ -31,7 +31,7 @@ jobs:
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-        node ./relay/setup/waitForNODES.js
+        sleep 120; node ./relay/setup/waitForNODES.js
     - name: Run tests
       working-directory: ./relay
       run: |
