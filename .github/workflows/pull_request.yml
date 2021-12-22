@@ -8,6 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Enable docker.host.internal for Ubuntu
+      run: |
+        sudo bash -c 'echo "172.17.0.1 host.docker.internal" >> /etc/hosts'
     - uses: actions/checkout@v2
       with:
         name: kevkevinpal/sphinx-relay      
@@ -16,9 +19,6 @@ jobs:
     - name: Build Relay
       run: |
         cd ./relay && npm install --dev && docker build -t sphinxlightning/sphinx-relay-test . 
-    - name: Enable docker.host.internal for Ubuntu
-      run: |
-        sudo bash -c 'echo "172.17.0.1 host.docker.internal" >> /etc/hosts'
     - name: Checkout stack
       run: |
         git clone -b relayPRTesting https://github.com/kevkevinpal/sphinx-stack.git stack
@@ -27,6 +27,10 @@ jobs:
         #    name: kevkevinpal/sphinx-stack
         #    path: stack
         #    branch: relayPRTesting
+    - name: give permissions 
+      working-directory: ./stack
+      run: |
+        chmod 777 ./bitcoind     
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
