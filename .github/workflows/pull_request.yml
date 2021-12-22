@@ -31,7 +31,7 @@ jobs:
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-        node ./relay/setup/waitForNODES.js && cat relay/NODES.json && cp relay/NODES.json ../relay/src/tests/configs/nodes.json
+        node ./relay/setup/waitForNODES.js;  cat ./relay/NODES.json;  cp ./relay/NODES.json ../relay/src/tests/configs/nodes.json
     - name: Run tests
       working-directory: ./relay
       run: |
