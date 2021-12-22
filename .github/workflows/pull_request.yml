@@ -28,6 +28,9 @@ jobs:
       working-directory: ./stack
       run: |
         ls -a && docker-compose pull && export COMPOSE_HTTP_TIMEOUT=120; docker-compose up -d 
+    - name: Enable docker.host.internal for Ubuntu
+      run: |
+        echo "172.17.0.1 host.docker.internal" >> /etc/hosts
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
