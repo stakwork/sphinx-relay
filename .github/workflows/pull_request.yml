@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Enable docker.host.internal for Ubuntu
       run: |
-        sudo bash -c 'echo "172.17.0.1 host.docker.internal" >> /etc/hosts'
+        pwd && sudo bash -c 'echo "172.17.0.1 host.docker.internal" >> /etc/hosts'
     - uses: actions/checkout@v2
       with:
         name: kevkevinpal/sphinx-relay      
