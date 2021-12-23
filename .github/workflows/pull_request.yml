@@ -38,7 +38,7 @@ jobs:
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-         sleep 120; docker logs stack_relaysetup_1; docker logs alice.sphinx; docker-compose ps; docker logs alice.sphinx; docker logs db.sphinx; docker wait stack_relaysetup_1 
+         sleep 120; docker logs stack_relaysetup_1; docker logs alice.sphinx; docker-compose ps; docker logs alice.sphinx; docker logs db.sphinx; docker restart alice.sphinx; docker wait stack_relaysetup_1 
     - name: Run tests
       working-directory: ./relay
       run: |
