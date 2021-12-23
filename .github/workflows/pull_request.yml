@@ -17,16 +17,12 @@ jobs:
         path: relay
         branch: stackOnDrone
     - name: Build Relay
+      working-dir: ./relay
       run: |
-        cd ./relay && npm install --dev && docker build -t kevkevinpal/sphinx-relay . 
+        npm install --dev && docker build -t kevkevinpal/sphinx-relay . 
     - name: Checkout stack
       run: |
         git clone -b relayPRTesting https://github.com/kevkevinpal/sphinx-stack.git stack
-        #- uses: actions/checkout@v2
-        #  with:
-        #    name: kevkevinpal/sphinx-stack
-        #    path: stack
-        #    branch: relayPRTesting
     - name: give permissions 
       working-directory: ./stack
       run: |
@@ -34,7 +30,7 @@ jobs:
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
-        ls -a && docker-compose pull && export COMPOSE_HTTP_TIMEOUT=120; sudo docker-compose up -d 
+        sudo docker-compose up -d 
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
