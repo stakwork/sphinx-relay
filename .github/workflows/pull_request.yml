@@ -17,7 +17,7 @@ jobs:
         path: relay
         branch: stackOnDrone
     - name: Build Relay
-      working-dir: ./relay
+      working-directory: ./relay
       run: |
         npm install --dev && docker build -t kevkevinpal/sphinx-relay . 
     - name: Checkout stack
