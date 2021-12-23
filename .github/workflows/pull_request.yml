@@ -37,12 +37,12 @@ jobs:
          sleep 120;
          docker logs stack_relaysetup_1;
          docker logs alice.sphinx;
-         docker-compose ps;
+         docker ps;
          docker logs alice.sphinx;
          docker logs db.sphinx;
          docker restart alice.sphinx;
          sleep 40;
-         docker-compose ps;
+         docker ps;
          docker logs db.sphinx;
          docker wait stack_relaysetup_1 
     - name: Run tests
