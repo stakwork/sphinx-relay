@@ -28,7 +28,6 @@ jobs:
       run: |
         chmod 777 ./bitcoind     
         chmod 777 ./relay
-        sudo chown www-data. .
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
