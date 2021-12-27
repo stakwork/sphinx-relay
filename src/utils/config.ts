@@ -33,7 +33,7 @@ export function loadConfig() {
     lightning_provider: provider,
     logging:
       logg ||
-      'LIGHTNING,TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT',
+      'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT',
     senza_url: ENV.SENZA_URL || config.senza_url,
     macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
     router_macaroon_location:
