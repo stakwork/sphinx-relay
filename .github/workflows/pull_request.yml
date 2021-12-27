@@ -37,8 +37,9 @@ jobs:
       working-directory: ./stack
       run: |
          sleep 120;
-         docker exec -it alice.sphinx ls ./configs/db;
          docker ps;
+         docker logs alice.sphinx;
+         docker-compose ps;
     - name: Run tests
       working-directory: ./relay
       run: |
