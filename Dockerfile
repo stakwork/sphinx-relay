@@ -19,7 +19,6 @@ RUN cp /relay/config/app.json /relay/dist/config/app.json
 RUN cp /relay/config/config.json /relay/dist/config/config.json
 
 RUN chown -R 1000:1000 /relay
-RUN chown www-data. .
 
 FROM node:12-buster-slim
 
