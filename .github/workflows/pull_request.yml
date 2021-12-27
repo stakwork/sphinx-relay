@@ -38,6 +38,7 @@ jobs:
          sleep 120;
          docker ps;
          docker exec alice.sphinx ls ./configs/;
+         docker exec alice.sphinx ls ./configs/db;
          docker logs alice.sphinx;
          docker-compose ps;
     - name: Run tests
