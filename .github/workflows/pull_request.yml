@@ -6,7 +6,7 @@ on:
     
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - name: Enable docker.host.internal for Ubuntu
       run: |
