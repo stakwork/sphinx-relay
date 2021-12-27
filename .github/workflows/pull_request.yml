@@ -39,6 +39,7 @@ jobs:
          docker ps;
          docker logs alice.sphinx;
          docker-compose ps;
+         docker wait sphinx-stack_relaysetup_1
     - name: Run tests
       working-directory: ./relay
       run: |
