@@ -7,7 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-18.04 
-    permissions: read-all|write-all
     steps:
     - name: Enable docker.host.internal for Ubuntu
       run: |
