@@ -43,11 +43,10 @@ jobs:
          ls ../relay/src/tests/configs;
          #sudo cp ./relay/NODES.json ../relay/src/tests/configs/nodes.json;
     - name: copy file
-      working-directory: ./stack
       uses: canastro/copy-file-action@master
       with:
-        source: "./relay/NODES.json"
-        target: "../relay/src/tests/configs/nodes.json"     
+        source: "stack/relay/NODES.json"
+        target: "relay/src/tests/configs/nodes.json"     
     - name: Run tests
       working-directory: ./relay
       run: |
