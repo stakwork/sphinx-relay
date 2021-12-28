@@ -14,6 +14,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+        path: relay
     - name: Build Relay
       working-directory: ./relay
       run: |
@@ -36,7 +37,6 @@ jobs:
          docker wait stack_relaysetup_1;
          mkdir ../relay/src/tests/configs/;
          touch ../relay/src/tests/configs/nodes.json;
-         ls ../relay/src/tests/configs;
     - name: copy file
       uses: canastro/copy-file-action@master
       with:
@@ -46,5 +46,3 @@ jobs:
       working-directory: ./relay
       run: |
         npx ava src/tests/controllers/paidMeet.test.ts --verbose --serial --timeout=2m
-        #npm run test
-        #;  cat ./relay/NODES.json;  cp ./relay/NODES.json ../relay/src/tests/configs/nodes.json
