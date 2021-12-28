@@ -38,6 +38,8 @@ async function paidMeet(t, node1, node2) {
   const self = await getSelf(t, node1)
   t.true(self.price_to_meet === 13, 'node1 should have updated price_to_meet')
 
+  await deleteContact(t, node1, node2.id)
+
   //NODE2 ADDS NODE1 AS A CONTACT
   let added = await addContact(t, node2, node1)
   t.true(added, 'node2 should add node1 as contact')
