@@ -46,4 +46,9 @@ jobs:
     - name: Run tests
       working-directory: ./relay
       run: |
+        npx ava src/tests/controllers/contacts.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribe.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/self.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/lsats.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/images.test.ts --verbose --serial --timeout=2m &&
         npx ava src/tests/controllers/paidMeet.test.ts --verbose --serial --timeout=2m
