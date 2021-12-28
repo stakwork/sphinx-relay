@@ -48,6 +48,7 @@ jobs:
       run: |
         npx ava src/tests/controllers/boostPayment.test.ts --verbose --serial --timeout=2m &&
         npx ava src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2m &&
+        sleep 20 &&
         npx ava src/tests/controllers/chatInvoice.test.ts --verbose --serial --timeout=2m &&
         npx ava src/tests/controllers/chatPayment.test.ts --verbose --serial --timeout=2m &&
         npx ava src/tests/controllers/cleanup.test.ts --verbose --serial --timeout=2m &&
