@@ -40,7 +40,6 @@ jobs:
          docker logs alice.sphinx;
          docker-compose ps;
          docker wait stack_relaysetup_1;
-         ls ../relay/src/tests/configs;
          #sudo cp ./relay/NODES.json ../relay/src/tests/configs/nodes.json;
     - name: copy file
       uses: canastro/copy-file-action@master
