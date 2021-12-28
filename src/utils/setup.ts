@@ -32,7 +32,7 @@ async function setVersion() {
   try {
     await sequelize.query(`PRAGMA user_version = ${USER_VERSION}`)
   } catch (e) {
-    console.log('=> [db] setVersion has  weee failed', e)
+    console.log('=> [db] setVersion has failed')
   }
 }
 
