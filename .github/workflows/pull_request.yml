@@ -40,7 +40,9 @@ jobs:
          docker logs alice.sphinx;
          docker-compose ps;
          docker wait stack_relaysetup_1;
-         ls ../relay/src/tests
+         mkdir ../relay/src/tests/configs/;
+         touch ../relay/src/tests/configs/nodes.json;
+         ls ../relay/src/tests/configs;
          #touch ../relay/src/tests/configs/nodes.json
          #sudo cp ./relay/NODES.json ../relay/src/tests/configs/nodes.json;
     - name: copy file
