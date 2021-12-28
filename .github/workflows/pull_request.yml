@@ -44,33 +44,29 @@ jobs:
         source: "stack/relay/NODES.json"
         target: "relay/src/tests/configs/nodes.json"     
     - name: Run tests
-      uses: nick-invision/retry@v2
-      with:
-        timeout_minutes: 10
-        max_attempts: 6 
-        shell: pwsh
-        command: |
-          npx ava relay/src/tests/controllers/boostPayment.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/chatInvoice.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/chatPayment.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/cleanup.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/clearAllChats.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/clearAllContacts.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/contacts.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/images.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/latestTest.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/lsats.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/paidMeet.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/paidTribeImages.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/queryRoutes.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/self.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/sphinxPeople.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/streamPayment.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/tribe.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/tribe3Escrow.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/tribe3Messages.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/tribe3Private.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/tribe3Profile.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/tribeEdit.test.ts --verbose --serial --timeout=2m &&
-          npx ava relay/src/tests/controllers/tribeImages.test.ts --verbose --serial --timeout=2m
+      working-directory: ./relay
+      run: |
+        npx ava src/tests/controllers/boostPayment.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/chatInvoice.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/chatPayment.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/cleanup.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/clearAllChats.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/clearAllContacts.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/contacts.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/images.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/latestTest.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/lsats.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/paidMeet.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/paidTribeImages.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/queryRoutes.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/self.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/sphinxPeople.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/streamPayment.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribe.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribe3Escrow.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribe3Messages.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribe3Private.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribe3Profile.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribeEdit.test.ts --verbose --serial --timeout=2m &&
+        npx ava src/tests/controllers/tribeImages.test.ts --verbose --serial --timeout=2m
