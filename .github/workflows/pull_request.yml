@@ -26,7 +26,6 @@ jobs:
       working-directory: ./stack
       run: |
         chmod 777 ./bitcoind;    
-        chmod 777 ./relay;
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
