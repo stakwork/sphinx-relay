@@ -18,7 +18,7 @@ jobs:
     - name: Build Relay
       working-directory: ./relay
       run: |
-        npm install && npm run build && docker build -t kevkevinpal/sphinx-relay . 
+        npm install && npm run build && docker build -t sphinxlighting/sphinx-relay . 
     - name: Checkout stack
       run: |
         git clone -b relayPRTesting https://github.com/kevkevinpal/sphinx-stack.git stack
