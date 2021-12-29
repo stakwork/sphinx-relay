@@ -18,7 +18,7 @@ jobs:
     - name: Build Relay
       working-directory: ./relay
       run: |
-        npm install && npm run build && docker build -t sphinxlightinggitAction_env/sphinx-relay . 
+        npm install && npm run build && docker build -t sphinxlightinggitactionenv/sphinx-relay . 
     - name: Checkout stack
       run: |
         git clone -b relayPRTesting https://github.com/kevkevinpal/sphinx-stack.git stack
@@ -29,7 +29,7 @@ jobs:
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
-        GITACTION_ENV=gitAction_env docker-compose up -d 
+        GITACTION_ENV=gitactionenv docker-compose up -d 
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
