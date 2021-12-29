@@ -29,6 +29,7 @@ jobs:
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
+        docker images;
         GITACTION_ENV=gitactionenv docker-compose up -d 
     - name: Check for NODES.json
       working-directory: ./stack
