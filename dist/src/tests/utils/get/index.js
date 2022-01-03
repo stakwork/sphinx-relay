@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
@@ -35,4 +35,8 @@ var getTribeByUuid_1 = require("./getTribeByUuid");
 Object.defineProperty(exports, "getTribeByUuid", { enumerable: true, get: function () { return getTribeByUuid_1.getTribeByUuid; } });
 var getCheckNewStream_1 = require("./getCheckNewStream");
 Object.defineProperty(exports, "getCheckNewStream", { enumerable: true, get: function () { return getCheckNewStream_1.getCheckNewStream; } });
+var getLatest_1 = require("./getLatest");
+Object.defineProperty(exports, "getLatest", { enumerable: true, get: function () { return getLatest_1.getLatest; } });
+var getCheckBotMsg_1 = require("./getCheckBotMsg");
+Object.defineProperty(exports, "getCheckBotMsg", { enumerable: true, get: function () { return getCheckBotMsg_1.getCheckBotMsg; } });
 //# sourceMappingURL=index.js.map

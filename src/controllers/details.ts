@@ -170,7 +170,7 @@ export const getLocalRemoteBalance = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   res.status(200)
   try {
-    const channelList = await Lightning.listChannels({})
+    const channelList = await Lightning.listChannels({}, req.owner.publicKey)
     const { channels } = channelList
 
     const localBalances: number[] = channels.map((c) =>

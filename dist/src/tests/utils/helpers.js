@@ -9,8 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sleep = exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
+exports.makeJwtArgs = exports.getTimestamp = exports.sleep = exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
 const http = require("ava-http");
+const moment = require("moment");
 const config_1 = require("../config");
 const makeArgs = (node, body = {}) => {
     return {
@@ -116,4 +117,16 @@ function sleep(ms) {
     });
 }
 exports.sleep = sleep;
+function getTimestamp() {
+    const dateq = moment().utc().format('YYYY-MM-DD%20HH:mm:ss');
+    return dateq;
+}
+exports.getTimestamp = getTimestamp;
+function makeJwtArgs(jwt, body) {
+    return {
+        headers: { 'x-jwt': jwt },
+        body,
+    };
+}
+exports.makeJwtArgs = makeJwtArgs;
 //# sourceMappingURL=helpers.js.map

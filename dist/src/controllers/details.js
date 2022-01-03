@@ -191,7 +191,7 @@ const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, fu
         return (0, res_1.failure)(res, 'no owner');
     res.status(200);
     try {
-        const channelList = yield Lightning.listChannels({});
+        const channelList = yield Lightning.listChannels({}, req.owner.publicKey);
         const { channels } = channelList;
         const localBalances = channels.map((c) => parseInt(c.local_balance));
         const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
