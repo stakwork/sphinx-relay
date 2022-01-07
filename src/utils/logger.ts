@@ -29,27 +29,34 @@ const logger = expressWinston.logger({
 export default logger
 
 interface Logging {
-  Express: boolean
-  Lightning: boolean
-  Meme: boolean
-  Tribes: boolean
-  Notification: boolean
-  Network: boolean
-  DB: boolean
-  Proxy: boolean
-  Lsat: boolean
+  Express: string
+  Lightning: string
+  Meme: string
+  Tribes: string
+  Notification: string
+  Network: string
+  DB: string
+  Proxy: string
+  Lsat: string
 }
 
 const logging: Logging = {
-  Express: config.logging && config.logging.includes('EXPRESS'),
-  Lightning: config.logging && config.logging.includes('LIGHTNING'),
-  Meme: config.logging && config.logging.includes('MEME'),
-  Tribes: config.logging && config.logging.includes('TRIBES'),
-  Notification: config.logging && config.logging.includes('NOTIFICATION'),
-  Network: config.logging && config.logging.includes('NETWORK'),
-  DB: config.logging && config.logging.includes('DB'),
-  Proxy: config.logging && config.logging.includes('PROXY'),
-  Lsat: config?.logging.includes('LSAT'),
+  Express: 'EXPRESS',
+  Lightning: 'LIGHTNING',
+  Meme: 'MEME',
+  Tribes: 'TRIBES',
+  Notification: 'NOTIFICATION',
+  Network: 'NETWORK',
+  DB: 'DB',
+  Proxy: 'PROXY',
+  Lsat: 'LSAT',
 }
 
-export { logging }
+function sphinxLogger(message: string | Array<string>, loggingType: string) {
+  if (config.logging && config.logging.includes(loggingType)) {
+    const date = new Date(Date.now())
+    console.log(date.toUTCString(), '[' + loggingType + ']', message)
+  }
+}
+
+export { logging, sphinxLogger }
