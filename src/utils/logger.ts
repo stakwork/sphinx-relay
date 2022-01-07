@@ -52,10 +52,16 @@ const logging: Logging = {
   Lsat: 'LSAT',
 }
 
-function sphinxLogger(message: string | Array<string>, loggingType: string) {
-  if (config.logging && config.logging.includes(loggingType)) {
-    const date = new Date(Date.now())
-    console.log(date.toUTCString(), '[' + loggingType + ']', message)
+function sphinxLogger(
+  message: string | Array<string>,
+  loggingType: string = 'MISC'
+) {
+  if (
+    (config.logging && config.logging.includes(loggingType)) ||
+    loggingType == 'MISC'
+  ) {
+    const date = new Date(Date.now()).toUTCString()
+    console.log(date, '[' + loggingType + ']', ...message)
   }
 }
 
