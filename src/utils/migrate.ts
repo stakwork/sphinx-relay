@@ -1,5 +1,5 @@
 import { sequelize } from '../models'
-import { sphinxLogger } from './logger'
+import { logging, sphinxLogger } from './logger'
 
 export default async function migrate() {
   addTableColumn('sphinx_chats', 'feed_type', 'INT')
@@ -152,7 +152,7 @@ export default async function migrate() {
 
   // add LSAT table
   try {
-    sphinxLogger.info('adding lsat table')
+    sphinxLogger.info('adding lsat table', logging.DB)
     await sequelize.query(`
     CREATE TABLE sphinx_relay_lsats (
       id BIGINT NOT NULL PRIMARY KEY,
@@ -168,7 +168,7 @@ export default async function migrate() {
       tenant BIGINT
     )`)
   } catch (e) {
-    sphinxLogger.error(['problem adding lsat table:', e.message])
+    sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
   }
 }
 
@@ -179,7 +179,7 @@ async function addTenant(tableName) {
       `update ${tableName} set tenant=1 where tenant IS NULL`
     )
   } catch (e) {
-    sphinxLogger.error(e)
+    sphinxLogger.error(e, logging.DB)
   }
 }
 
@@ -187,6 +187,6 @@ async function addTableColumn(table: string, column: string, type = 'TEXT') {
   try {
     await sequelize.query(`alter table ${table} add ${column} ${type}`)
   } catch (e) {
-    sphinxLogger.error(['=> migrate failed', e])
+    sphinxLogger.error(['=> migrate failed'], logging.DB)
   }
 }
