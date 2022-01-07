@@ -2,6 +2,8 @@ import * as expressWinston from 'express-winston'
 import * as winston from 'winston'
 import * as moment from 'moment'
 import { loadConfig } from './config'
+import * as blgr from 'blgr'
+const blgrLogger = new blgr('debug')
 
 const config = loadConfig()
 
@@ -52,7 +54,7 @@ const logging: Logging = {
   Lsat: 'LSAT',
 }
 
-function sphinxLogger(
+async function sphinxLoggerInfo(
   message: string | Array<string>,
   loggingType: string = 'MISC'
 ) {
@@ -60,9 +62,28 @@ function sphinxLogger(
     (config.logging && config.logging.includes(loggingType)) ||
     loggingType == 'MISC'
   ) {
+    await blgrLogger.open()
     const date = new Date(Date.now()).toUTCString()
-    console.log(date, '[' + loggingType + ']', ...message)
+    blgrLogger.info(date, '[' + loggingType + ']', ...message)
   }
 }
 
+async function sphinxLoggerError(
+  message: string | Array<string>,
+  loggingType: string = 'MISC'
+) {
+  if (
+    (config.logging && config.logging.includes(loggingType)) ||
+    loggingType == 'MISC'
+  ) {
+    await blgrLogger.open()
+    const date = new Date(Date.now()).toUTCString()
+    blgrLogger.error(date, '[' + loggingType + ']', ...message)
+  }
+}
+
+const sphinxLogger = {
+  info: sphinxLoggerInfo,
+  error: sphinxLoggerError,
+}
 export { logging, sphinxLogger }

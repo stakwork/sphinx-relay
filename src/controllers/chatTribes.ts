@@ -10,13 +10,13 @@ import { sendNotification } from '../hub'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
 import { Op } from 'sequelize'
 import constants from '../constants'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 
 export async function joinTribe(req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  if (logging.Express) console.log('=> joinTribe')
+  sphinxLogger.info('=> joinTribe', logging.Express)
   const {
     uuid,
     group_key,
@@ -30,8 +30,10 @@ export async function joinTribe(req, res) {
     my_alias,
     my_photo_url,
   } = req.body
-  if (logging.Express)
-    console.log('received owner route hint', owner_route_hint)
+  sphinxLogger.info(
+    ['received owner route hint', owner_route_hint],
+    logging.Express
+  )
   const is_private = req.body.private
 
   const existing = await models.Chat.findOne({ where: { uuid, tenant } })
@@ -410,7 +412,7 @@ export async function approveOrRejectMember(req, res) {
 }
 
 export async function receiveMemberApprove(payload) {
-  if (logging.Network) console.log('=> receiveMemberApprove') // received by the joiner only
+  sphinxLogger.info('-> receiveMemberApprove', logging.Network)
   const { owner, chat, sender, network_type } =
     await helpers.parseReceiveParams(payload)
   if (!chat) return console.log('no chat')
@@ -471,7 +473,7 @@ export async function receiveMemberApprove(payload) {
 }
 
 export async function receiveMemberReject(payload) {
-  if (logging.Network) console.log('=> receiveMemberReject')
+  sphinxLogger.info('-> receiveMemberReject', logging.Network)
   const { owner, chat, sender, chat_name, network_type } =
     await helpers.parseReceiveParams(payload)
   if (!chat) return console.log('no chat')
@@ -510,7 +512,7 @@ export async function receiveMemberReject(payload) {
 }
 
 export async function receiveTribeDelete(payload) {
-  if (logging.Network) console.log('=> receiveTribeDelete')
+  sphinxLogger.info('-> receiveTribeDelete', logging.Network)
   const { owner, chat, sender, network_type } =
     await helpers.parseReceiveParams(payload)
   if (!chat) return console.log('no chat')
@@ -548,7 +550,7 @@ export async function receiveTribeDelete(payload) {
 export async function replayChatHistory(chat, contact, ownerRecord) {
   const owner = ownerRecord.dataValues || ownerRecord
   const tenant: number = owner.id
-  if (logging.Tribes) console.log('-> replayHistory')
+  sphinxLogger.info('-> replayHistory', logging.Tribes)
   if (!(chat && chat.id && contact && contact.id)) {
     return console.log('[tribes] cant replay history')
   }

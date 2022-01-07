@@ -19,8 +19,8 @@ const env = process.env.NODE_ENV || 'development'
 const config = loadConfig()
 const port = process.env.PORT || config.node_http_port || 3001
 
-sphinxLogger(['=> env', env])
-//sphinxLogger(['=> config', config])
+sphinxLogger.info(['=> env', env])
+//sphinxLogger.info(['=> config', config])
 
 process.env.GRPC_SSL_CIPHER_SUITES =
   'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384'
@@ -41,7 +41,7 @@ start()
 async function mainSetup() {
   const app: any = await setupApp() // setup routes
   grpc.reconnectToLightning(Math.random(), async function () {
-    sphinxLogger('>>> FINISH SETUP')
+    sphinxLogger.info('>>> FINISH SETUP')
     await finishSetup()
     app.get('/is_setup', (req, res) => res.send(true))
   }) // recursive
@@ -107,17 +107,17 @@ function setupApp() {
         }
         server = require('https').createServer(credentials, app)
       } catch (e) {
-        sphinxLogger(['getCertificate ERROR', e])
+        sphinxLogger.info(['getCertificate ERROR', e])
       }
     } else {
       server = require('http').Server(app)
     }
 
-    if (!server) return sphinxLogger('=> FAILED to create server')
+    if (!server) return sphinxLogger.info('=> FAILED to create server')
     server.listen(port, (err) => {
       if (err) throw err
       /* eslint-disable no-console */
-      sphinxLogger(`Node listening on ${port}.`)
+      sphinxLogger.info(`Node listening on ${port}.`)
     })
 
     // process.on('SIGTERM', () => {
@@ -141,7 +141,7 @@ function setupApp() {
       app.post('/unlock', async function (req, res) {
         const ok = await unlocker(req, res)
         if (ok) {
-          sphinxLogger('=> relay unlocked!')
+          sphinxLogger.info('=> relay unlocked!')
           controllers.set(app)
           socket.connect(server)
           resolve(app)
