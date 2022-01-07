@@ -55,7 +55,7 @@ const logging: Logging = {
 }
 
 async function sphinxLoggerInfo(
-  message: string | Array<string>,
+  message: any | Array<any>,
   loggingType: string = 'MISC'
 ) {
   if (
@@ -64,12 +64,16 @@ async function sphinxLoggerInfo(
   ) {
     await blgrLogger.open()
     const date = new Date(Date.now()).toUTCString()
-    blgrLogger.info(date, '[' + loggingType + ']', ...message)
+    blgrLogger.info(
+      date,
+      '[' + loggingType + ']',
+      ...(Array.isArray(message) ? message : [message])
+    )
   }
 }
 
 async function sphinxLoggerError(
-  message: string | Array<string>,
+  message: any | Array<any>,
   loggingType: string = 'MISC'
 ) {
   if (
@@ -78,7 +82,11 @@ async function sphinxLoggerError(
   ) {
     await blgrLogger.open()
     const date = new Date(Date.now()).toUTCString()
-    blgrLogger.error(date, '[' + loggingType + ']', ...message)
+    blgrLogger.error(
+      date,
+      '[' + loggingType + ']',
+      ...(Array.isArray(message) ? message : [message])
+    )
   }
 }
 
