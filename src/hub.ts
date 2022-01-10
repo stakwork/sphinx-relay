@@ -123,7 +123,7 @@ const checkInviteHub = async (params = {}) => {
       }
     })
     .catch((error) => {
-      console.log('[hub error]', error)
+      sphinxLogger.error(`[hub error] ${error}`)
     })
 }
 
