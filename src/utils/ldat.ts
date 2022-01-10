@@ -1,6 +1,7 @@
 import * as zbase32 from './zbase32'
 import * as Lightning from '../grpc/lightning'
 import { loadConfig } from './config'
+import { sphinxLogger } from './logger'
 
 const config = loadConfig()
 
@@ -118,7 +119,7 @@ export {
 }
 
 async function testLDAT() {
-  console.log('testLDAT')
+  sphinxLogger.info(`testLDAT`)
   const terms = {
     host: '',
     ttl: 31536000, //one year
@@ -134,7 +135,7 @@ async function testLDAT() {
       '0373ca36a331d8fd847f190908715a34997b15dc3c5d560ca032cf3412fcf494e4',
   }
   const token = await tokenFromTerms(terms)
-  console.log(token)
+  sphinxLogger.info(`token`)
 
   const terms2 = {
     host: '',
@@ -148,9 +149,9 @@ async function testLDAT() {
     ownerPubkey: '',
   }
   const token2 = await tokenFromTerms(terms2)
-  console.log(token2)
+  sphinxLogger.info(token2)
 
-  console.log(parseLDAT(token2))
+  sphinxLogger.info(parseLDAT(token2))
 }
 
 function serializeMeta(obj) {
