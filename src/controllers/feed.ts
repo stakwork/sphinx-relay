@@ -2,6 +2,7 @@ import { models } from '../models'
 import * as helpers from '../helpers'
 import { failure, success } from '../utils/res'
 import constants from '../constants'
+import { sphinxLogger } from '../utils/logger'
 
 export interface ChatMeta {
   itemID: number
@@ -119,7 +120,7 @@ export async function anonymousKeysend(
     amount,
     msg,
     success: () => {
-      console.log('payment sent!')
+      sphinxLogger.info(`payment sent!`)
       var date = new Date()
       date.setMilliseconds(0)
       models.Message.create({
