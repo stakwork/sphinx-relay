@@ -14,12 +14,12 @@ import {
   addPendingContactIdsToChat,
 } from './chatTribes'
 import constants from '../constants'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 
 export async function updateChat(req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  console.log('=> updateChat')
+  sphinxLogger.info(`=> updateChat`)
   const id = parseInt(req.params.id)
   if (!id) {
     return failure(res, 'missing id')
@@ -81,7 +81,7 @@ export async function kickChatMember(req, res) {
 }
 
 export async function receiveGroupKick(payload) {
-  if (logging.Network) console.log('=> receiveGroupKick')
+  sphinxLogger.info(`=> receiveGroupKick`, logging.Network)
   const { owner, chat, sender, date_string, network_type } =
     await helpers.parseReceiveParams(payload)
   if (!chat) return
@@ -247,7 +247,7 @@ export async function createGroupChat(req, res) {
           owner_route_hint: owner.routeHint || '',
         })
       } catch (e) {
-        console.log('=> couldnt create tribe', e)
+        sphinxLogger.error(`=> couldnt create tribe ${e}`)
         okToCreate = false
       }
     }
@@ -282,7 +282,7 @@ export async function createGroupChat(req, res) {
             tenant,
           })
         } catch (e) {
-          console.log('=> createGroupChat failed to UPSERT', e)
+          sphinxLogger.error(`=> createGroupChat failed to UPSERT ${e}`)
         }
       }
       success(res, jsonUtils.chatToJson(chat))
@@ -368,7 +368,7 @@ export const deleteChat = async (req, res) => {
         notOK = true
       },
     })
-    if (notOK) return console.log('failed to send tribe_delete message')
+    if (notOK) return sphinxLogger.error(`failed to send tribe_delete message`)
   } else {
     // leave a group or tribe
     const isPending = chat.status === constants.chat_statuses.pending
@@ -400,7 +400,7 @@ export const deleteChat = async (req, res) => {
 }
 
 export async function receiveGroupJoin(payload) {
-  if (logging.Network) console.log('=> receiveGroupJoin')
+  sphinxLogger.info(`=> receiveGroupJoin`, logging.Network)
   const {
     owner,
     chat,
@@ -459,21 +459,23 @@ export async function receiveGroupJoin(payload) {
         contactIds.push(createdContact.id)
       }
     }
-    if (!theSender) return console.log('no sender') // fail (no contact key?)
+    if (!theSender) return sphinxLogger.error(`no sender`) // fail (no contact key?)
 
     await chat.update({ contactIds: JSON.stringify(contactIds) })
 
     if (isTribeOwner) {
       // IF TRIBE, ADD new member TO XREF
-      console.log('UPSERT CHAT MEMBER', {
-        contactId: theSender.id,
-        chatId: chat.id,
-        role: constants.chat_roles.reader,
-        status: constants.chat_statuses.pending,
-        lastActive: date,
-        lastAlias: senderAlias,
-        tenant,
-      })
+      sphinxLogger.info(
+        `UPSERT CHAT MEMBER ${{
+          contactId: theSender.id,
+          chatId: chat.id,
+          role: constants.chat_roles.reader,
+          status: constants.chat_statuses.pending,
+          lastActive: date,
+          lastAlias: senderAlias,
+          tenant,
+        }}`
+      )
       try {
         await models.ChatMember.upsert({
           contactId: theSender.id,
@@ -485,7 +487,7 @@ export async function receiveGroupJoin(payload) {
           tenant,
         })
       } catch (e) {
-        console.log('=> groupJoin could not upsert ChatMember')
+        sphinxLogger.error(`=> groupJoin could not upsert ChatMember`)
       }
       setTimeout(() => {
         replayChatHistory(chat, theSender, owner)
@@ -538,7 +540,7 @@ export async function receiveGroupJoin(payload) {
 }
 
 export async function receiveGroupLeave(payload) {
-  if (logging.Network) console.log('=> receiveGroupLeave')
+  sphinxLogger.info(`=> receiveGroupLeave`, logging.Network)
   const {
     chat,
     owner,
@@ -562,7 +564,8 @@ export async function receiveGroupLeave(payload) {
     sender = await models.Contact.findOne({
       where: { publicKey: sender_pub_key, tenant },
     })
-    if (!sender) return console.log('=> receiveGroupLeave cant find sender')
+    if (!sender)
+      return sphinxLogger.error(`=> receiveGroupLeave cant find sender`)
 
     const oldContactIds = JSON.parse(chat.contactIds || '[]')
     const contactIds = oldContactIds.filter((cid) => cid !== sender.id)
@@ -649,7 +652,8 @@ export async function receiveGroupCreateOrInvite(payload) {
   if (isTribe) {
     // must be sent by tribe owner?????
     const validOwner = await validateTribeOwner(chat_uuid, sender_pub_key)
-    if (!validOwner) return console.log('[tribes] invalid uuid signature!')
+    if (!validOwner)
+      return sphinxLogger.error(`[tribes] invalid uuid signature!`)
   }
 
   const contacts: any[] = []
