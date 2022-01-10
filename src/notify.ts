@@ -3,6 +3,7 @@ import { models } from './models'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
 import constants from './constants'
+import { sphinxLogger } from './utils/logger'
 
 type NotificationType =
   | 'group_join'
@@ -21,7 +22,7 @@ const sendNotification = async (
   owner,
   amount?: number
 ) => {
-  if (!owner) return console.log('=> sendNotification error: no owner')
+  if (!owner) return sphinxLogger.error(`=> sendNotification error: no owner`)
 
   let message = `You have a new message from ${name}`
   if (type === 'invite') {
@@ -63,7 +64,7 @@ const sendNotification = async (
 
   if (!owner.deviceId) {
     if (logging.Notification)
-      console.log('[send notification] skipping. owner.deviceId not set.')
+      sphinxLogger.info(`[send notification] skipping. owner.deviceId not set.`)
     return
   }
   const device_id = owner.deviceId
@@ -104,7 +105,7 @@ const sendNotification = async (
       if (other.blocked) return
       finalNotification(owner.id, params, isTribeOwner)
     } catch (e) {
-      console.log('=> notify conversation err', e)
+      sphinxLogger.error(`=> notify conversation err ${e}`)
     }
   } else {
     finalNotification(owner.id, params, isTribeOwner)
@@ -124,7 +125,7 @@ async function finalNotification(
 ) {
   if (params.notification.message) {
     if (logging.Notification)
-      console.log('[send notification]', params.notification)
+      sphinxLogger.info(`[send notification] ${params.notification}`)
   }
   const mutedChats = await models.Chat.findAll({
     where: { isMuted: true },
@@ -158,7 +159,7 @@ function triggerNotification(params: { [k: string]: any }) {
     body: JSON.stringify(params),
     headers: { 'Content-Type': 'application/json' },
   }).catch((error) => {
-    console.log('[hub error]: triggerNotification', error)
+    sphinxLogger.error(`[hub error]: triggerNotification ${error}`)
   })
 }
 
