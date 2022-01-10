@@ -1,6 +1,7 @@
 import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
+import { sphinxLogger } from './logger'
 
 const config = loadConfig()
 
@@ -45,7 +46,7 @@ export async function createOrEditPerson(
     const person = await r.json()
     return person
   } catch (e) {
-    console.log('[tribes] unauthorized to create person')
+    sphinxLogger.error('[tribes] unauthorized to create person')
     throw e
   }
 }
