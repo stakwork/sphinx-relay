@@ -4,7 +4,7 @@ import { loadConfig } from './config'
 import * as Lightning from '../grpc/lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
-import { logging } from './logger'
+import { logging, sphinxLogger } from './logger'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -37,23 +37,23 @@ const SATS_PER_USER = config.proxy_initial_sats || 5000
 // isOwner users with no authToken
 export async function generateNewUsers() {
   if (!isProxy()) {
-    if (logging.Proxy) console.log('[proxy] not proxy')
+    sphinxLogger.error(`[proxy] not proxy`, logging.Proxy)
     return
   }
   const newusers = await models.Contact.findAll({
     where: { isOwner: true, authToken: null },
   })
   if (newusers.length >= NEW_USER_NUM) {
-    if (logging.Proxy) console.log('[proxy] already have new users')
+    sphinxLogger.error(`[proxy] already have new users`, logging.Proxy)
     return // we already have the mimimum
   }
   const n1 = NEW_USER_NUM - newusers.length
   let n // the number of new users to create
   if (check_proxy_balance) {
     const virtualBal = await getProxyTotalBalance()
-    if (logging.Proxy) console.log('[proxy] total balance', virtualBal)
+    sphinxLogger.info(`[proxy] total balance ${virtualBal}`, logging.Proxy)
     const realBal = await getProxyLNDBalance()
-    if (logging.Proxy) console.log('[proxy] LND balance', virtualBal)
+    sphinxLogger.info(`[proxy] LND balance ${virtualBal}`, logging.Proxy)
 
     let availableBalance = realBal - virtualBal
     if (availableBalance < SATS_PER_USER) availableBalance = 1
@@ -61,13 +61,14 @@ export async function generateNewUsers() {
     const n = Math.min(n1, n2)
 
     if (!n) {
-      if (logging.Proxy) console.log('[proxy] not enough sats')
+      sphinxLogger.error(`[proxy] not enough sats`, logging.Proxy)
       return
     }
   } else {
     n = n1
   }
-  if (logging.Proxy) console.log('=> gen new users:', n)
+  sphinxLogger.info(`=> gen new users: ${n}`, logging.Proxy)
+
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
   await asyncForEach(arr, async () => {
@@ -94,10 +95,9 @@ export async function generateNewUser(rootpk: string) {
     const created = await models.Contact.create(contact)
     // set tenant to self!
     created.update({ tenant: created.id })
-    if (logging.Proxy)
-      console.log('=> CREATED OWNER:', created.dataValues.publicKey)
+    sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
   } catch (e) {
-    console.log('=> could not gen new user', e)
+    sphinxLogger.error(`=> could not gen new user ${e}`)
   }
 }
 
@@ -115,7 +115,7 @@ export async function generateNewExternalUser(pubkey: string, sig: string) {
       routeHint: `${rootpk}:${j.channel}`,
     }
   } catch (e) {
-    console.log('=> could not gen new external user', e)
+    sphinxLogger.error(`=> could not gen new external user ${e}`)
   }
 }
 
@@ -170,7 +170,7 @@ export async function loadProxyLightning(ownerPubkey?: string) {
     )
     return the
   } catch (e) {
-    console.log('ERROR in loadProxyLightning', e)
+    sphinxLogger.error(`ERROR in loadProxyLightning ${e}`)
   }
 }
 
