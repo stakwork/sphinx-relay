@@ -11,7 +11,7 @@ import { loadConfig } from './utils/config'
 import * as https from 'https'
 import { isProxy } from './utils/proxy'
 import { sendNotification, resetNotifyTribeCount } from './notify'
-import { logging } from './utils/logger'
+import { logging, sphinxLogger } from './utils/logger'
 
 const pingAgent = new https.Agent({
   keepAlive: true,
@@ -169,8 +169,9 @@ async function massPingHubFromProxies(rn) {
   })
   if (logging.Proxy) {
     const cleanNodes = nodes.filter((n) => n.clean)
-    console.log(
-      `[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`
+    sphinxLogger.info(
+      `[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`,
+      logging.Proxy
     )
   }
   // split into chunks of 50
@@ -200,10 +201,10 @@ async function sendHubCall(body, mass?: boolean) {
     const j = await r.json()
     // console.log("=> PING RESPONSE", j)
     if (!(j && j.status && j.status === 'ok')) {
-      console.log('[hub] ping returned not ok', j)
+      sphinxLogger.info(`[hub] ping returned not ok ${j}`)
     }
   } catch (e) {
-    console.log('[hub warning]: cannot reach hub', e)
+    sphinxLogger.error(`[hub warning]: cannot reach hub ${e}`)
   }
 }
 
@@ -216,13 +217,13 @@ const checkInvitesHubInterval = (ms) => {
 }
 
 export function sendInvoice(payReq, amount) {
-  console.log('[hub] sending invoice')
+  sphinxLogger.info(`[hub] sending invoice`)
   fetch(config.hub_api_url + '/invoices', {
     method: 'POST',
     body: JSON.stringify({ invoice: payReq, amount }),
     headers: { 'Content-Type': 'application/json' },
   }).catch((error) => {
-    console.log('[hub error]: sendInvoice', error)
+    sphinxLogger.error(`[hub error]: sendInvoice ${error}`)
   })
 }
 
@@ -234,11 +235,11 @@ const finishInviteInHub = (params, onSuccess, onFailure) => {
   })
     .then((res) => res.json())
     .then((json) => {
-      console.log('[hub] finished invite to hub')
+      sphinxLogger.info(`[hub] finished invite to hub`)
       onSuccess(json)
     })
     .catch((e) => {
-      console.log('[hub] fail to finish invite in hub')
+      sphinxLogger.error(`[hub] fail to finish invite in hub`)
       onFailure(e)
     })
 }
@@ -252,10 +253,10 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
     .then((res) => res.json())
     .then((json) => {
       if (json.object) {
-        console.log('[hub] finished pay to hub')
+        sphinxLogger.info(`[hub] finished pay to hub`)
         onSuccess(json)
       } else {
-        console.log('[hub] fail to pay invite in hub')
+        sphinxLogger.error(`[hub] fail to pay invite in hub`)
         onFailure(json)
       }
     })
@@ -279,10 +280,10 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
     .then((res) => res.json())
     .then((json) => {
       if (json.object) {
-        console.log('[hub] sent invite to be created to hub')
+        sphinxLogger.info(`[hub] sent invite to be created to hub`)
         onSuccess(json)
       } else {
-        console.log('[hub] fail to create invite in hub')
+        sphinxLogger.error(`[hub] fail to create invite in hub`)
         onFailure(json)
       }
     })
