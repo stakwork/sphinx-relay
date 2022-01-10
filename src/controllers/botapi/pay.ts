@@ -5,17 +5,18 @@ import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
+import { sphinxLogger } from '../../utils/logger'
 
 export default async function pay(a) {
   const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id } = a
 
-  console.log('=> BOT PAY', JSON.stringify(a, null, 2))
-  if (!recipient_id) return console.log('no recipient_id')
-  if (!chat_uuid) return console.log('no chat_uuid')
+  sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
+  if (!recipient_id) return sphinxLogger.error(`no recipient_id`)
+  if (!chat_uuid) return sphinxLogger.error(`no chat_uuid`)
   const theChat = await getTribeOwnersChatByUUID(chat_uuid)
-  if (!(theChat && theChat.id)) return console.log('no chat')
+  if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
   if (theChat.type !== constants.chat_types.tribe)
-    return console.log('not a tribe')
+    return sphinxLogger.error(`not a tribe`)
   const owner = await models.Contact.findOne({
     where: { id: theChat.tenant },
   })
@@ -66,7 +67,7 @@ export default async function pay(a) {
     type: constants.message_types.boost,
     success: () => ({ success: true }),
     failure: (e) => {
-      return console.log(e)
+      return sphinxLogger.error(e)
     },
     isForwarded: true,
     realSatsContactId: recipient_id,
