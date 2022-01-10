@@ -527,7 +527,7 @@ function listInvoicesPaginated(limit, offset) {
 export async function listAllPayments() {
   sphinxLogger.info('=> list all payments')
   const pays = await paginatePayments(40) // max num
-  sphinxLogger(`pays ${pays && pays.length}`)
+  sphinxLogger.info(`pays ${pays && pays.length}`)
   return pays
 }
 async function paginatePayments(limit, i = 0) {
@@ -804,7 +804,7 @@ export async function pendingChannels(
 export async function connectPeer(
   args: interfaces.ConnectPeerArgs
 ): Promise<{ [k: string]: any }> {
-  sphinxLogger.info('connectPeer', logging.info)
+  sphinxLogger.info('connectPeer', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     const req = interfaces.connectPeerRequest(args)

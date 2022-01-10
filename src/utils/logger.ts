@@ -54,9 +54,10 @@ const logging: Logging = {
   Lsat: 'LSAT',
 }
 
-async function sphinxLoggerInfo(
+async function sphinxLoggerBase(
   message: any | Array<any>,
-  loggingType: string = 'MISC'
+  loggingType: string = 'MISC',
+  level: string
 ) {
   if (
     (config.logging && config.logging.includes(loggingType)) ||
@@ -64,7 +65,7 @@ async function sphinxLoggerInfo(
   ) {
     await blgrLogger.open()
     const date = new Date(Date.now()).toUTCString()
-    blgrLogger.info(
+    blgrLogger[level](
       date,
       '[' + loggingType + ']',
       ...(Array.isArray(message) ? message : [message])
@@ -72,26 +73,50 @@ async function sphinxLoggerInfo(
   }
 }
 
+async function sphinxLoggerNone(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'none')
+}
 async function sphinxLoggerError(
   message: any | Array<any>,
-  loggingType: string = 'MISC'
+  loggingType?: string
 ) {
-  if (
-    (config.logging && config.logging.includes(loggingType)) ||
-    loggingType == 'MISC'
-  ) {
-    await blgrLogger.open()
-    const date = new Date(Date.now()).toUTCString()
-    blgrLogger.error(
-      date,
-      '[' + loggingType + ']',
-      ...(Array.isArray(message) ? message : [message])
-    )
-  }
+  sphinxLoggerBase(message, loggingType, 'error')
+}
+async function sphinxLoggerWarning(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'warning')
+}
+async function sphinxLoggerInfo(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'info')
+}
+async function sphinxLoggerDebug(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'debug')
+}
+async function sphinxLoggerSpam(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'spam')
 }
 
 const sphinxLogger = {
-  info: sphinxLoggerInfo,
+  none: sphinxLoggerNone,
   error: sphinxLoggerError,
+  warning: sphinxLoggerWarning,
+  info: sphinxLoggerInfo,
+  debug: sphinxLoggerDebug,
+  spam: sphinxLoggerSpam,
 }
+
 export { logging, sphinxLogger }

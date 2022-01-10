@@ -50,11 +50,8 @@ export function subscribeInvoices(parseKeysendInvoice) {
       }
     })
     call.on('error', function (err) {
-      const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()(
-        '[lightning] Error',
-        now,
-        err.code
-      )
+      const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
+      sphinxLogger.error(`[lightning] Error ${now} ${err.code}`)
       if (
         err.code == ERR_CODE_UNAVAILABLE ||
         err.code == ERR_CODE_STREAM_REMOVED
