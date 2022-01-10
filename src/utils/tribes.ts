@@ -9,7 +9,7 @@ import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
 import { isProxy } from './proxy'
 import { Op } from 'sequelize'
-import { logging } from './logger'
+import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
 
 export { declare_bot, delete_bot }
@@ -46,7 +46,7 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
     // console.log('=> getTribeOwnersChatByUUID r:', r)
     return r && r[0] && r[0].dataValues
   } catch (e) {
-    console.log(e)
+    sphinxLogger.error(e)
   }
 }
 
@@ -63,7 +63,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
           password: pwd,
           reconnectPeriod: 0, // dont auto reconnect
         })
-        if (logging.Tribes) console.log('[tribes] try to connect:', url)
+        sphinxLogger(`[tribes] try to connect: ${url}`, logging.Tribes)
         cl.on('connect', async function () {
           // first check if its already connected to this host (in case it takes a long time)
           connected = true
@@ -75,11 +75,11 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
             resolve(clients[pubkey][host])
             return
           }
-          if (logging.Tribes) console.log('[tribes] connected!')
+          sphinxLogger.info(`[tribes] connected!`, logging.Tribes)
           if (!clients[pubkey]) clients[pubkey] = {}
           clients[pubkey][host] = cl // ADD TO MAIN STATE
           cl.on('close', function (e) {
-            if (logging.Tribes) console.log('[tribes] CLOSE', e)
+            sphinxLogger.info(`[tribes] CLOSE ${e}`, logging.Tribes)
             // setTimeout(() => reconnect(), 2000);
             connected = false
             if (clients[pubkey] && clients[pubkey][host]) {
@@ -87,23 +87,28 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
             }
           })
           cl.on('error', function (e) {
-            if (logging.Tribes) console.log('[tribes] error: ', e.message || e)
+            sphinxLogger.error(
+              `[tribes] error:  ${e.message || e}`,
+              logging.Tribes
+            )
           })
           cl.on('message', function (topic, message) {
             // console.log("============>>>>> GOT A MSG", topic, message)
             if (onMessage) onMessage(topic, message)
           })
           cl.subscribe(`${pubkey}/#`, function (err) {
-            if (err) console.log('[tribes] error subscribing', err)
+            if (err) sphinxLogger.error(`[tribes] error subscribing ${err}`)
             else {
-              if (logging.Tribes)
-                console.log('[tribes] subscribed!', `${pubkey}/#`)
+              sphinxLogger.info(
+                `[tribes] subscribed! ${pubkey}/#`,
+                logging.Tribes
+              )
               resolve(cl)
             }
           })
         })
       } catch (e) {
-        if (logging.Tribes) console.log('[tribes] error initializing', e)
+        sphinxLogger.error(`[tribes] error initializing ${e}`, logging.Tribes)
       }
     }
     while (true) {
@@ -154,7 +159,7 @@ async function initAndSubscribeTopics(onMessage: Function) {
       subExtraHostsForTenant(1, info.identity_pubkey, onMessage) // 1 is the tenant id on non-proxy
     }
   } catch (e) {
-    console.log('TRIBES ERROR', e)
+    sphinxLogger.error(`TRIBES ERROR ${e}`)
   }
 }
 
@@ -177,7 +182,7 @@ async function subExtraHostsForTenant(
     usedHosts.push(et.host) // dont do it twice
     const client = await lazyClient(pubkey, host, onMessage)
     client.subscribe(`${pubkey}/#`, optz, function (err) {
-      if (err) console.log('[tribes] subscribe error 2', err)
+      if (err) sphinxLogger.error(`[tribes] subscribe error 2 ${err}`)
     })
   })
 }
@@ -247,8 +252,10 @@ async function updateTribeStats(myPubkey) {
     } catch (e) {}
   })
   if (myTribes.length) {
-    if (logging.Tribes)
-      console.log(`[tribes] updated stats for ${myTribes.length} tribes`)
+    sphinxLogger.info(
+      `[tribes] updated stats for ${myTribes.length} tribes`,
+      logging.Tribes
+    )
   }
 }
 
@@ -259,7 +266,7 @@ export async function subscribe(topic, onMessage: Function) {
   const client = await lazyClient(pubkey, host, onMessage)
   if (client)
     client.subscribe(topic, function () {
-      if (logging.Tribes) console.log('[tribes] added sub', host, topic)
+      sphinxLogger.info(`[tribes] added sub ${host} ${topic}`, logging.Tribes)
     })
 }
 
@@ -269,7 +276,7 @@ export async function publish(topic, msg, ownerPubkey, cb) {
   const client = await lazyClient(ownerPubkey, host)
   if (client)
     client.publish(topic, msg, optz, function (err) {
-      if (err) console.log('[tribes] error publishing', err)
+      if (err) sphinxLogger.error(`[tribes] error publishing ${err}`)
       else if (cb) cb()
     })
 }
@@ -327,7 +334,7 @@ export async function declare({
     }
     // const j = await r.json()
   } catch (e) {
-    console.log('[tribes] unauthorized to declare')
+    sphinxLogger.error(`[tribes] unauthorized to declare`)
     throw e
   }
 }
@@ -385,7 +392,7 @@ export async function edit({
     }
     // const j = await r.json()
   } catch (e) {
-    console.log('[tribes] unauthorized to edit')
+    sphinxLogger.error(`[tribes] unauthorized to edit`)
     throw e
   }
 }
@@ -407,7 +414,7 @@ export async function delete_tribe(uuid, owner_pubkey) {
     }
     // const j = await r.json()
   } catch (e) {
-    console.log('[tribes] unauthorized to delete')
+    sphinxLogger.error(`[tribes] unauthorized to delete`)
     throw e
   }
 }
@@ -426,7 +433,7 @@ export async function putActivity(
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (e) {
-    console.log('[tribes] unauthorized to putActivity')
+    sphinxLogger.error(`[tribes] unauthorized to putActivity`)
     throw e
   }
 }
@@ -454,7 +461,7 @@ export async function putstats({
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (e) {
-    console.log('[tribes] unauthorized to putstats')
+    sphinxLogger.error(`[tribes] unauthorized to putstats`)
     throw e
   }
 }
