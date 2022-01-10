@@ -63,7 +63,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
           password: pwd,
           reconnectPeriod: 0, // dont auto reconnect
         })
-        sphinxLogger(`[tribes] try to connect: ${url}`, logging.Tribes)
+        sphinxLogger.info(`[tribes] try to connect: ${url}`, logging.Tribes)
         cl.on('connect', async function () {
           // first check if its already connected to this host (in case it takes a long time)
           connected = true

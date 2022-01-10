@@ -135,7 +135,7 @@ async function testLDAT() {
       '0373ca36a331d8fd847f190908715a34997b15dc3c5d560ca032cf3412fcf494e4',
   }
   const token = await tokenFromTerms(terms)
-  sphinxLogger.info(`token`)
+  sphinxLogger.info(token)
 
   const terms2 = {
     host: '',
