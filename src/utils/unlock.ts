@@ -2,6 +2,7 @@ import * as Lightning from '../grpc/lightning'
 import { loadConfig } from './config'
 const fs = require('fs')
 const readline = require('readline')
+import { sphinxLogger } from './logger'
 
 const config = loadConfig()
 
@@ -13,17 +14,17 @@ export async function tryToUnlockLND() {
   const p = config.lnd_pwd_path
   if (!p) return
 
-  console.log('==>', p)
+  sphinxLogger.info(`==> ${p}`)
 
   var pwd = await getFirstLine(config.lnd_pwd_path)
   if (!pwd) return
 
-  console.log('==>', pwd, typeof pwd)
+  sphinxLogger.info(`==> ${pwd} ${typeof pwd}`)
 
   try {
     await Lightning.unlockWallet(String(pwd))
   } catch (e) {
-    console.log('[unlock] Error:', e)
+    sphinxLogger.error(`[unlock] Error: ${e}`)
   }
 }
 
