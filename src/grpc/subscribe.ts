@@ -5,6 +5,7 @@ import { tryToUnlockLND } from '../utils/unlock'
 import { receiveNonKeysend } from './regular'
 import * as interfaces from './interfaces'
 import { isProxy, getProxyRootPubkey } from '../utils/proxy'
+import { sphinxLogger } from '../utils/logger'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
@@ -36,7 +37,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
       }
     })
     call.on('status', function (status) {
-      console.log('[lightning] Status', status.code, status)
+      sphinxLogger.info(`[lightning] Status ${status.code} ${status}`)
       // The server is unavailable, trying to reconnect.
       if (
         status.code == ERR_CODE_UNAVAILABLE ||
@@ -49,8 +50,11 @@ export function subscribeInvoices(parseKeysendInvoice) {
       }
     })
     call.on('error', function (err) {
-      const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-      console.error('[lightning] Error', now, err.code)
+      const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()(
+        '[lightning] Error',
+        now,
+        err.code
+      )
       if (
         err.code == ERR_CODE_UNAVAILABLE ||
         err.code == ERR_CODE_STREAM_REMOVED
@@ -63,7 +67,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
     })
     call.on('end', function () {
       const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-      console.log(`[lightning] Closed stream ${now}`)
+      sphinxLogger.info(`[lightning] Closed stream ${now}`)
       // The server has closed the stream.
       i = 0
       waitAndReconnect()
@@ -88,18 +92,18 @@ export async function reconnectToLightning(
   ctx = innerCtx
   i++
   const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-  console.log(`=> ${now} [lightning] reconnecting... attempt #${i}`)
+  sphinxLogger.info(`=> ${now} [lightning] reconnecting... attempt #${i}`)
   try {
     await network.initGrpcSubscriptions(true)
     const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-    console.log(`=> [lightning] connected! ${now}`)
+    sphinxLogger.info(`=> [lightning] connected! ${now}`)
     if (callback) callback()
   } catch (e) {
     if (e.code === ERR_CODE_UNIMPLEMENTED) {
-      console.log(`[lightning] LOCKED ${now}`)
+      sphinxLogger.error(`[lightning] LOCKED ${now}`)
       await tryToUnlockLND()
     }
-    console.log(`[lightning] ERROR ${e}`)
+    sphinxLogger.error(`[lightning] ERROR ${e}`)
     setTimeout(async () => {
       // retry each 2 secs
       if (ctx === innerCtx) {
