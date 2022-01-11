@@ -3,10 +3,10 @@ import * as winston from 'winston'
 import * as moment from 'moment'
 import { loadConfig } from './config'
 import * as blgr from 'blgr'
-const blgrLogger = new blgr('debug')
 
 const config = loadConfig()
 
+const blgrLogger = new blgr(config.logging_level)
 const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim()
 
 const logger = expressWinston.logger({
