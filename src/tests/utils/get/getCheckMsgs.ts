@@ -6,7 +6,7 @@ import { Assertions } from 'ava'
 export function getCheckMsgs(
   _t: Assertions,
   node: NodeConfig
-): Promise<{ new_messages: Array<Message>; new_messages_length: number }> {
+): Promise<{ new_messages: Array<Message>; new_messages_total: number }> {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
       timeout(0, node, resolve, reject)
