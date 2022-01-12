@@ -44,7 +44,7 @@ export async function sendMessage(
 
   //send message from node1 to node2
   const msg = await http.post(
-    node1.external_ip + '/messags',
+    node1.external_ip + '/messages',
     makeArgs(node1, v)
   )
   //make sure msg exists
