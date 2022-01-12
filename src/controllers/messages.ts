@@ -114,7 +114,7 @@ export const getAllMessages = async (req, res) => {
   }
 
   const messages = await models.Message.findAll({
-    order: [['id', 'asc']],
+    order: [['id', 'desc']],
     limit,
     offset,
     where: { tenant },
@@ -140,10 +140,12 @@ export const getAllMessages = async (req, res) => {
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
   // console.log("=> indexed chats");
+  const new_messages = messages.map((message) =>
+    jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+  )
   success(res, {
-    new_messages: messages.map((message) =>
-      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
-    ),
+    new_messages: new_messages,
+    new_messages_total: new_messages.length,
     confirmed_messages: [],
   })
 }
@@ -164,7 +166,7 @@ export const getMsgs = async (req, res) => {
   }
 
   const clause: { [k: string]: any } = {
-    order: [['id', 'asc']],
+    order: [['id', 'desc']],
     where: {
       updated_at: { [Op.gte]: dateToReturn },
       tenant,
@@ -192,10 +194,12 @@ export const getMsgs = async (req, res) => {
         })
       : []
   const chatsById = indexBy(chats, 'id')
+  const new_messages = messages.map((message) =>
+    jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+  )
   success(res, {
-    new_messages: messages.map((message) =>
-      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
-    ),
+    new_messages: new_messages,
+    new_messages_total: new_messages.length,
   })
 }
 
