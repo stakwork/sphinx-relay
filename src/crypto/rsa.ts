@@ -1,4 +1,5 @@
 import * as crypto from 'crypto'
+import { sphinxLogger } from '../utils/logger'
 
 const BLOCK_SIZE = 256
 const MAX_CHUNK_SIZE = BLOCK_SIZE - 11 // 11 is the PCKS1 padding
@@ -99,7 +100,7 @@ export function testRSA() {
       const priv = cert.unpriv(privPEM)
 
       const dec = decrypt(priv, enc)
-      console.log('SUCESS:', msg === dec)
+      sphinxLogger.info(`SUCESS: ${msg === dec}`)
     }
   )
 }
