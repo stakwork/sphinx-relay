@@ -10,7 +10,6 @@ import { sendMessage } from './send'
 // import { Op } from 'sequelize'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
-import { sphinxLogger } from '../utils/logger'
 
 const msgtypes = constants.message_types
 
