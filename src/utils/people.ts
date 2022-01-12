@@ -64,7 +64,7 @@ export async function deletePerson(host, id, owner_pubkey) {
     }
     // const j = await r.json()
   } catch (e) {
-    console.log('[tribes] unauthorized to delete person')
+    sphinxLogger.error(`[tribes] unauthorized to delete person`)
     throw e
   }
 }
