@@ -5,32 +5,25 @@ import { Assertions } from 'ava'
 
 export function getCheckMsgs(
   _t: Assertions,
-  node: NodeConfig,
-  msgUuid: string
-): Promise<Message> {
+  node: NodeConfig
+): Promise<{ new_messages: Array<Message>; new_messages_length: number }> {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
-      timeout(0, node, msgUuid, resolve, reject)
+      timeout(0, node, resolve, reject)
     }, 1000)
   })
 }
 
-async function timeout(
-  i: number,
-  node: NodeConfig,
-  msgUuid: string,
-  resolve,
-  reject
-) {
+async function timeout(i: number, node: NodeConfig, resolve, reject) {
   const msgRes = await http.get(node.external_ip + '/msgs', makeArgs(node))
   if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
-    // console.log('===>', msgRes.response.new_messages, msgUuid)
+    // console.log('===>', msgRes.response.new_messages )
     return resolve(msgRes)
   }
   if (i > 10) {
     return reject('failed to getCheckMsgs')
   }
   setTimeout(async () => {
-    timeout(i + 1, node, msgUuid, resolve, reject)
+    timeout(i + 1, node, resolve, reject)
   }, 1000)
 }

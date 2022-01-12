@@ -4,7 +4,6 @@ import * as http from 'ava-http'
 import * as rsa from '../../../crypto/rsa'
 import { getContactAndCheckKeyExchange } from '../get'
 import { makeArgs } from '../helpers'
-import { getCheckNewMsgs } from '../get'
 import { Message } from '../../types'
 
 interface SendMessageOptions {
@@ -51,5 +50,5 @@ export async function sendMessage(
   //make sure msg exists
   t.true(msg.success, 'msg should exist')
 
-  return { success: msg.success, response: msg.response }
+  return msg.response
 }

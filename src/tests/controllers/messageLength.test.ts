@@ -2,7 +2,7 @@ import test, { ExecutionContext } from 'ava'
 import { randomText, iterate } from '../utils/helpers'
 import { addContact } from '../utils/save'
 import { deleteContact } from '../utils/del'
-import { sendMessage, sendInvoice, payInvoice } from '../utils/msg'
+import { sendMessage } from '../utils/msg'
 import { getContacts, getCheckMsgs } from '../utils/get'
 
 import nodes from '../nodes'
@@ -33,8 +33,8 @@ export async function messageLengthTest(t, node1, node2) {
 
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
   const text = randomText()
-  const messageSent = await sendMessage(t, node1, node2, text)
-  t.true(messageSent.success, 'node1 should send text message to node2')
+  await sendMessage(t, node1, node2, text)
+  //t.true(messageSent.success, 'node1 should send text message to node2')
 
   const newMessages = await getCheckMsgs(t, node2)
   console.log(newMessages + '')
