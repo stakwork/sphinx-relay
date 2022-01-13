@@ -113,7 +113,7 @@ export const getAllMessages = async (req, res) => {
     console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
   }
 
-  const clause = {
+  const clause: { [k: string]: any } = {
     order: [['id', 'desc']],
     where: { tenant },
   }

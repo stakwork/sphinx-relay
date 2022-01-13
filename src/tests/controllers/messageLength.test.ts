@@ -1,9 +1,9 @@
 import test, { ExecutionContext } from 'ava'
 import { randomText, iterate, sleep } from '../utils/helpers'
 import { addContact } from '../utils/save'
-import { deleteContact } from '../utils/del'
+import { deleteContact, deleteMessages } from '../utils/del'
 import { sendMessage } from '../utils/msg'
-import { getContacts, getCheckMsgs } from '../utils/get'
+import { getContacts, getCheckMsgs, getCheckAllMessages } from '../utils/get'
 
 import nodes from '../nodes'
 
@@ -25,6 +25,7 @@ test.serial(
 export async function messageLengthTest(t, node1, node2) {
   //TWO NODES SEND PAYMENTS TO EACH OTHER IN A CHAT ===>
 
+  await deleteMessages(t, node2)
   console.log(`${node1.alias} and ${node2.alias}`)
 
   //NODE1 ADDS NODE2 AS A CONTACT
@@ -53,6 +54,17 @@ export async function messageLengthTest(t, node1, node2) {
   t.true(
     newMessagesResponse.new_messages_total == 4,
     'node2 should have 4 new message'
+  )
+
+  const newMessagesResponse2 = await getCheckAllMessages(
+    t,
+    node2,
+    limit,
+    offset
+  )
+  t.true(
+    newMessagesResponse2.new_messages_total == 4,
+    `node2 should have 4 new messages`
   )
 
   //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
