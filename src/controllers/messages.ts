@@ -140,12 +140,12 @@ export const getAllMessages = async (req, res) => {
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
   // console.log("=> indexed chats");
-  const new_messages = messages.map((message) =>
+  const all_messages = messages.map((message) =>
     jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
   )
   success(res, {
-    new_messages: new_messages,
-    new_messages_total: new_messages.length,
+    new_messages: all_messages,
+    new_messages_total: all_messages.length,
     confirmed_messages: [],
   })
 }
