@@ -31,7 +31,7 @@ export async function messageLengthTest(t, node1, node2) {
   const added = await addContact(t, node1, node2)
   t.true(added, 'n1 should add n2 as contact')
 
-  const date = new Date.now()
+  const date = new Date(Date.now())
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
   const text = randomText()
   await sendMessage(t, node1, node2, text)

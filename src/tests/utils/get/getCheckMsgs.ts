@@ -10,12 +10,18 @@ export function getCheckMsgs(
 ): Promise<{ new_messages: Array<Message>; new_messages_total: number }> {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
-      timeout(0, node, resolve, reject)
+      timeout(0, node, date, resolve, reject)
     }, 1000)
   })
 }
 
-async function timeout(i: number, node: NodeConfig, resolve, reject) {
+async function timeout(
+  i: number,
+  node: NodeConfig,
+  date: any,
+  resolve,
+  reject
+) {
   const msgRes = await http.get(
     node.external_ip + '/msgs',
     makeArgs(node, { date: date })
