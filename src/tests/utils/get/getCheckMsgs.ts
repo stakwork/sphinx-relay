@@ -28,7 +28,7 @@ async function timeout(
   )
   if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
     // console.log('===>', msgRes.response.new_messages )
-    return resolve(msgRes)
+    return resolve(msgRes.response)
   }
   if (i > 10) {
     return reject('failed to getCheckMsgs')

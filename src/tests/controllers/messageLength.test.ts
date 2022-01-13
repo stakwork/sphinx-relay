@@ -38,10 +38,10 @@ export async function messageLengthTest(t, node1, node2) {
   await sendMessage(t, node1, node2, text)
   //t.true(messageSent.success, 'node1 should send text message to node2')
 
-  const newMessages = await getCheckMsgs(t, node2, date)
-  console.log(JSON.stringify(newMessages))
+  const newMessagesResponse = await getCheckMsgs(t, node2, date)
+  console.log(date, JSON.stringify(newMessagesResponse))
   t.true(
-    newMessages.new_messages_total == 1,
+    newMessagesResponse.response.new_messages_total == 1,
     'node2 should only have 1 new message'
   )
 
