@@ -24,7 +24,7 @@ async function timeout(
 ) {
   const msgRes = await http.get(
     node.external_ip + '/msgs',
-    makeArgs(node, { date: date })
+    makeArgs(node, { query: { date: date } })
   )
   if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
     // console.log('===>', msgRes.response.new_messages )
