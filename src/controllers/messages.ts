@@ -172,6 +172,7 @@ export const getMsgs = async (req, res) => {
       tenant,
     },
   }
+  const numberOfNewMessages = await models.Message.count(clause)
   if (limit) {
     clause.limit = limit
     clause.offset = offset
@@ -194,12 +195,11 @@ export const getMsgs = async (req, res) => {
         })
       : []
   const chatsById = indexBy(chats, 'id')
-  const new_messages = messages.map((message) =>
-    jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
-  )
   success(res, {
-    new_messages: new_messages,
-    new_messages_total: new_messages.length,
+    new_messages: messages.map((message) =>
+      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+    ),
+    new_messages_total: numberOfNewMessages,
   })
 }
 
