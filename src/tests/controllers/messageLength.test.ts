@@ -1,5 +1,5 @@
 import test, { ExecutionContext } from 'ava'
-import { randomText, iterate } from '../utils/helpers'
+import { randomText, iterate, sleep } from '../utils/helpers'
 import { addContact } from '../utils/save'
 import { deleteContact } from '../utils/del'
 import { sendMessage } from '../utils/msg'
@@ -32,6 +32,7 @@ export async function messageLengthTest(t, node1, node2) {
   t.true(added, 'n1 should add n2 as contact')
 
   const date = new Date(Date.now())
+  await sleep(2000)
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
   const text = randomText()
   await sendMessage(t, node1, node2, text)
