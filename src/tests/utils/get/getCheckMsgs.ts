@@ -34,6 +34,6 @@ async function timeout(
     return reject('failed to getCheckMsgs')
   }
   setTimeout(async () => {
-    timeout(i + 1, node, resolve, reject)
+    timeout(i + 1, node, date, resolve, reject)
   }, 1000)
 }
