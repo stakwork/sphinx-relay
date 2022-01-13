@@ -44,10 +44,15 @@ export async function messageLengthTest(t, node1, node2) {
   //t.true(messageSent.success, 'node1 should send text message to node2')
 
   const newMessagesResponse = await getCheckMsgs(t, node2, date, limit, offset)
-  console.log(date, JSON.stringify(newMessagesResponse))
+  console.log(date, JSON.stringify(newMessagesResponse, null, 2))
+  console.log(
+    `NewMessagesTotal: ${JSON.stringify(
+      newMessagesResponse.new_messages_total
+    )}`
+  )
   t.true(
     newMessagesResponse.new_messages_total == 4,
-    'node2 should only have 1 new message'
+    'node2 should have 4 new message'
   )
 
   //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
