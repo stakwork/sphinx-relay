@@ -1,9 +1,11 @@
 import test, { ExecutionContext } from 'ava'
+import * as rsa from '../../crypto/rsa'
 import { randomText, iterate, sleep } from '../utils/helpers'
 import { addContact } from '../utils/save'
 import { deleteContact, deleteMessages } from '../utils/del'
 import { sendMessage } from '../utils/msg'
 import { getContacts, getCheckMsgs, getCheckAllMessages } from '../utils/get'
+import { Message, NodeConfig } from '../types'
 
 import nodes from '../nodes'
 
@@ -39,21 +41,29 @@ export async function messageLengthTest(t, node1, node2) {
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
   const text = randomText()
   await sendMessage(t, node1, node2, text)
-  await sendMessage(t, node1, node2, text)
-  await sendMessage(t, node1, node2, text)
-  await sendMessage(t, node1, node2, text)
+  await sleep(1000)
+  const text2 = randomText()
+  await sendMessage(t, node1, node2, text2)
+  await sleep(1000)
+  const text3 = randomText()
+  await sendMessage(t, node1, node2, text3)
+  await sleep(1000)
+  const text4 = randomText()
+  await sendMessage(t, node1, node2, text4)
   //t.true(messageSent.success, 'node1 should send text message to node2')
 
   const newMessagesResponse = await getCheckMsgs(t, node2, date, limit, offset)
-  console.log(date, JSON.stringify(newMessagesResponse, null, 2))
-  console.log(
-    `NewMessagesTotal: ${JSON.stringify(
-      newMessagesResponse.new_messages_total
-    )}`
-  )
   t.true(
     newMessagesResponse.new_messages_total == 4,
     'node2 should have 4 new message'
+  )
+  t.true(
+    decrypt(newMessagesResponse.new_messages[0], node2) == text4,
+    'first message should be the newest message'
+  )
+  t.true(
+    decrypt(newMessagesResponse.new_messages[1], node2) == text3,
+    'first message should be the newest message'
   )
 
   const newMessagesResponse2 = await getCheckAllMessages(
@@ -66,6 +76,14 @@ export async function messageLengthTest(t, node1, node2) {
     newMessagesResponse2.new_messages_total == 4,
     `node2 should have 4 new messages`
   )
+  t.true(
+    decrypt(newMessagesResponse2.new_messages[0], node2) == text4,
+    'first message should be the newest message'
+  )
+  t.true(
+    decrypt(newMessagesResponse2.new_messages[1], node2) == text3,
+    'first message should be the newest message'
+  )
 
   //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
   const allContacts = await getContacts(t, node1)
@@ -76,4 +94,7 @@ export async function messageLengthTest(t, node1, node2) {
       t.true(deletion, 'contacts should be deleted')
     }
   }
+}
+function decrypt(message: Message, node: NodeConfig) {
+  return rsa.decrypt(node.privkey, message.message_content)
 }
