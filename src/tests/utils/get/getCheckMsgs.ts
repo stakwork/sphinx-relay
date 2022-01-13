@@ -5,7 +5,8 @@ import { Assertions } from 'ava'
 
 export function getCheckMsgs(
   _t: Assertions,
-  node: NodeConfig
+  node: NodeConfig,
+  date: any
 ): Promise<{ new_messages: Array<Message>; new_messages_total: number }> {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
@@ -15,7 +16,10 @@ export function getCheckMsgs(
 }
 
 async function timeout(i: number, node: NodeConfig, resolve, reject) {
-  const msgRes = await http.get(node.external_ip + '/msgs', makeArgs(node))
+  const msgRes = await http.get(
+    node.external_ip + '/msgs',
+    makeArgs(node, { date: date })
+  )
   if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
     // console.log('===>', msgRes.response.new_messages )
     return resolve(msgRes)

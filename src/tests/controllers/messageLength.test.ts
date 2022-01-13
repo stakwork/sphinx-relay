@@ -31,12 +31,13 @@ export async function messageLengthTest(t, node1, node2) {
   const added = await addContact(t, node1, node2)
   t.true(added, 'n1 should add n2 as contact')
 
+  const date = new Date.now()
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
   const text = randomText()
   await sendMessage(t, node1, node2, text)
   //t.true(messageSent.success, 'node1 should send text message to node2')
 
-  const newMessages = await getCheckMsgs(t, node2)
+  const newMessages = await getCheckMsgs(t, node2, date)
   console.log(JSON.stringify(newMessages))
   t.true(
     newMessages.new_messages_total == 1,
