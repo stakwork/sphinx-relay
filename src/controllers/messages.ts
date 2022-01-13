@@ -113,12 +113,16 @@ export const getAllMessages = async (req, res) => {
     console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
   }
 
-  const messages = await models.Message.findAll({
+  const clause = {
     order: [['id', 'desc']],
-    limit,
-    offset,
     where: { tenant },
-  })
+  }
+  const all_messages_length = await models.Message.count(clause)
+  if (limit) {
+    clause.limit = limit
+    clause.offset = offset
+  }
+  const messages = await models.Message.findAll(clause)
 
   if (logging.Express) {
     console.log('=> got msgs', messages && messages.length)
@@ -140,12 +144,11 @@ export const getAllMessages = async (req, res) => {
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
   // console.log("=> indexed chats");
-  const all_messages = messages.map((message) =>
-    jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
-  )
   success(res, {
-    new_messages: all_messages,
-    new_messages_total: all_messages.length,
+    new_messages: messages.map((message) =>
+      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+    ),
+    new_messages_total: all_messages_length,
     confirmed_messages: [],
   })
 }
