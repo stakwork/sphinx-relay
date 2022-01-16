@@ -210,6 +210,11 @@ export const generateToken = async (req, res) => {
     if (isProxy()) {
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
+    // TODO: create transport token and send back to client
+    const transportToken = crypto.publicEncrypt(
+      'some entropy make into a config value'
+    )
+
     owner.update({ authToken: hash })
   }
 
