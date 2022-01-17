@@ -7,6 +7,7 @@ import { loadConfig } from './utils/config'
 import { isProxy } from './utils/proxy'
 import * as jwtUtils from './utils/jwt'
 import { allowedJwtRoutes } from './scopes'
+import * as rsa from './crypto/rsa'
 
 const fs = require('fs')
 
@@ -88,7 +89,26 @@ export async function ownerMiddleware(req, res, next) {
     return
   }
 
-  const token = req.headers['x-user-token'] || req.cookies['x-user-token']
+  const x_user_token =
+    req.headers['x-user-token'] || req.cookies['x-user-token']
+  const x_transport_token =
+    req.headers['x-transport-token'] || req.cookies['x-transport-token']
+
+  console.log('Transport toke:', x_transport_token)
+  let token = x_user_token
+  const transportPrivateKey = fs.readFileSync('transportPrivate.pem')
+  if (x_transport_token) {
+    const splitTransportToken = rsa
+      .decrypt(transportPrivateKey, x_transport_token)
+      .split(' ')
+    token = splitTransportToken[0]
+    const splitTransportTokenTimestamp = splitTransportToken[1]
+    if (new Date(splitTransportTokenTimestamp) < new Date(Date.now() - 1)) {
+      return console.error('Too old of a request')
+    }
+  }
+
+  console.log('Transport toke decrypted:', token)
 
   if (process.env.HOSTING_PROVIDER === 'true') {
     if (token) {
@@ -116,6 +136,7 @@ export async function ownerMiddleware(req, res, next) {
   }
 
   const jwt = req.headers['x-jwt'] || req.cookies['x-jwt']
+
   if (!token && !jwt) {
     res.writeHead(401, 'Access invalid for user', {
       'Content-Type': 'text/plain',
@@ -234,7 +255,7 @@ export async function authModule(req, res, next) {
     req.headers['x-user-token'] || req.cookies['x-user-token']
   const x_transport_token =
     req.headers['x-transport-token'] || req.cookies['x-transport-token']
-
+  console.log('Transport toke:', x_transport_token)
   if (x_user_token == null || x_transport_token == null) {
     res.writeHead(401, 'Access invalid for user', {
       'Content-Type': 'text/plain',
@@ -249,6 +270,7 @@ export async function authModule(req, res, next) {
       // Here we are extracting the x_user_token to use later
       // to validate that it is the correct one saved for the owner
 
+      console.log('Transport Token: ', x_transport_token)
       token = crypto
         .privateDecrypt('privateKey', x_transport_token)
         .slice(0, 12)
@@ -283,6 +305,8 @@ export async function authModule(req, res, next) {
       .createHash('sha256')
       .update(token)
       .digest('base64')
+    console.log('Auth User Token: ', user.authToken)
+    console.log('Hashed User Token: ', hashedToken)
     if (user.authToken == null || user.authToken != hashedToken) {
       res.writeHead(401, 'Access invalid for user', {
         'Content-Type': 'text/plain',

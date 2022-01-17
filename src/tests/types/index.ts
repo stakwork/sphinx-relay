@@ -6,6 +6,7 @@ export interface NodeConfig {
   ip: string
   external_ip: string
   authToken: string
+  transportToken: string
   contact_key: string
   privkey: string
   exported_keys: string
@@ -18,7 +19,6 @@ export interface RequestBody {
 }
 
 export interface Headers {
-  'x-user-token': string
   [key: string]: string
 }
 
