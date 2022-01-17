@@ -12,6 +12,7 @@ import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
+import { sphinxLogger } from '../utils/logger'
 
 function stripLightningPrefix(s) {
   if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)
@@ -25,13 +26,13 @@ export const payInvoice = async (req, res) => {
   const payment_request = stripLightningPrefix(req.body.payment_request)
 
   if (!payment_request) {
-    console.log('[pay invoice] "payment_request" is empty')
+    sphinxLogger.error(`[pay invoice] "payment_request" is empty`)
     res.status(400)
     res.json({ success: false, error: 'payment_request is empty' })
     res.end()
     return
   }
-  console.log(`[pay invoice] ${payment_request}`)
+  sphinxLogger.info(`[pay invoice] ${payment_request}`)
 
   try {
     const response = await Lightning.sendPayment(
@@ -39,7 +40,7 @@ export const payInvoice = async (req, res) => {
       req.owner.publicKey
     )
 
-    console.log('[pay invoice data]', response)
+    sphinxLogger.info(`[pay invoice data] ${response}`)
 
     const message = await models.Message.findOne({
       where: { payment_request, tenant },
@@ -77,10 +78,10 @@ export const payInvoice = async (req, res) => {
       updatedAt: date,
       tenant,
     })
-    console.log('[pay invoice] stored message', paidMessage)
+    sphinxLogger.info(`[pay invoice] stored message ${paidMessage}`)
     success(res, jsonUtils.messageToJson(paidMessage, chat))
   } catch (e) {
-    console.log('ERR paying invoice', e)
+    sphinxLogger.error(`ERR paying invoice ${e}`)
     return failure(res, 'could not pay invoice')
   }
 }
@@ -159,7 +160,7 @@ export const createInvoice = async (req, res) => {
         const paymentHash =
           invoice.tags.find((t) => t.tagName === 'payment_hash')?.data || ''
 
-        console.log('decoded pay req', { invoice })
+        sphinxLogger.info(`decoded pay req ${{ invoice }}`)
 
         const owner = req.owner
 
@@ -204,7 +205,7 @@ export const createInvoice = async (req, res) => {
         })
       }
     } catch (err) {
-      console.log('addInvoice error:', err)
+      sphinxLogger.error(`addInvoice error: ${err}`)
     }
   }
 }
@@ -215,19 +216,19 @@ export const listInvoices = async (req, res) => {
   const lightning = await Lightning.loadLightning()
 
   lightning.listInvoices({}, (err, response) => {
-    console.log({ err, response })
+    sphinxLogger.info({ err, response })
     if (err == null) {
       res.status(200)
       res.json(response)
       res.end()
     } else {
-      console.log({ err, response })
+      sphinxLogger.error({ err, response })
     }
   })
 }
 
 export const receiveInvoice = async (payload) => {
-  console.log('received invoice', payload)
+  sphinxLogger.info(`received invoice ${payload}`)
 
   const total_spent = 1
   const dat = payload.content || payload
@@ -247,7 +248,7 @@ export const receiveInvoice = async (payload) => {
     sender_photo_url,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return sphinxLogger.error(`=> no group chat!`)
   }
   const tenant: number = owner.id
 
@@ -279,7 +280,7 @@ export const receiveInvoice = async (payload) => {
     msg.senderPic = sender_photo_url
   }
   const message = await models.Message.create(msg)
-  console.log('received keysend invoice message', message.id)
+  sphinxLogger.info(`received keysend invoice message ${message.id}`)
 
   socket.sendJson(
     {

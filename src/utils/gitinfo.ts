@@ -1,4 +1,5 @@
 import { exec } from 'child_process'
+import { sphinxLogger } from './logger'
 
 let commitHash
 function checkCommitHash() {
@@ -20,7 +21,7 @@ function checkCommitHash() {
         }
       )
     } catch (e) {
-      console.log(e)
+      sphinxLogger.error(e)
       resolve('')
     }
   })
@@ -46,7 +47,7 @@ function checkTag() {
         }
       )
     } catch (e) {
-      console.log(e)
+      sphinxLogger.error(e)
       resolve('')
     }
   })

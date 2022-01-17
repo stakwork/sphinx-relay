@@ -4,6 +4,7 @@ import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
+import { sphinxLogger } from '../utils/logger'
 
 const oktolog = true
 export function loginvoice(response) {
@@ -12,9 +13,12 @@ export function loginvoice(response) {
   r.r_hash = ''
   r.r_preimage = ''
   r.htlcs = r.htlcs && r.htlcs.map((h) => ({ ...h, custom_records: {} }))
-  console.log(
-    'AN INVOICE WAS RECIEVED!!!=======================>',
-    JSON.stringify(r, null, 2)
+  sphinxLogger.info(
+    `AN INVOICE WAS RECIEVED!!!=======================> ${JSON.stringify(
+      r,
+      null,
+      2
+    )}`
   )
 }
 
@@ -33,11 +37,11 @@ export async function receiveNonKeysend(response) {
   })
   if (invoice == null) {
     if (!decoded.payeeNodeKey)
-      return console.log('subscribeInvoices: cant get dest from pay req')
+      return sphinxLogger.error(`subscribeInvoices: cant get dest from pay req`)
     const owner = await models.Contact.findOne({
       where: { isOwner: true, publicKey: decoded.payeeNodeKey },
     })
-    if (!owner) return console.log('subscribeInvoices: no owner found')
+    if (!owner) return sphinxLogger.error(`subscribeInvoices: no owner found`)
     const tenant: number = owner.id
     const payReq = response['payment_request']
     const amount = response['amt_paid_sat']

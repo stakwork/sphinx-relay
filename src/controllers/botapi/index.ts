@@ -5,6 +5,7 @@ import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import broadcast from './broadcast'
 import pay from './pay'
+import { sphinxLogger } from '../../utils/logger'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -26,7 +27,7 @@ export interface Action {
 }
 
 export async function processAction(req, res) {
-  console.log('=> processAction', req.body)
+  sphinxLogger.info(`=> processAction ${req.body}`)
   let body = req.body
   if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
     try {
@@ -34,7 +35,7 @@ export async function processAction(req, res) {
       const dataBody = JSON.parse(body.data.replace(/'/g, '"'))
       if (dataBody) body = dataBody
     } catch (e) {
-      console.log(e)
+      sphinxLogger.error(e)
       return failure(res, 'failed to parse webhook body json')
     }
   }
@@ -125,10 +126,10 @@ export async function finalAction(a: Action) {
         tenant: owner.id,
       },
     })
-    if (!botMember) return console.log('no botMember')
+    if (!botMember) return sphinxLogger.error(`no botMember`)
 
     const dest = botMember.memberPubkey
-    if (!dest) return console.log('no dest to send to')
+    if (!dest) return sphinxLogger.error(`no dest to send to`)
     const topic = `${dest}/${myBot.uuid}`
     const data: network.Msg = {
       action,
@@ -157,13 +158,13 @@ export async function finalAction(a: Action) {
     try {
       await network.signAndSend({ dest, data, route_hint }, owner, topic)
     } catch (e) {
-      console.log('=> couldnt mqtt publish')
+      sphinxLogger.error(`=> couldnt mqtt publish`)
     }
     return // done
   }
 
   if (action === 'keysend') {
-    return console.log('=> BOT KEYSEND to', pubkey)
+    return sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`)
     // if (!(pubkey && pubkey.length === 66 && amount)) {
     //     throw 'wrong params'
     // }
@@ -184,6 +185,6 @@ export async function finalAction(a: Action) {
   } else if (action === 'broadcast') {
     broadcast(a)
   } else {
-    return console.log('invalid action')
+    return sphinxLogger.error(`invalid action`)
   }
 }

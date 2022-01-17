@@ -1,5 +1,6 @@
 import { models } from '../models'
 import * as crypto from 'crypto'
+import { sphinxLogger} from '../utils/logger'
 
 // import * as WebSocket from 'ws'
 const socketio = require('socket.io')
@@ -36,7 +37,7 @@ export function connect(server) {
     return next(new Error('authentication error'))
   })
   io.on('connection', (client) => {
-    console.log('=> [socket.io] connected!', client.ownerID)
+    sphinxLogger.info(`=> [socket.io] connected! ${client.ownerID}`)
     addClient(client.ownerID, client)
     client.on('disconnect', (reason) => {
       removeClientById(client.ownerID, client.id)

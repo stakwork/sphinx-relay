@@ -1,6 +1,6 @@
 import { Lsat } from 'lsat-js'
 import { models } from '../models'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import { Response, Request } from 'express'
@@ -53,16 +53,18 @@ export async function payForLsat(
   paymentRequest: string
 ): Promise<string | void> {
   if (!paymentRequest) {
-    if (logging.Lightning)
-      console.log('[pay invoice] "payment_request" is empty')
+    sphinxLogger.error(
+      '[pay invoice] "payment_request" is empty',
+      logging.Lightning
+    )
     return
   }
 
-  console.log(`[pay invoice] ${paymentRequest}`)
+  sphinxLogger.info(`[pay invoice] ${paymentRequest}`, logging.Lightning)
 
   const response = await Lightning.sendPayment(paymentRequest)
 
-  console.log('[pay invoice data]', response)
+  sphinxLogger.info(['[pay invoice data]', response], logging.Lightning)
 
   return response.payment_preimage.toString('hex')
 }
@@ -73,7 +75,7 @@ export async function saveLsat(
 ): Promise<void | Response> {
   const tenant: number = req.owner.id
 
-  if (logging.Express) console.log(`=> saveLsat`)
+  sphinxLogger.info(`=> saveLsat`, logging.Express)
 
   const { paymentRequest, macaroon, issuer, paths, metadata } = req.body
 
@@ -85,9 +87,10 @@ export async function saveLsat(
   try {
     lsat = Lsat.fromMacaroon(macaroon, paymentRequest)
   } catch (e) {
-    if (logging.Lsat) {
-      console.error('[save lsat] Problem getting Lsat:', e.message)
-    }
+    sphinxLogger.error(
+      ['[save lsat] Problem getting Lsat:', e.message],
+      logging.Lsat
+    )
     res.status(400)
     return res.json({ success: false, error: 'invalid lsat macaroon' })
   }
@@ -95,8 +98,10 @@ export async function saveLsat(
   const identifier = lsat.id
 
   if (await lsatAlreadyExists(lsat)) {
-    if (logging.Lsat)
-      console.error('[pay for lsat] Lsat already exists: ', identifier)
+    sphinxLogger.info(
+      ['[pay for lsat] Lsat already exists: ', identifier],
+      logging.Lsat
+    )
     return failure(res, `Could not save lsat. Already exists`)
   }
 
@@ -105,8 +110,10 @@ export async function saveLsat(
   try {
     preimage = await payForLsat(paymentRequest)
   } catch (e) {
-    if (logging.Lsat)
-      console.error('[pay for lsat] Problem paying for lsat:', e)
+    sphinxLogger.error(
+      ['[pay for lsat] Problem paying for lsat:', e],
+      logging.Lsat
+    )
 
     res.status(500)
     return failure(res, 'Could not pay for lsat')
@@ -144,7 +151,7 @@ export async function getLsat(
   const tenant = req.owner.id
   const identifier = req.params.identifier
 
-  if (logging.Express) console.log(`=> getLsat`)
+  sphinxLogger.info(`=> getLsat`, logging.Express)
 
   try {
     const lsat: LsatResponse = await models.Lsat.findOne({
@@ -168,7 +175,7 @@ export async function listLsats(
 ): Promise<void | Response> {
   const tenant = req.owner.id
 
-  if (logging.Express) console.log(`=> listLsats`)
+  sphinxLogger.info(`=> listLsats`, logging.Express)
   try {
     const lsats: LsatResponse[] = await models.Lsat.findAll({
       where: { tenant },
@@ -187,7 +194,7 @@ export async function updateLsat(
   const tenant = req.owner.id
   const identifier = req.params.identifier
   const body = req.body
-  if (logging.Express) console.log(`=> updateLsat ${identifier}`)
+  sphinxLogger.info(`=> updateLsat ${identifier}`, logging.Express)
   try {
     await models.Lsat.update(body, {
       where: { tenant, identifier },
@@ -204,7 +211,7 @@ export async function deleteLsat(
 ): Promise<void | Response> {
   const tenant = req.owner.id
   const identifier = req.params.identifier
-  if (logging.Express) console.log(`=> deleteLsat ${identifier}`)
+  sphinxLogger.info(`=> deleteLsat ${identifier}`, logging.Express)
   try {
     await models.Lsat.destroy({
       where: { tenant, identifier },

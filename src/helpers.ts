@@ -2,7 +2,7 @@ import { models, Contact } from './models'
 import * as md5 from 'md5'
 import * as network from './network'
 import constants from './constants'
-import { logging } from './utils/logger'
+import { logging, sphinxLogger } from './utils/logger'
 
 export const findOrCreateChat = async (params) => {
   const { chat_id, owner_id, recipient_id } = params
@@ -18,7 +18,7 @@ export const findOrCreateChat = async (params) => {
     // console.log('findOrCreateChat: chat_id exists')
   } else {
     if (!owner_id || !recipient_id) return null
-    console.log('chat does not exists, create new')
+    sphinxLogger.info(`chat does not exists, create new`)
     const owner = await models.Contact.findOne({ where: { id: owner_id } })
     const recipient = await models.Contact.findOne({
       where: { id: recipient_id, tenant: owner_id },
@@ -32,7 +32,7 @@ export const findOrCreateChat = async (params) => {
 
     if (!chat) {
       // no chat! create new
-      console.log('=> no chat! create new')
+      sphinxLogger.info(`=> no chat! create new`)
       chat = await models.Chat.create({
         uuid: uuid,
         contactIds: JSON.stringify([
@@ -158,9 +158,10 @@ export const performKeysendMessage = async ({
     // console.log("=> keysend to new contact")
     if (success) success(r)
   } catch (e) {
-    if (logging.Network) {
-      console.log('KEYSEND MESSAGE ERROR to', destination_key, e, opts)
-    }
+    sphinxLogger.info(
+      `KEYSEND MESSAGE ERROR to ${destination_key} ${e} ${opts}`,
+      logging.Network
+    )
     if (failure) failure(e)
   }
 }
@@ -268,7 +269,7 @@ export async function parseReceiveParams(payload) {
     })
     owner = ownerRecord.dataValues
   }
-  if (!owner) console.log('=> parseReceiveParams cannot find owner')
+  if (!owner) sphinxLogger.error(`=> parseReceiveParams cannot find owner`)
   if (isConversation) {
     const realAmount =
       network_type === constants.network_types.lightning ? amount : 0

@@ -7,6 +7,7 @@ import { models } from '../models'
 import { loadConfig } from '../utils/config'
 import { getAppVersionsFromHub } from '../hub'
 import { Op } from 'sequelize'
+import { sphinxLogger } from '../utils/logger'
 
 const config = loadConfig()
 
@@ -160,7 +161,7 @@ export const getBalance = async (req, res) => {
       response: blcs,
     })
   } catch (e) {
-    console.log('ERROR getBalance', e)
+    sphinxLogger.error(`ERROR getBalance ${e}`)
     res.json({ success: false })
   }
   res.end()

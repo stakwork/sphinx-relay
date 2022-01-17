@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs'
 import * as express from 'express'
+import { sphinxLogger } from './logger'
 const qs = require('qs')
 const axios = require('axios')
 var forge = require('node-forge')
@@ -52,21 +53,23 @@ async function validateCert(port, data, endpoint, apiKey) {
     res.send(validationObject.file_validation_content.join('\n'))
   })
   let server = await app.listen(port, () => {
-    console.log(`=> [ssl] validation server started at http://0.0.0.0:${port}`)
+    sphinxLogger.info(
+      `=> [ssl] validation server started at http://0.0.0.0:${port}`
+    )
   })
   await requestValidation(data.id, apiKey)
-  console.log('=> [ssl] waiting for certificate to be issued')
+  sphinxLogger.info(`=> [ssl] waiting for certificate to be issued`)
   while (true) {
     let certData = await getCert(data.id, apiKey)
     if (certData.status === 'issued') {
-      console.log('=> [ssl] certificate was issued')
+      sphinxLogger.info(`=> [ssl] certificate was issued`)
       break
     }
-    console.log('=> [ssl] checking certificate again...')
+    sphinxLogger.info(`=> [ssl] checking certificate again...`)
     await sleep(2000)
   }
   await server.close(() => {
-    console.log('=> [ssl] validation server stopped.')
+    sphinxLogger.info(`=> [ssl] validation server stopped.`)
   })
   return
 }
@@ -83,8 +86,8 @@ async function requestValidation(id, apiKey) {
     },
   })
   if (res.data.success === false) {
-    console.log('=> [ssl] Failed to request certificate validation')
-    console.log(res.data)
+    sphinxLogger.error(`=> [ssl] Failed to request certificate validation`)
+    sphinxLogger.error(res.data)
     throw new Error('=> [ssl] Failing to provision ssl certificate')
   }
   return res.data
@@ -143,9 +146,9 @@ async function getCertificate(domain, port, save_ssl) {
   var endpoint = endpoint_tmp.replace(':3001', '')
   var keys = forge.pki.rsa.generateKeyPair(2048)
   var csr = generateCsr(keys, endpoint)
-  console.log('=> [ssl] Generated CSR')
+  sphinxLogger.info(`=> [ssl] Generated CSR`)
   var res = await requestCert(endpoint, csr, apiKey)
-  console.log('=> [ssl] Requested certificate')
+  sphinxLogger.info(`=> [ssl] Requested certificate`)
   await validateCert(port, res, endpoint, apiKey)
   var certData = await downloadCert(res.id, apiKey)
   if (save_ssl === true) {
@@ -157,9 +160,9 @@ async function getCertificate(domain, port, save_ssl) {
       certData['certificate.crt'],
       function (err) {
         if (err) {
-          return console.log(err)
+          return sphinxLogger.error(err)
         }
-        console.log('=> [ssl] wrote tls certificate')
+        sphinxLogger.info(`=> [ssl] wrote tls certificate`)
       }
     )
     await writeFile(
@@ -167,9 +170,9 @@ async function getCertificate(domain, port, save_ssl) {
       certData['ca_bundle.crt'],
       function (err) {
         if (err) {
-          return console.log(err)
+          return sphinxLogger.error(err)
         }
-        console.log('=> [ssl] wrote tls ca bundle')
+        sphinxLogger.info(`=> [ssl] wrote tls ca bundle`)
       }
     )
     await writeFile(
@@ -177,9 +180,9 @@ async function getCertificate(domain, port, save_ssl) {
       forge.pki.privateKeyToPem(keys.privateKey),
       function (err) {
         if (err) {
-          return console.log(err)
+          return sphinxLogger.error(err)
         }
-        console.log('=> [ssl] wrote tls key')
+        sphinxLogger.info(`=> [ssl] wrote tls key`)
       }
     )
   }

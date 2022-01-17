@@ -5,7 +5,7 @@ import * as rp from 'request-promise'
 import * as helpers from '../helpers'
 import { loadConfig } from '../utils/config'
 import * as Lightning from '../grpc/lightning'
-import { logging } from './logger'
+import { logging, sphinxLogger } from './logger'
 
 const config = loadConfig()
 
@@ -36,7 +36,7 @@ export async function lazyToken(pubkey: string, host: string) {
     }
     return t
   } catch (e) {
-    if (logging.Meme) console.log('[meme] error getting token', e)
+    sphinxLogger.error(`[meme] error getting token ${e}`, logging.Meme)
   }
 }
 
@@ -69,7 +69,7 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
     const sigBytes = zbase32.decode(sig)
     const sigBase64 = urlBase64FromBytes(sigBytes)
 
-    if (logging.Meme) console.log('[meme] verify', pubkey)
+    sphinxLogger.info(`[meme] verify ${pubkey}`, logging.Meme)
     const bod = await rp.post(theURL + 'verify', {
       form: { id: r.id, sig: sigBase64, pubkey },
     })

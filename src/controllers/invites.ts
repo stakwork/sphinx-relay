@@ -4,6 +4,7 @@ import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 // import * as proxy from '../utils/proxy'
 import { failure } from '../utils/res'
+import { sphinxLogger } from '../utils/logger'
 
 export const finishInvite = async (req, res) => {
   const { invite_string } = req.body
@@ -43,7 +44,7 @@ export const payInvite = async (req, res) => {
     // 	dbInvite.update({ status: invite.invite_status })
     // }
     if (response.payment_error) {
-      console.log('=> payInvite ERROR', response.payment_error)
+      sphinxLogger.error(`=> payInvite ERROR ${response.payment_error}`)
       res.status(200)
       res.json({ success: false, error: response.payment_error })
       res.end()
@@ -58,7 +59,7 @@ export const payInvite = async (req, res) => {
   }
 
   const onFailure = (response) => {
-    console.log('=> payInvite ERROR', response)
+    sphinxLogger.error(`=> payInvite ERROR ${response}`)
     res.status(200)
     res.json({ success: false })
     res.end()
@@ -87,7 +88,7 @@ export const createInvite = async (req, res) => {
   }
 
   const onSuccess = async (response) => {
-    console.log('response', response)
+    sphinxLogger.info(`response ${response}`)
 
     const inviteCreated = response.object
 

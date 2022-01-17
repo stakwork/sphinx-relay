@@ -6,6 +6,7 @@ import { isClean } from './nodeinfo'
 import { loadConfig } from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
 import { failure, success } from './res'
+import { sphinxLogger } from './logger'
 const fs = require('fs')
 const net = require('net')
 
@@ -108,7 +109,7 @@ export async function checkPeered(req, res) {
     })
     success(res, { peered, active, channel_point })
   } catch (e) {
-    console.log('=> checkPeered failed', e)
+    sphinxLogger.error(`=> checkPeered failed ${e}`)
     failure(res, e)
   }
 }
@@ -124,7 +125,7 @@ export async function connectPeer(req, res) {
     })
     success(res, 'ok')
   } catch (e) {
-    console.log('=> connect peer failed', e)
+    sphinxLogger.error(`=> connect peer failed ${e}`)
     failure(res, e)
   }
 }
@@ -150,7 +151,7 @@ export async function genChannel(req, res) {
     })
     success(res, 'ok')
   } catch (e) {
-    console.log('=> connect failed', e)
+    sphinxLogger.error(`=> connect failed ${e}`)
   }
 }
 

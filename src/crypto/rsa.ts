@@ -99,7 +99,7 @@ export function testRSA() {
       const priv = cert.unpriv(privPEM)
 
       const dec = decrypt(priv, enc)
-      console.log('SUCESS:', msg === dec)
+      console.log(`SUCESS: ${msg === dec}`)
     }
   )
 }

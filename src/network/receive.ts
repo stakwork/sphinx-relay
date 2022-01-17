@@ -21,6 +21,7 @@ import * as jsonUtils from '../utils/json'
 import { isProxy } from '../utils/proxy'
 import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
+import { sphinxLogger } from '../utils/logger'
 
 const config = loadConfig()
 /*
@@ -69,27 +70,28 @@ const botMakerTypes = [
 async function onReceive(payload: { [k: string]: any }, dest: string) {
   if (dest) {
     if (typeof dest !== 'string' || dest.length !== 66)
-      return console.log('INVALID DEST', dest)
+      return sphinxLogger.error(`INVALID DEST ${dest}`)
   }
   payload.dest = dest // add "dest" into payload
 
   // console.log("===> onReceive", JSON.stringify(payload, null, 2));
   if (!(payload.type || payload.type === 0))
-    return console.log('no payload.type')
+    return sphinxLogger.error(`no payload.type`)
 
   let owner = await models.Contact.findOne({
     where: { isOwner: true, publicKey: dest },
   })
-  if (!owner) return console.log('=> RECEIVE: owner not found')
+  if (!owner) return sphinxLogger.error(`=> RECEIVE: owner not found`)
   const tenant: number = owner.id
 
   const ownerDataValues = owner || owner.dataValues
 
   if (botTypes.includes(payload.type)) {
     // if is admin on tribe? or is bot maker?
-    console.log('=> got bot msg type!!!!')
+    sphinxLogger.info(`=> got bot msg type!`)
     if (botMakerTypes.includes(payload.type)) {
-      if (!payload.bot_uuid) return console.log('bot maker type: no bot uuid')
+      if (!payload.bot_uuid)
+        return sphinxLogger.error(`bot maker type: no bot uuid`)
     }
     payload.owner = ownerDataValues
     return ACTIONS[payload.type](payload)
@@ -218,7 +220,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
         owner,
         forwardedFromContactId
       )
-    else console.log('=> insufficient payment for this action')
+    else sphinxLogger.error(`=> insufficient payment for this action`)
   }
   if (isTribeOwner && payload.type === msgtypes.purchase) {
     const mt = payload.message.mediaToken
@@ -279,7 +281,7 @@ async function doTheAction(data, owner) {
     // console.log("ACTIONS!", ACTIONS[payload.type])
     ACTIONS[payload.type](payload)
   } else {
-    console.log('Incorrect payload type:', payload.type)
+    sphinxLogger.error(`Incorrect payload type: ${payload.type}`)
   }
 }
 
@@ -436,7 +438,7 @@ async function parseAndVerifyPayload(data) {
         return payload // => RM THIS
       }
     } else {
-      console.log('no sender.pub_key')
+      sphinxLogger.error(`no sender.pub_key`)
       return null
     }
   } catch (e) {
@@ -491,13 +493,13 @@ export async function parseKeysendInvoice(i) {
     try {
       const invoice = bolt11.decode(i.payment_request)
       if (!invoice.payeeNodeKey)
-        return console.log('cant get dest from pay req')
+        return sphinxLogger.error(`cant get dest from pay req`)
       dest = invoice.payeeNodeKey
       owner = await models.Contact.findOne({
         where: { isOwner: true, publicKey: dest },
       })
     } catch (e) {
-      console.log('FAILURE TO DECODE PAY REQ', e)
+      sphinxLogger.error(`FAILURE TO DECODE PAY REQ ${e}`)
     }
   } else {
     // non-proxy, only one "owner"
@@ -505,7 +507,7 @@ export async function parseKeysendInvoice(i) {
     dest = owner.publicKey
   }
   if (!owner || !dest) {
-    console.log('=> parseKeysendInvoice ERROR: cant find owner')
+    sphinxLogger.error(`=> parseKeysendInvoice ERROR: cant find owner`)
     return
   }
 
