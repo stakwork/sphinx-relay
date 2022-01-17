@@ -18,6 +18,7 @@ const nodeinfo_1 = require("./nodeinfo");
 const config_1 = require("./config");
 const queries_1 = require("../controllers/queries");
 const res_1 = require("./res");
+const logger_1 = require("./logger");
 const fs = require('fs');
 const net = require('net');
 const config = (0, config_1.loadConfig)();
@@ -122,7 +123,7 @@ function checkPeered(req, res) {
             (0, res_1.success)(res, { peered, active, channel_point });
         }
         catch (e) {
-            console.log('=> checkPeered failed', e);
+            logger_1.sphinxLogger.error(`=> checkPeered failed ${e}`);
             (0, res_1.failure)(res, e);
         }
     });
@@ -140,7 +141,7 @@ function connectPeer(req, res) {
             (0, res_1.success)(res, 'ok');
         }
         catch (e) {
-            console.log('=> connect peer failed', e);
+            logger_1.sphinxLogger.error(`=> connect peer failed ${e}`);
             (0, res_1.failure)(res, e);
         }
     });
@@ -168,7 +169,7 @@ function genChannel(req, res) {
             (0, res_1.success)(res, 'ok');
         }
         catch (e) {
-            console.log('=> connect failed', e);
+            logger_1.sphinxLogger.error(`=> connect failed ${e}`);
         }
     });
 }

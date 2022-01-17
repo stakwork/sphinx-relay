@@ -16,6 +16,7 @@ const hub_1 = require("../hub");
 const jsonUtils = require("../utils/json");
 const constants_1 = require("../constants");
 const bolt11 = require("@boltz/bolt11");
+const logger_1 = require("../utils/logger");
 const oktolog = true;
 function loginvoice(response) {
     if (!oktolog)
@@ -24,7 +25,7 @@ function loginvoice(response) {
     r.r_hash = '';
     r.r_preimage = '';
     r.htlcs = r.htlcs && r.htlcs.map((h) => (Object.assign(Object.assign({}, h), { custom_records: {} })));
-    console.log('AN INVOICE WAS RECIEVED!!!=======================>', JSON.stringify(r, null, 2));
+    logger_1.sphinxLogger.info(`AN INVOICE WAS RECIEVED!!!=======================> ${JSON.stringify(r, null, 2)}`);
 }
 exports.loginvoice = loginvoice;
 function receiveNonKeysend(response) {
@@ -41,12 +42,12 @@ function receiveNonKeysend(response) {
         });
         if (invoice == null) {
             if (!decoded.payeeNodeKey)
-                return console.log('subscribeInvoices: cant get dest from pay req');
+                return logger_1.sphinxLogger.error(`subscribeInvoices: cant get dest from pay req`);
             const owner = yield models_1.models.Contact.findOne({
                 where: { isOwner: true, publicKey: decoded.payeeNodeKey },
             });
             if (!owner)
-                return console.log('subscribeInvoices: no owner found');
+                return logger_1.sphinxLogger.error(`subscribeInvoices: no owner found`);
             const tenant = owner.id;
             const payReq = response['payment_request'];
             const amount = response['amt_paid_sat'];

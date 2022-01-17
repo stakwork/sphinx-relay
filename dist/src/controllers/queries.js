@@ -68,7 +68,7 @@ function getPendingAccountings() {
         accountings.forEach((a) => {
             const utxo = utxos.find((u) => u.address === a.onchainAddress);
             if (utxo) {
-                console.log('[WATCH] UTXO', utxo);
+                logger_1.sphinxLogger.info(`[WATCH] UTXO ${utxo}`);
                 const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str;
                 ret.push({
                     id: a.id,
@@ -114,9 +114,9 @@ exports.getSuggestedSatPerByte = getSuggestedSatPerByte;
 // https://mempool.space/api/v1/fees/recommended
 function genChannelAndConfirmAccounting(acc) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('[WATCH]=> genChannelAndConfirmAccounting');
+        logger_1.sphinxLogger.info(`[WATCH]=> genChannelAndConfirmAccounting`);
         const sat_per_byte = yield getSuggestedSatPerByte();
-        console.log('[WATCH]=> sat_per_byte', sat_per_byte);
+        logger_1.sphinxLogger.info(`[WATCH]=> sat_per_byte ${sat_per_byte}`);
         try {
             const r = yield lightning.openChannel({
                 node_pubkey: acc.pubkey,
@@ -124,7 +124,7 @@ function genChannelAndConfirmAccounting(acc) {
                 push_sat: 0,
                 sat_per_byte,
             });
-            console.log('[WATCH]=> CHANNEL OPENED!', r);
+            logger_1.sphinxLogger.info(`[WATCH]=> CHANNEL OPENED! ${r}`);
             const fundingTxidRev = Buffer.from(r.funding_txid_bytes).toString('hex');
             const fundingTxid = fundingTxidRev.match(/.{2}/g)
                 .reverse()
@@ -137,10 +137,10 @@ function genChannelAndConfirmAccounting(acc) {
             }, {
                 where: { id: acc.id },
             });
-            console.log('[WATCH]=> ACCOUNTINGS UPDATED to received!', acc.id);
+            logger_1.sphinxLogger.info(`[WATCH]=> ACCOUNTINGS UPDATED to received! ${acc.id}`);
         }
         catch (e) {
-            console.log('[ACCOUNTING] error creating channel', e);
+            logger_1.sphinxLogger.error(`[ACCOUNTING] error creating channel ${e}`);
             const existing = yield models_1.models.Accounting.findOne({ where: { id: acc.id } });
             if (existing) {
                 if (!existing.amount) {
@@ -193,13 +193,13 @@ function checkChannelsAndKeysend(rec) {
             active_only: true,
             peer: rec.pubkey,
         });
-        console.log('[WATCH] chans for pubkey:', rec.pubkey, chans);
+        logger_1.sphinxLogger.info(`[WATCH] chans for pubkey: ${rec.pubkey} ${chans}`);
         if (!(chans && chans.channels))
             return;
         chans.channels.forEach((chan) => {
             // find by txid
             if (chan.channel_point.includes(rec.fundingTxid)) {
-                console.log('[WATCH] found channel to keysend!', chan);
+                logger_1.sphinxLogger.info(`[WATCH] found channel to keysend! ${chan}`);
                 const msg = {
                     type: constants_1.default.message_types.keysend,
                 };
@@ -208,7 +208,7 @@ function checkChannelsAndKeysend(rec) {
                 const remoteReserve = parseInt(chan.remote_chan_reserve_sat) || 0;
                 const commitFee = parseInt(chan.commit_fee) || 0;
                 const amount = rec.amount - localReserve - remoteReserve - commitFee - extraAmount;
-                console.log('[WATCH] amt to final keysend', amount);
+                logger_1.sphinxLogger.info(`[WATCH] amt to final keysend ${amount}`);
                 helpers.performKeysendMessage({
                     sender: owner,
                     destination_key: rec.pubkey,
@@ -216,7 +216,7 @@ function checkChannelsAndKeysend(rec) {
                     amount,
                     msg,
                     success: function () {
-                        console.log('[WATCH] complete! Updating accounting, id:', rec.id);
+                        logger_1.sphinxLogger.info(`[WATCH] complete! Updating accounting, id: ${rec.id}`);
                         models_1.models.Accounting.update({
                             status: constants_1.default.statuses.confirmed,
                             chanId: chan.chan_id,
@@ -229,7 +229,7 @@ function checkChannelsAndKeysend(rec) {
                         });
                     },
                     failure: function () {
-                        console.log('[WATCH] failed final keysend');
+                        logger_1.sphinxLogger.error(`[WATCH] failed final keysend`);
                     },
                 });
             }
@@ -245,9 +245,9 @@ function queryOnchainAddress(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         // const tenant:number = req.owner.id
-        console.log('=> queryOnchainAddress');
+        logger_1.sphinxLogger.info(`=> queryOnchainAddress`);
         if (!hub_pubkey)
-            return console.log('=> NO ROUTING NODE PUBKEY SET');
+            return logger_1.sphinxLogger.error(`=> NO ROUTING NODE PUBKEY SET`);
         const uuid = short.generate();
         const owner = req.owner;
         const app = req.params.app;
@@ -301,17 +301,17 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     const sender_route_hint = dat.sender.route_hint;
     // const tenant:number = owner.id
     if (!sender_pub_key || !content || !owner) {
-        return console.log('=> wrong query format');
+        return logger_1.sphinxLogger.error(`=> wrong query format`);
     }
     let q;
     try {
         q = JSON.parse(content);
     }
     catch (e) {
-        console.log('=> ERROR receiveQuery,', e);
+        logger_1.sphinxLogger.error(`=> ERROR receiveQuery, ${e}`);
         return;
     }
-    console.log('=> query received', q);
+    logger_1.sphinxLogger.info(`=> query received ${q}`);
     let result = '';
     switch (q.type) {
         case 'onchain_address':
@@ -351,14 +351,13 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         yield network.signAndSend(opts, owner);
     }
     catch (e) {
-        console.log('FAILED TO SEND QUERY_RESPONSE');
+        logger_1.sphinxLogger.error(`FAILED TO SEND QUERY_RESPONSE`);
         return;
     }
 });
 exports.receiveQuery = receiveQuery;
 const receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    if (logger_1.logging.Network)
-        console.log('=> receiveQueryResponse');
+    logger_1.sphinxLogger.info(`=> receiveQueryResponse`, logger_1.logging.Network);
     const dat = payload.content || payload;
     // const sender_pub_key = dat.sender.pub_key
     const content = dat.message.content;
@@ -367,7 +366,7 @@ const receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, func
         queries[q.uuid] = q;
     }
     catch (e) {
-        console.log('=> ERROR receiveQueryResponse,', e);
+        logger_1.sphinxLogger.error(`=> ERROR receiveQueryResponse, ${e}`);
     }
 });
 exports.receiveQueryResponse = receiveQueryResponse;

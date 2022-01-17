@@ -111,7 +111,7 @@ const loadWalletUnlocker = () => {
             return walletUnlocker;
         }
         catch (e) {
-            console.log(e);
+            logger_1.sphinxLogger.error(e);
         }
     }
 };
@@ -144,18 +144,18 @@ const getLock = () => isLocked;
 exports.getLock = getLock;
 const setLock = (value) => {
     isLocked = value;
-    console.log({ isLocked });
+    logger_1.sphinxLogger.info({ isLocked });
     if (lockTimeout)
         clearTimeout(lockTimeout);
     lockTimeout = setTimeout(() => {
         isLocked = false;
-        console.log({ isLocked });
+        logger_1.sphinxLogger.info({ isLocked });
     }, 1000 * 60 * 2);
 };
 exports.setLock = setLock;
 function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('queryRoute');
+        logger_1.sphinxLogger.info('queryRoute', logger_1.logging.Lightning);
         if (IS_GREENLIGHT) {
             // shim for now
             return {
@@ -217,7 +217,7 @@ exports.newAddress = newAddress;
 // for payingn invoice and invite invoice
 function sendPayment(payment_request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('sendPayment');
+        logger_1.sphinxLogger.info('sendPayment', logger_1.logging.Lightning);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             if ((0, proxy_1.isProxy)()) {
@@ -274,7 +274,7 @@ function sendPayment(payment_request, ownerPubkey) {
 }
 exports.sendPayment = sendPayment;
 const keysend = (opts, ownerPubkey) => {
-    log('keysend');
+    logger_1.sphinxLogger.info('keysend', logger_1.logging.Lightning);
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -405,7 +405,7 @@ exports.loadRouter = loadRouter;
 const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('keysendMessage');
+        logger_1.sphinxLogger.info('keysendMessage', logger_1.logging.Lightning);
         return new Promise(function (resolve, reject) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!opts.data || typeof opts.data !== 'string') {
@@ -439,7 +439,7 @@ function keysendMessage(opts, ownerPubkey) {
                         yield (0, helpers_1.sleep)(432);
                     }
                     catch (e) {
-                        console.log(e);
+                        logger_1.sphinxLogger.error(e);
                         fail = true;
                     }
                 }));
@@ -474,7 +474,7 @@ function signAscii(ascii, ownerPubkey) {
 }
 exports.signAscii = signAscii;
 function listInvoices() {
-    log('listInvoices');
+    logger_1.sphinxLogger.info('listInvoices', logger_1.logging.Lightning);
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         lightning.listInvoices({
@@ -493,7 +493,7 @@ function listInvoices() {
 exports.listInvoices = listInvoices;
 function listAllInvoices() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> list all invoices');
+        logger_1.sphinxLogger.info(`=> list all invoices`);
         const invs = yield paginateInvoices(40);
         return invs;
     });
@@ -532,9 +532,9 @@ function listInvoicesPaginated(limit, offset) {
 // need to upgrade to .10 for this
 function listAllPayments() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> list all payments');
+        logger_1.sphinxLogger.info('=> list all payments');
         const pays = yield paginatePayments(40); // max num
-        console.log('pays', pays && pays.length);
+        logger_1.sphinxLogger.info(`pays ${pays && pays.length}`);
         return pays;
     });
 }
@@ -571,7 +571,7 @@ function listPaymentsPaginated(limit, offset) {
 }
 exports.listPaymentsPaginated = listPaymentsPaginated;
 function listAllPaymentsFull() {
-    console.log('=> list all payments');
+    logger_1.sphinxLogger.info('=> list all payments');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         lightning.listPayments({}, (err, response) => {
@@ -600,7 +600,7 @@ function signMessage(msg, ownerPubkey) {
 }
 exports.signMessage = signMessage;
 function signBuffer(msg, ownerPubkey) {
-    log('signBuffer');
+    logger_1.sphinxLogger.info('signBuffer', logger_1.logging.Lightning);
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
             if (IS_GREENLIGHT) {
@@ -649,7 +649,7 @@ function verifyBytes(msg, sig) {
 exports.verifyBytes = verifyBytes;
 // msg input is hex encoded, sig is zbase32 encoded
 function verifyMessage(msg, sig, ownerPubkey) {
-    log('verifyMessage');
+    logger_1.sphinxLogger.info('verifyMessage', logger_1.logging.Lightning);
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
             if (IS_GREENLIGHT) {
@@ -751,7 +751,7 @@ function addInvoice(request, ownerPubkey) {
 exports.addInvoice = addInvoice;
 function listPeers(args, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('listChannels');
+        logger_1.sphinxLogger.info('listChannels', logger_1.logging.Lightning);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(true, ownerPubkey);
             const opts = interfaces.listPeersRequest(args);
@@ -769,7 +769,7 @@ function listPeers(args, ownerPubkey) {
 exports.listPeers = listPeers;
 function listChannels(args, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('listChannels');
+        logger_1.sphinxLogger.info('listChannels', logger_1.logging.Lightning);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             const cmd = interfaces.listChannelsCommand();
@@ -788,7 +788,7 @@ function listChannels(args, ownerPubkey) {
 exports.listChannels = listChannels;
 function pendingChannels(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('pendingChannels');
+        logger_1.sphinxLogger.info('pendingChannels', logger_1.logging.Lightning);
         if (IS_GREENLIGHT)
             return [];
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -807,7 +807,7 @@ function pendingChannels(ownerPubkey) {
 exports.pendingChannels = pendingChannels;
 function connectPeer(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('connectPeer');
+        logger_1.sphinxLogger.info('connectPeer', logger_1.logging.Lightning);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning();
             const req = interfaces.connectPeerRequest(args);
@@ -825,7 +825,7 @@ function connectPeer(args) {
 exports.connectPeer = connectPeer;
 function openChannel(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('openChannel');
+        logger_1.sphinxLogger.info('openChannel', logger_1.logging.Lightning);
         const opts = args || {};
         if (args && args.node_pubkey) {
             opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey);
@@ -846,7 +846,7 @@ function openChannel(args) {
 exports.openChannel = openChannel;
 function complexBalances(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('complexBalances');
+        logger_1.sphinxLogger.info('complexBalances', logger_1.logging.Lightning);
         const channelList = yield listChannels({}, ownerPubkey);
         const { channels } = channelList;
         if (IS_GREENLIGHT) {
@@ -873,7 +873,7 @@ function complexBalances(ownerPubkey) {
 exports.complexBalances = complexBalances;
 function channelBalance(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        log('channelBalance');
+        logger_1.sphinxLogger.info('channelBalance', logger_1.logging.Lightning);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             lightning.channelBalance({}, function (err, response) {
@@ -930,10 +930,4 @@ function ascii_to_hexa(str) {
 //     return lightningClient
 //   }
 // }
-const yeslog = logger_1.logging.Lightning;
-function log(a, b, c) {
-    if (!yeslog)
-        return;
-    console.log('[lightning]', [...arguments]);
-}
 //# sourceMappingURL=lightning.js.map

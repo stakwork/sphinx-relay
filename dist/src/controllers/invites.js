@@ -16,6 +16,7 @@ const jsonUtils = require("../utils/json");
 const hub_1 = require("../hub");
 // import * as proxy from '../utils/proxy'
 const res_1 = require("../utils/res");
+const logger_1 = require("../utils/logger");
 const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { invite_string } = req.body;
     const params = {
@@ -51,7 +52,7 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // 	dbInvite.update({ status: invite.invite_status })
         // }
         if (response.payment_error) {
-            console.log('=> payInvite ERROR', response.payment_error);
+            logger_1.sphinxLogger.error(`=> payInvite ERROR ${response.payment_error}`);
             res.status(200);
             res.json({ success: false, error: response.payment_error });
             res.end();
@@ -66,7 +67,7 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
     });
     const onFailure = (response) => {
-        console.log('=> payInvite ERROR', response);
+        logger_1.sphinxLogger.error(`=> payInvite ERROR ${response}`);
         res.status(200);
         res.json({ success: false });
         res.end();
@@ -92,7 +93,7 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         },
     };
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
-        console.log('response', response);
+        logger_1.sphinxLogger.info(`response ${response}`);
         const inviteCreated = response.object;
         const contact = yield models_1.models.Contact.create({
             alias: nickname,

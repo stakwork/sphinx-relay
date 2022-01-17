@@ -39,13 +39,12 @@ function lsatAlreadyExists(lsat) {
 function payForLsat(paymentRequest) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!paymentRequest) {
-            if (logger_1.logging.Lightning)
-                console.log('[pay invoice] "payment_request" is empty');
+            logger_1.sphinxLogger.error('[pay invoice] "payment_request" is empty', logger_1.logging.Lightning);
             return;
         }
-        console.log(`[pay invoice] ${paymentRequest}`);
+        logger_1.sphinxLogger.info(`[pay invoice] ${paymentRequest}`, logger_1.logging.Lightning);
         const response = yield Lightning.sendPayment(paymentRequest);
-        console.log('[pay invoice data]', response);
+        logger_1.sphinxLogger.info(['[pay invoice data]', response], logger_1.logging.Lightning);
         return response.payment_preimage.toString('hex');
     });
 }
@@ -53,8 +52,7 @@ exports.payForLsat = payForLsat;
 function saveLsat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = req.owner.id;
-        if (logger_1.logging.Express)
-            console.log(`=> saveLsat`);
+        logger_1.sphinxLogger.info(`=> saveLsat`, logger_1.logging.Express);
         const { paymentRequest, macaroon, issuer, paths, metadata } = req.body;
         if (!paymentRequest || !macaroon || !issuer) {
             return (0, res_1.failure)(res, 'Missing required LSAT data');
@@ -64,16 +62,13 @@ function saveLsat(req, res) {
             lsat = lsat_js_1.Lsat.fromMacaroon(macaroon, paymentRequest);
         }
         catch (e) {
-            if (logger_1.logging.Lsat) {
-                console.error('[save lsat] Problem getting Lsat:', e.message);
-            }
+            logger_1.sphinxLogger.error(['[save lsat] Problem getting Lsat:', e.message], logger_1.logging.Lsat);
             res.status(400);
             return res.json({ success: false, error: 'invalid lsat macaroon' });
         }
         const identifier = lsat.id;
         if (yield lsatAlreadyExists(lsat)) {
-            if (logger_1.logging.Lsat)
-                console.error('[pay for lsat] Lsat already exists: ', identifier);
+            logger_1.sphinxLogger.info(['[pay for lsat] Lsat already exists: ', identifier], logger_1.logging.Lsat);
             return (0, res_1.failure)(res, `Could not save lsat. Already exists`);
         }
         let preimage;
@@ -81,8 +76,7 @@ function saveLsat(req, res) {
             preimage = yield payForLsat(paymentRequest);
         }
         catch (e) {
-            if (logger_1.logging.Lsat)
-                console.error('[pay for lsat] Problem paying for lsat:', e);
+            logger_1.sphinxLogger.error(['[pay for lsat] Problem paying for lsat:', e], logger_1.logging.Lsat);
             res.status(500);
             return (0, res_1.failure)(res, 'Could not pay for lsat');
         }
@@ -114,8 +108,7 @@ function getLsat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = req.owner.id;
         const identifier = req.params.identifier;
-        if (logger_1.logging.Express)
-            console.log(`=> getLsat`);
+        logger_1.sphinxLogger.info(`=> getLsat`, logger_1.logging.Express);
         try {
             const lsat = yield models_1.models.Lsat.findOne({
                 where: { tenant, identifier },
@@ -137,8 +130,7 @@ exports.getLsat = getLsat;
 function listLsats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = req.owner.id;
-        if (logger_1.logging.Express)
-            console.log(`=> listLsats`);
+        logger_1.sphinxLogger.info(`=> listLsats`, logger_1.logging.Express);
         try {
             const lsats = yield models_1.models.Lsat.findAll({
                 where: { tenant },
@@ -157,8 +149,7 @@ function updateLsat(req, res) {
         const tenant = req.owner.id;
         const identifier = req.params.identifier;
         const body = req.body;
-        if (logger_1.logging.Express)
-            console.log(`=> updateLsat ${identifier}`);
+        logger_1.sphinxLogger.info(`=> updateLsat ${identifier}`, logger_1.logging.Express);
         try {
             yield models_1.models.Lsat.update(body, {
                 where: { tenant, identifier },
@@ -175,8 +166,7 @@ function deleteLsat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = req.owner.id;
         const identifier = req.params.identifier;
-        if (logger_1.logging.Express)
-            console.log(`=> deleteLsat ${identifier}`);
+        logger_1.sphinxLogger.info(`=> deleteLsat ${identifier}`, logger_1.logging.Express);
         try {
             yield models_1.models.Lsat.destroy({
                 where: { tenant, identifier },

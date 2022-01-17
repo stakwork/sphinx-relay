@@ -13,6 +13,7 @@ exports.urlBase64FromHex = exports.testLDAT = exports.urlBase64FromBytes = expor
 const zbase32 = require("./zbase32");
 const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
+const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 /*
 Lightning Data Access Token
@@ -104,7 +105,7 @@ function parseLDAT(ldat) {
 exports.parseLDAT = parseLDAT;
 function testLDAT() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('testLDAT');
+        logger_1.sphinxLogger.info(`testLDAT`);
         const terms = {
             host: '',
             ttl: 31536000,
@@ -118,7 +119,7 @@ function testLDAT() {
             ownerPubkey: '0373ca36a331d8fd847f190908715a34997b15dc3c5d560ca032cf3412fcf494e4',
         };
         const token = yield tokenFromTerms(terms);
-        console.log(token);
+        logger_1.sphinxLogger.info(token);
         const terms2 = {
             host: '',
             ttl: 0,
@@ -131,8 +132,8 @@ function testLDAT() {
             ownerPubkey: '',
         };
         const token2 = yield tokenFromTerms(terms2);
-        console.log(token2);
-        console.log(parseLDAT(token2));
+        logger_1.sphinxLogger.info(token2);
+        logger_1.sphinxLogger.info(parseLDAT(token2));
     });
 }
 exports.testLDAT = testLDAT;

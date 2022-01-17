@@ -17,9 +17,10 @@ const constants_1 = require("../../constants");
 const tribes_1 = require("../../utils/tribes");
 const broadcast_1 = require("./broadcast");
 const pay_1 = require("./pay");
+const logger_1 = require("../../utils/logger");
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=> processAction', req.body);
+        logger_1.sphinxLogger.info(`=> processAction ${req.body}`);
         let body = req.body;
         if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
             try {
@@ -29,7 +30,7 @@ function processAction(req, res) {
                     body = dataBody;
             }
             catch (e) {
-                console.log(e);
+                logger_1.sphinxLogger.error(e);
                 return (0, res_1.failure)(res, 'failed to parse webhook body json');
             }
         }
@@ -98,10 +99,10 @@ function finalAction(a) {
                 },
             });
             if (!botMember)
-                return console.log('no botMember');
+                return logger_1.sphinxLogger.error(`no botMember`);
             const dest = botMember.memberPubkey;
             if (!dest)
-                return console.log('no dest to send to');
+                return logger_1.sphinxLogger.error(`no dest to send to`);
             const topic = `${dest}/${myBot.uuid}`;
             const data = {
                 action,
@@ -131,12 +132,12 @@ function finalAction(a) {
                 yield network.signAndSend({ dest, data, route_hint }, owner, topic);
             }
             catch (e) {
-                console.log('=> couldnt mqtt publish');
+                logger_1.sphinxLogger.error(`=> couldnt mqtt publish`);
             }
             return; // done
         }
         if (action === 'keysend') {
-            return console.log('=> BOT KEYSEND to', pubkey);
+            return logger_1.sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`);
             // if (!(pubkey && pubkey.length === 66 && amount)) {
             //     throw 'wrong params'
             // }
@@ -160,7 +161,7 @@ function finalAction(a) {
             (0, broadcast_1.default)(a);
         }
         else {
-            return console.log('invalid action');
+            return logger_1.sphinxLogger.error(`invalid action`);
         }
     });
 }

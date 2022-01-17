@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendJson = exports.send = exports.connect = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
+const logger_1 = require("../utils/logger");
 // import * as WebSocket from 'ws'
 const socketio = require('socket.io');
 // { ownerID: [client1, client2] }
@@ -41,7 +42,7 @@ function connect(server) {
         return next(new Error('authentication error'));
     }));
     io.on('connection', (client) => {
-        console.log('=> [socket.io] connected!', client.ownerID);
+        logger_1.sphinxLogger.info(`=> [socket.io] connected! ${client.ownerID}`);
         addClient(client.ownerID, client);
         client.on('disconnect', (reason) => {
             removeClientById(client.ownerID, client.id);

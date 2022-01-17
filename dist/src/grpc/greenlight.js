@@ -19,6 +19,7 @@ const crypto = require("crypto");
 const interfaces = require("./interfaces");
 const lightning_1 = require("./lightning");
 const Lightning = require("./lightning");
+const logger_1 = require("../utils/logger");
 const config = (0, config_1.loadConfig)();
 function initGreenlight() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -90,10 +91,10 @@ function startGreenlightInit() {
                 yield recoverGreenlight(GID);
             }
             const r = yield schedule(GID.node_id);
-            console.log(r.node_id.toString('hex'));
+            logger_1.sphinxLogger.info(r.node_id.toString('hex'));
         }
         catch (e) {
-            console.log('initGreenlight error', e);
+            logger_1.sphinxLogger.error(`initGreenlight error ${e}`);
         }
     });
 }
@@ -116,7 +117,7 @@ function schedule(pubkey) {
             });
         }
         catch (e) {
-            console.log(e);
+            logger_1.sphinxLogger.error(e);
         }
     }));
 }
@@ -129,13 +130,13 @@ function recoverGreenlight(gid) {
             const res = yield recover(gid.node_id, challenge, signature);
             const keyLoc = config.tls_key_location;
             const chainLoc = config.tls_chain_location;
-            console.log('RECOVER KEY', keyLoc, res.device_key);
+            logger_1.sphinxLogger.info(`RECOVER KEY ${keyLoc} ${res.device_key}`);
             fs.writeFileSync(keyLoc, res.device_key);
             fs.writeFileSync(chainLoc, res.device_cert);
             writeTlsLocation();
         }
         catch (e) {
-            console.log('Greenlight register error', e);
+            logger_1.sphinxLogger.info(`Greenlight register error ${e}`);
         }
     });
 }
@@ -153,7 +154,7 @@ function registerGreenlight(gid, rootkey, secretPath) {
             const res = yield register(gid.node_id, gid.bip32_key + gid.bolt12_key, challenge, signature);
             const keyLoc = config.tls_key_location;
             const chainLoc = config.tls_chain_location;
-            console.log('WRITE KEY', keyLoc, res.device_key);
+            logger_1.sphinxLogger.info(`WRITE KEY ${keyLoc} ${res.device_key}`);
             fs.writeFileSync(keyLoc, res.device_key);
             fs.writeFileSync(chainLoc, res.device_cert);
             writeTlsLocation();
@@ -161,7 +162,7 @@ function registerGreenlight(gid, rootkey, secretPath) {
             fs.writeFileSync(secretPath, Buffer.from(rootkey, 'hex'));
         }
         catch (e) {
-            console.log('Greenlight register error', e);
+            logger_1.sphinxLogger.error(`Greenlight register error ${e}`);
         }
     });
 }
@@ -206,7 +207,7 @@ function register(pubkey, bip32_key, challenge, signature) {
                 challenge: ByteBuffer.fromHex(challenge),
                 signature: ByteBuffer.fromHex(signature),
             }, (err, response) => {
-                console.log(err, response);
+                logger_1.sphinxLogger.info(`${err} ${response}`);
                 if (!err) {
                     resolve(response);
                 }
@@ -230,7 +231,7 @@ function recover(pubkey, challenge, signature) {
                 challenge: ByteBuffer.fromHex(challenge),
                 signature: ByteBuffer.fromHex(signature),
             }, (err, response) => {
-                console.log(err, response);
+                logger_1.sphinxLogger.info(`${err} ${response}`);
                 if (!err) {
                     resolve(response);
                 }
@@ -253,7 +254,7 @@ function streamHsmRequests() {
             var call = lightning.streamHsmRequests({});
             call.on('data', function (response) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    console.log('DATA', response);
+                    logger_1.sphinxLogger.info(`DATA ${response}`);
                     try {
                         let sig = '';
                         if (response.context) {
@@ -262,8 +263,8 @@ function streamHsmRequests() {
                             sig = libhsmd_1.default.Handle(capabilities_bitset, dbid, peer, response.raw.toString('hex'));
                         }
                         else {
-                            console.log('RAW ====== ');
-                            console.log(response.raw.toString('hex'));
+                            logger_1.sphinxLogger.info(`RAW ====== `);
+                            logger_1.sphinxLogger.info(response.raw.toString('hex'));
                             sig = libhsmd_1.default.Handle(capabilities_bitset, 0, null, response.raw.toString('hex'));
                         }
                         lightning.respondHsmRequest({
@@ -271,28 +272,28 @@ function streamHsmRequests() {
                             raw: ByteBuffer.fromHex(sig),
                         }, (err, response) => {
                             if (err)
-                                console.log('[HSMD] error', err);
+                                logger_1.sphinxLogger.error(`[HSMD] error ${err}`);
                             else
-                                console.log('[HSMD] success', response);
+                                logger_1.sphinxLogger.info(`[HSMD] success ${response}`);
                         });
                     }
                     catch (e) {
-                        console.log('[HSMD] failure', e);
+                        logger_1.sphinxLogger.error(`[HSMD] failure ${e}`);
                     }
                 });
             });
             call.on('status', function (status) {
-                console.log('[HSMD] Status', status.code, status);
+                logger_1.sphinxLogger.info(`[HSMD] Status ${status.code} ${status}`);
             });
             call.on('error', function (err) {
-                console.error('[HSMD] Error', err.code);
+                logger_1.sphinxLogger.error(`[HSMD] Error ${err.code}`);
             });
             call.on('end', function () {
-                console.log(`[HSMD] Closed stream`);
+                logger_1.sphinxLogger.info(`[HSMD] Closed stream`);
             });
         }
         catch (e) {
-            console.log('[HSMD] last error:', e);
+            logger_1.sphinxLogger.error(`[HSMD] last error: ${e}`);
         }
     });
 }

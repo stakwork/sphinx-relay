@@ -47,43 +47,37 @@ const SATS_PER_USER = config.proxy_initial_sats || 5000;
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
         if (!isProxy()) {
-            if (logger_1.logging.Proxy)
-                console.log('[proxy] not proxy');
+            logger_1.sphinxLogger.error(`[proxy] not proxy`, logger_1.logging.Proxy);
             return;
         }
         const newusers = yield models_1.models.Contact.findAll({
             where: { isOwner: true, authToken: null },
         });
         if (newusers.length >= NEW_USER_NUM) {
-            if (logger_1.logging.Proxy)
-                console.log('[proxy] already have new users');
+            logger_1.sphinxLogger.error(`[proxy] already have new users`, logger_1.logging.Proxy);
             return; // we already have the mimimum
         }
         const n1 = NEW_USER_NUM - newusers.length;
         let n; // the number of new users to create
         if (check_proxy_balance) {
             const virtualBal = yield getProxyTotalBalance();
-            if (logger_1.logging.Proxy)
-                console.log('[proxy] total balance', virtualBal);
+            logger_1.sphinxLogger.info(`[proxy] total balance ${virtualBal}`, logger_1.logging.Proxy);
             const realBal = yield getProxyLNDBalance();
-            if (logger_1.logging.Proxy)
-                console.log('[proxy] LND balance', virtualBal);
+            logger_1.sphinxLogger.info(`[proxy] LND balance ${virtualBal}`, logger_1.logging.Proxy);
             let availableBalance = realBal - virtualBal;
             if (availableBalance < SATS_PER_USER)
                 availableBalance = 1;
             const n2 = Math.floor(availableBalance / SATS_PER_USER);
             const n = Math.min(n1, n2);
             if (!n) {
-                if (logger_1.logging.Proxy)
-                    console.log('[proxy] not enough sats');
+                logger_1.sphinxLogger.error(`[proxy] not enough sats`, logger_1.logging.Proxy);
                 return;
             }
         }
         else {
             n = n1;
         }
-        if (logger_1.logging.Proxy)
-            console.log('=> gen new users:', n);
+        logger_1.sphinxLogger.info(`=> gen new users: ${n}`, logger_1.logging.Proxy);
         const arr = new Array(n);
         const rootpk = yield getProxyRootPubkey();
         yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {
@@ -112,11 +106,10 @@ function generateNewUser(rootpk) {
             const created = yield models_1.models.Contact.create(contact);
             // set tenant to self!
             created.update({ tenant: created.id });
-            if (logger_1.logging.Proxy)
-                console.log('=> CREATED OWNER:', created.dataValues.publicKey);
+            logger_1.sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`);
         }
         catch (e) {
-            console.log('=> could not gen new user', e);
+            logger_1.sphinxLogger.error(`=> could not gen new user ${e}`);
         }
     });
 }
@@ -137,7 +130,7 @@ function generateNewExternalUser(pubkey, sig) {
             };
         }
         catch (e) {
-            console.log('=> could not gen new external user', e);
+            logger_1.sphinxLogger.error(`=> could not gen new external user ${e}`);
         }
     });
 }
@@ -192,7 +185,7 @@ function loadProxyLightning(ownerPubkey) {
             return the;
         }
         catch (e) {
-            console.log('ERROR in loadProxyLightning', e);
+            logger_1.sphinxLogger.error(`ERROR in loadProxyLightning ${e}`);
         }
     });
 }

@@ -17,19 +17,20 @@ const jsonUtils = require("../../utils/json");
 const socket = require("../../utils/socket");
 const constants_1 = require("../../constants");
 const tribes_1 = require("../../utils/tribes");
+const logger_1 = require("../../utils/logger");
 function broadcast(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid } = a;
-        console.log('=> BOT BROADCAST');
+        logger_1.sphinxLogger.info(`=> BOT BROADCAST`);
         if (!content)
-            return console.log('no content');
+            return logger_1.sphinxLogger.error(`no content`);
         if (!chat_uuid)
-            return console.log('no chat_uuid');
+            return logger_1.sphinxLogger.error(`no chat_uuid`);
         const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
         if (!(theChat && theChat.id))
-            return console.log('no chat');
+            return logger_1.sphinxLogger.error(`no chat`);
         if (theChat.type !== constants_1.default.chat_types.tribe)
-            return console.log('not a tribe');
+            return logger_1.sphinxLogger.error(`not a tribe`);
         const owner = yield models_1.models.Contact.findOne({
             where: { id: theChat.tenant },
         });
@@ -76,7 +77,7 @@ function broadcast(a) {
             type: constants_1.default.message_types.bot_res,
             success: () => ({ success: true }),
             failure: (e) => {
-                return console.log(e);
+                return logger_1.sphinxLogger.error(e);
             },
             isForwarded: true,
         });

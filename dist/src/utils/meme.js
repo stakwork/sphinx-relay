@@ -43,8 +43,7 @@ function lazyToken(pubkey, host) {
             return t;
         }
         catch (e) {
-            if (logger_1.logging.Meme)
-                console.log('[meme] error getting token', e);
+            logger_1.sphinxLogger.error(`[meme] error getting token ${e}`, logger_1.logging.Meme);
         }
     });
 }
@@ -77,8 +76,7 @@ function getMediaToken(ownerPubkey, host) {
             let pubkey = ownerPubkey;
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = (0, ldat_1.urlBase64FromBytes)(sigBytes);
-            if (logger_1.logging.Meme)
-                console.log('[meme] verify', pubkey);
+            logger_1.sphinxLogger.info(`[meme] verify ${pubkey}`, logger_1.logging.Meme);
             const bod = yield rp.post(theURL + 'verify', {
                 form: { id: r.id, sig: sigBase64, pubkey },
             });

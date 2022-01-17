@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkTag = exports.checkCommitHash = void 0;
 const child_process_1 = require("child_process");
+const logger_1 = require("./logger");
 let commitHash;
 function checkCommitHash() {
     return new Promise((resolve, reject) => {
@@ -20,7 +21,7 @@ function checkCommitHash() {
             });
         }
         catch (e) {
-            console.log(e);
+            logger_1.sphinxLogger.error(e);
             resolve('');
         }
     });
@@ -44,7 +45,7 @@ function checkTag() {
             });
         }
         catch (e) {
-            console.log(e);
+            logger_1.sphinxLogger.error(e);
             resolve('');
         }
     });

@@ -22,12 +22,13 @@ const short = require("short-uuid");
 const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
+const logger_1 = require("../utils/logger");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
-    console.log('[send payment]', req.body);
+    logger_1.sphinxLogger.info(`[send payment] ${req.body}`);
     const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
         (0, feed_1.anonymousKeysend)(owner, destination_key, route_hint, amount || '', text || '', function (body) {
@@ -125,12 +126,12 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.sendPayment = sendPayment;
 const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received payment', { payload });
+    logger_1.sphinxLogger.info(`received payment ${{ payload }}`);
     var date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log('=> no group chat!');
+        return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
     const tenant = owner.id;
     const msg = {

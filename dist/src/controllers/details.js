@@ -19,6 +19,7 @@ const models_1 = require("../models");
 const config_1 = require("../utils/config");
 const hub_1 = require("../hub");
 const sequelize_1 = require("sequelize");
+const logger_1 = require("../utils/logger");
 const config = (0, config_1.loadConfig)();
 const VERSION = 2;
 function getRelayVersion(req, res) {
@@ -180,7 +181,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
     }
     catch (e) {
-        console.log('ERROR getBalance', e);
+        logger_1.sphinxLogger.error(`ERROR getBalance ${e}`);
         res.json({ success: false });
     }
     res.end();

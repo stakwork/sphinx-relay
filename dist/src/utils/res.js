@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.failure200 = exports.failure = exports.success = void 0;
+const logger_1 = require("./logger");
 function success(res, json) {
     res.status(200);
     res.json({
@@ -12,7 +13,7 @@ function success(res, json) {
 exports.success = success;
 function failure(res, e) {
     const errorMessage = (e && e.message) || e;
-    console.log('--> failure:', errorMessage);
+    logger_1.sphinxLogger.error(`--> failure: ${errorMessage}`);
     res.status(400);
     res.json({
         success: false,

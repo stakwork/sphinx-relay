@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../models");
+const logger_1 = require("./logger");
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
         addTableColumn('sphinx_chats', 'feed_type', 'INT');
@@ -133,7 +134,7 @@ function migrate() {
         addTableColumn('sphinx_chats', 'escrow_millis', 'BIGINT');
         // add LSAT table
         try {
-            console.log('adding lsat table');
+            logger_1.sphinxLogger.info('adding lsat table', logger_1.logging.DB);
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_relay_lsats (
       id BIGINT NOT NULL PRIMARY KEY,
@@ -150,7 +151,7 @@ function migrate() {
     )`);
         }
         catch (e) {
-            console.error('problem adding lsat table:', e.message);
+            logger_1.sphinxLogger.error(['problem adding lsat table:', e.message], logger_1.logging.DB);
         }
     });
 }
@@ -162,7 +163,7 @@ function addTenant(tableName) {
             yield models_1.sequelize.query(`update ${tableName} set tenant=1 where tenant IS NULL`);
         }
         catch (e) {
-            console.log(e);
+            logger_1.sphinxLogger.error(e, logger_1.logging.DB);
         }
     });
 }
@@ -172,7 +173,7 @@ function addTableColumn(table, column, type = 'TEXT') {
             yield models_1.sequelize.query(`alter table ${table} add ${column} ${type}`);
         }
         catch (e) {
-            //console.log('=> migrate failed',e)
+            logger_1.sphinxLogger.error(['=> migrate failed'], logger_1.logging.DB);
         }
     });
 }

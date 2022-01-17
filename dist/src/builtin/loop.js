@@ -16,6 +16,7 @@ const models_1 = require("../models");
 const constants_1 = require("../constants");
 const child_process_1 = require("child_process");
 const config_1 = require("../utils/config");
+const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
 const config = (0, config_1.loadConfig)();
 var validate = require('bitcoin-address-validation');
@@ -134,13 +135,13 @@ function init() {
                     `--fast`,
                     `--addr=${addy}`,
                 ];
-                console.log('=> SPAWN', cmd, args);
+                logger_1.sphinxLogger.info(`=> SPAWN ${cmd} ${args}`);
                 let childProcess = (0, child_process_1.spawn)(cmd, args);
                 childProcess.stdout.on('data', function (data) {
                     const stdout = data.toString();
-                    console.log('LOOPBOT stdout:', stdout);
+                    logger_1.sphinxLogger.info(`LOOPBOT stdout: ${stdout}`);
                     if (stdout) {
-                        console.log('=> LOOPBOT stdout', stdout);
+                        logger_1.sphinxLogger.info(`=> LOOPBOT stdout ${stdout}`);
                         if (stdout.includes('CONTINUE SWAP?')) {
                             childProcess.stdin.write('y\n');
                         }
@@ -155,17 +156,17 @@ function init() {
                     }
                 });
                 childProcess.stderr.on('data', function (data) {
-                    console.log('STDERR:', data.toString());
+                    logger_1.sphinxLogger.error(`STDERR: ${data.toString()}`);
                 });
                 childProcess.on('error', (error) => {
-                    console.log('error', error.toString());
+                    logger_1.sphinxLogger.error(`error ${error.toString()}`);
                 });
                 childProcess.on('close', (code) => {
-                    console.log('CHILD PROCESS closed', code);
+                    logger_1.sphinxLogger.info(`CHILD PROCESS closed ${code}`);
                 });
             }
             catch (e) {
-                console.log('LoopBot error', e);
+                logger_1.sphinxLogger.error(`LoopBot error ${e}`);
             }
         }
         else {

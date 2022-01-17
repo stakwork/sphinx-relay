@@ -16,19 +16,20 @@ const jsonUtils = require("../../utils/json");
 const socket = require("../../utils/socket");
 const constants_1 = require("../../constants");
 const tribes_1 = require("../../utils/tribes");
+const logger_1 = require("../../utils/logger");
 function pay(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id } = a;
-        console.log('=> BOT PAY', JSON.stringify(a, null, 2));
+        logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
         if (!recipient_id)
-            return console.log('no recipient_id');
+            return logger_1.sphinxLogger.error(`no recipient_id`);
         if (!chat_uuid)
-            return console.log('no chat_uuid');
+            return logger_1.sphinxLogger.error(`no chat_uuid`);
         const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
         if (!(theChat && theChat.id))
-            return console.log('no chat');
+            return logger_1.sphinxLogger.error(`no chat`);
         if (theChat.type !== constants_1.default.chat_types.tribe)
-            return console.log('not a tribe');
+            return logger_1.sphinxLogger.error(`not a tribe`);
         const owner = yield models_1.models.Contact.findOne({
             where: { id: theChat.tenant },
         });
@@ -69,7 +70,7 @@ function pay(a) {
             type: constants_1.default.message_types.boost,
             success: () => ({ success: true }),
             failure: (e) => {
-                return console.log(e);
+                return logger_1.sphinxLogger.error(e);
             },
             isForwarded: true,
             realSatsContactId: recipient_id,

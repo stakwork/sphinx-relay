@@ -54,7 +54,7 @@ function getTribeOwnersChatByUUID(uuid) {
             return r && r[0] && r[0].dataValues;
         }
         catch (e) {
-            console.log(e);
+            logger_1.sphinxLogger.error(e);
         }
     });
 }
@@ -75,8 +75,7 @@ function initializeClient(pubkey, host, onMessage) {
                             password: pwd,
                             reconnectPeriod: 0, // dont auto reconnect
                         });
-                        if (logger_1.logging.Tribes)
-                            console.log('[tribes] try to connect:', url);
+                        logger_1.sphinxLogger.info(`[tribes] try to connect: ${url}`, logger_1.logging.Tribes);
                         cl.on('connect', function () {
                             return __awaiter(this, void 0, void 0, function* () {
                                 // first check if its already connected to this host (in case it takes a long time)
@@ -87,14 +86,12 @@ function initializeClient(pubkey, host, onMessage) {
                                     resolve(clients[pubkey][host]);
                                     return;
                                 }
-                                if (logger_1.logging.Tribes)
-                                    console.log('[tribes] connected!');
+                                logger_1.sphinxLogger.info(`[tribes] connected!`, logger_1.logging.Tribes);
                                 if (!clients[pubkey])
                                     clients[pubkey] = {};
                                 clients[pubkey][host] = cl; // ADD TO MAIN STATE
                                 cl.on('close', function (e) {
-                                    if (logger_1.logging.Tribes)
-                                        console.log('[tribes] CLOSE', e);
+                                    logger_1.sphinxLogger.info(`[tribes] CLOSE ${e}`, logger_1.logging.Tribes);
                                     // setTimeout(() => reconnect(), 2000);
                                     connected = false;
                                     if (clients[pubkey] && clients[pubkey][host]) {
@@ -102,8 +99,7 @@ function initializeClient(pubkey, host, onMessage) {
                                     }
                                 });
                                 cl.on('error', function (e) {
-                                    if (logger_1.logging.Tribes)
-                                        console.log('[tribes] error: ', e.message || e);
+                                    logger_1.sphinxLogger.error(`[tribes] error:  ${e.message || e}`, logger_1.logging.Tribes);
                                 });
                                 cl.on('message', function (topic, message) {
                                     // console.log("============>>>>> GOT A MSG", topic, message)
@@ -112,10 +108,9 @@ function initializeClient(pubkey, host, onMessage) {
                                 });
                                 cl.subscribe(`${pubkey}/#`, function (err) {
                                     if (err)
-                                        console.log('[tribes] error subscribing', err);
+                                        logger_1.sphinxLogger.error(`[tribes] error subscribing ${err}`);
                                     else {
-                                        if (logger_1.logging.Tribes)
-                                            console.log('[tribes] subscribed!', `${pubkey}/#`);
+                                        logger_1.sphinxLogger.info(`[tribes] subscribed! ${pubkey}/#`, logger_1.logging.Tribes);
                                         resolve(cl);
                                     }
                                 });
@@ -123,8 +118,7 @@ function initializeClient(pubkey, host, onMessage) {
                         });
                     }
                     catch (e) {
-                        if (logger_1.logging.Tribes)
-                            console.log('[tribes] error initializing', e);
+                        logger_1.sphinxLogger.error(`[tribes] error initializing ${e}`, logger_1.logging.Tribes);
                     }
                 });
             }
@@ -176,7 +170,7 @@ function initAndSubscribeTopics(onMessage) {
             }
         }
         catch (e) {
-            console.log('TRIBES ERROR', e);
+            logger_1.sphinxLogger.error(`TRIBES ERROR ${e}`);
         }
     });
 }
@@ -199,7 +193,7 @@ function subExtraHostsForTenant(tenant, pubkey, onMessage) {
             const client = yield lazyClient(pubkey, host, onMessage);
             client.subscribe(`${pubkey}/#`, optz, function (err) {
                 if (err)
-                    console.log('[tribes] subscribe error 2', err);
+                    logger_1.sphinxLogger.error(`[tribes] subscribe error 2 ${err}`);
             });
         }));
     });
@@ -271,8 +265,7 @@ function updateTribeStats(myPubkey) {
             catch (e) { }
         }));
         if (myTribes.length) {
-            if (logger_1.logging.Tribes)
-                console.log(`[tribes] updated stats for ${myTribes.length} tribes`);
+            logger_1.sphinxLogger.info(`[tribes] updated stats for ${myTribes.length} tribes`, logger_1.logging.Tribes);
         }
     });
 }
@@ -285,8 +278,7 @@ function subscribe(topic, onMessage) {
         const client = yield lazyClient(pubkey, host, onMessage);
         if (client)
             client.subscribe(topic, function () {
-                if (logger_1.logging.Tribes)
-                    console.log('[tribes] added sub', host, topic);
+                logger_1.sphinxLogger.info(`[tribes] added sub ${host} ${topic}`, logger_1.logging.Tribes);
             });
     });
 }
@@ -300,7 +292,7 @@ function publish(topic, msg, ownerPubkey, cb) {
         if (client)
             client.publish(topic, msg, optz, function (err) {
                 if (err)
-                    console.log('[tribes] error publishing', err);
+                    logger_1.sphinxLogger.error(`[tribes] error publishing ${err}`);
                 else if (cb)
                     cb();
             });
@@ -343,7 +335,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
             // const j = await r.json()
         }
         catch (e) {
-            console.log('[tribes] unauthorized to declare');
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to declare`);
             throw e;
         }
     });
@@ -385,7 +377,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
             // const j = await r.json()
         }
         catch (e) {
-            console.log('[tribes] unauthorized to edit');
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to edit`);
             throw e;
         }
     });
@@ -408,7 +400,7 @@ function delete_tribe(uuid, owner_pubkey) {
             // const j = await r.json()
         }
         catch (e) {
-            console.log('[tribes] unauthorized to delete');
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to delete`);
             throw e;
         }
     });
@@ -427,7 +419,7 @@ function putActivity(uuid, host, owner_pubkey) {
             });
         }
         catch (e) {
-            console.log('[tribes] unauthorized to putActivity');
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to putActivity`);
             throw e;
         }
     });
@@ -454,7 +446,7 @@ function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
             });
         }
         catch (e) {
-            console.log('[tribes] unauthorized to putstats');
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to putstats`);
             throw e;
         }
     });

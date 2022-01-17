@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCertificate = void 0;
 const fs_1 = require("fs");
 const express = require("express");
+const logger_1 = require("./logger");
 const qs = require('qs');
 const axios = require('axios');
 var forge = require('node-forge');
@@ -63,21 +64,21 @@ function validateCert(port, data, endpoint, apiKey) {
             res.send(validationObject.file_validation_content.join('\n'));
         });
         let server = yield app.listen(port, () => {
-            console.log(`=> [ssl] validation server started at http://0.0.0.0:${port}`);
+            logger_1.sphinxLogger.info(`=> [ssl] validation server started at http://0.0.0.0:${port}`);
         });
         yield requestValidation(data.id, apiKey);
-        console.log('=> [ssl] waiting for certificate to be issued');
+        logger_1.sphinxLogger.info(`=> [ssl] waiting for certificate to be issued`);
         while (true) {
             let certData = yield getCert(data.id, apiKey);
             if (certData.status === 'issued') {
-                console.log('=> [ssl] certificate was issued');
+                logger_1.sphinxLogger.info(`=> [ssl] certificate was issued`);
                 break;
             }
-            console.log('=> [ssl] checking certificate again...');
+            logger_1.sphinxLogger.info(`=> [ssl] checking certificate again...`);
             yield sleep(2000);
         }
         yield server.close(() => {
-            console.log('=> [ssl] validation server stopped.');
+            logger_1.sphinxLogger.info(`=> [ssl] validation server stopped.`);
         });
         return;
     });
@@ -95,8 +96,8 @@ function requestValidation(id, apiKey) {
             },
         });
         if (res.data.success === false) {
-            console.log('=> [ssl] Failed to request certificate validation');
-            console.log(res.data);
+            logger_1.sphinxLogger.error(`=> [ssl] Failed to request certificate validation`);
+            logger_1.sphinxLogger.error(res.data);
             throw new Error('=> [ssl] Failing to provision ssl certificate');
         }
         return res.data;
@@ -147,9 +148,9 @@ function getCertificate(domain, port, save_ssl) {
         var endpoint = endpoint_tmp.replace(':3001', '');
         var keys = forge.pki.rsa.generateKeyPair(2048);
         var csr = generateCsr(keys, endpoint);
-        console.log('=> [ssl] Generated CSR');
+        logger_1.sphinxLogger.info(`=> [ssl] Generated CSR`);
         var res = yield requestCert(endpoint, csr, apiKey);
-        console.log('=> [ssl] Requested certificate');
+        logger_1.sphinxLogger.info(`=> [ssl] Requested certificate`);
         yield validateCert(port, res, endpoint, apiKey);
         var certData = yield downloadCert(res.id, apiKey);
         if (save_ssl === true) {
@@ -158,21 +159,21 @@ function getCertificate(domain, port, save_ssl) {
             }
             yield (0, fs_1.writeFile)(__dirname + '/zerossl/tls.cert', certData['certificate.crt'], function (err) {
                 if (err) {
-                    return console.log(err);
+                    return logger_1.sphinxLogger.error(err);
                 }
-                console.log('=> [ssl] wrote tls certificate');
+                logger_1.sphinxLogger.info(`=> [ssl] wrote tls certificate`);
             });
             yield (0, fs_1.writeFile)(__dirname + '/zerossl/ca.cert', certData['ca_bundle.crt'], function (err) {
                 if (err) {
-                    return console.log(err);
+                    return logger_1.sphinxLogger.error(err);
                 }
-                console.log('=> [ssl] wrote tls ca bundle');
+                logger_1.sphinxLogger.info(`=> [ssl] wrote tls ca bundle`);
             });
             yield (0, fs_1.writeFile)(__dirname + '/zerossl/tls.key', forge.pki.privateKeyToPem(keys.privateKey), function (err) {
                 if (err) {
-                    return console.log(err);
+                    return logger_1.sphinxLogger.error(err);
                 }
-                console.log('=> [ssl] wrote tls key');
+                logger_1.sphinxLogger.info(`=> [ssl] wrote tls key`);
             });
         }
         return {

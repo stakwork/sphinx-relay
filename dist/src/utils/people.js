@@ -13,6 +13,7 @@ exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
+const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, }, id) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -39,7 +40,7 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
             return person;
         }
         catch (e) {
-            console.log('[tribes] unauthorized to create person');
+            logger_1.sphinxLogger.error('[tribes] unauthorized to create person');
             throw e;
         }
     });
@@ -61,7 +62,7 @@ function deletePerson(host, id, owner_pubkey) {
             // const j = await r.json()
         }
         catch (e) {
-            console.log('[tribes] unauthorized to delete person');
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to delete person`);
             throw e;
         }
     });
