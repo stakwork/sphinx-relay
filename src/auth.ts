@@ -226,7 +226,9 @@ export async function authModule(req, res, next) {
    * we also want to check that the timestamp is within the minute or what
    * ever time value we set
    */
-  const transportToken = crypto.publicEncrypt('some entropy')
+
+  //get transportToken private key from somewhere
+  //const transportToken = crypto.publicEncrypt('some entropy')
 
   const x_user_token =
     req.headers['x-user-token'] || req.cookies['x-user-token']
@@ -240,38 +242,42 @@ export async function authModule(req, res, next) {
     res.end('Invalid credentials')
   } else {
     const user = await models.Contact.findOne({ where: { isOwner: true } })
-    let token = null
+    let token: Buffer = new Buffer([])
     if (x_user_token != null) {
       token = x_user_token
     } else if (x_transport_token != null) {
       // Here we are extracting the x_user_token to use later
       // to validate that it is the correct one saved for the owner
+
       token = crypto
-        .privateDecrypt('some entropy', x_transport_token)
+        .privateDecrypt('privateKey', x_transport_token)
         .slice(0, 12)
-      const timePeriod = 1
 
       // We are extracting the timestamp from the x_transport_token
       // Need to figure out if this is the correct way to extract or if there
       // is a more sophisticated way
       const timestamp = crypto
-        .privateDecrypt('some entropy', x_transport_token)
+        .privateDecrypt('privateKey', x_transport_token)
         .slice(13, 20)
-      const timeval = 1
+      const timePeriod = 1
 
       // We want to check to see if the timestamp in the
       // x_transport_token is too old because then we
       // will not have a record of requests past that timestamp to
       // see if a x_transport_token is reused
-      if (timestamp < Date.now() - 1) {
+      if (timestamp.readUInt32BE() < Date.now() - timePeriod) {
         return failure(res, 'request too old')
       }
 
       // Here we want to check if there is a saved request
       // that uses the same x_transport_token to stop a replay attack
-      if (x_transport_token == someOtherRequestTokenSaved) {
-        return failure(res, 'duplicate x_transport_token used')
-      }
+      // TODO: should we save the data on redis if so we need to add redis to sphinx relay?
+      const arrayOfRequests = []
+      arrayOfRequests.forEach((requestItemTransportToken) => {
+        if (x_transport_token == requestItemTransportToken) {
+          return failure(res, 'duplicate x_transport_token used')
+        }
+      })
     }
     const hashedToken = crypto
       .createHash('sha256')

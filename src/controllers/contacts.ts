@@ -12,6 +12,7 @@ import * as network from '../network'
 import { isProxy, generateNewExternalUser } from '../utils/proxy'
 import { logging } from '../utils/logger'
 import * as moment from 'moment'
+import * as rsa from '../crypto/rsa'
 
 export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
@@ -210,15 +211,21 @@ export const generateToken = async (req, res) => {
     if (isProxy()) {
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
-    // TODO: create transport token and send back to client
-    const transportToken = crypto.publicEncrypt(
-      'some entropy make into a config value'
-    )
-
+    //  create transport token and send back to client
+    // save private key and send public key
+    const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
+    // TODO: save transport private key
     owner.update({ authToken: hash })
+    // Send transport pubkey
+    success(res, {
+      id: (owner && owner.id) || 0,
+      transportToken: transportTokenKeys.public,
+    })
   }
 
-  success(res, { id: (owner && owner.id) || 0 })
+  success(res, {
+    id: (owner && owner.id) || 0,
+  })
 }
 
 export const updateContact = async (req, res) => {

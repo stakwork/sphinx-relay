@@ -28,7 +28,13 @@ export function connect(server) {
   })
   io.use(async (client, next) => {
     let userToken = client.handshake.headers['x-user-token']
-    const owner = await getOwnerFromToken(userToken)
+    let x_transport_token = client.handshake.headers['x-transport-token']
+    let userTokenFromTransportToken = crypto
+      .privateDecrypt('privateKey', x_transport_token)
+      .slice(0, 12)
+    const owner = await getOwnerFromToken(
+      userToken != null ? userToken : userTokenFromTransportToken
+    )
     if (owner) {
       client.ownerID = owner.id // add it in
       return next()
