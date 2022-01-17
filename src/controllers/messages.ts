@@ -113,12 +113,16 @@ export const getAllMessages = async (req, res) => {
     console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
   }
 
-  const messages = await models.Message.findAll({
-    order: [['id', 'asc']],
-    limit,
-    offset,
+  const clause: { [k: string]: any } = {
+    order: [['id', 'desc']],
     where: { tenant },
-  })
+  }
+  const all_messages_length = await models.Message.count(clause)
+  if (limit) {
+    clause.limit = limit
+    clause.offset = offset
+  }
+  const messages = await models.Message.findAll(clause)
 
   if (logging.Express) {
     console.log('=> got msgs', messages && messages.length)
@@ -144,6 +148,7 @@ export const getAllMessages = async (req, res) => {
     new_messages: messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
     ),
+    new_messages_total: all_messages_length,
     confirmed_messages: [],
   })
 }
@@ -164,12 +169,13 @@ export const getMsgs = async (req, res) => {
   }
 
   const clause: { [k: string]: any } = {
-    order: [['id', 'asc']],
+    order: [['id', 'desc']],
     where: {
       updated_at: { [Op.gte]: dateToReturn },
       tenant,
     },
   }
+  const numberOfNewMessages = await models.Message.count(clause)
   if (limit) {
     clause.limit = limit
     clause.offset = offset
@@ -196,6 +202,7 @@ export const getMsgs = async (req, res) => {
     new_messages: messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
     ),
+    new_messages_total: numberOfNewMessages,
   })
 }
 
