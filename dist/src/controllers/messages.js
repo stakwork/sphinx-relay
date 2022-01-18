@@ -24,7 +24,7 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
-// import { date } from "yup/lib/locale";
+// deprecated
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -104,9 +104,13 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+    let order = 'asc';
+    if (req.query.order && req.query.order === 'desc') {
+        order = 'desc';
+    }
     logger_1.sphinxLogger.info(`=> getAllMessages, limit: ${limit}, offset: ${offset}`, logger_1.logging.Express);
     const clause = {
-        order: [['id', 'desc']],
+        order: [['id', order]],
         where: { tenant },
     };
     const all_messages_length = yield models_1.models.Message.count(clause);
@@ -148,8 +152,12 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return (0, exports.getAllMessages)(req, res);
     }
     logger_1.sphinxLogger.info(`=> getMsgs, limit: ${limit}, offset: ${offset}`, logger_1.logging.Express);
+    let order = 'asc';
+    if (req.query.order && req.query.order === 'desc') {
+        order = 'desc';
+    }
     const clause = {
-        order: [['id', 'desc']],
+        order: [['id', order]],
         where: {
             updated_at: { [sequelize_1.Op.gte]: dateToReturn },
             tenant,

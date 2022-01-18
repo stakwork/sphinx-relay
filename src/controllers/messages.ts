@@ -12,8 +12,8 @@ import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-// import { date } from "yup/lib/locale";
 
+// deprecated
 export const getMessages = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -108,6 +108,10 @@ export const getAllMessages = async (req, res) => {
 
   const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
+  let order = 'asc'
+  if (req.query.order && req.query.order === 'desc') {
+    order = 'desc'
+  }
 
   sphinxLogger.info(
     `=> getAllMessages, limit: ${limit}, offset: ${offset}`,
@@ -115,7 +119,7 @@ export const getAllMessages = async (req, res) => {
   )
 
   const clause: { [k: string]: any } = {
-    order: [['id', 'desc']],
+    order: [['id', order]],
     where: { tenant },
   }
   const all_messages_length = await models.Message.count(clause)
@@ -171,8 +175,12 @@ export const getMsgs = async (req, res) => {
     logging.Express
   )
 
+  let order = 'asc'
+  if (req.query.order && req.query.order === 'desc') {
+    order = 'desc'
+  }
   const clause: { [k: string]: any } = {
-    order: [['id', 'desc']],
+    order: [['id', order]],
     where: {
       updated_at: { [Op.gte]: dateToReturn },
       tenant,
