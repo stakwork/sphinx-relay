@@ -103,7 +103,18 @@ export async function ownerMiddleware(req, res, next) {
       .split(' ')
     token = splitTransportToken[0]
     const splitTransportTokenTimestamp = splitTransportToken[1]
-    if (new Date(splitTransportTokenTimestamp) < new Date(Date.now() - 1)) {
+    console.log(
+      new Date(splitTransportTokenTimestamp) < new Date(Date.now() + 1 * 60000)
+    )
+    console.log(new Date(splitTransportTokenTimestamp))
+    console.log(new Date(Date.now() + 1 * 60000))
+    if (
+      new Date(splitTransportTokenTimestamp) < new Date(Date.now() + 1 * 60000)
+    ) {
+      res.writeHead(401, 'Access invalid for user', {
+        'Content-Type': 'text/plain',
+      })
+      res.end('invalid credentials')
       return console.error('Too old of a request')
     }
   }
@@ -242,71 +253,22 @@ export async function authModule(req, res, next) {
     }
   }
 
-  /* TODO: need to accept both x-user-token and x-transport-token
-   * we should keep code minimal so we can delete x-user-token in future
-   * we also want to check that the timestamp is within the minute or what
-   * ever time value we set
-   */
-
   //get transportToken private key from somewhere
   //const transportToken = crypto.publicEncrypt('some entropy')
 
   const x_user_token =
     req.headers['x-user-token'] || req.cookies['x-user-token']
-  const x_transport_token =
-    req.headers['x-transport-token'] || req.cookies['x-transport-token']
-  console.log('Transport toke:', x_transport_token)
-  if (x_user_token == null || x_transport_token == null) {
+  if (token == null) {
     res.writeHead(401, 'Access invalid for user', {
       'Content-Type': 'text/plain',
     })
     res.end('Invalid credentials')
   } else {
     const user = await models.Contact.findOne({ where: { isOwner: true } })
-    let token: Buffer = new Buffer([])
-    if (x_user_token != null) {
-      token = x_user_token
-    } else if (x_transport_token != null) {
-      // Here we are extracting the x_user_token to use later
-      // to validate that it is the correct one saved for the owner
-
-      console.log('Transport Token: ', x_transport_token)
-      token = crypto
-        .privateDecrypt('privateKey', x_transport_token)
-        .slice(0, 12)
-
-      // We are extracting the timestamp from the x_transport_token
-      // Need to figure out if this is the correct way to extract or if there
-      // is a more sophisticated way
-      const timestamp = crypto
-        .privateDecrypt('privateKey', x_transport_token)
-        .slice(13, 20)
-      const timePeriod = 1
-
-      // We want to check to see if the timestamp in the
-      // x_transport_token is too old because then we
-      // will not have a record of requests past that timestamp to
-      // see if a x_transport_token is reused
-      if (timestamp.readUInt32BE() < Date.now() - timePeriod) {
-        return failure(res, 'request too old')
-      }
-
-      // Here we want to check if there is a saved request
-      // that uses the same x_transport_token to stop a replay attack
-      // TODO: should we save the data on redis if so we need to add redis to sphinx relay?
-      const arrayOfRequests = []
-      arrayOfRequests.forEach((requestItemTransportToken) => {
-        if (x_transport_token == requestItemTransportToken) {
-          return failure(res, 'duplicate x_transport_token used')
-        }
-      })
-    }
     const hashedToken = crypto
       .createHash('sha256')
       .update(token)
       .digest('base64')
-    console.log('Auth User Token: ', user.authToken)
-    console.log('Hashed User Token: ', hashedToken)
     if (user.authToken == null || user.authToken != hashedToken) {
       res.writeHead(401, 'Access invalid for user', {
         'Content-Type': 'text/plain',
