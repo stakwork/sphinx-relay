@@ -275,9 +275,6 @@ export async function authModule(req, res, next) {
     }
   }
 
-  //get transportToken private key from somewhere
-  //const transportToken = crypto.publicEncrypt('some entropy')
-
   const token = req.headers['x-user-token'] || req.cookies['x-user-token']
   if (token == null) {
     res.writeHead(401, 'Access invalid for user', {
