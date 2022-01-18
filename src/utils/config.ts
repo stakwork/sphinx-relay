@@ -108,5 +108,7 @@ export function loadConfig() {
     allow_test_clearing: ENV.ALLOW_TEST_CLEARING || config.allow_test_clearing,
     sql_log: ENV.SQL_LOG || config.sql_log,
     dont_ping_hub: ENV.DONT_PING_HUB || config.dont_ping_hub,
+    transportPrivateKeyLocation:
+      ENV.TRANSPORT_PRIVATE_KEY_LOCATION || config.transportPrivateKeyLocation,
   }
 }

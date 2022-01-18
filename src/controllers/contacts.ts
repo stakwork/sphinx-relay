@@ -14,6 +14,9 @@ import { logging } from '../utils/logger'
 import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
+import { loadConfig } from '../utils/config'
+
+const config = loadConfig()
 
 export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
@@ -218,7 +221,10 @@ export const generateToken = async (req, res) => {
     // TODO: save transport private key
     owner.update({ authToken: hash })
     // Send transport pubkey
-    fs.writeFileSync('transportPrivate.pem', transportTokenKeys.private)
+    fs.writeFileSync(
+      config.transportPrivateKeyLocation,
+      transportTokenKeys.private
+    )
     success(res, {
       id: (owner && owner.id) || 0,
       transportToken: transportTokenKeys.public,

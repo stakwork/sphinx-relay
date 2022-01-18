@@ -101,7 +101,9 @@ export async function ownerMiddleware(req, res, next) {
   let token = x_user_token
 
   // Read the transport private key since we will need to decrypt with this
-  const transportPrivateKey = fs.readFileSync('transportPrivate.pem')
+  const transportPrivateKey = fs.readFileSync(
+    config.transportPrivateKeyLocation
+  )
 
   // If we see the user using the new x_transport_token
   // we will enter this if block and execute this logic
