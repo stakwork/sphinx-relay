@@ -28,10 +28,15 @@ export function connect(server) {
   })
   io.use(async (client, next) => {
     let userToken = client.handshake.headers['x-user-token']
+
     let x_transport_token = client.handshake.headers['x-transport-token']
+
+    const transportPrivateKey = fs.readFileSync('transportPrivate.pem')
+
     let userTokenFromTransportToken = crypto
-      .privateDecrypt('privateKey', x_transport_token)
-      .slice(0, 12)
+      .privateDecrypt(transportPrivateKey, x_transport_token)
+      .split(' ')[0]
+
     const owner = await getOwnerFromToken(
       userToken != null ? userToken : userTokenFromTransportToken
     )
