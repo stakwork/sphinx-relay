@@ -89,25 +89,44 @@ export async function ownerMiddleware(req, res, next) {
     return
   }
 
+  // Here we are grabing both the x-user-token and x-transport-token
   const x_user_token =
     req.headers['x-user-token'] || req.cookies['x-user-token']
   const x_transport_token =
     req.headers['x-transport-token'] || req.cookies['x-transport-token']
 
   console.log('Transport toke:', x_transport_token)
+
+  // default assign token to x-user-token
   let token = x_user_token
+
+  // Read the transport private key since we will need to decrypt with this
   const transportPrivateKey = fs.readFileSync('transportPrivate.pem')
+
+  // If we see the user using the new x_transport_token
+  // we will enter this if block and execute this logic
   if (x_transport_token) {
+    // Decrypt the token and split by space not sure what
+    // the correct way to do the delimiting so I just put
+    // a space for now
     const splitTransportToken = rsa
       .decrypt(transportPrivateKey, x_transport_token)
       .split(' ')
+
+    // The token will be the first item
     token = splitTransportToken[0]
+
+    // The second item will be the timestamp
     const splitTransportTokenTimestamp = splitTransportToken[1]
+
     console.log(
       new Date(splitTransportTokenTimestamp) < new Date(Date.now() + 1 * 60000)
     )
     console.log(new Date(splitTransportTokenTimestamp))
     console.log(new Date(Date.now() + 1 * 60000))
+
+    // Check if the timestamp is within the timeframe we
+    // chose to clear out the db of saved recent requests
     if (
       new Date(splitTransportTokenTimestamp) < new Date(Date.now() + 1 * 60000)
     ) {
@@ -117,9 +136,12 @@ export async function ownerMiddleware(req, res, next) {
       res.end('invalid credentials')
       return console.error('Too old of a request')
     }
+
+    // TODO: we need to add a way to save the request and also
+    // to check the old requests to see if they use the same x_transport_token
   }
 
-  console.log('Transport toke decrypted:', token)
+  console.log('Transport token decrypted:', token)
 
   if (process.env.HOSTING_PROVIDER === 'true') {
     if (token) {
