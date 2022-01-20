@@ -9,14 +9,19 @@ import { loadLightning } from './lightning'
 import * as Lightning from './lightning'
 import { sphinxLogger } from '../utils/logger'
 
+let GID: GreenlightIdentity
+
 const config = loadConfig()
 
 export async function initGreenlight() {
+  sphinxLogger.info('=> initGreenlight')
+  if (GID && GID.initialized) return
   await startGreenlightInit()
   // await streamHsmRequests()
 }
 
 export function keepalive() {
+  sphinxLogger.info('=> Greenlight keepalive')
   setInterval(() => {
     Lightning.getInfo()
   }, 59000)
@@ -31,7 +36,7 @@ const loadSchedulerCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
-export function loadScheduler() {
+function loadScheduler() {
   // 35.236.110.178:2601
   var descriptor = grpc.load('proto/scheduler.proto')
   var scheduler: any = descriptor.scheduler
@@ -56,9 +61,10 @@ interface GreenlightIdentity {
   node_id: string
   bip32_key: string
   bolt12_key: string
+  initialized: boolean
 }
-let GID: GreenlightIdentity
 export async function startGreenlightInit() {
+  sphinxLogger.info('=> startGreenlightInit')
   try {
     let needToRegister = false
     const secretPath = config.hsm_secret_path
@@ -79,6 +85,7 @@ export async function startGreenlightInit() {
       node_id: node_id.toString('hex'),
       bip32_key: bip32_key.toString('hex'),
       bolt12_key: bolt12_key.toString('hex'),
+      initialized: false,
     }
     if (needToRegister) {
       await registerGreenlight(GID, rootkey, secretPath)
@@ -89,7 +96,8 @@ export async function startGreenlightInit() {
       await recoverGreenlight(GID)
     }
     const r = await schedule(GID.node_id)
-    sphinxLogger.info(r.node_id.toString('hex'))
+    sphinxLogger.info('Greenlight pubkey', r.node_id.toString('hex'))
+    GID.initialized = true
   } catch (e) {
     sphinxLogger.error(`initGreenlight error ${e}`)
   }
@@ -100,6 +108,7 @@ interface ScheduleResponse {
   grpc_uri: string
 }
 export function schedule(pubkey: string): Promise<ScheduleResponse> {
+  sphinxLogger.info('=> Greenlight schedule')
   return new Promise(async (resolve, reject) => {
     try {
       const s = loadScheduler()
@@ -124,6 +133,7 @@ export function schedule(pubkey: string): Promise<ScheduleResponse> {
 }
 
 async function recoverGreenlight(gid: GreenlightIdentity) {
+  sphinxLogger.info('=> recoverGreenlight')
   try {
     const challenge = await get_challenge(gid.node_id)
     const signature = await sign_challenge(challenge)
@@ -152,6 +162,7 @@ async function registerGreenlight(
   secretPath: string
 ) {
   try {
+    sphinxLogger.info('=> registerGreenlight')
     const challenge = await get_challenge(gid.node_id)
     const signature = await sign_challenge(challenge)
     const res = await register(

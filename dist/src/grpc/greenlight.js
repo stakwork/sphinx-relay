@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.streamHsmRequests = exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.loadScheduler = exports.keepalive = exports.initGreenlight = void 0;
+exports.streamHsmRequests = exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.keepalive = exports.initGreenlight = void 0;
 const fs = require("fs");
 const grpc = require("grpc");
 const libhsmd_1 = require("./libhsmd");
@@ -20,15 +20,20 @@ const interfaces = require("./interfaces");
 const lightning_1 = require("./lightning");
 const Lightning = require("./lightning");
 const logger_1 = require("../utils/logger");
+let GID;
 const config = (0, config_1.loadConfig)();
 function initGreenlight() {
     return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info('=> initGreenlight');
+        if (GID && GID.initialized)
+            return;
         yield startGreenlightInit();
         // await streamHsmRequests()
     });
 }
 exports.initGreenlight = initGreenlight;
 function keepalive() {
+    logger_1.sphinxLogger.info('=> Greenlight keepalive');
     setInterval(() => {
         Lightning.getInfo();
     }, 59000);
@@ -51,15 +56,14 @@ function loadScheduler() {
     schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
     return schedulerClient;
 }
-exports.loadScheduler = loadScheduler;
 let GREENLIGHT_GRPC_URI = '';
 function get_greenlight_grpc_uri() {
     return GREENLIGHT_GRPC_URI;
 }
 exports.get_greenlight_grpc_uri = get_greenlight_grpc_uri;
-let GID;
 function startGreenlightInit() {
     return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info('=> startGreenlightInit');
         try {
             let needToRegister = false;
             const secretPath = config.hsm_secret_path;
@@ -81,6 +85,7 @@ function startGreenlightInit() {
                 node_id: node_id.toString('hex'),
                 bip32_key: bip32_key.toString('hex'),
                 bolt12_key: bolt12_key.toString('hex'),
+                initialized: false,
             };
             if (needToRegister) {
                 yield registerGreenlight(GID, rootkey, secretPath);
@@ -91,7 +96,8 @@ function startGreenlightInit() {
                 yield recoverGreenlight(GID);
             }
             const r = yield schedule(GID.node_id);
-            logger_1.sphinxLogger.info(r.node_id.toString('hex'));
+            logger_1.sphinxLogger.info('Greenlight pubkey', r.node_id.toString('hex'));
+            GID.initialized = true;
         }
         catch (e) {
             logger_1.sphinxLogger.error(`initGreenlight error ${e}`);
@@ -100,6 +106,7 @@ function startGreenlightInit() {
 }
 exports.startGreenlightInit = startGreenlightInit;
 function schedule(pubkey) {
+    logger_1.sphinxLogger.info('=> Greenlight schedule');
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
             const s = loadScheduler();
@@ -124,6 +131,7 @@ function schedule(pubkey) {
 exports.schedule = schedule;
 function recoverGreenlight(gid) {
     return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info('=> recoverGreenlight');
         try {
             const challenge = yield get_challenge(gid.node_id);
             const signature = yield sign_challenge(challenge);
@@ -149,6 +157,7 @@ function writeTlsLocation() {
 function registerGreenlight(gid, rootkey, secretPath) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            logger_1.sphinxLogger.info('=> registerGreenlight');
             const challenge = yield get_challenge(gid.node_id);
             const signature = yield sign_challenge(challenge);
             const res = yield register(gid.node_id, gid.bip32_key + gid.bolt12_key, challenge, signature);

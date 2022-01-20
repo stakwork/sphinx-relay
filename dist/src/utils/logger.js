@@ -44,6 +44,7 @@ const logging = {
     DB: 'DB',
     Proxy: 'PROXY',
     Lsat: 'LSAT',
+    Greenlight: 'GREENLIGHT',
 };
 exports.logging = logging;
 function sphinxLoggerBase(message, loggingType = 'MISC', level) {
