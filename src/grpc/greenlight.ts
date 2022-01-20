@@ -15,7 +15,7 @@ const config = loadConfig()
 
 export async function initGreenlight() {
   sphinxLogger.info('=> initGreenlight')
-  if (GID && GID.initialized) return
+  // if (GID && GID.initialized) return
   await startGreenlightInit()
   // await streamHsmRequests()
 }
