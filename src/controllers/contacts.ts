@@ -228,13 +228,8 @@ export const generateToken = async (req, res) => {
     // TODO: save transport private key
     owner.update({ authToken: hash })
     // Send transport pubkey
-    fs.writeFileSync(
-      config.transportPrivateKeyLocation,
-      transportTokenKeys.private
-    )
     success(res, {
       id: (owner && owner.id) || 0,
-      transportToken: transportTokenKeys.public,
     })
   }
 
