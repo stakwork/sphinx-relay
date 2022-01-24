@@ -62,3 +62,13 @@ export async function requestExternalTokens(req, res) {
     failure(res, e)
   }
 }
+
+export async function requestTransportToken(req, res) {
+  const transportKeys = fs.readFileSync(config.transportKeyLocation)
+  if (transportKeys != null)
+    success(res, { transportToken: transportKeys.public })
+
+  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
+  fs.writeFileSync(config.transportKeyLocation, transportTokenKeys)
+  success(res, { transportToken: transportTokenKeys.public })
+}
