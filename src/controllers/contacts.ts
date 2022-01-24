@@ -200,7 +200,14 @@ export const generateToken = async (req, res) => {
     }
   }
 
-  const token = req.body['token']
+  let token = req.headers['x-transport-token']
+  if (!token) {
+    token = req.body['token']
+  } else {
+    const transportTokenKeys = fs.readFileSync(config.transportKeyLocation)
+    token = rsa.decrypt(transportTokenKeys.private, token).pop(10)
+  }
+
   if (!token) {
     return failure(res, 'no token in body')
   }
