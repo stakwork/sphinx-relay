@@ -73,6 +73,7 @@ export async function set(app) {
   app.delete('/profile', personal.deletePersonProfile)
   app.post('/public_pic', personal.uploadPublicPic)
   app.get('/refresh_jwt', personal.refreshJWT)
+  app.post('/claim_on_liquid', personal.claimOnLiquid)
 
   app.get('/msgs', messages.getMsgs)
   app.get('/allmessages', messages.getAllMessages)

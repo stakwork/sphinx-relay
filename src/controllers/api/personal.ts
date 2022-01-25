@@ -141,3 +141,28 @@ export async function refreshJWT(req, res) {
     jwt: jot,
   })
 }
+
+export async function claimOnLiquid(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+
+  try {
+    const owner = await models.Contact.findOne({
+      where: { tenant, isOwner: true },
+    })
+    const { host, asset, to, amount, memo } = req.body
+
+    const res = await people.claimOnLiquid({
+      host: host || 'liquid.sphinx.chat',
+      asset,
+      to,
+      amount,
+      memo,
+      owner_pubkey: owner.publicKey,
+    })
+
+    success(res, res)
+  } catch (e) {
+    failure(res, e)
+  }
+}

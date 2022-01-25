@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.claimOnLiquid = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
@@ -68,4 +68,34 @@ function deletePerson(host, id, owner_pubkey) {
     });
 }
 exports.deletePerson = deletePerson;
+function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/withdraw?token=' + token, {
+                method: 'POST',
+                body: JSON.stringify({
+                    asset,
+                    to,
+                    amount,
+                    memo,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to withdraw to liquid ' + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error('[liquid] unauthorized to move asset');
+            throw e;
+        }
+    });
+}
+exports.claimOnLiquid = claimOnLiquid;
 //# sourceMappingURL=people.js.map
