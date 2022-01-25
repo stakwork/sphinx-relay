@@ -204,8 +204,10 @@ export const generateToken = async (req, res) => {
   if (!token) {
     token = req.body['token']
   } else {
-    const transportTokenKeys = fs.readFileSync(config.transportKeyLocation)
-    token = rsa.decrypt(transportTokenKeys.private, token).pop(10)
+    const transportTokenKeys = fs.readFileSync(
+      config.transportPrivateKeyLocation
+    )
+    token = rsa.decrypt(transportTokenKeys, token).split('|')[0]
   }
 
   if (!token) {
@@ -224,8 +226,6 @@ export const generateToken = async (req, res) => {
     }
     //  create transport token and send back to client
     // save private key and send public key
-    const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
-    // TODO: save transport private key
     owner.update({ authToken: hash })
     // Send transport pubkey
     success(res, {

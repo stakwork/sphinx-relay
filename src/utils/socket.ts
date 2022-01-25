@@ -41,7 +41,7 @@ export function connect(server) {
     let userTokenFromTransportToken = crypto
       .privateDecrypt(transportPrivateKey, x_transport_token)
       .toString()
-      .split(' ')[0]
+      .split('|')[0]
 
     const owner = await getOwnerFromToken(
       userToken != null ? userToken : userTokenFromTransportToken

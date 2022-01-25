@@ -1,6 +1,11 @@
 import { createJWT, scopes } from '../utils/jwt'
 import { success, failure } from '../utils/res'
+import { loadConfig } from '../utils/config'
+import * as rsa from '../crypto/rsa'
 import * as tribes from '../utils/tribes'
+import * as fs from 'fs'
+
+const config = loadConfig()
 
 interface MeInfo {
   pubkey: string
@@ -64,11 +69,15 @@ export async function requestExternalTokens(req, res) {
 }
 
 export async function requestTransportToken(req, res) {
-  const transportKeys = fs.readFileSync(config.transportKeyLocation)
-  if (transportKeys != null)
-    success(res, { transportToken: transportKeys.public })
+  const transportPublicKey = fs.readFileSync(config.transportPublicKeyLocation)
+  if (transportPublicKey != null)
+    success(res, { transportToken: transportPublicKey })
 
   const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
-  fs.writeFileSync(config.transportKeyLocation, transportTokenKeys)
+  fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
+  fs.writeFileSync(
+    config.transportPrivateKeyLocation,
+    transportTokenKeys.private
+  )
   success(res, { transportToken: transportTokenKeys.public })
 }
