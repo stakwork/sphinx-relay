@@ -6,22 +6,25 @@ import { config } from '../config'
 
 export const makeArgs = (
   node: NodeConfig,
-  body: RequestBody = {}
+  body: RequestBody = {},
+  options?
 ): RequestArgs => {
   const currentTime = new Date(Date.now())
-  console.log(currentTime.toString())
-  console.log(
-    rsa.encrypt(
-      node.transportToken,
-      `${node.authToken}|${currentTime.toString()}`
-    )
-  )
+  if (options && options.useTransportToken) {
+    return {
+      headers: {
+        'x-transport-token': rsa.encrypt(
+          node.transportToken,
+          `${node.authToken}|${currentTime.toString()}`
+        ),
+      },
+      body,
+    }
+  }
+
   return {
     headers: {
-      'x-transport-token': rsa.encrypt(
-        node.transportToken,
-        `${node.authToken}|${currentTime.toString()}`
-      ),
+      'x-user-token': node.authToken,
     },
     body,
   }
