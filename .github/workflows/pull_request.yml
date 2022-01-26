@@ -29,6 +29,9 @@ jobs:
       working-directory: ./stack
       run: |
         chmod 777 ./bitcoind;    
+        chmod 777 ./relay/aliceTra**;
+        chmod 777 ./relay/bobTra**;
+        chmod 777 ./relay/carolTra**;
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
