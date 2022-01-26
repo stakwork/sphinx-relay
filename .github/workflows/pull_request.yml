@@ -29,12 +29,7 @@ jobs:
       working-directory: ./stack
       run: |
         chmod 777 ./bitcoind;    
-        chmod 777 ./relay/aliceTransportPrivateKey.pem;
-        chmod 777 ./relay/aliceTransportPublicKey.pem;
-        chmod 777 ./relay/bobTransportPrivateKey.pem;
-        chmod 777 ./relay/bobTransportPublicKey.pem;
-        chmod 777 ./relay/carolTransportPrivateKey.pem;
-        chmod 777 ./relay/carolTransportPublicKey.pem;
+        chmod 777 ./relay;
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
