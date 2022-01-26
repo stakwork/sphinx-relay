@@ -150,10 +150,10 @@ export async function claimOnLiquid(req, res) {
     const owner = await models.Contact.findOne({
       where: { tenant, isOwner: true },
     })
-    const { host, asset, to, amount, memo } = req.body
+    const { asset, to, amount, memo } = req.body
 
     const res = await people.claimOnLiquid({
-      host: host || 'liquid.sphinx.chat',
+      host: 'liquid.sphinx.chat',
       asset,
       to,
       amount,

@@ -152,9 +152,9 @@ function claimOnLiquid(req, res) {
             const owner = yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             });
-            const { host, asset, to, amount, memo } = req.body;
+            const { asset, to, amount, memo } = req.body;
             const res = yield people.claimOnLiquid({
-                host: host || 'liquid.sphinx.chat',
+                host: 'liquid.sphinx.chat',
                 asset,
                 to,
                 amount,
