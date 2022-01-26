@@ -7,11 +7,12 @@ export function getCheckAllMessages(
   _t: Assertions,
   node: NodeConfig,
   limit: number,
-  offset: number
+  offset: number,
+  order: string = 'asc'
 ): Promise<{ new_messages: Array<Message>; new_messages_total: number }> {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
-      timeout(0, node, limit, offset, resolve, reject)
+      timeout(0, node, limit, offset, order, resolve, reject)
     }, 1000)
   })
 }
@@ -21,11 +22,12 @@ async function timeout(
   node: NodeConfig,
   limit: number,
   offset: number,
+  order: string,
   resolve,
   reject
 ) {
   const msgRes = await http.get(
-    `${node.external_ip}/allmessages?limit=${limit}&offset=${offset}`,
+    `${node.external_ip}/allmessages?limit=${limit}&offset=${offset}&order=${order}`,
     makeArgs(node)
   )
   if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
@@ -36,6 +38,6 @@ async function timeout(
     return reject('failed to getCheckMsgs')
   }
   setTimeout(async () => {
-    timeout(i + 1, node, limit, offset, resolve, reject)
+    timeout(i + 1, node, limit, offset, order, resolve, reject)
   }, 1000)
 }
