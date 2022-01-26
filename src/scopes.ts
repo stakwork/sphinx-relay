@@ -7,7 +7,12 @@ export enum scopes {
 }
 
 export const routes: { [k: string]: string[] } = {
-  [scopes.PERSONAL]: ['/profile', '/public_pic', '/refresh_jwt'],
+  [scopes.PERSONAL]: [
+    '/profile',
+    '/public_pic',
+    '/refresh_jwt',
+    '/claim_on_liquid',
+  ],
   [scopes.BOTS]: ['/bots', '/bot', '/bot/*'],
 }
 
