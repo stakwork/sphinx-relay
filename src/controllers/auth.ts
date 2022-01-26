@@ -69,9 +69,14 @@ export async function requestExternalTokens(req, res) {
 }
 
 export async function requestTransportToken(req, res) {
-  const transportPublicKey = fs.readFileSync(config.transportPublicKeyLocation)
-  if (transportPublicKey != null)
+  const transportPublicKey = fs.readFileSync(
+    config.transportPublicKeyLocation,
+    'utf8'
+  )
+  if (transportPublicKey != null) {
     success(res, { transportToken: transportPublicKey })
+    return
+  }
 
   const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
   fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)

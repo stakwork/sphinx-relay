@@ -200,14 +200,19 @@ export const generateToken = async (req, res) => {
     }
   }
 
-  let token = req.headers['x-transport-token']
-  if (!token) {
+  let token = ''
+  let xTransportToken = req.headers['x-transport-token']
+  if (!xTransportToken) {
     token = req.body['token']
   } else {
     const transportTokenKeys = fs.readFileSync(
-      config.transportPrivateKeyLocation
+      config.transportPrivateKeyLocation,
+      'utf8'
     )
-    token = rsa.decrypt(transportTokenKeys, token).split('|')[0]
+    let tokenAndTimestamp = rsa
+      .decrypt(transportTokenKeys, xTransportToken)
+      .split('|')
+    token = tokenAndTimestamp[0]
   }
 
   if (!token) {

@@ -84,7 +84,7 @@ export async function ownerMiddleware(req, res, next) {
     req.path == '/connect' ||
     req.path == '/connect_peer' ||
     req.path == '/peered' ||
-    req.path == '/tranport_token'
+    req.path == '/request_transport_token'
   ) {
     next()
     return
@@ -106,7 +106,8 @@ export async function ownerMiddleware(req, res, next) {
   if (x_transport_token) {
     // Read the transport private key since we will need to decrypt with this
     const transportPrivateKey = fs.readFileSync(
-      config.transportPrivateKeyLocation
+      config.transportPrivateKeyLocation,
+      'utf8'
     )
     // Decrypt the token and split by space not sure what
     // the correct way to do the delimiting so I just put
@@ -120,13 +121,6 @@ export async function ownerMiddleware(req, res, next) {
 
     // The second item will be the timestamp
     const splitTransportTokenTimestamp = splitTransportToken[1]
-
-    console.log(
-      new Date(splitTransportTokenTimestamp) < new Date(Date.now() + 1 * 60000)
-    )
-    console.log(splitTransportTokenTimestamp)
-    console.log(new Date(splitTransportTokenTimestamp))
-    console.log(new Date(Date.now() + 1 * 60000))
 
     // Check if the timestamp is within the timeframe we
     // chose to clear out the db of saved recent requests
