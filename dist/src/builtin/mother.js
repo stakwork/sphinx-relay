@@ -19,6 +19,7 @@ const node_fetch_1 = require("node-fetch");
 const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const tribes_1 = require("../utils/tribes");
+const logger_1 = require("../utils/logger");
 const msg_types = Sphinx.MSG_TYPE;
 const config = (0, config_1.loadConfig)();
 const builtinBots = ['welcome', 'loopout'];
@@ -52,10 +53,10 @@ function init() {
                     return;
                 const botName = arr[2];
                 if (builtinBots.includes(botName)) {
-                    console.log('mombot INSTALL', botName);
+                    logger_1.sphinxLogger.info(['mombot INSTALL', botName]);
                     const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                     if (!(chat && chat.id))
-                        return console.log('=> motherbot no chat');
+                        return logger_1.sphinxLogger.error('=> motherbot no chat');
                     const existing = yield models_1.models.ChatBot.findOne({
                         where: {
                             chatId: chat.id,
@@ -96,10 +97,10 @@ function init() {
                 else {
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
-                        console.log('=> FOUND BOT', bot.unique_name);
+                        logger_1.sphinxLogger.info(['=> FOUND BOT', bot.unique_name]);
                         const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                         if (!(chat && chat.id))
-                            return console.log('=> motherbot no chat');
+                            return logger_1.sphinxLogger.error('=> motherbot no chat');
                         (0, bots_1.installBotAsTribeAdmin)(chat, bot);
                     }
                     else {
@@ -116,7 +117,7 @@ function init() {
                 const botName2 = arr[2];
                 const chat2 = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                 if (!(chat2 && chat2.id))
-                    return console.log('=> motherbot no chat');
+                    return logger_1.sphinxLogger.error('=> motherbot no chat');
                 const existing2 = yield models_1.models.ChatBot.findOne({
                     where: {
                         chatId: chat2.id,

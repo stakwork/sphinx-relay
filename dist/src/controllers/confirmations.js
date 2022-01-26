@@ -44,9 +44,7 @@ function sendConfirmation({ chat, sender, msg_id, receiver, }) {
 exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network) {
-            console.log('=> received confirmation', payload.message && payload.message.id);
-        }
+        logger_1.sphinxLogger.info(`=> received confirmation ${payload.message && payload.message.id}`, logger_1.logging.Network);
         const dat = payload.content || payload;
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;
@@ -145,8 +143,7 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
 exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
 function receiveHeartbeat(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> received heartbeat');
+        logger_1.sphinxLogger.info(`=> received heartbeat`, logger_1.logging.Network);
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_route_hint = dat.sender.route_hint;
@@ -154,9 +151,9 @@ function receiveHeartbeat(payload) {
         const owner = dat.owner;
         // const tenant:number = owner.id
         if (!(sender_pub_key && sender_pub_key.length === 66))
-            return console.log('no sender');
+            return logger_1.sphinxLogger.error(`no sender`);
         if (!receivedAmount)
-            return console.log('no amount');
+            return logger_1.sphinxLogger.error(`no amount`);
         const amount = Math.round(receivedAmount / 2);
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
@@ -232,8 +229,7 @@ function healthcheck(req, res) {
 exports.healthcheck = healthcheck;
 function receiveHeartbeatConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> received heartbeat confirmation');
+        logger_1.sphinxLogger.info(`=> received heartbeat confirmation`, logger_1.logging.Network);
         const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         heartbeats[sender_pub_key] = true;

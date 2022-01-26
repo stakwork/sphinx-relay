@@ -15,6 +15,7 @@ const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const config_1 = require("./config");
 const tribes_2 = require("./tribes");
+const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 function delete_bot({ uuid, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -29,11 +30,11 @@ function delete_bot({ uuid, owner_pubkey }) {
                 headers: { 'Content-Type': 'application/json' },
             });
             const j = yield r.json();
-            console.log('=> bot deleted:', j);
+            logger_1.sphinxLogger.info(`=> bot deleted: ${j}`);
             return true;
         }
         catch (e) {
-            console.log('[tribes] unauthorized to delete bot', e);
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to delete bot ${e}`);
             throw e;
         }
     });
@@ -64,10 +65,10 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
                 headers: { 'Content-Type': 'application/json' },
             });
             const j = yield r.json();
-            console.log('=> bot created:', j);
+            logger_1.sphinxLogger.info(`=> bot created: ${j}`);
         }
         catch (e) {
-            console.log('[tribes] unauthorized to declare bot', e);
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to declare bot ${e}`);
             throw e;
         }
     });

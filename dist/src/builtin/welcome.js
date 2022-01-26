@@ -15,6 +15,7 @@ const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
 const tribes_1 = require("../utils/tribes");
+const logger_1 = require("../utils/logger");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 function init() {
@@ -38,7 +39,7 @@ function init() {
                 const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                 // console.log("=> WelcomeBot chat", chat);
                 if (!(chat && chat.id))
-                    return console.log('=> welcomebot no chat');
+                    return logger_1.sphinxLogger.error(`=> welcomebot no chat`);
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
                         chatId: chat.id,
@@ -63,7 +64,7 @@ function init() {
                 return;
             }
             catch (e) {
-                console.log('WELCOME BOT ERROR', e);
+                logger_1.sphinxLogger.error(`WELCOME BOT ERROR ${e}`);
             }
         }
         const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
@@ -73,10 +74,10 @@ function init() {
             case 'setmessage':
                 if (arr.length < 3)
                     return;
-                console.log('setmsg', arr[2]);
+                logger_1.sphinxLogger.info(`setmsg ${arr[2]}`);
                 const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                 if (!(chat && chat.id))
-                    return console.log('=> welcomebot no chat');
+                    return logger_1.sphinxLogger.error(`=> welcomebot no chat`);
                 const chatBot = yield models_1.models.ChatBot.findOne({
                     where: {
                         chatId: chat.id,

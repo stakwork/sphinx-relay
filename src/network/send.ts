@@ -6,7 +6,7 @@ import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
 import { typesToForward } from './receive'
 import * as intercept from './intercept'
 import constants from '../constants'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 import { Msg } from './interfaces'
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
@@ -75,9 +75,10 @@ export async function sendMessage(params) {
       // decrypt message.content and message.mediaKey w groupKey
       msg = await decryptMessage(msg, chat)
       // console.log("SEND.TS isBotMsg")
-      if (logging.Network) {
-        console.log('[Network] => isTribeAdmin msg sending...', msg)
-      }
+      sphinxLogger.info(
+        `[Network] => isTribeAdmin msg sending... ${msg}`,
+        logging.Network
+      )
       const isBotMsg = await intercept.isBotMsg(
         msg,
         true,
@@ -85,9 +86,7 @@ export async function sendMessage(params) {
         forwardedFromContactId
       )
       if (isBotMsg === true) {
-        if (logging.Network) {
-          console.log('[Network] => isBotMsg')
-        }
+        sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
     }
@@ -121,9 +120,10 @@ export async function sendMessage(params) {
   let yes: any = true
   let no: any = null
 
-  if (logging.Network) {
-    console.log('=> sending to', contactIds.length, 'contacts')
-  }
+  sphinxLogger.info(
+    `=> sending to ${contactIds.length} 'contacts'`,
+    logging.Network
+  )
   await asyncForEach(contactIds, async (contactId) => {
     // console.log("=> TENANT", tenant)
     if (contactId === tenant) {
@@ -179,7 +179,7 @@ export async function sendMessage(params) {
       const r = await signAndSend(opts, sender, mqttTopic)
       yes = r
     } catch (e) {
-      console.log('KEYSEND ERROR', e)
+      sphinxLogger.error(`KEYSEND ERROR ${e}`)
       no = e
     }
     await sleep(10)

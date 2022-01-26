@@ -4,6 +4,7 @@ import { models } from '../models'
 import constants from '../constants'
 import { spawn } from 'child_process'
 import { loadConfig } from '../utils/config'
+import { sphinxLogger } from '../utils/logger'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 const config = loadConfig()
@@ -128,13 +129,13 @@ export function init() {
           `--fast`,
           `--addr=${addy}`,
         ]
-        console.log('=> SPAWN', cmd, args)
+        sphinxLogger.info(`=> SPAWN ${cmd} ${args}`)
         let childProcess = spawn(cmd, args)
         childProcess.stdout.on('data', function (data) {
           const stdout = data.toString()
-          console.log('LOOPBOT stdout:', stdout)
+          sphinxLogger.info(`LOOPBOT stdout: ${stdout}`)
           if (stdout) {
-            console.log('=> LOOPBOT stdout', stdout)
+            sphinxLogger.info(`=> LOOPBOT stdout ${stdout}`)
             if (stdout.includes('CONTINUE SWAP?')) {
               childProcess.stdin.write('y\n')
             }
@@ -149,16 +150,16 @@ export function init() {
           }
         })
         childProcess.stderr.on('data', function (data) {
-          console.log('STDERR:', data.toString())
+          sphinxLogger.error(`STDERR: ${data.toString()}`)
         })
         childProcess.on('error', (error) => {
-          console.log('error', error.toString())
+          sphinxLogger.error(`error ${error.toString()}`)
         })
         childProcess.on('close', (code) => {
-          console.log('CHILD PROCESS closed', code)
+          sphinxLogger.info(`CHILD PROCESS closed ${code}`)
         })
       } catch (e) {
-        console.log('LoopBot error', e)
+        sphinxLogger.error(`LoopBot error ${e}`)
       }
     } else {
       const cmd = arr[1]

@@ -28,19 +28,17 @@ function joinTribe(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        if (logger_1.logging.Express)
-            console.log('=> joinTribe');
+        logger_1.sphinxLogger.info('=> joinTribe', logger_1.logging.Express);
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url, } = req.body;
-        if (logger_1.logging.Express)
-            console.log('received owner route hint', owner_route_hint);
+        logger_1.sphinxLogger.info(['received owner route hint', owner_route_hint], logger_1.logging.Express);
         const is_private = req.body.private;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
         if (existing) {
-            console.log('[tribes] u are already in this tribe');
+            logger_1.sphinxLogger.error('You are already in this tribe', logger_1.logging.Tribes);
             return (0, res_1.failure)(res, 'cant find tribe');
         }
         if (!owner_pubkey || !group_key || !uuid) {
-            console.log('[tribes] missing required params');
+            logger_1.sphinxLogger.error('missing required params', logger_1.logging.Tribes);
             return (0, res_1.failure)(res, 'missing required params');
         }
         const ownerPubKey = owner_pubkey;
@@ -148,15 +146,14 @@ function joinTribe(req, res) {
 exports.joinTribe = joinTribe;
 function receiveMemberRequest(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> receiveMemberRequest');
+        logger_1.sphinxLogger.info('=> receiveMemberRequest', logger_1.logging.Network);
         const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, network_type, sender_photo_url, sender_route_hint, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
-            return console.log('no chat');
+            return logger_1.sphinxLogger.error('no chat');
         const isTribe = chat_type === constants_1.default.chat_types.tribe;
         if (!isTribe || !isTribeOwner)
-            return console.log('not a tribe');
+            return logger_1.sphinxLogger.error('not a tribe');
         var date = new Date();
         date.setMilliseconds(0);
         let theSender = null;
@@ -184,15 +181,18 @@ function receiveMemberRequest(payload) {
             }
         }
         if (!theSender)
-            return console.log('no sender'); // fail (no contact key?)
-        console.log('UPSERT', {
-            contactId: theSender.id,
-            chatId: chat.id,
-            role: constants_1.default.chat_roles.reader,
-            status: constants_1.default.chat_statuses.pending,
-            lastActive: date,
-            lastAlias: senderAlias,
-        });
+            return logger_1.sphinxLogger.error('no sender'); // fail (no contact key?)
+        logger_1.sphinxLogger.info([
+            'UPSERT',
+            {
+                contactId: theSender.id,
+                chatId: chat.id,
+                role: constants_1.default.chat_roles.reader,
+                status: constants_1.default.chat_statuses.pending,
+                lastActive: date,
+                lastAlias: senderAlias,
+            },
+        ]);
         // maybe check here manually????
         try {
             yield models_1.models.ChatMember.upsert({
@@ -324,7 +324,7 @@ function approveOrRejectMember(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        console.log('=> approve or reject tribe member');
+        logger_1.sphinxLogger.info('=> approve or reject tribe member');
         const msgId = parseInt(req.params['messageId']);
         const contactId = parseInt(req.params['contactId']);
         const status = req.params['status'];
@@ -385,11 +385,10 @@ function approveOrRejectMember(req, res) {
 exports.approveOrRejectMember = approveOrRejectMember;
 function receiveMemberApprove(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> receiveMemberApprove'); // received by the joiner only
+        logger_1.sphinxLogger.info('-> receiveMemberApprove', logger_1.logging.Network);
         const { owner, chat, sender, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
-            return console.log('no chat');
+            return logger_1.sphinxLogger.error('no chat');
         yield chat.update({ status: constants_1.default.chat_statuses.approved });
         const tenant = owner.id;
         let date = new Date();
@@ -440,11 +439,10 @@ function receiveMemberApprove(payload) {
 exports.receiveMemberApprove = receiveMemberApprove;
 function receiveMemberReject(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> receiveMemberReject');
+        logger_1.sphinxLogger.info('-> receiveMemberReject', logger_1.logging.Network);
         const { owner, chat, sender, chat_name, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
-            return console.log('no chat');
+            return logger_1.sphinxLogger.error('no chat');
         yield chat.update({ status: constants_1.default.chat_statuses.rejected });
         const tenant = owner.id;
         let date = new Date();
@@ -476,11 +474,10 @@ function receiveMemberReject(payload) {
 exports.receiveMemberReject = receiveMemberReject;
 function receiveTribeDelete(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> receiveTribeDelete');
+        logger_1.sphinxLogger.info('-> receiveTribeDelete', logger_1.logging.Network);
         const { owner, chat, sender, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
-            return console.log('no chat');
+            return logger_1.sphinxLogger.error('no chat');
         const tenant = owner.id;
         // await chat.update({status: constants.chat_statuses.rejected})
         // update on tribes server too
@@ -514,10 +511,9 @@ function replayChatHistory(chat, contact, ownerRecord) {
     return __awaiter(this, void 0, void 0, function* () {
         const owner = ownerRecord.dataValues || ownerRecord;
         const tenant = owner.id;
-        if (logger_1.logging.Tribes)
-            console.log('-> replayHistory');
+        logger_1.sphinxLogger.info('-> replayHistory', logger_1.logging.Tribes);
         if (!(chat && chat.id && contact && contact.id)) {
-            return console.log('[tribes] cant replay history');
+            return logger_1.sphinxLogger.info('cant replay history', logger_1.logging.Tribes);
         }
         try {
             const msgs = yield models_1.models.Message.findAll({
@@ -583,7 +579,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
             }));
         }
         catch (e) {
-            console.log('replayChatHistory ERROR', e);
+            logger_1.sphinxLogger.error(['replayChatHistory ERROR', e]);
         }
     });
 }

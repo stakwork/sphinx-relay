@@ -14,6 +14,7 @@ const models_1 = require("../models");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -84,7 +85,7 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
             amount,
             msg,
             success: () => {
-                console.log('payment sent!');
+                logger_1.sphinxLogger.info(`payment sent!`);
                 var date = new Date();
                 date.setMilliseconds(0);
                 models_1.models.Message.create({

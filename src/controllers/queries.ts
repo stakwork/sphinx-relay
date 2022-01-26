@@ -10,7 +10,7 @@ import { Op } from 'sequelize'
 import fetch from 'node-fetch'
 import * as helpers from '../helpers'
 import { isProxy } from '../utils/proxy'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -78,7 +78,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
   accountings.forEach((a) => {
     const utxo = utxos.find((u) => u.address === a.onchainAddress)
     if (utxo) {
-      console.log('[WATCH] UTXO', utxo)
+      sphinxLogger.info(`[WATCH] UTXO ${utxo}`)
       const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str
       ret.push(<Accounting>{
         id: a.id,
@@ -120,9 +120,9 @@ export async function getSuggestedSatPerByte(): Promise<number> {
 
 // https://mempool.space/api/v1/fees/recommended
 async function genChannelAndConfirmAccounting(acc: Accounting) {
-  console.log('[WATCH]=> genChannelAndConfirmAccounting')
+  sphinxLogger.info(`[WATCH]=> genChannelAndConfirmAccounting`)
   const sat_per_byte = await getSuggestedSatPerByte()
-  console.log('[WATCH]=> sat_per_byte', sat_per_byte)
+  sphinxLogger.info(`[WATCH]=> sat_per_byte ${sat_per_byte}`)
   try {
     const r = await lightning.openChannel({
       node_pubkey: acc.pubkey,
@@ -130,7 +130,7 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
       push_sat: 0,
       sat_per_byte,
     })
-    console.log('[WATCH]=> CHANNEL OPENED!', r)
+    sphinxLogger.info(`[WATCH]=> CHANNEL OPENED! ${r}`)
     const fundingTxidRev = Buffer.from(r.funding_txid_bytes).toString('hex')
     const fundingTxid = (fundingTxidRev.match(/.{2}/g) as any)
       .reverse()
@@ -146,9 +146,9 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
         where: { id: acc.id },
       }
     )
-    console.log('[WATCH]=> ACCOUNTINGS UPDATED to received!', acc.id)
+    sphinxLogger.info(`[WATCH]=> ACCOUNTINGS UPDATED to received! ${acc.id}`)
   } catch (e) {
-    console.log('[ACCOUNTING] error creating channel', e)
+    sphinxLogger.error(`[ACCOUNTING] error creating channel ${e}`)
     const existing = await models.Accounting.findOne({ where: { id: acc.id } })
     if (existing) {
       if (!existing.amount) {
@@ -191,12 +191,12 @@ async function checkChannelsAndKeysend(rec: Accounting) {
     active_only: true,
     peer: rec.pubkey,
   })
-  console.log('[WATCH] chans for pubkey:', rec.pubkey, chans)
+  sphinxLogger.info(`[WATCH] chans for pubkey: ${rec.pubkey} ${chans}`)
   if (!(chans && chans.channels)) return
   chans.channels.forEach((chan) => {
     // find by txid
     if (chan.channel_point.includes(rec.fundingTxid)) {
-      console.log('[WATCH] found channel to keysend!', chan)
+      sphinxLogger.info(`[WATCH] found channel to keysend! ${chan}`)
       const msg: { [k: string]: any } = {
         type: constants.message_types.keysend,
       }
@@ -206,7 +206,7 @@ async function checkChannelsAndKeysend(rec: Accounting) {
       const commitFee = parseInt(chan.commit_fee) || 0
       const amount =
         rec.amount - localReserve - remoteReserve - commitFee - extraAmount
-      console.log('[WATCH] amt to final keysend', amount)
+      sphinxLogger.info(`[WATCH] amt to final keysend ${amount}`)
       helpers.performKeysendMessage({
         sender: owner,
         destination_key: rec.pubkey,
@@ -214,7 +214,9 @@ async function checkChannelsAndKeysend(rec: Accounting) {
         amount,
         msg,
         success: function () {
-          console.log('[WATCH] complete! Updating accounting, id:', rec.id)
+          sphinxLogger.info(
+            `[WATCH] complete! Updating accounting, id: ${rec.id}`
+          )
           models.Accounting.update(
             {
               status: constants.statuses.confirmed,
@@ -230,7 +232,7 @@ async function checkChannelsAndKeysend(rec: Accounting) {
           )
         },
         failure: function () {
-          console.log('[WATCH] failed final keysend')
+          sphinxLogger.error(`[WATCH] failed final keysend`)
         },
       })
     }
@@ -245,8 +247,8 @@ export async function queryOnchainAddress(req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 
-  console.log('=> queryOnchainAddress')
-  if (!hub_pubkey) return console.log('=> NO ROUTING NODE PUBKEY SET')
+  sphinxLogger.info(`=> queryOnchainAddress`)
+  if (!hub_pubkey) return sphinxLogger.error(`=> NO ROUTING NODE PUBKEY SET`)
 
   const uuid = short.generate()
   const owner = req.owner
@@ -306,16 +308,16 @@ export const receiveQuery = async (payload) => {
   // const tenant:number = owner.id
 
   if (!sender_pub_key || !content || !owner) {
-    return console.log('=> wrong query format')
+    return sphinxLogger.error(`=> wrong query format`)
   }
   let q: Query
   try {
     q = JSON.parse(content)
   } catch (e) {
-    console.log('=> ERROR receiveQuery,', e)
+    sphinxLogger.error(`=> ERROR receiveQuery, ${e}`)
     return
   }
-  console.log('=> query received', q)
+  sphinxLogger.info(`=> query received ${q}`)
   let result = ''
   switch (q.type) {
     case 'onchain_address':
@@ -354,13 +356,13 @@ export const receiveQuery = async (payload) => {
   try {
     await network.signAndSend(opts, owner)
   } catch (e) {
-    console.log('FAILED TO SEND QUERY_RESPONSE')
+    sphinxLogger.error(`FAILED TO SEND QUERY_RESPONSE`)
     return
   }
 }
 
 export const receiveQueryResponse = async (payload) => {
-  if (logging.Network) console.log('=> receiveQueryResponse')
+  sphinxLogger.info(`=> receiveQueryResponse`, logging.Network)
   const dat = payload.content || payload
   // const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
@@ -368,7 +370,7 @@ export const receiveQueryResponse = async (payload) => {
     const q: Query = JSON.parse(content)
     queries[q.uuid] = q
   } catch (e) {
-    console.log('=> ERROR receiveQueryResponse,', e)
+    sphinxLogger.error(`=> ERROR receiveQueryResponse, ${e}`)
   }
 }
 

@@ -10,7 +10,12 @@ var scopes;
     scopes["MEME"] = "meme";
 })(scopes = exports.scopes || (exports.scopes = {}));
 exports.routes = {
-    [scopes.PERSONAL]: ['/profile', '/public_pic', '/refresh_jwt'],
+    [scopes.PERSONAL]: [
+        '/profile',
+        '/public_pic',
+        '/refresh_jwt',
+        '/claim_on_liquid',
+    ],
     [scopes.BOTS]: ['/bots', '/bot', '/bot/*'],
 };
 function allowedJwtRoutes(jwt, path) {

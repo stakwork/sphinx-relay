@@ -31,7 +31,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     else {
         if (!owner_id || !recipient_id)
             return null;
-        console.log('chat does not exists, create new');
+        logger_1.sphinxLogger.info(`chat does not exists, create new`);
         const owner = yield models_1.models.Contact.findOne({ where: { id: owner_id } });
         const recipient = yield models_1.models.Contact.findOne({
             where: { id: recipient_id, tenant: owner_id },
@@ -43,7 +43,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
         });
         if (!chat) {
             // no chat! create new
-            console.log('=> no chat! create new');
+            logger_1.sphinxLogger.info(`=> no chat! create new`);
             chat = yield models_1.models.Chat.create({
                 uuid: uuid,
                 contactIds: JSON.stringify([
@@ -128,9 +128,7 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
             success(r);
     }
     catch (e) {
-        if (logger_1.logging.Network) {
-            console.log('KEYSEND MESSAGE ERROR to', destination_key, e, opts);
-        }
+        logger_1.sphinxLogger.info(`KEYSEND MESSAGE ERROR to ${destination_key} ${e} ${opts}`, logger_1.logging.Network);
         if (failure)
             failure(e);
     }
@@ -241,7 +239,7 @@ function parseReceiveParams(payload) {
             owner = ownerRecord.dataValues;
         }
         if (!owner)
-            console.log('=> parseReceiveParams cannot find owner');
+            logger_1.sphinxLogger.error(`=> parseReceiveParams cannot find owner`);
         if (isConversation) {
             const realAmount = network_type === constants_1.default.network_types.lightning ? amount : 0;
             sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner.dataValues, realAmount);

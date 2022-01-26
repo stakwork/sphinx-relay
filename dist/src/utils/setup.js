@@ -25,23 +25,18 @@ const logger_1 = require("../utils/logger");
 const USER_VERSION = 7;
 const config = (0, config_1.loadConfig)();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
-    if (logger_1.logging.DB)
-        console.log('=> [db] starting setup...');
+    logger_1.sphinxLogger.info(['=> [db] starting setup'], logger_1.logging.DB);
     yield setVersion();
-    if (logger_1.logging.DB)
-        console.log('=> [db] sync now');
+    logger_1.sphinxLogger.info(['=> [db] sync now'], logger_1.logging.DB);
     try {
         yield models_1.sequelize.sync();
-        if (logger_1.logging.DB)
-            console.log('=> [db] done syncing');
+        logger_1.sphinxLogger.info(['=> [db] done syncing'], logger_1.logging.DB);
     }
     catch (e) {
-        if (logger_1.logging.DB)
-            console.log('[db] sync failed', e);
+        logger_1.sphinxLogger.info(['[db] sync failed', e], logger_1.logging.DB);
     }
     yield (0, migrate_1.default)();
-    if (logger_1.logging.DB)
-        console.log('=> [db] setup done');
+    logger_1.sphinxLogger.info(['=> [db] setup done'], logger_1.logging.DB);
 });
 exports.setupDatabase = setupDatabase;
 function setVersion() {
@@ -50,7 +45,7 @@ function setVersion() {
             yield models_1.sequelize.query(`PRAGMA user_version = ${USER_VERSION}`);
         }
         catch (e) {
-            console.log('=> [db] setVersion failed');
+            logger_1.sphinxLogger.error('=> [db] setVersion failed');
         }
     });
 }
@@ -81,11 +76,14 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                     authToken,
                     tenant,
                 });
-                console.log('[db] created node owner contact, id:', contact.id);
+                logger_1.sphinxLogger.info(['[db] created node owner contact, id:', contact.id]);
             }
         }
         catch (err) {
-            console.log('[db] error creating node owner due to lnd failure', err);
+            logger_1.sphinxLogger.info([
+                '[db] error creating node owner due to lnd failure',
+                err,
+            ]);
         }
     }
 });
@@ -117,24 +115,24 @@ function printGitInfo() {
     return __awaiter(this, void 0, void 0, function* () {
         const commitHash = yield (0, gitinfo_1.checkCommitHash)();
         const tag = yield (0, gitinfo_1.checkTag)();
-        console.log(`=> Relay version: ${tag}, commit: ${commitHash}`);
+        logger_1.sphinxLogger.info(`=> Relay version: ${tag}, commit: ${commitHash}`);
     });
 }
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
         const b64 = yield (0, connect_1.getQR)();
         if (!b64) {
-            console.log('=> no public IP provided');
+            logger_1.sphinxLogger.info('=> no public IP provided');
             return '';
         }
-        console.log('>>', b64);
+        logger_1.sphinxLogger.info(['>>', b64]);
         connectionStringFile(b64);
         const clean = yield (0, nodeinfo_1.isClean)();
         if (!clean)
             return; // skip it if already setup!
-        console.log('Scan this QR in Sphinx app:');
+        logger_1.sphinxLogger.info('Scan this QR in Sphinx app:');
         QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
-            console.log(url);
+            logger_1.sphinxLogger.info(url);
         });
     });
 }
@@ -145,7 +143,7 @@ function connectionStringFile(str) {
     }
     fs.writeFile(connectStringPath || 'connection_string.txt', str, function (err) {
         if (err)
-            console.log('ERROR SAVING connection_string.txt.', err);
+            logger_1.sphinxLogger.error(['ERROR SAVING connection_string.txt.', err]);
     });
 }
 //# sourceMappingURL=setup.js.map

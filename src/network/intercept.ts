@@ -4,7 +4,7 @@ import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
 import * as SphinxBot from 'sphinx-bot'
 import constants from '../constants'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 
 /*
 default show or not
@@ -20,7 +20,7 @@ export async function isBotMsg(
 ): Promise<boolean> {
   const tenant: number = sender.id
   if (!tenant) {
-    console.log('no tenant in isBotMsg')
+    sphinxLogger.info(`no tenant in isBotMsg`)
     return false
   }
 
@@ -79,7 +79,7 @@ export async function isBotMsg(
         tenant,
       },
     })
-    if (logging.Network) console.log('=> botsInTribe', botsInTribe.length) //, payload)
+    sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logging.Network) //, payload)
 
     if (!(botsInTribe && botsInTribe.length)) return false
 
@@ -114,18 +114,18 @@ export async function isBotMsg(
 
     return didEmit
   } catch (e) {
-    console.log('=> isBotMsg ERROR', e)
+    sphinxLogger.error(`=> isBotMsg ERROR ${e}`)
     return false
   }
 }
 
 async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
   // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
-  if (logging.Network) console.log('=> emitMessageToBot', msg) //, payload)
+  sphinxLogger.info(`=> emitMessageToBot ${msg}`, logging.Network) //, payload)
 
   const tenant: number = sender.id
   if (!tenant) {
-    console.log('=> no tenant in emitMessageToBot')
+    sphinxLogger.error(`=> no tenant in emitMessageToBot`)
     return false
   }
   switch (botInTribe.botType) {

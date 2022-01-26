@@ -9,6 +9,7 @@ import * as RNCryptor from 'jscryptor-2'
 import { sendMessage } from './send'
 // import { Op } from 'sequelize'
 import constants from '../constants'
+import { sphinxLogger } from '../utils/logger'
 
 const msgtypes = constants.message_types
 
@@ -28,7 +29,7 @@ export async function modifyPayloadAndSaveMediaKey(
     )
     return fillmsg(payload, ret) // key is re-encrypted later
   } catch (e) {
-    console.log('[modify] error', e)
+    sphinxLogger.error(`[modify] error ${e}`)
     return payload
   }
 }

@@ -25,7 +25,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = sender.id;
         if (!tenant) {
-            console.log('no tenant in isBotMsg');
+            logger_1.sphinxLogger.info(`no tenant in isBotMsg`);
             return false;
         }
         const msg = JSON.parse(JSON.stringify(m));
@@ -79,8 +79,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                     tenant,
                 },
             });
-            if (logger_1.logging.Network)
-                console.log('=> botsInTribe', botsInTribe.length); //, payload)
+            logger_1.sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logger_1.logging.Network); //, payload)
             if (!(botsInTribe && botsInTribe.length))
                 return false;
             yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
@@ -111,7 +110,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
             return didEmit;
         }
         catch (e) {
-            console.log('=> isBotMsg ERROR', e);
+            logger_1.sphinxLogger.error(`=> isBotMsg ERROR ${e}`);
             return false;
         }
     });
@@ -120,11 +119,10 @@ exports.isBotMsg = isBotMsg;
 function emitMessageToBot(msg, botInTribe, sender) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
-        if (logger_1.logging.Network)
-            console.log('=> emitMessageToBot', msg); //, payload)
+        logger_1.sphinxLogger.info(`=> emitMessageToBot ${msg}`, logger_1.logging.Network); //, payload)
         const tenant = sender.id;
         if (!tenant) {
-            console.log('=> no tenant in emitMessageToBot');
+            logger_1.sphinxLogger.error(`=> no tenant in emitMessageToBot`);
             return false;
         }
         switch (botInTribe.botType) {

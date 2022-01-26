@@ -112,5 +112,6 @@ export function loadConfig() {
       ENV.TRANSPORT_PRIVATE_KEY_LOCATION || config.transportPrivateKeyLocation,
     transportPublicKeyLocation:
       ENV.TRANSPORT_PUBLIC_KEY_LOCATION || config.transportPublicKeyLocation,
+    logging_level: ENV.LOGGING_LEVEL || config.logging_level || 'info',
   }
 }

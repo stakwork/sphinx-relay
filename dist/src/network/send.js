@@ -65,14 +65,10 @@ function sendMessage(params) {
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield (0, msg_1.decryptMessage)(msg, chat);
                 // console.log("SEND.TS isBotMsg")
-                if (logger_1.logging.Network) {
-                    console.log('[Network] => isTribeAdmin msg sending...', msg);
-                }
+                logger_1.sphinxLogger.info(`[Network] => isTribeAdmin msg sending... ${msg}`, logger_1.logging.Network);
                 const isBotMsg = yield intercept.isBotMsg(msg, true, sender, forwardedFromContactId);
                 if (isBotMsg === true) {
-                    if (logger_1.logging.Network) {
-                        console.log('[Network] => isBotMsg');
-                    }
+                    logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
             }
@@ -107,9 +103,7 @@ function sendMessage(params) {
         }
         let yes = true;
         let no = null;
-        if (logger_1.logging.Network) {
-            console.log('=> sending to', contactIds.length, 'contacts');
-        }
+        logger_1.sphinxLogger.info(`=> sending to ${contactIds.length} 'contacts'`, logger_1.logging.Network);
         yield asyncForEach(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
             // console.log("=> TENANT", tenant)
             if (contactId === tenant) {
@@ -160,7 +154,7 @@ function sendMessage(params) {
                 yes = r;
             }
             catch (e) {
-                console.log('KEYSEND ERROR', e);
+                logger_1.sphinxLogger.error(`KEYSEND ERROR ${e}`);
                 no = e;
             }
             yield sleep(10);

@@ -10,6 +10,7 @@ import * as rsa from '../crypto/rsa'
 import * as moment from 'moment'
 import * as network from '../network'
 import constants from '../constants'
+import { sphinxLogger } from '../utils/logger'
 
 // store all current running jobs in memory
 let jobs = {}
@@ -20,7 +21,11 @@ export const initializeCronJobs = async () => {
   const subs = await getRawSubs({ where: { ended: false } })
   subs.length &&
     subs.forEach((sub) => {
-      console.log('=> starting subscription cron job', sub.id + ':', sub.cron)
+      sphinxLogger.info([
+        '=> starting subscription cron job',
+        sub.id + ':',
+        sub.cron,
+      ])
       startCronJob(sub)
     })
 }
@@ -37,7 +42,7 @@ async function startCronJob(sub) {
         return this.stop()
       }
 
-      console.log('EXEC CRON =>', subscription.id)
+      sphinxLogger.info(['EXEC CRON =>', subscription.id])
       if (subscription.paused) {
         // skip, still in jobs{} tho
         return this.stop()
@@ -45,7 +50,7 @@ async function startCronJob(sub) {
       let STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription)
       if (STOP) {
         // end the job and return
-        console.log('stop')
+        sphinxLogger.info('stop')
         subscription.update({ ended: true })
         delete jobs[subscription.id]
         return this.stop()
@@ -127,7 +132,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
     where: { id: subscription.chatId, tenant },
   })
   if (!subscription) {
-    console.log('=> no sub for this payment!!!')
+    sphinxLogger.error('=> no sub for this payment!!!')
     return
   }
 
@@ -185,7 +190,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
       )
     },
     failure: async (err) => {
-      console.log('SEND PAY ERROR')
+      sphinxLogger.error('SEND PAY ERROR')
       let errMessage = constants.payment_errors[err] || 'Unknown'
       errMessage = 'Payment Failed: ' + errMessage
       const message = await models.Message.create({
@@ -228,7 +233,7 @@ export async function pauseSubscription(req, res) {
       failure(res, 'not found')
     }
   } catch (e) {
-    console.log('ERROR pauseSubscription', e)
+    sphinxLogger.error(['ERROR pauseSubscription', e])
     failure(res, e)
   }
 }
@@ -248,7 +253,7 @@ export async function restartSubscription(req, res) {
       failure(res, 'not found')
     }
   } catch (e) {
-    console.log('ERROR restartSubscription', e)
+    sphinxLogger.error(['ERROR restartSubscription', e])
     failure(res, e)
   }
 }
@@ -274,7 +279,7 @@ export const getAllSubscriptions = async (req, res) => {
       subs.map((sub) => jsonUtils.subscriptionToJson(sub, null))
     )
   } catch (e) {
-    console.log('ERROR getAllSubscriptions', e)
+    sphinxLogger.error(['ERROR getAllSubscriptions', e])
     failure(res, e)
   }
 }
@@ -289,7 +294,7 @@ export async function getSubscription(req, res) {
     })
     success(res, jsonUtils.subscriptionToJson(sub, null))
   } catch (e) {
-    console.log('ERROR getSubscription', e)
+    sphinxLogger.error(['ERROR getSubscription', e])
     failure(res, e)
   }
 }
@@ -308,7 +313,7 @@ export async function deleteSubscription(req, res) {
     models.Subscription.destroy({ where: { id, tenant } })
     success(res, true)
   } catch (e) {
-    console.log('ERROR deleteSubscription', e)
+    sphinxLogger.error(['ERROR deleteSubscription', e])
     failure(res, e)
   }
 }
@@ -326,7 +331,7 @@ export const getSubscriptionsForContact = async (req, res) => {
       subs.map((sub) => jsonUtils.subscriptionToJson(sub, null))
     )
   } catch (e) {
-    console.log('ERROR getSubscriptionsForContact', e)
+    sphinxLogger.error(['ERROR getSubscriptionsForContact', e])
     failure(res, e)
   }
 }
@@ -369,7 +374,7 @@ export async function createSubscription(req, res) {
     sendSubscriptionPayment(sub, isFirstMessage, owner)
     success(res, jsonUtils.subscriptionToJson(sub, chat))
   } catch (e) {
-    console.log('ERROR createSubscription', e)
+    sphinxLogger.error(['ERROR createSubscription', e])
     failure(res, e)
   }
 }
@@ -378,7 +383,7 @@ export async function editSubscription(req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  console.log('=> editSubscription')
+  sphinxLogger.info('=> editSubscription')
   const date = new Date()
   date.setMilliseconds(0)
   const id = parseInt(req.params.id)
@@ -419,13 +424,13 @@ export async function editSubscription(req, res) {
     const chat = await models.Chat.findOne({ where: { id: s.chatId, tenant } })
     success(res, jsonUtils.subscriptionToJson(sub, chat))
   } catch (e) {
-    console.log('ERROR createSubscription', e)
+    sphinxLogger.error(['ERROR createSubscription', e])
     failure(res, e)
   }
 }
 
 function jsonToSubscription(j) {
-  console.log('=>', j)
+  sphinxLogger.info(['=>', j])
   const cron = cronUtils.make(j.interval)
   return toCamel({
     ...j,

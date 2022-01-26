@@ -2,9 +2,11 @@ import * as expressWinston from 'express-winston'
 import * as winston from 'winston'
 import * as moment from 'moment'
 import { loadConfig } from './config'
+import * as blgr from 'blgr'
 
 const config = loadConfig()
 
+const blgrLogger = new blgr(config.logging_level)
 const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim()
 
 const logger = expressWinston.logger({
@@ -29,27 +31,94 @@ const logger = expressWinston.logger({
 export default logger
 
 interface Logging {
-  Express: boolean
-  Lightning: boolean
-  Meme: boolean
-  Tribes: boolean
-  Notification: boolean
-  Network: boolean
-  DB: boolean
-  Proxy: boolean
-  Lsat: boolean
+  Express: string
+  Lightning: string
+  Meme: string
+  Tribes: string
+  Notification: string
+  Network: string
+  DB: string
+  Proxy: string
+  Lsat: string
+  Greenlight: string
 }
 
 const logging: Logging = {
-  Express: config.logging && config.logging.includes('EXPRESS'),
-  Lightning: config.logging && config.logging.includes('LIGHTNING'),
-  Meme: config.logging && config.logging.includes('MEME'),
-  Tribes: config.logging && config.logging.includes('TRIBES'),
-  Notification: config.logging && config.logging.includes('NOTIFICATION'),
-  Network: config.logging && config.logging.includes('NETWORK'),
-  DB: config.logging && config.logging.includes('DB'),
-  Proxy: config.logging && config.logging.includes('PROXY'),
-  Lsat: config?.logging.includes('LSAT'),
+  Express: 'EXPRESS',
+  Lightning: 'LIGHTNING',
+  Meme: 'MEME',
+  Tribes: 'TRIBES',
+  Notification: 'NOTIFICATION',
+  Network: 'NETWORK',
+  DB: 'DB',
+  Proxy: 'PROXY',
+  Lsat: 'LSAT',
+  Greenlight: 'GREENLIGHT',
 }
 
-export { logging }
+async function sphinxLoggerBase(
+  message: any | Array<any>,
+  loggingType: string = 'MISC',
+  level: string
+) {
+  if (
+    (config.logging && config.logging.includes(loggingType)) ||
+    loggingType == 'MISC'
+  ) {
+    await blgrLogger.open()
+    const date = new Date(Date.now()).toUTCString()
+    blgrLogger[level](
+      date,
+      '[' + loggingType + ']',
+      ...(Array.isArray(message) ? message : [message])
+    )
+  }
+}
+
+async function sphinxLoggerNone(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'none')
+}
+async function sphinxLoggerError(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'error')
+}
+async function sphinxLoggerWarning(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'warning')
+}
+async function sphinxLoggerInfo(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'info')
+}
+async function sphinxLoggerDebug(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'debug')
+}
+async function sphinxLoggerSpam(
+  message: any | Array<any>,
+  loggingType?: string
+) {
+  sphinxLoggerBase(message, loggingType, 'spam')
+}
+
+const sphinxLogger = {
+  none: sphinxLoggerNone,
+  error: sphinxLoggerError,
+  warning: sphinxLoggerWarning,
+  info: sphinxLoggerInfo,
+  debug: sphinxLoggerDebug,
+  spam: sphinxLoggerSpam,
+}
+
+export { logging, sphinxLogger }

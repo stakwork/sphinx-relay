@@ -29,6 +29,7 @@ const jsonUtils = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
 const bolt11 = require("@boltz/bolt11");
 const config_1 = require("../utils/config");
+const logger_1 = require("../utils/logger");
 const config = (0, config_1.loadConfig)();
 /*
 delete type:
@@ -75,25 +76,25 @@ function onReceive(payload, dest) {
     return __awaiter(this, void 0, void 0, function* () {
         if (dest) {
             if (typeof dest !== 'string' || dest.length !== 66)
-                return console.log('INVALID DEST', dest);
+                return logger_1.sphinxLogger.error(`INVALID DEST ${dest}`);
         }
         payload.dest = dest; // add "dest" into payload
         // console.log("===> onReceive", JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
-            return console.log('no payload.type');
+            return logger_1.sphinxLogger.error(`no payload.type`);
         let owner = yield models_1.models.Contact.findOne({
             where: { isOwner: true, publicKey: dest },
         });
         if (!owner)
-            return console.log('=> RECEIVE: owner not found');
+            return logger_1.sphinxLogger.error(`=> RECEIVE: owner not found`);
         const tenant = owner.id;
         const ownerDataValues = owner || owner.dataValues;
         if (botTypes.includes(payload.type)) {
             // if is admin on tribe? or is bot maker?
-            console.log('=> got bot msg type!!!!');
+            logger_1.sphinxLogger.info(`=> got bot msg type!`);
             if (botMakerTypes.includes(payload.type)) {
                 if (!payload.bot_uuid)
-                    return console.log('bot maker type: no bot uuid');
+                    return logger_1.sphinxLogger.error(`bot maker type: no bot uuid`);
             }
             payload.owner = ownerDataValues;
             return controllers_1.ACTIONS[payload.type](payload);
@@ -212,7 +213,7 @@ function onReceive(payload, dest) {
             if (doAction)
                 forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner, forwardedFromContactId);
             else
-                console.log('=> insufficient payment for this action');
+                logger_1.sphinxLogger.error(`=> insufficient payment for this action`);
         }
         if (isTribeOwner && payload.type === msgtypes.purchase) {
             const mt = payload.message.mediaToken;
@@ -276,7 +277,7 @@ function doTheAction(data, owner) {
             controllers_1.ACTIONS[payload.type](payload);
         }
         else {
-            console.log('Incorrect payload type:', payload.type);
+            logger_1.sphinxLogger.error(`Incorrect payload type: ${payload.type}`);
         }
     });
 }
@@ -433,7 +434,7 @@ function parseAndVerifyPayload(data) {
                 }
             }
             else {
-                console.log('no sender.pub_key');
+                logger_1.sphinxLogger.error(`no sender.pub_key`);
                 return null;
             }
         }
@@ -488,14 +489,14 @@ function parseKeysendInvoice(i) {
             try {
                 const invoice = bolt11.decode(i.payment_request);
                 if (!invoice.payeeNodeKey)
-                    return console.log('cant get dest from pay req');
+                    return logger_1.sphinxLogger.error(`cant get dest from pay req`);
                 dest = invoice.payeeNodeKey;
                 owner = yield models_1.models.Contact.findOne({
                     where: { isOwner: true, publicKey: dest },
                 });
             }
             catch (e) {
-                console.log('FAILURE TO DECODE PAY REQ', e);
+                logger_1.sphinxLogger.error(`FAILURE TO DECODE PAY REQ ${e}`);
             }
         }
         else {
@@ -504,7 +505,7 @@ function parseKeysendInvoice(i) {
             dest = owner.publicKey;
         }
         if (!owner || !dest) {
-            console.log('=> parseKeysendInvoice ERROR: cant find owner');
+            logger_1.sphinxLogger.error(`=> parseKeysendInvoice ERROR: cant find owner`);
             return;
         }
         const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];

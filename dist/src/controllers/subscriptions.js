@@ -22,6 +22,7 @@ const rsa = require("../crypto/rsa");
 const moment = require("moment");
 const network = require("../network");
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 // store all current running jobs in memory
 let jobs = {};
 // init jobs from DB
@@ -30,7 +31,11 @@ const initializeCronJobs = () => __awaiter(void 0, void 0, void 0, function* () 
     const subs = yield getRawSubs({ where: { ended: false } });
     subs.length &&
         subs.forEach((sub) => {
-            console.log('=> starting subscription cron job', sub.id + ':', sub.cron);
+            logger_1.sphinxLogger.info([
+                '=> starting subscription cron job',
+                sub.id + ':',
+                sub.cron,
+            ]);
             startCronJob(sub);
         });
 });
@@ -46,7 +51,7 @@ function startCronJob(sub) {
                     delete jobs[sub.id];
                     return this.stop();
                 }
-                console.log('EXEC CRON =>', subscription.id);
+                logger_1.sphinxLogger.info(['EXEC CRON =>', subscription.id]);
                 if (subscription.paused) {
                     // skip, still in jobs{} tho
                     return this.stop();
@@ -54,7 +59,7 @@ function startCronJob(sub) {
                 let STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription);
                 if (STOP) {
                     // end the job and return
-                    console.log('stop');
+                    logger_1.sphinxLogger.info('stop');
                     subscription.update({ ended: true });
                     delete jobs[subscription.id];
                     return this.stop();
@@ -131,7 +136,7 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
             where: { id: subscription.chatId, tenant },
         });
         if (!subscription) {
-            console.log('=> no sub for this payment!!!');
+            logger_1.sphinxLogger.error('=> no sub for this payment!!!');
             return;
         }
         const forMe = false;
@@ -182,7 +187,7 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                 }, tenant);
             }),
             failure: (err) => __awaiter(this, void 0, void 0, function* () {
-                console.log('SEND PAY ERROR');
+                logger_1.sphinxLogger.error('SEND PAY ERROR');
                 let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
                 errMessage = 'Payment Failed: ' + errMessage;
                 const message = yield models_1.models.Message.create({
@@ -227,7 +232,7 @@ function pauseSubscription(req, res) {
             }
         }
         catch (e) {
-            console.log('ERROR pauseSubscription', e);
+            logger_1.sphinxLogger.error(['ERROR pauseSubscription', e]);
             (0, res_1.failure)(res, e);
         }
     });
@@ -253,7 +258,7 @@ function restartSubscription(req, res) {
             }
         }
         catch (e) {
-            console.log('ERROR restartSubscription', e);
+            logger_1.sphinxLogger.error(['ERROR restartSubscription', e]);
             (0, res_1.failure)(res, e);
         }
     });
@@ -281,7 +286,7 @@ const getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, func
         (0, res_1.success)(res, subs.map((sub) => jsonUtils.subscriptionToJson(sub, null)));
     }
     catch (e) {
-        console.log('ERROR getAllSubscriptions', e);
+        logger_1.sphinxLogger.error(['ERROR getAllSubscriptions', e]);
         (0, res_1.failure)(res, e);
     }
 });
@@ -299,7 +304,7 @@ function getSubscription(req, res) {
             (0, res_1.success)(res, jsonUtils.subscriptionToJson(sub, null));
         }
         catch (e) {
-            console.log('ERROR getSubscription', e);
+            logger_1.sphinxLogger.error(['ERROR getSubscription', e]);
             (0, res_1.failure)(res, e);
         }
     });
@@ -323,7 +328,7 @@ function deleteSubscription(req, res) {
             (0, res_1.success)(res, true);
         }
         catch (e) {
-            console.log('ERROR deleteSubscription', e);
+            logger_1.sphinxLogger.error(['ERROR deleteSubscription', e]);
             (0, res_1.failure)(res, e);
         }
     });
@@ -341,7 +346,7 @@ const getSubscriptionsForContact = (req, res) => __awaiter(void 0, void 0, void 
         (0, res_1.success)(res, subs.map((sub) => jsonUtils.subscriptionToJson(sub, null)));
     }
     catch (e) {
-        console.log('ERROR getSubscriptionsForContact', e);
+        logger_1.sphinxLogger.error(['ERROR getSubscriptionsForContact', e]);
         (0, res_1.failure)(res, e);
     }
 });
@@ -378,7 +383,7 @@ function createSubscription(req, res) {
             (0, res_1.success)(res, jsonUtils.subscriptionToJson(sub, chat));
         }
         catch (e) {
-            console.log('ERROR createSubscription', e);
+            logger_1.sphinxLogger.error(['ERROR createSubscription', e]);
             (0, res_1.failure)(res, e);
         }
     });
@@ -389,7 +394,7 @@ function editSubscription(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        console.log('=> editSubscription');
+        logger_1.sphinxLogger.info('=> editSubscription');
         const date = new Date();
         date.setMilliseconds(0);
         const id = parseInt(req.params.id);
@@ -428,14 +433,14 @@ function editSubscription(req, res) {
             (0, res_1.success)(res, jsonUtils.subscriptionToJson(sub, chat));
         }
         catch (e) {
-            console.log('ERROR createSubscription', e);
+            logger_1.sphinxLogger.error(['ERROR createSubscription', e]);
             (0, res_1.failure)(res, e);
         }
     });
 }
 exports.editSubscription = editSubscription;
 function jsonToSubscription(j) {
-    console.log('=>', j);
+    logger_1.sphinxLogger.info(['=>', j]);
     const cron = cronUtils.make(j.interval);
     return (0, case_1.toCamel)(Object.assign(Object.assign({}, j), { cron }));
 }

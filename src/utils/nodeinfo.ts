@@ -4,6 +4,7 @@ import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import { models } from '../models'
 import * as interfaces from '../grpc/interfaces'
 import { loadConfig } from './config'
+import { sphinxLogger } from './logger'
 
 const config = loadConfig()
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
@@ -152,7 +153,7 @@ export function nodeinfo() {
       }
       resolve(node)
     } catch (e) {
-      console.log('=>', e)
+      sphinxLogger.error(`=> ${e}`)
     }
   })
 }

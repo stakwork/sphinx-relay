@@ -21,6 +21,7 @@ const RNCryptor = require("jscryptor-2");
 const send_1 = require("./send");
 // import { Op } from 'sequelize'
 const constants_1 = require("../constants");
+const logger_1 = require("../utils/logger");
 const msgtypes = constants_1.default.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender, owner) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -31,7 +32,7 @@ function modifyPayloadAndSaveMediaKey(payload, chat, sender, owner) {
             return fillmsg(payload, ret); // key is re-encrypted later
         }
         catch (e) {
-            console.log('[modify] error', e);
+            logger_1.sphinxLogger.error(`[modify] error ${e}`);
             return payload;
         }
     });

@@ -5,7 +5,7 @@ import * as jsonUtils from '../utils/json'
 import * as network from '../network'
 import constants from '../constants'
 import { success, failure200, failure } from '../utils/res'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 
 /* 
  if in tribe: dont send
@@ -42,12 +42,10 @@ export function sendConfirmation({
 }
 
 export async function receiveConfirmation(payload) {
-  if (logging.Network) {
-    console.log(
-      '=> received confirmation',
-      payload.message && payload.message.id
-    )
-  }
+  sphinxLogger.info(
+    `=> received confirmation ${payload.message && payload.message.id}`,
+    logging.Network
+  )
 
   const dat = payload.content || payload
   const chat_uuid = dat.chat.uuid
@@ -153,7 +151,7 @@ export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
 }
 
 export async function receiveHeartbeat(payload) {
-  if (logging.Network) console.log('=> received heartbeat')
+  sphinxLogger.info(`=> received heartbeat`, logging.Network)
 
   const dat = payload.content || payload
   const sender_pub_key = dat.sender.pub_key
@@ -163,8 +161,8 @@ export async function receiveHeartbeat(payload) {
   // const tenant:number = owner.id
 
   if (!(sender_pub_key && sender_pub_key.length === 66))
-    return console.log('no sender')
-  if (!receivedAmount) return console.log('no amount')
+    return sphinxLogger.error(`no sender`)
+  if (!receivedAmount) return sphinxLogger.error(`no amount`)
 
   const amount = Math.round(receivedAmount / 2)
   const amt = Math.max(amount || constants.min_sat_amount)
@@ -238,7 +236,7 @@ export async function healthcheck(req, res) {
 }
 
 export async function receiveHeartbeatConfirmation(payload) {
-  if (logging.Network) console.log('=> received heartbeat confirmation')
+  sphinxLogger.info(`=> received heartbeat confirmation`, logging.Network)
 
   const dat = payload.content || payload
   const sender_pub_key = dat.sender.pub_key

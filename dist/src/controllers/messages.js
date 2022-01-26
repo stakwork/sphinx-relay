@@ -24,7 +24,7 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
-// import { date } from "yup/lib/locale";
+// deprecated
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -33,8 +33,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!dateToReturn) {
         return (0, exports.getAllMessages)(req, res);
     }
-    if (logger_1.logging.Express)
-        console.log(dateToReturn);
+    logger_1.sphinxLogger.info(dateToReturn, logger_1.logging.Express);
     const owner = req.owner;
     // const chatId = req.query.chat_id
     let newMessagesWhere = {
@@ -105,18 +104,22 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
-    if (logger_1.logging.Express) {
-        console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`);
+    let order = 'asc';
+    if (req.query.order && req.query.order === 'desc') {
+        order = 'desc';
     }
-    const messages = yield models_1.models.Message.findAll({
-        order: [['id', 'asc']],
-        limit,
-        offset,
+    logger_1.sphinxLogger.info(`=> getAllMessages, limit: ${limit}, offset: ${offset}`, logger_1.logging.Express);
+    const clause = {
+        order: [['id', order]],
         where: { tenant },
-    });
-    if (logger_1.logging.Express) {
-        console.log('=> got msgs', messages && messages.length);
+    };
+    const all_messages_length = yield models_1.models.Message.count(clause);
+    if (limit) {
+        clause.limit = limit;
+        clause.offset = offset;
     }
+    const messages = yield models_1.models.Message.findAll(clause);
+    logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chatIds = [];
     messages.forEach((m) => {
         if (m.chatId && !chatIds.includes(m.chatId)) {
@@ -133,6 +136,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // console.log("=> indexed chats");
     (0, res_1.success)(res, {
         new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+        new_messages_total: all_messages_length,
         confirmed_messages: [],
     });
 });
@@ -147,24 +151,25 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!dateToReturn) {
         return (0, exports.getAllMessages)(req, res);
     }
-    if (logger_1.logging.Express) {
-        console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`);
+    logger_1.sphinxLogger.info(`=> getMsgs, limit: ${limit}, offset: ${offset}`, logger_1.logging.Express);
+    let order = 'asc';
+    if (req.query.order && req.query.order === 'desc') {
+        order = 'desc';
     }
     const clause = {
-        order: [['id', 'asc']],
+        order: [['id', order]],
         where: {
             updated_at: { [sequelize_1.Op.gte]: dateToReturn },
             tenant,
         },
     };
+    const numberOfNewMessages = yield models_1.models.Message.count(clause);
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
     const messages = yield models_1.models.Message.findAll(clause);
-    if (logger_1.logging.Express) {
-        console.log('=> got msgs', messages && messages.length);
-    }
+    logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chatIds = [];
     messages.forEach((m) => {
         if (m.chatId && !chatIds.includes(m.chatId)) {
@@ -179,6 +184,7 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     (0, res_1.success)(res, {
         new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+        new_messages_total: numberOfNewMessages,
     });
 });
 exports.getMsgs = getMsgs;
@@ -318,10 +324,10 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.sendMessage = sendMessage;
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received message', { payload });
+    logger_1.sphinxLogger.info(`received message ${payload}`);
     const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, message_status, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log('=> no group chat!');
+        return logger_1.sphinxLogger.info('=> no group chat!');
     }
     const tenant = owner.id;
     const text = content || '';
@@ -363,11 +369,9 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id, } = yield helpers.parseReceiveParams(payload);
-    if (logger_1.logging.Network) {
-        console.log('=> received boost ' + amount + ' sats on network:', network_type);
-    }
+    logger_1.sphinxLogger.info(`=> received boost  ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
-        return console.log('=> no group chat!');
+        return logger_1.sphinxLogger.error('=> no group chat!');
     }
     const tenant = owner.id;
     const text = content;
@@ -416,11 +420,9 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
 exports.receiveBoost = receiveBoost;
 const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, date_string, amount, network_type } = yield helpers.parseReceiveParams(payload);
-    if (logger_1.logging.Network) {
-        console.log('=> received repayment ' + amount + ' sats');
-    }
+    logger_1.sphinxLogger.info(`=> received repayment ${amount}sats`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
-        return console.log('=> no group chat!');
+        return logger_1.sphinxLogger.error('=> no group chat!');
     }
     const tenant = owner.id;
     var date = new Date();
@@ -446,12 +448,10 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
 });
 exports.receiveRepayment = receiveRepayment;
 const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    if (logger_1.logging.Network) {
-        console.log('=> received delete message');
-    }
+    logger_1.sphinxLogger.info('=> received delete message', logger_1.logging.Network);
     const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log('=> no group chat!');
+        return logger_1.sphinxLogger.error('=> no group chat!');
     }
     const tenant = owner.id;
     const isTribe = chat_type === constants_1.default.chat_types.tribe;

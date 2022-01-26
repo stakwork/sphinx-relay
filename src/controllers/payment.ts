@@ -10,6 +10,7 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
+import { sphinxLogger } from '../utils/logger'
 
 export const sendPayment = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
@@ -30,7 +31,7 @@ export const sendPayment = async (req, res) => {
     reply_uuid,
   } = req.body
 
-  console.log('[send payment]', req.body)
+  sphinxLogger.info(`[send payment] ${req.body}`)
 
   const owner = req.owner
 
@@ -139,7 +140,7 @@ export const sendPayment = async (req, res) => {
 }
 
 export const receivePayment = async (payload) => {
-  console.log('received payment', { payload })
+  sphinxLogger.info(`received payment ${{ payload }}`)
 
   var date = new Date()
   date.setMilliseconds(0)
@@ -160,7 +161,7 @@ export const receivePayment = async (payload) => {
     sender_photo_url,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return sphinxLogger.error(`=> no group chat!`)
   }
   const tenant: number = owner.id
 

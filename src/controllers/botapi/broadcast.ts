@@ -6,17 +6,18 @@ import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
+import { sphinxLogger } from '../../utils/logger'
 
 export default async function broadcast(a: any) {
   const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid } = a
 
-  console.log('=> BOT BROADCAST')
-  if (!content) return console.log('no content')
-  if (!chat_uuid) return console.log('no chat_uuid')
+  sphinxLogger.info(`=> BOT BROADCAST`)
+  if (!content) return sphinxLogger.error(`no content`)
+  if (!chat_uuid) return sphinxLogger.error(`no chat_uuid`)
   const theChat = await getTribeOwnersChatByUUID(chat_uuid)
-  if (!(theChat && theChat.id)) return console.log('no chat')
+  if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
   if (theChat.type !== constants.chat_types.tribe)
-    return console.log('not a tribe')
+    return sphinxLogger.error(`not a tribe`)
   const owner = await models.Contact.findOne({
     where: { id: theChat.tenant },
   })
@@ -73,7 +74,7 @@ export default async function broadcast(a: any) {
     type: constants.message_types.bot_res,
     success: () => ({ success: true }),
     failure: (e) => {
-      return console.log(e)
+      return sphinxLogger.error(e)
     },
     isForwarded: true,
   })

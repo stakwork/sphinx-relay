@@ -1,6 +1,7 @@
 import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
+import { sphinxLogger } from './logger'
 
 const config = loadConfig()
 
@@ -45,7 +46,7 @@ export async function createOrEditPerson(
     const person = await r.json()
     return person
   } catch (e) {
-    console.log('[tribes] unauthorized to create person')
+    sphinxLogger.error('[tribes] unauthorized to create person')
     throw e
   }
 }
@@ -63,7 +64,43 @@ export async function deletePerson(host, id, owner_pubkey) {
     }
     // const j = await r.json()
   } catch (e) {
-    console.log('[tribes] unauthorized to delete person')
+    sphinxLogger.error(`[tribes] unauthorized to delete person`)
+    throw e
+  }
+}
+
+export async function claimOnLiquid({
+  host,
+  asset,
+  to,
+  amount,
+  memo,
+  owner_pubkey,
+}) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(
+      protocol + '://' + host + '/withdraw?token=' + token,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          asset,
+          to,
+          amount,
+          memo,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      throw 'failed to withdraw to liquid ' + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (e) {
+    sphinxLogger.error('[liquid] unauthorized to move asset', e)
     throw e
   }
 }

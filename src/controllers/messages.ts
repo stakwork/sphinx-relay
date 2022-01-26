@@ -11,9 +11,9 @@ import { sendConfirmation } from './confirmations'
 import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
-import { logging } from '../utils/logger'
-// import { date } from "yup/lib/locale";
+import { logging, sphinxLogger } from '../utils/logger'
 
+// deprecated
 export const getMessages = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -24,7 +24,7 @@ export const getMessages = async (req, res) => {
     return getAllMessages(req, res)
   }
 
-  if (logging.Express) console.log(dateToReturn)
+  sphinxLogger.info(dateToReturn, logging.Express)
 
   const owner = req.owner
   // const chatId = req.query.chat_id
@@ -108,21 +108,31 @@ export const getAllMessages = async (req, res) => {
 
   const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
   const offset = (req.query.offset && parseInt(req.query.offset)) || 0
-
-  if (logging.Express) {
-    console.log(`=> getAllMessages, limit: ${limit}, offset: ${offset}`)
+  let order = 'asc'
+  if (req.query.order && req.query.order === 'desc') {
+    order = 'desc'
   }
 
-  const messages = await models.Message.findAll({
-    order: [['id', 'asc']],
-    limit,
-    offset,
+  sphinxLogger.info(
+    `=> getAllMessages, limit: ${limit}, offset: ${offset}`,
+    logging.Express
+  )
+
+  const clause: { [k: string]: any } = {
+    order: [['id', order]],
     where: { tenant },
-  })
-
-  if (logging.Express) {
-    console.log('=> got msgs', messages && messages.length)
   }
+  const all_messages_length = await models.Message.count(clause)
+  if (limit) {
+    clause.limit = limit
+    clause.offset = offset
+  }
+  const messages = await models.Message.findAll(clause)
+
+  sphinxLogger.info(
+    `=> got msgs, ${messages && messages.length}`,
+    logging.Express
+  )
 
   const chatIds: number[] = []
   messages.forEach((m) => {
@@ -144,6 +154,7 @@ export const getAllMessages = async (req, res) => {
     new_messages: messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
     ),
+    new_messages_total: all_messages_length,
     confirmed_messages: [],
   })
 }
@@ -159,25 +170,32 @@ export const getMsgs = async (req, res) => {
     return getAllMessages(req, res)
   }
 
-  if (logging.Express) {
-    console.log(`=> getMsgs, limit: ${limit}, offset: ${offset}`)
-  }
+  sphinxLogger.info(
+    `=> getMsgs, limit: ${limit}, offset: ${offset}`,
+    logging.Express
+  )
 
+  let order = 'asc'
+  if (req.query.order && req.query.order === 'desc') {
+    order = 'desc'
+  }
   const clause: { [k: string]: any } = {
-    order: [['id', 'asc']],
+    order: [['id', order]],
     where: {
       updated_at: { [Op.gte]: dateToReturn },
       tenant,
     },
   }
+  const numberOfNewMessages = await models.Message.count(clause)
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
   const messages = await models.Message.findAll(clause)
-  if (logging.Express) {
-    console.log('=> got msgs', messages && messages.length)
-  }
+  sphinxLogger.info(
+    `=> got msgs, ${messages && messages.length}`,
+    logging.Express
+  )
   const chatIds: number[] = []
   messages.forEach((m) => {
     if (m.chatId && !chatIds.includes(m.chatId)) {
@@ -196,6 +214,7 @@ export const getMsgs = async (req, res) => {
     new_messages: messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
     ),
+    new_messages_total: numberOfNewMessages,
   })
 }
 
@@ -354,7 +373,7 @@ export const sendMessage = async (req, res) => {
 }
 
 export const receiveMessage = async (payload) => {
-  console.log('received message', { payload })
+  sphinxLogger.info(`received message ${payload}`)
 
   const {
     owner,
@@ -374,7 +393,7 @@ export const receiveMessage = async (payload) => {
     message_status,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return sphinxLogger.info('=> no group chat!')
   }
   const tenant: number = owner.id
   const text = content || ''
@@ -437,14 +456,12 @@ export const receiveBoost = async (payload) => {
     msg_id,
   } = await helpers.parseReceiveParams(payload)
 
-  if (logging.Network) {
-    console.log(
-      '=> received boost ' + amount + ' sats on network:',
-      network_type
-    )
-  }
+  sphinxLogger.info(
+    `=> received boost  ${amount} sats on network: ${network_type}`,
+    logging.Network
+  )
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return sphinxLogger.error('=> no group chat!')
   }
   const tenant: number = owner.id
   const text = content
@@ -500,11 +517,9 @@ export const receiveRepayment = async (payload) => {
   const { owner, sender, chat, date_string, amount, network_type } =
     await helpers.parseReceiveParams(payload)
 
-  if (logging.Network) {
-    console.log('=> received repayment ' + amount + ' sats')
-  }
+  sphinxLogger.info(`=> received repayment ${amount}sats`, logging.Network)
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return sphinxLogger.error('=> no group chat!')
   }
   const tenant = owner.id
 
@@ -535,13 +550,11 @@ export const receiveRepayment = async (payload) => {
 }
 
 export const receiveDeleteMessage = async (payload) => {
-  if (logging.Network) {
-    console.log('=> received delete message')
-  }
+  sphinxLogger.info('=> received delete message', logging.Network)
   const { owner, sender, chat, chat_type, msg_uuid } =
     await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
-    return console.log('=> no group chat!')
+    return sphinxLogger.error('=> no group chat!')
   }
   const tenant = owner.id
 

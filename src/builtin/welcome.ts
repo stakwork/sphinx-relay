@@ -3,6 +3,7 @@ import { finalAction } from '../controllers/botapi'
 import { models } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
+import { sphinxLogger } from '../utils/logger'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -28,7 +29,8 @@ export function init() {
       try {
         const chat = await getTribeOwnersChatByUUID(message.channel.id)
         // console.log("=> WelcomeBot chat", chat);
-        if (!(chat && chat.id)) return console.log('=> welcomebot no chat')
+        if (!(chat && chat.id))
+          return sphinxLogger.error(`=> welcomebot no chat`)
         const chatBot = await models.ChatBot.findOne({
           where: {
             chatId: chat.id,
@@ -51,7 +53,7 @@ export function init() {
         }, 2500)
         return
       } catch (e) {
-        console.log('WELCOME BOT ERROR', e)
+        sphinxLogger.error(`WELCOME BOT ERROR ${e}`)
       }
     }
 
@@ -61,9 +63,10 @@ export function init() {
     switch (cmd) {
       case 'setmessage':
         if (arr.length < 3) return
-        console.log('setmsg', arr[2])
+        sphinxLogger.info(`setmsg ${arr[2]}`)
         const chat = await getTribeOwnersChatByUUID(message.channel.id)
-        if (!(chat && chat.id)) return console.log('=> welcomebot no chat')
+        if (!(chat && chat.id))
+          return sphinxLogger.error(`=> welcomebot no chat`)
         const chatBot = await models.ChatBot.findOne({
           where: {
             chatId: chat.id,

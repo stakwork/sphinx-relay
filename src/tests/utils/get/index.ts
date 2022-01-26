@@ -17,4 +17,5 @@ export { getTribeByUuid } from './getTribeByUuid'
 export { getCheckNewStream } from './getCheckNewStream'
 export { getLatest } from './getLatest'
 export { getCheckBotMsg } from './getCheckBotMsg'
-
+export { getCheckMsgs } from './getCheckMsgs'
+export { getCheckAllMessages } from './getCheckAllMessages'

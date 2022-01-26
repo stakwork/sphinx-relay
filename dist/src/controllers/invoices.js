@@ -23,6 +23,7 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const bolt11 = require("@boltz/bolt11");
+const logger_1 = require("../utils/logger");
 function stripLightningPrefix(s) {
     if (s.toLowerCase().startsWith('lightning:'))
         return s.substring(10);
@@ -34,16 +35,16 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const tenant = req.owner.id;
     const payment_request = stripLightningPrefix(req.body.payment_request);
     if (!payment_request) {
-        console.log('[pay invoice] "payment_request" is empty');
+        logger_1.sphinxLogger.error(`[pay invoice] "payment_request" is empty`);
         res.status(400);
         res.json({ success: false, error: 'payment_request is empty' });
         res.end();
         return;
     }
-    console.log(`[pay invoice] ${payment_request}`);
+    logger_1.sphinxLogger.info(`[pay invoice] ${payment_request}`);
     try {
         const response = yield Lightning.sendPayment(payment_request, req.owner.publicKey);
-        console.log('[pay invoice data]', response);
+        logger_1.sphinxLogger.info(`[pay invoice data] ${response}`);
         const message = yield models_1.models.Message.findOne({
             where: { payment_request, tenant },
         });
@@ -76,11 +77,11 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             updatedAt: date,
             tenant,
         });
-        console.log('[pay invoice] stored message', paidMessage);
+        logger_1.sphinxLogger.info(`[pay invoice] stored message ${paidMessage}`);
         (0, res_1.success)(res, jsonUtils.messageToJson(paidMessage, chat));
     }
     catch (e) {
-        console.log('ERR paying invoice', e);
+        logger_1.sphinxLogger.error(`ERR paying invoice ${e}`);
         return (0, res_1.failure)(res, 'could not pay invoice');
     }
 });
@@ -156,7 +157,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             const invoice = bolt11.decode(payment_request);
             if (invoice) {
                 const paymentHash = ((_a = invoice.tags.find((t) => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
-                console.log('decoded pay req', { invoice });
+                logger_1.sphinxLogger.info(`decoded pay req ${{ invoice }}`);
                 const owner = req.owner;
                 const chat = yield helpers.findOrCreateChat({
                     chat_id,
@@ -198,7 +199,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             }
         }
         catch (err) {
-            console.log('addInvoice error:', err);
+            logger_1.sphinxLogger.error(`addInvoice error: ${err}`);
         }
     }
 });
@@ -208,20 +209,20 @@ const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         return (0, res_1.failure)(res, 'no owner');
     const lightning = yield Lightning.loadLightning();
     lightning.listInvoices({}, (err, response) => {
-        console.log({ err, response });
+        logger_1.sphinxLogger.info({ err, response });
         if (err == null) {
             res.status(200);
             res.json(response);
             res.end();
         }
         else {
-            console.log({ err, response });
+            logger_1.sphinxLogger.error({ err, response });
         }
     });
 });
 exports.listInvoices = listInvoices;
 const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('received invoice', payload);
+    logger_1.sphinxLogger.info(`received invoice ${payload}`);
     const total_spent = 1;
     const dat = payload.content || payload;
     const payment_request = dat.message.invoice;
@@ -230,7 +231,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     date.setMilliseconds(0);
     const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
-        return console.log('=> no group chat!');
+        return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
     const tenant = owner.id;
     const { memo, sat, msat, paymentHash, invoiceDate, expirationSeconds } = (0, decode_1.decodePaymentRequest)(payment_request);
@@ -259,7 +260,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.senderPic = sender_photo_url;
     }
     const message = yield models_1.models.Message.create(msg);
-    console.log('received keysend invoice message', message.id);
+    logger_1.sphinxLogger.info(`received keysend invoice message ${message.id}`);
     socket.sendJson({
         type: 'invoice',
         response: jsonUtils.messageToJson(message, chat, sender),

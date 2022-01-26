@@ -7,15 +7,21 @@ import * as crypto from 'crypto'
 import * as interfaces from './interfaces'
 import { loadLightning } from './lightning'
 import * as Lightning from './lightning'
+import { sphinxLogger } from '../utils/logger'
+
+let GID: GreenlightIdentity
 
 const config = loadConfig()
 
 export async function initGreenlight() {
+  sphinxLogger.info('=> initGreenlight')
+  // if (GID && GID.initialized) return
   await startGreenlightInit()
   // await streamHsmRequests()
 }
 
 export function keepalive() {
+  sphinxLogger.info('=> Greenlight keepalive')
   setInterval(() => {
     Lightning.getInfo()
   }, 59000)
@@ -30,7 +36,7 @@ const loadSchedulerCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
-export function loadScheduler() {
+function loadScheduler() {
   // 35.236.110.178:2601
   var descriptor = grpc.load('proto/scheduler.proto')
   var scheduler: any = descriptor.scheduler
@@ -55,9 +61,10 @@ interface GreenlightIdentity {
   node_id: string
   bip32_key: string
   bolt12_key: string
+  initialized: boolean
 }
-let GID: GreenlightIdentity
 export async function startGreenlightInit() {
+  sphinxLogger.info('=> startGreenlightInit')
   try {
     let needToRegister = false
     const secretPath = config.hsm_secret_path
@@ -78,6 +85,7 @@ export async function startGreenlightInit() {
       node_id: node_id.toString('hex'),
       bip32_key: bip32_key.toString('hex'),
       bolt12_key: bolt12_key.toString('hex'),
+      initialized: false,
     }
     if (needToRegister) {
       await registerGreenlight(GID, rootkey, secretPath)
@@ -88,9 +96,10 @@ export async function startGreenlightInit() {
       await recoverGreenlight(GID)
     }
     const r = await schedule(GID.node_id)
-    console.log(r.node_id.toString('hex'))
+    sphinxLogger.info('Greenlight pubkey', r.node_id.toString('hex'))
+    GID.initialized = true
   } catch (e) {
-    console.log('initGreenlight error', e)
+    sphinxLogger.error(`initGreenlight error ${e}`)
   }
 }
 
@@ -99,6 +108,7 @@ interface ScheduleResponse {
   grpc_uri: string
 }
 export function schedule(pubkey: string): Promise<ScheduleResponse> {
+  sphinxLogger.info('=> Greenlight schedule')
   return new Promise(async (resolve, reject) => {
     try {
       const s = loadScheduler()
@@ -117,24 +127,25 @@ export function schedule(pubkey: string): Promise<ScheduleResponse> {
         }
       )
     } catch (e) {
-      console.log(e)
+      sphinxLogger.error(e)
     }
   })
 }
 
 async function recoverGreenlight(gid: GreenlightIdentity) {
+  sphinxLogger.info('=> recoverGreenlight')
   try {
     const challenge = await get_challenge(gid.node_id)
     const signature = await sign_challenge(challenge)
     const res = await recover(gid.node_id, challenge, signature)
     const keyLoc = config.tls_key_location
     const chainLoc = config.tls_chain_location
-    console.log('RECOVER KEY', keyLoc, res.device_key)
+    sphinxLogger.info(`RECOVER KEY ${keyLoc} ${res.device_key}`)
     fs.writeFileSync(keyLoc, res.device_key)
     fs.writeFileSync(chainLoc, res.device_cert)
     writeTlsLocation()
   } catch (e) {
-    console.log('Greenlight register error', e)
+    sphinxLogger.info(`Greenlight register error ${e}`)
   }
 }
 
@@ -151,6 +162,7 @@ async function registerGreenlight(
   secretPath: string
 ) {
   try {
+    sphinxLogger.info('=> registerGreenlight')
     const challenge = await get_challenge(gid.node_id)
     const signature = await sign_challenge(challenge)
     const res = await register(
@@ -161,14 +173,14 @@ async function registerGreenlight(
     )
     const keyLoc = config.tls_key_location
     const chainLoc = config.tls_chain_location
-    console.log('WRITE KEY', keyLoc, res.device_key)
+    sphinxLogger.info(`WRITE KEY ${keyLoc} ${res.device_key}`)
     fs.writeFileSync(keyLoc, res.device_key)
     fs.writeFileSync(chainLoc, res.device_cert)
     writeTlsLocation()
     // after registered successfully
     fs.writeFileSync(secretPath, Buffer.from(rootkey, 'hex'))
   } catch (e) {
-    console.log('Greenlight register error', e)
+    sphinxLogger.error(`Greenlight register error ${e}`)
   }
 }
 
@@ -227,7 +239,7 @@ export function register(
           signature: ByteBuffer.fromHex(signature),
         },
         (err, response) => {
-          console.log(err, response)
+          sphinxLogger.info(`${err} ${response}`)
           if (!err) {
             resolve(response)
           } else {
@@ -256,7 +268,7 @@ export function recover(
           signature: ByteBuffer.fromHex(signature),
         },
         (err, response) => {
-          console.log(err, response)
+          sphinxLogger.info(`${err} ${response}`)
           if (!err) {
             resolve(response)
           } else {
@@ -290,7 +302,7 @@ export async function streamHsmRequests() {
     const lightning = await loadLightning(true) // try proxy
     var call = lightning.streamHsmRequests({})
     call.on('data', async function (response) {
-      console.log('DATA', response)
+      sphinxLogger.info(`DATA ${response}`)
       try {
         let sig = ''
         if (response.context) {
@@ -303,8 +315,8 @@ export async function streamHsmRequests() {
             response.raw.toString('hex')
           )
         } else {
-          console.log('RAW ====== ')
-          console.log(response.raw.toString('hex'))
+          sphinxLogger.info(`RAW ====== `)
+          sphinxLogger.info(response.raw.toString('hex'))
           sig = libhsmd.Handle(
             capabilities_bitset,
             0,
@@ -318,24 +330,24 @@ export async function streamHsmRequests() {
             raw: ByteBuffer.fromHex(sig),
           },
           (err, response) => {
-            if (err) console.log('[HSMD] error', err)
-            else console.log('[HSMD] success', response)
+            if (err) sphinxLogger.error(`[HSMD] error ${err}`)
+            else sphinxLogger.info(`[HSMD] success ${response}`)
           }
         )
       } catch (e) {
-        console.log('[HSMD] failure', e)
+        sphinxLogger.error(`[HSMD] failure ${e}`)
       }
     })
     call.on('status', function (status) {
-      console.log('[HSMD] Status', status.code, status)
+      sphinxLogger.info(`[HSMD] Status ${status.code} ${status}`)
     })
     call.on('error', function (err) {
-      console.error('[HSMD] Error', err.code)
+      sphinxLogger.error(`[HSMD] Error ${err.code}`)
     })
     call.on('end', function () {
-      console.log(`[HSMD] Closed stream`)
+      sphinxLogger.info(`[HSMD] Closed stream`)
     })
   } catch (e) {
-    console.log('[HSMD] last error:', e)
+    sphinxLogger.error(`[HSMD] last error: ${e}`)
   }
 }

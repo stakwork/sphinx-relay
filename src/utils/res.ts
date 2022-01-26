@@ -1,3 +1,5 @@
+import { sphinxLogger } from './logger'
+
 function success(res, json) {
   res.status(200)
   res.json({
@@ -9,7 +11,7 @@ function success(res, json) {
 
 function failure(res, e) {
   const errorMessage = (e && e.message) || e
-  console.log('--> failure:', errorMessage)
+  sphinxLogger.error(`--> failure: ${errorMessage}`)
   res.status(400)
   res.json({
     success: false,

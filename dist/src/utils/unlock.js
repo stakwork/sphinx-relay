@@ -14,6 +14,7 @@ const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const fs = require('fs');
 const readline = require('readline');
+const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 /*
 "lnd_pwd_path": "/relay/.lnd/.lndpwd"
@@ -23,16 +24,16 @@ function tryToUnlockLND() {
         const p = config.lnd_pwd_path;
         if (!p)
             return;
-        console.log('==>', p);
+        logger_1.sphinxLogger.info(`==> ${p}`);
         var pwd = yield getFirstLine(config.lnd_pwd_path);
         if (!pwd)
             return;
-        console.log('==>', pwd, typeof pwd);
+        logger_1.sphinxLogger.info(`==> ${pwd} ${typeof pwd}`);
         try {
             yield Lightning.unlockWallet(String(pwd));
         }
         catch (e) {
-            console.log('[unlock] Error:', e);
+            logger_1.sphinxLogger.error(`[unlock] Error: ${e}`);
         }
     });
 }

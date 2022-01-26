@@ -10,7 +10,7 @@ import constants from '../constants'
 import * as tribes from '../utils/tribes'
 import * as network from '../network'
 import { isProxy, generateNewExternalUser } from '../utils/proxy'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
@@ -170,11 +170,14 @@ export async function generateOwnerWithExternalSigner(req, res) {
 }
 
 export const generateToken = async (req, res) => {
-  console.log('=> generateToken called', {
-    body: req.body,
-    params: req.params,
-    query: req.query,
-  })
+  sphinxLogger.info([
+    '=> generateToken called',
+    {
+      body: req.body,
+      params: req.params,
+      query: req.query,
+    },
+  ])
 
   const where: { [k: string]: any } = { isOwner: true }
 
@@ -196,7 +199,7 @@ export const generateToken = async (req, res) => {
       failure(res, 'Wrong Password')
       return
     } else {
-      console.log('PASSWORD ACCEPTED!')
+      sphinxLogger.info('PASSWORD ACCEPTED!')
     }
   }
 
@@ -246,13 +249,17 @@ export const generateToken = async (req, res) => {
 export const updateContact = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  if (logging.Network) {
-    console.log('=> updateContact called', {
-      body: req.body,
-      params: req.params,
-      query: req.query,
-    })
-  }
+  sphinxLogger.info(
+    [
+      '=> updateContact called',
+      {
+        body: req.body,
+        params: req.params,
+        query: req.query,
+      },
+    ],
+    logging.Network
+  )
 
   let attrs = extractAttrs(req.body)
 
@@ -289,7 +296,7 @@ export const updateContact = async (req, res) => {
     .map((c) => c.id)
   if (contactIds.length == 0) return
 
-  console.log('=> send contact_key to', contactIds)
+  sphinxLogger.info(['=> send contact_key to', contactIds])
   helpers.sendContactKeys({
     contactIds: contactIds,
     sender: owner,
@@ -301,11 +308,17 @@ export const updateContact = async (req, res) => {
 export const exchangeKeys = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  console.log('=> exchangeKeys called', {
-    body: req.body,
-    params: req.params,
-    query: req.query,
-  })
+  sphinxLogger.info(
+    [
+      '=> exchangeKeys called',
+      {
+        body: req.body,
+        params: req.params,
+        query: req.query,
+      },
+    ],
+    logging.Network
+  )
 
   const contact = await models.Contact.findOne({
     where: { id: req.params.id, tenant },
@@ -324,13 +337,17 @@ export const exchangeKeys = async (req, res) => {
 export const createContact = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  if (logging.Network) {
-    console.log('=> createContact called', {
-      body: req.body,
-      params: req.params,
-      query: req.query,
-    })
-  }
+  sphinxLogger.info(
+    [
+      '=> createContact called',
+      {
+        body: req.body,
+        params: req.params,
+        query: req.query,
+      },
+    ],
+    logging.Network
+  )
 
   let attrs = extractAttrs(req.body)
 
@@ -458,11 +475,13 @@ export const receiveContactKey = async (payload) => {
   const owner = payload.owner
   const tenant: number = owner.id
 
-  if (logging.Network)
-    console.log('=> received contact key from', sender_pub_key, tenant)
+  sphinxLogger.info(
+    ['=> received contact key from', sender_pub_key, tenant],
+    logging.Network
+  )
 
   if (!sender_pub_key) {
-    return console.log('no pubkey!')
+    return sphinxLogger.error('no pubkey!')
   }
 
   const sender = await models.Contact.findOne({
@@ -493,7 +512,7 @@ export const receiveContactKey = async (payload) => {
       tenant
     )
   } else {
-    console.log('DID NOT FIND SENDER')
+    sphinxLogger.info('DID NOT FIND SENDER')
   }
 
   if (msgIncludedContactKey) {
@@ -508,10 +527,10 @@ export const receiveContactKey = async (payload) => {
 }
 
 export const receiveConfirmContactKey = async (payload) => {
-  console.log(
+  sphinxLogger.info([
     `=> confirm contact key for ${payload.sender && payload.sender.pub_key}`,
-    JSON.stringify(payload)
-  )
+    JSON.stringify(payload),
+  ])
 
   const dat = payload.content || payload
   const sender_pub_key = dat.sender.pub_key
@@ -522,7 +541,7 @@ export const receiveConfirmContactKey = async (payload) => {
   const tenant: number = owner.id
 
   if (!sender_pub_key) {
-    return console.log('no pubkey!')
+    return sphinxLogger.error('no pubkey!')
   }
 
   const sender = await models.Contact.findOne({

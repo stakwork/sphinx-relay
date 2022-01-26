@@ -168,11 +168,14 @@ function generateOwnerWithExternalSigner(req, res) {
 }
 exports.generateOwnerWithExternalSigner = generateOwnerWithExternalSigner;
 const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('=> generateToken called', {
-        body: req.body,
-        params: req.params,
-        query: req.query,
-    });
+    logger_1.sphinxLogger.info([
+        '=> generateToken called',
+        {
+            body: req.body,
+            params: req.params,
+            query: req.query,
+        },
+    ]);
     const where = { isOwner: true };
     const pubkey = req.body['pubkey'];
     if ((0, proxy_1.isProxy)()) {
@@ -192,7 +195,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return;
         }
         else {
-            console.log('PASSWORD ACCEPTED!');
+            logger_1.sphinxLogger.info('PASSWORD ACCEPTED!');
         }
     }
     const token = req.body['token'];
@@ -219,13 +222,14 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    if (logger_1.logging.Network) {
-        console.log('=> updateContact called', {
+    logger_1.sphinxLogger.info([
+        '=> updateContact called',
+        {
             body: req.body,
             params: req.params,
             query: req.query,
-        });
-    }
+        },
+    ], logger_1.logging.Network);
     let attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({
         where: { id: req.params.id, tenant },
@@ -255,7 +259,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         .map((c) => c.id);
     if (contactIds.length == 0)
         return;
-    console.log('=> send contact_key to', contactIds);
+    logger_1.sphinxLogger.info(['=> send contact_key to', contactIds]);
     helpers.sendContactKeys({
         contactIds: contactIds,
         sender: owner,
@@ -268,11 +272,14 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    console.log('=> exchangeKeys called', {
-        body: req.body,
-        params: req.params,
-        query: req.query,
-    });
+    logger_1.sphinxLogger.info([
+        '=> exchangeKeys called',
+        {
+            body: req.body,
+            params: req.params,
+            query: req.query,
+        },
+    ], logger_1.logging.Network);
     const contact = yield models_1.models.Contact.findOne({
         where: { id: req.params.id, tenant },
     });
@@ -289,13 +296,14 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    if (logger_1.logging.Network) {
-        console.log('=> createContact called', {
+    logger_1.sphinxLogger.info([
+        '=> createContact called',
+        {
             body: req.body,
             params: req.params,
             query: req.query,
-        });
-    }
+        },
+    ], logger_1.logging.Network);
     let attrs = extractAttrs(req.body);
     const owner = req.owner;
     const existing = attrs['public_key'] &&
@@ -410,10 +418,9 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     const sender_photo_url = dat.sender.photo_url;
     const owner = payload.owner;
     const tenant = owner.id;
-    if (logger_1.logging.Network)
-        console.log('=> received contact key from', sender_pub_key, tenant);
+    logger_1.sphinxLogger.info(['=> received contact key from', sender_pub_key, tenant], logger_1.logging.Network);
     if (!sender_pub_key) {
-        return console.log('no pubkey!');
+        return logger_1.sphinxLogger.error('no pubkey!');
     }
     const sender = yield models_1.models.Contact.findOne({
         where: {
@@ -443,7 +450,7 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
         }, tenant);
     }
     else {
-        console.log('DID NOT FIND SENDER');
+        logger_1.sphinxLogger.info('DID NOT FIND SENDER');
     }
     if (msgIncludedContactKey) {
         helpers.sendContactKeys({
@@ -457,7 +464,10 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.receiveContactKey = receiveContactKey;
 const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`=> confirm contact key for ${payload.sender && payload.sender.pub_key}`, JSON.stringify(payload));
+    logger_1.sphinxLogger.info([
+        `=> confirm contact key for ${payload.sender && payload.sender.pub_key}`,
+        JSON.stringify(payload),
+    ]);
     const dat = payload.content || payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_contact_key = dat.sender.contact_key;
@@ -466,7 +476,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     const owner = dat.owner;
     const tenant = owner.id;
     if (!sender_pub_key) {
-        return console.log('no pubkey!');
+        return logger_1.sphinxLogger.error('no pubkey!');
     }
     const sender = yield models_1.models.Contact.findOne({
         where: {

@@ -15,9 +15,10 @@ const models_1 = require("./models");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("./constants");
+const logger_2 = require("./utils/logger");
 const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
     if (!owner)
-        return console.log('=> sendNotification error: no owner');
+        return logger_2.sphinxLogger.error(`=> sendNotification error: no owner`);
     let message = `You have a new message from ${name}`;
     if (type === 'invite') {
         message = `Your invite to ${name} is ready`;
@@ -51,7 +52,7 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     }
     if (!owner.deviceId) {
         if (logger_1.logging.Notification)
-            console.log('[send notification] skipping. owner.deviceId not set.');
+            logger_2.sphinxLogger.info(`[send notification] skipping. owner.deviceId not set.`);
         return;
     }
     const device_id = owner.deviceId;
@@ -91,7 +92,7 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
             finalNotification(owner.id, params, isTribeOwner);
         }
         catch (e) {
-            console.log('=> notify conversation err', e);
+            logger_2.sphinxLogger.error(`=> notify conversation err ${e}`);
         }
     }
     else {
@@ -108,7 +109,7 @@ function finalNotification(ownerID, params, isTribeOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         if (params.notification.message) {
             if (logger_1.logging.Notification)
-                console.log('[send notification]', params.notification);
+                logger_2.sphinxLogger.info(`[send notification] ${params.notification}`);
         }
         const mutedChats = yield models_1.models.Chat.findAll({
             where: { isMuted: true },
@@ -142,7 +143,7 @@ function triggerNotification(params) {
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' },
     }).catch((error) => {
-        console.log('[hub error]: triggerNotification', error);
+        logger_2.sphinxLogger.error(`[hub error]: triggerNotification ${error}`);
     });
 }
 const bounceTimeouts = {};

@@ -10,30 +10,30 @@ import { getQR } from './connect'
 import { loadConfig } from './config'
 import migrate from './migrate'
 import { isProxy } from '../utils/proxy'
-import { logging } from '../utils/logger'
+import { logging, sphinxLogger } from '../utils/logger'
 
 const USER_VERSION = 7
 const config = loadConfig()
 
 const setupDatabase = async () => {
-  if (logging.DB) console.log('=> [db] starting setup...')
+  sphinxLogger.info(['=> [db] starting setup'], logging.DB)
   await setVersion()
-  if (logging.DB) console.log('=> [db] sync now')
+  sphinxLogger.info(['=> [db] sync now'], logging.DB)
   try {
     await sequelize.sync()
-    if (logging.DB) console.log('=> [db] done syncing')
+    sphinxLogger.info(['=> [db] done syncing'], logging.DB)
   } catch (e) {
-    if (logging.DB) console.log('[db] sync failed', e)
+    sphinxLogger.info(['[db] sync failed', e], logging.DB)
   }
   await migrate()
-  if (logging.DB) console.log('=> [db] setup done')
+  sphinxLogger.info(['=> [db] setup done'], logging.DB)
 }
 
 async function setVersion() {
   try {
     await sequelize.query(`PRAGMA user_version = ${USER_VERSION}`)
   } catch (e) {
-    console.log('=> [db] setVersion failed')
+    sphinxLogger.error('=> [db] setVersion failed')
   }
 }
 
@@ -63,10 +63,13 @@ const setupOwnerContact = async () => {
           authToken,
           tenant,
         })
-        console.log('[db] created node owner contact, id:', contact.id)
+        sphinxLogger.info(['[db] created node owner contact, id:', contact.id])
       }
     } catch (err) {
-      console.log('[db] error creating node owner due to lnd failure', err)
+      sphinxLogger.info([
+        '[db] error creating node owner due to lnd failure',
+        err,
+      ])
     }
   }
 }
@@ -116,25 +119,25 @@ async function setupDone() {
 async function printGitInfo() {
   const commitHash = await checkCommitHash()
   const tag = await checkTag()
-  console.log(`=> Relay version: ${tag}, commit: ${commitHash}`)
+  sphinxLogger.info(`=> Relay version: ${tag}, commit: ${commitHash}`)
 }
 
 async function printQR() {
   const b64 = await getQR()
   if (!b64) {
-    console.log('=> no public IP provided')
+    sphinxLogger.info('=> no public IP provided')
     return ''
   }
 
-  console.log('>>', b64)
+  sphinxLogger.info(['>>', b64])
   connectionStringFile(b64)
 
   const clean = await isClean()
   if (!clean) return // skip it if already setup!
 
-  console.log('Scan this QR in Sphinx app:')
+  sphinxLogger.info('Scan this QR in Sphinx app:')
   QRCode.toString(b64, { type: 'terminal' }, function (err, url) {
-    console.log(url)
+    sphinxLogger.info(url)
   })
 }
 
@@ -147,7 +150,7 @@ function connectionStringFile(str: string) {
     connectStringPath || 'connection_string.txt',
     str,
     function (err) {
-      if (err) console.log('ERROR SAVING connection_string.txt.', err)
+      if (err) sphinxLogger.error(['ERROR SAVING connection_string.txt.', err])
     }
   )
 }

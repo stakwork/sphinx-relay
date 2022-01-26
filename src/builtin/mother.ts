@@ -7,6 +7,7 @@ import fetch from 'node-fetch'
 import constants from '../constants'
 import { loadConfig } from '../utils/config'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
+import { sphinxLogger } from '../utils/logger'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -46,9 +47,10 @@ export function init() {
         const botName = arr[2]
 
         if (builtinBots.includes(botName)) {
-          console.log('mombot INSTALL', botName)
+          sphinxLogger.info(['mombot INSTALL', botName])
           const chat = await getTribeOwnersChatByUUID(message.channel.id)
-          if (!(chat && chat.id)) return console.log('=> motherbot no chat')
+          if (!(chat && chat.id))
+            return sphinxLogger.error('=> motherbot no chat')
           const existing = await models.ChatBot.findOne({
             where: {
               chatId: chat.id,
@@ -88,9 +90,10 @@ export function init() {
         } else {
           const bot = await getBotByName(botName)
           if (bot && bot.uuid) {
-            console.log('=> FOUND BOT', bot.unique_name)
+            sphinxLogger.info(['=> FOUND BOT', bot.unique_name])
             const chat = await getTribeOwnersChatByUUID(message.channel.id)
-            if (!(chat && chat.id)) return console.log('=> motherbot no chat')
+            if (!(chat && chat.id))
+              return sphinxLogger.error('=> motherbot no chat')
             installBotAsTribeAdmin(chat, bot)
           } else {
             const embed = new Sphinx.MessageEmbed()
@@ -105,7 +108,8 @@ export function init() {
         if (arr.length < 3) return
         const botName2 = arr[2]
         const chat2 = await getTribeOwnersChatByUUID(message.channel.id)
-        if (!(chat2 && chat2.id)) return console.log('=> motherbot no chat')
+        if (!(chat2 && chat2.id))
+          return sphinxLogger.error('=> motherbot no chat')
         const existing2 = await models.ChatBot.findOne({
           where: {
             chatId: chat2.id,

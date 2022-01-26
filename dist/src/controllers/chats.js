@@ -28,7 +28,7 @@ function updateChat(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        console.log('=> updateChat');
+        logger_1.sphinxLogger.info(`=> updateChat`);
         const id = parseInt(req.params.id);
         if (!id) {
             return (0, res_1.failure)(res, 'missing id');
@@ -94,8 +94,7 @@ function kickChatMember(req, res) {
 exports.kickChatMember = kickChatMember;
 function receiveGroupKick(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> receiveGroupKick');
+        logger_1.sphinxLogger.info(`=> receiveGroupKick`, logger_1.logging.Network);
         const { owner, chat, sender, date_string, network_type } = yield helpers.parseReceiveParams(payload);
         if (!chat)
             return;
@@ -227,7 +226,7 @@ function createGroupChat(req, res) {
                     });
                 }
                 catch (e) {
-                    console.log('=> couldnt create tribe', e);
+                    logger_1.sphinxLogger.error(`=> couldnt create tribe ${e}`);
                     okToCreate = false;
                 }
             }
@@ -263,7 +262,7 @@ function createGroupChat(req, res) {
                             });
                         }
                         catch (e) {
-                            console.log('=> createGroupChat failed to UPSERT', e);
+                            logger_1.sphinxLogger.error(`=> createGroupChat failed to UPSERT ${e}`);
                         }
                     }
                     (0, res_1.success)(res, jsonUtils.chatToJson(chat));
@@ -350,7 +349,7 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             },
         });
         if (notOK)
-            return console.log('failed to send tribe_delete message');
+            return logger_1.sphinxLogger.error(`failed to send tribe_delete message`);
     }
     else {
         // leave a group or tribe
@@ -382,8 +381,7 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteChat = deleteChat;
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> receiveGroupJoin');
+        logger_1.sphinxLogger.info(`=> receiveGroupJoin`, logger_1.logging.Network);
         const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, sender_route_hint, chat_name, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
@@ -429,11 +427,11 @@ function receiveGroupJoin(payload) {
                 }
             }
             if (!theSender)
-                return console.log('no sender'); // fail (no contact key?)
+                return logger_1.sphinxLogger.error(`no sender`); // fail (no contact key?)
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) {
                 // IF TRIBE, ADD new member TO XREF
-                console.log('UPSERT CHAT MEMBER', {
+                logger_1.sphinxLogger.info(`UPSERT CHAT MEMBER ${{
                     contactId: theSender.id,
                     chatId: chat.id,
                     role: constants_1.default.chat_roles.reader,
@@ -441,7 +439,7 @@ function receiveGroupJoin(payload) {
                     lastActive: date,
                     lastAlias: senderAlias,
                     tenant,
-                });
+                }}`);
                 try {
                     yield models_1.models.ChatMember.upsert({
                         contactId: theSender.id,
@@ -454,7 +452,7 @@ function receiveGroupJoin(payload) {
                     });
                 }
                 catch (e) {
-                    console.log('=> groupJoin could not upsert ChatMember');
+                    logger_1.sphinxLogger.error(`=> groupJoin could not upsert ChatMember`);
                 }
                 setTimeout(() => {
                     (0, chatTribes_1.replayChatHistory)(chat, theSender, owner);
@@ -503,8 +501,7 @@ function receiveGroupJoin(payload) {
 exports.receiveGroupJoin = receiveGroupJoin;
 function receiveGroupLeave(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (logger_1.logging.Network)
-            console.log('=> receiveGroupLeave');
+        logger_1.sphinxLogger.info(`=> receiveGroupLeave`, logger_1.logging.Network);
         const { chat, owner, sender_pub_key, chat_type, sender_alias, isTribeOwner, date_string, network_type, sender_photo_url, chat_name, } = yield helpers.parseReceiveParams(payload);
         const tenant = owner.id;
         if (!chat)
@@ -517,7 +514,7 @@ function receiveGroupLeave(payload) {
                 where: { publicKey: sender_pub_key, tenant },
             });
             if (!sender)
-                return console.log('=> receiveGroupLeave cant find sender');
+                return logger_1.sphinxLogger.error(`=> receiveGroupLeave cant find sender`);
             const oldContactIds = JSON.parse(chat.contactIds || '[]');
             const contactIds = oldContactIds.filter((cid) => cid !== sender.id);
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
@@ -594,7 +591,7 @@ function receiveGroupCreateOrInvite(payload) {
             // must be sent by tribe owner?????
             const validOwner = yield validateTribeOwner(chat_uuid, sender_pub_key);
             if (!validOwner)
-                return console.log('[tribes] invalid uuid signature!');
+                return logger_1.sphinxLogger.error(`[tribes] invalid uuid signature!`);
         }
         const contacts = [];
         const newContacts = [];

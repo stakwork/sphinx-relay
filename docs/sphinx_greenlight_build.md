@@ -100,3 +100,12 @@ index 8255a2b5..07879e40 100644
 Finally, while still standing in the `config` directory, run
 
 `npm run prod`
+
+### When the master updates either `package.json` or `package-lock.json`
+
+1. Stash the local changes
+2. `git pull` on master to grab the latest changes
+3. `git stash pop`
+4. Manually resolve the conflicts
+5. `git add` the two files
+6. `npm install` on the root sphinx-relay directory
