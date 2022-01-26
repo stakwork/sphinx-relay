@@ -100,7 +100,7 @@ export async function claimOnLiquid({
     const res = await r.json()
     return res
   } catch (e) {
-    sphinxLogger.error('[liquid] unauthorized to move asset')
+    sphinxLogger.error('[liquid] unauthorized to move asset', e)
     throw e
   }
 }

@@ -92,7 +92,7 @@ function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
             return res;
         }
         catch (e) {
-            logger_1.sphinxLogger.error('[liquid] unauthorized to move asset');
+            logger_1.sphinxLogger.error('[liquid] unauthorized to move asset', e);
             throw e;
         }
     });
