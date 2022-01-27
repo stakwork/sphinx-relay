@@ -40,8 +40,9 @@ async function check1MinuteOldRequest(
     route_hint: node2.routeHint || '',
   }
   const currentTime = new Date(Date.now() - 1 * 60001)
+  let added
   try {
-    await http.post(node1.external_ip + '/contacts', {
+    added = await http.post(node1.external_ip + '/contacts', {
       headers: {
         'x-transportToken': rsa.encrypt(
           node1.transportToken,
@@ -60,6 +61,10 @@ async function check1MinuteOldRequest(
       'node1 should have failed due to old and should have correct error'
     )
   }
+  t.true(
+    added == undefined,
+    'we should not get back any value from the request'
+  )
 }
 
 async function checkContactsWithTransportToken(
