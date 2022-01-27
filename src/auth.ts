@@ -96,8 +96,6 @@ export async function ownerMiddleware(req, res, next) {
   const x_transport_token =
     req.headers['x-transport-token'] || req.cookies['x-transport-token']
 
-  console.log('Transport toke:', x_transport_token)
-
   // default assign token to x-user-token
   let token = x_user_token
 
@@ -123,7 +121,7 @@ export async function ownerMiddleware(req, res, next) {
     const splitTransportTokenTimestamp = splitTransportToken[1]
 
     // Check if the timestamp is within the timeframe we
-    // chose to clear out the db of saved recent requests
+    // choose (1 minute here) to clear out the db of saved recent requests
     if (
       new Date(splitTransportTokenTimestamp) < new Date(Date.now() - 1 * 60000)
     ) {
@@ -131,14 +129,12 @@ export async function ownerMiddleware(req, res, next) {
         'Content-Type': 'text/plain',
       })
       res.end('invalid credentials')
-      return console.error('Too old of a request')
+      return
     }
 
     // TODO: we need to add a way to save the request and also
     // to check the old requests to see if they use the same x_transport_token
   }
-
-  console.log('Transport token decrypted:', token)
 
   if (process.env.HOSTING_PROVIDER === 'true') {
     if (token) {
