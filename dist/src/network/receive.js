@@ -480,8 +480,13 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
         }, tenant);
     });
 }
+let hashCache = {};
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
+        const hash = i.r_hash.toString('base64');
+        if (hashCache[hash])
+            return;
+        hashCache[hash] = true;
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
         let dest = '';
         let owner;
