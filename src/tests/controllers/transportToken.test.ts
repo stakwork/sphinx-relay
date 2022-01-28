@@ -24,9 +24,56 @@ test.serial(
     await iterate(nodes, async (node1, node2) => {
       await checkContactsWithTransportToken(t, node1, node2)
       await check1MinuteOldRequest(t, node1, node2)
+      //await checkDuplicateTransportTokens(t, node1, node2)
     })
   }
 )
+
+/*async function checkDuplicateTransportTokens(
+  t: ExecutionContext<Context>,
+  node1: NodeConfig,
+  node2: NodeConfig
+) {
+  const body = {
+    alias: `${node2.alias}`,
+    public_key: node2.pubkey,
+    status: 1,
+    route_hint: node2.routeHint || '',
+  }
+  const currentTime = new Date(Date.now())
+  const transportToken = rsa.encrypt(
+    node1.transportToken,
+    `${node1.authToken}|${currentTime.toString()}`
+  )
+  let added = await http.post(node1.external_ip + '/contacts', {
+    headers: {
+      'x-transport-token': transportToken,
+    },
+    body,
+  })
+  t.true(added.success, 'we should get back a value from the request')
+  let error
+  let added2
+  try {
+    added2 = await http.post(node1.external_ip + '/contacts', {
+      headers: {
+        'x-transport-token': transportToken,
+      },
+      body,
+    })
+  } catch (e) {
+    error = e
+  }
+  t.false(added2.success, 'we should not get back any value from the request')
+  t.true(
+    error.statusCode == 401,
+    'node1 should have failed due to old transportToken and have 401 code'
+  )
+  t.true(
+    error.error == 'Invalid credentials',
+    'node1 should have failed due to old and should have correct error'
+  )
+}*/
 
 async function check1MinuteOldRequest(
   t: ExecutionContext<Context>,
@@ -40,30 +87,27 @@ async function check1MinuteOldRequest(
     route_hint: node2.routeHint || '',
   }
   const currentTime = new Date(Date.now() - 1 * 60001)
-  let added
+  let error
   try {
-    added = await http.post(node1.external_ip + '/contacts', {
+    await http.post(node1.external_ip + '/contacts', {
       headers: {
-        'x-transportToken': rsa.encrypt(
+        'x-transport-token': rsa.encrypt(
           node1.transportToken,
           `${node1.authToken}|${currentTime.toString()}`
         ),
       },
       body,
     })
-  } catch (error) {
-    t.true(
-      error.statusCode == 401,
-      'node1 should have failed due to old transportToken and have 401 code'
-    )
-    t.true(
-      error.error == 'Invalid credentials',
-      'node1 should have failed due to old and should have correct error'
-    )
+  } catch (e) {
+    error = e
   }
   t.true(
-    added == undefined,
-    'we should not get back any value from the request'
+    error.statusCode == 401,
+    'node1 should have failed due to old transportToken and have 401 code'
+  )
+  t.true(
+    error.error == 'invalid credentials',
+    'node1 should have failed due to old and should have correct error'
   )
 }
 
