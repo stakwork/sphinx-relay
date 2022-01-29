@@ -24,12 +24,12 @@ test.serial(
     await iterate(nodes, async (node1, node2) => {
       await checkContactsWithTransportToken(t, node1, node2)
       await check1MinuteOldRequest(t, node1, node2)
-      //await checkDuplicateTransportTokens(t, node1, node2)
+      await checkDuplicateTransportTokens(t, node1, node2)
     })
   }
 )
 
-/*async function checkDuplicateTransportTokens(
+async function checkDuplicateTransportTokens(
   t: ExecutionContext<Context>,
   node1: NodeConfig,
   node2: NodeConfig
@@ -64,16 +64,19 @@ test.serial(
   } catch (e) {
     error = e
   }
-  t.false(added2.success, 'we should not get back any value from the request')
+  t.true(
+    added2 == undefined,
+    'added2 should remain undefined as the try catch should fail'
+  )
   t.true(
     error.statusCode == 401,
     'node1 should have failed due to old transportToken and have 401 code'
   )
   t.true(
-    error.error == 'Invalid credentials',
+    error.error == 'invalid credentials',
     'node1 should have failed due to old and should have correct error'
   )
-}*/
+}
 
 async function check1MinuteOldRequest(
   t: ExecutionContext<Context>,

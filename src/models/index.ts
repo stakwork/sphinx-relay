@@ -15,6 +15,7 @@ import ChatBot from './sql/chatBot'
 import BotMember from './sql/botMember'
 import Accounting from './sql/accounting'
 import Lsat from './sql/lsat'
+import RequestsTransportTokens from './sql/requestsTransportTokens'
 import * as minimist from 'minimist'
 import { loadConfig } from '../utils/config'
 import { isProxy } from '../utils/proxy'
@@ -47,6 +48,7 @@ const opts = {
     BotMember,
     Accounting,
     Lsat,
+    RequestsTransportTokens,
   ],
 }
 if (isProxy()) {

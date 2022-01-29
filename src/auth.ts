@@ -1,5 +1,6 @@
 import * as crypto from 'crypto'
 import { models } from './models'
+import { Op } from 'sequelize'
 import * as cryptoJS from 'crypto-js'
 import { success, failure } from './utils/res'
 import { setInMemoryMacaroon } from './utils/macaroon'
@@ -102,6 +103,26 @@ export async function ownerMiddleware(req, res, next) {
   // If we see the user using the new x_transport_token
   // we will enter this if block and execute this logic
   if (x_transport_token) {
+    // Deleting any transport tokens that are older than a minute long
+    // since they will fail the date test futhrer along the auth process
+    await models.RequestsTransportTokens.destroy({
+      where: { createdAt: { [Op.lt]: new Date(Date.now() - 1 * 60000) } },
+    })
+
+    const savedTransportTokens = await models.RequestsTransportTokens.findAll()
+
+    // Here we are checking all of the saved x_transport_tokens
+    // to see if we hav a repeat
+    savedTransportTokens.forEach((token) => {
+      if (token.dataValues.transportToken == x_transport_token) {
+        res.writeHead(401, 'Access invalid for user', {
+          'Content-Type': 'text/plain',
+        })
+        res.end('invalid credentials')
+        return
+      }
+    })
+
     // Read the transport private key since we will need to decrypt with this
     const transportPrivateKey = fs.readFileSync(
       config.transportPrivateKeyLocation,
@@ -134,6 +155,8 @@ export async function ownerMiddleware(req, res, next) {
 
     // TODO: we need to add a way to save the request and also
     // to check the old requests to see if they use the same x_transport_token
+    const transportTokenDBValues = { transportToken: x_transport_token }
+    await models.RequestsTransportTokens.create(transportTokenDBValues)
   }
 
   if (process.env.HOSTING_PROVIDER === 'true') {
