@@ -1,6 +1,7 @@
 import * as lndService from '../grpc/subscribe'
 import * as Lightning from '../grpc/lightning'
 import * as Greenlight from '../grpc/greenlight'
+import * as interfaces from '../grpc/interfaces'
 import { ACTIONS } from '../controllers'
 import * as tribes from '../utils/tribes'
 import * as signer from '../utils/signer'
@@ -484,7 +485,17 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
   )
 }
 
-export async function parseKeysendInvoice(i) {
+let hashCache: { [k: string]: boolean } = {}
+
+export async function parseKeysendInvoice(i: interfaces.Invoice) {
+  try {
+    const hash = i.r_hash.toString('base64')
+    if (hashCache[hash]) return
+    hashCache[hash] = true
+  } catch (e) {
+    sphinxLogger.error('failed hash cache in parseKeysendInvoice')
+  }
+
   const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
 
   let dest = ''

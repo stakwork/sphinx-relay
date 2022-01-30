@@ -480,8 +480,18 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
         }, tenant);
     });
 }
+let hashCache = {};
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const hash = i.r_hash.toString('base64');
+            if (hashCache[hash])
+                return;
+            hashCache[hash] = true;
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error('failed hash cache in parseKeysendInvoice');
+        }
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
         let dest = '';
         let owner;
