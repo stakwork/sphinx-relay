@@ -170,6 +170,17 @@ export default async function migrate() {
   } catch (e) {
     sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
   }
+
+  // add RequestTransportToken table
+  try {
+    sphinxLogger.info('adding requestsTransportTokens table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_requests_transport_tokens (
+      id BIGINT NOT NULL PRIMARY KEY,
+      transport_token TEXT,
+			created_at DATETIME
+    )`)
+  } catch (e) {}
 }
 
 async function addTenant(tableName) {
@@ -187,6 +198,6 @@ async function addTableColumn(table: string, column: string, type = 'TEXT') {
   try {
     await sequelize.query(`alter table ${table} add ${column} ${type}`)
   } catch (e) {
-    sphinxLogger.error(['=> migrate failed'], logging.DB)
+    sphinxLogger.error(['=> migrate failed', e], logging.DB)
   }
 }

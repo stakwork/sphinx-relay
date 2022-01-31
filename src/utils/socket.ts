@@ -1,7 +1,10 @@
 import { models } from '../models'
 import * as crypto from 'crypto'
+import * as fs from 'fs'
+import { loadConfig } from './config'
 import { sphinxLogger} from '../utils/logger'
 
+const config = loadConfig()
 // import * as WebSocket from 'ws'
 const socketio = require('socket.io')
 
@@ -29,7 +32,21 @@ export function connect(server) {
   })
   io.use(async (client, next) => {
     let userToken = client.handshake.headers['x-user-token']
-    const owner = await getOwnerFromToken(userToken)
+
+    let x_transport_token = client.handshake.headers['x-transport-token']
+
+    const transportPrivateKey = fs.readFileSync(
+      config.transportPrivateKeyLocation
+    )
+
+    let userTokenFromTransportToken = crypto
+      .privateDecrypt(transportPrivateKey, x_transport_token)
+      .toString()
+      .split('|')[0]
+
+    const owner = await getOwnerFromToken(
+      userToken != null ? userToken : userTokenFromTransportToken
+    )
     if (owner) {
       client.ownerID = owner.id // add it in
       return next()

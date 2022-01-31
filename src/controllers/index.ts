@@ -100,6 +100,7 @@ export async function set(app) {
   app.get('/signer/:challenge', media.signer)
 
   app.post('/verify_external', auth.verifyAuthRequest)
+  app.get('/request_transport_token', auth.requestTransportToken)
 
   app.post('/stream', feed.streamFeed)
 

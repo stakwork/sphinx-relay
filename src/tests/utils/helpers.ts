@@ -1,14 +1,31 @@
 import http = require('ava-http')
+import * as rsa from '../../crypto/rsa'
 import * as moment from 'moment'
 import { NodeConfig, RequestArgs, RequestBody } from '../types'
 import { config } from '../config'
 
 export const makeArgs = (
   node: NodeConfig,
-  body: RequestBody = {}
+  body: RequestBody = {},
+  options?
 ): RequestArgs => {
+  const currentTime = new Date(Date.now())
+  if (options && options.useTransportToken) {
+    return {
+      headers: {
+        'x-transport-token': rsa.encrypt(
+          node.transportToken,
+          `${node.authToken}|${currentTime.toString()}`
+        ),
+      },
+      body,
+    }
+  }
+
   return {
-    headers: { 'x-user-token': node.authToken },
+    headers: {
+      'x-user-token': node.authToken,
+    },
     body,
   }
 }

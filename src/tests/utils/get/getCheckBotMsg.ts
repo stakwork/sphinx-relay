@@ -11,8 +11,14 @@ export function getCheckBotMsg(t, node, botAlias) {
         makeArgs(node)
       )
       if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
-        if (msgRes.response.new_messages[0].sender_alias === botAlias) {
-          const lastMessage = msgRes.response.new_messages[0]
+        if (
+          msgRes.response.new_messages[msgRes.response.new_messages.length - 1]
+            .sender_alias === botAlias
+        ) {
+          const lastMessage =
+            msgRes.response.new_messages[
+              msgRes.response.new_messages.length - 1
+            ]
           if (lastMessage) {
             clearInterval(interval)
             resolve(lastMessage)

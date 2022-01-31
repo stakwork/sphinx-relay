@@ -12,6 +12,11 @@ import * as network from '../network'
 import { isProxy, generateNewExternalUser } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
 import * as moment from 'moment'
+import * as rsa from '../crypto/rsa'
+import * as fs from 'fs'
+import { loadConfig } from '../utils/config'
+
+const config = loadConfig()
 
 export const getContacts = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
@@ -198,7 +203,21 @@ export const generateToken = async (req, res) => {
     }
   }
 
-  const token = req.body['token']
+  let token = ''
+  let xTransportToken = req.headers['x-transport-token']
+  if (!xTransportToken) {
+    token = req.body['token']
+  } else {
+    const transportTokenKeys = fs.readFileSync(
+      config.transportPrivateKeyLocation,
+      'utf8'
+    )
+    let tokenAndTimestamp = rsa
+      .decrypt(transportTokenKeys, xTransportToken)
+      .split('|')
+    token = tokenAndTimestamp[0]
+  }
+
   if (!token) {
     return failure(res, 'no token in body')
   }
@@ -213,10 +232,18 @@ export const generateToken = async (req, res) => {
     if (isProxy()) {
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
+    //  create transport token and send back to client
+    // save private key and send public key
     owner.update({ authToken: hash })
+    // Send transport pubkey
+    success(res, {
+      id: (owner && owner.id) || 0,
+    })
   }
 
-  success(res, { id: (owner && owner.id) || 0 })
+  success(res, {
+    id: (owner && owner.id) || 0,
+  })
 }
 
 export const updateContact = async (req, res) => {

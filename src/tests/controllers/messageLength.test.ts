@@ -52,7 +52,14 @@ export async function messageLengthTest(t, node1, node2) {
   await sendMessage(t, node1, node2, text4)
   //t.true(messageSent.success, 'node1 should send text message to node2')
 
-  const newMessagesResponse = await getCheckMsgs(t, node2, date, limit, offset)
+  const newMessagesResponse = await getCheckMsgs(
+    t,
+    node2,
+    date,
+    limit,
+    offset,
+    'desc'
+  )
   t.true(
     newMessagesResponse.new_messages_total == 4,
     'node2 should have 4 new message'
@@ -70,7 +77,8 @@ export async function messageLengthTest(t, node1, node2) {
     t,
     node2,
     limit,
-    offset
+    offset,
+    'desc'
   )
   t.true(
     newMessagesResponse2.new_messages_total == 4,
