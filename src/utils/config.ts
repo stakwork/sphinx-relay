@@ -24,6 +24,10 @@ const DEFAULT_TLS_CHAIN_LOCAION = './creds/device.crt'
 const DEFAULT_SCHEDULER_TLS_LOCATION = './creds/scheduler_creds/ca.pem'
 const DEFAULT_SCHEDULER_KEY_LOCATION = './creds/scheduler_creds/device-key.pem'
 const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt'
+const DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION =
+  './creds/transport_token_creds/transportTokenPublicKey.pem'
+const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION =
+  './creds/transport_token_creds/transportTokenPrivateKey.pem'
 
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
@@ -109,9 +113,13 @@ export function loadConfig() {
     sql_log: ENV.SQL_LOG || config.sql_log,
     dont_ping_hub: ENV.DONT_PING_HUB || config.dont_ping_hub,
     transportPrivateKeyLocation:
-      ENV.TRANSPORT_PRIVATE_KEY_LOCATION || config.transportPrivateKeyLocation,
+      ENV.TRANSPORT_PRIVATE_KEY_LOCATION ||
+      config.transportPrivateKeyLocation ||
+      DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION,
     transportPublicKeyLocation:
-      ENV.TRANSPORT_PUBLIC_KEY_LOCATION || config.transportPublicKeyLocation,
+      ENV.TRANSPORT_PUBLIC_KEY_LOCATION ||
+      config.transportPublicKeyLocation ||
+      DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION,
     logging_level: ENV.LOGGING_LEVEL || config.logging_level || 'info',
   }
 }
