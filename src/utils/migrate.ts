@@ -177,16 +177,10 @@ export default async function migrate() {
     await sequelize.query(`
     CREATE TABLE sphinx_requests_transport_tokens (
       id BIGINT NOT NULL PRIMARY KEY,
-      transportToken TEXT,
+      transport_token TEXT,
 			created_at DATETIME
     )`)
-  } catch (e) {
-    sphinxLogger.error(
-      ['problem adding requestsTransportTokens table:', e.message],
-      logging.DB
-    )
-  }
-  addTableColumn('sphinx_requests_transport_tokens', 'transportToken', 'TEXT')
+  } catch (e) {}
 }
 
 async function addTenant(tableName) {

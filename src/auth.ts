@@ -151,9 +151,10 @@ export async function ownerMiddleware(req, res, next) {
     // choose (1 minute here) to clear out the db of saved recent requests
     if (
       new Date(splitTransportTokenTimestamp) <
-      new Date(
-        Date.now() - config.length_of_time_for_transport_token_clear * 60000
-      )
+        new Date(
+          Date.now() - config.length_of_time_for_transport_token_clear * 60000
+        ) ||
+      !splitTransportTokenTimestamp
     ) {
       res.writeHead(401, 'Access invalid for user', {
         'Content-Type': 'text/plain',
@@ -162,8 +163,8 @@ export async function ownerMiddleware(req, res, next) {
       return
     }
 
-    // TODO: we need to add a way to save the request and also
-    // to check the old requests to see if they use the same x_transport_token
+    // Here we are saving the x_transport_token that we just
+    // used into the db to be checked against later
     const transportTokenDBValues = { transportToken: x_transport_token }
     await models.RequestsTransportTokens.create(transportTokenDBValues)
   }
