@@ -28,6 +28,7 @@ const DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION =
   './creds/transport_token_creds/transportTokenPublicKey.pem'
 const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION =
   './creds/transport_token_creds/transportTokenPrivateKey.pem'
+const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1
 
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
@@ -121,5 +122,9 @@ export function loadConfig() {
       config.transportPublicKeyLocation ||
       DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION,
     logging_level: ENV.LOGGING_LEVEL || config.logging_level || 'info',
+    length_of_time_for_transport_token_clear:
+      ENV.LENGTH_OF_TIME_FOR_TRANSPORT_TOKEN_CLEAR ||
+      config.length_of_time_for_transport_token_clear ||
+      DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING,
   }
 }

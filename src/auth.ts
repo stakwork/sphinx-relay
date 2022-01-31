@@ -106,7 +106,13 @@ export async function ownerMiddleware(req, res, next) {
     // Deleting any transport tokens that are older than a minute long
     // since they will fail the date test futhrer along the auth process
     await models.RequestsTransportTokens.destroy({
-      where: { createdAt: { [Op.lt]: new Date(Date.now() - 1 * 60000) } },
+      where: {
+        createdAt: {
+          [Op.lt]: new Date(
+            Date.now() - config.length_of_time_for_transport_token_clear * 60000
+          ),
+        },
+      },
     })
 
     const savedTransportTokens = await models.RequestsTransportTokens.findAll()
@@ -144,7 +150,10 @@ export async function ownerMiddleware(req, res, next) {
     // Check if the timestamp is within the timeframe we
     // choose (1 minute here) to clear out the db of saved recent requests
     if (
-      new Date(splitTransportTokenTimestamp) < new Date(Date.now() - 1 * 60000)
+      new Date(splitTransportTokenTimestamp) <
+      new Date(
+        Date.now() - config.length_of_time_for_transport_token_clear * 60000
+      )
     ) {
       res.writeHead(401, 'Access invalid for user', {
         'Content-Type': 'text/plain',
