@@ -25,9 +25,9 @@ const DEFAULT_SCHEDULER_TLS_LOCATION = './creds/scheduler_creds/ca.pem'
 const DEFAULT_SCHEDULER_KEY_LOCATION = './creds/scheduler_creds/device-key.pem'
 const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt'
 const DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION =
-  './creds/transport_token_creds/transportTokenPublicKey.pem'
+  './creds/transportTokenPublicKey.pem'
 const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION =
-  './creds/transport_token_creds/transportTokenPrivateKey.pem'
+  './creds/transportTokenPrivateKey.pem'
 const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1
 
 export function loadConfig() {
