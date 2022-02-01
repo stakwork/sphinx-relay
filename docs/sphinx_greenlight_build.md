@@ -67,8 +67,6 @@ index 79a01b68..fe5758af 100644
 
 Also make the following modifications to `app.json`
 
-( Get the IP address of your raspberry pi to put in the `public_url` field with `hostname -I` )
-
 ```diff
 diff --git a/config/app.json b/config/app.json
 index 8255a2b5..07879e40 100644
@@ -80,21 +78,13 @@ index 8255a2b5..07879e40 100644
    "production": {
 +    "connect_ui": true,
 +    "lightning_provider": "GREENLIGHT",
++    "logging": "TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,LSAT"
      "senza_url": "https://staging.senza.us/api/v2/",
      "macaroon_location": "/relay/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
 -    "tls_location": "/relay/.lnd/tls.cert",
      "lnd_log_location": "/relay/.lnd/logs/bitcoin/mainnet/lnd.log",
      "node_ip": "localhost",
      "lnd_ip": "localhost",
-@@ -43,7 +44,7 @@
-     "hub_check_invite_url": "https://hub.sphinx.chat/check_invite",
-     "media_host": "memes.sphinx.chat",
-     "tribes_host": "tribes.sphinx.chat",
--    "public_url": "",
-+    "public_url": "10.161.66.250:3001",
-     "connection_string_path": "connection_string.txt",
-     "ssl": {
-       "enabled": false,
 ```
 
 Finally, while still standing in the `config` directory, run
