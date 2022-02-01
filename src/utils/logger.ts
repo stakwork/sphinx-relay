@@ -66,9 +66,12 @@ async function sphinxLoggerBase(
     loggingType == 'MISC'
   ) {
     await blgrLogger.open()
-    const date = new Date(Date.now()).toUTCString()
+    const [date, time] = new Date(Date.now()).toISOString().split('.')[0].split('T');
+    const dateArr: string[] = date.split('-');
+    dateArr.push((dateArr.shift() !).substring(2));
+
     blgrLogger[level](
-      date,
+      `${dateArr.join('-')}T${time}`,
       '[' + loggingType + ']',
       ...(Array.isArray(message) ? message : [message])
     )
