@@ -115,20 +115,6 @@ export async function ownerMiddleware(req, res, next) {
       },
     })
 
-    const savedTransportTokens = await models.RequestsTransportTokens.findAll()
-
-    // Here we are checking all of the saved x_transport_tokens
-    // to see if we hav a repeat
-    savedTransportTokens.forEach((token) => {
-      if (token.dataValues.transportToken == x_transport_token) {
-        res.writeHead(401, 'Access invalid for user', {
-          'Content-Type': 'text/plain',
-        })
-        res.end('invalid credentials')
-        return
-      }
-    })
-
     // Read the transport private key since we will need to decrypt with this
     const transportPrivateKey = fs.readFileSync(
       config.transportPrivateKeyLocation,
@@ -162,6 +148,22 @@ export async function ownerMiddleware(req, res, next) {
       res.end('invalid credentials')
       return
     }
+
+    // Checking the db last since it'll take the most compute power and will
+    // grow if we get lots of requests and will let us reject incorrect tokens faster
+    const savedTransportTokens = await models.RequestsTransportTokens.findAll()
+
+    // Here we are checking all of the saved x_transport_tokens
+    // to see if we hav a repeat
+    savedTransportTokens.forEach((token) => {
+      if (token.dataValues.transportToken == x_transport_token) {
+        res.writeHead(401, 'Access invalid for user', {
+          'Content-Type': 'text/plain',
+        })
+        res.end('invalid credentials')
+        return
+      }
+    })
 
     // Here we are saving the x_transport_token that we just
     // used into the db to be checked against later
