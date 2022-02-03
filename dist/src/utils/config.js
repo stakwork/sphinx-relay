@@ -20,6 +20,9 @@ const DEFAULT_TLS_CHAIN_LOCAION = './creds/device.crt';
 const DEFAULT_SCHEDULER_TLS_LOCATION = './creds/scheduler_creds/ca.pem';
 const DEFAULT_SCHEDULER_KEY_LOCATION = './creds/scheduler_creds/device-key.pem';
 const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt';
+const DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION = './creds/transportTokenPublicKey.pem';
+const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION = './creds/transportTokenPrivateKey.pem';
+const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1;
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
     const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
@@ -87,7 +90,16 @@ function loadConfig() {
         allow_test_clearing: ENV.ALLOW_TEST_CLEARING || config.allow_test_clearing,
         sql_log: ENV.SQL_LOG || config.sql_log,
         dont_ping_hub: ENV.DONT_PING_HUB || config.dont_ping_hub,
+        transportPrivateKeyLocation: ENV.TRANSPORT_PRIVATE_KEY_LOCATION ||
+            config.transportPrivateKeyLocation ||
+            DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION,
+        transportPublicKeyLocation: ENV.TRANSPORT_PUBLIC_KEY_LOCATION ||
+            config.transportPublicKeyLocation ||
+            DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION,
         logging_level: ENV.LOGGING_LEVEL || config.logging_level || 'info',
+        length_of_time_for_transport_token_clear: ENV.LENGTH_OF_TIME_FOR_TRANSPORT_TOKEN_CLEAR ||
+            config.length_of_time_for_transport_token_clear ||
+            DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING,
     };
 }
 exports.loadConfig = loadConfig;

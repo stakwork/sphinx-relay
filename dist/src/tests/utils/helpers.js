@@ -11,11 +11,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeJwtArgs = exports.getTimestamp = exports.sleep = exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
 const http = require("ava-http");
+const rsa = require("../../crypto/rsa");
 const moment = require("moment");
 const config_1 = require("../config");
-const makeArgs = (node, body = {}) => {
+const makeArgs = (node, body = {}, options) => {
+    const currentTime = new Date(Date.now());
+    if (options && options.useTransportToken) {
+        return {
+            headers: {
+                'x-transport-token': rsa.encrypt(node.transportToken, `${node.authToken}|${currentTime.toString()}`),
+            },
+            body,
+        };
+    }
     return {
-        headers: { 'x-user-token': node.authToken },
+        headers: {
+            'x-user-token': node.authToken,
+        },
         body,
     };
 };

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authModule = exports.base64ToHex = exports.ownerMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
+const sequelize_1 = require("sequelize");
 const cryptoJS = require("crypto-js");
 const res_1 = require("./utils/res");
 const macaroon_1 = require("./utils/macaroon");
@@ -19,6 +20,7 @@ const config_1 = require("./utils/config");
 const proxy_1 = require("./utils/proxy");
 const jwtUtils = require("./utils/jwt");
 const scopes_1 = require("./scopes");
+const rsa = require("./crypto/rsa");
 const fs = require('fs');
 const config = (0, config_1.loadConfig)();
 /*
@@ -87,11 +89,68 @@ function ownerMiddleware(req, res, next) {
             req.path == '/contacts/set_dev' ||
             req.path == '/connect' ||
             req.path == '/connect_peer' ||
-            req.path == '/peered') {
+            req.path == '/peered' ||
+            req.path == '/request_transport_token') {
             next();
             return;
         }
-        const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
+        // Here we are grabing both the x-user-token and x-transport-token
+        const x_user_token = req.headers['x-user-token'] || req.cookies['x-user-token'];
+        const x_transport_token = req.headers['x-transport-token'] || req.cookies['x-transport-token'];
+        // default assign token to x-user-token
+        let token = x_user_token;
+        // If we see the user using the new x_transport_token
+        // we will enter this if block and execute this logic
+        if (x_transport_token) {
+            // Deleting any transport tokens that are older than a minute long
+            // since they will fail the date test futhrer along the auth process
+            yield models_1.models.RequestsTransportTokens.destroy({
+                where: {
+                    createdAt: {
+                        [sequelize_1.Op.lt]: new Date(Date.now() - config.length_of_time_for_transport_token_clear * 60000),
+                    },
+                },
+            });
+            const savedTransportTokens = yield models_1.models.RequestsTransportTokens.findAll();
+            // Here we are checking all of the saved x_transport_tokens
+            // to see if we hav a repeat
+            savedTransportTokens.forEach((token) => {
+                if (token.dataValues.transportToken == x_transport_token) {
+                    res.writeHead(401, 'Access invalid for user', {
+                        'Content-Type': 'text/plain',
+                    });
+                    res.end('invalid credentials');
+                    return;
+                }
+            });
+            // Read the transport private key since we will need to decrypt with this
+            const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+            // Decrypt the token and split by space not sure what
+            // the correct way to do the delimiting so I just put
+            // a space for now
+            const splitTransportToken = rsa
+                .decrypt(transportPrivateKey, x_transport_token)
+                .split('|');
+            // The token will be the first item
+            token = splitTransportToken[0];
+            // The second item will be the timestamp
+            const splitTransportTokenTimestamp = splitTransportToken[1];
+            // Check if the timestamp is within the timeframe we
+            // choose (1 minute here) to clear out the db of saved recent requests
+            if (new Date(splitTransportTokenTimestamp) <
+                new Date(Date.now() - config.length_of_time_for_transport_token_clear * 60000) ||
+                !splitTransportTokenTimestamp) {
+                res.writeHead(401, 'Access invalid for user', {
+                    'Content-Type': 'text/plain',
+                });
+                res.end('invalid credentials');
+                return;
+            }
+            // Here we are saving the x_transport_token that we just
+            // used into the db to be checked against later
+            const transportTokenDBValues = { transportToken: x_transport_token };
+            yield models_1.models.RequestsTransportTokens.create(transportTokenDBValues);
+        }
         if (process.env.HOSTING_PROVIDER === 'true') {
             if (token) {
                 // add owner in anyway

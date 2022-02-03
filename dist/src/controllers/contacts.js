@@ -24,6 +24,10 @@ const network = require("../network");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const moment = require("moment");
+const rsa = require("../crypto/rsa");
+const fs = require("fs");
+const config_1 = require("../utils/config");
+const config = (0, config_1.loadConfig)();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -198,7 +202,18 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             logger_1.sphinxLogger.info('PASSWORD ACCEPTED!');
         }
     }
-    const token = req.body['token'];
+    let token = '';
+    let xTransportToken = req.headers['x-transport-token'];
+    if (!xTransportToken) {
+        token = req.body['token'];
+    }
+    else {
+        const transportTokenKeys = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+        let tokenAndTimestamp = rsa
+            .decrypt(transportTokenKeys, xTransportToken)
+            .split('|');
+        token = tokenAndTimestamp[0];
+    }
     if (!token) {
         return (0, res_1.failure)(res, 'no token in body');
     }
@@ -213,9 +228,17 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if ((0, proxy_1.isProxy)()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
+        //  create transport token and send back to client
+        // save private key and send public key
         owner.update({ authToken: hash });
+        // Send transport pubkey
+        (0, res_1.success)(res, {
+            id: (owner && owner.id) || 0,
+        });
     }
-    (0, res_1.success)(res, { id: (owner && owner.id) || 0 });
+    (0, res_1.success)(res, {
+        id: (owner && owner.id) || 0,
+    });
 });
 exports.generateToken = generateToken;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

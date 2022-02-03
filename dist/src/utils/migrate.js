@@ -153,6 +153,17 @@ function migrate() {
         catch (e) {
             logger_1.sphinxLogger.error(['problem adding lsat table:', e.message], logger_1.logging.DB);
         }
+        // add RequestTransportToken table
+        try {
+            logger_1.sphinxLogger.info('adding requestsTransportTokens table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_requests_transport_tokens (
+      id BIGINT NOT NULL PRIMARY KEY,
+      transport_token TEXT,
+			created_at DATETIME
+    )`);
+        }
+        catch (e) { }
     });
 }
 exports.default = migrate;
@@ -173,7 +184,7 @@ function addTableColumn(table, column, type = 'TEXT') {
             yield models_1.sequelize.query(`alter table ${table} add ${column} ${type}`);
         }
         catch (e) {
-            logger_1.sphinxLogger.error(['=> migrate failed'], logger_1.logging.DB);
+            logger_1.sphinxLogger.error(['=> migrate failed', e], logger_1.logging.DB);
         }
     });
 }

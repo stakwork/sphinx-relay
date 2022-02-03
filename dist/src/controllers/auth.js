@@ -9,10 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requestExternalTokens = exports.verifyAuthRequest = void 0;
+exports.requestTransportToken = exports.requestExternalTokens = exports.verifyAuthRequest = void 0;
 const jwt_1 = require("../utils/jwt");
 const res_1 = require("../utils/res");
+const config_1 = require("../utils/config");
+const rsa = require("../crypto/rsa");
 const tribes = require("../utils/tribes");
+const fs = require("fs");
+const config = (0, config_1.loadConfig)();
 function verifyAuthRequest(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -72,4 +76,18 @@ function requestExternalTokens(req, res) {
     });
 }
 exports.requestExternalTokens = requestExternalTokens;
+function requestTransportToken(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const transportPublicKey = fs.readFileSync(config.transportPublicKeyLocation, 'utf8');
+        if (transportPublicKey != null) {
+            (0, res_1.success)(res, { transportToken: transportPublicKey });
+            return;
+        }
+        const transportTokenKeys = yield rsa.genKeys();
+        fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public);
+        fs.writeFileSync(config.transportPrivateKeyLocation, transportTokenKeys.private);
+        (0, res_1.success)(res, { transportToken: transportTokenKeys.public });
+    });
+}
+exports.requestTransportToken = requestTransportToken;
 //# sourceMappingURL=auth.js.map

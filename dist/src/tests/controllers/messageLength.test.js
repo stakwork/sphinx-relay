@@ -48,11 +48,11 @@ function messageLengthTest(t, node1, node2) {
         const text4 = (0, helpers_1.randomText)();
         yield (0, msg_1.sendMessage)(t, node1, node2, text4);
         //t.true(messageSent.success, 'node1 should send text message to node2')
-        const newMessagesResponse = yield (0, get_1.getCheckMsgs)(t, node2, date, limit, offset);
+        const newMessagesResponse = yield (0, get_1.getCheckMsgs)(t, node2, date, limit, offset, 'desc');
         t.true(newMessagesResponse.new_messages_total == 4, 'node2 should have 4 new message');
         t.true(decrypt(newMessagesResponse.new_messages[0], node2) == text4, 'first message should be the newest message');
         t.true(decrypt(newMessagesResponse.new_messages[1], node2) == text3, 'first message should be the newest message');
-        const newMessagesResponse2 = yield (0, get_1.getCheckAllMessages)(t, node2, limit, offset);
+        const newMessagesResponse2 = yield (0, get_1.getCheckAllMessages)(t, node2, limit, offset, 'desc');
         t.true(newMessagesResponse2.new_messages_total == 4, `node2 should have 4 new messages`);
         t.true(decrypt(newMessagesResponse2.new_messages[0], node2) == text4, 'first message should be the newest message');
         t.true(decrypt(newMessagesResponse2.new_messages[1], node2) == text3, 'first message should be the newest message');

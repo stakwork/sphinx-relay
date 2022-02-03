@@ -382,7 +382,7 @@ export async function initGrpcSubscriptions(noCache?: boolean) {
     await Lightning.getInfo(true, noCache) // try proxy
     await lndService.subscribeInvoices(parseKeysendInvoice)
   } catch (e) {
-    // console.log(e)
+    console.log('=> initGrpcSubscriptions error', e)
     throw e
   }
 }

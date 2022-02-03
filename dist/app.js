@@ -36,6 +36,7 @@ process.env.NODE_EXTRA_CA_CERTS = config.tls_location;
 // START SETUP!
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
+        yield (0, setup_1.setupTransportToken)();
         yield (0, setup_1.setupDatabase)();
         mainSetup();
         // // IF NOT UNLOCK, go ahead and start this now

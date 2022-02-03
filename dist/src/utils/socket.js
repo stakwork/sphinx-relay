@@ -12,7 +12,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendJson = exports.send = exports.connect = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
+const fs = require("fs");
+const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
+const config = (0, config_1.loadConfig)();
 // import * as WebSocket from 'ws'
 const socketio = require('socket.io');
 // { ownerID: [client1, client2] }
@@ -34,7 +37,13 @@ function connect(server) {
     });
     io.use((client, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = client.handshake.headers['x-user-token'];
-        const owner = yield getOwnerFromToken(userToken);
+        let x_transport_token = client.handshake.headers['x-transport-token'];
+        const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
+        let userTokenFromTransportToken = crypto
+            .privateDecrypt(transportPrivateKey, x_transport_token)
+            .toString()
+            .split('|')[0];
+        const owner = yield getOwnerFromToken(userToken != null ? userToken : userTokenFromTransportToken);
         if (owner) {
             client.ownerID = owner.id; // add it in
             return next();

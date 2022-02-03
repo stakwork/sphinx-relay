@@ -18,6 +18,7 @@ const chatBot_1 = require("./sql/chatBot");
 const botMember_1 = require("./sql/botMember");
 const accounting_1 = require("./sql/accounting");
 const lsat_1 = require("./sql/lsat");
+const requestsTransportTokens_1 = require("./sql/requestsTransportTokens");
 const minimist = require("minimist");
 const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
@@ -42,6 +43,7 @@ const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_l
         botMember_1.default,
         accounting_1.default,
         lsat_1.default,
+        requestsTransportTokens_1.default,
     ] });
 if ((0, proxy_1.isProxy)()) {
     opts.pool = {

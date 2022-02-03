@@ -52,8 +52,10 @@ function sphinxLoggerBase(message, loggingType = 'MISC', level) {
         if ((config.logging && config.logging.includes(loggingType)) ||
             loggingType == 'MISC') {
             yield blgrLogger.open();
-            const date = new Date(Date.now()).toUTCString();
-            blgrLogger[level](date, '[' + loggingType + ']', ...(Array.isArray(message) ? message : [message]));
+            const [date, time] = new Date(Date.now()).toISOString().split('.')[0].split('T');
+            const dateArr = date.split('-');
+            dateArr.push((dateArr.shift()).substring(2));
+            blgrLogger[level](`${dateArr.join('-')}T${time}`, '[' + loggingType + ']', ...(Array.isArray(message) ? message : [message]));
         }
     });
 }
