@@ -107,6 +107,6 @@ export async function reconnectToLightning(
         // if another retry fires, then this will not run
         await reconnectToLightning(innerCtx, callback, noCache)
       }
-    }, 2000)
+    }, 5000)
   }
 }

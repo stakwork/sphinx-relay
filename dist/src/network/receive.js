@@ -360,12 +360,12 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
 function initGrpcSubscriptions(noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield Lightning.getInfo(true, noCache); // try proxy
-            yield lndService.subscribeInvoices(parseKeysendInvoice);
             if (config.lightning_provider === 'GREENLIGHT') {
                 yield Greenlight.initGreenlight();
                 Greenlight.keepalive();
             }
+            yield Lightning.getInfo(true, noCache); // try proxy
+            yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {
             console.log('=> initGrpcSubscriptions error', e);
