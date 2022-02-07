@@ -4,6 +4,10 @@
     "plugin:@typescript-eslint/recommended",
     "prettier"
   ],
+  "rules": {
+    "no-useless-catch": 0,
+    "no-async-promise-executor": 0
+  },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.json"
