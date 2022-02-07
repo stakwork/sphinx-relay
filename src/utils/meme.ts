@@ -43,7 +43,7 @@ export async function lazyToken(pubkey: string, host: string) {
 let mediaProtocol = 'https'
 if (config.media_host.includes('localhost')) mediaProtocol = 'http'
 if (config.media_host.includes('meme.sphinx:5555')) mediaProtocol = 'http'
-let mediaURL = mediaProtocol + '://' + config.media_host + '/'
+const mediaURL = mediaProtocol + '://' + config.media_host + '/'
 
 export async function getMediaToken(ownerPubkey: string, host?: string) {
   // console.log("[meme] gET MEDIA TOEKN", ownerPubkey)
@@ -64,7 +64,7 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
     )
 
     if (!sig) throw new Error('no signature')
-    let pubkey: string = ownerPubkey
+    const pubkey: string = ownerPubkey
 
     const sigBytes = zbase32.decode(sig)
     const sigBase64 = urlBase64FromBytes(sigBytes)

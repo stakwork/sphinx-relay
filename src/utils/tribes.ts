@@ -17,7 +17,7 @@ export { declare_bot, delete_bot }
 const config = loadConfig()
 
 // {pubkey: {host: Client} }
-let clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
+const clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
 
 const optz: IClientSubscribeOptions = { qos: 0 }
 

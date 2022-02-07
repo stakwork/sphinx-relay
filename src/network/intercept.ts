@@ -132,7 +132,7 @@ async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
     case constants.bot_types.builtin:
       builtinBotEmit(msg)
       return true
-    case constants.bot_types.local:
+    case constants.bot_types.local: {
       const bot = await models.Bot.findOne({
         where: {
           uuid: botInTribe.botUuid,
@@ -140,6 +140,7 @@ async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
         },
       })
       return postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE)
+    }
     case constants.bot_types.remote:
       return keysendBotCmd(msg, botInTribe, sender)
     default:

@@ -7,16 +7,16 @@ import { loadConfig } from './config'
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 
-var signerClient = <any>null
+let signerClient = <any>null
 
 export const loadSigner = () => {
   if (signerClient) {
     return signerClient
   } else {
     try {
-      var credentials = Lightning.loadCredentials('signer.macaroon')
-      var lnrpcDescriptor = grpc.load('proto/signer.proto')
-      var signer: any = lnrpcDescriptor.signrpc
+      const credentials = Lightning.loadCredentials('signer.macaroon')
+      const lnrpcDescriptor = grpc.load('proto/signer.proto')
+      const signer: any = lnrpcDescriptor.signrpc
       signerClient = new signer.Signer(
         LND_IP + ':' + config.lnd_port,
         credentials
@@ -30,7 +30,7 @@ export const loadSigner = () => {
 
 export const signMessage = (msg) => {
   return new Promise(async (resolve, reject) => {
-    let signer = await loadSigner()
+    const signer = await loadSigner()
     try {
       const options = {
         msg: ByteBuffer.fromHex(msg),
@@ -52,7 +52,7 @@ export const signMessage = (msg) => {
 
 export const signBuffer = (msg) => {
   return new Promise(async (resolve, reject) => {
-    let signer = await loadSigner()
+    const signer = await loadSigner()
     try {
       const options = { msg }
       signer.signMessage(options, function (err, sig) {
@@ -71,7 +71,7 @@ export const signBuffer = (msg) => {
 
 function verifyMessage(msg, sig, pubkey): Promise<{ [k: string]: any }> {
   return new Promise(async (resolve, reject) => {
-    let signer = await loadSigner()
+    const signer = await loadSigner()
     if (msg.length === 0) {
       return reject('invalid msg')
     }
@@ -123,9 +123,9 @@ export async function verifyAscii(
 }
 
 function ascii_to_hexa(str) {
-  var arr1 = <string[]>[]
-  for (var n = 0, l = str.length; n < l; n++) {
-    var hex = Number(str.charCodeAt(n)).toString(16)
+  const arr1 = <string[]>[]
+  for (let n = 0, l = str.length; n < l; n++) {
+    const hex = Number(str.charCodeAt(n)).toString(16)
     arr1.push(hex)
   }
   return arr1.join('')

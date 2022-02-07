@@ -79,7 +79,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
   if (!(payload.type || payload.type === 0))
     return sphinxLogger.error(`no payload.type`)
 
-  let owner = await models.Contact.findOne({
+  const owner = await models.Contact.findOne({
     where: { isOwner: true, publicKey: dest },
   })
   if (!owner) return sphinxLogger.error(`=> RECEIVE: owner not found`)
@@ -459,7 +459,7 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
     }
   }
   const amount = (inv.value && parseInt(inv.value)) || 0
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const msg = await models.Message.create({
     chatId: 0,
@@ -485,7 +485,7 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
   )
 }
 
-let hashCache: { [k: string]: boolean } = {}
+const hashCache: { [k: string]: boolean } = {}
 
 export async function parseKeysendInvoice(i: interfaces.Invoice) {
   try {

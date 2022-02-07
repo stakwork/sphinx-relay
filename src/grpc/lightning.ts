@@ -72,7 +72,7 @@ export async function loadLightning(
   }
 
   if (IS_GREENLIGHT) {
-    var credentials = loadGreenlightCredentials()
+    const credentials = loadGreenlightCredentials()
     const descriptor = grpc.load('proto/greenlight.proto')
     const greenlight: any = descriptor.greenlight
     const options = {
@@ -86,7 +86,7 @@ export async function loadLightning(
 
   try {
     // LND
-    var credentials = loadCredentials()
+    const credentials = loadCredentials()
     const lnrpcDescriptor = grpc.load('proto/rpc.proto')
     const lnrpc: any = lnrpcDescriptor.lnrpc
     lightningClient = new lnrpc.Lightning(

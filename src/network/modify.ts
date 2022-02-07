@@ -54,7 +54,7 @@ export async function purchaseFromOriginalSender(
   })
 
   const terms = parseLDAT(mt)
-  let price = terms.meta && terms.meta.amt
+  const price = terms.meta && terms.meta.amt
   if (amount < price) return // not enough sats
 
   if (mediaKey) {
@@ -249,7 +249,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
     // console.log('[modify] about to encrypt', imgBuf.length, newKey)
     const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey)
 
-    var encImgBuffer = Buffer.from(encImgBase64, 'base64')
+    const encImgBuffer = Buffer.from(encImgBase64, 'base64')
 
     const form = new FormData()
     form.append('file', encImgBuffer, {
@@ -267,7 +267,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
       body: form,
     })
 
-    let json = await resp.json()
+    const json = await resp.json()
     if (!json.muid) throw new Error('no muid')
 
     // PUT NEW TERMS, to finish in personalizeMessage
@@ -281,7 +281,7 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
     }
 
     const encKey = rsa.encrypt(chat.groupKey, newKey.slice())
-    var date = new Date()
+    const date = new Date()
 
     date.setMilliseconds(0)
     await sleep(1)

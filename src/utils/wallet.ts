@@ -12,9 +12,9 @@ export const loadWalletKit = () => {
     return walletClient
   } else {
     try {
-      var credentials = Lightning.loadCredentials()
-      var lnrpcDescriptor = grpc.load('proto/walletkit.proto')
-      var walletkit: any = lnrpcDescriptor.walletrpc
+      const credentials = Lightning.loadCredentials()
+      const lnrpcDescriptor = grpc.load('proto/walletkit.proto')
+      const walletkit: any = lnrpcDescriptor.walletrpc
       walletClient = new walletkit.WalletKit(
         LND_IP + ':' + config.lnd_port,
         credentials
@@ -39,7 +39,7 @@ export interface UTXO {
 
 export async function listUnspent(): Promise<UTXO[]> {
   return new Promise(async (resolve, reject) => {
-    let walletkit = await loadWalletKit()
+    const walletkit = await loadWalletKit()
     try {
       const opts = { min_confs: 0, max_confs: 10000 }
       walletkit.listUnspent(opts, function (err, res) {

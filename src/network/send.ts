@@ -30,7 +30,7 @@ export async function sendMessage(params) {
   if (!tenant) return
 
   const isTribe = chat.type === constants.chat_types.tribe
-  let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
+  const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
   // console.log('-> sender.publicKey', sender.publicKey)
   // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 

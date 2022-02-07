@@ -184,7 +184,7 @@ export async function receiveHeartbeat(payload) {
   }
 }
 
-let heartbeats: { [k: string]: boolean } = {}
+const heartbeats: { [k: string]: boolean } = {}
 export async function healthcheck(req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
@@ -218,7 +218,7 @@ export async function healthcheck(req, res) {
   }
 
   let i = 0
-  let interval = setInterval(() => {
+  const interval = setInterval(() => {
     if (i >= 15) {
       clearInterval(interval)
       delete heartbeats[pubkey]

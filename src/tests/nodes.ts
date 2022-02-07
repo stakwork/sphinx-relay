@@ -2,7 +2,7 @@ import { NodeConfig } from './types'
 
 const name = 'nodes'
 
-var nodes = require(`./configs/${name}.json`)
+const nodes = require(`./configs/${name}.json`)
 
 const configs: NodeConfig[] = []
 
