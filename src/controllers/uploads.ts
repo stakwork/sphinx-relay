@@ -5,10 +5,10 @@ import { loadConfig } from '../utils/config'
 const config = loadConfig()
 
 // setup disk storage
-var multer = require('multer')
-var avatarStorage = multer.diskStorage({
+import multer = require('multer')
+const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let dir = __dirname.includes('/dist/')
+    const dir = __dirname.includes('/dist/')
       ? path.join(__dirname, '..')
       : __dirname
     cb(null, dir + '/../../public/uploads')
@@ -24,7 +24,7 @@ var avatarStorage = multer.diskStorage({
     }
   },
 })
-export var avatarUpload = multer({ storage: avatarStorage })
+export const avatarUpload = multer({ storage: avatarStorage })
 
 function hasProtocol(ip) {
   if (ip.startsWith('https://')) return true

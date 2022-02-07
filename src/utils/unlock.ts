@@ -1,7 +1,7 @@
 import * as Lightning from '../grpc/lightning'
 import { loadConfig } from './config'
-const fs = require('fs')
-const readline = require('readline')
+import fs = require('fs')
+import readline = require('readline')
 import { sphinxLogger } from './logger'
 
 const config = loadConfig()
@@ -16,7 +16,7 @@ export async function tryToUnlockLND() {
 
   sphinxLogger.info(`==> ${p}`)
 
-  var pwd = await getFirstLine(config.lnd_pwd_path)
+  const pwd = await getFirstLine(config.lnd_pwd_path)
   if (!pwd) return
 
   sphinxLogger.info(`==> ${pwd} ${typeof pwd}`)

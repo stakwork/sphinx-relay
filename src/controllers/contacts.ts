@@ -55,8 +55,8 @@ export const getContacts = async (req, res) => {
   })
 
   const contactsResponse = contacts.map((contact) => {
-    let contactJson = jsonUtils.contactToJson(contact)
-    let invite = invites.find((invite) => invite.contactId == contact.id)
+    const contactJson = jsonUtils.contactToJson(contact)
+    const invite = invites.find((invite) => invite.contactId == contact.id)
 
     if (invite) {
       contactJson.invite = jsonUtils.inviteToJson(invite)
@@ -204,7 +204,7 @@ export const generateToken = async (req, res) => {
   }
 
   let token = ''
-  let xTransportToken = req.headers['x-transport-token']
+  const xTransportToken = req.headers['x-transport-token']
   if (!xTransportToken) {
     token = req.body['token']
   } else {
@@ -212,7 +212,7 @@ export const generateToken = async (req, res) => {
       config.transportPrivateKeyLocation,
       'utf8'
     )
-    let tokenAndTimestamp = rsa
+    const tokenAndTimestamp = rsa
       .decrypt(transportTokenKeys, xTransportToken)
       .split('|')
     token = tokenAndTimestamp[0]
@@ -261,7 +261,7 @@ export const updateContact = async (req, res) => {
     logging.Network
   )
 
-  let attrs = extractAttrs(req.body)
+  const attrs = extractAttrs(req.body)
 
   const contact = await models.Contact.findOne({
     where: { id: req.params.id, tenant },
@@ -349,7 +349,7 @@ export const createContact = async (req, res) => {
     logging.Network
   )
 
-  let attrs = extractAttrs(req.body)
+  const attrs = extractAttrs(req.body)
 
   const owner = req.owner
 
@@ -570,7 +570,7 @@ export const receiveConfirmContactKey = async (payload) => {
 }
 
 function extractAttrs(body): { [k: string]: any } {
-  let fields_to_update = [
+  const fields_to_update = [
     'public_key',
     'node_alias',
     'alias',
@@ -585,7 +585,7 @@ function extractAttrs(body): { [k: string]: any } {
     'route_hint',
     'price_to_meet',
   ]
-  let attrs = {}
+  const attrs = {}
   Object.keys(body).forEach((key) => {
     if (fields_to_update.includes(key)) {
       attrs[key] = body[key]

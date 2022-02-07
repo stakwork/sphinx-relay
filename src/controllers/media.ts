@@ -164,9 +164,9 @@ export function saveMediaKeys(
     sphinxLogger.error('wrong type for mediaKeyMap')
     return
   }
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
-  for (let [contactId, key] of Object.entries(mediaKeyMap)) {
+  for (const [contactId, key] of Object.entries(mediaKeyMap)) {
     if (parseInt(contactId) !== tenant) {
       const receiverID = parseInt(contactId) || 0 // 0 is for a tribe
       models.MediaKey.create({
@@ -187,7 +187,7 @@ export const purchase = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { chat_id, contact_id, amount, media_token } = req.body
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   try {
@@ -245,7 +245,7 @@ export const purchase = async (req, res) => {
 export const receivePurchase = async (payload) => {
   sphinxLogger.info(['=> received purchase', { payload }], logging.Network)
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {
@@ -414,7 +414,7 @@ export const receivePurchase = async (payload) => {
 
 export const receivePurchaseAccept = async (payload) => {
   sphinxLogger.info('=> receivePurchaseAccept', logging.Network)
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {
@@ -474,7 +474,7 @@ export const receivePurchaseAccept = async (payload) => {
 
 export const receivePurchaseDeny = async (payload) => {
   sphinxLogger.info('=> receivePurchaseDeny', logging.Network)
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const { owner, sender, chat, amount, mediaToken, network_type } =
     await helpers.parseReceiveParams(payload)
@@ -509,7 +509,7 @@ export const receivePurchaseDeny = async (payload) => {
 export const receiveAttachment = async (payload) => {
   // console.log('received attachment', { payload })
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {

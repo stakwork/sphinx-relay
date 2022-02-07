@@ -27,7 +27,7 @@ export async function receiveNonKeysend(response) {
   const paymentHash =
     decoded.tags.find((t) => t.tagName === 'payment_hash')?.data || ''
 
-  let settleDate = parseInt(response['settle_date'] + '000')
+  const settleDate = parseInt(response['settle_date'] + '000')
 
   const invoice = await models.Message.findOne({
     where: {

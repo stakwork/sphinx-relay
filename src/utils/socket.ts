@@ -6,7 +6,7 @@ import { sphinxLogger} from '../utils/logger'
 
 const config = loadConfig()
 // import * as WebSocket from 'ws'
-const socketio = require('socket.io')
+import socketio = require('socket.io')
 
 type ClientMap = Record<number, any[]>
 // { ownerID: [client1, client2] }
@@ -31,15 +31,15 @@ export function connect(server) {
     },
   })
   io.use(async (client, next) => {
-    let userToken = client.handshake.headers['x-user-token']
+    const userToken = client.handshake.headers['x-user-token']
 
-    let x_transport_token = client.handshake.headers['x-transport-token']
+    const x_transport_token = client.handshake.headers['x-transport-token']
 
     const transportPrivateKey = fs.readFileSync(
       config.transportPrivateKeyLocation
     )
 
-    let userTokenFromTransportToken = crypto
+    const userTokenFromTransportToken = crypto
       .privateDecrypt(transportPrivateKey, x_transport_token)
       .toString()
       .split('|')[0]

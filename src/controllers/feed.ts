@@ -121,7 +121,7 @@ export async function anonymousKeysend(
     msg,
     success: () => {
       sphinxLogger.info(`payment sent!`)
-      var date = new Date()
+      const date = new Date()
       date.setMilliseconds(0)
       models.Message.create({
         chatId: 0,

@@ -53,7 +53,7 @@ export async function kickChatMember(req, res) {
     return failure(res, 'missing param')
   }
   // remove chat.contactIds
-  let chat = await models.Chat.findOne({ where: { id: chatId, tenant } })
+  const chat = await models.Chat.findOne({ where: { id: chatId, tenant } })
   const contactIds = JSON.parse(chat.contactIds || '[]')
   const newContactIds = contactIds.filter((cid) => cid !== contactId)
   await chat.update({ contactIds: JSON.stringify(newContactIds) })
@@ -99,7 +99,7 @@ export async function receiveGroupKick(payload) {
   // })
   // await models.Message.destroy({ where: { chatId: chat.id } })
 
-  var date = new Date()
+  let date = new Date()
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
   const msg: { [k: string]: any } = {
@@ -300,7 +300,7 @@ export async function addGroupMembers(req, res) {
 
   const members: { [k: string]: { [k: string]: string } } = {} //{pubkey:{key,alias}, ...}
   const owner = req.owner
-  let chat = await models.Chat.findOne({ where: { id, tenant } })
+  const chat = await models.Chat.findOne({ where: { id, tenant } })
 
   const contactIds = JSON.parse(chat.contactIds || '[]')
   // for all members (existing and new)
@@ -421,7 +421,7 @@ export async function receiveGroupJoin(payload) {
 
   const isTribe = chat_type === constants.chat_types.tribe
 
-  var date = new Date()
+  let date = new Date()
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
@@ -589,7 +589,7 @@ export async function receiveGroupLeave(payload) {
     }
   }
 
-  var date = new Date()
+  let date = new Date()
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
   const msg: { [k: string]: any } = {
@@ -658,7 +658,7 @@ export async function receiveGroupCreateOrInvite(payload) {
 
   const contacts: any[] = []
   const newContacts: any[] = []
-  for (let [pubkey, member] of Object.entries(chat_members)) {
+  for (const [pubkey, member] of Object.entries(chat_members)) {
     const contact = await models.Contact.findOne({
       where: { publicKey: pubkey, tenant },
     })
@@ -695,7 +695,7 @@ export async function receiveGroupCreateOrInvite(payload) {
   const contactIds = contacts.map((c) => c.id)
   if (!contactIds.includes(owner.id)) contactIds.push(owner.id)
   // make chat
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const chat = await models.Chat.create({
     uuid: chat_uuid,
@@ -751,14 +751,14 @@ export async function receiveGroupCreateOrInvite(payload) {
 }
 
 function createGroupChatParams(owner, contactIds, members, name) {
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   if (!(owner && members && contactIds && Array.isArray(contactIds))) {
     return
   }
 
   const pubkeys: string[] = []
-  for (let pubkey of Object.keys(members)) {
+  for (const pubkey of Object.keys(members)) {
     // just the key
     pubkeys.push(String(pubkey))
   }

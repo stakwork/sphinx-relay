@@ -62,7 +62,7 @@ export const sendPayment = async (req, res) => {
   })
   if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const msg: { [k: string]: any } = {
@@ -142,7 +142,7 @@ export const sendPayment = async (req, res) => {
 export const receivePayment = async (payload) => {
   sphinxLogger.info(`received payment ${{ payload }}`)
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {

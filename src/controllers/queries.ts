@@ -20,7 +20,7 @@ export interface Query {
   app: string
 }
 
-let queries: { [k: string]: Query } = {}
+const queries: { [k: string]: Query } = {}
 
 const POLL_MINS = 10
 
@@ -282,7 +282,7 @@ export async function queryOnchainAddress(req, res) {
   }
 
   let i = 0
-  let interval = setInterval(() => {
+  const interval = setInterval(() => {
     if (i >= 15) {
       clearInterval(interval)
       delete queries[uuid]
