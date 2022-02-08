@@ -30,6 +30,7 @@ export async function createTribe(
     app_url: '',
     feed_url: '',
     feed_type: 0,
+    pin: 'A pinned message',
   }
 
   //node1 creates new tribe

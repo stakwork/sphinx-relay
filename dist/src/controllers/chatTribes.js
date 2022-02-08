@@ -246,7 +246,7 @@ function editTribe(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, } = req.body;
+        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, } = req.body;
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
@@ -278,6 +278,7 @@ function editTribe(req, res) {
                     deleted: false,
                     owner_route_hint: owner.routeHint || '',
                     owner_pubkey: owner.publicKey,
+                    pin: pin || '',
                 });
             }
             catch (e) {
@@ -584,7 +585,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin) {
     return __awaiter(this, void 0, void 0, function* () {
         let date = new Date();
         date.setMilliseconds(0);
@@ -619,6 +620,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             feedUrl: feed_url || '',
             feedType: feed_type || 0,
             tenant,
+            pin: pin || '',
         };
     });
 }

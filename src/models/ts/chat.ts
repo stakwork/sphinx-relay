@@ -29,4 +29,5 @@ export interface Chat {
   myAlias: string
   tenant: number
   skipBroadcastJoins: boolean
+  pin: string
 }

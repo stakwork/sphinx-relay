@@ -18,6 +18,7 @@ function migrate() {
         addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT');
         addTableColumn('sphinx_contacts', 'unmet', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN');
+        addTableColumn('sphinx_chats', 'pin');
         addTenant('sphinx_chat_members');
         addTenant('sphinx_chats');
         addTenant('sphinx_bots');

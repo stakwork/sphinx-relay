@@ -33,6 +33,7 @@ function createTribe(t, node, escrowAmount, escrowMillis, ppm, privacy) {
             app_url: '',
             feed_url: '',
             feed_type: 0,
+            pin: 'A pinned message',
         };
         //node1 creates new tribe
         let c = yield http.post(node.external_ip + '/group', (0, helpers_1.makeArgs)(node, newTribe));

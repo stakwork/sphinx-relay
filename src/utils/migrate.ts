@@ -11,6 +11,8 @@ export default async function migrate() {
 
   addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN')
 
+  addTableColumn('sphinx_chats', 'pin')
+
   addTenant('sphinx_chat_members')
   addTenant('sphinx_chats')
   addTenant('sphinx_bots')

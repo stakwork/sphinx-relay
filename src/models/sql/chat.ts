@@ -113,4 +113,7 @@ export default class Chat extends Model<Chat> {
     allowNull: true,
   })
   skipBroadcastJoins: boolean
+
+  @Column
+  pin: string
 }

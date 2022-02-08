@@ -299,7 +299,7 @@ function publish(topic, msg, ownerPubkey, cb) {
     });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let protocol = 'https';
@@ -326,6 +326,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     feed_url: feed_url || '',
                     feed_type: feed_type || 0,
                     owner_route_hint: owner_route_hint || '',
+                    pin: pin || '',
                 }),
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -341,7 +342,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
     });
 }
 exports.declare = declare;
-function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, deleted, owner_route_hint, owner_pubkey, }) {
+function edit({ uuid, host, name, description, tags, img, price_per_message, price_to_join, owner_alias, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, deleted, owner_route_hint, owner_pubkey, pin, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield genSignedTimestamp(owner_pubkey);
@@ -368,6 +369,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     feed_url: feed_url || '',
                     feed_type: feed_type || 0,
                     owner_route_hint: owner_route_hint || '',
+                    pin: pin || '',
                 }),
                 headers: { 'Content-Type': 'application/json' },
             });
