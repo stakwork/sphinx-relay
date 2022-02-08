@@ -301,6 +301,7 @@ export async function declare({
   feed_url,
   feed_type,
   owner_route_hint,
+  pin,
 }) {
   try {
     let protocol = 'https'
@@ -326,6 +327,7 @@ export async function declare({
         feed_url: feed_url || '',
         feed_type: feed_type || 0,
         owner_route_hint: owner_route_hint || '',
+        pin: pin || '',
       }),
       headers: { 'Content-Type': 'application/json' },
     })
@@ -359,6 +361,7 @@ export async function edit({
   deleted,
   owner_route_hint,
   owner_pubkey,
+  pin,
 }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
@@ -384,6 +387,7 @@ export async function edit({
         feed_url: feed_url || '',
         feed_type: feed_type || 0,
         owner_route_hint: owner_route_hint || '',
+        pin: pin || '',
       }),
       headers: { 'Content-Type': 'application/json' },
     })

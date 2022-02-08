@@ -183,6 +183,7 @@ export async function createGroupChat(req, res) {
     app_url,
     feed_url,
     feed_type,
+    pin,
   } = req.body
   const contact_ids = req.body.contact_ids || []
 
@@ -220,7 +221,8 @@ export async function createGroupChat(req, res) {
       app_url,
       feed_url,
       feed_type,
-      tenant
+      tenant,
+      pin
     )
     if (chatParams.uuid) {
       // publish to tribe server
@@ -245,6 +247,7 @@ export async function createGroupChat(req, res) {
           feed_url,
           feed_type,
           owner_route_hint: owner.routeHint || '',
+          pin: pin || '',
         })
       } catch (e) {
         sphinxLogger.error(`=> couldnt create tribe ${e}`)

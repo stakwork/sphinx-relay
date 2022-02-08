@@ -279,6 +279,7 @@ export async function editTribe(req, res) {
     app_url,
     feed_url,
     feed_type,
+    pin,
   } = req.body
   const { id } = req.params
 
@@ -314,6 +315,7 @@ export async function editTribe(req, res) {
         deleted: false,
         owner_route_hint: owner.routeHint || '',
         owner_pubkey: owner.publicKey,
+        pin: pin || '',
       })
     } catch (e) {
       okToUpdate = false
@@ -668,7 +670,8 @@ export async function createTribeChatParams(
   app_url,
   feed_url,
   feed_type,
-  tenant
+  tenant,
+  pin
 ): Promise<{ [k: string]: any }> {
   let date = new Date()
   date.setMilliseconds(0)
@@ -704,6 +707,7 @@ export async function createTribeChatParams(
     feedUrl: feed_url || '',
     feedType: feed_type || 0,
     tenant,
+    pin: pin || '',
   }
 }
 
