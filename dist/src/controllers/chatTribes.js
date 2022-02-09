@@ -527,6 +527,25 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 limit: 40,
             });
             msgs.reverse();
+            // if theres a pinned msg in this chat
+            if (chat.pin) {
+                const pinned = msgs.find((m) => m.uuid === chat.pin);
+                // if the pinned msg is not already included
+                if (!pinned) {
+                    const pinnedMsg = yield models_1.models.Message.findOne({
+                        where: {
+                            tenant,
+                            chatId: chat.id,
+                            type: { [sequelize_1.Op.in]: network.typesToReplay },
+                            uuid: chat.pin,
+                        },
+                    });
+                    // add it
+                    if (pinnedMsg) {
+                        msgs.push(pinnedMsg);
+                    }
+                }
+            }
             asyncForEach(msgs, (m) => __awaiter(this, void 0, void 0, function* () {
                 if (!network.typesToReplay.includes(m.type))
                     return; // only for message for now
@@ -577,7 +596,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
                     dest: contact.publicKey,
                     route_hint: contact.routeHint,
                 }, owner, mqttTopic, replayingHistory);
-            }));
+            })); // end forEach
         }
         catch (e) {
             logger_1.sphinxLogger.error(['replayChatHistory ERROR', e]);

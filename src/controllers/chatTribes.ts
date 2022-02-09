@@ -572,6 +572,26 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
     })
     msgs.reverse()
 
+    // if theres a pinned msg in this chat
+    if (chat.pin) {
+      const pinned = msgs.find((m) => m.uuid === chat.pin)
+      // if the pinned msg is not already included
+      if (!pinned) {
+        const pinnedMsg = await models.Message.findOne({
+          where: {
+            tenant,
+            chatId: chat.id,
+            type: { [Op.in]: network.typesToReplay },
+            uuid: chat.pin,
+          },
+        })
+        // add it
+        if (pinnedMsg) {
+          msgs.push(pinnedMsg)
+        }
+      }
+    }
+
     asyncForEach(msgs, async (m) => {
       if (!network.typesToReplay.includes(m.type)) return // only for message for now
       if (chat.skipBroadcastJoins) {
@@ -650,7 +670,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
         mqttTopic,
         replayingHistory
       )
-    })
+    }) // end forEach
   } catch (e) {
     sphinxLogger.error(['replayChatHistory ERROR', e])
   }
