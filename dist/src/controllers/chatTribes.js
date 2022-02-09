@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addPendingContactIdsToChat = exports.createTribeChatParams = exports.replayChatHistory = exports.receiveTribeDelete = exports.receiveMemberReject = exports.receiveMemberApprove = exports.approveOrRejectMember = exports.editTribe = exports.receiveMemberRequest = exports.joinTribe = void 0;
+exports.addPendingContactIdsToChat = exports.createTribeChatParams = exports.replayChatHistory = exports.receiveTribeDelete = exports.receiveMemberReject = exports.receiveMemberApprove = exports.approveOrRejectMember = exports.editTribe = exports.pinToTribe = exports.receiveMemberRequest = exports.joinTribe = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -241,6 +241,36 @@ function receiveMemberRequest(payload) {
     });
 }
 exports.receiveMemberRequest = receiveMemberRequest;
+function pinToTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { pin } = req.body;
+        const { id } = req.params;
+        if (!id)
+            return (0, res_1.failure)(res, 'group id is required');
+        const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
+        if (!chat) {
+            return (0, res_1.failure)(res, 'cant find chat');
+        }
+        const owner = req.owner;
+        if (owner.publicKey !== chat.ownerPubkey) {
+            return (0, res_1.failure)(res, 'not your tribe');
+        }
+        try {
+            let td = yield tribes.get_tribe_data(chat.uuid);
+            let chatData = chat.dataValues || chat;
+            chatData.pin = pin;
+            yield tribes.edit(mergeTribeAndChatData(chat, td, owner));
+            yield chat.update({ pin });
+        }
+        catch (e) {
+            return (0, res_1.failure)(res, 'failed to update pin');
+        }
+    });
+}
+exports.pinToTribe = pinToTribe;
 function editTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -667,5 +697,29 @@ function asyncForEach(array, callback) {
             yield callback(array[index], index, array);
         }
     });
+}
+function mergeTribeAndChatData(chat, td, owner) {
+    return {
+        uuid: chat.uuid,
+        name: chat.name,
+        host: chat.host,
+        price_per_message: chat.pricePerMessage,
+        price_to_join: chat.priceToJoin,
+        escrow_amount: chat.escrowAmount,
+        escrow_millis: chat.escrowMillis,
+        app_url: chat.appUrl,
+        feed_url: chat.feedUrl,
+        feed_type: chat.feedType,
+        pin: chat.pin || '',
+        deleted: false,
+        owner_alias: owner.alias,
+        owner_route_hint: owner.routeHint || '',
+        owner_pubkey: owner.publicKey,
+        description: td.description,
+        tags: td.tags,
+        img: td.img,
+        unlisted: td.unlisted,
+        is_private: td.private,
+    };
 }
 //# sourceMappingURL=chatTribes.js.map

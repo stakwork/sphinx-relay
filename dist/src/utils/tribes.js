@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
+exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("../grpc/lightning");
@@ -49,7 +49,6 @@ function getTribeOwnersChatByUUID(uuid) {
                 model: models_1.models.Chat,
                 mapToModel: true, // pass true here if you have any mapped fields
             });
-            // console.log("=> getTribeOWnersChatByUUID", r);
             // console.log('=> getTribeOwnersChatByUUID r:', r)
             return r && r[0] && r[0].dataValues;
         }
@@ -408,6 +407,27 @@ function delete_tribe(uuid, owner_pubkey) {
     });
 }
 exports.delete_tribe = delete_tribe;
+function get_tribe_data(uuid) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const host = getHost();
+        try {
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/tribes/${uuid}`);
+            if (!r.ok) {
+                throw 'failed to get tribe ' + r.status;
+            }
+            const j = yield r.json();
+            return j;
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error(`[tribes] couldnt get tribe`);
+            throw e;
+        }
+    });
+}
+exports.get_tribe_data = get_tribe_data;
 function putActivity(uuid, host, owner_pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
