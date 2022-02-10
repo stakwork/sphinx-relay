@@ -232,13 +232,7 @@ export const generateToken = async (req, res) => {
     if (isProxy()) {
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
-    //  create transport token and send back to client
-    // save private key and send public key
     owner.update({ authToken: hash })
-    // Send transport pubkey
-    success(res, {
-      id: (owner && owner.id) || 0,
-    })
   }
 
   success(res, {
