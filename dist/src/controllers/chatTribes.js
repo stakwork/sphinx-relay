@@ -262,8 +262,9 @@ function pinToTribe(req, res) {
             let td = yield tribes.get_tribe_data(chat.uuid);
             let chatData = chat.dataValues || chat;
             chatData.pin = pin;
-            yield tribes.edit(mergeTribeAndChatData(chat, td, owner));
-            yield chat.update({ pin });
+            yield tribes.edit(mergeTribeAndChatData(chatData, td, owner));
+            yield models_1.models.Chat.update({ pin }, { where: { id, tenant } });
+            (0, res_1.success)(res, { pin });
         }
         catch (e) {
             return (0, res_1.failure)(res, 'failed to update pin');

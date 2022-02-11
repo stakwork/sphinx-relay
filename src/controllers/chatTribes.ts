@@ -282,8 +282,9 @@ export async function pinToTribe(req, res) {
     let td = await tribes.get_tribe_data(chat.uuid)
     let chatData = chat.dataValues || chat
     chatData.pin = pin
-    await tribes.edit(mergeTribeAndChatData(chat, td, owner))
-    await chat.update({ pin })
+    await tribes.edit(mergeTribeAndChatData(chatData, td, owner))
+    await models.Chat.update({ pin }, { where: { id, tenant } })
+    success(res, { pin })
   } catch (e) {
     return failure(res, 'failed to update pin')
   }
