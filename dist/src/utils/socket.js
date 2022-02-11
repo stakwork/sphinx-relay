@@ -38,12 +38,15 @@ function connect(server) {
     io.use((client, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = client.handshake.headers['x-user-token'];
         let x_transport_token = client.handshake.headers['x-transport-token'];
-        const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
-        let userTokenFromTransportToken = crypto
-            .privateDecrypt(transportPrivateKey, x_transport_token)
-            .toString()
-            .split('|')[0];
-        const owner = yield getOwnerFromToken(userToken != null ? userToken : userTokenFromTransportToken);
+        if (x_transport_token) {
+            const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
+            let userTokenFromTransportToken = crypto
+                .privateDecrypt(transportPrivateKey, x_transport_token)
+                .toString()
+                .split('|')[0];
+            userToken = userTokenFromTransportToken;
+        }
+        const owner = yield getOwnerFromToken(userToken);
         if (owner) {
             client.ownerID = owner.id; // add it in
             return next();

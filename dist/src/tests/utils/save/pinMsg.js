@@ -24,7 +24,6 @@ function pinMsgToTribe(t, node, id, pin) {
         //check that the chat was found
         t.true(typeof r === 'object', 'the newly created chat should be found');
         // pin updated on relay
-        console.log('THE CHAt', r);
         t.true(r.pin === pin, 'chat pin does not equal');
         const tribe = yield (0, get_1.getTribeByUuid)(t, r);
         // pin updated on tribes server
