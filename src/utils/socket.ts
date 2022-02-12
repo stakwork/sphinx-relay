@@ -2,7 +2,7 @@ import { models } from '../models'
 import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { loadConfig } from './config'
-import { sphinxLogger} from '../utils/logger'
+import { sphinxLogger } from '../utils/logger'
 
 const config = loadConfig()
 // import * as WebSocket from 'ws'
@@ -39,10 +39,12 @@ export function connect(server) {
       config.transportPrivateKeyLocation
     )
 
-    let userTokenFromTransportToken = crypto
-      .privateDecrypt(transportPrivateKey, x_transport_token)
-      .toString()
-      .split('|')[0]
+    if (!!transportPrivateKey && !!x_transport_token) {
+      let userTokenFromTransportToken = crypto
+        .privateDecrypt(transportPrivateKey, x_transport_token)
+        .toString()
+        .split('|')[0]
+    }
 
     const owner = await getOwnerFromToken(
       userToken != null ? userToken : userTokenFromTransportToken
