@@ -39,8 +39,9 @@ export function connect(server) {
       config.transportPrivateKeyLocation
     )
 
+    let userTokenFromTransportToken
     if (!!transportPrivateKey && !!x_transport_token) {
-      let userTokenFromTransportToken = crypto
+      userTokenFromTransportToken = crypto
         .privateDecrypt(transportPrivateKey, x_transport_token)
         .toString()
         .split('|')[0]
