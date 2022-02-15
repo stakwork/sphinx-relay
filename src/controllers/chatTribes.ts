@@ -11,6 +11,7 @@ import { personalizeMessage, decryptMessage } from '../utils/msg'
 import { Op } from 'sequelize'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
+import type { Tribe } from '../models/ts/tribe'
 
 export async function joinTribe(req, res) {
   if (!req.owner) return failure(res, 'no owner')
@@ -261,6 +262,32 @@ export async function receiveMemberRequest(payload) {
     },
     tenant
   )
+}
+
+export async function pinToTribe(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { pin } = req.body
+  const { id } = req.params
+  if (!id) return failure(res, 'group id is required')
+  const chat = await models.Chat.findOne({ where: { id, tenant } })
+  if (!chat) {
+    return failure(res, 'cant find chat')
+  }
+  const owner = req.owner
+  if (owner.publicKey !== chat.ownerPubkey) {
+    return failure(res, 'not your tribe')
+  }
+  try {
+    let td = await tribes.get_tribe_data(chat.uuid)
+    let chatData = chat.dataValues || chat
+    chatData.pin = pin
+    await tribes.edit(mergeTribeAndChatData(chatData, td, owner))
+    await models.Chat.update({ pin }, { where: { id, tenant } })
+    success(res, { pin })
+  } catch (e) {
+    return failure(res, 'failed to update pin')
+  }
 }
 
 export async function editTribe(req, res) {
@@ -572,6 +599,26 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
     })
     msgs.reverse()
 
+    // if theres a pinned msg in this chat
+    if (chat.pin) {
+      const pinned = msgs.find((m) => m.uuid === chat.pin)
+      // if the pinned msg is not already included
+      if (!pinned) {
+        const pinnedMsg = await models.Message.findOne({
+          where: {
+            tenant,
+            chatId: chat.id,
+            type: { [Op.in]: network.typesToReplay },
+            uuid: chat.pin,
+          },
+        })
+        // add it
+        if (pinnedMsg) {
+          msgs.push(pinnedMsg)
+        }
+      }
+    }
+
     asyncForEach(msgs, async (m) => {
       if (!network.typesToReplay.includes(m.type)) return // only for message for now
       if (chat.skipBroadcastJoins) {
@@ -650,7 +697,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
         mqttTopic,
         replayingHistory
       )
-    })
+    }) // end forEach
   } catch (e) {
     sphinxLogger.error(['replayChatHistory ERROR', e])
   }
@@ -731,5 +778,30 @@ export async function addPendingContactIdsToChat(achat, tenant) {
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
+  }
+}
+
+function mergeTribeAndChatData(chat, td: Tribe, owner) {
+  return {
+    uuid: chat.uuid,
+    name: chat.name,
+    host: chat.host,
+    price_per_message: chat.pricePerMessage,
+    price_to_join: chat.priceToJoin,
+    escrow_amount: chat.escrowAmount,
+    escrow_millis: chat.escrowMillis,
+    app_url: chat.appUrl,
+    feed_url: chat.feedUrl,
+    feed_type: chat.feedType,
+    pin: chat.pin || '',
+    deleted: false,
+    owner_alias: owner.alias,
+    owner_route_hint: owner.routeHint || '',
+    owner_pubkey: owner.publicKey,
+    description: td.description,
+    tags: td.tags,
+    img: td.img,
+    unlisted: td.unlisted,
+    is_private: td.private,
   }
 }

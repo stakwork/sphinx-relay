@@ -50,6 +50,7 @@ export async function set(app) {
     chatTribes.approveOrRejectMember
   )
   app.put('/group/:id', chatTribes.editTribe)
+  app.put('/chat_pin/:id', chatTribes.pinToTribe)
 
   app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile)
 

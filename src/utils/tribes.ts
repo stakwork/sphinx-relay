@@ -11,6 +11,7 @@ import { isProxy } from './proxy'
 import { Op } from 'sequelize'
 import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
+import type { Tribe } from '../models/ts/tribe'
 
 export { declare_bot, delete_bot }
 
@@ -42,7 +43,6 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
         mapToModel: true, // pass true here if you have any mapped fields
       }
     )
-    // console.log("=> getTribeOWnersChatByUUID", r);
     // console.log('=> getTribeOwnersChatByUUID r:', r)
     return r && r[0] && r[0].dataValues
   } catch (e) {
@@ -419,6 +419,23 @@ export async function delete_tribe(uuid, owner_pubkey) {
     // const j = await r.json()
   } catch (e) {
     sphinxLogger.error(`[tribes] unauthorized to delete`)
+    throw e
+  }
+}
+
+export async function get_tribe_data(uuid): Promise<Tribe> {
+  const host = getHost()
+  try {
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(`${protocol}://${host}/tribes/${uuid}`)
+    if (!r.ok) {
+      throw 'failed to get tribe ' + r.status
+    }
+    const j = await r.json()
+    return j
+  } catch (e) {
+    sphinxLogger.error(`[tribes] couldnt get tribe`)
     throw e
   }
 }

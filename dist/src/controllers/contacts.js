@@ -228,13 +228,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if ((0, proxy_1.isProxy)()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
-        //  create transport token and send back to client
-        // save private key and send public key
         owner.update({ authToken: hash });
-        // Send transport pubkey
-        (0, res_1.success)(res, {
-            id: (owner && owner.id) || 0,
-        });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,

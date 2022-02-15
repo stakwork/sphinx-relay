@@ -73,4 +73,5 @@ export interface Chat {
   owner_route_hint?: string
   img: string
   meta: string
+  pin: string
 }
