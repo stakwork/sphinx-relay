@@ -9,7 +9,7 @@ import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import { sphinxLogger } from '../../utils/logger'
 
 export default async function broadcast(a: any) {
-  const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid } = a
+  const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id } = a
 
   sphinxLogger.info(`=> BOT BROADCAST`)
   if (!content) return sphinxLogger.error(`no content`)
@@ -47,6 +47,7 @@ export default async function broadcast(a: any) {
     senderAlias: alias,
     tenant,
   }
+  if (parent_id) msg.parentId = parent_id
   const message = await models.Message.create(msg)
   socket.sendJson(
     {
@@ -70,6 +71,7 @@ export default async function broadcast(a: any) {
       id: message.id,
       uuid: message.uuid,
       replyUuid: message.replyUuid,
+      parentId: message.parentId || 0,
     },
     type: constants.message_types.bot_res,
     success: () => ({ success: true }),

@@ -671,6 +671,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
           content, // replaced with the remoteMessageContent (u are owner) {}
           uuid: m.uuid,
           replyUuid: m.replyUuid,
+          parentId: m.parentId || 0,
           status: m.status,
           amount: m.amount,
           ...(mediaKeyMap && { mediaKey: mediaKeyMap }),

@@ -224,6 +224,7 @@ function parseReceiveParams(payload) {
         const date_string = dat.message.date;
         const skip_payment_processing = dat.message.skipPaymentProcessing;
         const reply_uuid = dat.message.replyUuid;
+        const parent_id = dat.message.parentId;
         const purchaser_id = dat.message.purchaser;
         const network_type = dat.network_type || 0;
         const isTribeOwner = dat.isTribeOwner ? true : false;
@@ -288,6 +289,7 @@ function parseReceiveParams(payload) {
             msg_uuid,
             date_string,
             reply_uuid,
+            parent_id,
             skip_payment_processing,
             purchaser_id,
             sender_photo_url,

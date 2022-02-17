@@ -205,6 +205,7 @@ export async function botKeysend(
 
   const sender_id = (msg && msg.sender && msg.sender.id) || sender.id
   const reply_uuid = msg && msg.message.replyUuid
+  const parent_id = msg && msg.message.parentId
 
   const dest = botmaker_pubkey
   const amt = Math.max(amount || constants.min_sat_amount)
@@ -234,6 +235,9 @@ export async function botKeysend(
   }
   if (reply_uuid) {
     opts.data.message.replyUuid = reply_uuid
+  }
+  if (parent_id) {
+    opts.data.message.parentId = parent_id
   }
   sphinxLogger.info(['BOT MSG TO SEND!!!', opts.data])
 
@@ -423,6 +427,7 @@ export async function receiveBotRes(payload) {
   const amount = dat.message.amount || 0
   const msg_uuid = dat.message.uuid || ''
   const reply_uuid = dat.message.replyUuid || ''
+  const parent_id = dat.message.parentId || 0
   const content = dat.message.content
   const action = dat.action
   const bot_name = dat.bot_name
@@ -459,6 +464,7 @@ export async function receiveBotRes(payload) {
       content,
       amount,
       reply_uuid,
+      parent_id,
       msg_uuid,
       recipient_id,
     })
@@ -495,6 +501,7 @@ export async function receiveBotRes(payload) {
       network_type,
       tenant,
     }
+    if (parent_id) msg.parentId = parent_id
     const message = await models.Message.create(msg)
     socket.sendJson(
       {

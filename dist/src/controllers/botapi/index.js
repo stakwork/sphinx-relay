@@ -34,7 +34,7 @@ function processAction(req, res) {
                 return (0, res_1.failure)(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id, } = body;
         if (!bot_id)
             return (0, res_1.failure)(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
@@ -56,6 +56,7 @@ function processAction(req, res) {
             chat_uuid: chat_uuid || '',
             msg_uuid: msg_uuid || '',
             reply_uuid: reply_uuid || '',
+            parent_id: parent_id || 0,
             recipient_id: recipient_id ? parseInt(recipient_id) : 0,
         };
         try {
@@ -70,7 +71,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id, } = a;
+        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id, recipient_id, } = a;
         let myBot;
         // not for tribe admin, for bot maker
         if (bot_id) {
@@ -127,6 +128,9 @@ function finalAction(a) {
             }
             if (reply_uuid) {
                 data.message.replyUuid = reply_uuid;
+            }
+            if (parent_id) {
+                data.message.parentId = parent_id;
             }
             try {
                 yield network.signAndSend({ dest, data, route_hint }, owner, topic);

@@ -19,7 +19,7 @@ const tribes_1 = require("../../utils/tribes");
 const logger_1 = require("../../utils/logger");
 function pay(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id } = a;
+        const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id } = a;
         logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
         if (!recipient_id)
             return logger_1.sphinxLogger.error(`no recipient_id`);
@@ -52,6 +52,8 @@ function pay(a) {
             senderAlias: alias,
             tenant,
         };
+        if (parent_id)
+            msg.parentId = parent_id;
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
             type: 'boost',
@@ -66,6 +68,7 @@ function pay(a) {
                 id: message.id,
                 uuid: message.uuid,
                 replyUuid: message.replyUuid,
+                parentId: message.parentId || 0
             },
             type: constants_1.default.message_types.boost,
             success: () => ({ success: true }),

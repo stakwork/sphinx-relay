@@ -62,6 +62,7 @@ function migrate() {
         addTableColumn('sphinx_chats', 'my_alias');
         addTableColumn('sphinx_messages', 'sender_pic');
         addTableColumn('sphinx_messages', 'network_type', 'INTEGER');
+        addTableColumn('sphinx_messages', 'parent_id', 'INTEGER');
         addTableColumn('sphinx_chats', 'meta');
         addTableColumn('sphinx_contacts', 'tip_amount', 'BIGINT');
         addTableColumn('sphinx_contacts', 'last_active', 'DATETIME');

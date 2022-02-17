@@ -616,7 +616,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 }
                 const isForwarded = m.sender !== tenant;
                 const includeStatus = true;
-                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, status: m.status, amount: m.amount }, (mediaKeyMap && { mediaKey: mediaKeyMap })), (newMediaTerms && { mediaToken: newMediaTerms })), (m.mediaType && { mediaType: m.mediaType })), (dateString && { date: dateString })), isForwarded, includeStatus);
+                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, parentId: m.parentId || 0, status: m.status, amount: m.amount }, (mediaKeyMap && { mediaKey: mediaKeyMap })), (newMediaTerms && { mediaToken: newMediaTerms })), (m.mediaType && { mediaType: m.mediaType })), (dateString && { date: dateString })), isForwarded, includeStatus);
                 msg = yield (0, msg_1.decryptMessage)(msg, chat);
                 const data = yield (0, msg_1.personalizeMessage)(msg, contact, true);
                 const mqttTopic = `${contact.publicKey}/${chat.uuid}`;

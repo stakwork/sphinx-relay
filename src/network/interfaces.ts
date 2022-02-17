@@ -5,6 +5,7 @@ export interface Msg {
     content: string
     amount: number
     replyUuid?: string
+    parentId?: number
   }
   chat: {
     uuid: string

@@ -230,7 +230,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, } = req.body;
     let msgtype = constants_1.default.message_types.message;
     if (boost)
         msgtype = constants_1.default.message_types.boost;
@@ -294,6 +294,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     };
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (parent_id)
+        msg.parentId = parent_id;
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
     (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
@@ -305,6 +307,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     };
     if (reply_uuid)
         msgToSend.replyUuid = reply_uuid;
+    if (parent_id)
+        msgToSend.parentId = parent_id;
     const sendMessageParams = {
         chat: chat,
         sender: owner,
@@ -325,7 +329,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendMessage = sendMessage;
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, message_status, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
@@ -358,6 +362,8 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (parent_id)
+        msg.parentId = parent_id;
     const message = yield models_1.models.Message.create(msg);
     socket.sendJson({
         type: 'message',
@@ -368,7 +374,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, amount, network_type, sender_photo_url, msg_id, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received boost  ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
@@ -402,6 +408,8 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (parent_id)
+        msg.parentId = parent_id;
     const message = yield models_1.models.Message.create(msg);
     socket.sendJson({
         type: 'boost',
