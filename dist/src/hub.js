@@ -82,7 +82,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     };
                     if (invite.invoice)
                         updateObj.invoice = invite.invoice;
-                    dbInvite.update(updateObj);
+                    yield dbInvite.update(updateObj);
                     socket.sendJson({
                         type: 'invite',
                         response: jsonUtils.inviteToJson(dbInvite),
@@ -100,7 +100,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     };
                     if (routeHint)
                         updateObj.routeHint = routeHint;
-                    contact.update(updateObj);
+                    yield contact.update(updateObj);
                     var contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
