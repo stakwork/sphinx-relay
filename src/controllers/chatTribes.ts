@@ -152,6 +152,22 @@ export async function joinTribe(req, res) {
   })
 }
 
+export async function createChannel(req, res) {
+  console.log('Step 1')
+  if (!req.owner) return failure(res, 'no owner')
+  //const tenant: number = req.owner.id
+  console.log('Step 2')
+
+  const { tribe_uuid, name, host, owner_pubkey } = req.body
+  const channel = await tribes.createChannel({
+    tribe_uuid,
+    name,
+    host,
+    owner_pubkey,
+  })
+  return channel
+}
+
 export async function receiveMemberRequest(payload) {
   sphinxLogger.info('=> receiveMemberRequest', logging.Network)
   const {

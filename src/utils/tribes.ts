@@ -487,6 +487,29 @@ export async function putstats({
   }
 }
 
+export async function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
+  if (!tribe_uuid) return
+  if (!name) return
+  //const bots = await makeBotsJSON(chatId)
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    await fetch(protocol + '://' + host + '/channel?token=' + token, {
+      method: 'POST',
+      body: JSON.stringify({
+        tribe_uuid,
+        name,
+        owner_pubkey,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+  } catch (e) {
+    sphinxLogger.error(`[tribes] unauthorized to create channel`)
+    throw e
+  }
+}
+
 export async function genSignedTimestamp(ownerPubkey: string) {
   // console.log('genSignedTimestamp')
   try {
