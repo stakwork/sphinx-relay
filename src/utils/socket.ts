@@ -19,6 +19,7 @@ export function connect(server) {
   // srvr = new WebSocket.Server({ server, clientTracking:true })
 
   io = socketio(server, {
+    allowEIO3: true,
     handlePreflightRequest: (req, res) => {
       const headers = {
         'Access-Control-Allow-Headers':
