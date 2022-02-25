@@ -77,7 +77,7 @@ export function connectWebSocket(
     return // dont reconnect if already exists
   }
 
-  if (legacy) {
+  if (!legacy) {
     io = socketio.connect(ip, {
       reconnection: true,
       extraHeaders: {
