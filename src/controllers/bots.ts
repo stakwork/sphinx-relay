@@ -427,7 +427,7 @@ export async function receiveBotRes(payload) {
   const action = dat.action
   const bot_name = dat.bot_name
   const sender_alias = dat.sender.alias
-  const sender_pic = dat.sender_photo_url
+  const sender_pic = dat.sender.photo_url
   const date_string = dat.message.date
   const network_type = dat.network_type || 0
   const owner = dat.owner
