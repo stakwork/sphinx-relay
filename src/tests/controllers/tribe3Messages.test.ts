@@ -5,7 +5,7 @@ import { makeArgs, randomText } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
 import { sendTribeMessage, checkMessageDecryption } from '../utils/msg'
-import { getCheckNewMsgs } from '../utils/get'
+import { getCheckNewMsgs, getTribeByUuid, getCheckTribe } from '../utils/get'
 
 import nodes from '../nodes'
 
@@ -115,23 +115,36 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     name: 'testChannel',
     owner_pubkey: node1.pubkey,
   }
+
   const createChannelBody2 = {
     tribe_uuid: tribe.uuid,
     host: config.tribeHostInternal,
     name: 'testChannel2',
     owner_pubkey: node1.pubkey,
   }
+  console.log(tribe)
   const tribeSeverAddChannelResponse = await http.post(
     node1.external_ip + '/tribe_channel',
     makeArgs(node1, createChannelBody)
   )
   const tribeSeverAddChannelResponse2 = await http.post(
-    config.tribeHost + '/channel',
+    node1.external_ip + '/tribe_channel',
     makeArgs(node1, createChannelBody2)
   )
-  console.log(tribe)
-  console.log(tribeSeverAddChannelResponse)
-  console.log(tribeSeverAddChannelResponse2)
+  /*t.true(
+    tribeSeverAddChannelResponse.id == 0,
+    'First tribe added should have an id of 0'
+  )
+  t.true(
+    tribeSeverAddChannelResponse2.id == 1,
+    'Second tribe added should have an id of 1'
+  )*/
+  console.log(tribeSeverAddChannelResponse, tribeSeverAddChannelResponse2)
+
+  //Here we get the tribe which should have the correct channels
+  const r = await getCheckTribe(t, node1, tribe.id)
+  const channelTribe = await getTribeByUuid(t, r)
+  console.log(channelTribe)
 
   //NODE3 SENDS A TEXT MESSAGE IN TRIBE
   const text4 = randomText()

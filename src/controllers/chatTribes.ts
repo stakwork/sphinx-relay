@@ -165,7 +165,7 @@ export async function createChannel(req, res) {
     host,
     owner_pubkey,
   })
-  return channel
+  success(res, channel)
 }
 
 export async function receiveMemberRequest(payload) {

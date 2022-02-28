@@ -495,7 +495,7 @@ export async function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
     if (config.tribes_insecure) protocol = 'http'
-    await fetch(protocol + '://' + host + '/channel?token=' + token, {
+    const r = await fetch(protocol + '://' + host + '/channel?token=' + token, {
       method: 'POST',
       body: JSON.stringify({
         tribe_uuid,
@@ -504,6 +504,11 @@ export async function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
       }),
       headers: { 'Content-Type': 'application/json' },
     })
+    if (!r.ok) {
+      throw 'failed to create tribe ' + r.status
+    }
+    let j = await r.json()
+    return j
   } catch (e) {
     sphinxLogger.error(`[tribes] unauthorized to create channel`)
     throw e
