@@ -8,7 +8,7 @@ import { finalAction, Action } from './botapi'
 import * as socket from '../utils/socket'
 import fetch from 'node-fetch'
 import * as SphinxBot from 'sphinx-bot'
-import { Msg } from '../network/interfaces'
+import { BotMsg } from '../network/interfaces'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import * as short from 'short-uuid'
@@ -127,7 +127,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
     })
     if (myBot) {
       const success = await postToBotServer(
-        <network.Msg>{
+        <BotMsg>{
           type: constants.message_types.bot_install,
           bot_uuid: myBot.uuid,
           message: { content: '', amount: 0, uuid: short.generate() },
@@ -196,7 +196,7 @@ export async function botKeysend(
   chat_uuid: string,
   sender,
   botmaker_route_hint?: string,
-  msg?: Msg
+  msg?: BotMsg
 ): Promise<boolean> {
   const content = (msg && msg.message.content) || ''
   const sender_role =
@@ -212,7 +212,7 @@ export async function botKeysend(
     amt,
     dest,
     route_hint: botmaker_route_hint,
-    data: <network.Msg>{
+    data: <BotMsg>{
       type: msg_type,
       bot_uuid,
       chat: { uuid: chat_uuid },
@@ -381,7 +381,7 @@ export async function postToBotServer(
   }
 }
 
-export function buildBotPayload(msg: Msg): SphinxBot.Message {
+export function buildBotPayload(msg: BotMsg): SphinxBot.Message {
   const chat_uuid = msg.chat && msg.chat.uuid
   const m = <SphinxBot.Message>{
     id: msg.message.uuid,
