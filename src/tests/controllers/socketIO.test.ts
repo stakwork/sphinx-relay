@@ -3,10 +3,11 @@ import test, { ExecutionContext } from 'ava'
 import * as socketio from 'socket.io-client'
 import * as socketiolegacy from 'socket.io-client-legacy'
 import nodes from '../nodes'
+
 //import { tribe3Msgs } from './tribe3Messages.test'
 import { sendPayment } from '../utils/msg'
 
-import { addContact } from '../utils/save'
+//import { addContact } from '../utils/save'
 
 /*
   npx ava src/tests/controllers/chatInvoice.test.ts --verbose --serial --timeout=2m
@@ -38,7 +39,7 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
   io.connect()
   //    tribe3Msgs(t, nodes[0], nodes[1], nodes[2])
-  await addContact(t, nodes[0], nodes[1])
+  //await addContact(t, nodes[0], nodes[1])
 
   //*******
   //Receive payment
