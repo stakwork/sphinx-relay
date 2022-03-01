@@ -30,8 +30,8 @@ test.serial(
 
 async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   connectWebSocket(
-    'http://localhost:3001',
-    nodes[0].authToken,
+    'http://localhost:3002',
+    nodes[1].authToken,
     legacy,
     () => {},
     () => {}
@@ -39,19 +39,24 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   io.connect()
   //    tribe3Msgs(t, nodes[0], nodes[1], nodes[2])
   await addContact(t, nodes[0], nodes[1])
+  console.log('contact added')
 
   //*******
   //Receive payment
   //payment.ts
   const amount = 101
   const paymentText = 'this eleven payment'
-  const payment = await sendPayment(t, nodes[1], nodes[0], amount, paymentText)
+  console.log('presdfadsfsf')
+  const payment = await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
   t.true(payment, 'payment should be sent')
+  console.log('post sdfadsfsf')
+
   t.true(
     responseArray[responseArray.length - 1].response.contact.public_key ==
-      nodes[1].pubkey,
+      nodes[0].pubkey,
     'payment should be sent'
   )
+  console.log('contact added')
   t.true(
     responseArray[responseArray.length - 1].response.amount == amount,
     'payment should be sent'
