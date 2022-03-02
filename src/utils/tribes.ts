@@ -500,7 +500,6 @@ export async function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
       body: JSON.stringify({
         tribe_uuid,
         name,
-        owner_pubkey,
       }),
       headers: { 'Content-Type': 'application/json' },
     })
