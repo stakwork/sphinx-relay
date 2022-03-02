@@ -122,7 +122,7 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     name: 'testChannel2',
     owner_pubkey: node1.pubkey,
   }
-  console.log(tribe)
+
   const tribeSeverAddChannelResponse = await http.post(
     node1.external_ip + '/tribe_channel',
     makeArgs(node1, createChannelBody)
@@ -131,6 +131,7 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     node1.external_ip + '/tribe_channel',
     makeArgs(node1, createChannelBody2)
   )
+  console.log(tribeSeverAddChannelResponse, tribeSeverAddChannelResponse2)
   /*t.true(
     tribeSeverAddChannelResponse.id == 0,
     'First tribe added should have an id of 0'
@@ -139,12 +140,22 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     tribeSeverAddChannelResponse2.id == 1,
     'Second tribe added should have an id of 1'
   )*/
-  console.log(tribeSeverAddChannelResponse, tribeSeverAddChannelResponse2)
 
   //Here we get the tribe which should have the correct channels
   const r = await getCheckTribe(t, node1, tribe.id)
   const channelTribe = await getTribeByUuid(t, r)
-  console.log(channelTribe)
+  console.log(
+    tribeSeverAddChannelResponse.response.id,
+    channelTribe.channels[0].id
+  )
+  t.true(
+    tribeSeverAddChannelResponse.response.id == channelTribe.channels[0].id,
+    'First tribe added should have an id of 0'
+  )
+  t.true(
+    channelTribe.channels.length == 2,
+    'the amount of channels in this new tribe should be 2'
+  )
 
   //NODE3 SENDS A TEXT MESSAGE IN TRIBE
   const text4 = randomText()
