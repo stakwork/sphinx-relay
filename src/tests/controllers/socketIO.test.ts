@@ -7,7 +7,7 @@ import nodes from '../nodes'
 //import { tribe3Msgs } from './tribe3Messages.test'
 import { sendPayment } from '../utils/msg'
 
-//import { addContact } from '../utils/save'
+import { addContact } from '../utils/save'
 
 /*
   npx ava src/tests/controllers/chatInvoice.test.ts --verbose --serial --timeout=2m
@@ -39,13 +39,14 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
   io.connect()
   //    tribe3Msgs(t, nodes[0], nodes[1], nodes[2])
-  //await addContact(t, nodes[0], nodes[1])
+  await addContact(t, nodes[0], nodes[1])
 
   //*******
   //Receive payment
   //payment.ts
   const amount = 101
   const paymentText = 'this eleven payment'
+  await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
   const payment = await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
   t.true(payment, 'payment should be sent')
 
