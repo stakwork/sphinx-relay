@@ -153,17 +153,16 @@ export async function joinTribe(req, res) {
 }
 
 export async function createChannel(req, res) {
-  console.log('Step 1')
   if (!req.owner) return failure(res, 'no owner')
+  const owner = req.owner
   //const tenant: number = req.owner.id
-  console.log('Step 2')
 
-  const { tribe_uuid, name, host, owner_pubkey } = req.body
+  const { tribe_uuid, name, host } = req.body
   const channel = await tribes.createChannel({
     tribe_uuid,
     name,
     host,
-    owner_pubkey,
+    owner_pubkey: owner.publicKey,
   })
   success(res, channel)
 }

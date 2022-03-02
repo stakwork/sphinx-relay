@@ -113,14 +113,12 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     tribe_uuid: tribe.uuid,
     host: config.tribeHostInternal,
     name: 'testChannel',
-    owner_pubkey: node1.pubkey,
   }
 
   const createChannelBody2 = {
     tribe_uuid: tribe.uuid,
     host: config.tribeHostInternal,
     name: 'testChannel2',
-    owner_pubkey: node1.pubkey,
   }
 
   const tribeSeverAddChannelResponse = await http.post(
@@ -132,25 +130,29 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     makeArgs(node1, createChannelBody2)
   )
   console.log(tribeSeverAddChannelResponse, tribeSeverAddChannelResponse2)
-  /*t.true(
-    tribeSeverAddChannelResponse.id == 0,
-    'First tribe added should have an id of 0'
-  )
-  t.true(
-    tribeSeverAddChannelResponse2.id == 1,
-    'Second tribe added should have an id of 1'
-  )*/
 
   //Here we get the tribe which should have the correct channels
   const r = await getCheckTribe(t, node1, tribe.id)
   const channelTribe = await getTribeByUuid(t, r)
-  console.log(
-    tribeSeverAddChannelResponse.response.id,
-    channelTribe.channels[0].id
-  )
   t.true(
     tribeSeverAddChannelResponse.response.id == channelTribe.channels[0].id,
-    'First tribe added should have an id of 0'
+    'First tribe added should have an id of the response we get back when we call for tribes'
+  )
+  t.true(
+    tribeSeverAddChannelResponse2.response.id == channelTribe.channels[1].id,
+    'second tribe added should have an id of the response we get back when we call for tribes'
+  )
+  t.true(
+    tribeSeverAddChannelResponse.response.name == createChannelBody.name &&
+      tribeSeverAddChannelResponse2.response.name == createChannelBody2.name,
+    'the response should send back the correct channel name'
+  )
+  t.true(
+    tribeSeverAddChannelResponse.response.tribe_uuid ==
+      createChannelBody.tribe_uuid &&
+      tribeSeverAddChannelResponse2.response.tribe_uuid ==
+        createChannelBody2.tribe_uuid,
+    'the tribes channels that returned should have the same tribe_uuid that we sent'
   )
   t.true(
     channelTribe.channels.length == 2,
