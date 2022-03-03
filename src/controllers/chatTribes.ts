@@ -167,6 +167,19 @@ export async function createChannel(req, res) {
   success(res, channel)
 }
 
+export async function deleteChannel(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+
+  const owner = req.owner
+  const { id, host } = req.body
+  const channel = await tribes.deleteChannel({
+    id,
+    host,
+    owner_pubkey: owner.publicKey,
+  })
+  success(res, channel)
+}
+
 export async function receiveMemberRequest(payload) {
   sphinxLogger.info('=> receiveMemberRequest', logging.Network)
   const {

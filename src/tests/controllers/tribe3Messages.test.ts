@@ -200,6 +200,30 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   )
   t.true(n2check3, 'node2 should have read and decrypted node3 message')
 
+  //delete channel
+  const deleteChannel1Body = {
+    id: channelTribe.channels[0].id,
+    host: config.tribeHostInternal,
+  }
+  const deleteChannel2Body = {
+    id: channelTribe.channels[1].id,
+    host: config.tribeHostInternal,
+  }
+  await http.del(
+    node1.external_ip + '/tribe_channel',
+    makeArgs(node1, deleteChannel1Body)
+  )
+
+  await http.del(
+    node1.external_ip + '/tribe_channel',
+    makeArgs(node1, deleteChannel2Body)
+  )
+  const channelTribe2 = await getTribeByUuid(t, r)
+  t.true(
+    channelTribe2.channels.length == 0,
+    'there should not be anymore channels in the tribe'
+  )
+
   //NODE2 LEAVES THE TRIBE
   let n2left = await leaveTribe(t, node2, tribe)
   t.true(n2left, 'node2 should leave tribe')

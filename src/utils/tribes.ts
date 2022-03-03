@@ -490,7 +490,6 @@ export async function putstats({
 export async function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
   if (!tribe_uuid) return
   if (!name) return
-  //const bots = await makeBotsJSON(chatId)
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
@@ -504,7 +503,31 @@ export async function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
       headers: { 'Content-Type': 'application/json' },
     })
     if (!r.ok) {
-      throw 'failed to create tribe ' + r.status
+      throw 'failed to create tribe channel ' + r.status
+    }
+    let j = await r.json()
+    return j
+  } catch (e) {
+    sphinxLogger.error(`[tribes] unauthorized to create channel`)
+    throw e
+  }
+}
+
+export async function deleteChannel({ id, host, owner_pubkey }) {
+  if (!id) return
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(
+      protocol + '://' + host + '/channel/' + id + '?token=' + token,
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      throw 'failed to delete channel' + r.status
     }
     let j = await r.json()
     return j
