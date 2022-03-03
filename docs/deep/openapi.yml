@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  description: |
+    This is a sample server for sphinx-relay below you'll find api docs and such
+  version: 1.0.0
+  title: Swagger Sphinx-Relay
+  summary: My lovely API
+  termsOfService: 'http://swagger.io/terms/'
+  contact:
+    name: Sphinx Support
+    email: support@stakwork.com
+  x-logo:
+    url: 'https://miro.medium.com/max/512/1*sAlVjz09nS6f7iYJ6apMhg.png'
+    altText: Sphinx-Chat logo
+  license:
+    name: MIT License
+    url: 'https://raw.githubusercontent.com/stakwork/sphinx-relay/master/LICENSE'
+    identifier: MIT License
+tags:
+  - name: tribes
+    description: Everything about your Tribes
+x-tagGroups:
+  - name: Tribes
+    tags:
+      - tribe_channel
+      - tribes
+paths:
+  /tribe_channel:
+    post:
+      tags:
+        - tribe_channel
+      summary: Add a new channel for tribe in tribe server
+      description: Create new tribe text channel.
+      operationId: createChannel
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                  response:
+                    type: object
+                    properties:
+                     id:
+                        type: integer
+                     tribe_uuid:
+                        type: string
+                     name:
+                       type: string
+                     created:
+                       type: string
+                       format: date-time
+                     deleted:
+                        type: boolean
+                type: object
+          description: Success
+        '405':
+          description: Invalid input
+      parameters:
+        - description: "Authentication token."
+          in: header
+          name: x-user-token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                tribe_uuid:
+                  description: The id of the tribe to add channel to.
+                  type: string
+                host:
+                  description: the domain of the host tribe server.
+                  type: string
+                name:
+                  type: string
+              type: object
+    delete:
+      tags:
+        - tribe_channel
+      summary: delete tribe text channel
+      description: delete tribe text channel in the tribes server.
+      operationId: deleteChannel
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                  response:
+                    type: boolean
+                type: object
+          description: Success
+        '405':
+          description: Invalid input
+      parameters:
+        - description: "Authentication token."
+          in: header
+          name: x-user-token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  description: The id of the channel to delete.
+                  type: number
+                host:
+                  description: the domain of the host tribe server.
+                  type: string
+              type: object
+
