@@ -119,7 +119,7 @@ paths:
                   type: string
               type: object
 
-              /tribes:
+  /tribes:
     get:
       tags:
         - tribes
