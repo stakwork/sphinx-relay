@@ -134,43 +134,42 @@ paths:
                  properties:
                    success:
                      type: boolean
-                  response:
+                   response:
                      type: object
-                    properties:
-                     id:
-                       type: integer
-                     tribe_uuid:
-                       type: string
-                     name:
-                       type: string
-                     created:
-                       type: string
-                       format: date-time
-                     deleted:
-                       type: boolean
+                     properties:
+                       id:
+                         type: integer
+                       tribe_uuid:
+                         type: string
+                       name:
+                         type: string
+                       created:
+                         type: string
+                         format: date-time
+                       deleted:
+                         type: boolean
                  type: object
            description: Success
-         '405':
-           description: Invalid input
-       parameters:
-         - description: "Authentication token."
-           in: header
-           name: x-user-token
-           required: true
-           schema:
-             type: string
-       requestBody:
-         content:
-           application/json:
-             schema:
-               properties:
-                 tribe_uuid:
-                   description: The id of the tribe to add channel to.
-                   type: string
-                 host:
-                   description: the domain of the host tribe server.
-                   type: string
-                 name:
-                   type: string
-               type: object
-
+        '405':
+          description: Invalid input
+          parameters:
+            - description: "Authentication token."
+              in: header
+              name: x-user-token
+              required: true
+              schema:
+                type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                tribe_uuid:
+                  description: The id of the tribe to add channel to.
+                  type: string
+                host:
+                  description: the domain of the host tribe server.
+                  type: string
+                name:
+                  type: string
+              type: object
