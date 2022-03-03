@@ -124,7 +124,7 @@ paths:
       tags:
         - tribes
       summary: Add a new channel for tribe in tribe server
-        description: Create new tribe text channel.
+      description: Create new tribe text channel.
       operationId: createChannel
       responses:
         '200':
