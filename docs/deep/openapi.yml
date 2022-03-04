@@ -118,13 +118,18 @@ paths:
                   description: the domain of the host tribe server.
                   type: string
               type: object
-
   /tribes:
     get:
       tags:
         - tribes
       summary: Add a new channel for tribe in tribe server
       description: Create new tribe text channel.
+      parameters:
+        - description: The tribe ID.
+          in: path
+          name: tribe_uuid 
+          required: true
+          type: string
       operationId: createChannel
       responses:
         '200':
@@ -159,17 +164,3 @@ paths:
               required: true
               schema:
                 type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                tribe_uuid:
-                  description: The id of the tribe to add channel to.
-                  type: string
-                host:
-                  description: the domain of the host tribe server.
-                  type: string
-                name:
-                  type: string
-              type: object
