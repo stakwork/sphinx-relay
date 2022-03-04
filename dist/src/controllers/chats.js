@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
+exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.setNotifyLevel = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -153,6 +153,29 @@ function getChats(req, res) {
     });
 }
 exports.getChats = getChats;
+function setNotifyLevel(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const chatId = req.params['chat_id'];
+        const levelString = req.params['level'];
+        const level = parseInt(levelString);
+        if (!chatId) {
+            return (0, res_1.failure)(res, 'setNotifyLevel no chatId');
+        }
+        if (!Object.values(constants_1.default.notify_levels).includes(level)) {
+            return (0, res_1.failure)(res, 'invalid notify level');
+        }
+        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
+        if (!chat) {
+            return (0, res_1.failure)(res, 'chat not found');
+        }
+        yield chat.update({ notify: level });
+        (0, res_1.success)(res, jsonUtils.chatToJson(chat));
+    });
+}
+exports.setNotifyLevel = setNotifyLevel;
 function mute(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -167,7 +190,7 @@ function mute(req, res) {
         if (!chat) {
             return (0, res_1.failure)(res, 'chat not found');
         }
-        chat.update({ isMuted: mute == 'mute' });
+        yield chat.update({ isMuted: mute == 'mute' });
         (0, res_1.success)(res, jsonUtils.chatToJson(chat));
     });
 }

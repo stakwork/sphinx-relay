@@ -65,6 +65,7 @@ export async function sendMessage(params) {
 
   let networkType: NetworkType = undefined
   const chatUUID = chat.uuid
+  let mentionContactIds: number[] = []
   if (isTribe) {
     if (type === constants.message_types.confirmation) {
       // if u are owner, go ahead!
@@ -89,6 +90,12 @@ export async function sendMessage(params) {
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
+      mentionContactIds = await detectMentions(
+        msg,
+        isForwarded,
+        chat.id,
+        tenant
+      )
     }
 
     // stop here if just me
@@ -165,6 +172,14 @@ export async function sendMessage(params) {
     }
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
+
+    // send a "push", the user was mentioned
+    if (
+      mentionContactIds.includes(contact.id) ||
+      mentionContactIds.includes(Infinity)
+    ) {
+      m.message.push = true
+    }
     // console.log('-> personalized msg', m)
     const opts = {
       dest: destkey,
@@ -306,3 +321,24 @@ async function sleep(ms) {
 // function urlBase64FromBytes(buf){
 //     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }
+
+async function detectMentions(
+  msg: Msg,
+  isForwarded: boolean,
+  chatId: number,
+  tenant: number
+): Promise<number[]> {
+  const content = msg.message.content
+  const words = content.split(' ')
+  if (words.includes('@all') && !isForwarded) return [Infinity]
+  const ret: number[] = []
+  const mentions = words.filter((w) => w.startsWith('@'))
+  await asyncForEach(mentions, async (men) => {
+    const lastAlias = men.substring(1)
+    const member = await models.ChatMember.findOne({
+      where: { lastAlias, tenant, chatId },
+    })
+    ret.push(member.id)
+  })
+  return ret
+}

@@ -391,6 +391,7 @@ export const receiveMessage = async (payload) => {
     network_type,
     sender_photo_url,
     message_status,
+    force_push,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
@@ -433,7 +434,14 @@ export const receiveMessage = async (payload) => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    msg.senderAlias || sender.alias,
+    'message',
+    owner,
+    undefined,
+    force_push
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
@@ -454,6 +462,7 @@ export const receiveBoost = async (payload) => {
     network_type,
     sender_photo_url,
     msg_id,
+    force_push,
   } = await helpers.parseReceiveParams(payload)
 
   sphinxLogger.info(
@@ -508,7 +517,14 @@ export const receiveBoost = async (payload) => {
       where: { uuid: msg.replyUuid, tenant },
     })
     if (ogMsg && ogMsg.sender === tenant) {
-      sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner)
+      sendNotification(
+        chat,
+        msg.senderAlias || sender.alias,
+        'boost',
+        owner,
+        undefined,
+        force_push
+      )
     }
   }
 }

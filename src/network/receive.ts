@@ -298,9 +298,14 @@ async function uniqueifyAlias(payload, sender, chat, owner): Promise<Object> {
     where: { chatId: chat.id, tenant: owner.id },
   })
   if (!(chatMembers && chatMembers.length)) return payload
+  const ALL = 'all'
   asyncForEach(chatMembers, (cm) => {
     if (cm.contactId === senderContactId) return // dont check against self of course
-    if (sender_alias === cm.lastAlias || sender_alias === owner_alias) {
+    if (
+      sender_alias === cm.lastAlias ||
+      sender_alias === owner_alias ||
+      sender_alias === ALL
+    ) {
       // impersonating! switch it up!
       final_sender_alias = `${sender_alias}_2`
     }
@@ -357,6 +362,7 @@ async function forwardMessageToTribe(
     type,
     message,
     sender: {
+      // the owner... but with og sender alias
       ...owner.dataValues,
       alias: (payload.sender && payload.sender.alias) || '',
       photoUrl: (payload.sender && payload.sender.photo_url) || '',

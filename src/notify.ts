@@ -20,7 +20,8 @@ const sendNotification = async (
   name,
   type: NotificationType,
   owner,
-  amount?: number
+  amount?: number,
+  push?: boolean
 ) => {
   if (!owner) return sphinxLogger.error(`=> sendNotification error: no owner`)
 
@@ -76,7 +77,11 @@ const sendNotification = async (
     chat_id: chat.id || 0,
     sound: '',
   }
-  if (type !== 'badge' && !chat.isMuted) {
+  let chatIsMuted = chat.isMuted || chat.notify === constants.notify_levels.mute
+  if (chat.notify === constants.notify_levels.mentions && !push) {
+    chatIsMuted = true
+  }
+  if (type !== 'badge' && !chatIsMuted) {
     notification.message = message
     notification.sound = owner.notificationSound || 'default'
   } else {
@@ -84,15 +89,15 @@ const sendNotification = async (
   }
   params.notification = notification
 
-  const isTribeOwner = chat.ownerPubkey === owner.publicKey
+  // const isTribeOwner = chat.ownerPubkey === owner.publicKey
   if (type === 'message' && chat.type == constants.chat_types.tribe) {
     debounce(
       () => {
         const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : ''
-        params.notification.message = chat.isMuted
+        params.notification.message = chatIsMuted
           ? ''
           : `You have ${count}new messages in ${chat.name}`
-        finalNotification(owner.id, params, isTribeOwner)
+        finalNotification(owner.id, params, push)
       },
       chat.id,
       30000
@@ -103,12 +108,12 @@ const sendNotification = async (
       const notme = cids.find((id) => id !== 1)
       const other = models.Contact.findOne({ where: { id: notme } })
       if (other.blocked) return
-      finalNotification(owner.id, params, isTribeOwner)
+      finalNotification(owner.id, params, push)
     } catch (e) {
       sphinxLogger.error(`=> notify conversation err ${e}`)
     }
   } else {
-    finalNotification(owner.id, params, isTribeOwner)
+    finalNotification(owner.id, params, push)
   }
 }
 
@@ -121,14 +126,27 @@ const sendNotification = async (
 async function finalNotification(
   ownerID: number,
   params: { [k: string]: any },
-  isTribeOwner: boolean
+  push?: boolean
 ) {
   if (params.notification.message) {
     if (logging.Notification)
       sphinxLogger.info(`[send notification] ${params.notification}`)
   }
+  const mutedAtLeast = push
+    ? constants.notify_levels.mute
+    : constants.notify_levels.mentions
+  let query = {
+    [Op.or]: [
+      {
+        isMuted: true,
+      },
+      {
+        notify: { [Op.gte]: mutedAtLeast },
+      },
+    ],
+  }
   const mutedChats = await models.Chat.findAll({
-    where: { isMuted: true },
+    where: { query },
   })
   const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)

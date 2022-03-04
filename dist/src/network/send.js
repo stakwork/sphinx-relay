@@ -54,6 +54,7 @@ function sendMessage(params) {
         }
         let networkType = undefined;
         const chatUUID = chat.uuid;
+        let mentionContactIds = [];
         if (isTribe) {
             if (type === constants_1.default.message_types.confirmation) {
                 // if u are owner, go ahead!
@@ -71,6 +72,7 @@ function sendMessage(params) {
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
+                mentionContactIds = yield detectMentions(msg, isForwarded, chat.id, tenant);
             }
             // stop here if just me
             if (justMe) {
@@ -140,6 +142,11 @@ function sendMessage(params) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
+            // send a "push", the user was mentioned
+            if (mentionContactIds.includes(contact.id) ||
+                mentionContactIds.includes(Infinity)) {
+                m.message.push = true;
+            }
             // console.log('-> personalized msg', m)
             const opts = {
                 dest: destkey,
@@ -261,4 +268,22 @@ function sleep(ms) {
 // function urlBase64FromBytes(buf){
 //     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }
+function detectMentions(msg, isForwarded, chatId, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const content = msg.message.content;
+        const words = content.split(' ');
+        if (words.includes('@all') && !isForwarded)
+            return [Infinity];
+        const ret = [];
+        const mentions = words.filter((w) => w.startsWith('@'));
+        yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
+            const lastAlias = men.substring(1);
+            const member = yield models_1.models.ChatMember.findOne({
+                where: { lastAlias, tenant, chatId },
+            });
+            ret.push(member.id);
+        }));
+        return ret;
+    });
+}
 //# sourceMappingURL=send.js.map

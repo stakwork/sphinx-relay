@@ -2,6 +2,8 @@ import { sequelize } from '../models'
 import { logging, sphinxLogger } from './logger'
 
 export default async function migrate() {
+  addTableColumn('sphinx_chats', 'notify', 'BIGINT')
+
   addTableColumn('sphinx_chats', 'feed_type', 'INT')
 
   addTableColumn('sphinx_contacts', 'blocked', 'BOOLEAN')

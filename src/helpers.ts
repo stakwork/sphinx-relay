@@ -254,6 +254,7 @@ export async function parseReceiveParams(payload) {
   const skip_payment_processing = dat.message.skipPaymentProcessing
   const reply_uuid = dat.message.replyUuid
   const purchaser_id = dat.message.purchaser
+  const force_push = dat.message.push
   const network_type = dat.network_type || 0
   const isTribeOwner = dat.isTribeOwner ? true : false
   const dest = dat.dest
@@ -333,6 +334,7 @@ export async function parseReceiveParams(payload) {
     sender_photo_url,
     network_type,
     message_status,
+    force_push,
   }
 }
 

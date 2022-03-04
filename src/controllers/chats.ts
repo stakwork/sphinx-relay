@@ -141,6 +141,27 @@ export async function getChats(req, res) {
   success(res, c)
 }
 
+export async function setNotifyLevel(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const chatId = req.params['chat_id']
+  const levelString = req.params['level']
+  const level = parseInt(levelString)
+  if (!chatId) {
+    return failure(res, 'setNotifyLevel no chatId')
+  }
+  if (!Object.values(constants.notify_levels).includes(level)) {
+    return failure(res, 'invalid notify level')
+  }
+  const chat = await models.Chat.findOne({ where: { id: chatId, tenant } })
+  if (!chat) {
+    return failure(res, 'chat not found')
+  }
+  await chat.update({ notify: level })
+
+  success(res, jsonUtils.chatToJson(chat))
+}
+
 export async function mute(req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -158,7 +179,7 @@ export async function mute(req, res) {
     return failure(res, 'chat not found')
   }
 
-  chat.update({ isMuted: mute == 'mute' })
+  await chat.update({ isMuted: mute == 'mute' })
 
   success(res, jsonUtils.chatToJson(chat))
 }

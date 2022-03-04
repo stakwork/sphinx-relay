@@ -527,6 +527,7 @@ export const receiveAttachment = async (payload) => {
     reply_uuid,
     network_type,
     sender_photo_url,
+    force_push,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error('=> no group chat!')
@@ -568,7 +569,14 @@ export const receiveAttachment = async (payload) => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    msg.senderAlias || sender.alias,
+    'message',
+    owner,
+    undefined,
+    force_push
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
