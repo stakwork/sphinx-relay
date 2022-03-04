@@ -140,12 +140,16 @@ paths:
                    app_url:
                      type: string 
                    bots:
-                     type: object
-                     properties:
-                       id:
-                         type: integer
+                     type: array 
+                     items:
+                       type: object 
+                       Properties:
+                         id:
+                           type: integer
                    channels:
-                     type: array(string)    
+                     type: array    
+                     items:
+                       type: string
                    created:
                      type: string    
                      format: date-time
@@ -187,6 +191,8 @@ paths:
                      type: number 
                    tags:
                      type: array 
+                     items:
+                       type: string
                    unique_name:
                      type: string 
                    unlisted:
