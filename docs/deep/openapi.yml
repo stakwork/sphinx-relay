@@ -149,7 +149,7 @@ paths:
                    channels:
                      type: array    
                      items:
-                       type: string
+                       type: number 
                    created:
                      type: string    
                      format: date-time
