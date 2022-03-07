@@ -4,10 +4,17 @@ import * as socketio from 'socket.io-client'
 import * as socketiolegacy from 'socket.io-client-legacy'
 import nodes from '../nodes'
 
-//import { tribe3Msgs } from './tribe3Messages.test'
-import { sendPayment } from '../utils/msg'
+import { randomText } from '../utils/helpers'
 
-import { addContact } from '../utils/save'
+//import { tribe3Msgs } from './tribe3Messages.test'
+import {
+  sendPayment,
+  sendMessageAndCheckDecryption,
+  sendBoost,
+  sendTribeMessage,
+} from '../utils/msg'
+
+import { addContact, joinTribe, createTribe } from '../utils/save'
 
 /*
   npx ava src/tests/controllers/chatInvoice.test.ts --verbose --serial --timeout=2m
@@ -25,7 +32,7 @@ test.serial(
   'test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact',
   async (t: ExecutionContext<Context>) => {
     await testSocketIO(t, false)
-    await testSocketIO(t, true)
+    //await testSocketIO(t, true)
   }
 )
 
@@ -40,6 +47,8 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   io.connect()
   //    tribe3Msgs(t, nodes[0], nodes[1], nodes[2])
   await addContact(t, nodes[0], nodes[1])
+  console.log('\nafter add contact')
+  responseArray.forEach((item) => console.log(item.type))
 
   //*******
   //Receive payment
@@ -47,7 +56,11 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   const amount = 101
   const paymentText = 'this eleven payment'
   await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
+  console.log('\nafter send payment')
+  responseArray.forEach((item) => console.log(item.type))
   const payment = await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
+  console.log('\nafter second send payment')
+  responseArray.forEach((item) => console.log(item.type))
   t.true(payment, 'payment should be sent')
 
   t.true(
@@ -63,6 +76,61 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
     responseArray[responseArray.length - 1].type == 'direct_payment',
     'payment should be sent'
   )
+
+  //*******
+  //Recieve message
+  //messages.ts
+  //********
+  const messageText = randomText()
+  await sendMessageAndCheckDecryption(t, nodes[0], nodes[1], messageText)
+  console.log('\nafter send direct message')
+  responseArray.forEach((item) => console.log(item.type))
+  t.true(
+    responseArray[responseArray.length - 1].type == 'message',
+    'we should get back something when we recieve a message'
+  )
+  //*****
+  //recieve boost
+  //messages.ts
+  //*******
+
+  const socketTribe = await createTribe(t, nodes[0])
+  console.log('\nafter create tribe')
+  responseArray.forEach((item) => console.log(item.type))
+
+  await joinTribe(t, nodes[1], socketTribe)
+  console.log('\nafter join tribe')
+  responseArray.forEach((item) => console.log(item.type))
+
+  const tribeMessage = await sendTribeMessage(
+    t,
+    nodes[1],
+    socketTribe,
+    messageText
+  )
+  console.log('\n after send tribe message')
+  responseArray.forEach((item) => console.log(item.type))
+
+  await sendBoost(t, nodes[0], nodes[1], tribeMessage, 10, socketTribe)
+  console.log('\n after boost message')
+  responseArray.forEach((item) => console.log(item.type))
+  t.true(
+    responseArray[responseArray.length - 4].type == 'confirmation',
+    'we should get back something when we recieve a message'
+  )
+  t.true(
+    responseArray[responseArray.length - 3].type == 'message',
+    'we should get back something when we recieve a message'
+  )
+  t.true(
+    responseArray[responseArray.length - 2].type == 'group_join',
+    'we should get back something when we join a tribe group chat'
+  )
+  t.true(
+    responseArray[responseArray.length - 1].type == 'boost',
+    'we should get back something when we recieve a message'
+  )
+  //console.log('This is', responseArray)
   //******
   //Receive Invoice
   //invoices.ts
@@ -106,7 +174,7 @@ export function connectWebSocket(
   })
 
   io.on('message', (data) => {
-    console.log('recived message: ', JSON.parse(data))
+    //console.log('recived message: ', JSON.parse(data))
 
     responseArray.push(JSON.parse(data))
     try {
