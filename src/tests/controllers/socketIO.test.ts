@@ -32,7 +32,7 @@ test.serial(
   'test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact',
   async (t: ExecutionContext<Context>) => {
     await testSocketIO(t, false)
-    //await testSocketIO(t, true)
+    await testSocketIO(t, true)
   }
 )
 
