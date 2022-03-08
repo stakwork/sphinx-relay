@@ -44,8 +44,6 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
   io.connect()
   await addContact(t, nodes[0], nodes[1])
-  console.log('\nafter add contact')
-  responseArray.forEach((item) => console.log(item.type))
 
   //*******
   //Receive payment
@@ -55,8 +53,6 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
 
   await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
   const payment = await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
-  console.log('\nafter send payment')
-  responseArray.forEach((item) => console.log(item.type))
 
   t.true(payment, 'payment should be sent')
 
@@ -85,8 +81,6 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
     nodes[1],
     messageText
   )
-  console.log('\nafter send direct message')
-  responseArray.forEach((item) => console.log(item.type))
   t.true(
     responseArray[responseArray.length - 1].type == 'message',
     'we should get back something when we recieve a message'
@@ -97,12 +91,8 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   //*******
 
   const socketTribe = await createTribe(t, nodes[0])
-  console.log('\nafter create tribe')
-  responseArray.forEach((item) => console.log(item.type))
 
   await joinTribe(t, nodes[1], socketTribe)
-  console.log('\nafter join tribe')
-  responseArray.forEach((item) => console.log(item.type))
 
   const tribeMessage = await sendTribeMessage(
     t,
@@ -110,12 +100,9 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
     socketTribe,
     messageText
   )
-  console.log('\n after send tribe message')
-  responseArray.forEach((item) => console.log(item.type))
 
   await sendBoost(t, nodes[0], nodes[1], tribeMessage, 10, socketTribe)
-  console.log('\n after boost message')
-  responseArray.forEach((item) => console.log(item.type))
+
   t.true(
     responseArray[responseArray.length - 4].type == 'confirmation',
     'we should get back something when we recieve a message'
@@ -139,11 +126,6 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
     responseArray[responseArray.length - 1].type == 'delete',
     'we should get back a delete type'
   )
-  //console.log('This is', responseArray)
-  //******
-  //Receive Invoice
-  //invoices.ts
-  //******
 }
 
 export function connectWebSocket(
@@ -183,8 +165,6 @@ export function connectWebSocket(
   })
 
   io.on('message', (data) => {
-    //console.log('recived message: ', JSON.parse(data))
-
     responseArray.push(JSON.parse(data))
     try {
       let msg: WSMessage = JSON.parse(data)
