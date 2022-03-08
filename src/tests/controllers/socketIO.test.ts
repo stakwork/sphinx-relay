@@ -44,9 +44,9 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
   io.connect()
   await addContact(t, nodes[0], nodes[1])
+  await sleep(10000)
   console.log('\nafter add contact')
   responseArray.forEach((item) => console.log(item.type))
-  sleep(10000)
 
   //*******
   //Receive payment
