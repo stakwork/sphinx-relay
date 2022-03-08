@@ -44,7 +44,6 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
   io.connect()
   await addContact(t, nodes[0], nodes[1])
-  await sleep(10000)
   console.log('\nafter add contact')
   responseArray.forEach((item) => console.log(item.type))
 
@@ -54,8 +53,8 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   const amount = 101
   const paymentText = 'this eleven payment'
 
+  await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
   const payment = await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
-  await sleep(10000)
   console.log('\nafter send payment')
   responseArray.forEach((item) => console.log(item.type))
 
