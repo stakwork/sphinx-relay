@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
+exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("../grpc/lightning");
@@ -474,6 +474,64 @@ function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
     });
 }
 exports.putstats = putstats;
+function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!tribe_uuid)
+            return;
+        if (!name)
+            return;
+        try {
+            const token = yield genSignedTimestamp(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/channel?token=' + token, {
+                method: 'POST',
+                body: JSON.stringify({
+                    tribe_uuid,
+                    name,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to create tribe channel ' + r.status;
+            }
+            let j = yield r.json();
+            return j;
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to create channel`);
+            throw e;
+        }
+    });
+}
+exports.createChannel = createChannel;
+function deleteChannel({ id, host, owner_pubkey }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!id)
+            return;
+        try {
+            const token = yield genSignedTimestamp(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/channel/' + id + '?token=' + token, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to delete channel' + r.status;
+            }
+            let j = yield r.json();
+            return j;
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error(`[tribes] unauthorized to create channel`);
+            throw e;
+        }
+    });
+}
+exports.deleteChannel = deleteChannel;
 function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('genSignedTimestamp')
