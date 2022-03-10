@@ -13,8 +13,9 @@ const msg_types = Sphinx.MSG_TYPE
 
 const config = loadConfig()
 
-const builtinBots = ['welcome', 'loopout']
+const builtinBots = ['welcome', 'loopout', 'git']
 
+// else just message type
 const builtInBotMsgTypes = {
   welcome: [
     constants.message_types.message,
@@ -25,6 +26,7 @@ const builtInBotMsgTypes = {
 const builtInBotNames = {
   welcome: 'WelcomeBot',
   loopout: 'LoopBot',
+  git: 'GitBot',
 }
 
 export function init() {
@@ -76,12 +78,6 @@ export function init() {
             tenant: chat.tenant,
           }
           await models.ChatBot.create(chatBot)
-          // if (botName === 'welcome') {
-          //   WelcomeBot.init()
-          // }
-          // if (botName === 'loopout') {
-          //   LoopBot.init()
-          // }
           const theName = builtInBotNames[botName] || 'Bot'
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('MotherBot')

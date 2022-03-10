@@ -22,7 +22,8 @@ const tribes_1 = require("../utils/tribes");
 const logger_1 = require("../utils/logger");
 const msg_types = Sphinx.MSG_TYPE;
 const config = (0, config_1.loadConfig)();
-const builtinBots = ['welcome', 'loopout'];
+const builtinBots = ['welcome', 'loopout', 'git'];
+// else just message type
 const builtInBotMsgTypes = {
     welcome: [
         constants_1.default.message_types.message,
@@ -32,6 +33,7 @@ const builtInBotMsgTypes = {
 const builtInBotNames = {
     welcome: 'WelcomeBot',
     loopout: 'LoopBot',
+    git: 'GitBot',
 };
 function init() {
     const client = new Sphinx.Client();
@@ -82,12 +84,6 @@ function init() {
                         tenant: chat.tenant,
                     };
                     yield models_1.models.ChatBot.create(chatBot);
-                    // if (botName === 'welcome') {
-                    //   WelcomeBot.init()
-                    // }
-                    // if (botName === 'loopout') {
-                    //   LoopBot.init()
-                    // }
                     const theName = builtInBotNames[botName] || 'Bot';
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('MotherBot')
