@@ -15,7 +15,7 @@ const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
 const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
-const GitBot = require("./github");
+const GitBot = require("./git");
 const bots_1 = require("../controllers/bots");
 Object.defineProperty(exports, "buildBotPayload", { enumerable: true, get: function () { return bots_1.buildBotPayload; } });
 function init() {

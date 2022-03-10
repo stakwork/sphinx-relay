@@ -3,7 +3,7 @@ import * as SphinxBot from 'sphinx-bot'
 import * as MotherBot from './mother'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
-import * as GitBot from './github'
+import * as GitBot from './git'
 import { Msg } from '../network/interfaces'
 import { buildBotPayload } from '../controllers/bots'
 
