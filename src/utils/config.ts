@@ -36,9 +36,7 @@ export function loadConfig() {
     ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND'
   return {
     lightning_provider: provider,
-    logging:
-      logg ||
-      'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT',
+    logging: logg || 'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT',
     senza_url: ENV.SENZA_URL || config.senza_url,
     macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
     router_macaroon_location:

@@ -2,13 +2,14 @@ import * as crypto from 'crypto'
 import { models } from './models'
 import { Op } from 'sequelize'
 import * as cryptoJS from 'crypto-js'
-import { success, failure } from './utils/res'
+import { success, failure, unauthorized } from './utils/res'
 import { setInMemoryMacaroon } from './utils/macaroon'
 import { loadConfig } from './utils/config'
 import { isProxy } from './utils/proxy'
 import * as jwtUtils from './utils/jwt'
 import { allowedJwtRoutes } from './scopes'
 import * as rsa from './crypto/rsa'
+import * as hmac from './crypto/hmac'
 
 const fs = require('fs')
 
@@ -70,23 +71,54 @@ export async function unlocker(req, res): Promise<boolean> {
   }
 }
 
+export async function hmacMiddleware(req, res, next) {
+  if (no_auth(req.path)) {
+    next()
+    return
+  }
+  // separate hmac with bot hmac secret
+  if (req.path == '/webhook') {
+    next()
+    return
+  }
+  // opt-in feature
+  if (!req.owner.hmacKey) {
+    next()
+    return
+  }
+  // req.headers['x-hub-signature-256']
+  const sig = req.headers['x-hmac'] || req.cookies['x-hmac']
+  if (!sig) return unauthorized(res)
+  const message = `${req.method}|${req.originalUrl}|${req.rawBody}`
+  const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey)
+  console.log('valid sig!', valid)
+  if (!valid) {
+    return unauthorized(res)
+  }
+  next()
+}
+
+function no_auth(path) {
+  return (
+    path == '/app' ||
+    path == '/is_setup' ||
+    path == '/' ||
+    path == '/unlock' ||
+    path == '/info' ||
+    path == '/action' ||
+    path == '/contacts/tokens' ||
+    path == '/latest' ||
+    path.startsWith('/static') ||
+    path == '/contacts/set_dev' ||
+    path == '/connect' ||
+    path == '/connect_peer' ||
+    path == '/peered' ||
+    path == '/request_transport_token'
+  )
+}
+
 export async function ownerMiddleware(req, res, next) {
-  if (
-    req.path == '/app' ||
-    req.path == '/is_setup' ||
-    req.path == '/' ||
-    req.path == '/unlock' ||
-    req.path == '/info' ||
-    req.path == '/action' ||
-    req.path == '/contacts/tokens' ||
-    req.path == '/latest' ||
-    req.path.startsWith('/static') ||
-    req.path == '/contacts/set_dev' ||
-    req.path == '/connect' ||
-    req.path == '/connect_peer' ||
-    req.path == '/peered' ||
-    req.path == '/request_transport_token'
-  ) {
+  if (no_auth(req.path)) {
     next()
     return
   }

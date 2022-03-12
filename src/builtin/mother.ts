@@ -8,6 +8,8 @@ import constants from '../constants'
 import { loadConfig } from '../utils/config'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import { sphinxLogger } from '../utils/logger'
+import * as crypto from 'crypto'
+import { GITBOT_UUID } from './git'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -49,7 +51,8 @@ export function init() {
         const botName = arr[2]
 
         if (builtinBots.includes(botName)) {
-          sphinxLogger.info(['mombot INSTALL', botName])
+          // localbot
+          sphinxLogger.info(['MotherBot INSTALL', botName])
           const chat = await getTribeOwnersChatByUUID(message.channel.id)
           if (!(chat && chat.id))
             return sphinxLogger.error('=> motherbot no chat')
@@ -69,13 +72,17 @@ export function init() {
           const msgTypes = builtInBotMsgTypes[botName] || [
             constants.message_types.message,
           ]
-          const chatBot = {
+          const chatBot: { [k: string]: any } = {
             chatId: chat.id,
             botPrefix: '/' + botName,
             botType: constants.bot_types.builtin,
             msgTypes: JSON.stringify(msgTypes),
             pricePerUse: 0,
             tenant: chat.tenant,
+          }
+          if (botName === 'git') {
+            await createGitBotIfNotExists(chat.tenant)
+            chatBot.botUuid = GITBOT_UUID
           }
           await models.ChatBot.create(chatBot)
           const theName = builtInBotNames[botName] || 'Bot'
@@ -84,6 +91,7 @@ export function init() {
             .setDescription(theName + ' has been installed!')
           message.channel.send({ embed })
         } else {
+          // bot from tribes registry
           const bot = await getBotByName(botName)
           if (bot && bot.uuid) {
             sphinxLogger.info(['=> FOUND BOT', bot.unique_name])
@@ -172,6 +180,21 @@ export function init() {
 const botSVG = `<svg viewBox="64 64 896 896" height="16" width="16" fill="white">
   <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
 </svg>`
+
+async function createGitBotIfNotExists(tenant) {
+  const existing = await models.Bot.findOne({ where: { name: 'GitBot' } })
+  if (existing) {
+    return
+  }
+  const newBot = {
+    name: 'GitBot',
+    uuid: GITBOT_UUID,
+    secret: crypto.randomBytes(20).toString('hex').toLowerCase(),
+    pricePerUse: 0,
+    tenant,
+  }
+  await models.Bot.create(newBot)
+}
 
 async function searchBots(q: string) {
   try {

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.finalAction = exports.processAction = void 0;
+exports.finalAction = exports.processAction = exports.processWebhook = void 0;
 const network = require("../../network");
 const models_1 = require("../../models");
 const res_1 = require("../../utils/res");
@@ -18,6 +18,41 @@ const tribes_1 = require("../../utils/tribes");
 const broadcast_1 = require("./broadcast");
 const pay_1 = require("./pay");
 const logger_1 = require("../../utils/logger");
+const hmac = require("../../crypto/hmac");
+const git_1 = require("../../builtin/git");
+const helpers_1 = require("../../tests/utils/helpers");
+function processWebhook(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);
+        const sig = req.headers['x-hub-signature-256'];
+        if (!sig)
+            return (0, res_1.unauthorized)(res);
+        // find bot by uuid = GITBOT_UUID - secret
+        const gitbot = yield models_1.models.Bot.findOne({ where: { uuid: git_1.GITBOT_UUID } });
+        if (!gitbot) {
+            return (0, res_1.failure)(res, 'nope');
+        }
+        const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret);
+        if (!valid) {
+            return (0, res_1.failure)(res, 'invalid hmac');
+        }
+        const chatbots = yield models_1.models.ChatBot.findAll({
+            where: { botUuid: git_1.GITBOT_UUID },
+        });
+        yield (0, helpers_1.asyncForEach)(chatbots, (cb) => {
+            if (!cb.meta)
+                return;
+            try {
+                const meta = JSON.parse(cb.meta);
+                console.log(meta.repos);
+            }
+            catch (e) { }
+        });
+        // loop thru all ChatBots for GitBot
+        // parse meta repos - match ChatBot(s)
+    });
+}
+exports.processWebhook = processWebhook;
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> processAction ${req.body}`);

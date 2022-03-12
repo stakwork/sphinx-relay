@@ -77,7 +77,13 @@ function setupApp() {
     return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
         const app = express();
         app.use(helmet());
-        app.use(express.json({ limit: '5MB' }));
+        app.use(express.json({
+            limit: '5MB',
+            verify: (req, res, buf) => {
+                ;
+                req.rawBody = buf.toString();
+            },
+        }));
         app.use(express.urlencoded());
         if (logger_1.logging.Express) {
             app.use(logger_1.default);
@@ -89,10 +95,13 @@ function setupApp() {
                 'Accept',
                 'x-user-token',
                 'x-jwt',
+                'x-hub-signature-256',
+                'x-hmac',
             ],
         }));
         app.use(cookieParser());
         app.use(auth_1.ownerMiddleware);
+        app.use(auth_1.hmacMiddleware);
         app.use('/static', express.static('public'));
         app.get('/app', (req, res) => res.send('INDEX'));
         if (config.connect_ui) {

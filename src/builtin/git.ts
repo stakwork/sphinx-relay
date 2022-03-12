@@ -12,8 +12,10 @@ let initted = false
 
 const prefix = '/git'
 
+export const GITBOT_UUID = '_gitbot'
+
 type Repo = string
-interface Meta {
+export interface GitBotMeta {
   pat: string
   repos: Repo[]
 }
@@ -25,7 +27,7 @@ async function octokit(pat: string): Promise<Octokit> {
 
 async function getStuff(
   message: Sphinx.Message
-): Promise<{ chat: any; chatBot: any; meta: Meta }> {
+): Promise<{ chat: any; chatBot: any; meta: GitBotMeta }> {
   try {
     const chat = await getTribeOwnersChatByUUID(message.channel.id)
     // console.log("=> WelcomeBot chat", chat);
@@ -40,7 +42,7 @@ async function getStuff(
     })
     if (!chatBot) throw new Error('chat bot not found')
     const empty = { pat: '', repos: [] }
-    const meta: Meta = chatBot.meta ? JSON.parse(chatBot.meta) : empty
+    const meta: GitBotMeta = chatBot.meta ? JSON.parse(chatBot.meta) : empty
     return { chat, chatBot, meta }
   } catch (_e) {
     throw new Error('failed')
@@ -95,7 +97,7 @@ export function init() {
   })
 }
 
-async function addWebhookToRepo(meta: Meta, repo) {
+async function addWebhookToRepo(meta: GitBotMeta, repo) {
   const octo = octokit(meta.pat)
   console.log(octo)
 }

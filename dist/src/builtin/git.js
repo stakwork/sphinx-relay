@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.init = void 0;
+exports.init = exports.GITBOT_UUID = void 0;
 const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const octokit_1 = require("octokit");
@@ -20,6 +20,7 @@ const tribes_1 = require("../utils/tribes");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const prefix = '/git';
+exports.GITBOT_UUID = '_gitbot';
 function octokit(pat) {
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = new octokit_1.Octokit({ auth: pat });

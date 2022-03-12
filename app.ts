@@ -15,7 +15,7 @@ import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
 import * as network from './src/network'
-import { ownerMiddleware, unlocker } from './src/auth'
+import { hmacMiddleware, ownerMiddleware, unlocker } from './src/auth'
 import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
@@ -71,7 +71,14 @@ function setupApp() {
     const app = express()
 
     app.use(helmet())
-    app.use(express.json({ limit: '5MB' }))
+    app.use(
+      express.json({
+        limit: '5MB',
+        verify: (req, res, buf) => {
+          ;(req as any).rawBody = buf.toString()
+        },
+      })
+    )
     app.use(express.urlencoded())
     if (logging.Express) {
       app.use(logger)
@@ -84,11 +91,14 @@ function setupApp() {
           'Accept',
           'x-user-token',
           'x-jwt',
+          'x-hub-signature-256',
+          'x-hmac',
         ],
       })
     )
     app.use(cookieParser())
     app.use(ownerMiddleware)
+    app.use(hmacMiddleware)
     app.use('/static', express.static('public'))
     app.get('/app', (req, res) => res.send('INDEX'))
     if (config.connect_ui) {

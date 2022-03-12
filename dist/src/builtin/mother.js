@@ -20,6 +20,8 @@ const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const tribes_1 = require("../utils/tribes");
 const logger_1 = require("../utils/logger");
+const crypto = require("crypto");
+const git_1 = require("./git");
 const msg_types = Sphinx.MSG_TYPE;
 const config = (0, config_1.loadConfig)();
 const builtinBots = ['welcome', 'loopout', 'git'];
@@ -55,7 +57,8 @@ function init() {
                     return;
                 const botName = arr[2];
                 if (builtinBots.includes(botName)) {
-                    logger_1.sphinxLogger.info(['mombot INSTALL', botName]);
+                    // localbot
+                    logger_1.sphinxLogger.info(['MotherBot INSTALL', botName]);
                     const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                     if (!(chat && chat.id))
                         return logger_1.sphinxLogger.error('=> motherbot no chat');
@@ -83,6 +86,10 @@ function init() {
                         pricePerUse: 0,
                         tenant: chat.tenant,
                     };
+                    if (botName === 'git') {
+                        yield createGitBotIfNotExists(chat.tenant);
+                        chatBot.botUuid = git_1.GITBOT_UUID;
+                    }
                     yield models_1.models.ChatBot.create(chatBot);
                     const theName = builtInBotNames[botName] || 'Bot';
                     const embed = new Sphinx.MessageEmbed()
@@ -91,6 +98,7 @@ function init() {
                     message.channel.send({ embed });
                 }
                 else {
+                    // bot from tribes registry
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
                         logger_1.sphinxLogger.info(['=> FOUND BOT', bot.unique_name]);
@@ -177,6 +185,22 @@ exports.init = init;
 const botSVG = `<svg viewBox="64 64 896 896" height="16" width="16" fill="white">
   <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
 </svg>`;
+function createGitBotIfNotExists(tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const existing = yield models_1.models.Bot.findOne({ where: { name: 'GitBot' } });
+        if (existing) {
+            return;
+        }
+        const newBot = {
+            name: 'GitBot',
+            uuid: git_1.GITBOT_UUID,
+            secret: crypto.randomBytes(20).toString('hex').toLowerCase(),
+            pricePerUse: 0,
+            tenant,
+        };
+        yield models_1.models.Bot.create(newBot);
+    });
+}
 function searchBots(q) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

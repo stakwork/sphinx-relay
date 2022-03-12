@@ -240,6 +240,24 @@ export const generateToken = async (req, res) => {
   })
 }
 
+export const registerHmacKey = async (req, res) => {
+  if (!req.body.encrypted_key) {
+    return failure(res, 'no encrypted_key found')
+  }
+  const transportTokenKeys = fs.readFileSync(
+    config.transportPrivateKeyLocation,
+    'utf8'
+  )
+  let hmacKey = rsa.decrypt(transportTokenKeys, req.body.encrypted_key)
+  const tenant: number = req.owner.id
+  const owner = await models.Contact.findOne({ where: { tenant } })
+  await owner.update({ hmacKey })
+
+  success(res, {
+    registered: true,
+  })
+}
+
 export const updateContact = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id

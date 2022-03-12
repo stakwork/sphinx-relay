@@ -29,4 +29,11 @@ function failure200(res, e) {
   res.end()
 }
 
-export { success, failure, failure200 }
+function unauthorized(res) {
+  res.writeHead(401, 'Access invalid for user', {
+    'Content-Type': 'text/plain',
+  })
+  res.end('invalid credentials')
+}
+
+export { success, failure, failure200, unauthorized }
