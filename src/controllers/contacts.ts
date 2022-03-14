@@ -253,8 +253,7 @@ export const registerHmacKey = async (req, res) => {
     return failure(res, 'no decrypted hmac key')
   }
   const tenant: number = req.owner.id
-  console.log('UPDATE HMAC KEY NOW', hmacKey, tenant)
-  await models.Contact.update({ hmacKey }, { where: { tenant } })
+  await models.Contact.update({ hmacKey }, { where: { tenant, isOwner: true } })
 
   success(res, {
     registered: true,

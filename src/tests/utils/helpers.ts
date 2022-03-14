@@ -14,8 +14,9 @@ export const makeArgs = (
   const headers = {}
   if (options && options.hmacOptions) {
     const rawBody = JSON.stringify(body)
-    const message = `${options.hmacOptions.method}|${options.hmacOptions.path}|${rawBody}`
-    const sig = hmac.sign(message, options.hmacOptions.key).toString()
+    const { key, method, path } = options.hmacOptions
+    const message = `${method}|${path}|${rawBody}`
+    const sig = hmac.sign(message, key).toString()
     headers['x-hmac'] = sig
   }
   if (options && options.useTransportToken) {

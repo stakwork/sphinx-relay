@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const ava_1 = require("ava");
 const nodes_1 = require("../nodes");
-const get_1 = require("../utils/get");
 const http = require("ava-http");
 const helpers_1 = require("../utils/helpers");
 const rsa = require("../../crypto/rsa");
@@ -60,22 +59,35 @@ function addContact(t, node1, node2, key) {
         //node1 adds node2 as contact
         const add = yield http.post(node1.external_ip + '/contacts', (0, helpers_1.makeArgs)(node1, body, {
             hmacOptions: {
-                method: 'POSTi',
+                method: 'POST',
                 path: '/contacts',
                 key,
             },
         }));
         t.true(typeof add.response === 'object', 'add contact should return object');
-        console.log(add.response);
+        console.log('add.response', add.response);
         //create node2 id based on the post response
         var node2id = add && add.response && add.response.id;
         //check that node2id is a number and therefore exists (contact was posted)
         t.true(typeof node2id === 'number', 'node1id should be a number');
-        //await contact_key
-        const [n1contactP1, n2contactP1] = yield (0, get_1.getContactAndCheckKeyExchange)(t, node1, node2);
-        //make sure node 2 has the contact_key
-        t.true(typeof n2contactP1.contact_key === 'string', 'node2 should have a contact key');
-        t.true(typeof n1contactP1 === 'object', 'node1 should be its own first contact');
+        let failed = false;
+        try {
+            // should fail!!!
+            const add = yield http.post(node1.external_ip + '/contacts', (0, helpers_1.makeArgs)(node1, body, {
+                hmacOptions: {
+                    method: 'NOT_REAL',
+                    path: '/contacts',
+                    key,
+                },
+            }));
+            t.falsy(add);
+        }
+        catch (e) {
+            // should fail
+            console.log('correctly failed');
+            failed = true;
+        }
+        t.true(failed, 'should have failed with bad hmac message');
         return true;
     });
 }

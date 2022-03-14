@@ -80,28 +80,29 @@ function hmacMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         if (no_auth(req.path)) {
             next();
-            return console.log('no auth');
+            return;
         }
         // creating hmac key for the first time does not require one of course
         if (req.path == '/hmac_key') {
             next();
-            return console.log('/hmac key');
+            return;
         }
         // separate hmac with bot hmac secret
         if (req.path == '/webhook') {
             next();
-            return console.log('/webhook');
+            return;
         }
         // opt-in feature
         if (!req.owner.hmacKey) {
             next();
-            return console.log('no owner hmac keys');
+            return;
         }
         // req.headers['x-hub-signature-256']
         const sig = req.headers['x-hmac'] || req.cookies['x-hmac'];
         if (!sig)
             return (0, res_1.unauthorized)(res);
         const message = `${req.method}|${req.originalUrl}|${req.rawBody}`;
+        console.log('=============== MESSAGE', message, req.owner.hmacKey);
         const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey);
         console.log('valid sig!', valid);
         if (!valid) {

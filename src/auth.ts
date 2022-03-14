@@ -95,6 +95,7 @@ export async function hmacMiddleware(req, res, next) {
   const sig = req.headers['x-hmac'] || req.cookies['x-hmac']
   if (!sig) return unauthorized(res)
   const message = `${req.method}|${req.originalUrl}|${req.rawBody}`
+  console.log('=============== MESSAGE', message, req.owner.hmacKey)
   const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey)
   console.log('valid sig!', valid)
   if (!valid) {

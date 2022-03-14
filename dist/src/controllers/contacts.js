@@ -239,11 +239,13 @@ const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!req.body.encrypted_key) {
         return (0, res_1.failure)(res, 'no encrypted_key found');
     }
-    const transportTokenKeys = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
-    let hmacKey = rsa.decrypt(transportTokenKeys, req.body.encrypted_key);
+    const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+    let hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
+    if (!hmacKey) {
+        return (0, res_1.failure)(res, 'no decrypted hmac key');
+    }
     const tenant = req.owner.id;
-    console.log('UPDATE HMAC KEY NOW', hmacKey, tenant);
-    yield models_1.models.Contact.update({ hmacKey }, { where: { tenant } });
+    yield models_1.models.Contact.update({ hmacKey }, { where: { tenant, isOwner: true } });
     (0, res_1.success)(res, {
         registered: true,
     });

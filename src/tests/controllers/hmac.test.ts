@@ -1,6 +1,5 @@
 import test, { ExecutionContext } from 'ava'
 import nodes from '../nodes'
-import { getContactAndCheckKeyExchange } from '../utils/get'
 import { NodeConfig } from '../types'
 import { Assertions } from 'ava'
 import * as http from 'ava-http'
@@ -79,35 +78,39 @@ async function addContact(
     node1.external_ip + '/contacts',
     makeArgs(node1, body, {
       hmacOptions: {
-        method: 'POSTi',
+        method: 'POST',
         path: '/contacts',
         key,
       },
     })
   )
   t.true(typeof add.response === 'object', 'add contact should return object')
-  console.log(add.response)
+  console.log('add.response', add.response)
   //create node2 id based on the post response
   var node2id = add && add.response && add.response.id
   //check that node2id is a number and therefore exists (contact was posted)
   t.true(typeof node2id === 'number', 'node1id should be a number')
 
-  //await contact_key
-  const [n1contactP1, n2contactP1] = await getContactAndCheckKeyExchange(
-    t,
-    node1,
-    node2
-  )
-
-  //make sure node 2 has the contact_key
-  t.true(
-    typeof n2contactP1.contact_key === 'string',
-    'node2 should have a contact key'
-  )
-  t.true(
-    typeof n1contactP1 === 'object',
-    'node1 should be its own first contact'
-  )
+  let failed = false
+  try {
+    // should fail!!!
+    const add = await http.post(
+      node1.external_ip + '/contacts',
+      makeArgs(node1, body, {
+        hmacOptions: {
+          method: 'NOT_REAL',
+          path: '/contacts',
+          key,
+        },
+      })
+    )
+    t.falsy(add)
+  } catch (e) {
+    // should fail
+    console.log('correctly failed')
+    failed = true
+  }
+  t.true(failed, 'should have failed with bad hmac message')
 
   return true
 }
