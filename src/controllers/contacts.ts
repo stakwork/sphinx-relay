@@ -244,14 +244,17 @@ export const registerHmacKey = async (req, res) => {
   if (!req.body.encrypted_key) {
     return failure(res, 'no encrypted_key found')
   }
-  const transportTokenKeys = fs.readFileSync(
+  const transportTokenKey = fs.readFileSync(
     config.transportPrivateKeyLocation,
     'utf8'
   )
-  let hmacKey = rsa.decrypt(transportTokenKeys, req.body.encrypted_key)
+  let hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key)
+  if (!hmacKey) {
+    return failure(res, 'no decrypted hmac key')
+  }
   const tenant: number = req.owner.id
-  const owner = await models.Contact.findOne({ where: { tenant } })
-  await owner.update({ hmacKey })
+  console.log('UPDATE HMAC KEY NOW', hmacKey, tenant)
+  await models.Contact.update({ hmacKey }, { where: { tenant } })
 
   success(res, {
     registered: true,

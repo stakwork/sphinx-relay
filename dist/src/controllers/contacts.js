@@ -242,8 +242,8 @@ const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function
     const transportTokenKeys = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
     let hmacKey = rsa.decrypt(transportTokenKeys, req.body.encrypted_key);
     const tenant = req.owner.id;
-    const owner = yield models_1.models.Contact.findOne({ where: { tenant } });
-    yield owner.update({ hmacKey });
+    console.log('UPDATE HMAC KEY NOW', hmacKey, tenant);
+    yield models_1.models.Contact.update({ hmacKey }, { where: { tenant } });
     (0, res_1.success)(res, {
         registered: true,
     });

@@ -3,6 +3,7 @@ import * as rsa from '../../crypto/rsa'
 import * as moment from 'moment'
 import { NodeConfig, RequestArgs, RequestBody } from '../types'
 import { config } from '../config'
+import * as hmac from '../../crypto/hmac'
 
 export const makeArgs = (
   node: NodeConfig,
@@ -10,24 +11,22 @@ export const makeArgs = (
   options?
 ): RequestArgs => {
   const currentTime = new Date(Date.now())
+  const headers = {}
+  if (options && options.hmacOptions) {
+    const rawBody = JSON.stringify(body)
+    const message = `${options.hmacOptions.method}|${options.hmacOptions.path}|${rawBody}`
+    const sig = hmac.sign(message, options.hmacOptions.key).toString()
+    headers['x-hmac'] = sig
+  }
   if (options && options.useTransportToken) {
-    return {
-      headers: {
-        'x-transport-token': rsa.encrypt(
-          node.transportToken,
-          `${node.authToken}|${currentTime.toString()}`
-        ),
-      },
-      body,
-    }
+    headers['x-transport-token'] = rsa.encrypt(
+      node.transportToken,
+      `${node.authToken}|${currentTime.toString()}`
+    )
+  } else {
+    headers['x-user-token'] = node.authToken
   }
-
-  return {
-    headers: {
-      'x-user-token': node.authToken,
-    },
-    body,
-  }
+  return { body, headers }
 }
 
 export const makeRelayRequest = async (

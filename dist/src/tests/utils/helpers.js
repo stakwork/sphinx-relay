@@ -14,22 +14,23 @@ const http = require("ava-http");
 const rsa = require("../../crypto/rsa");
 const moment = require("moment");
 const config_1 = require("../config");
+const hmac = require("../../crypto/hmac");
 const makeArgs = (node, body = {}, options) => {
     const currentTime = new Date(Date.now());
-    if (options && options.useTransportToken) {
-        return {
-            headers: {
-                'x-transport-token': rsa.encrypt(node.transportToken, `${node.authToken}|${currentTime.toString()}`),
-            },
-            body,
-        };
+    const headers = {};
+    if (options && options.hmacOptions) {
+        const rawBody = JSON.stringify(body);
+        const message = `${options.hmacOptions.method}|${options.hmacOptions.path}|${rawBody}`;
+        const sig = hmac.sign(message, options.hmacOptions.key).toString();
+        headers['x-hmac'] = sig;
     }
-    return {
-        headers: {
-            'x-user-token': node.authToken,
-        },
-        body,
-    };
+    if (options && options.useTransportToken) {
+        headers['x-transport-token'] = rsa.encrypt(node.transportToken, `${node.authToken}|${currentTime.toString()}`);
+    }
+    else {
+        headers['x-user-token'] = node.authToken;
+    }
+    return { body, headers };
 };
 exports.makeArgs = makeArgs;
 const makeRelayRequest = (method, path, node, body

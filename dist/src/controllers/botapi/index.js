@@ -48,8 +48,6 @@ function processWebhook(req, res) {
             }
             catch (e) { }
         });
-        // loop thru all ChatBots for GitBot
-        // parse meta repos - match ChatBot(s)
     });
 }
 exports.processWebhook = processWebhook;

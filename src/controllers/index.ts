@@ -71,6 +71,7 @@ export async function set(app) {
   app.delete('/contacts/:id', contacts.deleteContact)
   app.get('/latest_contacts', contacts.getLatestContacts)
   app.post('/generate_external', contacts.generateOwnerWithExternalSigner)
+  app.post('/hmac_key', contacts.registerHmacKey)
 
   app.post('/profile', personal.createPeopleProfile)
   app.delete('/profile', personal.deletePersonProfile)

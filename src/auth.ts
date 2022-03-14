@@ -76,6 +76,11 @@ export async function hmacMiddleware(req, res, next) {
     next()
     return
   }
+  // creating hmac key for the first time does not require one of course
+  if (req.path == '/hmac_key') {
+    next()
+    return
+  }
   // separate hmac with bot hmac secret
   if (req.path == '/webhook') {
     next()
