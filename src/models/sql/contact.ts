@@ -82,4 +82,6 @@ export default class Contact extends Model<Contact> {
 
   @Column
   blocked: boolean
+
+  dataValues: { [k: string]: any }
 }

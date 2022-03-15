@@ -13,12 +13,12 @@ export interface Message {
   expirationDate: Date
   messageContent: string
   remoteMessageContent: string
-  status: number
+  status?: number
   statusMap: string
   parentId: number
   subscriptionId: number
   mediaKey: string
-  mediaType: string
+  mediaType?: string
   mediaToken: string
   seen: boolean
   createdAt: Date
@@ -29,4 +29,9 @@ export interface Message {
   replyUuid: string
   network_type: number
   tenant: number
+
+  dataValues: { [k: string]: any }
+  update: Function
+  save: Function
+  skipPaymentProcessing: boolean
 }

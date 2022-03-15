@@ -1,33 +1,46 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.models = exports.sequelize = void 0;
+exports.RequestsTransportTokens = exports.Lsat = exports.Accounting = exports.BotMember = exports.ChatBot = exports.Bot = exports.Timer = exports.ChatMember = exports.MediaKey = exports.Subscription = exports.Invite = exports.models = exports.sequelize = void 0;
 // parse BIGINTs to number
-require('pg').defaults.parseInt8 = true;
+const pg = require("pg");
+pg.defaults.parseInt8 = true;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const path = require("path");
 const chat_1 = require("./sql/chat");
 const contact_1 = require("./sql/contact");
 const invite_1 = require("./sql/invite");
+exports.Invite = invite_1.default;
 const message_1 = require("./sql/message");
 const subscription_1 = require("./sql/subscription");
+exports.Subscription = subscription_1.default;
 const mediaKey_1 = require("./sql/mediaKey");
+exports.MediaKey = mediaKey_1.default;
 const chatMember_1 = require("./sql/chatMember");
+exports.ChatMember = chatMember_1.default;
 const timer_1 = require("./sql/timer");
+exports.Timer = timer_1.default;
 const bot_1 = require("./sql/bot");
+exports.Bot = bot_1.default;
 const chatBot_1 = require("./sql/chatBot");
+exports.ChatBot = chatBot_1.default;
 const botMember_1 = require("./sql/botMember");
+exports.BotMember = botMember_1.default;
 const accounting_1 = require("./sql/accounting");
+exports.Accounting = accounting_1.default;
 const lsat_1 = require("./sql/lsat");
+exports.Lsat = lsat_1.default;
 const requestsTransportTokens_1 = require("./sql/requestsTransportTokens");
+exports.RequestsTransportTokens = requestsTransportTokens_1.default;
 const minimist = require("minimist");
 const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
+const fs_1 = require("fs");
 const argv = minimist(process.argv.slice(2));
 const configFile = argv.db
     ? path.resolve(process.cwd(), argv.db)
     : path.join(__dirname, '../../config/config.json');
 const env = process.env.NODE_ENV || 'development';
-const config = require(configFile)[env];
+const config = JSON.parse((0, fs_1.readFileSync)(configFile).toString())[env];
 const appConfig = (0, config_1.loadConfig)();
 const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_log === 'true' ? console.log : false, models: [
         chat_1.default,

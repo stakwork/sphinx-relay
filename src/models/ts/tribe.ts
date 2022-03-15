@@ -25,4 +25,6 @@ export interface Tribe {
   bots: string //json
   owner_route_hint: string
   pin: string
+
+  dataValues: { [k: string]: any }
 }

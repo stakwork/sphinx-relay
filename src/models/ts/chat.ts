@@ -30,4 +30,9 @@ export interface Chat {
   tenant: number
   skipBroadcastJoins: boolean
   pin: string
+
+  dataValues: { [k: string]: any }
+  update: Function
+  members: { [k: string]: { [k: string]: string | number } }
+  pendingContactIds?: number[]
 }

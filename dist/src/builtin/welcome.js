@@ -71,7 +71,7 @@ function init() {
         if (!isAdmin)
             return;
         switch (cmd) {
-            case 'setmessage':
+            case 'setmessage': {
                 if (arr.length < 3)
                     return;
                 logger_1.sphinxLogger.info(`setmsg ${arr[2]}`);
@@ -95,19 +95,21 @@ function init() {
                     .setDescription('Your welcome message has been updated');
                 message.channel.send({ embed: resEmbed });
                 return;
+            }
             default:
-                const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('WelcomeBot')
-                    .setTitle('Bot Commands:')
-                    .addFields([
-                    {
-                        name: 'Set welcome message',
-                        value: '/welcome setmessage {MESSAGE}',
-                    },
-                    { name: 'Help', value: '/welcome help' },
-                ])
-                    .setThumbnail(botSVG);
-                message.channel.send({ embed });
+                message.channel.send({
+                    embed: new Sphinx.MessageEmbed()
+                        .setAuthor('WelcomeBot')
+                        .setTitle('Bot Commands:')
+                        .addFields([
+                        {
+                            name: 'Set welcome message',
+                            value: '/welcome setmessage {MESSAGE}',
+                        },
+                        { name: 'Help', value: '/welcome help' },
+                    ])
+                        .setThumbnail(botSVG)
+                });
                 return;
         }
     }));

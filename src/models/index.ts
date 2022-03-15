@@ -1,5 +1,6 @@
 // parse BIGINTs to number
-require('pg').defaults.parseInt8 = true
+import * as pg from 'pg'
+pg.defaults.parseInt8 = true
 import { Sequelize } from 'sequelize-typescript'
 import * as path from 'path'
 import Chat from './sql/chat'
@@ -19,6 +20,7 @@ import RequestsTransportTokens from './sql/requestsTransportTokens'
 import * as minimist from 'minimist'
 import { loadConfig } from '../utils/config'
 import { isProxy } from '../utils/proxy'
+import { readFileSync } from 'fs'
 
 const argv = minimist(process.argv.slice(2))
 
@@ -27,7 +29,7 @@ const configFile = argv.db
   : path.join(__dirname, '../../config/config.json')
 
 const env = process.env.NODE_ENV || 'development'
-const config = require(configFile)[env]
+const config = JSON.parse(readFileSync(configFile).toString())[env]
 
 const appConfig = loadConfig()
 
@@ -75,4 +77,15 @@ export {
   ContactType as Contact,
   ChatType as Chat,
   MessageType as Message,
+  Invite,
+  Subscription,
+  MediaKey,
+  ChatMember,
+  Timer,
+  Bot,
+  ChatBot,
+  BotMember,
+  Accounting,
+  Lsat,
+  RequestsTransportTokens
 }

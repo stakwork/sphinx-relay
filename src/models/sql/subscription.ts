@@ -48,4 +48,6 @@ export default class Subscription extends Model<Subscription> {
 
   @Column
   tenant: number
+
+  dataValues: { [k: string]: any }
 }
