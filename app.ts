@@ -5,12 +5,7 @@ import * as cors from 'cors'
 import logger, { logging, sphinxLogger } from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
-import {
-  setupDatabase,
-  setupDone,
-  setupOwnerContact,
-  setupTransportToken,
-} from './src/utils/setup'
+import { setupDatabase, setupDone, setupOwnerContact } from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
@@ -33,7 +28,6 @@ process.env.NODE_EXTRA_CA_CERTS = config.tls_location
 
 // START SETUP!
 async function start() {
-  await setupTransportToken()
   await setupDatabase()
   mainSetup()
   // // IF NOT UNLOCK, go ahead and start this now

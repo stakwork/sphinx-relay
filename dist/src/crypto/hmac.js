@@ -3,14 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyHmac = exports.sign = exports.ALGO = void 0;
 const crypto = require("crypto");
 exports.ALGO = 'sha256';
-// rawBody: utf8 string
+// message: utf8 string
 // secret: hex encoded
-function sign(rawBody, secret) {
-    if (!rawBody || !secret) {
+function sign(message, secret) {
+    if (!message || !secret) {
         throw new Error('hmac missing data');
     }
     const hmac = crypto.createHmac(exports.ALGO, secret);
-    return Buffer.from(exports.ALGO + '=' + hmac.update(Buffer.from(rawBody)).digest('hex'), 'utf8');
+    return Buffer.from(exports.ALGO + '=' + hmac.update(Buffer.from(message)).digest('hex'), 'utf8');
 }
 exports.sign = sign;
 function verifyHmac(signature, rawBody, secret) {

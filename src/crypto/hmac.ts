@@ -2,15 +2,15 @@ import * as crypto from 'crypto'
 
 export const ALGO = 'sha256'
 
-// rawBody: utf8 string
+// message: utf8 string
 // secret: hex encoded
-export function sign(rawBody: string, secret: string): Buffer {
-  if (!rawBody || !secret) {
+export function sign(message: string, secret: string): Buffer {
+  if (!message || !secret) {
     throw new Error('hmac missing data')
   }
   const hmac = crypto.createHmac(ALGO, secret)
   return Buffer.from(
-    ALGO + '=' + hmac.update(Buffer.from(rawBody)).digest('hex'),
+    ALGO + '=' + hmac.update(Buffer.from(message)).digest('hex'),
     'utf8'
   )
 }
