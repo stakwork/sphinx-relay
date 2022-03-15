@@ -125,8 +125,8 @@ function tribe3Msgs(t, node1, node2, node3) {
         yield http.del(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, deleteChannel1Body));
         yield http.del(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, deleteChannel2Body));
         const channelTribe2 = yield (0, get_1.getTribeByUuid)(t, r);
-        t.true(channelTribe2.channels.length == 0, 'there should not be anymore channels in the tribe');
         console.log(channelTribe2);
+        t.true(channelTribe2.channels.length == 0, 'there should not be anymore channels in the tribe');
         //NODE2 LEAVES THE TRIBE
         let n2left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(n2left, 'node2 should leave tribe');
