@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.finalAction = exports.processAction = void 0;
+exports.finalAction = exports.processAction = exports.processWebhook = void 0;
 const network = require("../../network");
 const models_1 = require("../../models");
 const res_1 = require("../../utils/res");
@@ -18,6 +18,39 @@ const tribes_1 = require("../../utils/tribes");
 const broadcast_1 = require("./broadcast");
 const pay_1 = require("./pay");
 const logger_1 = require("../../utils/logger");
+const hmac = require("../../crypto/hmac");
+const git_1 = require("../../builtin/git");
+const helpers_1 = require("../../tests/utils/helpers");
+function processWebhook(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);
+        const sig = req.headers['x-hub-signature-256'];
+        if (!sig)
+            return (0, res_1.unauthorized)(res);
+        // find bot by uuid = GITBOT_UUID - secret
+        const gitbot = yield models_1.models.Bot.findOne({ where: { uuid: git_1.GITBOT_UUID } });
+        if (!gitbot) {
+            return (0, res_1.failure)(res, 'nope');
+        }
+        const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret);
+        if (!valid) {
+            return (0, res_1.failure)(res, 'invalid hmac');
+        }
+        const chatbots = yield models_1.models.ChatBot.findAll({
+            where: { botUuid: git_1.GITBOT_UUID },
+        });
+        yield (0, helpers_1.asyncForEach)(chatbots, (cb) => {
+            if (!cb.meta)
+                return;
+            try {
+                const meta = JSON.parse(cb.meta);
+                console.log(meta.repos);
+            }
+            catch (e) { }
+        });
+    });
+}
+exports.processWebhook = processWebhook;
 function processAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> processAction ${req.body}`);
@@ -34,7 +67,7 @@ function processAction(req, res) {
                 return (0, res_1.failure)(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id, } = body;
         if (!bot_id)
             return (0, res_1.failure)(res, 'no bot_id');
         const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
@@ -56,6 +89,7 @@ function processAction(req, res) {
             chat_uuid: chat_uuid || '',
             msg_uuid: msg_uuid || '',
             reply_uuid: reply_uuid || '',
+            parent_id: parent_id || 0,
             recipient_id: recipient_id ? parseInt(recipient_id) : 0,
         };
         try {
@@ -70,7 +104,7 @@ function processAction(req, res) {
 exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id, } = a;
+        const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id, recipient_id, } = a;
         let myBot;
         // not for tribe admin, for bot maker
         if (bot_id) {
@@ -127,6 +161,9 @@ function finalAction(a) {
             }
             if (reply_uuid) {
                 data.message.replyUuid = reply_uuid;
+            }
+            if (parent_id) {
+                data.message.parentId = parent_id;
             }
             try {
                 yield network.signAndSend({ dest, data, route_hint }, owner, topic);

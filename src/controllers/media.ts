@@ -61,6 +61,7 @@ export const sendAttachmentMessage = async (req, res) => {
     ttl,
     price, // IF AMOUNT>0 THEN do NOT sign or send receipt
     reply_uuid,
+    parent_id,
   } = req.body
 
   sphinxLogger.info(['[send attachment]', req.body])
@@ -117,6 +118,7 @@ export const sendAttachmentMessage = async (req, res) => {
     tenant,
   }
   if (reply_uuid) mm.replyUuid = reply_uuid
+  if (parent_id) mm.parentId = parent_id
   const message = await models.Message.create(mm)
 
   sphinxLogger.info(['saved attachment msg from me', message.id])
@@ -138,6 +140,7 @@ export const sendAttachmentMessage = async (req, res) => {
     mediaType: mediaType,
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (parent_id) msg.parentId = parent_id
   network.sendMessage({
     chat: chat,
     sender: owner,
@@ -525,6 +528,7 @@ export const receiveAttachment = async (payload) => {
     sender_alias,
     msg_uuid,
     reply_uuid,
+    parent_id,
     network_type,
     sender_photo_url,
     force_push,
@@ -551,6 +555,7 @@ export const receiveAttachment = async (payload) => {
   if (mediaKey) msg.mediaKey = mediaKey
   if (mediaType) msg.mediaType = mediaType
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (parent_id) msg.parentId = parent_id
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {
     msg.senderAlias = sender_alias

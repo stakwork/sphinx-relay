@@ -1,9 +1,11 @@
 import test from 'ava'
-
-import { randomText } from '../utils/helpers'
+import * as http from 'ava-http'
+import { config } from '../config'
+import { makeArgs, randomText } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
 import { sendTribeMessage, checkMessageDecryption } from '../utils/msg'
+import { getCheckNewMsgs, getTribeByUuid, getCheckTribe } from '../utils/get'
 
 import nodes from '../nodes'
 
@@ -101,6 +103,126 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     text3
   )
   t.true(n2check2, 'node2 should have read and decrypted node3 message')
+
+  /*****
+				Here we want to create a new message channel for a tribe
+******/
+  //Here we are going to try and add a new channel to the tribe in tribe server
+
+  const createChannelBody = {
+    tribe_uuid: tribe.uuid,
+    host: config.tribeHostInternal,
+    name: 'testChannel',
+  }
+
+  const createChannelBody2 = {
+    tribe_uuid: tribe.uuid,
+    host: config.tribeHostInternal,
+    name: 'testChannel2',
+  }
+
+  const tribeSeverAddChannelResponse = await http.post(
+    node1.external_ip + '/tribe_channel',
+    makeArgs(node1, createChannelBody)
+  )
+  const tribeSeverAddChannelResponse2 = await http.post(
+    node1.external_ip + '/tribe_channel',
+    makeArgs(node1, createChannelBody2)
+  )
+  console.log(tribeSeverAddChannelResponse, tribeSeverAddChannelResponse2)
+
+  //Here we get the tribe which should have the correct channels
+  const r = await getCheckTribe(t, node1, tribe.id)
+  const channelTribe = await getTribeByUuid(t, r)
+  t.true(
+    tribeSeverAddChannelResponse.response.id == channelTribe.channels[0].id,
+    'First tribe added should have an id of the response we get back when we call for tribes'
+  )
+  t.true(
+    tribeSeverAddChannelResponse2.response.id == channelTribe.channels[1].id,
+    'second tribe added should have an id of the response we get back when we call for tribes'
+  )
+  t.true(
+    tribeSeverAddChannelResponse.response.name == createChannelBody.name &&
+      tribeSeverAddChannelResponse2.response.name == createChannelBody2.name,
+    'the response should send back the correct channel name'
+  )
+  t.true(
+    tribeSeverAddChannelResponse.response.tribe_uuid ==
+      createChannelBody.tribe_uuid &&
+      tribeSeverAddChannelResponse2.response.tribe_uuid ==
+        createChannelBody2.tribe_uuid,
+    'the tribes channels that returned should have the same tribe_uuid that we sent'
+  )
+  t.true(
+    channelTribe.channels.length == 2,
+    'the amount of channels in this new tribe should be 2'
+  )
+
+  //NODE3 SENDS A TEXT MESSAGE IN TRIBE
+  const text4 = randomText()
+  const options = { parent_id: 1 }
+  let tribeMessage4 = await sendTribeMessage(t, node3, tribe, text4, options)
+  const recivedMessageFromNode1 = await getCheckNewMsgs(
+    t,
+    node1,
+    tribeMessage4.uuid
+  )
+  const recivedMessageFromNode2 = await getCheckNewMsgs(
+    t,
+    node1,
+    tribeMessage4.uuid
+  )
+
+  t.true(
+    recivedMessageFromNode1.parent_id == options.parent_id,
+    'Node 1 gets message channel id'
+  )
+  t.true(
+    recivedMessageFromNode2.parent_id == options.parent_id,
+    'node 2 gets message channel id'
+  )
+  //CHECK THAT NODE3'S DECRYPTED MESSAGE IS SAME AS INPUT
+  const n1check3 = await checkMessageDecryption(
+    t,
+    node1,
+    tribeMessage4.uuid,
+    text4
+  )
+  t.true(n1check3, 'node1 should have read and decrypted node3 message')
+
+  //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
+  const n2check3 = await checkMessageDecryption(
+    t,
+    node2,
+    tribeMessage4.uuid,
+    text4
+  )
+  t.true(n2check3, 'node2 should have read and decrypted node3 message')
+
+  //delete channel
+  const deleteChannel1Body = {
+    id: channelTribe.channels[0].id,
+    host: config.tribeHostInternal,
+  }
+  const deleteChannel2Body = {
+    id: channelTribe.channels[1].id,
+    host: config.tribeHostInternal,
+  }
+  await http.del(
+    node1.external_ip + '/tribe_channel',
+    makeArgs(node1, deleteChannel1Body)
+  )
+
+  await http.del(
+    node1.external_ip + '/tribe_channel',
+    makeArgs(node1, deleteChannel2Body)
+  )
+  const channelTribe2 = await getTribeByUuid(t, r)
+  t.true(
+    channelTribe2.channels.length == 0,
+    'there should not be anymore channels in the tribe'
+  )
 
   //NODE2 LEAVES THE TRIBE
   let n2left = await leaveTribe(t, node2, tribe)

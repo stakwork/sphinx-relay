@@ -152,6 +152,34 @@ export async function joinTribe(req, res) {
   })
 }
 
+export async function createChannel(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const owner = req.owner
+  //const tenant: number = req.owner.id
+
+  const { tribe_uuid, name, host } = req.body
+  const channel = await tribes.createChannel({
+    tribe_uuid,
+    name,
+    host,
+    owner_pubkey: owner.publicKey,
+  })
+  success(res, channel)
+}
+
+export async function deleteChannel(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+
+  const owner = req.owner
+  const { id, host } = req.body
+  const channel = await tribes.deleteChannel({
+    id,
+    host,
+    owner_pubkey: owner.publicKey,
+  })
+  success(res, channel)
+}
+
 export async function receiveMemberRequest(payload) {
   sphinxLogger.info('=> receiveMemberRequest', logging.Network)
   const {
@@ -671,6 +699,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
           content, // replaced with the remoteMessageContent (u are owner) {}
           uuid: m.uuid,
           replyUuid: m.replyUuid,
+          parentId: m.parentId || 0,
           status: m.status,
           amount: m.amount,
           ...(mediaKeyMap && { mediaKey: mediaKeyMap }),

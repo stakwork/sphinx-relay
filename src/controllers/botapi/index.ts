@@ -1,11 +1,14 @@
 import * as network from '../../network'
 import { models } from '../../models'
-import { success, failure } from '../../utils/res'
+import { success, failure, unauthorized } from '../../utils/res'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import broadcast from './broadcast'
 import pay from './pay'
 import { sphinxLogger } from '../../utils/logger'
+import * as hmac from '../../crypto/hmac'
+import { GITBOT_UUID, GitBotMeta } from '../../builtin/git'
+import { asyncForEach } from '../../tests/utils/helpers'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -24,6 +27,32 @@ export interface Action {
   reply_uuid?: string
   route_hint?: string
   recipient_id?: number
+  parent_id?: number
+}
+
+export async function processWebhook(req, res) {
+  sphinxLogger.info(`=> processWebhook ${req.body}`)
+  const sig = req.headers['x-hub-signature-256']
+  if (!sig) return unauthorized(res)
+  // find bot by uuid = GITBOT_UUID - secret
+  const gitbot = await models.Bot.findOne({ where: { uuid: GITBOT_UUID } })
+  if (!gitbot) {
+    return failure(res, 'nope')
+  }
+  const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret)
+  if (!valid) {
+    return failure(res, 'invalid hmac')
+  }
+  const chatbots = await models.ChatBot.findAll({
+    where: { botUuid: GITBOT_UUID },
+  })
+  await asyncForEach(chatbots, (cb) => {
+    if (!cb.meta) return
+    try {
+      const meta: GitBotMeta = JSON.parse(cb.meta)
+      console.log(meta.repos)
+    } catch (e) {}
+  })
 }
 
 export async function processAction(req, res) {
@@ -50,6 +79,7 @@ export async function processAction(req, res) {
     msg_uuid,
     reply_uuid,
     recipient_id,
+    parent_id,
   } = body
 
   if (!bot_id) return failure(res, 'no bot_id')
@@ -73,6 +103,7 @@ export async function processAction(req, res) {
     chat_uuid: chat_uuid || '',
     msg_uuid: msg_uuid || '',
     reply_uuid: reply_uuid || '',
+    parent_id: parent_id || 0,
     recipient_id: recipient_id ? parseInt(recipient_id) : 0,
   }
 
@@ -96,6 +127,7 @@ export async function finalAction(a: Action) {
     chat_uuid,
     msg_uuid,
     reply_uuid,
+    parent_id,
     recipient_id,
   } = a
 
@@ -154,6 +186,9 @@ export async function finalAction(a: Action) {
     }
     if (reply_uuid) {
       data.message.replyUuid = reply_uuid
+    }
+    if (parent_id) {
+      data.message.parentId = parent_id
     }
     try {
       await network.signAndSend({ dest, data, route_hint }, owner, topic)

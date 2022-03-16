@@ -14,6 +14,7 @@ const logger_1 = require("./logger");
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
         addTableColumn('sphinx_chats', 'notify', 'BIGINT');
+        addTableColumn('sphinx_contacts', 'hmac_key');
         addTableColumn('sphinx_chats', 'feed_type', 'INT');
         addTableColumn('sphinx_contacts', 'blocked', 'BOOLEAN');
         addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT');
@@ -63,6 +64,7 @@ function migrate() {
         addTableColumn('sphinx_chats', 'my_alias');
         addTableColumn('sphinx_messages', 'sender_pic');
         addTableColumn('sphinx_messages', 'network_type', 'INTEGER');
+        addTableColumn('sphinx_messages', 'parent_id', 'INTEGER');
         addTableColumn('sphinx_chats', 'meta');
         addTableColumn('sphinx_contacts', 'tip_amount', 'BIGINT');
         addTableColumn('sphinx_contacts', 'last_active', 'DATETIME');

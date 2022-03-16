@@ -14,6 +14,7 @@ export interface MessageContent {
   status?: number
   purchaser?: number
   invoice?: string
+  parentId?: number
   push?: boolean
 }
 

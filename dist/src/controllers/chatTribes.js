@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addPendingContactIdsToChat = exports.createTribeChatParams = exports.replayChatHistory = exports.receiveTribeDelete = exports.receiveMemberReject = exports.receiveMemberApprove = exports.approveOrRejectMember = exports.editTribe = exports.pinToTribe = exports.receiveMemberRequest = exports.joinTribe = void 0;
+exports.addPendingContactIdsToChat = exports.createTribeChatParams = exports.replayChatHistory = exports.receiveTribeDelete = exports.receiveMemberReject = exports.receiveMemberApprove = exports.approveOrRejectMember = exports.editTribe = exports.pinToTribe = exports.receiveMemberRequest = exports.deleteChannel = exports.createChannel = exports.joinTribe = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -144,6 +144,38 @@ function joinTribe(req, res) {
     });
 }
 exports.joinTribe = joinTribe;
+function createChannel(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const owner = req.owner;
+        //const tenant: number = req.owner.id
+        const { tribe_uuid, name, host } = req.body;
+        const channel = yield tribes.createChannel({
+            tribe_uuid,
+            name,
+            host,
+            owner_pubkey: owner.publicKey,
+        });
+        (0, res_1.success)(res, channel);
+    });
+}
+exports.createChannel = createChannel;
+function deleteChannel(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const owner = req.owner;
+        const { id, host } = req.body;
+        const channel = yield tribes.deleteChannel({
+            id,
+            host,
+            owner_pubkey: owner.publicKey,
+        });
+        (0, res_1.success)(res, channel);
+    });
+}
+exports.deleteChannel = deleteChannel;
 function receiveMemberRequest(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('=> receiveMemberRequest', logger_1.logging.Network);
@@ -616,7 +648,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 }
                 const isForwarded = m.sender !== tenant;
                 const includeStatus = true;
-                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, status: m.status, amount: m.amount }, (mediaKeyMap && { mediaKey: mediaKeyMap })), (newMediaTerms && { mediaToken: newMediaTerms })), (m.mediaType && { mediaType: m.mediaType })), (dateString && { date: dateString })), isForwarded, includeStatus);
+                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, parentId: m.parentId || 0, status: m.status, amount: m.amount }, (mediaKeyMap && { mediaKey: mediaKeyMap })), (newMediaTerms && { mediaToken: newMediaTerms })), (m.mediaType && { mediaType: m.mediaType })), (dateString && { date: dateString })), isForwarded, includeStatus);
                 msg = yield (0, msg_1.decryptMessage)(msg, chat);
                 const data = yield (0, msg_1.personalizeMessage)(msg, contact, true);
                 const mqttTopic = `${contact.publicKey}/${chat.uuid}`;

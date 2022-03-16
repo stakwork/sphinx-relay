@@ -82,4 +82,7 @@ export default class Contact extends Model<Contact> {
 
   @Column
   blocked: boolean
+
+  @Column
+  hmacKey: string
 }

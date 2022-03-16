@@ -272,6 +272,7 @@ export const sendMessage = async (req, res) => {
     reply_uuid,
     boost,
     message_price,
+    parent_id,
   } = req.body
 
   let msgtype = constants.message_types.message
@@ -342,6 +343,7 @@ export const sendMessage = async (req, res) => {
     tenant,
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (parent_id) msg.parentId = parent_id
   // console.log(msg)
   const message = await models.Message.create(msg)
 
@@ -354,6 +356,7 @@ export const sendMessage = async (req, res) => {
     amount: amtToStore,
   }
   if (reply_uuid) msgToSend.replyUuid = reply_uuid
+  if (parent_id) msgToSend.parentId = parent_id
 
   const sendMessageParams: { [k: string]: any } = {
     chat: chat,
@@ -387,6 +390,7 @@ export const receiveMessage = async (payload) => {
     msg_uuid,
     date_string,
     reply_uuid,
+    parent_id,
     amount,
     network_type,
     sender_photo_url,
@@ -424,6 +428,7 @@ export const receiveMessage = async (payload) => {
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (parent_id) msg.parentId = parent_id
   const message = await models.Message.create(msg)
 
   socket.sendJson(
@@ -458,6 +463,7 @@ export const receiveBoost = async (payload) => {
     msg_uuid,
     date_string,
     reply_uuid,
+    parent_id,
     amount,
     network_type,
     sender_photo_url,
@@ -500,6 +506,7 @@ export const receiveBoost = async (payload) => {
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (parent_id) msg.parentId = parent_id
   const message = await models.Message.create(msg)
 
   socket.sendJson(
