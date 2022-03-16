@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
+exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
 const network = require("./network");
@@ -306,6 +306,7 @@ function asyncForEach(array, callback) {
         }
     });
 }
+exports.asyncForEach = asyncForEach;
 function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {

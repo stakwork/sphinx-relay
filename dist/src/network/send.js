@@ -189,7 +189,7 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
             // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
             try {
                 if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data, ownerPubkey, function (err) {
+                    yield tribes.publish(mqttTopic, data, ownerPubkey, () => {
                         if (!replayingHistory) {
                             if (mqttTopic)
                                 checkIfAutoConfirm(opts.data, ownerID);
