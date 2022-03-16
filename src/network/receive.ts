@@ -23,6 +23,7 @@ import { isProxy } from '../utils/proxy'
 import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger } from '../utils/logger'
+import { Payload } from './interfaces'
 
 const config = loadConfig()
 /*
@@ -68,7 +69,7 @@ const botMakerTypes = [
   constants.message_types.bot_install,
   constants.message_types.bot_cmd,
 ]
-async function onReceive(payload: { [k: string]: any }, dest: string) {
+async function onReceive(payload: Payload, dest: string) {
   if (dest) {
     if (typeof dest !== 'string' || dest.length !== 66)
       return sphinxLogger.error(`INVALID DEST ${dest}`)
@@ -286,7 +287,12 @@ async function doTheAction(data, owner) {
   }
 }
 
-async function uniqueifyAlias(payload, sender, chat, owner): Promise<Object> {
+async function uniqueifyAlias(
+  payload: Payload,
+  sender,
+  chat,
+  owner
+): Promise<Payload> {
   if (!chat || !sender || !owner) return payload
   if (!(payload && payload.sender)) return payload
   const senderContactId = sender.id // og msg sender
@@ -324,7 +330,7 @@ async function uniqueifyAlias(payload, sender, chat, owner): Promise<Object> {
 }
 
 async function forwardMessageToTribe(
-  ogpayload,
+  ogpayload: Payload,
   sender,
   realSatsContactId,
   amtToForwardToRealSatsContactId,
@@ -344,7 +350,7 @@ async function forwardMessageToTribe(
     }
   }
 
-  let payload
+  let payload: Payload
   if (sender && typesToModify.includes(ogpayload.type)) {
     payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, owner)
   } else {
@@ -405,7 +411,7 @@ export async function initTribesSubscriptions() {
   tribes.connect(receiveMqttMessage)
 }
 
-function parsePayload(data) {
+function parsePayload(data): Payload {
   const li = data.lastIndexOf('}')
   const msg = data.substring(0, li + 1)
   try {
@@ -417,7 +423,7 @@ function parsePayload(data) {
 }
 
 // VERIFY PUBKEY OF SENDER from sig
-async function parseAndVerifyPayload(data) {
+async function parseAndVerifyPayload(data): Promise<Payload | null> {
   let payload
   const li = data.lastIndexOf('}')
   const msg = data.substring(0, li + 1)
@@ -534,7 +540,7 @@ export async function parseKeysendInvoice(i: interfaces.Invoice) {
   let sender_pubkey
   if (data) {
     try {
-      const payload = parsePayload(data)
+      const payload: Payload = parsePayload(data)
       if (payload && payload.type === constants.message_types.keysend) {
         // console.log('====> IS KEYSEND TYPE')
         // console.log('====> MEMOOOO', i.memo)

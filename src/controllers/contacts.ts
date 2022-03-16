@@ -479,8 +479,8 @@ export const deleteContact = async (req, res) => {
   success(res, {})
 }
 
-export const receiveContactKey = async (payload) => {
-  const dat = payload.content || payload
+export const receiveContactKey = async (payload: network.Payload) => {
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_route_hint = dat.sender.route_hint
   const sender_contact_key = dat.sender.contact_key
@@ -540,13 +540,13 @@ export const receiveContactKey = async (payload) => {
   }
 }
 
-export const receiveConfirmContactKey = async (payload) => {
+export const receiveConfirmContactKey = async (payload: network.Payload) => {
   sphinxLogger.info([
     `=> confirm contact key for ${payload.sender && payload.sender.pub_key}`,
     JSON.stringify(payload),
   ])
 
-  const dat = payload.content || payload
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_contact_key = dat.sender.contact_key
   const sender_alias = dat.sender.alias || 'Unknown'

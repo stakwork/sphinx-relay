@@ -37,3 +37,7 @@ export default class Invite extends Model<Invite> {
   @Column
   tenant: number
 }
+
+export interface InviteRecord extends Invite {
+  dataValues: Invite
+}

@@ -45,7 +45,7 @@ exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> received confirmation ${payload.message && payload.message.id}`, logger_1.logging.Network);
-        const dat = payload.content || payload;
+        const dat = payload;
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;
         const sender_pub_key = dat.sender.pub_key;
@@ -144,7 +144,7 @@ exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
 function receiveHeartbeat(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> received heartbeat`, logger_1.logging.Network);
-        const dat = payload.content || payload;
+        const dat = payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_route_hint = dat.sender.route_hint;
         const receivedAmount = dat.message.amount;
@@ -230,7 +230,7 @@ exports.healthcheck = healthcheck;
 function receiveHeartbeatConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> received heartbeat confirmation`, logger_1.logging.Network);
-        const dat = payload.content || payload;
+        const dat = payload;
         const sender_pub_key = dat.sender.pub_key;
         heartbeats[sender_pub_key] = true;
     });
