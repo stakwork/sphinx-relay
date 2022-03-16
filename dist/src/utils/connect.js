@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connect = exports.genChannel = exports.connectPeer = exports.checkPeered = exports.getQR = void 0;
+exports.connect = exports.genChannel = exports.connectPeer = exports.checkPeered = exports.getQR = exports.getIP = void 0;
 const publicIp = require("public-ip");
 const localip = require("ip");
 const password_1 = require("./password");
@@ -23,7 +23,7 @@ const fs = require('fs');
 const net = require('net');
 const config = (0, config_1.loadConfig)();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
-function getQR() {
+function getIP() {
     return __awaiter(this, void 0, void 0, function* () {
         let theIP;
         const public_url = config.public_url;
@@ -55,6 +55,13 @@ function getQR() {
                 theIP = `${config.node_http_protocol}://${theIP}`;
             }
         }
+        return theIP;
+    });
+}
+exports.getIP = getIP;
+function getQR() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const theIP = yield getIP();
         return Buffer.from(`ip::${theIP}::${password_1.default || ''}`).toString('base64');
     });
 }

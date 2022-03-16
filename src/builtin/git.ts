@@ -5,6 +5,8 @@ import { models } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 // import { sphinxLogger } from '../utils/logger'
+import * as crypto from 'crypto'
+import { getIP } from '../utils/connect'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -20,7 +22,7 @@ export interface GitBotMeta {
   repos: Repo[]
 }
 
-async function octokit(pat: string): Promise<Octokit> {
+function octokit(pat: string): Octokit {
   const octokit = new Octokit({ auth: pat })
   return octokit
 }
@@ -73,15 +75,13 @@ export function init() {
         console.log('add')
         try {
           const { meta, chat, chatBot } = await getStuff(message)
-          if (chat) {
-            // rm this
-          }
           if (!meta.pat) throw new Error('GitBot not connected')
           const repo = from_repo_url(words[2])
           console.log('repo', repo)
           meta.repos.push(repo)
+          const bot = await getOrCreateGitBot(chat.tenant)
+          await addWebhookToRepo(meta, repo, bot.secret)
           await chatBot.update({ meta: JSON.stringify(meta) })
-          await addWebhookToRepo(meta, repo)
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription(repo + ' repo has been added!')
@@ -92,14 +92,42 @@ export function init() {
             .setDescription('Error: ' + e.message)
           return message.channel.send({ embed })
         }
-        return
     }
   })
 }
 
-async function addWebhookToRepo(meta: GitBotMeta, repo) {
+async function addWebhookToRepo(
+  meta: GitBotMeta,
+  repoAndOwner: string,
+  bot_secret: string
+) {
+  if (!bot_secret) {
+    throw new Error('no GitBot secret supplied')
+  }
   const octo = octokit(meta.pat)
   console.log(octo)
+  const arr = repoAndOwner.split('/')
+  const owner = arr[0]
+  const repo = arr[1]
+  const list = await octo.request('GET /repos/{owner}/{repo}/hooks', {
+    owner,
+    repo,
+  })
+  if (list.data.length) {
+    return
+  }
+  const ip = await getIP()
+  await octo.request('POST /repos/{owner}/{repo}/hooks', {
+    owner,
+    repo,
+    active: true,
+    events: ['push'],
+    config: {
+      url: ip + '/webhook',
+      content_type: 'json',
+      secret: bot_secret,
+    },
+  })
 }
 
 // const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
@@ -110,4 +138,20 @@ function from_repo_url(s: string) {
   const parts = s.split('/')
   if (parts.length != 2) throw new Error('invalid repo')
   return s
+}
+
+export async function getOrCreateGitBot(tenant: number) {
+  const existing = await models.Bot.findOne({ where: { uuid: GITBOT_UUID } })
+  if (existing) {
+    return existing
+  }
+  const newBot = {
+    name: 'GitBot',
+    uuid: GITBOT_UUID,
+    secret: crypto.randomBytes(20).toString('hex').toLowerCase(),
+    pricePerUse: 0,
+    tenant,
+  }
+  const b = await models.Bot.create(newBot)
+  return b
 }

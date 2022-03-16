@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.init = exports.GITBOT_UUID = void 0;
+exports.getOrCreateGitBot = exports.init = exports.GITBOT_UUID = void 0;
 const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const octokit_1 = require("octokit");
@@ -17,15 +17,15 @@ const models_1 = require("../models");
 const constants_1 = require("../constants");
 const tribes_1 = require("../utils/tribes");
 // import { sphinxLogger } from '../utils/logger'
+const crypto = require("crypto");
+const connect_1 = require("../utils/connect");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const prefix = '/git';
 exports.GITBOT_UUID = '_gitbot';
 function octokit(pat) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const octokit = new octokit_1.Octokit({ auth: pat });
-        return octokit;
-    });
+    const octokit = new octokit_1.Octokit({ auth: pat });
+    return octokit;
 }
 function getStuff(message) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -75,16 +75,14 @@ function init() {
                 console.log('add');
                 try {
                     const { meta, chat, chatBot } = yield getStuff(message);
-                    if (chat) {
-                        // rm this
-                    }
                     if (!meta.pat)
                         throw new Error('GitBot not connected');
                     const repo = from_repo_url(words[2]);
                     console.log('repo', repo);
                     meta.repos.push(repo);
+                    const bot = yield getOrCreateGitBot(chat.tenant);
+                    yield addWebhookToRepo(meta, repo, bot.secret);
                     yield chatBot.update({ meta: JSON.stringify(meta) });
-                    yield addWebhookToRepo(meta, repo);
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
                         .setDescription(repo + ' repo has been added!');
@@ -96,15 +94,39 @@ function init() {
                         .setDescription('Error: ' + e.message);
                     return message.channel.send({ embed });
                 }
-                return;
         }
     }));
 }
 exports.init = init;
-function addWebhookToRepo(meta, repo) {
+function addWebhookToRepo(meta, repoAndOwner, bot_secret) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!bot_secret) {
+            throw new Error('no GitBot secret supplied');
+        }
         const octo = octokit(meta.pat);
         console.log(octo);
+        const arr = repoAndOwner.split('/');
+        const owner = arr[0];
+        const repo = arr[1];
+        const list = yield octo.request('GET /repos/{owner}/{repo}/hooks', {
+            owner,
+            repo,
+        });
+        if (list.data.length) {
+            return;
+        }
+        const ip = yield (0, connect_1.getIP)();
+        yield octo.request('POST /repos/{owner}/{repo}/hooks', {
+            owner,
+            repo,
+            active: true,
+            events: ['push'],
+            config: {
+                url: ip + '/webhook',
+                content_type: 'json',
+                secret: bot_secret,
+            },
+        });
     });
 }
 // const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
@@ -116,4 +138,22 @@ function from_repo_url(s) {
         throw new Error('invalid repo');
     return s;
 }
+function getOrCreateGitBot(tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const existing = yield models_1.models.Bot.findOne({ where: { uuid: exports.GITBOT_UUID } });
+        if (existing) {
+            return existing;
+        }
+        const newBot = {
+            name: 'GitBot',
+            uuid: exports.GITBOT_UUID,
+            secret: crypto.randomBytes(20).toString('hex').toLowerCase(),
+            pricePerUse: 0,
+            tenant,
+        };
+        const b = yield models_1.models.Bot.create(newBot);
+        return b;
+    });
+}
+exports.getOrCreateGitBot = getOrCreateGitBot;
 //# sourceMappingURL=git.js.map
