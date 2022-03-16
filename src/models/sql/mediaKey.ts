@@ -48,3 +48,7 @@ export default class MediaKey extends Model<MediaKey> {
   @Column
   tenant: number
 }
+
+export interface MediaKeyRecord extends MediaKey {
+  dataValues: MediaKey
+}

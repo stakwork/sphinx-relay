@@ -294,7 +294,7 @@ function queryOnchainAddress(req, res) {
 }
 exports.queryOnchainAddress = queryOnchainAddress;
 const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const dat = payload.content || payload;
+    const dat = payload;
     const sender_pub_key = dat.sender.pub_key;
     const content = dat.message.content;
     const owner = dat.owner;
@@ -358,7 +358,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
 exports.receiveQuery = receiveQuery;
 const receiveQueryResponse = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`=> receiveQueryResponse`, logger_1.logging.Network);
-    const dat = payload.content || payload;
+    const dat = payload;
     // const sender_pub_key = dat.sender.pub_key
     const content = dat.message.content;
     try {

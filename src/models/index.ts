@@ -2,17 +2,17 @@
 require('pg').defaults.parseInt8 = true
 import { Sequelize } from 'sequelize-typescript'
 import * as path from 'path'
-import Chat from './sql/chat'
-import Contact from './sql/contact'
-import Invite from './sql/invite'
-import Message from './sql/message'
+import Chat, { ChatRecord } from './sql/chat'
+import Contact, { ContactRecord } from './sql/contact'
+import Invite, { InviteRecord } from './sql/invite'
+import Message, { MessageRecord } from './sql/message'
 import Subscription from './sql/subscription'
-import MediaKey from './sql/mediaKey'
-import ChatMember from './sql/chatMember'
+import MediaKey, { MediaKeyRecord } from './sql/mediaKey'
+import ChatMember, { ChatMemberRecord } from './sql/chatMember'
 import Timer from './sql/timer'
-import Bot from './sql/bot'
-import ChatBot from './sql/chatBot'
-import BotMember from './sql/botMember'
+import Bot, { BotRecord } from './sql/bot'
+import ChatBot, { ChatBotRecord } from './sql/chatBot'
+import BotMember, { BotMemberRecord } from './sql/botMember'
 import Accounting from './sql/accounting'
 import Lsat from './sql/lsat'
 import RequestsTransportTokens from './sql/requestsTransportTokens'
@@ -63,16 +63,19 @@ if (isProxy()) {
 const sequelize = new Sequelize(opts)
 const models = sequelize.models
 
-import {
-  Contact as ContactType,
-  Chat as ChatType,
-  Message as MessageType,
-} from './ts'
-
 export {
   sequelize,
   models,
-  ContactType as Contact,
-  ChatType as Chat,
-  MessageType as Message,
+  Contact,
+  ContactRecord,
+  Chat,
+  ChatRecord,
+  Message,
+  MessageRecord,
+  InviteRecord,
+  MediaKeyRecord,
+  ChatMemberRecord,
+  BotRecord,
+  ChatBotRecord,
+  BotMemberRecord,
 }

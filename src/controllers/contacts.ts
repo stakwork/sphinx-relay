@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, ContactRecord } from '../models'
 import * as crypto from 'crypto'
 import * as socket from '../utils/socket'
 import * as helpers from '../helpers'
@@ -188,7 +188,7 @@ export const generateToken = async (req, res) => {
     }
     where.publicKey = pubkey
   }
-  const owner = await models.Contact.findOne({ where })
+  const owner: ContactRecord = await models.Contact.findOne({ where })
   if (!owner) {
     return failure(res, 'no owner')
   }
@@ -232,7 +232,7 @@ export const generateToken = async (req, res) => {
     if (isProxy()) {
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
-    owner.update({ authToken: hash })
+    await owner.update({ authToken: hash })
   }
 
   success(res, {
@@ -479,8 +479,8 @@ export const deleteContact = async (req, res) => {
   success(res, {})
 }
 
-export const receiveContactKey = async (payload) => {
-  const dat = payload.content || payload
+export const receiveContactKey = async (payload: network.Payload) => {
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_route_hint = dat.sender.route_hint
   const sender_contact_key = dat.sender.contact_key
@@ -540,13 +540,13 @@ export const receiveContactKey = async (payload) => {
   }
 }
 
-export const receiveConfirmContactKey = async (payload) => {
+export const receiveConfirmContactKey = async (payload: network.Payload) => {
   sphinxLogger.info([
     `=> confirm contact key for ${payload.sender && payload.sender.pub_key}`,
     JSON.stringify(payload),
   ])
 
-  const dat = payload.content || payload
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_contact_key = dat.sender.contact_key
   const sender_alias = dat.sender.alias || 'Unknown'

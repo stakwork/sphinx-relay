@@ -228,7 +228,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if ((0, proxy_1.isProxy)()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
-        owner.update({ authToken: hash });
+        yield owner.update({ authToken: hash });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,
@@ -443,7 +443,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.deleteContact = deleteContact;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const dat = payload.content || payload;
+    const dat = payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_route_hint = dat.sender.route_hint;
     const sender_contact_key = dat.sender.contact_key;
@@ -501,7 +501,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
         `=> confirm contact key for ${payload.sender && payload.sender.pub_key}`,
         JSON.stringify(payload),
     ]);
-    const dat = payload.content || payload;
+    const dat = payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';

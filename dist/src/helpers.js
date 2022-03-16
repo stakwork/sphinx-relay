@@ -32,7 +32,9 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
         if (!owner_id || !recipient_id)
             return null;
         logger_1.sphinxLogger.info(`chat does not exists, create new`);
-        const owner = yield models_1.models.Contact.findOne({ where: { id: owner_id } });
+        const owner = yield models_1.models.Contact.findOne({
+            where: { id: owner_id },
+        });
         const recipient = yield models_1.models.Contact.findOne({
             where: { id: recipient_id, tenant: owner_id },
         });
@@ -200,7 +202,7 @@ function sleep(ms) {
 exports.sleep = sleep;
 function parseReceiveParams(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        const dat = payload.content || payload;
+        const dat = payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_route_hint = dat.sender.route_hint;
         const sender_alias = dat.sender.alias;
@@ -243,8 +245,8 @@ function parseReceiveParams(payload) {
             logger_1.sphinxLogger.error(`=> parseReceiveParams cannot find owner`);
         if (isConversation) {
             const realAmount = network_type === constants_1.default.network_types.lightning ? amount : 0;
-            sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner.dataValues, realAmount);
-            chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id);
+            sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner, realAmount);
+            chat = yield findOrCreateChatByUUID(chat_uuid, [owner.id, sender.id], owner.id);
             if (sender.fromGroup) {
                 // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });

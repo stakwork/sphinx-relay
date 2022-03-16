@@ -163,7 +163,7 @@ export async function finalAction(a: Action) {
     const dest = botMember.memberPubkey
     if (!dest) return sphinxLogger.error(`no dest to send to`)
     const topic = `${dest}/${myBot.uuid}`
-    const data: network.Msg = {
+    const data: network.BotMsg = {
       action,
       bot_id,
       bot_name,
