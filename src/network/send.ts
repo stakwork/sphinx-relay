@@ -1,15 +1,12 @@
 import { models } from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
-import * as tribes from '../utils/tribes'
-import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
-import { typesToForward } from './receive'
 import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg } from './interfaces'
 
-type NetworkType = undefined | 'mqtt' | 'lightning'
+type NetworkType = undefined | 'mqtt-over-http' | 'lightning'
 
 export async function sendMessage(params) {
   const {
@@ -30,7 +27,7 @@ export async function sendMessage(params) {
   if (!tenant) return
 
   const isTribe = chat.type === constants.chat_types.tribe
-  let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
+    const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
   // console.log('-> sender.publicKey', sender.publicKey)
   // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 
@@ -71,7 +68,7 @@ export async function sendMessage(params) {
       if (!isTribeOwner) return // dont send confs for tribe if not owner
     }
     if (isTribeOwner) {
-      networkType = 'mqtt' // broadcast to all
+      networkType = 'mqtt-over-http' // broadcast to all
       // decrypt message.content and message.mediaKey w groupKey
       msg = await decryptMessage(msg, chat)
       // console.log("SEND.TS isBotMsg")
@@ -85,7 +82,7 @@ export async function sendMessage(params) {
         sender,
         forwardedFromContactId
       )
-      if (isBotMsg === true) {
+      if (isBotMsg) {
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
@@ -97,12 +94,7 @@ export async function sendMessage(params) {
       return // if no contacts thats fine (like create public tribe)
     }
 
-    if (isTribeOwner) {
-      try {
-        // post last_active to tribes server
-        tribes.putActivity(chat.uuid, chat.host, sender.publicKey)
-      } catch (e) {}
-    } else {
+    if (!isTribeOwner) {
       // if tribe, send to owner only
       const tribeOwner = await models.Contact.findOne({
         where: { publicKey: chat.ownerPubkey, tenant },
@@ -124,6 +116,8 @@ export async function sendMessage(params) {
     `=> sending to ${contactIds.length} 'contacts'`,
     logging.Network
   )
+  const batchItems = [];
+
   await asyncForEach(contactIds, async (contactId) => {
     // console.log("=> TENANT", tenant)
     if (contactId === tenant) {
@@ -153,7 +147,7 @@ export async function sendMessage(params) {
     }
     // console.log('-> sending to ', contact.id, destkey)
 
-    let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
+    let mqttTopic = networkType === 'mqtt-over-http' ? `${destkey}/${chatUUID}` : ''
 
     // sending a payment to one subscriber, buying a pic from OG poster
     // or boost to og poster
@@ -176,14 +170,17 @@ export async function sendMessage(params) {
     // console.log("==> SENDER",sender)
     // console.log("==> OK SIGN AND SEND", opts);
     try {
-      const r = await signAndSend(opts, sender, mqttTopic)
-      yes = r
+      const r = await sign(opts, sender)
+      batchItems.push({'mqttTopic': mqttTopic, 'data': r})
     } catch (e) {
       sphinxLogger.error(`KEYSEND ERROR ${e}`)
       no = e
     }
     await sleep(10)
   })
+
+  await post(batchItems, chatUUID, "https://some.url/here")
+
   if (no) {
     if (failure) failure(no)
   } else {
@@ -191,15 +188,11 @@ export async function sendMessage(params) {
   }
 }
 
-export function signAndSend(
+export function sign(
   opts,
-  owner: { [k: string]: any },
-  mqttTopic?: string,
-  replayingHistory?: boolean
-) {
-  // console.log('sign and send!',opts)
+  owner: { [k: string]: any }
+): Promise<string> {
   const ownerPubkey = owner.publicKey
-  const ownerID = owner.id
   return new Promise(async function (resolve, reject) {
     if (!opts || typeof opts !== 'object') {
       return reject('object plz')
@@ -212,32 +205,23 @@ export function signAndSend(
 
     const sig = await LND.signAscii(data, ownerPubkey)
     data = data + sig
-
-    // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
-    try {
-      if (mqttTopic) {
-        await tribes.publish(mqttTopic, data, ownerPubkey, function (err) {
-          if (!replayingHistory) {
-            if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)
-          }
-        })
-      } else {
-        await LND.keysendMessage({ ...opts, data }, ownerPubkey)
-      }
-      resolve(true)
-    } catch (e) {
-      reject(e)
-    }
+      resolve(data)
   })
 }
 
-function checkIfAutoConfirm(data, tenant) {
-  if (typesToForward.includes(data.type)) {
-    if (data.type === constants.message_types.delete) {
-      return // dont auto confirm delete msg
+export async function post(
+    batchItems,
+    chatUUID: string,
+    sphinxTribesUrl: string
+) {
+    const response = await fetch(sphinxTribesUrl, {
+        method: 'POST',
+        body: JSON.stringify({"chat_uuid": chatUUID, "batch_contents": batchItems}),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'}
+    });
+    if (!response.ok) {
+        sphinxLogger.error(`Posting batch update to sphinx-tribes was not ok: ${response.statusText}`)
     }
-    tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid, tenant)
-  }
 }
 
 export function newmsg(
@@ -299,10 +283,3 @@ async function asyncForEach(array, callback) {
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
-
-// function urlBase64FromHex(ascii){
-//     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }
-// function urlBase64FromBytes(buf){
-//     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }
