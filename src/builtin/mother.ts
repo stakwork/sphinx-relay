@@ -8,13 +8,15 @@ import constants from '../constants'
 import { loadConfig } from '../utils/config'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import { sphinxLogger } from '../utils/logger'
+import { GITBOT_UUID, getOrCreateGitBot } from './git'
 
 const msg_types = Sphinx.MSG_TYPE
 
 const config = loadConfig()
 
-const builtinBots = ['welcome', 'loopout']
+const builtinBots = ['welcome', 'loopout', 'git']
 
+// else just message type
 const builtInBotMsgTypes = {
   welcome: [
     constants.message_types.message,
@@ -25,6 +27,7 @@ const builtInBotMsgTypes = {
 const builtInBotNames = {
   welcome: 'WelcomeBot',
   loopout: 'LoopBot',
+  git: 'GitBot',
 }
 
 export function init() {
@@ -47,7 +50,8 @@ export function init() {
         const botName = arr[2]
 
         if (builtinBots.includes(botName)) {
-          sphinxLogger.info(['mombot INSTALL', botName])
+          // localbot
+          sphinxLogger.info(['MotherBot INSTALL', botName])
           const chat = await getTribeOwnersChatByUUID(message.channel.id)
           if (!(chat && chat.id))
             return sphinxLogger.error('=> motherbot no chat')
@@ -67,7 +71,7 @@ export function init() {
           const msgTypes = builtInBotMsgTypes[botName] || [
             constants.message_types.message,
           ]
-          const chatBot = {
+          const chatBot: { [k: string]: any } = {
             chatId: chat.id,
             botPrefix: '/' + botName,
             botType: constants.bot_types.builtin,
@@ -75,19 +79,18 @@ export function init() {
             pricePerUse: 0,
             tenant: chat.tenant,
           }
+          if (botName === 'git') {
+            await getOrCreateGitBot(chat.tenant)
+            chatBot.botUuid = GITBOT_UUID
+          }
           await models.ChatBot.create(chatBot)
-          // if (botName === 'welcome') {
-          //   WelcomeBot.init()
-          // }
-          // if (botName === 'loopout') {
-          //   LoopBot.init()
-          // }
           const theName = builtInBotNames[botName] || 'Bot'
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('MotherBot')
             .setDescription(theName + ' has been installed!')
           message.channel.send({ embed })
         } else {
+          // bot from tribes registry
           const bot = await getBotByName(botName)
           if (bot && bot.uuid) {
             sphinxLogger.info(['=> FOUND BOT', bot.unique_name])

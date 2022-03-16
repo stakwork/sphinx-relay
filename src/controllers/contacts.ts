@@ -240,6 +240,26 @@ export const generateToken = async (req, res) => {
   })
 }
 
+export const registerHmacKey = async (req, res) => {
+  if (!req.body.encrypted_key) {
+    return failure(res, 'no encrypted_key found')
+  }
+  const transportTokenKey = fs.readFileSync(
+    config.transportPrivateKeyLocation,
+    'utf8'
+  )
+  let hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key)
+  if (!hmacKey) {
+    return failure(res, 'no decrypted hmac key')
+  }
+  const tenant: number = req.owner.id
+  await models.Contact.update({ hmacKey }, { where: { tenant, isOwner: true } })
+
+  success(res, {
+    registered: true,
+  })
+}
+
 export const updateContact = async (req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id

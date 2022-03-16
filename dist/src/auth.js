@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authModule = exports.base64ToHex = exports.ownerMiddleware = exports.unlocker = void 0;
+exports.authModule = exports.base64ToHex = exports.ownerMiddleware = exports.hmacMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
 const sequelize_1 = require("sequelize");
@@ -21,6 +21,7 @@ const proxy_1 = require("./utils/proxy");
 const jwtUtils = require("./utils/jwt");
 const scopes_1 = require("./scopes");
 const rsa = require("./crypto/rsa");
+const hmac = require("./crypto/hmac");
 const fs = require('fs');
 const config = (0, config_1.loadConfig)();
 /*
@@ -75,22 +76,60 @@ function unlocker(req, res) {
     });
 }
 exports.unlocker = unlocker;
+function hmacMiddleware(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (no_auth(req.path)) {
+            next();
+            return;
+        }
+        // creating hmac key for the first time does not require one of course
+        if (req.path == '/hmac_key') {
+            next();
+            return;
+        }
+        // separate hmac with bot hmac secret
+        if (req.path == '/webhook') {
+            next();
+            return;
+        }
+        // opt-in feature
+        if (!req.owner.hmacKey) {
+            next();
+            return;
+        }
+        // req.headers['x-hub-signature-256']
+        const sig = req.headers['x-hmac'] || req.cookies['x-hmac'];
+        if (!sig)
+            return (0, res_1.unauthorized)(res);
+        const message = `${req.method}|${req.originalUrl}|${req.rawBody}`;
+        const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey);
+        console.log('valid sig!', valid);
+        if (!valid) {
+            return (0, res_1.unauthorized)(res);
+        }
+        next();
+    });
+}
+exports.hmacMiddleware = hmacMiddleware;
+function no_auth(path) {
+    return (path == '/app' ||
+        path == '/is_setup' ||
+        path == '/' ||
+        path == '/unlock' ||
+        path == '/info' ||
+        path == '/action' ||
+        path == '/contacts/tokens' ||
+        path == '/latest' ||
+        path.startsWith('/static') ||
+        path == '/contacts/set_dev' ||
+        path == '/connect' ||
+        path == '/connect_peer' ||
+        path == '/peered' ||
+        path == '/request_transport_token');
+}
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (req.path == '/app' ||
-            req.path == '/is_setup' ||
-            req.path == '/' ||
-            req.path == '/unlock' ||
-            req.path == '/info' ||
-            req.path == '/action' ||
-            req.path == '/contacts/tokens' ||
-            req.path == '/latest' ||
-            req.path.startsWith('/static') ||
-            req.path == '/contacts/set_dev' ||
-            req.path == '/connect' ||
-            req.path == '/connect_peer' ||
-            req.path == '/peered' ||
-            req.path == '/request_transport_token') {
+        if (no_auth(req.path)) {
             next();
             return;
         }
