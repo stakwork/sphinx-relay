@@ -85,7 +85,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
   if (!owner) return sphinxLogger.error(`=> RECEIVE: owner not found`)
   const tenant: number = owner.id
 
-  const ownerDataValues = owner || owner.dataValues
+  const ownerDataValues = owner.dataValues || owner
 
   if (botTypes.includes(payload.type)) {
     // if is admin on tribe? or is bot maker?

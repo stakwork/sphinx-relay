@@ -2,8 +2,8 @@
 require('pg').defaults.parseInt8 = true
 import { Sequelize } from 'sequelize-typescript'
 import * as path from 'path'
-import Chat from './sql/chat'
-import Contact from './sql/contact'
+import Chat, { ChatRecord } from './sql/chat'
+import Contact, { ContactRecord } from './sql/contact'
 import Invite from './sql/invite'
 import Message from './sql/message'
 import Subscription from './sql/subscription'
@@ -73,6 +73,8 @@ export {
   sequelize,
   models,
   ContactType as Contact,
+  ContactRecord,
   ChatType as Chat,
+  ChatRecord,
   MessageType as Message,
 }

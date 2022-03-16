@@ -228,7 +228,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if ((0, proxy_1.isProxy)()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
-        owner.update({ authToken: hash });
+        yield owner.update({ authToken: hash });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,

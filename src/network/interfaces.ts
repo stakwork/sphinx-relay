@@ -18,10 +18,17 @@ export interface MessageContent {
   push?: boolean
 }
 
+// fro group join msgs, etc
+export interface ChatMember {
+  role: number
+  key: string
+  alias: string
+}
+
 export interface ChatContent {
   uuid: string
   type?: number
-  members?: { [k: string]: any }
+  members?: { [k: string]: ChatMember }
   name?: string
   groupKey?: string
   host?: string

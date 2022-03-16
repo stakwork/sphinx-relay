@@ -8,7 +8,7 @@ import {
   typesToSkipIfSkipBroadcastJoins,
   receiveMqttMessage,
 } from './receive'
-import { Msg, BotMsg, Payload } from './interfaces'
+import { Msg, BotMsg, Payload, ChatMember } from './interfaces'
 
 /*
 Abstracts between lightning network and MQTT depending on Chat type and sender
@@ -28,4 +28,5 @@ export {
   Msg,
   BotMsg,
   Payload,
+  ChatMember,
 }

@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, ContactRecord } from '../models'
 import * as crypto from 'crypto'
 import * as socket from '../utils/socket'
 import * as helpers from '../helpers'
@@ -188,7 +188,7 @@ export const generateToken = async (req, res) => {
     }
     where.publicKey = pubkey
   }
-  const owner = await models.Contact.findOne({ where })
+  const owner: ContactRecord = await models.Contact.findOne({ where })
   if (!owner) {
     return failure(res, 'no owner')
   }
@@ -232,7 +232,7 @@ export const generateToken = async (req, res) => {
     if (isProxy()) {
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
-    owner.update({ authToken: hash })
+    await owner.update({ authToken: hash })
   }
 
   success(res, {
