@@ -41,13 +41,13 @@ export function sendConfirmation({
   })
 }
 
-export async function receiveConfirmation(payload) {
+export async function receiveConfirmation(payload: network.Payload) {
   sphinxLogger.info(
     `=> received confirmation ${payload.message && payload.message.id}`,
     logging.Network
   )
 
-  const dat = payload.content || payload
+  const dat = payload
   const chat_uuid = dat.chat.uuid
   const msg_id = dat.message.id
   const sender_pub_key = dat.sender.pub_key
@@ -150,10 +150,10 @@ export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
   }
 }
 
-export async function receiveHeartbeat(payload) {
+export async function receiveHeartbeat(payload: network.Payload) {
   sphinxLogger.info(`=> received heartbeat`, logging.Network)
 
-  const dat = payload.content || payload
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_route_hint = dat.sender.route_hint
   const receivedAmount = dat.message.amount
@@ -235,10 +235,10 @@ export async function healthcheck(req, res) {
   }, 1000)
 }
 
-export async function receiveHeartbeatConfirmation(payload) {
+export async function receiveHeartbeatConfirmation(payload: network.Payload) {
   sphinxLogger.info(`=> received heartbeat confirmation`, logging.Network)
 
-  const dat = payload.content || payload
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
 
   heartbeats[sender_pub_key] = true

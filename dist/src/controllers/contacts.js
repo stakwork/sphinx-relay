@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
+exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -228,13 +228,29 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if ((0, proxy_1.isProxy)()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
-        owner.update({ authToken: hash });
+        yield owner.update({ authToken: hash });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,
     });
 });
 exports.generateToken = generateToken;
+const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.body.encrypted_key) {
+        return (0, res_1.failure)(res, 'no encrypted_key found');
+    }
+    const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+    let hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
+    if (!hmacKey) {
+        return (0, res_1.failure)(res, 'no decrypted hmac key');
+    }
+    const tenant = req.owner.id;
+    yield models_1.models.Contact.update({ hmacKey }, { where: { tenant, isOwner: true } });
+    (0, res_1.success)(res, {
+        registered: true,
+    });
+});
+exports.registerHmacKey = registerHmacKey;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -427,7 +443,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.deleteContact = deleteContact;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const dat = payload.content || payload;
+    const dat = payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_route_hint = dat.sender.route_hint;
     const sender_contact_key = dat.sender.contact_key;
@@ -485,7 +501,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
         `=> confirm contact key for ${payload.sender && payload.sender.pub_key}`,
         JSON.stringify(payload),
     ]);
-    const dat = payload.content || payload;
+    const dat = payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';

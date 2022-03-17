@@ -78,7 +78,11 @@ function requestExternalTokens(req, res) {
 exports.requestExternalTokens = requestExternalTokens;
 function requestTransportToken(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const transportPublicKey = fs.readFileSync(config.transportPublicKeyLocation, 'utf8');
+        let transportPublicKey = null;
+        try {
+            transportPublicKey = fs.readFileSync(config.transportPublicKeyLocation, 'utf8');
+        }
+        catch (e) { }
         if (transportPublicKey != null) {
             (0, res_1.success)(res, { transportToken: transportPublicKey });
             return;

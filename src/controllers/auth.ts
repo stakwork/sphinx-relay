@@ -69,10 +69,13 @@ export async function requestExternalTokens(req, res) {
 }
 
 export async function requestTransportToken(req, res) {
-  const transportPublicKey = fs.readFileSync(
-    config.transportPublicKeyLocation,
-    'utf8'
-  )
+  let transportPublicKey: string | null = null
+  try {
+    transportPublicKey = fs.readFileSync(
+      config.transportPublicKeyLocation,
+      'utf8'
+    )
+  } catch (e) {}
   if (transportPublicKey != null) {
     success(res, { transportToken: transportPublicKey })
     return

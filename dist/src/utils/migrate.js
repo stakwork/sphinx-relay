@@ -13,6 +13,7 @@ const models_1 = require("../models");
 const logger_1 = require("./logger");
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_contacts', 'hmac_key');
         addTableColumn('sphinx_chats', 'feed_type', 'INT');
         addTableColumn('sphinx_contacts', 'blocked', 'BOOLEAN');
         addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT');

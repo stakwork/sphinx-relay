@@ -117,3 +117,7 @@ export default class Chat extends Model<Chat> {
   @Column
   pin: string
 }
+
+export interface ChatRecord extends Chat {
+  dataValues: Chat
+}
