@@ -1,6 +1,6 @@
 # Deployment to Raspiblitz
 
-This guide is focused on installing Sphinx-relay on top of **_raspiblitz_**. Information about myNode can be found at: https://raspiblitz.com/.
+This guide is focused on installing Sphinx-relay on top of **_raspiblitz_**. Information about raspiblitz can be found at: https://raspiblitz.com/.
 
 ### Preparations
 
