@@ -26,7 +26,7 @@ const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
 const config = (0, config_1.loadConfig)();
 // {pubkey: {host: Client} }
-let clients = {};
+const clients = {};
 const optz = { qos: 0 };
 // this runs at relay startup
 function connect(onMessage) {
@@ -60,7 +60,7 @@ function getTribeOwnersChatByUUID(uuid) {
 exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
 function initializeClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             let connected = false;
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -151,7 +151,7 @@ function initAndSubscribeTopics(onMessage) {
                 });
                 if (!(allOwners && allOwners.length))
                     return;
-                asyncForEach(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+                (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
                     if (c.id === 1)
                         return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
@@ -228,7 +228,7 @@ function mqttURL(h) {
     if (config.tribes_insecure) {
         protocol = 'tcp';
     }
-    let port = '8883';
+    let port = 8883;
     if (config.tribes_mqtt_port) {
         port = config.tribes_mqtt_port;
     }
@@ -249,7 +249,7 @@ function updateTribeStats(myPubkey) {
                 deleted: false,
             },
         });
-        yield asyncForEach(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
+        yield (0, helpers_1.asyncForEach)(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const contactIds = JSON.parse(tribe.contactIds);
                 const member_count = (contactIds && contactIds.length) || 0;
@@ -261,7 +261,9 @@ function updateTribeStats(myPubkey) {
                     owner_pubkey: myPubkey,
                 });
             }
-            catch (e) { }
+            catch (e) {
+                // dont care about the error
+            }
         }));
         if (myTribes.length) {
             logger_1.sphinxLogger.info(`[tribes] updated stats for ${myTribes.length} tribes`, logger_1.logging.Tribes);
@@ -298,7 +300,7 @@ function publish(topic, msg, ownerPubkey, cb) {
     });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin, }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let protocol = 'https';
@@ -447,7 +449,7 @@ function putActivity(uuid, host, owner_pubkey) {
     });
 }
 exports.putActivity = putActivity;
-function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
+function putstats({ uuid, host, member_count, chatId, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!uuid)
             return;
@@ -496,7 +498,7 @@ function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
             if (!r.ok) {
                 throw 'failed to create tribe channel ' + r.status;
             }
-            let j = yield r.json();
+            const j = yield r.json();
             return j;
         }
         catch (e) {
@@ -522,7 +524,7 @@ function deleteChannel({ id, host, owner_pubkey }) {
             if (!r.ok) {
                 throw 'failed to delete channel' + r.status;
             }
-            let j = yield r.json();
+            const j = yield r.json();
             return j;
         }
         catch (e) {
@@ -535,18 +537,13 @@ exports.deleteChannel = deleteChannel;
 function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('genSignedTimestamp')
-        try {
-            const now = moment().unix();
-            const tsBytes = Buffer.from(now.toString(16), 'hex');
-            const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
-            const sigBytes = zbase32.decode(sig);
-            const totalLength = tsBytes.length + sigBytes.length;
-            const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
-            return urlBase64(buf);
-        }
-        catch (e) {
-            throw e;
-        }
+        const now = moment().unix();
+        const tsBytes = Buffer.from(now.toString(16), 'hex');
+        const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
+        const sigBytes = zbase32.decode(sig);
+        const totalLength = tsBytes.length + sigBytes.length;
+        const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
+        return urlBase64(buf);
     });
 }
 exports.genSignedTimestamp = genSignedTimestamp;
@@ -559,9 +556,6 @@ function verifySignedTimestamp(stsBase64) {
         if (r.valid) {
             return r.pubkey;
         }
-        else {
-            return false;
-        }
     });
 }
 exports.verifySignedTimestamp = verifySignedTimestamp;
@@ -571,12 +565,5 @@ function getHost() {
 exports.getHost = getHost;
 function urlBase64(buf) {
     return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
-}
-function asyncForEach(array, callback) {
-    return __awaiter(this, void 0, void 0, function* () {
-        for (let index = 0; index < array.length; index++) {
-            yield callback(array[index], index, array);
-        }
-    });
 }
 //# sourceMappingURL=tribes.js.map
