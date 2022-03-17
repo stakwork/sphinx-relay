@@ -1,6 +1,6 @@
 # Relay
 
-**Relay** is a Node.js wrapper around [LND](https://github.com/lightningnetwork/lnd), handling connectivity and storage for [**Sphinx**](https://sphinx.chat). Communication between Relay nodes takes place entirely on the Lightning Network, so it is decentralized, untraceable, and encrypted. Message content is also end-to-end encrypted using client public keys, on the ** Sphinx** app itself.
+**Relay** is a Node.js wrapper around [LND](https://github.com/lightningnetwork/lnd), handling connectivity and storage for [**Sphinx**](https://sphinx.chat). Communication between Relay nodes takes place entirely on the Lightning Network, so it is decentralized, untraceable, and encrypted. Message content is also end-to-end encrypted using client public keys, on the **Sphinx** app itself.
 
 ![Relay](https://github.com/stakwork/sphinx-relay/raw/master/public/relay.jpg)
 
@@ -106,7 +106,7 @@ If you have a permanent public IP on your internet connection and you want your 
 
 If you plan to use your Sphinx clients within the local network, then you do not have to do anything special.
 
-If you are using the Docker file, the port is `3300` ([1](https://github.com/stakwork/sphinx-relay/blob/master/Dockerfile#L32))
+If you are using the Docker file, the port is `3300` ([1](https://github.com/stakwork/sphinx-relay/blob/master/Dockerfile#L31), [2](https://github.com/stakwork/sphinx-relay/blob/master/Dockerfile#L35))
 
 ## Deployment
 
