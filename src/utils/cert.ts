@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs'
 import * as express from 'express'
-import { sphinxLogger } from './logger'
+import { sphinxLogger, logging } from './logger'
 const qs = require('qs')
 const axios = require('axios')
 var forge = require('node-forge')
@@ -21,7 +21,8 @@ function generateCsr(keys, endpoint) {
   ])
   csr.sign(keys.privateKey)
   if (!csr.verify()) {
-    throw new Error('=> [ssl] Verification of CSR failed.')
+    sphinxLogger.error('Verification of CSR failed.', logging.SSL)
+    throw new Error('Verification of CSR failed.')
   }
   var csr = forge.pki.certificationRequestToPem(csr)
   return csr.trim()
@@ -54,22 +55,23 @@ async function validateCert(port, data, endpoint, apiKey) {
   })
   let server = await app.listen(port, () => {
     sphinxLogger.info(
-      `=> [ssl] validation server started at http://0.0.0.0:${port}`
+      `validation server started at http://0.0.0.0:${port}`,
+      logging.SSL
     )
   })
   await requestValidation(data.id, apiKey)
-  sphinxLogger.info(`=> [ssl] waiting for certificate to be issued`)
+  sphinxLogger.info(`waiting for certificate to be issued`, logging.SSL)
   while (true) {
     let certData = await getCert(data.id, apiKey)
     if (certData.status === 'issued') {
-      sphinxLogger.info(`=> [ssl] certificate was issued`)
+      sphinxLogger.info(`certificate was issued`, logging.SSL)
       break
     }
-    sphinxLogger.info(`=> [ssl] checking certificate again...`)
+    sphinxLogger.info(`checking certificate again...`, logging.SSL)
     await sleep(2000)
   }
   await server.close(() => {
-    sphinxLogger.info(`=> [ssl] validation server stopped.`)
+    sphinxLogger.info(`validation server stopped.`, logging.SSL)
   })
   return
 }
@@ -86,9 +88,9 @@ async function requestValidation(id, apiKey) {
     },
   })
   if (res.data.success === false) {
-    sphinxLogger.error(`=> [ssl] Failed to request certificate validation`)
-    sphinxLogger.error(res.data)
-    throw new Error('=> [ssl] Failing to provision ssl certificate')
+    sphinxLogger.error(`Failed to request certificate validation`, logging.SSL)
+    sphinxLogger.error(res.data, logging.SSL)
+    throw new Error('Failing to provision ssl certificate')
   }
   return res.data
 }
@@ -140,15 +142,16 @@ async function getCertificate(domain, port, save_ssl) {
   }
   var apiKey = process.env.ZEROSSL_API_KEY
   if (!apiKey) {
-    throw new Error('=> [ssl] ZEROSSL_API_KEY is not set')
+    sphinxLogger.error('ZEROSSL_API_KEY is not set', logging.SSL)
+    throw new Error('ZEROSSL_API_KEY is not set')
   }
   var endpoint_tmp = domain.replace('https://', '')
   var endpoint = endpoint_tmp.replace(':3001', '')
   var keys = forge.pki.rsa.generateKeyPair(2048)
   var csr = generateCsr(keys, endpoint)
-  sphinxLogger.info(`=> [ssl] Generated CSR`)
+  sphinxLogger.info(`Generated CSR`, logging.SSL)
   var res = await requestCert(endpoint, csr, apiKey)
-  sphinxLogger.info(`=> [ssl] Requested certificate`)
+  sphinxLogger.info(`Requested certificate`, logging.SSL)
   await validateCert(port, res, endpoint, apiKey)
   var certData = await downloadCert(res.id, apiKey)
   if (save_ssl === true) {
@@ -162,7 +165,7 @@ async function getCertificate(domain, port, save_ssl) {
         if (err) {
           return sphinxLogger.error(err)
         }
-        sphinxLogger.info(`=> [ssl] wrote tls certificate`)
+        sphinxLogger.info(`wrote tls certificate`, logging.SSL)
       }
     )
     await writeFile(
@@ -172,7 +175,7 @@ async function getCertificate(domain, port, save_ssl) {
         if (err) {
           return sphinxLogger.error(err)
         }
-        sphinxLogger.info(`=> [ssl] wrote tls ca bundle`)
+        sphinxLogger.info(`wrote tls ca bundle`, logging.SSL)
       }
     )
     await writeFile(
@@ -182,7 +185,7 @@ async function getCertificate(domain, port, save_ssl) {
         if (err) {
           return sphinxLogger.error(err)
         }
-        sphinxLogger.info(`=> [ssl] wrote tls key`)
+        sphinxLogger.info(`wrote tls key`, logging.SSL)
       }
     )
   }
