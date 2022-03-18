@@ -23,4 +23,5 @@ jobs:
           git config --global user.name "Github Actions"
           git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git pull github ${GITHUB_REF} --ff-only || echo -n
-          git commit -am "Update dist/ (`npm run build`)" && git push github HEAD:${GITHUB_REF} || echo -n
+          git add dist
+          git commit -m "Update dist/ (`npm run build`)" && git push github HEAD:${GITHUB_REF} || echo -n
