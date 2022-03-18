@@ -19,23 +19,23 @@ const receive_1 = require("./receive");
 const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
-function sendMessage(params) {
+function sendMessage({ type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, forwardedFromContactId, realSatsContactId, }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, forwardedFromContactId, realSatsContactId, } = params;
         if (!chat || !sender)
             return;
         const tenant = sender.id;
         if (!tenant)
             return;
         const isTribe = chat.type === constants_1.default.chat_types.tribe;
-        let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
+        const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
         // console.log('-> sender.publicKey', sender.publicKey)
         // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
-        let theSender = sender.dataValues || sender;
+        let theSender = (sender.dataValues ||
+            sender);
         if (isTribeOwner && !isForwarded) {
             theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants_1.default.chat_roles.owner });
         }
-        let msg = newmsg(type, chat, theSender, message, isForwarded);
+        let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false);
         // console.log("=> MSG TO SEND",msg)
         // console.log(type,message)
         if (!(sender && sender.publicKey)) {
@@ -83,7 +83,9 @@ function sendMessage(params) {
                     // post last_active to tribes server
                     tribes.putActivity(chat.uuid, chat.host, sender.publicKey);
                 }
-                catch (e) { }
+                catch (e) {
+                    logger_1.sphinxLogger.error('failed to tribes.putActivity', logger_1.logging.Network);
+                }
             }
             else {
                 // if tribe, send to owner only

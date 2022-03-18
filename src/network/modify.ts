@@ -1,24 +1,25 @@
 import fetch from 'node-fetch'
-import { parseLDAT } from '../utils/ldat'
+import { LdatTerms, parseLDAT } from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
 import * as meme from '../utils/meme'
 import * as FormData from 'form-data'
-import { models } from '../models'
+import { models, Chat, Contact, ContactRecord, ChatRecord } from '../models'
 import * as RNCryptor from 'jscryptor-2'
-import { sendMessage } from './send'
+import { ContactPlusRole, sendMessage } from './send'
 // import { Op } from 'sequelize'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
+import { MessageContent, Msg, Payload } from './interfaces'
 
 const msgtypes = constants.message_types
 
 export async function modifyPayloadAndSaveMediaKey(
-  payload,
-  chat,
-  sender,
-  owner
-) {
+  payload: Payload,
+  chat: Chat,
+  sender: Contact,
+  owner: Contact
+): Promise<Payload> {
   if (payload.type !== msgtypes.attachment) return payload
   try {
     const ret = await downloadAndUploadAndSaveReturningTermsAndKey(
@@ -27,20 +28,33 @@ export async function modifyPayloadAndSaveMediaKey(
       sender,
       owner
     )
-    return fillmsg(payload, ret) // key is re-encrypted later
+    return fillpayload(payload, ret) // key is re-encrypted later
   } catch (e) {
     sphinxLogger.error(`[modify] error ${e}`)
     return payload
   }
 }
 
+export function fillpayload(
+  full: Partial<Payload>,
+  props: Partial<MessageContent>
+): Payload {
+  return {
+    ...full,
+    message: {
+      ...full.message,
+      ...props,
+    },
+  } as Payload
+}
+
 // "purchase" type
 export async function purchaseFromOriginalSender(
-  payload,
-  chat,
-  purchaser,
-  owner
-) {
+  payload: Msg,
+  chat: ChatRecord,
+  purchaser: Contact,
+  owner: ContactRecord
+): Promise<void> {
   const tenant = owner.id
   if (payload.type !== msgtypes.purchase) return
 
@@ -54,28 +68,28 @@ export async function purchaseFromOriginalSender(
   })
 
   const terms = parseLDAT(mt)
-  let price = terms.meta && terms.meta.amt
+  const price = (terms.meta && terms.meta.amt) || 0
   if (amount < price) return // not enough sats
 
   if (mediaKey) {
     // ALREADY BEEN PURHCASED! simply send
     // send back the new mediaToken and key
-    const mediaTerms: { [k: string]: any } = {
+    const mediaTerms: Partial<LdatTerms> = {
       muid: mediaKey.muid,
       ttl: 31536000,
       host: '',
       meta: { ...(amount && { amt: amount }) },
     }
     // send full new key and token
-    const msg = {
-      mediaTerms,
+    const msg: Partial<MessageContent> = {
+      mediaTerms: mediaTerms as LdatTerms,
       mediaKey: mediaKey.key,
       originalMuid: mediaKey.originalMuid,
       mediaType: mediaKey.mediaType,
     }
     sendMessage({
-      chat: { ...chat.dataValues, contactIds: [purchaser.id] }, // the merchant id
-      sender: owner,
+      chat: { ...chat.dataValues, contactIds: JSON.stringify([purchaser.id]) }, // the merchant id
+      sender: owner as ContactPlusRole,
       type: constants.message_types.purchase_accept,
       message: msg,
       success: () => {},
@@ -83,8 +97,11 @@ export async function purchaseFromOriginalSender(
     })
     // PAY THE OG POSTER HERE!!!
     sendMessage({
-      chat: { ...chat.dataValues, contactIds: [mediaKey.sender] },
-      sender: owner,
+      chat: {
+        ...chat.dataValues,
+        contactIds: JSON.stringify([mediaKey.sender]),
+      },
+      sender: owner as ContactPlusRole,
       type: constants.message_types.purchase,
       amount: amount,
       realSatsContactId: mediaKey.sender,
@@ -103,7 +120,7 @@ export async function purchaseFromOriginalSender(
     // purchase it from creator (send "purchase")
     const msg = { mediaToken: mt, purchaser: purchaser.id }
     sendMessage({
-      chat: { ...chat.dataValues, contactIds: [ogmsg.sender] },
+      chat: { ...chat.dataValues, contactIds: JSON.stringify([ogmsg.sender]) },
       sender: {
         ...owner.dataValues,
         ...(purchaser && purchaser.alias && { alias: purchaser.alias }),
@@ -121,18 +138,21 @@ export async function purchaseFromOriginalSender(
 }
 
 export async function sendFinalMemeIfFirstPurchaser(
-  payload,
-  chat,
-  sender,
-  owner
-) {
+  payload: Msg,
+  chat: ChatRecord,
+  sender: ContactRecord,
+  owner: ContactRecord
+): Promise<void> {
   const tenant = owner.id
   if (payload.type !== msgtypes.purchase_accept) return
 
   const mt = payload.message && payload.message.mediaToken
   const typ = payload.message && payload.message.mediaType
   const purchaserID = payload.message && payload.message.purchaser
-  if (!mt) return
+  if (!mt || !purchaserID)
+    return sphinxLogger.warning(
+      'missing params in sendFinalMemeIfFirstPurchaser'
+    )
   const muid = mt && mt.split('.').length && mt.split('.')[1]
   if (!muid) return
 
@@ -151,7 +171,7 @@ export async function sendFinalMemeIfFirstPurchaser(
     },
   })
 
-  if (!ogPurchaser) return
+  if (!ogPurchaser) return sphinxLogger.warning('no ogPurchaser')
 
   const amt = (terms.meta && terms.meta.amt) || 0
 
@@ -160,44 +180,36 @@ export async function sendFinalMemeIfFirstPurchaser(
   //   type: msgtypes.purchase,
   // }})
 
-  const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(
-    payload,
-    chat,
-    sender,
-    owner,
-    amt
-  )
+  try {
+    const termsAndKey = await downloadAndUploadAndSaveReturningTermsAndKey(
+      payload,
+      chat,
+      sender,
+      owner,
+      amt
+    )
 
-  // send it to the purchaser
-  sendMessage({
-    sender: {
-      ...owner.dataValues,
-      ...(sender && sender.alias && { alias: sender.alias }),
-      role: constants.chat_roles.reader,
-    },
-    chat: {
-      ...chat.dataValues,
-      contactIds: [ogPurchaser.id],
-    },
-    type: msgtypes.purchase_accept,
-    message: {
-      ...termsAndKey,
-      mediaType: typ,
-      originalMuid: muid,
-    },
-    success: () => {},
-    receive: () => {},
-    isForwarded: true,
-  })
-}
-
-function fillmsg(full, props) {
-  return {
-    ...full,
-    message: {
-      ...full.message,
-      ...props,
-    },
+    // send it to the purchaser
+    sendMessage({
+      sender: {
+        ...owner.dataValues,
+        ...(sender && sender.alias && { alias: sender.alias }),
+        role: constants.chat_roles.reader,
+      },
+      chat: {
+        ...chat.dataValues,
+        contactIds: JSON.stringify([ogPurchaser.id]),
+      },
+      type: msgtypes.purchase_accept,
+      message: {
+        ...termsAndKey,
+        mediaType: typ,
+        originalMuid: muid,
+      },
+      isForwarded: true,
+    })
+  } catch (e) {
+    sphinxLogger.error('failed to sendFinalMemeIfFirstPurchaser')
   }
 }
 
@@ -206,16 +218,16 @@ async function sleep(ms) {
 }
 
 export async function downloadAndUploadAndSaveReturningTermsAndKey(
-  payload,
-  chat,
-  sender,
-  owner,
+  payload: Msg,
+  chat: Chat,
+  sender: Contact,
+  owner: Contact,
   injectedAmount?: number
-) {
+): Promise<Partial<MessageContent>> {
   const mt = payload.message && payload.message.mediaToken
   const key = payload.message && payload.message.mediaKey
   const typ = payload.message && payload.message.mediaType
-  if (!mt || !key) return payload // save anyway??????????
+  if (!mt || !key) return payload.message // save anyway??????????
 
   // console.log('[modify] ==> downloadAndUploadAndSaveReturningTermsAndKey', owner)
   const tenant = owner.id
@@ -224,81 +236,77 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
   const ogmuid = mt && mt.split('.').length && mt.split('.')[1]
 
   const terms = parseLDAT(mt)
-  if (!terms.host) return payload
+  if (!terms.host) return payload.message
 
   const token = await meme.lazyToken(ownerPubkey, terms.host)
   // console.log('[modify] meme token', token)
   // console.log('[modify] terms.host', terms.host)
   // console.log('[modify] mt', mt)
-  try {
-    let protocol = 'https'
-    if (terms.host.includes('localhost')) protocol = 'http'
-    const r = await fetch(`${protocol}://${terms.host}/file/${mt}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    // console.log("[modify] dl RES", r)
-    const buf = await r.buffer()
+  let protocol = 'https'
+  if (terms.host.includes('localhost')) protocol = 'http'
+  const r = await fetch(`${protocol}://${terms.host}/file/${mt}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  // console.log("[modify] dl RES", r)
+  const buf = await r.buffer()
 
-    const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key)
+  const decMediaKey = rsa.decrypt(chat.groupPrivateKey, key)
 
-    // console.log('[modify] about to decrypt', buf.length, decMediaKey)
-    const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), decMediaKey)
+  // console.log('[modify] about to decrypt', buf.length, decMediaKey)
+  const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), decMediaKey)
 
-    const newKey = crypto.randomBytes(20).toString('hex')
+  const newKey = crypto.randomBytes(20).toString('hex')
 
-    // console.log('[modify] about to encrypt', imgBuf.length, newKey)
-    const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey)
+  // console.log('[modify] about to encrypt', imgBuf.length, newKey)
+  const encImgBase64 = RNCryptor.Encrypt(imgBuf, newKey)
 
-    var encImgBuffer = Buffer.from(encImgBase64, 'base64')
+  const encImgBuffer = Buffer.from(encImgBase64, 'base64')
 
-    const form = new FormData()
-    form.append('file', encImgBuffer, {
-      contentType: typ || 'image/jpg',
-      filename: 'Image.jpg',
-      knownLength: encImgBuffer.length,
-    })
-    const formHeaders = form.getHeaders()
-    const resp = await fetch(`${protocol}://${terms.host}/file`, {
-      method: 'POST',
-      headers: {
-        ...formHeaders, // THIS IS REQUIRED!!!
-        Authorization: `Bearer ${token}`,
-      },
-      body: form,
-    })
+  const form = new FormData()
+  form.append('file', encImgBuffer, {
+    contentType: typ || 'image/jpg',
+    filename: 'Image.jpg',
+    knownLength: encImgBuffer.length,
+  })
+  const formHeaders = form.getHeaders()
+  const resp = await fetch(`${protocol}://${terms.host}/file`, {
+    method: 'POST',
+    headers: {
+      ...formHeaders, // THIS IS REQUIRED!!!
+      Authorization: `Bearer ${token}`,
+    },
+    body: form,
+  })
 
-    let json = await resp.json()
-    if (!json.muid) throw new Error('no muid')
+  const json = await resp.json()
+  if (!json.muid) throw new Error('no muid')
 
-    // PUT NEW TERMS, to finish in personalizeMessage
-    const amt = (terms.meta && terms.meta.amt) || injectedAmount
-    const ttl = terms.meta && terms.meta.ttl
-    const mediaTerms: { [k: string]: any } = {
-      muid: json.muid,
-      ttl: ttl || 31536000,
-      host: '',
-      meta: { ...(amt && { amt }) },
-    }
-
-    const encKey = rsa.encrypt(chat.groupKey, newKey.slice())
-    var date = new Date()
-
-    date.setMilliseconds(0)
-    await sleep(1)
-    await models.MediaKey.create({
-      muid: json.muid,
-      chatId: chat.id,
-      key: encKey,
-      messageId: (payload.message && payload.message.id) || 0,
-      receiver: 0,
-      sender: sender.id, // the og sender (merchant) who is sending the completed media token
-      createdAt: date,
-      originalMuid: ogmuid,
-      mediaType: typ,
-      tenant,
-    })
-    return { mediaTerms, mediaKey: encKey }
-  } catch (e) {
-    throw e
+  // PUT NEW TERMS, to finish in personalizeMessage
+  const amt = (terms.meta && terms.meta.amt) || injectedAmount
+  const ttl = terms.meta && terms.meta.ttl
+  const mediaTerms: LdatTerms = {
+    muid: json.muid,
+    ttl: ttl || 31536000,
+    host: '',
+    meta: { ...(amt && { amt }) },
   }
+
+  const encKey = rsa.encrypt(chat.groupKey, newKey.slice())
+  const date = new Date()
+
+  date.setMilliseconds(0)
+  await sleep(1)
+  await models.MediaKey.create({
+    muid: json.muid,
+    chatId: chat.id,
+    key: encKey,
+    messageId: (payload.message && payload.message.id) || 0,
+    receiver: 0,
+    sender: sender.id, // the og sender (merchant) who is sending the completed media token
+    createdAt: date,
+    originalMuid: ogmuid,
+    mediaType: typ,
+    tenant,
+  })
+  return { mediaTerms, mediaKey: encKey }
 }

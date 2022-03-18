@@ -312,7 +312,7 @@ export const receiveQuery = async (payload: network.Payload) => {
   }
   let q: Query
   try {
-    q = JSON.parse(content)
+    q = JSON.parse(content as string)
   } catch (e) {
     sphinxLogger.error(`=> ERROR receiveQuery, ${e}`)
     return
@@ -367,7 +367,7 @@ export const receiveQueryResponse = async (payload: network.Payload) => {
   // const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
   try {
-    const q: Query = JSON.parse(content)
+    const q: Query = JSON.parse(content as string)
     queries[q.uuid] = q
   } catch (e) {
     sphinxLogger.error(`=> ERROR receiveQueryResponse, ${e}`)

@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, Chat } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
@@ -35,7 +35,7 @@ export async function joinTribe(req, res) {
     ['received owner route hint', owner_route_hint],
     logging.Express
   )
-  const is_private = req.body.private
+  const is_private = req.body.private ? true : false
 
   const existing = await models.Chat.findOne({ where: { uuid, tenant } })
   if (existing) {
@@ -85,7 +85,7 @@ export async function joinTribe(req, res) {
   const chatStatus = is_private
     ? constants.chat_statuses.pending
     : constants.chat_statuses.approved
-  const chatParams: { [k: string]: any } = {
+  const chatParams: Partial<Chat> = {
     uuid: uuid,
     contactIds: JSON.stringify(contactIds),
     photoUrl: img || '',
@@ -107,9 +107,9 @@ export async function joinTribe(req, res) {
   const typeToSend = is_private
     ? constants.message_types.member_request
     : constants.message_types.group_join
-  const contactIdsToSend = is_private
-    ? [theTribeOwner.id] // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
-    : chatParams.contactIds
+  const contactIdsToSend: string = is_private
+    ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
+    : JSON.stringify(contactIds)
   // console.log("=> joinTribe: typeToSend", typeToSend);
   // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
   // set my alias to be the custom one

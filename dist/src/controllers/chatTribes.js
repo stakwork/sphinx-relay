@@ -31,7 +31,7 @@ function joinTribe(req, res) {
         logger_1.sphinxLogger.info('=> joinTribe', logger_1.logging.Express);
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url, } = req.body;
         logger_1.sphinxLogger.info(['received owner route hint', owner_route_hint], logger_1.logging.Express);
-        const is_private = req.body.private;
+        const is_private = req.body.private ? true : false;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
         if (existing) {
             logger_1.sphinxLogger.error('You are already in this tribe', logger_1.logging.Tribes);
@@ -100,8 +100,8 @@ function joinTribe(req, res) {
             ? constants_1.default.message_types.member_request
             : constants_1.default.message_types.group_join;
         const contactIdsToSend = is_private
-            ? [theTribeOwner.id] // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
-            : chatParams.contactIds;
+            ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
+            : JSON.stringify(contactIds);
         // console.log("=> joinTribe: typeToSend", typeToSend);
         // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
         // set my alias to be the custom one

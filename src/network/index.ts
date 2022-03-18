@@ -1,4 +1,4 @@
-import { sendMessage, signAndSend, newmsg } from './send'
+import { sendMessage, signAndSend, newmsg, SendMessageParams } from './send'
 import {
   initGrpcSubscriptions,
   initTribesSubscriptions,
@@ -29,4 +29,5 @@ export {
   BotMsg,
   Payload,
   ChatMember,
+  SendMessageParams,
 }

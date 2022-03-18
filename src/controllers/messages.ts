@@ -358,7 +358,7 @@ export const sendMessage = async (req, res) => {
   if (reply_uuid) msgToSend.replyUuid = reply_uuid
   if (parent_id) msgToSend.parentId = parent_id
 
-  const sendMessageParams: { [k: string]: any } = {
+  const sendMessageParams: network.SendMessageParams = {
     chat: chat,
     sender: owner,
     amount: amount || 0,

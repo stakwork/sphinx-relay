@@ -142,7 +142,7 @@ export const performKeysendMessage = async ({
   destination_key: string
   route_hint?: string
   amount: number
-  msg: { [k: string]: any }
+  msg: Partial<network.Msg>
   success?: Function
   failure?: Function
   sender: any
