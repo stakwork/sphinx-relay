@@ -153,7 +153,7 @@ function claimOnLiquid(req, res) {
                 where: { tenant, isOwner: true },
             });
             const { asset, to, amount, memo } = req.body;
-            const res = yield people.claimOnLiquid({
+            const r = yield people.claimOnLiquid({
                 host: 'liquid.sphinx.chat',
                 asset,
                 to,
@@ -161,7 +161,7 @@ function claimOnLiquid(req, res) {
                 memo,
                 owner_pubkey: owner.publicKey,
             });
-            (0, res_1.success)(res, res);
+            (0, res_1.success)(res, r);
         }
         catch (e) {
             (0, res_1.failure)(res, e);

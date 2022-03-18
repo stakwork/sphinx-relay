@@ -145,7 +145,4 @@ Message = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_messages', underscored: true })
 ], Message);
 exports.default = Message;
-/*
-ALTER TABLE sphinx_invites ALTER COLUMN invoice TYPE text;
-*/
 //# sourceMappingURL=message.js.map

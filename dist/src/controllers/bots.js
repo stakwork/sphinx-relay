@@ -191,6 +191,7 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, send
         const msg_uuid = (msg && msg.message.uuid) || short.generate();
         const sender_id = (msg && msg.sender && msg.sender.id) || sender.id;
         const reply_uuid = msg && msg.message.replyUuid;
+        const parent_id = msg && msg.message.parentId;
         const dest = botmaker_pubkey;
         const amt = Math.max(amount || constants_1.default.min_sat_amount);
         const opts = {
@@ -220,6 +221,9 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, send
         if (reply_uuid) {
             opts.data.message.replyUuid = reply_uuid;
         }
+        if (parent_id) {
+            opts.data.message.parentId = parent_id;
+        }
         logger_1.sphinxLogger.info(['BOT MSG TO SEND!!!', opts.data]);
         try {
             yield network.signAndSend(opts, sender);
@@ -231,17 +235,16 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, send
     });
 }
 exports.botKeysend = botKeysend;
-function receiveBotInstall(payload) {
+function receiveBotInstall(dat) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger_1.sphinxLogger.info(['=> receiveBotInstall', payload], logger_1.logging.Network);
-        const dat = payload.content || payload;
+        logger_1.sphinxLogger.info(['=> receiveBotInstall', dat], logger_1.logging.Network);
         const sender_pub_key = dat.sender && dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
         const chat_uuid = dat.chat && dat.chat.uuid;
         const owner = dat.owner;
         const tenant = owner.id;
-        if (!chat_uuid || !sender_pub_key)
-            return logger_1.sphinxLogger.info('no chat uuid or sender pub key');
+        if (!chat_uuid || !sender_pub_key || !bot_uuid)
+            return logger_1.sphinxLogger.info('=> no chat uuid or sender pub key or bot_uuid');
         const bot = yield models_1.models.Bot.findOne({
             where: {
                 uuid: bot_uuid,
@@ -272,23 +275,22 @@ function receiveBotInstall(payload) {
             return logger_1.sphinxLogger.error('=> receiveBotInstall no contact');
         }
         // sender id needs to be in the msg
-        payload.sender.id = contact.id;
-        postToBotServer(payload, bot, SphinxBot.MSG_TYPE.INSTALL);
+        dat.sender.id = contact.id || 0;
+        postToBotServer(dat, bot, SphinxBot.MSG_TYPE.INSTALL);
     });
 }
 exports.receiveBotInstall = receiveBotInstall;
 // ONLY FOR BOT MAKER
-function receiveBotCmd(payload) {
+function receiveBotCmd(dat) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('=> receiveBotCmd', logger_1.logging.Network);
-        const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
         const chat_uuid = dat.chat && dat.chat.uuid;
         const sender_id = dat.sender && dat.sender.id;
         const owner = dat.owner;
         const tenant = owner.id;
-        if (!chat_uuid)
+        if (!chat_uuid || !bot_uuid)
             return logger_1.sphinxLogger.error('no chat uuid');
         // const amount = dat.message.amount - check price_per_use
         const bot = yield models_1.models.Bot.findOne({
@@ -319,8 +321,8 @@ function receiveBotCmd(payload) {
             return logger_1.sphinxLogger.error('=> receiveBotInstall no contact');
         }
         // sender id needs to be in the msg
-        payload.sender.id = sender_id || '0';
-        postToBotServer(payload, bot, SphinxBot.MSG_TYPE.MESSAGE);
+        dat.sender.id = sender_id || 0;
+        postToBotServer(dat, bot, SphinxBot.MSG_TYPE.MESSAGE);
         // forward to the entire Action back over MQTT
     });
 }
@@ -392,10 +394,9 @@ function buildBotPayload(msg) {
     return m;
 }
 exports.buildBotPayload = buildBotPayload;
-function receiveBotRes(payload) {
+function receiveBotRes(dat) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('=> receiveBotRes', logger_1.logging.Network); //, payload)
-        const dat = payload.content || payload;
         if (!dat.chat || !dat.message || !dat.sender) {
             return logger_1.sphinxLogger.error('=> receiveBotRes error, no chat||msg||sender');
         }
@@ -404,11 +405,12 @@ function receiveBotRes(payload) {
         const amount = dat.message.amount || 0;
         const msg_uuid = dat.message.uuid || '';
         const reply_uuid = dat.message.replyUuid || '';
+        const parent_id = dat.message.parentId || 0;
         const content = dat.message.content;
         const action = dat.action;
         const bot_name = dat.bot_name;
         const sender_alias = dat.sender.alias;
-        const sender_pic = dat.sender_photo_url;
+        const sender_pic = dat.sender.photo_url;
         const date_string = dat.message.date;
         const network_type = dat.network_type || 0;
         const owner = dat.owner;
@@ -426,8 +428,8 @@ function receiveBotRes(payload) {
             // console.log("=> is tribeOwner, do finalAction!")
             // IF IS TRIBE ADMIN forward to the tribe
             // received the entire action?
-            const bot_id = payload.bot_id;
-            const recipient_id = payload.recipient_id;
+            const bot_id = dat.bot_id;
+            const recipient_id = dat.recipient_id;
             (0, botapi_1.finalAction)({
                 bot_id,
                 action,
@@ -436,6 +438,7 @@ function receiveBotRes(payload) {
                 content,
                 amount,
                 reply_uuid,
+                parent_id,
                 msg_uuid,
                 recipient_id,
             });
@@ -473,6 +476,8 @@ function receiveBotRes(payload) {
                 network_type,
                 tenant,
             };
+            if (parent_id)
+                msg.parentId = parent_id;
             const message = yield models_1.models.Message.create(msg);
             socket.sendJson({
                 type: 'message',

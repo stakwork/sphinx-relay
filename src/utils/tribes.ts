@@ -4,30 +4,29 @@ import * as LND from '../grpc/lightning'
 import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
-import { models, sequelize } from '../models'
+import { Contact, Chat, models, sequelize } from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
 import { isProxy } from './proxy'
 import { Op } from 'sequelize'
 import { logging, sphinxLogger } from './logger'
-import { sleep } from '../helpers'
 import type { Tribe } from '../models/ts/tribe'
-
+import { sleep, asyncForEach } from '../helpers'
 export { declare_bot, delete_bot }
 
 const config = loadConfig()
 
 // {pubkey: {host: Client} }
-let clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
+const clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
 
 const optz: IClientSubscribeOptions = { qos: 0 }
 
 // this runs at relay startup
-export async function connect(onMessage: Function) {
+export async function connect(onMessage: (topic: string, message: Buffer) => void): Promise<void> {
   initAndSubscribeTopics(onMessage)
 }
 
-export async function getTribeOwnersChatByUUID(uuid: string) {
+export async function getTribeOwnersChatByUUID(uuid: string): Promise<any> {
   const isOwner = isProxy() ? "'t'" : '1'
   try {
     const r = await sequelize.query(
@@ -42,7 +41,7 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
         model: models.Chat,
         mapToModel: true, // pass true here if you have any mapped fields
       }
-    )
+    ) as unknown as Chat
     // console.log('=> getTribeOwnersChatByUUID r:', r)
     return r && r[0] && r[0].dataValues
   } catch (e) {
@@ -50,8 +49,8 @@ export async function getTribeOwnersChatByUUID(uuid: string) {
   }
 }
 
-async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
-  return new Promise(async (resolve, reject) => {
+async function initializeClient(pubkey: string, host: string, onMessage?: (topic: string, message: Buffer) => void): Promise<mqtt.Client> {
+  return new Promise(async resolve => {
     let connected = false
     async function reconnect() {
       try {
@@ -123,7 +122,7 @@ async function initializeClient(pubkey, host, onMessage): Promise<mqtt.Client> {
 async function lazyClient(
   pubkey: string,
   host: string,
-  onMessage?: Function
+  onMessage?: (topic: string, message: Buffer) => void
 ): Promise<mqtt.Client> {
   if (
     clients[pubkey] &&
@@ -136,15 +135,15 @@ async function lazyClient(
   return cl
 }
 
-async function initAndSubscribeTopics(onMessage: Function) {
+async function initAndSubscribeTopics(onMessage: (topic: string, message: Buffer) => void): Promise<void> {
   const host = getHost()
   try {
     if (isProxy()) {
-      const allOwners = await models.Contact.findAll({
+      const allOwners: Contact[] = await models.Contact.findAll({
         where: { isOwner: true },
-      })
+      }) as unknown as Contact[]
       if (!(allOwners && allOwners.length)) return
-      asyncForEach(allOwners, async (c) => {
+      asyncForEach(allOwners, async c => {
         if (c.id === 1) return // the proxy non user
         if (c.publicKey && c.publicKey.length === 66) {
           await lazyClient(c.publicKey, host, onMessage)
@@ -166,7 +165,7 @@ async function initAndSubscribeTopics(onMessage: Function) {
 async function subExtraHostsForTenant(
   tenant: number,
   pubkey: string,
-  onMessage: Function
+  onMessage: (topic: string, message: Buffer) => void
 ) {
   const host = getHost()
   const externalTribes = await models.Chat.findAll({
@@ -174,7 +173,7 @@ async function subExtraHostsForTenant(
       tenant,
       host: { [Op.ne]: host }, // not the host from config
     },
-  })
+  }) as unknown as Chat[]
   if (!(externalTribes && externalTribes.length)) return
   const usedHosts: string[] = []
   externalTribes.forEach(async (et) => {
@@ -187,7 +186,7 @@ async function subExtraHostsForTenant(
   })
 }
 
-export function printTribesClients() {
+export function printTribesClients(): string {
   const ret = {}
   Object.entries(clients).forEach((entry) => {
     const pk = entry[0]
@@ -203,8 +202,8 @@ export function printTribesClients() {
 export async function addExtraHost(
   pubkey: string,
   host: string,
-  onMessage: Function
-) {
+  onMessage: (topic: string, message: Buffer) => void
+): Promise<void> {
   // console.log("ADD EXTRA HOST", printTribesClients(), host);
   if (getHost() === host) return // not for default host
   if (clients[pubkey] && clients[pubkey][host]) return // already exists
@@ -212,13 +211,13 @@ export async function addExtraHost(
   client.subscribe(`${pubkey}/#`, optz)
 }
 
-function mqttURL(h) {
+function mqttURL(h: string) {
   let host = config.mqtt_host || h
   let protocol = 'tls'
   if (config.tribes_insecure) {
     protocol = 'tcp'
   }
-  let port = '8883'
+  let port = 8883
   if (config.tribes_mqtt_port) {
     port = config.tribes_mqtt_port
   }
@@ -232,12 +231,12 @@ function mqttURL(h) {
 // for proxy, need to get all isOwner contacts and their owned chats
 async function updateTribeStats(myPubkey) {
   if (isProxy()) return // skip on proxy for now?
-  const myTribes = await models.Chat.findAll({
+  const myTribes: Chat[] = await models.Chat.findAll({
     where: {
       ownerPubkey: myPubkey,
       deleted: false,
     },
-  })
+  }) as unknown as Chat[]
   await asyncForEach(myTribes, async (tribe) => {
     try {
       const contactIds = JSON.parse(tribe.contactIds)
@@ -249,7 +248,9 @@ async function updateTribeStats(myPubkey) {
         chatId: tribe.id,
         owner_pubkey: myPubkey,
       })
-    } catch (e) {}
+    } catch (e) {
+      // dont care about the error
+    }
   })
   if (myTribes.length) {
     sphinxLogger.info(
@@ -259,7 +260,7 @@ async function updateTribeStats(myPubkey) {
   }
 }
 
-export async function subscribe(topic, onMessage: Function) {
+export async function subscribe(topic: string, onMessage: (topic: string, message: Buffer) => void): Promise<void> {
   const pubkey = topic.split('/')[0]
   if (pubkey.length !== 66) return
   const host = getHost()
@@ -270,7 +271,7 @@ export async function subscribe(topic, onMessage: Function) {
     })
 }
 
-export async function publish(topic, msg, ownerPubkey, cb) {
+export async function publish(topic: string, msg: string, ownerPubkey: string, cb: () => void): Promise<void> {
   if (ownerPubkey.length !== 66) return
   const host = getHost()
   const client = await lazyClient(ownerPubkey, host)
@@ -279,6 +280,31 @@ export async function publish(topic, msg, ownerPubkey, cb) {
       if (err) sphinxLogger.error(`[tribes] error publishing ${err}`)
       else if (cb) cb()
     })
+}
+
+// good name? made this because 2 functions used similar object pattern args
+export interface TribeInterface {
+  uuid: string,
+  name: string,
+  description: string,
+  tags: any[],
+  img: string,
+  group_key?: string,
+  host: string,
+  price_per_message: number,
+  price_to_join: number,
+  owner_alias: string,
+  owner_pubkey: string,
+  escrow_amount: number,
+  escrow_millis: number,
+  unlisted: boolean,
+  is_private: boolean,
+  app_url: string,
+  feed_url: string,
+  feed_type: number,
+  deleted?: boolean,
+  owner_route_hint: string,
+  pin: string
 }
 
 export async function declare({
@@ -301,8 +327,8 @@ export async function declare({
   feed_url,
   feed_type,
   owner_route_hint,
-  pin,
-}) {
+  pin
+}: TribeInterface): Promise<void> {
   try {
     let protocol = 'https'
     if (config.tribes_insecure) protocol = 'http'
@@ -362,7 +388,7 @@ export async function edit({
   owner_route_hint,
   owner_pubkey,
   pin,
-}) {
+}: TribeInterface): Promise<void> {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
@@ -401,7 +427,7 @@ export async function edit({
   }
 }
 
-export async function delete_tribe(uuid, owner_pubkey) {
+export async function delete_tribe(uuid: string, owner_pubkey: string): Promise<void> {
   const host = getHost()
   try {
     const token = await genSignedTimestamp(owner_pubkey)
@@ -423,7 +449,7 @@ export async function delete_tribe(uuid, owner_pubkey) {
   }
 }
 
-export async function get_tribe_data(uuid): Promise<Tribe> {
+export async function get_tribe_data(uuid: string): Promise<Tribe> {
   const host = getHost()
   try {
     let protocol = 'https'
@@ -444,7 +470,7 @@ export async function putActivity(
   uuid: string,
   host: string,
   owner_pubkey: string
-) {
+): Promise<void> {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
@@ -464,8 +490,14 @@ export async function putstats({
   host,
   member_count,
   chatId,
-  owner_pubkey,
-}) {
+  owner_pubkey
+}: {
+  uuid: string,
+  host: string,
+  member_count: number,
+  chatId: number,
+  owner_pubkey: string
+}): Promise<void> {
   if (!uuid) return
   const bots = await makeBotsJSON(chatId)
   try {
@@ -487,43 +519,99 @@ export async function putstats({
   }
 }
 
-export async function genSignedTimestamp(ownerPubkey: string) {
-  // console.log('genSignedTimestamp')
+export async function createChannel({
+  tribe_uuid,
+  host,
+  name,
+  owner_pubkey
+}: {
+  tribe_uuid: string,
+  host: string,
+  name: string,
+  owner_pubkey: string
+}) {
+  if (!tribe_uuid) return
+  if (!name) return
   try {
-    const now = moment().unix()
-    const tsBytes = Buffer.from(now.toString(16), 'hex')
-    const sig = await LND.signBuffer(tsBytes, ownerPubkey)
-    const sigBytes = zbase32.decode(sig)
-    const totalLength = tsBytes.length + sigBytes.length
-    const buf = Buffer.concat([tsBytes, sigBytes], totalLength)
-    return urlBase64(buf)
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(protocol + '://' + host + '/channel?token=' + token, {
+      method: 'POST',
+      body: JSON.stringify({
+        tribe_uuid,
+        name,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!r.ok) {
+      throw 'failed to create tribe channel ' + r.status
+    }
+    const j = await r.json()
+    return j
   } catch (e) {
+    sphinxLogger.error(`[tribes] unauthorized to create channel`)
     throw e
   }
 }
 
-export async function verifySignedTimestamp(stsBase64) {
+export async function deleteChannel({
+  id,
+  host,
+  owner_pubkey
+}: {
+  id: number,
+  host: string,
+  owner_pubkey: string
+}) {
+  if (!id) return
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(
+      protocol + '://' + host + '/channel/' + id + '?token=' + token,
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      throw 'failed to delete channel' + r.status
+    }
+    const j = await r.json()
+    return j
+  } catch (e) {
+    sphinxLogger.error(`[tribes] unauthorized to create channel`)
+    throw e
+  }
+}
+
+export async function genSignedTimestamp(ownerPubkey: string): Promise<string> {
+  // console.log('genSignedTimestamp')
+  const now = moment().unix()
+  const tsBytes = Buffer.from(now.toString(16), 'hex')
+  const sig = await LND.signBuffer(tsBytes, ownerPubkey)
+  const sigBytes = zbase32.decode(sig)
+  const totalLength = tsBytes.length + sigBytes.length
+  const buf = Buffer.concat([tsBytes, sigBytes], totalLength)
+  return urlBase64(buf)
+}
+
+export async function verifySignedTimestamp(stsBase64: string): Promise<string | undefined> {
   const stsBuf = Buffer.from(stsBase64, 'base64')
   const sig = stsBuf.subarray(4, 92)
   const sigZbase32 = zbase32.encode(sig)
   const r = await LND.verifyBytes(stsBuf.subarray(0, 4), sigZbase32) // sig needs to be zbase32 :(
   if (r.valid) {
     return r.pubkey
-  } else {
-    return false
   }
 }
 
-export function getHost() {
+export function getHost(): string {
   return config.tribes_host || ''
 }
 
-function urlBase64(buf) {
+function urlBase64(buf: Buffer): string {
   return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
 }

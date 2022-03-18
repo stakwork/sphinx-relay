@@ -9,7 +9,7 @@ import { NodeConfig } from '../types'
 npx ava src/tests/controllers/contacts.test.ts --verbose --serial --timeout=2m
 */
 /*
-sqlite3 /Users/evanfeenstra/code/sphinx/sphinx-stack/relay/db/bob.db
+sqlite3 /Users/evanfeenstra/code/sphinx/sphinx-stack/relay/db/alice.db
 */
 
 interface Context {}

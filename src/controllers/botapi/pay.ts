@@ -8,7 +8,7 @@ import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import { sphinxLogger } from '../../utils/logger'
 
 export default async function pay(a) {
-  const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id } = a
+  const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id } = a
 
   sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
   if (!recipient_id) return sphinxLogger.error(`no recipient_id`)
@@ -40,6 +40,7 @@ export default async function pay(a) {
     senderAlias: alias,
     tenant,
   }
+  if (parent_id) msg.parentId = parent_id
   const message = await models.Message.create(msg)
   socket.sendJson(
     {
@@ -63,6 +64,7 @@ export default async function pay(a) {
       id: message.id,
       uuid: message.uuid,
       replyUuid: message.replyUuid,
+      parentId: message.parentId || 0
     },
     type: constants.message_types.boost,
     success: () => ({ success: true }),

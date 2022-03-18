@@ -20,7 +20,7 @@ const tribes_1 = require("../../utils/tribes");
 const logger_1 = require("../../utils/logger");
 function broadcast(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid } = a;
+        const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id } = a;
         logger_1.sphinxLogger.info(`=> BOT BROADCAST`);
         if (!content)
             return logger_1.sphinxLogger.error(`no content`);
@@ -58,6 +58,8 @@ function broadcast(a) {
             senderAlias: alias,
             tenant,
         };
+        if (parent_id)
+            msg.parentId = parent_id;
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
             type: 'message',
@@ -73,6 +75,7 @@ function broadcast(a) {
                 id: message.id,
                 uuid: message.uuid,
                 replyUuid: message.replyUuid,
+                parentId: message.parentId || 0,
             },
             type: constants_1.default.message_types.bot_res,
             success: () => ({ success: true }),

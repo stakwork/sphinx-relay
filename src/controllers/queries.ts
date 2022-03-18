@@ -299,8 +299,8 @@ export async function queryOnchainAddress(req, res) {
   }, 1000)
 }
 
-export const receiveQuery = async (payload) => {
-  const dat = payload.content || payload
+export const receiveQuery = async (payload: network.Payload) => {
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
   const owner = dat.owner
@@ -361,9 +361,9 @@ export const receiveQuery = async (payload) => {
   }
 }
 
-export const receiveQueryResponse = async (payload) => {
+export const receiveQueryResponse = async (payload: network.Payload) => {
   sphinxLogger.info(`=> receiveQueryResponse`, logging.Network)
-  const dat = payload.content || payload
+  const dat = payload
   // const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
   try {

@@ -11,10 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.tribe3Msgs = void 0;
 const ava_1 = require("ava");
+const http = require("ava-http");
+const config_1 = require("../config");
 const helpers_1 = require("../utils/helpers");
 const del_1 = require("../utils/del");
 const save_1 = require("../utils/save");
 const msg_1 = require("../utils/msg");
+const get_1 = require("../utils/get");
 const nodes_1 = require("../nodes");
 /*
 npx ava test-10-tribe3Msgs.js --verbose --serial --timeout=2m
@@ -67,6 +70,62 @@ function tribe3Msgs(t, node1, node2, node3) {
         //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
         const n2check2 = yield (0, msg_1.checkMessageDecryption)(t, node2, tribeMessage3.uuid, text3);
         t.true(n2check2, 'node2 should have read and decrypted node3 message');
+        /*****
+                      Here we want to create a new message channel for a tribe
+      ******/
+        //Here we are going to try and add a new channel to the tribe in tribe server
+        const createChannelBody = {
+            tribe_uuid: tribe.uuid,
+            host: config_1.config.tribeHostInternal,
+            name: 'testChannel',
+        };
+        const createChannelBody2 = {
+            tribe_uuid: tribe.uuid,
+            host: config_1.config.tribeHostInternal,
+            name: 'testChannel2',
+        };
+        const tribeSeverAddChannelResponse = yield http.post(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, createChannelBody));
+        const tribeSeverAddChannelResponse2 = yield http.post(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, createChannelBody2));
+        console.log(tribeSeverAddChannelResponse, tribeSeverAddChannelResponse2);
+        //Here we get the tribe which should have the correct channels
+        const r = yield (0, get_1.getCheckTribe)(t, node1, tribe.id);
+        const channelTribe = yield (0, get_1.getTribeByUuid)(t, r);
+        t.true(tribeSeverAddChannelResponse.response.id == channelTribe.channels[0].id, 'First tribe added should have an id of the response we get back when we call for tribes');
+        t.true(tribeSeverAddChannelResponse2.response.id == channelTribe.channels[1].id, 'second tribe added should have an id of the response we get back when we call for tribes');
+        t.true(tribeSeverAddChannelResponse.response.name == createChannelBody.name &&
+            tribeSeverAddChannelResponse2.response.name == createChannelBody2.name, 'the response should send back the correct channel name');
+        t.true(tribeSeverAddChannelResponse.response.tribe_uuid ==
+            createChannelBody.tribe_uuid &&
+            tribeSeverAddChannelResponse2.response.tribe_uuid ==
+                createChannelBody2.tribe_uuid, 'the tribes channels that returned should have the same tribe_uuid that we sent');
+        t.true(channelTribe.channels.length == 2, 'the amount of channels in this new tribe should be 2');
+        //NODE3 SENDS A TEXT MESSAGE IN TRIBE
+        const text4 = (0, helpers_1.randomText)();
+        const options = { parent_id: 1 };
+        let tribeMessage4 = yield (0, msg_1.sendTribeMessage)(t, node3, tribe, text4, options);
+        const recivedMessageFromNode1 = yield (0, get_1.getCheckNewMsgs)(t, node1, tribeMessage4.uuid);
+        const recivedMessageFromNode2 = yield (0, get_1.getCheckNewMsgs)(t, node1, tribeMessage4.uuid);
+        t.true(recivedMessageFromNode1.parent_id == options.parent_id, 'Node 1 gets message channel id');
+        t.true(recivedMessageFromNode2.parent_id == options.parent_id, 'node 2 gets message channel id');
+        //CHECK THAT NODE3'S DECRYPTED MESSAGE IS SAME AS INPUT
+        const n1check3 = yield (0, msg_1.checkMessageDecryption)(t, node1, tribeMessage4.uuid, text4);
+        t.true(n1check3, 'node1 should have read and decrypted node3 message');
+        //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
+        const n2check3 = yield (0, msg_1.checkMessageDecryption)(t, node2, tribeMessage4.uuid, text4);
+        t.true(n2check3, 'node2 should have read and decrypted node3 message');
+        //delete channel
+        const deleteChannel1Body = {
+            id: channelTribe.channels[0].id,
+            host: config_1.config.tribeHostInternal,
+        };
+        const deleteChannel2Body = {
+            id: channelTribe.channels[1].id,
+            host: config_1.config.tribeHostInternal,
+        };
+        yield http.del(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, deleteChannel1Body));
+        yield http.del(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, deleteChannel2Body));
+        const channelTribe2 = yield (0, get_1.getTribeByUuid)(t, r);
+        t.true(channelTribe2.channels.length == 0, 'there should not be anymore channels in the tribe');
         //NODE2 LEAVES THE TRIBE
         let n2left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(n2left, 'node2 should leave tribe');

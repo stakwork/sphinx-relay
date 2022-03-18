@@ -44,6 +44,7 @@ export interface Message {
   media_key: string
   sender_alias: string
   sender_pic: string
+  parent_id: number
 }
 
 export interface Chat {

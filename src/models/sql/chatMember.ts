@@ -33,3 +33,7 @@ export default class ChatMember extends Model<ChatMember> {
   @Column
   tenant: number
 }
+
+export interface ChatMemberRecord extends ChatMember {
+  dataValues: ChatMember
+}

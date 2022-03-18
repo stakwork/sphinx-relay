@@ -2,6 +2,8 @@ import { sequelize } from '../models'
 import { logging, sphinxLogger } from './logger'
 
 export default async function migrate() {
+  addTableColumn('sphinx_contacts', 'hmac_key')
+
   addTableColumn('sphinx_chats', 'feed_type', 'INT')
 
   addTableColumn('sphinx_contacts', 'blocked', 'BOOLEAN')
@@ -63,6 +65,8 @@ export default async function migrate() {
   addTableColumn('sphinx_messages', 'sender_pic')
 
   addTableColumn('sphinx_messages', 'network_type', 'INTEGER')
+
+  addTableColumn('sphinx_messages', 'parent_id', 'INTEGER')
 
   addTableColumn('sphinx_chats', 'meta')
 

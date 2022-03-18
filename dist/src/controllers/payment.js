@@ -27,7 +27,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, } = req.body;
+    const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, parent_id, } = req.body;
     logger_1.sphinxLogger.info(`[send payment] ${req.body}`);
     const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
@@ -69,6 +69,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.remoteMessageContent = remote_text;
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (parent_id)
+        msg.parentId = parent_id;
     if (muid) {
         const myMediaToken = yield (0, ldat_1.tokenFromTerms)({
             meta: { dim: dimensions },
@@ -95,6 +97,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msgToSend.content = remote_text;
     if (reply_uuid)
         msgToSend.replyUuid = reply_uuid;
+    if (parent_id)
+        msgToSend.parentId = parent_id;
     // if contact_ids, replace that in "chat" below
     // if remote text map, put that in
     let theChat = chat;
@@ -129,7 +133,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     logger_1.sphinxLogger.info(`received payment ${{ payload }}`);
     var date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
@@ -160,6 +164,8 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (parent_id)
+        msg.parentId = parent_id;
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved message', message.dataValues)
     socket.sendJson({

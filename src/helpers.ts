@@ -1,4 +1,4 @@
-import { models, Contact } from './models'
+import { models, Contact, ContactRecord, ChatRecord } from './models'
 import * as md5 from 'md5'
 import * as network from './network'
 import constants from './constants'
@@ -19,7 +19,9 @@ export const findOrCreateChat = async (params) => {
   } else {
     if (!owner_id || !recipient_id) return null
     sphinxLogger.info(`chat does not exists, create new`)
-    const owner = await models.Contact.findOne({ where: { id: owner_id } })
+    const owner: ContactRecord = await models.Contact.findOne({
+      where: { id: owner_id },
+    })
     const recipient = await models.Contact.findOne({
       where: { id: recipient_id, tenant: owner_id },
     })
@@ -205,7 +207,11 @@ export async function findOrCreateContactByPubkeyAndRouteHint(
   return sender
 }
 
-export async function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
+export async function findOrCreateChatByUUID(
+  chat_uuid,
+  contactIds,
+  tenant
+): Promise<ChatRecord> {
   let chat = await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant, deleted: false },
   })
@@ -228,8 +234,11 @@ export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function parseReceiveParams(payload) {
-  const dat = payload.content || payload
+export async function parseReceiveParams(payload: network.Payload): Promise<{
+  chat_members: { [k: string]: network.ChatMember }
+  [k: string]: any
+}> {
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_route_hint = dat.sender.route_hint
   const sender_alias = dat.sender.alias
@@ -253,6 +262,7 @@ export async function parseReceiveParams(payload) {
   const date_string = dat.message.date
   const skip_payment_processing = dat.message.skipPaymentProcessing
   const reply_uuid = dat.message.replyUuid
+  const parent_id = dat.message.parentId
   const purchaser_id = dat.message.purchaser
   const network_type = dat.network_type || 0
   const isTribeOwner = dat.isTribeOwner ? true : false
@@ -260,12 +270,12 @@ export async function parseReceiveParams(payload) {
 
   const isConversation =
     !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
-  let sender
-  let chat
-  let owner = dat.owner
+  let sender: ContactRecord
+  let chat: ChatRecord
+  let owner: Contact = dat.owner
   if (!owner) {
-    const ownerRecord = await models.Contact.findOne({
-      where: { isOwner: true, publicKey: dest },
+    const ownerRecord: ContactRecord = await models.Contact.findOne({
+      where: { isOwner: true, publicKey: dest as string },
     })
     owner = ownerRecord.dataValues
   }
@@ -275,14 +285,14 @@ export async function parseReceiveParams(payload) {
       network_type === constants.network_types.lightning ? amount : 0
     sender = await findOrCreateContactByPubkeyAndRouteHint(
       sender_pub_key,
-      sender_route_hint,
+      sender_route_hint as string,
       sender_alias,
-      owner.dataValues,
+      owner,
       realAmount
     )
     chat = await findOrCreateChatByUUID(
       chat_uuid,
-      [parseInt(owner.id), parseInt(sender.id)],
+      [owner.id, sender.id],
       owner.id
     )
     if (sender.fromGroup) {
@@ -296,7 +306,7 @@ export async function parseReceiveParams(payload) {
     })
     // inject a "sender" with an alias
     if (!sender && chat_type == constants.chat_types.tribe) {
-      sender = { id: 0, alias: sender_alias }
+      sender = <ContactRecord>{ id: 0, alias: sender_alias }
     }
     chat = await models.Chat.findOne({
       where: { uuid: chat_uuid, tenant: owner.id },
@@ -328,6 +338,7 @@ export async function parseReceiveParams(payload) {
     msg_uuid,
     date_string,
     reply_uuid,
+    parent_id,
     skip_payment_processing,
     purchaser_id,
     sender_photo_url,
@@ -336,7 +347,7 @@ export async function parseReceiveParams(payload) {
   }
 }
 
-async function asyncForEach(array, callback) {
+export async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
   }
