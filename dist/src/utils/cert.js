@@ -31,7 +31,8 @@ function generateCsr(keys, endpoint) {
     ]);
     csr.sign(keys.privateKey);
     if (!csr.verify()) {
-        throw new Error('=> [ssl] Verification of CSR failed.');
+        logger_1.sphinxLogger.error('Verification of CSR failed.', logger_1.logging.SSL);
+        throw new Error('Verification of CSR failed.');
     }
     var csr = forge.pki.certificationRequestToPem(csr);
     return csr.trim();
@@ -64,21 +65,21 @@ function validateCert(port, data, endpoint, apiKey) {
             res.send(validationObject.file_validation_content.join('\n'));
         });
         let server = yield app.listen(port, () => {
-            logger_1.sphinxLogger.info(`=> [ssl] validation server started at http://0.0.0.0:${port}`);
+            logger_1.sphinxLogger.info(`validation server started at http://0.0.0.0:${port}`, logger_1.logging.SSL);
         });
         yield requestValidation(data.id, apiKey);
-        logger_1.sphinxLogger.info(`=> [ssl] waiting for certificate to be issued`);
+        logger_1.sphinxLogger.info(`waiting for certificate to be issued`, logger_1.logging.SSL);
         while (true) {
             let certData = yield getCert(data.id, apiKey);
             if (certData.status === 'issued') {
-                logger_1.sphinxLogger.info(`=> [ssl] certificate was issued`);
+                logger_1.sphinxLogger.info(`certificate was issued`, logger_1.logging.SSL);
                 break;
             }
-            logger_1.sphinxLogger.info(`=> [ssl] checking certificate again...`);
+            logger_1.sphinxLogger.info(`checking certificate again...`, logger_1.logging.SSL);
             yield sleep(2000);
         }
         yield server.close(() => {
-            logger_1.sphinxLogger.info(`=> [ssl] validation server stopped.`);
+            logger_1.sphinxLogger.info(`validation server stopped.`, logger_1.logging.SSL);
         });
         return;
     });
@@ -96,9 +97,9 @@ function requestValidation(id, apiKey) {
             },
         });
         if (res.data.success === false) {
-            logger_1.sphinxLogger.error(`=> [ssl] Failed to request certificate validation`);
-            logger_1.sphinxLogger.error(res.data);
-            throw new Error('=> [ssl] Failing to provision ssl certificate');
+            logger_1.sphinxLogger.error(`Failed to request certificate validation`, logger_1.logging.SSL);
+            logger_1.sphinxLogger.error(res.data, logger_1.logging.SSL);
+            throw new Error('Failing to provision ssl certificate');
         }
         return res.data;
     });
@@ -142,15 +143,16 @@ function getCertificate(domain, port, save_ssl) {
         }
         var apiKey = process.env.ZEROSSL_API_KEY;
         if (!apiKey) {
-            throw new Error('=> [ssl] ZEROSSL_API_KEY is not set');
+            logger_1.sphinxLogger.error('ZEROSSL_API_KEY is not set', logger_1.logging.SSL);
+            throw new Error('ZEROSSL_API_KEY is not set');
         }
         var endpoint_tmp = domain.replace('https://', '');
         var endpoint = endpoint_tmp.replace(':3001', '');
         var keys = forge.pki.rsa.generateKeyPair(2048);
         var csr = generateCsr(keys, endpoint);
-        logger_1.sphinxLogger.info(`=> [ssl] Generated CSR`);
+        logger_1.sphinxLogger.info(`Generated CSR`, logger_1.logging.SSL);
         var res = yield requestCert(endpoint, csr, apiKey);
-        logger_1.sphinxLogger.info(`=> [ssl] Requested certificate`);
+        logger_1.sphinxLogger.info(`Requested certificate`, logger_1.logging.SSL);
         yield validateCert(port, res, endpoint, apiKey);
         var certData = yield downloadCert(res.id, apiKey);
         if (save_ssl === true) {
@@ -161,19 +163,19 @@ function getCertificate(domain, port, save_ssl) {
                 if (err) {
                     return logger_1.sphinxLogger.error(err);
                 }
-                logger_1.sphinxLogger.info(`=> [ssl] wrote tls certificate`);
+                logger_1.sphinxLogger.info(`wrote tls certificate`, logger_1.logging.SSL);
             });
             yield (0, fs_1.writeFile)(__dirname + '/zerossl/ca.cert', certData['ca_bundle.crt'], function (err) {
                 if (err) {
                     return logger_1.sphinxLogger.error(err);
                 }
-                logger_1.sphinxLogger.info(`=> [ssl] wrote tls ca bundle`);
+                logger_1.sphinxLogger.info(`wrote tls ca bundle`, logger_1.logging.SSL);
             });
             yield (0, fs_1.writeFile)(__dirname + '/zerossl/tls.key', forge.pki.privateKeyToPem(keys.privateKey), function (err) {
                 if (err) {
                     return logger_1.sphinxLogger.error(err);
                 }
-                logger_1.sphinxLogger.info(`=> [ssl] wrote tls key`);
+                logger_1.sphinxLogger.info(`wrote tls key`, logger_1.logging.SSL);
             });
         }
         return {
