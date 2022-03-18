@@ -30,9 +30,14 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
         // console.log('-> sender.publicKey', sender.publicKey)
         // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
-        let theSender = (sender.dataValues || sender);
+        let aSender = sender;
+        if (sender.dataValues) {
+            aSender = sender.dataValues;
+        }
+        const theSender = aSender;
+        // let theSender: ContactRecord = (sender.dataValues || sender) as ContactRecord
         if (isTribeOwner && !isForwarded) {
-            theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants_1.default.chat_roles.owner });
+            theSender.role = constants_1.default.chat_roles.owner;
         }
         let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false);
         // console.log("=> MSG TO SEND",msg)
@@ -80,7 +85,9 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             if (isTribeOwner) {
                 try {
                     // post last_active to tribes server
-                    tribes.putActivity(chat.uuid, chat.host, sender.publicKey);
+                    if (chat.uuid && chat.host) {
+                        tribes.putActivity(chat.uuid, chat.host, sender.publicKey);
+                    }
                 }
                 catch (e) {
                     logger_1.sphinxLogger.error('failed to tribes.putActivity', logger_1.logging.Network);

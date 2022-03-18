@@ -12,8 +12,9 @@ import { Msg, Payload } from '../network/interfaces'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import * as short from 'short-uuid'
+import { Req } from '../types'
 
-export const getBots = async (req, res) => {
+export const getBots = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -26,7 +27,7 @@ export const getBots = async (req, res) => {
   }
 }
 
-export const createBot = async (req, res) => {
+export const createBot = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { name, webhook, price_per_use, img, description, tags } = req.body
@@ -63,7 +64,7 @@ export const createBot = async (req, res) => {
   }
 }
 
-export const deleteBot = async (req, res) => {
+export const deleteBot = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id

@@ -10,8 +10,8 @@ import * as jwtUtils from './utils/jwt'
 import { allowedJwtRoutes } from './scopes'
 import * as rsa from './crypto/rsa'
 import * as hmac from './crypto/hmac'
-
-const fs = require('fs')
+import { Req } from './types'
+import * as fs from 'fs'
 
 const config = loadConfig()
 
@@ -20,7 +20,7 @@ const config = loadConfig()
 "encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
 */
 
-export async function unlocker(req, res): Promise<boolean> {
+export async function unlocker(req: Req, res): Promise<boolean> {
   const { password } = req.body
   if (!password) {
     failure(res, 'no password')
@@ -71,7 +71,7 @@ export async function unlocker(req, res): Promise<boolean> {
   }
 }
 
-export async function hmacMiddleware(req, res, next) {
+export async function hmacMiddleware(req: Req, res, next) {
   if (no_auth(req.path)) {
     next()
     return

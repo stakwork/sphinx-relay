@@ -11,6 +11,7 @@ import fetch from 'node-fetch'
 import * as helpers from '../helpers'
 import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -95,7 +96,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
   return ret
 }
 
-export async function listUTXOs(req, res) {
+export async function listUTXOs(req: Req, res) {
   try {
     const ret: Accounting[] = await getPendingAccountings()
     success(
@@ -243,7 +244,7 @@ export function startWatchingUTXOs() {
   setInterval(pollUTXOs, POLL_MINS * 60 * 1000) // every 1 minutes
 }
 
-export async function queryOnchainAddress(req, res) {
+export async function queryOnchainAddress(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 

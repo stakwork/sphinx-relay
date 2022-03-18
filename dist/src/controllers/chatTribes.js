@@ -105,7 +105,7 @@ function joinTribe(req, res) {
         // console.log("=> joinTribe: typeToSend", typeToSend);
         // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
         // set my alias to be the custom one
-        const theOwner = owner.dataValues || owner;
+        const theOwner = owner;
         if (my_alias)
             theOwner.alias = my_alias;
         network.sendMessage({

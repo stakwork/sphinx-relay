@@ -13,13 +13,14 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 function stripLightningPrefix(s) {
   if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)
   return s
 }
 
-export const payInvoice = async (req, res) => {
+export const payInvoice = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -111,13 +112,13 @@ async function anonymousInvoice(res, payment_request: string, tenant: number) {
   })
 }
 
-export const cancelInvoice = (req, res) => {
+export const cancelInvoice = (req: Req, res) => {
   res.status(200)
   res.json({ success: false })
   res.end()
 }
 
-export const createInvoice = async (req, res) => {
+export const createInvoice = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -210,7 +211,7 @@ export const createInvoice = async (req, res) => {
   }
 }
 
-export const listInvoices = async (req, res) => {
+export const listInvoices = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
 
   const lightning = await Lightning.loadLightning()

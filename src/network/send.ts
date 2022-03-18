@@ -1,4 +1,4 @@
-import { models, Chat, ContactRecord } from '../models'
+import { models, Chat, ContactRecord, Contact } from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
 import * as tribes from '../utils/tribes'
@@ -19,7 +19,7 @@ export interface SendMessageParams {
   type: number
   chat: Partial<ChatPlusMembers>
   message: Partial<MessageContent>
-  sender: Partial<ContactRecord>
+  sender: Partial<ContactRecord | Contact>
   amount?: number
   success?: (data: any) => void
   failure?: (error: any) => void
@@ -51,12 +51,14 @@ export async function sendMessage({
   // console.log('-> sender.publicKey', sender.publicKey)
   // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 
-  let theSender: ContactRecord = (sender.dataValues || sender) as ContactRecord
+  let aSender = sender
+  if ((sender as ContactRecord).dataValues) {
+    aSender = (sender as ContactRecord).dataValues
+  }
+  const theSender: ContactRecord = aSender as ContactRecord
+  // let theSender: ContactRecord = (sender.dataValues || sender) as ContactRecord
   if (isTribeOwner && !isForwarded) {
-    theSender = {
-      ...(sender.dataValues || sender),
-      role: constants.chat_roles.owner,
-    } as ContactRecord
+    theSender.role = constants.chat_roles.owner
   }
   let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false)
 
@@ -117,11 +119,9 @@ export async function sendMessage({
     if (isTribeOwner) {
       try {
         // post last_active to tribes server
-        tribes.putActivity(
-          chat.uuid as string,
-          chat.host as string,
-          sender.publicKey
-        )
+        if (chat.uuid && chat.host) {
+          tribes.putActivity(chat.uuid, chat.host, sender.publicKey)
+        }
       } catch (e) {
         sphinxLogger.error('failed to tribes.putActivity', logging.Network)
       }
