@@ -6,7 +6,7 @@ import * as meme from '../utils/meme'
 import * as FormData from 'form-data'
 import { models, Chat, Contact, ContactRecord, ChatRecord } from '../models'
 import * as RNCryptor from 'jscryptor-2'
-import { ContactPlusRole, sendMessage } from './send'
+import { sendMessage } from './send'
 // import { Op } from 'sequelize'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
@@ -89,7 +89,7 @@ export async function purchaseFromOriginalSender(
     }
     sendMessage({
       chat: { ...chat.dataValues, contactIds: JSON.stringify([purchaser.id]) }, // the merchant id
-      sender: owner as ContactPlusRole,
+      sender: owner,
       type: constants.message_types.purchase_accept,
       message: msg,
       success: () => {},
@@ -101,7 +101,7 @@ export async function purchaseFromOriginalSender(
         ...chat.dataValues,
         contactIds: JSON.stringify([mediaKey.sender]),
       },
-      sender: owner as ContactPlusRole,
+      sender: owner,
       type: constants.message_types.purchase,
       amount: amount,
       realSatsContactId: mediaKey.sender,

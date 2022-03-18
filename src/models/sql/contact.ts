@@ -89,4 +89,5 @@ export default class Contact extends Model<Contact> {
 
 export interface ContactRecord extends Contact {
   dataValues: Contact
+  role?: number // injected
 }

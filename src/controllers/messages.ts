@@ -9,6 +9,7 @@ import { failure, success } from '../utils/res'
 import * as timers from '../utils/timers'
 import { sendConfirmation } from './confirmations'
 import * as network from '../network'
+import type { SendMessageParams } from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
@@ -358,7 +359,7 @@ export const sendMessage = async (req, res) => {
   if (reply_uuid) msgToSend.replyUuid = reply_uuid
   if (parent_id) msgToSend.parentId = parent_id
 
-  const sendMessageParams: network.SendMessageParams = {
+  const sendMessageParams: SendMessageParams = {
     chat: chat,
     sender: owner,
     amount: amount || 0,

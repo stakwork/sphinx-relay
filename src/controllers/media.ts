@@ -341,7 +341,7 @@ export const receivePurchase = async (payload) => {
     // didnt pay enough
     return network.sendMessage({
       // "purchase_deny"
-      chat: { ...chat.dataValues, contactIds: [sender.id] }, // only send back to sender
+      chat: { ...chat.dataValues, contactIds: JSON.stringify([sender.id]) }, // only send back to sender
       sender: owner,
       amount: amount,
       type: constants.message_types.purchase_deny,
@@ -386,7 +386,7 @@ export const receivePurchase = async (payload) => {
   }
   if (purchaser_id) msgToSend.purchaser = purchaser_id
   network.sendMessage({
-    chat: { ...chat.dataValues, contactIds: [sender.id] }, // only to sender
+    chat: { ...chat.dataValues, contactIds: JSON.stringify([sender.id]) }, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
     message: msgToSend,

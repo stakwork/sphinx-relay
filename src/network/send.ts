@@ -15,15 +15,11 @@ export interface ChatPlusMembers extends Chat {
   members?: { [k: string]: ChatMember }
 }
 
-export interface ContactPlusRole extends ContactRecord {
-  role: number
-}
-
 export interface SendMessageParams {
   type: number
   chat: Partial<ChatPlusMembers>
   message: Partial<MessageContent>
-  sender: Partial<ContactPlusRole>
+  sender: Partial<ContactRecord>
   amount?: number
   success?: (data: any) => void
   failure?: (error: any) => void
@@ -55,13 +51,12 @@ export async function sendMessage({
   // console.log('-> sender.publicKey', sender.publicKey)
   // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 
-  let theSender: ContactPlusRole = (sender.dataValues ||
-    sender) as ContactPlusRole
+  let theSender: ContactRecord = (sender.dataValues || sender) as ContactRecord
   if (isTribeOwner && !isForwarded) {
     theSender = {
       ...(sender.dataValues || sender),
       role: constants.chat_roles.owner,
-    } as ContactPlusRole
+    } as ContactRecord
   }
   let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false)
 
@@ -278,7 +273,7 @@ function checkIfAutoConfirm(data, tenant) {
 export function newmsg(
   type: number,
   chat: Partial<ChatPlusMembers>,
-  sender: ContactPlusRole,
+  sender: ContactRecord,
   message: Partial<MessageContent>,
   isForwarded: boolean,
   includeStatus?: boolean

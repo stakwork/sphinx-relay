@@ -480,7 +480,7 @@ function receiveMemberApprove(payload) {
         }, tenant);
         const amount = chat.priceToJoin || 0;
         const theChat = chat.dataValues || chat;
-        const theOwner = owner.dataValues || owner;
+        const theOwner = owner;
         const theAlias = chat.myAlias || owner.alias;
         if (theAlias)
             theOwner.alias = theAlias;

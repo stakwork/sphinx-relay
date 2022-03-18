@@ -30,8 +30,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey;
         // console.log('-> sender.publicKey', sender.publicKey)
         // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
-        let theSender = (sender.dataValues ||
-            sender);
+        let theSender = (sender.dataValues || sender);
         if (isTribeOwner && !isForwarded) {
             theSender = Object.assign(Object.assign({}, (sender.dataValues || sender)), { role: constants_1.default.chat_roles.owner });
         }
