@@ -40,7 +40,7 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
             return person;
         }
         catch (e) {
-            logger_1.sphinxLogger.error('[tribes] unauthorized to create person');
+            logger_1.sphinxLogger.error('unauthorized to create person', logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -62,7 +62,7 @@ function deletePerson(host, id, owner_pubkey) {
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to delete person`);
+            logger_1.sphinxLogger.error(`unauthorized to delete person`, logger_1.logging.Tribes);
             throw e;
         }
     });
