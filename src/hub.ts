@@ -170,7 +170,7 @@ async function massPingHubFromProxies(rn) {
   if (logging.Proxy) {
     const cleanNodes = nodes.filter((n) => n.clean)
     sphinxLogger.info(
-      `[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`,
+      `pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`,
       logging.Proxy
     )
   }

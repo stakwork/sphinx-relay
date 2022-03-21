@@ -62,7 +62,7 @@ async function initializeClient(pubkey: string, host: string, onMessage?: (topic
           password: pwd,
           reconnectPeriod: 0, // dont auto reconnect
         })
-        sphinxLogger.info(`[tribes] try to connect: ${url}`, logging.Tribes)
+        sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
         cl.on('connect', async function () {
           // first check if its already connected to this host (in case it takes a long time)
           connected = true
@@ -74,11 +74,11 @@ async function initializeClient(pubkey: string, host: string, onMessage?: (topic
             resolve(clients[pubkey][host])
             return
           }
-          sphinxLogger.info(`[tribes] connected!`, logging.Tribes)
+          sphinxLogger.info(`connected!`, logging.Tribes)
           if (!clients[pubkey]) clients[pubkey] = {}
           clients[pubkey][host] = cl // ADD TO MAIN STATE
           cl.on('close', function (e) {
-            sphinxLogger.info(`[tribes] CLOSE ${e}`, logging.Tribes)
+            sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
             // setTimeout(() => reconnect(), 2000);
             connected = false
             if (clients[pubkey] && clients[pubkey][host]) {
@@ -87,7 +87,7 @@ async function initializeClient(pubkey: string, host: string, onMessage?: (topic
           })
           cl.on('error', function (e) {
             sphinxLogger.error(
-              `[tribes] error:  ${e.message || e}`,
+              `error:  ${e.message}`,
               logging.Tribes
             )
           })
@@ -96,18 +96,15 @@ async function initializeClient(pubkey: string, host: string, onMessage?: (topic
             if (onMessage) onMessage(topic, message)
           })
           cl.subscribe(`${pubkey}/#`, function (err) {
-            if (err) sphinxLogger.error(`[tribes] error subscribing ${err}`)
+            if (err) sphinxLogger.error(`error subscribing ${err}`, logging.Tribes)
             else {
-              sphinxLogger.info(
-                `[tribes] subscribed! ${pubkey}/#`,
-                logging.Tribes
-              )
+              sphinxLogger.info(`subscribed! ${pubkey}/#`, logging.Tribes)
               resolve(cl)
             }
           })
         })
       } catch (e) {
-        sphinxLogger.error(`[tribes] error initializing ${e}`, logging.Tribes)
+        sphinxLogger.error(`error initializing ${e}`, logging.Tribes)
       }
     }
     while (true) {
@@ -181,7 +178,7 @@ async function subExtraHostsForTenant(
     usedHosts.push(et.host) // dont do it twice
     const client = await lazyClient(pubkey, host, onMessage)
     client.subscribe(`${pubkey}/#`, optz, function (err) {
-      if (err) sphinxLogger.error(`[tribes] subscribe error 2 ${err}`)
+      if (err) sphinxLogger.error(`subscribe error 2 ${err}`, logging.Tribes)
     })
   })
 }
@@ -253,10 +250,7 @@ async function updateTribeStats(myPubkey) {
     }
   })
   if (myTribes.length) {
-    sphinxLogger.info(
-      `[tribes] updated stats for ${myTribes.length} tribes`,
-      logging.Tribes
-    )
+    sphinxLogger.info(`updated stats for ${myTribes.length} tribes`, logging.Tribes)
   }
 }
 
@@ -267,7 +261,7 @@ export async function subscribe(topic: string, onMessage: (topic: string, messag
   const client = await lazyClient(pubkey, host, onMessage)
   if (client)
     client.subscribe(topic, function () {
-      sphinxLogger.info(`[tribes] added sub ${host} ${topic}`, logging.Tribes)
+      sphinxLogger.info(`added sub ${host} ${topic}`, logging.Tribes)
     })
 }
 
@@ -277,7 +271,7 @@ export async function publish(topic: string, msg: string, ownerPubkey: string, c
   const client = await lazyClient(ownerPubkey, host)
   if (client)
     client.publish(topic, msg, optz, function (err) {
-      if (err) sphinxLogger.error(`[tribes] error publishing ${err}`)
+      if (err) sphinxLogger.error(`error publishing ${err}`, logging.Tribes)
       else if (cb) cb()
     })
 }
@@ -362,7 +356,7 @@ export async function declare({
     }
     // const j = await r.json()
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to declare`)
+    sphinxLogger.error(`unauthorized to declare`, logging.Tribes)
     throw e
   }
 }
@@ -422,7 +416,7 @@ export async function edit({
     }
     // const j = await r.json()
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to edit`)
+    sphinxLogger.error(`unauthorized to edit`, logging.Tribes)
     throw e
   }
 }
@@ -444,7 +438,7 @@ export async function delete_tribe(uuid: string, owner_pubkey: string): Promise<
     }
     // const j = await r.json()
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to delete`)
+    sphinxLogger.error(`unauthorized to delete`, logging.Tribes)
     throw e
   }
 }
@@ -461,7 +455,7 @@ export async function get_tribe_data(uuid: string): Promise<Tribe> {
     const j = await r.json()
     return j
   } catch (e) {
-    sphinxLogger.error(`[tribes] couldnt get tribe`)
+    sphinxLogger.error(`couldnt get tribe`, logging.Tribes)
     throw e
   }
 }
@@ -480,7 +474,7 @@ export async function putActivity(
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to putActivity`)
+    sphinxLogger.error(`unauthorized to putActivity`, logging.Tribes)
     throw e
   }
 }
@@ -514,7 +508,7 @@ export async function putstats({
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to putstats`)
+    sphinxLogger.error(`unauthorized to putstats`, logging.Tribes)
     throw e
   }
 }
@@ -550,7 +544,7 @@ export async function createChannel({
     const j = await r.json()
     return j
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to create channel`)
+    sphinxLogger.error(`unauthorized to create channel`, logging.Tribes)
     throw e
   }
 }
@@ -582,7 +576,7 @@ export async function deleteChannel({
     const j = await r.json()
     return j
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to create channel`)
+    sphinxLogger.error(`unauthorized to create channel`, logging.Tribes)
     throw e
   }
 }

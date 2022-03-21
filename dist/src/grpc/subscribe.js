@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.reconnectToLightning = exports.subscribeInvoices = void 0;
 const lightning_1 = require("./lightning");
 const network = require("../network");
-const moment = require("moment");
 const unlock_1 = require("../utils/unlock");
 const regular_1 = require("./regular");
 const interfaces = require("./interfaces");
@@ -49,7 +48,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             });
         });
         call.on('status', function (status) {
-            logger_1.sphinxLogger.info(`[lightning] Status ${status.code} ${status}`);
+            logger_1.sphinxLogger.info(`Status ${status.code} ${status}`, logger_1.logging.Lightning);
             // The server is unavailable, trying to reconnect.
             if (status.code == ERR_CODE_UNAVAILABLE ||
                 status.code == ERR_CODE_STREAM_REMOVED) {
@@ -61,8 +60,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             }
         });
         call.on('error', function (err) {
-            const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            logger_1.sphinxLogger.error(`[lightning] Error ${now} ${err.code}`);
+            logger_1.sphinxLogger.error(`Error ${err.code}`, logger_1.logging.Lightning);
             if (err.code == ERR_CODE_UNAVAILABLE ||
                 err.code == ERR_CODE_STREAM_REMOVED) {
                 i = 0;
@@ -73,8 +71,7 @@ function subscribeInvoices(parseKeysendInvoice) {
             }
         });
         call.on('end', function () {
-            const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            logger_1.sphinxLogger.info(`[lightning] Closed stream ${now}`);
+            logger_1.sphinxLogger.info(`Closed stream`, logger_1.logging.Lightning);
             // The server has closed the stream.
             i = 0;
             waitAndReconnect();
@@ -94,21 +91,19 @@ function reconnectToLightning(innerCtx, callback, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         ctx = innerCtx;
         i++;
-        const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-        logger_1.sphinxLogger.info(`=> ${now} [lightning] reconnecting... attempt #${i}`);
+        logger_1.sphinxLogger.info(`reconnecting... attempt #${i}`, logger_1.logging.Lightning);
         try {
             yield network.initGrpcSubscriptions(true);
-            const now = moment().format('YYYY-MM-DD HH:mm:ss').trim();
-            logger_1.sphinxLogger.info(`=> [lightning] connected! ${now}`);
+            logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Lightning);
             if (callback)
                 callback();
         }
         catch (e) {
             if (e.code === ERR_CODE_UNIMPLEMENTED) {
-                logger_1.sphinxLogger.error(`[lightning] LOCKED ${now}`);
+                logger_1.sphinxLogger.error(`LOCKED`, logger_1.logging.Lightning);
                 yield (0, unlock_1.tryToUnlockLND)();
             }
-            logger_1.sphinxLogger.error(`[lightning] ERROR ${e}`);
+            logger_1.sphinxLogger.error(`ERROR ${e}`, logger_1.logging.Lightning);
             setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                 // retry each 2 secs
                 if (ctx === innerCtx) {
