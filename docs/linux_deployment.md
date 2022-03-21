@@ -196,6 +196,11 @@ information in the process.
 After this, open the config file again. A new VirtualHost was added by certbot. You can remove the VirtualHost which
 was used during the process and you can change the port of the newly created one.
 
+When done configuring, restart apache2
+```sh
+sudo systemctl restart apache2
+```
+
 In Sphinx you can connect to **https://example.com:port/**. (Replace `port` with your chosen port and example.com
 with your own domain name)
 
