@@ -3,6 +3,7 @@ import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
 import * as https from 'https'
+import * as http from 'http'
 import logger, { logging, sphinxLogger } from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
@@ -122,7 +123,7 @@ function setupApp() {
         sphinxLogger.info(['getCertificate ERROR', e])
       }
     } else {
-      server = new https.Server(app)
+      server = http.createServer(app)
     }
 
     if (!server) return sphinxLogger.info('=> FAILED to create server')

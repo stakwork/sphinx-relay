@@ -14,6 +14,7 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const https = require("https");
+const http = require("http");
 const logger_1 = require("./src/utils/logger");
 const hub_1 = require("./src/hub");
 const proxy_1 = require("./src/utils/proxy");
@@ -126,7 +127,7 @@ function setupApp() {
             }
         }
         else {
-            server = new https.Server(app);
+            server = http.createServer(app);
         }
         if (!server)
             return logger_1.sphinxLogger.info('=> FAILED to create server');
