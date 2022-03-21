@@ -39,7 +39,7 @@ $ sudo su
 
 Open up port 3001 on your machine and make sure it has been added to the list.
 
-```
+```sh
 ufw allow 3001 comment 'allow Sphinx-Chat'
 ```
 
@@ -56,9 +56,12 @@ To check: `ufw status` should print something like:
 If you plan on setting up forwarding from an external domain using nginx (following instructions further down), we'll want to open the port that nginx will be listening on, which we'll set to 54001 for the rest of this walk-thru.
 
 ```sh
-# ufw allow 54001 comment 'allow nginx'
-# ufw status
+ufw allow 54001 comment 'allow nginx'
+```
 
+To check: `ufw status` should print something like:
+
+```
 > Status: active
 >
 > To                         Action      From
