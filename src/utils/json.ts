@@ -47,7 +47,7 @@ const accountingToJson = (acc) => toSnake(acc.dataValues || acc)
 
 const jsonToContact = (json) => toCamel(json)
 
-function subscriptionToJson(subscription, chat) {
+function subscriptionToJson(subscription, chat?) {
   const sub = subscription.dataValues || subscription
   const { interval, next } = cronUtils.parse(sub.cron)
   return toSnake({

@@ -4,3 +4,8 @@ src/*
 !src/utils
 src/utils/*
 !src/utils/tribes.ts
+
+!src/controllers
+src/controllers/*
+!src/controllers/contacts.ts
+
