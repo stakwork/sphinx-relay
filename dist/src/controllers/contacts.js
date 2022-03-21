@@ -116,8 +116,8 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }));
     if (!contactIDs || !contactIDs.length)
         return (0, res_1.failure)(res, 'no contact ids length');
-    const limit = parseInt((req.query.limit || '').toString()) || 1000;
-    const offset = parseInt((req.query.offset || '').toString()) || 0;
+    const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
+    const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const contacts = (yield models_1.models.Contact.findAll({
         where: { id: { [sequelize_1.Op.in]: contactIDs }, tenant },
         limit,
@@ -569,7 +569,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     try {
-        const dateToReturn = decodeURI((req.query.date || '').toString());
+        const dateToReturn = decodeURI(req.query.date);
         const local = moment.utc(dateToReturn).local().toDate();
         const where = {
             updatedAt: { [sequelize_1.Op.gte]: local },

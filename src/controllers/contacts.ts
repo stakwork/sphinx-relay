@@ -32,7 +32,6 @@ import { Response } from 'express'
 const config = loadConfig()
 
 export const getContacts = async (req: Req, res: Response): Promise<void> => {
-
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -130,10 +129,9 @@ export const getContactsForChat = async (
   if (!contactIDs || !contactIDs.length)
     return failure(res, 'no contact ids length')
 
-
   const limit = (req.query.limit && parseInt(req.query.limit as string)) || 1000
   const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
-  const contacts = await models.Contact.findAll({
+  const contacts = (await models.Contact.findAll({
     where: { id: { [Op.in]: contactIDs }, tenant },
     limit,
     offset,
@@ -167,7 +165,6 @@ export async function generateOwnerWithExternalSigner(
   req: Req,
   res: Response
 ): Promise<void> {
-
   if (!isProxy()) {
     return failure(res, 'only proxy')
   }
@@ -273,7 +270,7 @@ export const registerHmacKey = async (req: Req, res) => {
     config.transportPrivateKeyLocation,
     'utf8'
   )
-  let hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key)
+  const hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key)
   if (!hmacKey) {
     return failure(res, 'no decrypted hmac key')
   }
@@ -284,7 +281,6 @@ export const registerHmacKey = async (req: Req, res) => {
     registered: true,
   })
 }
-
 
 export const updateContact = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -650,7 +646,6 @@ export const getLatestContacts = async (
   const tenant: number = req.owner.id
 
   try {
-
     const dateToReturn = decodeURI(req.query.date as string)
     const local = moment.utc(dateToReturn).local().toDate()
     const where: { [k: string]: any } = {
@@ -724,7 +719,6 @@ async function switchBlock(
   const updated = await contact.update({ blocked })
   success(res, jsonUtils.contactToJson(updated))
 }
-
 
 export const blockContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
