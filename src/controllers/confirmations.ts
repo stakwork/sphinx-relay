@@ -6,6 +6,7 @@ import * as network from '../network'
 import constants from '../constants'
 import { success, failure200, failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 /* 
  if in tribe: dont send
@@ -185,15 +186,15 @@ export async function receiveHeartbeat(payload: network.Payload) {
 }
 
 let heartbeats: { [k: string]: boolean } = {}
-export async function healthcheck(req, res) {
+export async function healthcheck(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 
-  const pubkey: string = req.query.pubkey
+  const pubkey: string = req.query.pubkey as string
   if (!(pubkey && pubkey.length === 66)) {
     return failure200(res, 'missing pubkey')
   }
-  const routeHint: string = req.query.route_hint
+  const routeHint: string = req.query.route_hint as string
 
   const owner = req.owner
 

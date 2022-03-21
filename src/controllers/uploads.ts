@@ -1,6 +1,7 @@
 import { models } from '../models'
 import * as path from 'path'
 import { loadConfig } from '../utils/config'
+import { Req } from '../types'
 
 const config = loadConfig()
 
@@ -32,7 +33,11 @@ function hasProtocol(ip) {
   return false
 }
 
-export const uploadFile = async (req, res) => {
+interface UploadReq extends Req {
+  file: any
+}
+
+export const uploadFile = async (req: UploadReq, res) => {
   const { contact_id, chat_id } = req.body
   const { file } = req
 

@@ -302,7 +302,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         // didnt pay enough
         return network.sendMessage({
             // "purchase_deny"
-            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: JSON.stringify([sender.id]) }),
             sender: owner,
             amount: amount,
             type: constants_1.default.message_types.purchase_deny,
@@ -343,7 +343,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (purchaser_id)
         msgToSend.purchaser = purchaser_id;
     network.sendMessage({
-        chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [sender.id] }),
+        chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: JSON.stringify([sender.id]) }),
         sender: owner,
         type: constants_1.default.message_types.purchase_accept,
         message: msgToSend,

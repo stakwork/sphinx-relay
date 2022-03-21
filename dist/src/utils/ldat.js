@@ -27,7 +27,7 @@ Base64 strings separated by dots:
 - meta: key/value pairs, url query encoded (alphabetically ordered, ascii->base64)
 - signature of all that (concatenated bytes of each)
 */
-function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey }) {
+function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const theHost = host || config.media_host || '';
         const pubkeyBytes = Buffer.from(pubkey, 'hex');

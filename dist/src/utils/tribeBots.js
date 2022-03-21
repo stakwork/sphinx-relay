@@ -34,7 +34,7 @@ function delete_bot({ uuid, owner_pubkey }) {
             return true;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to delete bot ${e}`);
+            logger_1.sphinxLogger.error(`unauthorized to delete bot ${e}`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -68,7 +68,7 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
             logger_1.sphinxLogger.info(`=> bot created: ${j}`);
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to declare bot ${e}`);
+            logger_1.sphinxLogger.error(`unauthorized to declare bot ${e}`, logger_1.logging.Tribes);
             throw e;
         }
     });

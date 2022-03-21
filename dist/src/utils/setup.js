@@ -26,18 +26,18 @@ const logger_1 = require("../utils/logger");
 const USER_VERSION = 7;
 const config = (0, config_1.loadConfig)();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
-    logger_1.sphinxLogger.info(['=> [db] starting setup'], logger_1.logging.DB);
+    logger_1.sphinxLogger.info('starting setup', logger_1.logging.DB);
     yield setVersion();
-    logger_1.sphinxLogger.info(['=> [db] sync now'], logger_1.logging.DB);
+    logger_1.sphinxLogger.info('sync now', logger_1.logging.DB);
     try {
         yield models_1.sequelize.sync();
-        logger_1.sphinxLogger.info(['=> [db] done syncing'], logger_1.logging.DB);
+        logger_1.sphinxLogger.info('done syncing', logger_1.logging.DB);
     }
     catch (e) {
-        logger_1.sphinxLogger.info(['[db] sync failed', e], logger_1.logging.DB);
+        logger_1.sphinxLogger.info(['sync failed', e], logger_1.logging.DB);
     }
     yield (0, migrate_1.default)();
-    logger_1.sphinxLogger.info(['=> [db] setup done'], logger_1.logging.DB);
+    logger_1.sphinxLogger.info('setup done', logger_1.logging.DB);
 });
 exports.setupDatabase = setupDatabase;
 function setVersion() {
@@ -46,7 +46,7 @@ function setVersion() {
             yield models_1.sequelize.query(`PRAGMA user_version = ${USER_VERSION}`);
         }
         catch (e) {
-            logger_1.sphinxLogger.error('=> [db] setVersion failed');
+            logger_1.sphinxLogger.error('setVersion failed', logger_1.logging.DB);
         }
     });
 }
@@ -77,14 +77,11 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                     authToken,
                     tenant,
                 });
-                logger_1.sphinxLogger.info(['[db] created node owner contact, id:', contact.id]);
+                logger_1.sphinxLogger.info(['created node owner contact, id:', contact.id], logger_1.logging.DB);
             }
         }
         catch (err) {
-            logger_1.sphinxLogger.info([
-                '[db] error creating node owner due to lnd failure',
-                err,
-            ]);
+            logger_1.sphinxLogger.info(['error creating node owner due to lnd failure', err], logger_1.logging.DB);
         }
     }
 });

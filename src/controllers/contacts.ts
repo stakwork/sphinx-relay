@@ -15,10 +15,11 @@ import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
 import { loadConfig } from '../utils/config'
+import { Req } from '../types'
 
 const config = loadConfig()
 
-export const getContacts = async (req, res) => {
+export const getContacts = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -83,7 +84,7 @@ export const getContacts = async (req, res) => {
   })
 }
 
-export const getContactsForChat = async (req, res) => {
+export const getContactsForChat = async (req: Req, res) => {
   const chat_id = parseInt(req.params.chat_id)
   if (!chat_id) return failure(res, 'no chat id')
   if (!req.owner) return failure(res, 'no owner')
@@ -111,8 +112,8 @@ export const getContactsForChat = async (req, res) => {
   if (!contactIDs || !contactIDs.length)
     return failure(res, 'no contact ids length')
 
-  const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
-  const offset = (req.query.offset && parseInt(req.query.offset)) || 0
+  const limit = (req.query.limit && parseInt(req.query.limit as string)) || 1000
+  const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
   const contacts = await models.Contact.findAll({
     where: { id: { [Op.in]: contactIDs }, tenant },
     limit,
@@ -142,7 +143,7 @@ export const getContactsForChat = async (req, res) => {
   success(res, { contacts: finalContacts })
 }
 
-export async function generateOwnerWithExternalSigner(req, res) {
+export async function generateOwnerWithExternalSigner(req: Req, res) {
   if (!isProxy()) {
     return failure(res, 'only proxy')
   }
@@ -169,7 +170,7 @@ export async function generateOwnerWithExternalSigner(req, res) {
   success(res, { id: (created && created.id) || 0 })
 }
 
-export const generateToken = async (req, res) => {
+export const generateToken = async (req: Req, res) => {
   sphinxLogger.info([
     '=> generateToken called',
     {
@@ -240,7 +241,7 @@ export const generateToken = async (req, res) => {
   })
 }
 
-export const registerHmacKey = async (req, res) => {
+export const registerHmacKey = async (req: Req, res) => {
   if (!req.body.encrypted_key) {
     return failure(res, 'no encrypted_key found')
   }
@@ -260,7 +261,7 @@ export const registerHmacKey = async (req, res) => {
   })
 }
 
-export const updateContact = async (req, res) => {
+export const updateContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(
@@ -319,7 +320,7 @@ export const updateContact = async (req, res) => {
   })
 }
 
-export const exchangeKeys = async (req, res) => {
+export const exchangeKeys = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(
@@ -348,7 +349,7 @@ export const exchangeKeys = async (req, res) => {
   })
 }
 
-export const createContact = async (req, res) => {
+export const createContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(
@@ -403,7 +404,7 @@ export const createContact = async (req, res) => {
   })
 }
 
-export const deleteContact = async (req, res) => {
+export const deleteContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id || '0')
@@ -608,12 +609,12 @@ function extractAttrs(body): { [k: string]: any } {
   return attrs
 }
 
-export const getLatestContacts = async (req, res) => {
+export const getLatestContacts = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   try {
-    const dateToReturn = decodeURI(req.query.date)
+    const dateToReturn = decodeURI(req.query.date as string)
     const local = moment.utc(dateToReturn).local().toDate()
     const where: { [k: string]: any } = {
       updatedAt: { [Op.gte]: local },
@@ -678,12 +679,14 @@ async function switchBlock(
   success(res, jsonUtils.contactToJson(updated))
 }
 
-export const blockContact = async (req, res) => {
+export const blockContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
-  switchBlock(res, req.owner.id, req.params.contact_id, true)
+  const contactId = parseInt(req.params.contact_id as string)
+  switchBlock(res, req.owner.id, contactId, true)
 }
 
-export const unblockContact = async (req, res) => {
+export const unblockContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
-  switchBlock(res, req.owner.id, req.params.contact_id, false)
+  const contactId = parseInt(req.params.contact_id as string)
+  switchBlock(res, req.owner.id, contactId, false)
 }
