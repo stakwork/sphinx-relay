@@ -6,3 +6,4 @@ src/utils/*
 !src/utils/tribes.ts
 !src/network
 !src/utils/msg.ts
+!src/grpc

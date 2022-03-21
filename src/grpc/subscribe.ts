@@ -11,16 +11,18 @@ const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
 const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
-export function subscribeInvoices(parseKeysendInvoice) {
+export function subscribeInvoices(
+  parseKeysendInvoice: (i: interfaces.Invoice) => Promise<void>
+): Promise<void | null> {
   return new Promise(async (resolve, reject) => {
-    let ownerPubkey: string = ''
+    let ownerPubkey = ''
     if (isProxy()) {
       ownerPubkey = await getProxyRootPubkey()
     }
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
 
     const cmd = interfaces.subscribeCommand()
-    var call = lightning[cmd]()
+    const call = lightning[cmd]()
     call.on('data', async function (response) {
       // console.log("=> INVOICE RAW", response)
       const inv = interfaces.subscribeResponse(response)
@@ -79,13 +81,13 @@ function waitAndReconnect() {
   setTimeout(() => reconnectToLightning(Math.random(), null, true), 2000)
 }
 
-var i = 0
-var ctx = 0
+let i = 0
+let ctx = 0
 export async function reconnectToLightning(
   innerCtx: number,
-  callback?: Function | null,
+  callback?: (() => Promise<void>) | null,
   noCache?: boolean
-) {
+): Promise<void> {
   ctx = innerCtx
   i++
   const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()

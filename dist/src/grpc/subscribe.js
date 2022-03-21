@@ -29,7 +29,7 @@ function subscribeInvoices(parseKeysendInvoice) {
         }
         const lightning = yield (0, lightning_1.loadLightning)(true, ownerPubkey); // try proxy
         const cmd = interfaces.subscribeCommand();
-        var call = lightning[cmd]();
+        const call = lightning[cmd]();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
                 // console.log("=> INVOICE RAW", response)
@@ -88,8 +88,8 @@ exports.subscribeInvoices = subscribeInvoices;
 function waitAndReconnect() {
     setTimeout(() => reconnectToLightning(Math.random(), null, true), 2000);
 }
-var i = 0;
-var ctx = 0;
+let i = 0;
+let ctx = 0;
 function reconnectToLightning(innerCtx, callback, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         ctx = innerCtx;
