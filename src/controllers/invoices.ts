@@ -14,7 +14,7 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
-import { RelayRequest } from '../models/ts/index'
+import { Req } from '../types'
 import { Response } from 'express'
 
 function stripLightningPrefix(s: string): string {
@@ -22,10 +22,7 @@ function stripLightningPrefix(s: string): string {
   return s
 }
 
-export const payInvoice = async (
-  req: RelayRequest,
-  res: Response
-): Promise<void> => {
+export const payInvoice = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -121,16 +118,13 @@ async function anonymousInvoice(
   })
 }
 
-export const cancelInvoice = (req: RelayRequest, res: Response): void => {
+export const cancelInvoice = (req: Req, res: Response): void => {
   res.status(200)
   res.json({ success: false })
   res.end()
 }
 
-export const createInvoice = async (
-  req: RelayRequest,
-  res: Response
-): Promise<void> => {
+export const createInvoice = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -223,10 +217,7 @@ export const createInvoice = async (
   }
 }
 
-export const listInvoices = async (
-  req: RelayRequest,
-  res: Response
-): Promise<void> => {
+export const listInvoices = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
 
   const lightning = await Lightning.loadLightning()
