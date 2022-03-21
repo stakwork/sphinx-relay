@@ -10,7 +10,7 @@ export interface MessageContent {
   mediaToken?: string
   mediaKey?: string
   mediaType?: string
-  date?: string
+  date?: Date
   originalMuid?: string
   status?: number
   purchaser?: number
