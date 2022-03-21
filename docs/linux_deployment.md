@@ -29,7 +29,7 @@ sudo apt install sqlite3 python2
 
 If not, skip this part. The port is ready to use.
 
-This example is for `ufw`. Consult docs of your firewall when needed.
+This example is for `ufw`. Consult docs of your firewall if you use a different one.
 
 Open up a console window with SSH. And login as root
 
@@ -156,6 +156,47 @@ Make sure that port 54001 forwarding is properly set up. The network routing sho
 As noted in the previous section, you might want to protect communications between your Sphinx client and **sphinx-relay** with SSL.
 
 In order to do that, obtain a domain and an SSL certificate for your **sphinx-relay** server and set up a reverse proxy with NGINX (or a more lightweight alternative).
+
+##### With apach2 and certbot
+
+Install Apache2 Web Server on your machine.
+
+Edit `/etc/apache2/sites-enabled/000-default.conf` or create the file if it doesn't exist.
+
+Use the following config: (Note that there is no SSL yet here, certbot does that for us)
+```
+<VirtualHost *:80>
+    ServerName example.com
+
+    DocumentRoot /var/www/html
+    ServerAlias example.com
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:3001/
+    ProxyPassReverse / http://localhost:3001/
+</VirtualHost>
+
+```
+
+Use an open port (forwarded by your router) for the VirtualHost. Certbot needs to check that this domain and server
+is yours in order to give out a certificate.
+
+Now go to [the Certbot website](https://certbot.eff.org/instructions?ws=apache) and select Apache for web server
+and your OS/distro in the next dropdown.
+
+Follow the instructions from certbot and eventually run it with `sudo certbot --apache`. You will be asked some
+information in the process.
+
+After this, open the config file again. A new VirtualHost was added by certbot. You can remove the VirtualHost which
+was used during the process and you can change the port of the newly created one.
+
+In Sphinx you can connect to **https://example.com:port/**. (Replace `port` with your chosen port and example.com
+with your own domain name)
+
+##### With nginx and acme.sh
 
 We recommend using Let's Encrypt service to obtain a free SSL certificate and [**acme.sh**](https://acme.sh) for setting it up and renewals. Note that acme.sh now has their default issuer set to zerossl which could produce errors. Lets Encrypt meanwhile may include an obsolete certificate in their chain which can also cause problems. If you see either of these, you can use these commands to fix (after installation of `acme.sh`):
 
