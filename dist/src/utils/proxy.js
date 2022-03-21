@@ -47,37 +47,37 @@ const SATS_PER_USER = config.proxy_initial_sats || 5000;
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
         if (!isProxy()) {
-            logger_1.sphinxLogger.error(`[proxy] not proxy`, logger_1.logging.Proxy);
+            logger_1.sphinxLogger.error(`not proxy`, logger_1.logging.Proxy);
             return;
         }
         const newusers = yield models_1.models.Contact.findAll({
             where: { isOwner: true, authToken: null },
         });
         if (newusers.length >= NEW_USER_NUM) {
-            logger_1.sphinxLogger.error(`[proxy] already have new users`, logger_1.logging.Proxy);
+            logger_1.sphinxLogger.error(`already have new users`, logger_1.logging.Proxy);
             return; // we already have the mimimum
         }
         const n1 = NEW_USER_NUM - newusers.length;
         let n; // the number of new users to create
         if (check_proxy_balance) {
             const virtualBal = yield getProxyTotalBalance();
-            logger_1.sphinxLogger.info(`[proxy] total balance ${virtualBal}`, logger_1.logging.Proxy);
+            logger_1.sphinxLogger.info(`total balance ${virtualBal}`, logger_1.logging.Proxy);
             const realBal = yield getProxyLNDBalance();
-            logger_1.sphinxLogger.info(`[proxy] LND balance ${virtualBal}`, logger_1.logging.Proxy);
+            logger_1.sphinxLogger.info(`LND balance ${virtualBal}`, logger_1.logging.Proxy);
             let availableBalance = realBal - virtualBal;
             if (availableBalance < SATS_PER_USER)
                 availableBalance = 1;
             const n2 = Math.floor(availableBalance / SATS_PER_USER);
             const n = Math.min(n1, n2);
             if (!n) {
-                logger_1.sphinxLogger.error(`[proxy] not enough sats`, logger_1.logging.Proxy);
+                logger_1.sphinxLogger.error(`not enough sats`, logger_1.logging.Proxy);
                 return;
             }
         }
         else {
             n = n1;
         }
-        logger_1.sphinxLogger.info(`=> gen new users: ${n}`, logger_1.logging.Proxy);
+        logger_1.sphinxLogger.info(`gen new users: ${n}`, logger_1.logging.Proxy);
         const arr = new Array(n);
         const rootpk = yield getProxyRootPubkey();
         yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {

@@ -1,7 +1,7 @@
 import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
-import { sphinxLogger } from './logger'
+import { sphinxLogger, logging } from './logger'
 
 const config = loadConfig()
 
@@ -46,7 +46,7 @@ export async function createOrEditPerson(
     const person = await r.json()
     return person
   } catch (e) {
-    sphinxLogger.error('[tribes] unauthorized to create person')
+    sphinxLogger.error('unauthorized to create person', logging.Tribes)
     throw e
   }
 }
@@ -64,7 +64,7 @@ export async function deletePerson(host, id, owner_pubkey) {
     }
     // const j = await r.json()
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to delete person`)
+    sphinxLogger.error(`unauthorized to delete person`, logging.Tribes)
     throw e
   }
 }

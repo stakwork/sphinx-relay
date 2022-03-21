@@ -148,7 +148,7 @@ function massPingHubFromProxies(rn) {
         }));
         if (logger_1.logging.Proxy) {
             const cleanNodes = nodes.filter((n) => n.clean);
-            logger_1.sphinxLogger.info(`[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`, logger_1.logging.Proxy);
+            logger_1.sphinxLogger.info(`pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`, logger_1.logging.Proxy);
         }
         // split into chunks of 50
         const size = 50;

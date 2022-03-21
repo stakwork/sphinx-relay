@@ -74,7 +74,7 @@ function initializeClient(pubkey, host, onMessage) {
                             password: pwd,
                             reconnectPeriod: 0, // dont auto reconnect
                         });
-                        logger_1.sphinxLogger.info(`[tribes] try to connect: ${url}`, logger_1.logging.Tribes);
+                        logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
                         cl.on('connect', function () {
                             return __awaiter(this, void 0, void 0, function* () {
                                 // first check if its already connected to this host (in case it takes a long time)
@@ -85,12 +85,12 @@ function initializeClient(pubkey, host, onMessage) {
                                     resolve(clients[pubkey][host]);
                                     return;
                                 }
-                                logger_1.sphinxLogger.info(`[tribes] connected!`, logger_1.logging.Tribes);
+                                logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Tribes);
                                 if (!clients[pubkey])
                                     clients[pubkey] = {};
                                 clients[pubkey][host] = cl; // ADD TO MAIN STATE
                                 cl.on('close', function (e) {
-                                    logger_1.sphinxLogger.info(`[tribes] CLOSE ${e}`, logger_1.logging.Tribes);
+                                    logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
                                     // setTimeout(() => reconnect(), 2000);
                                     connected = false;
                                     if (clients[pubkey] && clients[pubkey][host]) {
@@ -98,7 +98,7 @@ function initializeClient(pubkey, host, onMessage) {
                                     }
                                 });
                                 cl.on('error', function (e) {
-                                    logger_1.sphinxLogger.error(`[tribes] error:  ${e.message || e}`, logger_1.logging.Tribes);
+                                    logger_1.sphinxLogger.error(`error:  ${e.message}`, logger_1.logging.Tribes);
                                 });
                                 cl.on('message', function (topic, message) {
                                     // console.log("============>>>>> GOT A MSG", topic, message)
@@ -107,9 +107,9 @@ function initializeClient(pubkey, host, onMessage) {
                                 });
                                 cl.subscribe(`${pubkey}/#`, function (err) {
                                     if (err)
-                                        logger_1.sphinxLogger.error(`[tribes] error subscribing ${err}`);
+                                        logger_1.sphinxLogger.error(`error subscribing ${err}`, logger_1.logging.Tribes);
                                     else {
-                                        logger_1.sphinxLogger.info(`[tribes] subscribed! ${pubkey}/#`, logger_1.logging.Tribes);
+                                        logger_1.sphinxLogger.info(`subscribed! ${pubkey}/#`, logger_1.logging.Tribes);
                                         resolve(cl);
                                     }
                                 });
@@ -117,7 +117,7 @@ function initializeClient(pubkey, host, onMessage) {
                         });
                     }
                     catch (e) {
-                        logger_1.sphinxLogger.error(`[tribes] error initializing ${e}`, logger_1.logging.Tribes);
+                        logger_1.sphinxLogger.error(`error initializing ${e}`, logger_1.logging.Tribes);
                     }
                 });
             }
@@ -192,7 +192,7 @@ function subExtraHostsForTenant(tenant, pubkey, onMessage) {
             const client = yield lazyClient(pubkey, host, onMessage);
             client.subscribe(`${pubkey}/#`, optz, function (err) {
                 if (err)
-                    logger_1.sphinxLogger.error(`[tribes] subscribe error 2 ${err}`);
+                    logger_1.sphinxLogger.error(`subscribe error 2 ${err}`, logger_1.logging.Tribes);
             });
         }));
     });
@@ -266,7 +266,7 @@ function updateTribeStats(myPubkey) {
             }
         }));
         if (myTribes.length) {
-            logger_1.sphinxLogger.info(`[tribes] updated stats for ${myTribes.length} tribes`, logger_1.logging.Tribes);
+            logger_1.sphinxLogger.info(`updated stats for ${myTribes.length} tribes`, logger_1.logging.Tribes);
         }
     });
 }
@@ -279,7 +279,7 @@ function subscribe(topic, onMessage) {
         const client = yield lazyClient(pubkey, host, onMessage);
         if (client)
             client.subscribe(topic, function () {
-                logger_1.sphinxLogger.info(`[tribes] added sub ${host} ${topic}`, logger_1.logging.Tribes);
+                logger_1.sphinxLogger.info(`added sub ${host} ${topic}`, logger_1.logging.Tribes);
             });
     });
 }
@@ -293,7 +293,7 @@ function publish(topic, msg, ownerPubkey, cb) {
         if (client)
             client.publish(topic, msg, optz, function (err) {
                 if (err)
-                    logger_1.sphinxLogger.error(`[tribes] error publishing ${err}`);
+                    logger_1.sphinxLogger.error(`error publishing ${err}`, logger_1.logging.Tribes);
                 else if (cb)
                     cb();
             });
@@ -337,7 +337,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to declare`);
+            logger_1.sphinxLogger.error(`unauthorized to declare`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -380,7 +380,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to edit`);
+            logger_1.sphinxLogger.error(`unauthorized to edit`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -403,7 +403,7 @@ function delete_tribe(uuid, owner_pubkey) {
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to delete`);
+            logger_1.sphinxLogger.error(`unauthorized to delete`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -424,7 +424,7 @@ function get_tribe_data(uuid) {
             return j;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] couldnt get tribe`);
+            logger_1.sphinxLogger.error(`couldnt get tribe`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -443,7 +443,7 @@ function putActivity(uuid, host, owner_pubkey) {
             });
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to putActivity`);
+            logger_1.sphinxLogger.error(`unauthorized to putActivity`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -470,7 +470,7 @@ function putstats({ uuid, host, member_count, chatId, owner_pubkey }) {
             });
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to putstats`);
+            logger_1.sphinxLogger.error(`unauthorized to putstats`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -502,7 +502,7 @@ function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
             return j;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to create channel`);
+            logger_1.sphinxLogger.error(`unauthorized to create channel`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -528,7 +528,7 @@ function deleteChannel({ id, host, owner_pubkey }) {
             return j;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to create channel`);
+            logger_1.sphinxLogger.error(`unauthorized to create channel`, logger_1.logging.Tribes);
             throw e;
         }
     });
