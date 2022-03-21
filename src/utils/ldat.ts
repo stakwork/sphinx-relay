@@ -18,10 +18,17 @@ Base64 strings separated by dots:
 - signature of all that (concatenated bytes of each)
 */
 
-async function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey }) {
+async function tokenFromTerms({
+  host,
+  muid,
+  ttl,
+  pubkey,
+  meta,
+  ownerPubkey,
+}: LdatTerms) {
   const theHost = host || config.media_host || ''
 
-  const pubkeyBytes = Buffer.from(pubkey, 'hex')
+  const pubkeyBytes = Buffer.from(pubkey as string, 'hex')
   const pubkey64 = urlBase64FromBytes(pubkeyBytes)
 
   const now = Math.floor(Date.now() / 1000)
@@ -98,13 +105,13 @@ const termKeys = [
   },
 ]
 
-function parseLDAT(ldat) {
+function parseLDAT(ldat): LdatTerms {
   const a = ldat.split('.')
   const o: { [k: string]: any } = {}
   termKeys.forEach((t, i) => {
     if (a[i]) o[t.key] = t.func(Buffer.from(a[i], 'base64'))
   })
-  return o
+  return o as LdatTerms
 }
 
 export {
@@ -118,9 +125,24 @@ export {
   urlBase64FromHex,
 }
 
+export interface LdatTermsMeta {
+  amt?: number
+  ttl?: number
+  dim?: string
+}
+export interface LdatTerms {
+  host: string
+  ttl: number | null
+  muid: string
+  pubkey?: string
+  meta: LdatTermsMeta
+  ownerPubkey?: string
+  skipSigning?: boolean
+}
+
 async function testLDAT() {
   sphinxLogger.info(`testLDAT`)
-  const terms = {
+  const terms: LdatTerms = {
     host: '',
     ttl: 31536000, //one year
     muid: 'qFSOa50yWeGSG8oelsMvctLYdejPRD090dsypBSx_xg=',

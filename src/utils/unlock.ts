@@ -1,7 +1,7 @@
 import * as Lightning from '../grpc/lightning'
 import { loadConfig } from './config'
-const fs = require('fs')
-const readline = require('readline')
+import * as fs from 'fs'
+import * as readline from 'readline'
 import { sphinxLogger } from './logger'
 
 const config = loadConfig()

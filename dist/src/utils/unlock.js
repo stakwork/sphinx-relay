@@ -12,8 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.tryToUnlockLND = void 0;
 const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
-const fs = require('fs');
-const readline = require('readline');
+const fs = require("fs");
+const readline = require("readline");
 const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 /*
