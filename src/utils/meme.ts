@@ -17,7 +17,6 @@ interface tokenStore {
 const tokens: { [k: string]: { [k: string]: tokenStore } } = {}
 
 export async function lazyToken(pubkey: string, host: string) {
-  // console.log("[meme] lazyToken for", pubkey)
   if (tokens[pubkey] && tokens[pubkey][host]) {
     const ts = tokens[pubkey][host].ts
     const now = moment().unix()
@@ -36,7 +35,7 @@ export async function lazyToken(pubkey: string, host: string) {
     }
     return t
   } catch (e) {
-    sphinxLogger.error(`[meme] error getting token ${e}`, logging.Meme)
+    sphinxLogger.error(`error getting token ${e}`, logging.Meme)
   }
 }
 
@@ -46,7 +45,6 @@ if (config.media_host.includes('meme.sphinx:5555')) mediaProtocol = 'http'
 let mediaURL = mediaProtocol + '://' + config.media_host + '/'
 
 export async function getMediaToken(ownerPubkey: string, host?: string) {
-  // console.log("[meme] gET MEDIA TOEKN", ownerPubkey)
   let protocol = 'https'
   if (host?.includes('localhost')) protocol = 'http'
   if (host?.includes('meme.sphinx:5555')) protocol = 'http'
@@ -69,7 +67,7 @@ export async function getMediaToken(ownerPubkey: string, host?: string) {
     const sigBytes = zbase32.decode(sig)
     const sigBase64 = urlBase64FromBytes(sigBytes)
 
-    sphinxLogger.info(`[meme] verify ${pubkey}`, logging.Meme)
+    sphinxLogger.info(`verify ${pubkey}`, logging.Meme)
     const bod = await rp.post(theURL + 'verify', {
       form: { id: r.id, sig: sigBase64, pubkey },
     })

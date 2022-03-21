@@ -41,6 +41,7 @@ interface Logging {
   Proxy: string
   Lsat: string
   Greenlight: string
+  SSL: string
 }
 
 const logging: Logging = {
@@ -54,6 +55,7 @@ const logging: Logging = {
   Proxy: 'PROXY',
   Lsat: 'LSAT',
   Greenlight: 'GREENLIGHT',
+  SSL: 'SSL'
 }
 
 async function sphinxLoggerBase(

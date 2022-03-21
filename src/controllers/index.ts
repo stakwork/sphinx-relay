@@ -23,6 +23,7 @@ import { failure } from '../utils/res'
 import * as auth from './auth'
 import * as personal from './api/personal'
 import * as lsats from './lsats'
+import { Req } from '../types'
 
 export async function set(app) {
   builtInBots.init()
@@ -140,12 +141,12 @@ export async function set(app) {
 
   app.get('/healthcheck', confirmations.healthcheck)
 
-  app.get('/version', async function (req, res) {
+  app.get('/version', async function (req: Req, res) {
     const version = await checkTag()
     res.send({ version })
   })
 
-  app.get('/latest', async function (req, res) {
+  app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')
     const tenant: number = req.owner.id
     const lasts = await models.Message.findAll({

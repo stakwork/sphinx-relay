@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
-const network = require("./network");
+const network_1 = require("./network");
 const constants_1 = require("./constants");
 const logger_1 = require("./utils/logger");
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
@@ -124,7 +124,7 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
         extra_tlv,
     };
     try {
-        const r = yield network.signAndSend(opts, sender);
+        const r = yield (0, network_1.signAndSend)(opts, sender);
         // console.log("=> keysend to new contact")
         if (success)
             success(r);
@@ -266,8 +266,8 @@ function parseReceiveParams(payload) {
             });
         }
         return {
+            owner: owner,
             dest,
-            owner,
             sender,
             chat,
             sender_pub_key,
