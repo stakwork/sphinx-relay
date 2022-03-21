@@ -26,11 +26,13 @@ import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
 import { loadConfig } from '../utils/config'
 import { Req } from '../types'
+
 import { Response } from 'express'
 
 const config = loadConfig()
 
 export const getContacts = async (req: Req, res: Response): Promise<void> => {
+
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -128,9 +130,10 @@ export const getContactsForChat = async (
   if (!contactIDs || !contactIDs.length)
     return failure(res, 'no contact ids length')
 
-  const limit = parseInt((req.query.limit || '').toString()) || 1000
-  const offset = parseInt((req.query.offset || '').toString()) || 0
-  const contacts = (await models.Contact.findAll({
+
+  const limit = (req.query.limit && parseInt(req.query.limit as string)) || 1000
+  const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
+  const contacts = await models.Contact.findAll({
     where: { id: { [Op.in]: contactIDs }, tenant },
     limit,
     offset,
@@ -164,6 +167,7 @@ export async function generateOwnerWithExternalSigner(
   req: Req,
   res: Response
 ): Promise<void> {
+
   if (!isProxy()) {
     return failure(res, 'only proxy')
   }
@@ -280,6 +284,7 @@ export const registerHmacKey = async (req: Req, res) => {
     registered: true,
   })
 }
+
 
 export const updateContact = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -645,7 +650,8 @@ export const getLatestContacts = async (
   const tenant: number = req.owner.id
 
   try {
-    const dateToReturn = decodeURI((req.query.date || '').toString())
+
+    const dateToReturn = decodeURI(req.query.date as string)
     const local = moment.utc(dateToReturn).local().toDate()
     const where: { [k: string]: any } = {
       updatedAt: { [Op.gte]: local },
@@ -719,15 +725,15 @@ async function switchBlock(
   success(res, jsonUtils.contactToJson(updated))
 }
 
-export const blockContact = async (req: Req, res: Response): Promise<void> => {
+
+export const blockContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
-  switchBlock(res, req.owner.id, parseInt(req.params.contact_id), true)
+  const contactId = parseInt(req.params.contact_id as string)
+  switchBlock(res, req.owner.id, contactId, true)
 }
 
-export const unblockContact = async (
-  req: Req,
-  res: Response
-): Promise<void> => {
+export const unblockContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
-  switchBlock(res, req.owner.id, parseInt(req.params.contact_id), false)
+  const contactId = parseInt(req.params.contact_id as string)
+  switchBlock(res, req.owner.id, contactId, false)
 }

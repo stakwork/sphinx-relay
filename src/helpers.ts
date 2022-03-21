@@ -1,6 +1,7 @@
 import { models, Contact, ContactRecord, ChatRecord } from './models'
 import * as md5 from 'md5'
-import * as network from './network'
+import { signAndSend } from './network'
+import type { Msg, Payload, ChatMember } from './network/interfaces'
 import constants from './constants'
 import { logging, sphinxLogger } from './utils/logger'
 
@@ -142,7 +143,7 @@ export const performKeysendMessage = async ({
   destination_key: string
   route_hint?: string
   amount: number
-  msg: { [k: string]: any }
+  msg: Partial<Msg>
   success?: Function
   failure?: Function
   sender: any
@@ -156,7 +157,7 @@ export const performKeysendMessage = async ({
     extra_tlv,
   }
   try {
-    const r = await network.signAndSend(opts, sender)
+    const r = await signAndSend(opts, sender)
     // console.log("=> keysend to new contact")
     if (success) success(r)
   } catch (e) {
@@ -234,8 +235,11 @@ export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function parseReceiveParams(payload: network.Payload): Promise<{
-  chat_members: { [k: string]: network.ChatMember }
+export async function parseReceiveParams(payload: Payload): Promise<{
+  chat_members: { [k: string]: ChatMember }
+  owner: ContactRecord
+  sender: ContactRecord
+  chat: ChatRecord
   [k: string]: any
 }> {
   const dat = payload
@@ -313,8 +317,8 @@ export async function parseReceiveParams(payload: network.Payload): Promise<{
     })
   }
   return {
+    owner: owner as ContactRecord,
     dest,
-    owner,
     sender,
     chat,
     sender_pub_key,

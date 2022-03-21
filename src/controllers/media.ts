@@ -17,6 +17,7 @@ import constants from '../constants'
 import { loadConfig } from '../utils/config'
 import { failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 const config = loadConfig()
 
@@ -38,7 +39,7 @@ purchase_accept should update the original attachment message with the terms and
 purchase_deny returns the sats
 */
 
-export const sendAttachmentMessage = async (req, res) => {
+export const sendAttachmentMessage = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   // try {
@@ -186,7 +187,7 @@ export function saveMediaKeys(
   }
 }
 
-export const purchase = async (req, res) => {
+export const purchase = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { chat_id, contact_id, amount, media_token } = req.body
@@ -341,7 +342,7 @@ export const receivePurchase = async (payload) => {
     // didnt pay enough
     return network.sendMessage({
       // "purchase_deny"
-      chat: { ...chat.dataValues, contactIds: [sender.id] }, // only send back to sender
+      chat: { ...chat.dataValues, contactIds: JSON.stringify([sender.id]) }, // only send back to sender
       sender: owner,
       amount: amount,
       type: constants.message_types.purchase_deny,
@@ -386,7 +387,7 @@ export const receivePurchase = async (payload) => {
   }
   if (purchaser_id) msgToSend.purchaser = purchaser_id
   network.sendMessage({
-    chat: { ...chat.dataValues, contactIds: [sender.id] }, // only to sender
+    chat: { ...chat.dataValues, contactIds: JSON.stringify([sender.id]) }, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
     message: msgToSend,
@@ -578,7 +579,7 @@ export const receiveAttachment = async (payload) => {
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
-export async function signer(req, res) {
+export async function signer(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
   if (!req.params.challenge) return resUtils.failure(res, 'no challenge')

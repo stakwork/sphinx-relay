@@ -9,3 +9,6 @@ src/utils/*
 src/controllers/*
 !src/controllers/contacts.ts
 
+!src/network
+!src/utils/msg.ts
+

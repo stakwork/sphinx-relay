@@ -635,13 +635,15 @@ function switchBlock(res, tenant, id, blocked) {
 const blockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
-    switchBlock(res, req.owner.id, parseInt(req.params.contact_id), true);
+    const contactId = parseInt(req.params.contact_id);
+    switchBlock(res, req.owner.id, contactId, true);
 });
 exports.blockContact = blockContact;
 const unblockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
-    switchBlock(res, req.owner.id, parseInt(req.params.contact_id), false);
+    const contactId = parseInt(req.params.contact_id);
+    switchBlock(res, req.owner.id, contactId, false);
 });
 exports.unblockContact = unblockContact;
 //# sourceMappingURL=contacts.js.map
