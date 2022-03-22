@@ -83,7 +83,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.mediaToken = myMediaToken;
         msg.mediaType = media_type || '';
     }
-    const message = (yield models_1.models.Message.create(msg));
+    const message = yield models_1.models.Message.create(msg);
     const msgToSend = {
         id: message.id,
         uuid: message.uuid,
@@ -166,7 +166,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
-    const message = (yield models_1.models.Message.create(msg));
+    const message = yield models_1.models.Message.create(msg);
     // console.log('saved message', message.dataValues)
     socket.sendJson({
         type: 'direct_payment',
@@ -183,7 +183,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
     const MIN_VAL = constants_1.default.min_sat_amount;
     try {
-        const msgs = (yield models_1.models.Message.findAll({
+        const msgs = yield models_1.models.Message.findAll({
             where: {
                 [sequelize_1.Op.or]: [
                     {
@@ -217,7 +217,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             order: [['createdAt', 'desc']],
             limit,
             offset,
-        }));
+        });
         const ret = msgs || [];
         (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message)));
     }

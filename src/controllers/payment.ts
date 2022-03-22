@@ -101,7 +101,7 @@ export const sendPayment = async (req: Req, res: Response): Promise<void> => {
     msg.mediaType = media_type || ''
   }
 
-  const message = (await models.Message.create(msg)) as unknown as Message
+  const message: Message = await models.Message.create(msg)
 
   const msgToSend: { [k: string]: any } = {
     id: message.id,
@@ -196,7 +196,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
 
-  const message = (await models.Message.create(msg)) as unknown as Message
+  const message: Message = await models.Message.create(msg)
 
   // console.log('saved message', message.dataValues)
 
@@ -220,7 +220,7 @@ export const listPayments = async (req: Req, res: Response): Promise<void> => {
 
   const MIN_VAL = constants.min_sat_amount
   try {
-    const msgs: Message[] = (await models.Message.findAll({
+    const msgs: Message[] = await models.Message.findAll({
       where: {
         [Op.or]: [
           {
@@ -254,7 +254,7 @@ export const listPayments = async (req: Req, res: Response): Promise<void> => {
       order: [['createdAt', 'desc']],
       limit,
       offset,
-    })) as unknown as Message[]
+    })
     const ret = msgs || []
     success(
       res,
