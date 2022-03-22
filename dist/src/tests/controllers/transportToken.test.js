@@ -32,8 +32,9 @@ function checkDuplicateTransportTokens(t, node1, node2) {
             status: 1,
             route_hint: node2.routeHint || '',
         };
-        const currentTime = new Date(Date.now());
-        const transportToken = rsa.encrypt(node1.transportToken, `${node1.authToken}|${currentTime.toString()}`);
+        const currentTime = Date.now();
+        console.log('This is the current time: ', currentTime);
+        const transportToken = rsa.encrypt(node1.transportToken, `${node1.authToken}|${Date.now()}`);
         let added = yield http.post(node1.external_ip + '/contacts', {
             headers: {
                 'x-transport-token': transportToken,
@@ -67,7 +68,7 @@ function check1MinuteOldRequest(t, node1, node2) {
             status: 1,
             route_hint: node2.routeHint || '',
         };
-        const currentTime = new Date(Date.now() - 1 * 60001);
+        const currentTime = Date.now() - 1 * 60001;
         let error;
         try {
             yield http.post(node1.external_ip + '/contacts', {

@@ -16,7 +16,7 @@ const moment = require("moment");
 const config_1 = require("../config");
 const hmac = require("../../crypto/hmac");
 const makeArgs = (node, body = {}, options) => {
-    const currentTime = new Date(Date.now());
+    const currentTime = Date.now();
     const headers = {};
     if (options && options.hmacOptions) {
         const rawBody = JSON.stringify(body);

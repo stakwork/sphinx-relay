@@ -10,7 +10,7 @@ export const makeArgs = (
   body: RequestBody = {},
   options?
 ): RequestArgs => {
-  const currentTime = new Date(Date.now())
+  const currentTime = Date.now()
   const headers = {}
   if (options && options.hmacOptions) {
     const rawBody = JSON.stringify(body)

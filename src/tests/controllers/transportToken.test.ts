@@ -40,10 +40,11 @@ async function checkDuplicateTransportTokens(
     status: 1,
     route_hint: node2.routeHint || '',
   }
-  const currentTime = new Date(Date.now())
+  const currentTime = Date.now()
+  console.log('This is the current time: ', currentTime)
   const transportToken = rsa.encrypt(
     node1.transportToken,
-    `${node1.authToken}|${currentTime.toString()}`
+    `${node1.authToken}|${Date.now()}`
   )
   let added = await http.post(node1.external_ip + '/contacts', {
     headers: {
@@ -89,7 +90,7 @@ async function check1MinuteOldRequest(
     status: 1,
     route_hint: node2.routeHint || '',
   }
-  const currentTime = new Date(Date.now() - 1 * 60001)
+  const currentTime = Date.now() - 1 * 60001
   let error
   try {
     await http.post(node1.external_ip + '/contacts', {

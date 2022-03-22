@@ -168,17 +168,17 @@ export async function ownerMiddleware(req, res, next) {
     token = splitTransportToken[0]
 
     // The second item will be the timestamp
-    const splitTransportTokenTimestamp = splitTransportToken[1]
+    const splitTransportTokenTimestamp = parseInt(splitTransportToken[1])
 
+    console.log('Times stamp :', splitTransportTokenTimestamp)
     // Check if the timestamp is within the timeframe we
     // choose (1 minute here) to clear out the db of saved recent requests
     if (
-      new Date(splitTransportTokenTimestamp) <
-        new Date(
-          Date.now() - config.length_of_time_for_transport_token_clear * 60000
-        ) ||
+      splitTransportTokenTimestamp <
+        Date.now() - config.length_of_time_for_transport_token_clear * 60000 ||
       !splitTransportTokenTimestamp
     ) {
+      console.log('DO WE CHECK THE TIME')
       res.writeHead(401, 'Access invalid for user', {
         'Content-Type': 'text/plain',
       })
