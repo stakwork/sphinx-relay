@@ -12,6 +12,7 @@ import * as rsa from './crypto/rsa'
 import * as hmac from './crypto/hmac'
 import { Req } from './types'
 import * as fs from 'fs'
+import * as moment from 'moment'
 
 const config = loadConfig()
 
@@ -175,10 +176,10 @@ export async function ownerMiddleware(req, res, next) {
     // choose (1 minute here) to clear out the db of saved recent requests
     if (
       splitTransportTokenTimestamp <
-        Date.now() - config.length_of_time_for_transport_token_clear * 60000 ||
+        moment().unix() -
+          config.length_of_time_for_transport_token_clear * 60000 ||
       !splitTransportTokenTimestamp
     ) {
-      console.log('DO WE CHECK THE TIME')
       res.writeHead(401, 'Access invalid for user', {
         'Content-Type': 'text/plain',
       })

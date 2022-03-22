@@ -23,6 +23,7 @@ const scopes_1 = require("./scopes");
 const rsa = require("./crypto/rsa");
 const hmac = require("./crypto/hmac");
 const fs = require("fs");
+const moment = require("moment");
 const config = (0, config_1.loadConfig)();
 /*
 "unlock": true,
@@ -166,9 +167,9 @@ function ownerMiddleware(req, res, next) {
             // Check if the timestamp is within the timeframe we
             // choose (1 minute here) to clear out the db of saved recent requests
             if (splitTransportTokenTimestamp <
-                Date.now() - config.length_of_time_for_transport_token_clear * 60000 ||
+                moment().unix() -
+                    config.length_of_time_for_transport_token_clear * 60000 ||
                 !splitTransportTokenTimestamp) {
-                console.log('DO WE CHECK THE TIME');
                 res.writeHead(401, 'Access invalid for user', {
                     'Content-Type': 'text/plain',
                 });

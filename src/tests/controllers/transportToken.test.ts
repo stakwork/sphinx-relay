@@ -1,4 +1,5 @@
 import test, { ExecutionContext } from 'ava'
+import * as moment from 'moment'
 import nodes from '../nodes'
 import { randomText, iterate } from '../utils/helpers'
 import { getContactAndCheckKeyExchange } from '../utils/get'
@@ -40,11 +41,11 @@ async function checkDuplicateTransportTokens(
     status: 1,
     route_hint: node2.routeHint || '',
   }
-  const currentTime = Date.now()
+  const currentTime = moment().unix()
   console.log('This is the current time: ', currentTime)
   const transportToken = rsa.encrypt(
     node1.transportToken,
-    `${node1.authToken}|${Date.now()}`
+    `${node1.authToken}|${moment().unix()}`
   )
   let added = await http.post(node1.external_ip + '/contacts', {
     headers: {
@@ -90,7 +91,7 @@ async function check1MinuteOldRequest(
     status: 1,
     route_hint: node2.routeHint || '',
   }
-  const currentTime = Date.now() - 1 * 60001
+  const currentTime = moment().unix() - 1 * 60001
   let error
   try {
     await http.post(node1.external_ip + '/contacts', {
