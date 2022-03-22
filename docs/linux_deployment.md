@@ -1,13 +1,18 @@
 # Deployment on Linux
 
 This guide is focused on installing Sphinx-relay on top of LND on Linux.
+This guide assumes that you have LND up and running.
+If that's not the case, do it first.
+
+[LND install docs](https://github.com/lightningnetwork/lnd/blob/master/docs/INSTALL.md)
 
 ### Preparations
 
-- Connect to your node via SSH to the user account where your LND runs (most people use `bitcoin`)
+- Connect to your node via SSH to the user account where your LND runs (most people use `bitcoin`).
+- Substitute `ip` with the ip address of your node on your local network.
 
 ```sh
-$ ssh bitcoin@ip.ad.dr.ess
+$ ssh bitcoin@ip
 ```
 
 ### Install dependencies
