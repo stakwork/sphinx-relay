@@ -429,7 +429,7 @@ export async function keysendMessage(
     // WEAVE MESSAGE If TOO LARGE
     await asyncForEach(Array.from(Array(n)), async (u, i) => {
       const spliti = Math.ceil((opts.data || '').length / n)
-      const m = (opts.data || '').substring(i * spliti, spliti)
+      const m = (opts.data || '').substring(i * spliti, i * spliti + spliti)
       const isLastThread = i === n - 1
       const amt = isLastThread ? opts.amt : constants.min_sat_amount
       try {
