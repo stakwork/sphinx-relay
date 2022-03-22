@@ -11,6 +11,7 @@ import fetch from 'node-fetch'
 import * as helpers from '../helpers'
 import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -95,7 +96,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
   return ret
 }
 
-export async function listUTXOs(req, res) {
+export async function listUTXOs(req: Req, res) {
   try {
     const ret: Accounting[] = await getPendingAccountings()
     success(
@@ -243,7 +244,7 @@ export function startWatchingUTXOs() {
   setInterval(pollUTXOs, POLL_MINS * 60 * 1000) // every 1 minutes
 }
 
-export async function queryOnchainAddress(req, res) {
+export async function queryOnchainAddress(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 
@@ -312,7 +313,7 @@ export const receiveQuery = async (payload: network.Payload) => {
   }
   let q: Query
   try {
-    q = JSON.parse(content)
+    q = JSON.parse(content as string)
   } catch (e) {
     sphinxLogger.error(`=> ERROR receiveQuery, ${e}`)
     return
@@ -367,7 +368,7 @@ export const receiveQueryResponse = async (payload: network.Payload) => {
   // const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
   try {
-    const q: Query = JSON.parse(content)
+    const q: Query = JSON.parse(content as string)
     queries[q.uuid] = q
   } catch (e) {
     sphinxLogger.error(`=> ERROR receiveQueryResponse, ${e}`)

@@ -9,12 +9,14 @@ import { failure, success } from '../utils/res'
 import * as timers from '../utils/timers'
 import { sendConfirmation } from './confirmations'
 import * as network from '../network'
+import type { SendMessageParams } from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 // deprecated
-export const getMessages = async (req, res) => {
+export const getMessages = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -102,12 +104,12 @@ export const getMessages = async (req, res) => {
   res.end()
 }
 
-export const getAllMessages = async (req, res) => {
+export const getAllMessages = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  const limit = (req.query.limit && parseInt(req.query.limit)) || 1000
-  const offset = (req.query.offset && parseInt(req.query.offset)) || 0
+  const limit = (req.query.limit && parseInt(req.query.limit as string)) || 1000
+  const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
   let order = 'asc'
   if (req.query.order && req.query.order === 'desc') {
     order = 'desc'
@@ -159,12 +161,12 @@ export const getAllMessages = async (req, res) => {
   })
 }
 
-export const getMsgs = async (req, res) => {
+export const getMsgs = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  const limit = req.query.limit && parseInt(req.query.limit)
-  const offset = req.query.offset && parseInt(req.query.offset)
+  const limit = req.query.limit && parseInt(req.query.limit as string)
+  const offset = req.query.offset && parseInt(req.query.offset as string)
   const dateToReturn = req.query.date
   if (!dateToReturn) {
     return getAllMessages(req, res)
@@ -218,7 +220,7 @@ export const getMsgs = async (req, res) => {
   })
 }
 
-export async function deleteMessage(req, res) {
+export async function deleteMessage(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -254,7 +256,7 @@ export async function deleteMessage(req, res) {
   })
 }
 
-export const sendMessage = async (req, res) => {
+export const sendMessage = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   // try {
@@ -358,7 +360,7 @@ export const sendMessage = async (req, res) => {
   if (reply_uuid) msgToSend.replyUuid = reply_uuid
   if (parent_id) msgToSend.parentId = parent_id
 
-  const sendMessageParams: { [k: string]: any } = {
+  const sendMessageParams: SendMessageParams = {
     chat: chat,
     sender: owner,
     amount: amount || 0,
@@ -584,7 +586,7 @@ export const receiveDeleteMessage = async (payload) => {
   )
 }
 
-export const readMessages = async (req, res) => {
+export const readMessages = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
 
   const chat_id = req.params.chat_id
@@ -622,7 +624,7 @@ export const readMessages = async (req, res) => {
   }
 }
 
-export const clearMessages = (req, res) => {
+export const clearMessages = (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 

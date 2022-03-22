@@ -1,26 +1,29 @@
 import type { Contact } from '../models'
+import * as ldat from '../utils/ldat'
 
 export interface MessageContent {
   uuid: string
-  content: string
+  content: string | { [k: string]: string }
   amount: number
   id?: number
   replyUuid?: string
   mediaToken?: string
   mediaKey?: string
   mediaType?: string
-  date?: string
+  date?: Date
   originalMuid?: string
   status?: number
   purchaser?: number
   invoice?: string
   parentId?: number
   push?: boolean
+  mediaTerms?: ldat.LdatTerms
+  skipPaymentProcessing?: boolean
 }
 
 // fro group join msgs, etc
 export interface ChatMember {
-  role: number
+  role?: number
   key: string
   alias: string
 }

@@ -16,7 +16,7 @@ export async function isBotMsg(
   m: Msg,
   sentByMe: boolean,
   sender,
-  forwardedFromContactId: number
+  forwardedFromContactId?: number
 ): Promise<boolean> {
   const tenant: number = sender.id
   if (!tenant) {
@@ -102,7 +102,10 @@ export async function isBotMsg(
               )
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          sphinxLogger.error(`error parsing bots in tribe ${e}`)
+          return false
+        }
       } else {
         // no message types defined, do all?
         if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
@@ -132,7 +135,7 @@ async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
     case constants.bot_types.builtin:
       builtinBotEmit(msg)
       return true
-    case constants.bot_types.local:
+    case constants.bot_types.local: {
       const bot = await models.Bot.findOne({
         where: {
           uuid: botInTribe.botUuid,
@@ -140,6 +143,7 @@ async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
         },
       })
       return postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE)
+    }
     case constants.bot_types.remote:
       return keysendBotCmd(msg, botInTribe, sender)
     default:

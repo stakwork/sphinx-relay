@@ -15,8 +15,9 @@ import {
 } from './chatTribes'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
-export async function updateChat(req, res) {
+export async function updateChat(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(`=> updateChat`)
@@ -130,7 +131,7 @@ export async function receiveGroupKick(payload) {
   )
 }
 
-export async function getChats(req, res) {
+export async function getChats(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const chats = await models.Chat.findAll({
@@ -141,7 +142,7 @@ export async function getChats(req, res) {
   success(res, c)
 }
 
-export async function mute(req, res) {
+export async function mute(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -165,7 +166,7 @@ export async function mute(req, res) {
 
 // just add self here if tribes
 // or can u add contacts as members?
-export async function createGroupChat(req, res) {
+export async function createGroupChat(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -294,7 +295,7 @@ export async function createGroupChat(req, res) {
 }
 
 // only owner can do for tribe?
-export async function addGroupMembers(req, res) {
+export async function addGroupMembers(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -342,7 +343,7 @@ export async function addGroupMembers(req, res) {
   })
 }
 
-export const deleteChat = async (req, res) => {
+export const deleteChat = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -656,7 +657,7 @@ export async function receiveGroupCreateOrInvite(payload) {
     // must be sent by tribe owner?????
     const validOwner = await validateTribeOwner(chat_uuid, sender_pub_key)
     if (!validOwner)
-      return sphinxLogger.error(`[tribes] invalid uuid signature!`)
+      return sphinxLogger.error(`invalid uuid signature!`, logging.Tribes)
   }
 
   const contacts: any[] = []

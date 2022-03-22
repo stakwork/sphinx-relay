@@ -13,6 +13,8 @@ const express = require("express");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const https = require("https");
+const http = require("http");
 const logger_1 = require("./src/utils/logger");
 const hub_1 = require("./src/hub");
 const proxy_1 = require("./src/utils/proxy");
@@ -118,14 +120,14 @@ function setupApp() {
                     ca: certData === null || certData === void 0 ? void 0 : certData.caBundle,
                     cert: certData === null || certData === void 0 ? void 0 : certData.certificate,
                 };
-                server = require('https').createServer(credentials, app);
+                server = https.createServer(credentials, app);
             }
             catch (e) {
                 logger_1.sphinxLogger.info(['getCertificate ERROR', e]);
             }
         }
         else {
-            server = require('http').Server(app);
+            server = http.createServer(app);
         }
         if (!server)
             return logger_1.sphinxLogger.info('=> FAILED to create server');

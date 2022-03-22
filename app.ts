@@ -2,6 +2,8 @@ import * as express from 'express'
 import * as helmet from 'helmet'
 import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
+import * as https from 'https'
+import * as http from 'http'
 import logger, { logging, sphinxLogger } from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
@@ -14,6 +16,7 @@ import { hmacMiddleware, ownerMiddleware, unlocker } from './src/auth'
 import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
+import { Req } from './src/types'
 
 const env = process.env.NODE_ENV || 'development'
 const config = loadConfig()
@@ -115,12 +118,12 @@ function setupApp() {
           ca: certData?.caBundle,
           cert: certData?.certificate,
         }
-        server = require('https').createServer(credentials, app)
+        server = https.createServer(credentials, app)
       } catch (e) {
         sphinxLogger.info(['getCertificate ERROR', e])
       }
     } else {
-      server = require('http').Server(app)
+      server = http.createServer(app)
     }
 
     if (!server) return sphinxLogger.info('=> FAILED to create server')
@@ -148,7 +151,7 @@ function setupApp() {
       socket.connect(server)
       resolve(app)
     } else {
-      app.post('/unlock', async function (req, res) {
+      app.post('/unlock', async function (req: Req, res) {
         const ok = await unlocker(req, res)
         if (ok) {
           sphinxLogger.info('=> relay unlocked!')

@@ -1,15 +1,13 @@
 import { tokenFromTerms } from './ldat'
 import * as rsa from '../crypto/rsa'
 import constants from '../constants'
+import { Msg, MessageContent, ChatContent } from '../network/interfaces'
+import * as models from '../models'
 
-function addInRemoteText(
-  full: { [k: string]: any },
-  contactId,
-  isTribe: boolean
-) {
+function addInRemoteText(full: Partial<Msg>, contactId, isTribe: boolean): Msg {
   const m = full && full.message
-  if (!(m && m.content)) return full
-  if (!(typeof m.content === 'object')) return full
+  if (!(m && m.content)) return full as Msg
+  if (!(typeof m.content === 'object')) return full as Msg
   if (isTribe) {
     // if just one, send it (for tribe remote_text_map... is there a better way?)
     if (m.content['chat']) {
@@ -19,18 +17,24 @@ function addInRemoteText(
   return fillmsg(full, { content: m.content[contactId + ''] })
 }
 
-function removeRecipientFromChatMembers(full: { [k: string]: any }, destkey) {
+function removeRecipientFromChatMembers(
+  full: Partial<Msg>,
+  destkey: string
+): Msg {
   const c = full && full.chat
-  if (!(c && c.members)) return full
-  if (!(typeof c.members === 'object')) return full
+  if (!(c && c.members)) return full as Msg
+  if (!(typeof c.members === 'object')) return full as Msg
 
   const members = { ...c.members }
   if (members[destkey]) delete members[destkey]
   return fillchatmsg(full, { members })
 }
 
-function removeAllNonAdminMembersIfTribe(full: { [k: string]: any }, destkey) {
-  return full
+function removeAllNonAdminMembersIfTribe(
+  full: Partial<Msg>,
+  destkey: string
+): Msg {
+  return full as Msg
   // const c = full && full.chat
   // if (!(c && c.members)) return full
   // if (!(typeof c.members==='object')) return full
@@ -43,16 +47,16 @@ function removeAllNonAdminMembersIfTribe(full: { [k: string]: any }, destkey) {
 // THIS IS ONLY FOR TRIBE OWNER
 // by this time the content and mediaKey are already in message as string
 async function encryptTribeBroadcast(
-  full: { [k: string]: any },
-  contact,
+  full: Partial<Msg>,
+  contact: models.Contact,
   isTribeOwner: boolean
-) {
-  if (!isTribeOwner) return full
+): Promise<Msg> {
+  if (!isTribeOwner) return full as Msg
 
   const chat = full && full.chat
   const message = full && full.message
-  if (!message || !(chat && chat.type && chat.uuid)) return full
-  const obj: { [k: string]: any } = {}
+  if (!message || !(chat && chat.type && chat.uuid)) return full as Msg
+  const obj: Partial<MessageContent> = {}
   if (isTribeOwner) {
     // has been previously decrypted
     if (message.content) {
@@ -71,14 +75,14 @@ async function encryptTribeBroadcast(
 }
 
 function addInMediaKey(
-  full: { [k: string]: any },
-  contactId,
+  full: Partial<Msg>,
+  contactId: number,
   isTribe: boolean
-) {
+): Msg {
   const m = full && full.message
-  if (!(m && m.mediaKey)) return full
-  if (!(m && m.mediaTerms)) return full
-  if (!(typeof m.mediaKey === 'object')) return full
+  if (!(m && m.mediaKey)) return full as Msg
+  if (!(m && m.mediaTerms)) return full as Msg
+  if (!(typeof m.mediaKey === 'object')) return full as Msg
 
   if (isTribe) {
     if (m.mediaKey['chat']) {
@@ -93,12 +97,12 @@ function addInMediaKey(
 
 // add the token if its free, but if a price just the base64(host).muid
 async function finishTermsAndReceipt(
-  full: { [k: string]: any },
+  full: Partial<Msg>,
   destkey: string,
   senderPubkey: string
-) {
+): Promise<Msg> {
   const m = full && full.message
-  if (!(m && m.mediaTerms)) return full
+  if (!(m && m.mediaTerms)) return full as Msg
 
   const t = m.mediaTerms
   const meta = t.meta || {}
@@ -119,12 +123,15 @@ async function finishTermsAndReceipt(
 
 // this is only for tribes
 // DECRYPT EITHER STRING OR FIRST VAL IN OBJ
-async function decryptMessage(full: { [k: string]: any }, chat) {
-  if (!chat.groupPrivateKey) return full
+async function decryptMessage(
+  full: Partial<Msg>,
+  chat: Partial<models.Chat>
+): Promise<Msg> {
+  if (!chat.groupPrivateKey) return full as Msg
   const m = full && full.message
-  if (!m) return full
+  if (!m) return full as Msg
 
-  const obj: { [k: string]: any } = {}
+  const obj: Partial<MessageContent> = {}
   if (m.content) {
     let content = m.content
     if (typeof m.content === 'object') {
@@ -150,15 +157,20 @@ async function decryptMessage(full: { [k: string]: any }, chat) {
   return fillmsg(full, obj)
 }
 
-async function personalizeMessage(m, contact, isTribeOwner: boolean) {
+async function personalizeMessage(
+  m: Msg,
+  contact: models.Contact,
+  isTribeOwner: boolean
+): Promise<Msg> {
   const contactId = contact.id
   const destkey = contact.publicKey
   const senderPubkey = m.sender.pub_key
 
-  const cloned = JSON.parse(JSON.stringify(m))
+  const cloned: Msg = JSON.parse(JSON.stringify(m))
 
   const chat = cloned && cloned.chat
-  const isTribe = chat.type && chat.type === constants.chat_types.tribe
+  const isTribe =
+    (chat.type && chat.type === constants.chat_types.tribe) || false
 
   const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe)
   const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey)
@@ -177,24 +189,27 @@ async function personalizeMessage(m, contact, isTribeOwner: boolean) {
   return encMsg
 }
 
-function fillmsg(full, props) {
+export function fillmsg(
+  full: Partial<Msg>,
+  props: Partial<MessageContent>
+): Msg {
   return {
     ...full,
     message: {
       ...full.message,
       ...props,
     },
-  }
+  } as Msg
 }
 
-function fillchatmsg(full, props) {
+function fillchatmsg(full: Partial<Msg>, props: Partial<ChatContent>): Msg {
   return {
     ...full,
     chat: {
       ...full.chat,
       ...props,
     },
-  }
+  } as Msg
 }
 
 export { personalizeMessage, decryptMessage, encryptTribeBroadcast }

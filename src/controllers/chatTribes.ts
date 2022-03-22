@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, Chat } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
@@ -12,8 +12,9 @@ import { Op } from 'sequelize'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import type { Tribe } from '../models/ts/tribe'
+import { Req } from '../types'
 
-export async function joinTribe(req, res) {
+export async function joinTribe(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -35,7 +36,7 @@ export async function joinTribe(req, res) {
     ['received owner route hint', owner_route_hint],
     logging.Express
   )
-  const is_private = req.body.private
+  const is_private = req.body.private ? true : false
 
   const existing = await models.Chat.findOne({ where: { uuid, tenant } })
   if (existing) {
@@ -85,7 +86,7 @@ export async function joinTribe(req, res) {
   const chatStatus = is_private
     ? constants.chat_statuses.pending
     : constants.chat_statuses.approved
-  const chatParams: { [k: string]: any } = {
+  const chatParams: Partial<Chat> = {
     uuid: uuid,
     contactIds: JSON.stringify(contactIds),
     photoUrl: img || '',
@@ -107,13 +108,13 @@ export async function joinTribe(req, res) {
   const typeToSend = is_private
     ? constants.message_types.member_request
     : constants.message_types.group_join
-  const contactIdsToSend = is_private
-    ? [theTribeOwner.id] // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
-    : chatParams.contactIds
+  const contactIdsToSend: string = is_private
+    ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
+    : JSON.stringify(contactIds)
   // console.log("=> joinTribe: typeToSend", typeToSend);
   // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
   // set my alias to be the custom one
-  const theOwner = owner.dataValues || owner
+  const theOwner = owner
   if (my_alias) theOwner.alias = my_alias
   network.sendMessage({
     // send my data to tribe owner
@@ -152,7 +153,7 @@ export async function joinTribe(req, res) {
   })
 }
 
-export async function createChannel(req, res) {
+export async function createChannel(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const owner = req.owner
   //const tenant: number = req.owner.id
@@ -167,7 +168,7 @@ export async function createChannel(req, res) {
   success(res, channel)
 }
 
-export async function deleteChannel(req, res) {
+export async function deleteChannel(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
 
   const owner = req.owner
@@ -292,7 +293,7 @@ export async function receiveMemberRequest(payload) {
   )
 }
 
-export async function pinToTribe(req, res) {
+export async function pinToTribe(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { pin } = req.body
@@ -318,7 +319,7 @@ export async function pinToTribe(req, res) {
   }
 }
 
-export async function editTribe(req, res) {
+export async function editTribe(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
@@ -402,14 +403,14 @@ export async function editTribe(req, res) {
 }
 
 type ChatMemberStatus = 'approved' | 'rejected'
-export async function approveOrRejectMember(req, res) {
+export async function approveOrRejectMember(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   sphinxLogger.info('=> approve or reject tribe member')
   const msgId = parseInt(req.params['messageId'])
   const contactId = parseInt(req.params['contactId'])
-  const status: ChatMemberStatus = req.params['status']
+  const status: ChatMemberStatus = req.params['status'] as ChatMemberStatus
 
   const msg = await models.Message.findOne({ where: { id: msgId, tenant } })
   if (!msg) return failure(res, 'no message')
@@ -509,7 +510,7 @@ export async function receiveMemberApprove(payload) {
 
   const amount = chat.priceToJoin || 0
   const theChat = chat.dataValues || chat
-  const theOwner = owner.dataValues || owner
+  const theOwner = owner
   const theAlias = chat.myAlias || owner.alias
   if (theAlias) theOwner.alias = theAlias
   // send JOIN and my info to all
