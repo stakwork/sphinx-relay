@@ -2,6 +2,8 @@ import test, { ExecutionContext } from 'ava'
 
 import * as socketio from 'socket.io-client'
 import * as socketiolegacy from 'socket.io-client-legacy'
+import { greenSquare } from '../utils/base64images'
+
 import nodes from '../nodes'
 
 import { randomText, sleep } from '../utils/helpers'
@@ -13,6 +15,7 @@ import {
   sendBoost,
   sendTribeMessage,
   sendInvoice,
+  sendImage,
 } from '../utils/msg'
 
 import { addContact, joinTribe, createTribe } from '../utils/save'
@@ -136,6 +139,20 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   t.true(
     responseArray[responseArray.length - 1].type == 'invoice',
     'we should get back a invoice type'
+  )
+
+  /*
+   * Recieve Purchase
+   */
+  await sendImage(t, nodes[0], nodes[1], greenSquare, null, 10)
+  await sleep(1000)
+  t.true(
+    responseArray[responseArray.length - 2].type == 'attachment',
+    'we should get back a attachment type'
+  )
+  t.true(
+    responseArray[responseArray.length - 1].type == 'purchase_accept',
+    'we should get back a purchase_accept type'
   )
 }
 
