@@ -8,6 +8,7 @@ src/utils/*
 !src/controllers
 src/controllers/*
 !src/controllers/invoices.ts
+!src/controllers/payment.ts
 
 
 !src/network

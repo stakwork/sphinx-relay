@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { Message, Chat, models } from '../models'
 import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
@@ -6,14 +6,16 @@ import * as helpers from '../helpers'
 import { failure, success } from '../utils/res'
 import { tokenFromTerms } from '../utils/ldat'
 import * as network from '../network'
+import { Payload } from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
+import { Response } from 'express'
 
-export const sendPayment = async (req: Req, res) => {
+export const sendPayment = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
@@ -64,7 +66,7 @@ export const sendPayment = async (req: Req, res) => {
   })
   if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const msg: { [k: string]: any } = {
@@ -99,7 +101,7 @@ export const sendPayment = async (req: Req, res) => {
     msg.mediaType = media_type || ''
   }
 
-  const message = await models.Message.create(msg)
+  const message = (await models.Message.create(msg)) as unknown as Message
 
   const msgToSend: { [k: string]: any } = {
     id: message.id,
@@ -118,14 +120,14 @@ export const sendPayment = async (req: Req, res) => {
   // if remote text map, put that in
   let theChat = chat
   if (contact_ids) {
-    theChat = { ...chat.dataValues, contactIds: contact_ids }
+    theChat = { ...chat.dataValues, contactIds: contact_ids } as Chat
     if (remote_text_map) msgToSend.content = remote_text_map
   }
   network.sendMessage({
     chat: theChat,
     sender: owner,
     type: constants.message_types.direct_payment,
-    message: msgToSend,
+    message: msgToSend as Message,
     amount: amount,
     success: async (data) => {
       // console.log('payment sent', { data })
@@ -143,10 +145,10 @@ export const sendPayment = async (req: Req, res) => {
   })
 }
 
-export const receivePayment = async (payload) => {
+export const receivePayment = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received payment ${{ payload }}`)
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {
@@ -177,7 +179,7 @@ export const receivePayment = async (payload) => {
     status: constants.statuses.received,
     sender: sender.id,
     amount: amount,
-    amountMsat: parseFloat(amount) * 1000,
+    amountMsat: parseFloat(amount + '') * 1000,
     date: date,
     createdAt: date,
     updatedAt: date,
@@ -194,7 +196,7 @@ export const receivePayment = async (payload) => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
 
-  const message = await models.Message.create(msg)
+  const message = (await models.Message.create(msg)) as unknown as Message
 
   // console.log('saved message', message.dataValues)
 
@@ -209,15 +211,16 @@ export const receivePayment = async (payload) => {
   sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
 }
 
-export const listPayments = async (req: Req, res) => {
+export const listPayments = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  const limit = (req.query.limit && parseInt(req.query.limit as string)) || 100
-  const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
+  const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100
+  const offset =
+    (req.query.offset && parseInt(req.query.offset.toString())) || 0
 
   const MIN_VAL = constants.min_sat_amount
   try {
-    const msgs = await models.Message.findAll({
+    const msgs: Message[] = (await models.Message.findAll({
       where: {
         [Op.or]: [
           {
@@ -251,11 +254,11 @@ export const listPayments = async (req: Req, res) => {
       order: [['createdAt', 'desc']],
       limit,
       offset,
-    })
+    })) as unknown as Message[]
     const ret = msgs || []
     success(
       res,
-      ret.map((message) => jsonUtils.messageToJson(message, null))
+      ret.map((message) => jsonUtils.messageToJson(message))
     )
   } catch (e) {
     failure(res, 'cant find payments')
