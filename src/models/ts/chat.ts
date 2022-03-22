@@ -1,3 +1,5 @@
+import { Contact } from './contact'
+
 export interface Chat {
   id: number
   uuid: string
@@ -30,4 +32,9 @@ export interface Chat {
   tenant: number
   skipBroadcastJoins: boolean
   pin: string
+}
+
+export interface ChatRecord extends Chat {
+  dataValues: Contact
+  pendingContactIds: Array<string>
 }
