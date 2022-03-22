@@ -47,28 +47,28 @@ export const getContacts = async (req: Req, res: Response): Promise<void> => {
     // this is the default
     where.unmet = { [Op.or]: [false, null] }
   }
-  const contacts = (await models.Contact.findAll({
+  const contacts: ContactRecord[] = await models.Contact.findAll({
     where,
     raw: true,
-  })) as unknown as Contact[]
-  const invites = (await models.Invite.findAll({
+  })
+  const invites: Invite[] = await models.Invite.findAll({
     raw: true,
     where: { tenant },
-  })) as unknown as Invite[]
-  const chats = (await models.Chat.findAll({
+  })
+  const chats: ChatRecord[] = await models.Chat.findAll({
     where: { deleted: false, tenant },
     raw: true,
-  })) as unknown as ChatRecord[]
-  const subscriptions = (await models.Subscription.findAll({
+  })
+  const subscriptions: Subscription[] = await models.Subscription.findAll({
     raw: true,
     where: { tenant },
-  })) as unknown as Subscription[]
-  const pendingMembers = (await models.ChatMember.findAll({
+  })
+  const pendingMembers: ChatMember[] = await models.ChatMember.findAll({
     where: {
       status: constants.chat_statuses.pending,
       tenant,
     },
-  })) as unknown as ChatMember[]
+  })
 
   const contactsResponse = contacts.map((contact) => {
     const contactJson = jsonUtils.contactToJson(contact)
@@ -107,9 +107,9 @@ export const getContactsForChat = async (
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  const chat = (await models.Chat.findOne({
+  const chat: ChatRecord = await models.Chat.findOne({
     where: { id: chat_id, tenant },
-  })) as unknown as Chat
+  })
   if (!chat) return failure(res, 'chat not found')
 
   let contactIDs
@@ -118,35 +118,35 @@ export const getContactsForChat = async (
   } catch (e) {
     return failure(res, 'no contact ids')
   }
-  const pendingMembers = (await models.ChatMember.findAll({
+  const pendingMembers: ChatMember[] = await models.ChatMember.findAll({
     where: {
       status: constants.chat_statuses.pending,
       chatId: chat_id,
       tenant,
     },
-  })) as unknown as ChatMember[]
+  })
 
   if (!contactIDs || !contactIDs.length)
     return failure(res, 'no contact ids length')
 
   const limit = (req.query.limit && parseInt(req.query.limit as string)) || 1000
   const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
-  const contacts = (await models.Contact.findAll({
+  const contacts: ContactRecord[] = await models.Contact.findAll({
     where: { id: { [Op.in]: contactIDs }, tenant },
     limit,
     offset,
     order: [['alias', 'asc']],
-  })) as unknown as Contact[]
+  })
   if (!contacts) return failure(res, 'no contacts found')
   const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c))
 
   let finalContacts = contactsRet
   if (offset === 0) {
     const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId)
-    const pendingContacts = (await models.Contact.findAll({
+    const pendingContacts: ContactRecord[] = await models.Contact.findAll({
       where: { id: { [Op.in]: pendingContactIDs }, tenant },
       order: [['alias', 'asc']],
-    })) as unknown as ContactRecord[]
+    })
     if (pendingContacts) {
       const pendingContactsRet = pendingContacts.map((c) => {
         const ctc = c.dataValues as Contact
@@ -170,7 +170,9 @@ export async function generateOwnerWithExternalSigner(
   }
   const { pubkey, sig } = req.body
   const where: { [k: string]: any } = { isOwner: true, publicKey: pubkey }
-  const owner = (await models.Contact.findOne({ where })) as unknown as Contact
+  const owner: Contact = await models.Contact.findOne({
+    where,
+  })
   if (owner) {
     return failure(res, 'owner already exists')
   }
@@ -185,7 +187,7 @@ export async function generateOwnerWithExternalSigner(
     isOwner: true,
     authToken: null,
   }
-  const created = (await models.Contact.create(contact)) as unknown as Contact
+  const created: Contact = await models.Contact.create(contact)
   // set tenant to self!
   created.update({ tenant: created.id })
   success(res, { id: (created && created.id) || 0 })
@@ -210,7 +212,9 @@ export const generateToken = async (req: Req, res: Response): Promise<void> => {
     }
     where.publicKey = pubkey
   }
-  const owner = (await models.Contact.findOne({ where })) as unknown as Contact
+  const owner: Contact = await models.Contact.findOne({
+    where,
+  })
   if (!owner) {
     return failure(res, 'no owner')
   }
@@ -299,9 +303,9 @@ export const updateContact = async (req: Req, res: Response): Promise<void> => {
 
   const attrs = extractAttrs(req.body)
 
-  const contact = (await models.Contact.findOne({
+  const contact: Contact = await models.Contact.findOne({
     where: { id: req.params.id, tenant },
-  })) as unknown as Contact
+  })
   if (!contact) {
     return failure(res, 'no contact found')
   }
@@ -325,10 +329,10 @@ export const updateContact = async (req: Req, res: Response): Promise<void> => {
   }
 
   // send updated owner info to others!
-  const contactIds = (
-    (await models.Contact.findAll({
+  const contactIds: number[] = (
+    await models.Contact.findAll({
       where: { deleted: false, tenant },
-    })) as unknown as Contact[]
+    })
   )
     .filter((c) => c.id !== tenant && c.publicKey)
     .map((c) => c.id)
@@ -358,9 +362,9 @@ export const exchangeKeys = async (req: Req, res: Response): Promise<void> => {
     logging.Network
   )
 
-  const contact = (await models.Contact.findOne({
+  const contact: Contact = await models.Contact.findOne({
     where: { id: req.params.id, tenant },
-  })) as unknown as Contact
+  })
   const owner = req.owner
 
   success(res, jsonUtils.contactToJson(contact))
@@ -391,11 +395,11 @@ export const createContact = async (req: Req, res: Response): Promise<void> => {
 
   const owner = req.owner
 
-  const existing =
+  const existing: Contact =
     attrs['public_key'] &&
-    ((await models.Contact.findOne({
+    (await models.Contact.findOne({
       where: { publicKey: attrs['public_key'], tenant },
-    })) as unknown as Contact)
+    }))
   if (existing) {
     const updateObj: { [k: string]: any } = { fromGroup: false }
     if (attrs['alias']) updateObj.alias = attrs['alias']
@@ -415,9 +419,7 @@ export const createContact = async (req: Req, res: Response): Promise<void> => {
     attrs['public_key'] = attrs['public_key'].substring(0, 66)
   attrs.tenant = tenant
 
-  const createdContact = (await models.Contact.create(
-    attrs
-  )) as unknown as Contact
+  const createdContact: Contact = await models.Contact.create(attrs)
   const contact = await createdContact.update(jsonUtils.jsonToContact(attrs))
 
   success(res, jsonUtils.contactToJson(contact))
@@ -438,25 +440,25 @@ export const deleteContact = async (req: Req, res: Response): Promise<void> => {
     return
   }
 
-  const contact = (await models.Contact.findOne({
+  const contact: Contact = await models.Contact.findOne({
     where: { id, tenant },
-  })) as unknown as Contact
+  })
   if (!contact) return
 
   // CHECK IF IN MY TRIBE
   const owner = req.owner
-  const tribesImAdminOf = (await models.Chat.findAll({
+  const tribesImAdminOf: Chat[] = await models.Chat.findAll({
     where: { ownerPubkey: owner.publicKey, tenant },
-  })) as unknown as Chat[]
+  })
   const tribesIdArray =
     tribesImAdminOf &&
     tribesImAdminOf.length &&
     tribesImAdminOf.map((t) => t.id)
   let okToDelete = true
   if (tribesIdArray && tribesIdArray.length) {
-    const thisContactMembers = (await models.ChatMember.findAll({
+    const thisContactMembers: ChatMember[] = await models.ChatMember.findAll({
       where: { contactId: id, chatId: { [Op.in]: tribesIdArray }, tenant },
-    })) as unknown as ChatMember[]
+    })
     if (thisContactMembers && thisContactMembers.length) {
       // IS A MEMBER! dont delete, instead just set from_group=true
       okToDelete = false
@@ -465,9 +467,9 @@ export const deleteContact = async (req: Req, res: Response): Promise<void> => {
   }
 
   // CHECK IF IM IN THEIR TRIBE
-  const tribesTheyreAdminOf = (await models.Chat.findAll({
+  const tribesTheyreAdminOf: Chat[] = await models.Chat.findAll({
     where: { ownerPubkey: contact.publicKey, tenant, deleted: false },
-  })) as unknown as Chat[]
+  })
   if (tribesTheyreAdminOf && tribesTheyreAdminOf.length) {
     okToDelete = false
     await contact.update({ fromGroup: true })
@@ -484,9 +486,9 @@ export const deleteContact = async (req: Req, res: Response): Promise<void> => {
   }
 
   // find and destroy chat & messages
-  const chats = (await models.Chat.findAll({
+  const chats: Chat[] = await models.Chat.findAll({
     where: { deleted: false, tenant },
-  })) as unknown as Chat[]
+  })
   chats.map(async (chat) => {
     if (chat.type === constants.chat_types.conversation) {
       const contactIds = JSON.parse(chat.contactIds)
@@ -526,13 +528,13 @@ export const receiveContactKey = async (payload: Payload): Promise<void> => {
     return sphinxLogger.error('no pubkey!')
   }
 
-  const sender = (await models.Contact.findOne({
+  const sender: Contact = await models.Contact.findOne({
     where: {
       publicKey: sender_pub_key,
       status: constants.contact_statuses.confirmed,
       tenant,
     },
-  })) as unknown as Contact
+  })
   let msgIncludedContactKey = false // ???????
   if (sender_contact_key) {
     msgIncludedContactKey = true
@@ -588,13 +590,13 @@ export const receiveConfirmContactKey = async (
     return sphinxLogger.error('no pubkey!')
   }
 
-  const sender = (await models.Contact.findOne({
+  const sender: Contact = await models.Contact.findOne({
     where: {
       publicKey: sender_pub_key,
       status: constants.contact_statuses.confirmed,
       tenant,
     },
-  })) as unknown as Contact
+  })
   if (sender_contact_key && sender) {
     const objToUpdate: { [k: string]: any } = {
       contactKey: sender_contact_key,
@@ -652,18 +654,18 @@ export const getLatestContacts = async (
       updatedAt: { [Op.gte]: local },
       tenant,
     }
-    const contacts = (await models.Contact.findAll({
+    const contacts: Contact[] = await models.Contact.findAll({
       where,
-    })) as unknown as Contact[]
-    const invites = (await models.Invite.findAll({
+    })
+    const invites: Invite[] = await models.Invite.findAll({
       where,
-    })) as unknown as Invite[]
-    const chats = (await models.Chat.findAll({
+    })
+    const chats: ChatRecord[] = await models.Chat.findAll({
       where,
-    })) as unknown as ChatRecord[]
-    const subscriptions = (await models.Subscription.findAll({
+    })
+    const subscriptions: Subscription[] = await models.Subscription.findAll({
       where,
-    })) as unknown as Subscription[]
+    })
 
     const contactsResponse = contacts.map((contact) =>
       jsonUtils.contactToJson(contact)
@@ -676,13 +678,13 @@ export const getLatestContacts = async (
     )
     // const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
     const chatIds = chats.map((c) => c.id)
-    const pendingMembers = (await models.ChatMember.findAll({
+    const pendingMembers: ChatMember[] = await models.ChatMember.findAll({
       where: {
         status: constants.chat_statuses.pending,
         tenant,
         chatId: { [Op.in]: chatIds },
       },
-    })) as unknown as ChatMember[]
+    })
     const chatsResponse = chats.map((chat) => {
       const theChat = (chat.dataValues as Chat) || chat
       if (!pendingMembers) return jsonUtils.chatToJson(theChat)
@@ -709,9 +711,9 @@ async function switchBlock(
   id: number,
   blocked: boolean
 ) {
-  const contact = (await models.Contact.findOne({
+  const contact: Contact = await models.Contact.findOne({
     where: { id, tenant },
-  })) as unknown as Contact
+  })
   if (!contact) {
     return failure(res, 'no contact found')
   }

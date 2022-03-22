@@ -42,28 +42,28 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         // this is the default
         where.unmet = { [sequelize_1.Op.or]: [false, null] };
     }
-    const contacts = (yield models_1.models.Contact.findAll({
+    const contacts = yield models_1.models.Contact.findAll({
         where,
         raw: true,
-    }));
-    const invites = (yield models_1.models.Invite.findAll({
+    });
+    const invites = yield models_1.models.Invite.findAll({
         raw: true,
         where: { tenant },
-    }));
-    const chats = (yield models_1.models.Chat.findAll({
+    });
+    const chats = yield models_1.models.Chat.findAll({
         where: { deleted: false, tenant },
         raw: true,
-    }));
-    const subscriptions = (yield models_1.models.Subscription.findAll({
+    });
+    const subscriptions = yield models_1.models.Subscription.findAll({
         raw: true,
         where: { tenant },
-    }));
-    const pendingMembers = (yield models_1.models.ChatMember.findAll({
+    });
+    const pendingMembers = yield models_1.models.ChatMember.findAll({
         where: {
             status: constants_1.default.chat_statuses.pending,
             tenant,
         },
-    }));
+    });
     const contactsResponse = contacts.map((contact) => {
         const contactJson = jsonUtils.contactToJson(contact);
         const invite = invites.find((invite) => invite.contactId == contact.id);
@@ -95,9 +95,9 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    const chat = (yield models_1.models.Chat.findOne({
+    const chat = yield models_1.models.Chat.findOne({
         where: { id: chat_id, tenant },
-    }));
+    });
     if (!chat)
         return (0, res_1.failure)(res, 'chat not found');
     let contactIDs;
@@ -107,33 +107,33 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
     catch (e) {
         return (0, res_1.failure)(res, 'no contact ids');
     }
-    const pendingMembers = (yield models_1.models.ChatMember.findAll({
+    const pendingMembers = yield models_1.models.ChatMember.findAll({
         where: {
             status: constants_1.default.chat_statuses.pending,
             chatId: chat_id,
             tenant,
         },
-    }));
+    });
     if (!contactIDs || !contactIDs.length)
         return (0, res_1.failure)(res, 'no contact ids length');
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
-    const contacts = (yield models_1.models.Contact.findAll({
+    const contacts = yield models_1.models.Contact.findAll({
         where: { id: { [sequelize_1.Op.in]: contactIDs }, tenant },
         limit,
         offset,
         order: [['alias', 'asc']],
-    }));
+    });
     if (!contacts)
         return (0, res_1.failure)(res, 'no contacts found');
     const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
     let finalContacts = contactsRet;
     if (offset === 0) {
         const pendingContactIDs = (pendingMembers || []).map((cm) => cm.contactId);
-        const pendingContacts = (yield models_1.models.Contact.findAll({
+        const pendingContacts = yield models_1.models.Contact.findAll({
             where: { id: { [sequelize_1.Op.in]: pendingContactIDs }, tenant },
             order: [['alias', 'asc']],
-        }));
+        });
         if (pendingContacts) {
             const pendingContactsRet = pendingContacts.map((c) => {
                 const ctc = c.dataValues;
@@ -154,7 +154,9 @@ function generateOwnerWithExternalSigner(req, res) {
         }
         const { pubkey, sig } = req.body;
         const where = { isOwner: true, publicKey: pubkey };
-        const owner = (yield models_1.models.Contact.findOne({ where }));
+        const owner = yield models_1.models.Contact.findOne({
+            where,
+        });
         if (owner) {
             return (0, res_1.failure)(res, 'owner already exists');
         }
@@ -168,7 +170,7 @@ function generateOwnerWithExternalSigner(req, res) {
             isOwner: true,
             authToken: null,
         };
-        const created = (yield models_1.models.Contact.create(contact));
+        const created = yield models_1.models.Contact.create(contact);
         // set tenant to self!
         created.update({ tenant: created.id });
         (0, res_1.success)(res, { id: (created && created.id) || 0 });
@@ -192,7 +194,9 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         where.publicKey = pubkey;
     }
-    const owner = (yield models_1.models.Contact.findOne({ where }));
+    const owner = yield models_1.models.Contact.findOne({
+        where,
+    });
     if (!owner) {
         return (0, res_1.failure)(res, 'no owner');
     }
@@ -268,9 +272,9 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         },
     ], logger_1.logging.Network);
     const attrs = extractAttrs(req.body);
-    const contact = (yield models_1.models.Contact.findOne({
+    const contact = yield models_1.models.Contact.findOne({
         where: { id: req.params.id, tenant },
-    }));
+    });
     if (!contact) {
         return (0, res_1.failure)(res, 'no contact found');
     }
@@ -317,9 +321,9 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             query: req.query,
         },
     ], logger_1.logging.Network);
-    const contact = (yield models_1.models.Contact.findOne({
+    const contact = yield models_1.models.Contact.findOne({
         where: { id: req.params.id, tenant },
-    }));
+    });
     const owner = req.owner;
     (0, res_1.success)(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
@@ -365,7 +369,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (attrs['public_key'].length > 66)
         attrs['public_key'] = attrs['public_key'].substring(0, 66);
     attrs.tenant = tenant;
-    const createdContact = (yield models_1.models.Contact.create(attrs));
+    const createdContact = yield models_1.models.Contact.create(attrs);
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
     (0, res_1.success)(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
@@ -384,24 +388,24 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         (0, res_1.failure)(res, 'Cannot delete self');
         return;
     }
-    const contact = (yield models_1.models.Contact.findOne({
+    const contact = yield models_1.models.Contact.findOne({
         where: { id, tenant },
-    }));
+    });
     if (!contact)
         return;
     // CHECK IF IN MY TRIBE
     const owner = req.owner;
-    const tribesImAdminOf = (yield models_1.models.Chat.findAll({
+    const tribesImAdminOf = yield models_1.models.Chat.findAll({
         where: { ownerPubkey: owner.publicKey, tenant },
-    }));
+    });
     const tribesIdArray = tribesImAdminOf &&
         tribesImAdminOf.length &&
         tribesImAdminOf.map((t) => t.id);
     let okToDelete = true;
     if (tribesIdArray && tribesIdArray.length) {
-        const thisContactMembers = (yield models_1.models.ChatMember.findAll({
+        const thisContactMembers = yield models_1.models.ChatMember.findAll({
             where: { contactId: id, chatId: { [sequelize_1.Op.in]: tribesIdArray }, tenant },
-        }));
+        });
         if (thisContactMembers && thisContactMembers.length) {
             // IS A MEMBER! dont delete, instead just set from_group=true
             okToDelete = false;
@@ -409,9 +413,9 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
     }
     // CHECK IF IM IN THEIR TRIBE
-    const tribesTheyreAdminOf = (yield models_1.models.Chat.findAll({
+    const tribesTheyreAdminOf = yield models_1.models.Chat.findAll({
         where: { ownerPubkey: contact.publicKey, tenant, deleted: false },
-    }));
+    });
     if (tribesTheyreAdminOf && tribesTheyreAdminOf.length) {
         okToDelete = false;
         yield contact.update({ fromGroup: true });
@@ -426,9 +430,9 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
     // find and destroy chat & messages
-    const chats = (yield models_1.models.Chat.findAll({
+    const chats = yield models_1.models.Chat.findAll({
         where: { deleted: false, tenant },
-    }));
+    });
     chats.map((chat) => __awaiter(void 0, void 0, void 0, function* () {
         if (chat.type === constants_1.default.chat_types.conversation) {
             const contactIds = JSON.parse(chat.contactIds);
@@ -461,13 +465,13 @@ const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, functio
     if (!sender_pub_key) {
         return logger_1.sphinxLogger.error('no pubkey!');
     }
-    const sender = (yield models_1.models.Contact.findOne({
+    const sender = yield models_1.models.Contact.findOne({
         where: {
             publicKey: sender_pub_key,
             status: constants_1.default.contact_statuses.confirmed,
             tenant,
         },
-    }));
+    });
     let msgIncludedContactKey = false; // ???????
     if (sender_contact_key) {
         msgIncludedContactKey = true;
@@ -517,13 +521,13 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
     if (!sender_pub_key) {
         return logger_1.sphinxLogger.error('no pubkey!');
     }
-    const sender = (yield models_1.models.Contact.findOne({
+    const sender = yield models_1.models.Contact.findOne({
         where: {
             publicKey: sender_pub_key,
             status: constants_1.default.contact_statuses.confirmed,
             tenant,
         },
-    }));
+    });
     if (sender_contact_key && sender) {
         const objToUpdate = {
             contactKey: sender_contact_key,
@@ -575,30 +579,30 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             updatedAt: { [sequelize_1.Op.gte]: local },
             tenant,
         };
-        const contacts = (yield models_1.models.Contact.findAll({
+        const contacts = yield models_1.models.Contact.findAll({
             where,
-        }));
-        const invites = (yield models_1.models.Invite.findAll({
+        });
+        const invites = yield models_1.models.Invite.findAll({
             where,
-        }));
-        const chats = (yield models_1.models.Chat.findAll({
+        });
+        const chats = yield models_1.models.Chat.findAll({
             where,
-        }));
-        const subscriptions = (yield models_1.models.Subscription.findAll({
+        });
+        const subscriptions = yield models_1.models.Subscription.findAll({
             where,
-        }));
+        });
         const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
         const invitesResponse = invites.map((invite) => jsonUtils.inviteToJson(invite));
         const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));
         // const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
         const chatIds = chats.map((c) => c.id);
-        const pendingMembers = (yield models_1.models.ChatMember.findAll({
+        const pendingMembers = yield models_1.models.ChatMember.findAll({
             where: {
                 status: constants_1.default.chat_statuses.pending,
                 tenant,
                 chatId: { [sequelize_1.Op.in]: chatIds },
             },
-        }));
+        });
         const chatsResponse = chats.map((chat) => {
             const theChat = chat.dataValues || chat;
             if (!pendingMembers)
@@ -621,9 +625,9 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.getLatestContacts = getLatestContacts;
 function switchBlock(res, tenant, id, blocked) {
     return __awaiter(this, void 0, void 0, function* () {
-        const contact = (yield models_1.models.Contact.findOne({
+        const contact = yield models_1.models.Contact.findOne({
             where: { id, tenant },
-        }));
+        });
         if (!contact) {
             return (0, res_1.failure)(res, 'no contact found');
         }
