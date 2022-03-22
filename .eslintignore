@@ -4,6 +4,12 @@ src/*
 !src/utils
 src/utils/*
 !src/utils/tribes.ts
+
+!src/controllers
+src/controllers/*
+!src/controllers/invoices.ts
+
+
 !src/network
 !src/utils/msg.ts
 !src/grpc
