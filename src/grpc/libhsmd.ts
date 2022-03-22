@@ -3,7 +3,7 @@ import { loadConfig } from '../utils/config'
 const config = loadConfig()
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
 
-var libhsmd = {
+let libhsmd = {
   Init: function (rootkey: string, chain: string): string {
     return ''
   },

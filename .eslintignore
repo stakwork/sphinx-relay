@@ -12,4 +12,4 @@ src/controllers/*
 
 !src/network
 !src/utils/msg.ts
-
+!src/grpc

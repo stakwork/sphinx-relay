@@ -33,7 +33,7 @@ function receiveNonKeysend(response) {
     return __awaiter(this, void 0, void 0, function* () {
         const decoded = bolt11.decode(response['payment_request']);
         const paymentHash = ((_a = decoded.tags.find((t) => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
-        let settleDate = parseInt(response['settle_date'] + '000');
+        const settleDate = parseInt(response['settle_date'] + '000');
         const invoice = yield models_1.models.Message.findOne({
             where: {
                 type: constants_1.default.message_types.invoice,
