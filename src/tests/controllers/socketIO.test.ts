@@ -12,6 +12,7 @@ import {
   sendMessageAndCheckDecryption,
   sendBoost,
   sendTribeMessage,
+  sendInvoice,
 } from '../utils/msg'
 
 import { addContact, joinTribe, createTribe } from '../utils/save'
@@ -121,10 +122,20 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
 
   await deleteMessage(t, nodes[0], sentMessage.id)
-  await sleep(10000)
+  await sleep(1000)
   t.true(
     responseArray[responseArray.length - 1].type == 'delete',
     'we should get back a delete type'
+  )
+
+  /*******
+   * Recieve Invoice
+   */
+  await sendInvoice(t, nodes[0], nodes[1], 11, 'Invoice sample text')
+  await sleep(1000)
+  t.true(
+    responseArray[responseArray.length - 1].type == 'invoice',
+    'we should get back a invoice type'
   )
 }
 
