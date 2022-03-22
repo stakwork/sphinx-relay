@@ -224,7 +224,7 @@ export interface ListChannelsResponse {
 interface GreenlightHTLC {
   direction: string
   id: number
-  amount: string
+  amount: string // int64
   expiry: number
   payment_hash: string
   state: string
