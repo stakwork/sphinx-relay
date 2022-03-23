@@ -152,9 +152,9 @@ function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) 
         logger_1.sphinxLogger.error('wrong type for mediaKeyMap');
         return;
     }
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
-    for (let [contactId, key] of Object.entries(mediaKeyMap)) {
+    for (const [contactId, key] of Object.entries(mediaKeyMap)) {
         if (parseInt(contactId) !== tenant) {
             const receiverID = parseInt(contactId) || 0; // 0 is for a tribe
             models_1.models.MediaKey.create({
@@ -176,7 +176,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { chat_id, contact_id, amount, media_token } = req.body;
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     try {
         schemas.purchase.validateSync(req.body);
@@ -230,7 +230,7 @@ exports.purchase = purchase;
 /* RECEIVERS */
 const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(['=> received purchase', { payload }], logger_1.logging.Network);
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, mediaToken, msg_uuid, chat_type, skip_payment_processing, purchaser_id, network_type, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
@@ -370,7 +370,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
 exports.receivePurchase = receivePurchase;
 const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info('=> receivePurchaseAccept', logger_1.logging.Network);
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, mediaToken, mediaKey, mediaType, originalMuid, network_type, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
@@ -415,7 +415,7 @@ const receivePurchaseAccept = (payload) => __awaiter(void 0, void 0, void 0, fun
 exports.receivePurchaseAccept = receivePurchaseAccept;
 const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info('=> receivePurchaseDeny', logger_1.logging.Network);
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, mediaToken, network_type } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
@@ -445,7 +445,7 @@ const receivePurchaseDeny = (payload) => __awaiter(void 0, void 0, void 0, funct
 exports.receivePurchaseDeny = receivePurchaseDeny;
 const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('received attachment', { payload })
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {

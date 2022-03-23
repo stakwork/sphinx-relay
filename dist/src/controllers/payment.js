@@ -47,7 +47,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     });
     if (!chat)
         return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const msg = {
         chatId: chat.id,
@@ -131,7 +131,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendPayment = sendPayment;
 const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received payment ${{ payload }}`);
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {

@@ -106,7 +106,7 @@ export const createInvite = async (req: Req, res) => {
       tenant,
       // invoice: inviteCreated.invoice,
     })
-    let contactJson = jsonUtils.contactToJson(contact)
+    const contactJson = jsonUtils.contactToJson(contact)
     if (invite) {
       contactJson.invite = jsonUtils.inviteToJson(invite)
     }

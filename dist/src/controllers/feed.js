@@ -86,7 +86,7 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
             msg,
             success: () => {
                 logger_1.sphinxLogger.info(`payment sent!`);
-                var date = new Date();
+                const date = new Date();
                 date.setMilliseconds(0);
                 models_1.models.Message.create({
                     chatId: 0,

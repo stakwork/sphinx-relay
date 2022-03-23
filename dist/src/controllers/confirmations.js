@@ -70,7 +70,9 @@ function receiveConfirmation(payload) {
                         try {
                             statusMap = JSON.parse(message.statusMap || '{}');
                         }
-                        catch (e) { }
+                        catch (e) {
+                            //Leave empty we want to do nothing here
+                        }
                         statusMap[sender.id] = constants_1.default.statuses.received;
                         yield message.update({
                             status: constants_1.default.statuses.received,
@@ -176,7 +178,7 @@ function receiveHeartbeat(payload) {
     });
 }
 exports.receiveHeartbeat = receiveHeartbeat;
-let heartbeats = {};
+const heartbeats = {};
 function healthcheck(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -209,7 +211,7 @@ function healthcheck(req, res) {
             return;
         }
         let i = 0;
-        let interval = setInterval(() => {
+        const interval = setInterval(() => {
             if (i >= 15) {
                 clearInterval(interval);
                 delete heartbeats[pubkey];

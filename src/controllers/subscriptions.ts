@@ -14,7 +14,7 @@ import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 
 // store all current running jobs in memory
-let jobs = {}
+const jobs = {}
 
 // init jobs from DB
 export const initializeCronJobs = async () => {
@@ -48,7 +48,7 @@ async function startCronJob(sub) {
         // skip, still in jobs{} tho
         return this.stop()
       }
-      let STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription)
+      const STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription)
       if (STOP) {
         // end the job and return
         sphinxLogger.info('stop')
@@ -120,7 +120,7 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
 async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
   const tenant: number = owner.id
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const subscription = await models.Subscription.findOne({
@@ -261,12 +261,8 @@ export async function restartSubscription(req: Req, res) {
 
 async function getRawSubs(opts = {}) {
   const options: { [k: string]: any } = { order: [['id', 'asc']], ...opts }
-  try {
-    const subs = await models.Subscription.findAll(options)
-    return subs
-  } catch (e) {
-    throw e
-  }
+  const subs = await models.Subscription.findAll(options)
+  return subs
 }
 
 // all subs
