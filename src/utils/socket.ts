@@ -3,6 +3,7 @@ import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { loadConfig } from './config'
 import { sphinxLogger } from '../utils/logger'
+import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
 // import * as WebSocket from 'ws'
@@ -38,10 +39,10 @@ export function connect(server) {
       const transportPrivateKey = fs.readFileSync(
         config.transportPrivateKeyLocation
       )
-      let userTokenFromTransportToken = crypto
-        .privateDecrypt(transportPrivateKey, x_transport_token)
-        .toString()
+      const userTokenFromTransportToken = rsa
+        .decrypt(transportPrivateKey, x_transport_token)
         .split('|')[0]
+
       userToken = userTokenFromTransportToken
     }
 
