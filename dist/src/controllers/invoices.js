@@ -45,9 +45,9 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const response = yield Lightning.sendPayment(payment_request, req.owner.publicKey);
         logger_1.sphinxLogger.info(`[pay invoice data] ${response}`);
-        const message = (yield models_1.models.Message.findOne({
+        const message = yield models_1.models.Message.findOne({
             where: { payment_request, tenant },
-        }));
+        });
         if (!message) {
             // invoice still paid
             anonymousInvoice(res, payment_request, tenant);
@@ -57,12 +57,12 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         message.save();
         const date = new Date();
         date.setMilliseconds(0);
-        const chat = (yield models_1.models.Chat.findOne({
+        const chat = yield models_1.models.Chat.findOne({
             where: { id: message.chatId, tenant },
-        }));
+        });
         const contactIds = JSON.parse(chat.contactIds);
         const senderId = contactIds.find((id) => id != message.sender);
-        const paidMessage = (yield models_1.models.Message.create({
+        const paidMessage = yield models_1.models.Message.create({
             chatId: message.chatId,
             sender: senderId,
             type: constants_1.default.message_types.payment,
@@ -76,7 +76,7 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             createdAt: date,
             updatedAt: date,
             tenant,
-        }));
+        });
         logger_1.sphinxLogger.info(`[pay invoice] stored message ${paidMessage}`);
         (0, res_1.success)(res, jsonUtils.messageToJson(paidMessage, chat));
     }
@@ -91,7 +91,7 @@ function anonymousInvoice(res, payment_request, tenant) {
         const { memo, sat, msat, paymentHash, invoiceDate } = (0, decode_1.decodePaymentRequest)(payment_request);
         const date = new Date();
         date.setMilliseconds(0);
-        models_1.models.Message.create({
+        yield models_1.models.Message.create({
             chatId: 0,
             type: constants_1.default.message_types.payment,
             sender: tenant,
@@ -168,7 +168,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
                 const timestamp = parseInt(invoice.timestamp + '000');
                 const expiry = parseInt(invoice.timeExpireDate + '000');
-                const message = (yield models_1.models.Message.create({
+                const message = yield models_1.models.Message.create({
                     chatId: chat.id,
                     uuid: short.generate(),
                     sender: owner.id,
@@ -185,7 +185,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     createdAt: new Date(timestamp),
                     updatedAt: new Date(timestamp),
                     tenant,
-                }));
+                });
                 (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
                 network.sendMessage({
                     chat: chat,
@@ -259,7 +259,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
     }
-    const message = (yield models_1.models.Message.create(msg));
+    const message = yield models_1.models.Message.create(msg);
     logger_1.sphinxLogger.info(`received keysend invoice message ${message.id}`);
     socket.sendJson({
         type: 'invoice',
