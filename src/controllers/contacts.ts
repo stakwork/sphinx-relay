@@ -39,7 +39,12 @@ export const getContacts = async (req: Req, res: Response): Promise<void> => {
     req.query.from_group && req.query.from_group === 'false'
   const includeUnmet = req.query.unmet && req.query.unmet === 'include'
 
-  const where: { [k: string]: any } = { deleted: false, tenant }
+  const where: {
+    deleted: boolean
+    tenant: number
+    unmet?: { [Op.or]: [boolean, null] }
+    fromGroup?: { [Op.or]: [boolean, null] }
+  } = { deleted: false, tenant }
   if (dontIncludeFromGroup) {
     where.fromGroup = { [Op.or]: [false, null] }
   }
@@ -169,7 +174,10 @@ export async function generateOwnerWithExternalSigner(
     return failure(res, 'only proxy')
   }
   const { pubkey, sig } = req.body
-  const where: { [k: string]: any } = { isOwner: true, publicKey: pubkey }
+  const where: { isOwner: boolean; publicKey: string } = {
+    isOwner: true,
+    publicKey: pubkey,
+  }
   const owner: Contact = await models.Contact.findOne({
     where,
   })
@@ -203,7 +211,7 @@ export const generateToken = async (req: Req, res: Response): Promise<void> => {
     },
   ])
 
-  const where: { [k: string]: any } = { isOwner: true }
+  const where: { isOwner: boolean; publicKey?: string } = { isOwner: true }
 
   const pubkey = req.body['pubkey']
   if (isProxy()) {
@@ -401,7 +409,9 @@ export const createContact = async (req: Req, res: Response): Promise<void> => {
       where: { publicKey: attrs['public_key'], tenant },
     }))
   if (existing) {
-    const updateObj: { [k: string]: any } = { fromGroup: false }
+    const updateObj: { fromGroup: boolean; alias?: string } = {
+      fromGroup: false,
+    }
     if (attrs['alias']) updateObj.alias = attrs['alias']
     await existing.update(updateObj)
     // retry the key exchange
@@ -415,7 +425,7 @@ export const createContact = async (req: Req, res: Response): Promise<void> => {
     return success(res, jsonUtils.contactToJson(existing))
   }
 
-  if (attrs['public_key'].length > 66)
+  if (attrs['public_key'] && attrs['public_key'].length > 66)
     attrs['public_key'] = attrs['public_key'].substring(0, 66)
   attrs.tenant = tenant
 
@@ -540,7 +550,11 @@ export const receiveContactKey = async (payload: Payload): Promise<void> => {
     msgIncludedContactKey = true
   }
   if (sender) {
-    const objToUpdate: { [k: string]: any } = {}
+    const objToUpdate: {
+      contactKey?: string
+      alias?: string
+      photoUrl?: string
+    } = {}
     if (sender_contact_key) objToUpdate.contactKey = sender_contact_key
     if (sender_alias) objToUpdate.alias = sender_alias
     if (sender_photo_url) objToUpdate.photoUrl = sender_photo_url
@@ -598,7 +612,11 @@ export const receiveConfirmContactKey = async (
     },
   })
   if (sender_contact_key && sender) {
-    const objToUpdate: { [k: string]: any } = {
+    const objToUpdate: {
+      alias?: string
+      photoUrl?: string
+      contactKey: string
+    } = {
       contactKey: sender_contact_key,
     }
     if (sender_alias) objToUpdate.alias = sender_alias
@@ -615,7 +633,22 @@ export const receiveConfirmContactKey = async (
   }
 }
 
-function extractAttrs(body): { [k: string]: any } {
+function extractAttrs(body): {
+  public_key?: string
+  node_alias?: string
+  alias?: string
+  photo_url?: string
+  device_id?: number
+  status?: string
+  contact_key?: string
+  from_group?: boolean
+  private_photo?: string
+  notification_sound?: boolean
+  tip_amount?: number
+  route_hint?: string
+  price_to_meet?: number
+  tenant?: number
+} {
   const fields_to_update = [
     'public_key',
     'node_alias',
@@ -650,7 +683,7 @@ export const getLatestContacts = async (
   try {
     const dateToReturn = decodeURI(req.query.date as string)
     const local = moment.utc(dateToReturn).local().toDate()
-    const where: { [k: string]: any } = {
+    const where: { tenant: number; updatedAt: { [Op.gte]: Date } } = {
       updatedAt: { [Op.gte]: local },
       tenant,
     }
@@ -706,7 +739,7 @@ export const getLatestContacts = async (
 }
 
 async function switchBlock(
-  res: any,
+  res: Response,
   tenant: number,
   id: number,
   blocked: boolean

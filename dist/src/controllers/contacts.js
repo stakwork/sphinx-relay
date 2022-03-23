@@ -153,7 +153,10 @@ function generateOwnerWithExternalSigner(req, res) {
             return (0, res_1.failure)(res, 'only proxy');
         }
         const { pubkey, sig } = req.body;
-        const where = { isOwner: true, publicKey: pubkey };
+        const where = {
+            isOwner: true,
+            publicKey: pubkey,
+        };
         const owner = yield models_1.models.Contact.findOne({
             where,
         });
@@ -352,7 +355,9 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             where: { publicKey: attrs['public_key'], tenant },
         }));
     if (existing) {
-        const updateObj = { fromGroup: false };
+        const updateObj = {
+            fromGroup: false,
+        };
         if (attrs['alias'])
             updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);
@@ -366,7 +371,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         return (0, res_1.success)(res, jsonUtils.contactToJson(existing));
     }
-    if (attrs['public_key'].length > 66)
+    if (attrs['public_key'] && attrs['public_key'].length > 66)
         attrs['public_key'] = attrs['public_key'].substring(0, 66);
     attrs.tenant = tenant;
     const createdContact = yield models_1.models.Contact.create(attrs);
