@@ -261,14 +261,13 @@ function createGroupChat(req, res) {
                     if (chat.type === constants_1.default.chat_types.tribe) {
                         // save me as owner when i create
                         try {
-                            ;
-                            (yield models_1.models.ChatMember.create({
+                            yield models_1.models.ChatMember.create({
                                 contactId: owner.id,
                                 chatId: chat.id,
                                 role: constants_1.default.chat_roles.owner,
                                 status: constants_1.default.chat_statuses.approved,
                                 tenant,
-                            }));
+                            });
                         }
                         catch (e) {
                             logger_1.sphinxLogger.error(`=> createGroupChat failed to UPSERT ${e}`);

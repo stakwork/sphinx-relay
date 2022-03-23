@@ -307,13 +307,13 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
       if (chat.type === constants.chat_types.tribe) {
         // save me as owner when i create
         try {
-          ;(await models.ChatMember.create({
+          await models.ChatMember.create({
             contactId: owner.id,
             chatId: chat.id,
             role: constants.chat_roles.owner,
             status: constants.chat_statuses.approved,
             tenant,
-          })) as unknown as ChatMember
+          })
         } catch (e) {
           sphinxLogger.error(`=> createGroupChat failed to UPSERT ${e}`)
         }
