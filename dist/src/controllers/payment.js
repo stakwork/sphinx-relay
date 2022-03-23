@@ -145,7 +145,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         status: constants_1.default.statuses.received,
         sender: sender.id,
         amount: amount,
-        amountMsat: parseFloat(amount) * 1000,
+        amountMsat: parseFloat(amount + '') * 1000,
         date: date,
         createdAt: date,
         updatedAt: date,
@@ -179,8 +179,8 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
-    const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+    const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100;
+    const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
     const MIN_VAL = constants_1.default.min_sat_amount;
     try {
         const msgs = yield models_1.models.Message.findAll({
@@ -219,7 +219,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             offset,
         });
         const ret = msgs || [];
-        (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message, null)));
+        (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message)));
     }
     catch (e) {
         (0, res_1.failure)(res, 'cant find payments');
