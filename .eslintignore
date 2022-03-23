@@ -9,6 +9,7 @@ src/utils/*
 src/controllers/*
 !src/controllers/contacts.ts
 !src/controllers/invoices.ts
+!src/controllers/payment.ts
 
 !src/network
 !src/utils/msg.ts

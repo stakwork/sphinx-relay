@@ -16,7 +16,7 @@ function chatToJson(c) {
   })
 }
 
-function messageToJson(msg, chat, contact?) {
+function messageToJson(msg, chat?, contact?) {
   if (!msg) return {}
   const message = msg.dataValues || msg
   let statusMap = message.statusMap || null
