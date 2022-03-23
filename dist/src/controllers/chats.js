@@ -605,7 +605,7 @@ function receiveGroupCreateOrInvite(payload) {
             // must be sent by tribe owner?????
             const validOwner = yield validateTribeOwner(chat_uuid, sender_pub_key);
             if (!validOwner)
-                return logger_1.sphinxLogger.error(`[tribes] invalid uuid signature!`);
+                return logger_1.sphinxLogger.error(`invalid uuid signature!`, logger_1.logging.Tribes);
         }
         const contacts = [];
         const newContacts = [];
