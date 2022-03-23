@@ -126,7 +126,7 @@ function no_auth(path) {
         path == '/connect' ||
         path == '/connect_peer' ||
         path == '/peered' ||
-        path == '/request_transport_token');
+        path == '/request_transport_key');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -139,6 +139,8 @@ function ownerMiddleware(req, res, next) {
         const x_transport_token = req.headers['x-transport-token'] || req.cookies['x-transport-token'];
         // default assign token to x-user-token
         let token = x_user_token;
+        console.log('=====> TOM LOOK HERE ==> x-user-token:', x_user_token);
+        console.log('=====> TOM LOOK HERE ==> x-transport-token:', x_transport_token);
         // If we see the user using the new x_transport_token
         // we will enter this if block and execute this logic
         if (x_transport_token) {
@@ -147,7 +149,8 @@ function ownerMiddleware(req, res, next) {
             yield models_1.models.RequestsTransportTokens.destroy({
                 where: {
                     createdAt: {
-                        [sequelize_1.Op.lt]: new Date(Date.now() - config.length_of_time_for_transport_token_clear * 60000),
+                        [sequelize_1.Op.lt]: new Date(moment().unix() -
+                            config.length_of_time_for_transport_token_clear * 60000),
                     },
                 },
             });
@@ -159,11 +162,12 @@ function ownerMiddleware(req, res, next) {
             const splitTransportToken = rsa
                 .decrypt(transportPrivateKey, x_transport_token)
                 .split('|');
+            console.log('=====> TOM LOOK HERE ==> transport token split:', splitTransportToken);
             // The token will be the first item
             token = splitTransportToken[0];
             // The second item will be the timestamp
             const splitTransportTokenTimestamp = parseInt(splitTransportToken[1]);
-            console.log('Times stamp :', splitTransportTokenTimestamp);
+            console.log('=====> TOM LOOK HERE ==> transport token timestamp:', splitTransportTokenTimestamp);
             // Check if the timestamp is within the timeframe we
             // choose (1 minute here) to clear out the db of saved recent requests
             if (splitTransportTokenTimestamp <

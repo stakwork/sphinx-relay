@@ -204,6 +204,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     let token = '';
     let xTransportToken = req.headers['x-transport-token'];
+    console.log('HERE IS THE TOKEN: ', xTransportToken);
     if (!xTransportToken) {
         token = req.body['token'];
     }

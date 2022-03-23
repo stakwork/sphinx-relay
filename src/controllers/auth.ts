@@ -69,7 +69,7 @@ export async function requestExternalTokens(req: Req, res) {
   }
 }
 
-export async function requestTransportToken(req: Req, res) {
+export async function requestTransportKey(req: Req, res) {
   let transportPublicKey: string | null = null
   try {
     transportPublicKey = fs.readFileSync(
@@ -77,8 +77,12 @@ export async function requestTransportToken(req: Req, res) {
       'utf8'
     )
   } catch (e) {}
+  console.log(
+    '====> TOM LOOK HERE ====> transport_token key: (will skip here if null)',
+    transportPublicKey
+  )
   if (transportPublicKey != null) {
-    success(res, { transportToken: transportPublicKey })
+    success(res, { transport_key: transportPublicKey })
     return
   }
 
@@ -88,5 +92,9 @@ export async function requestTransportToken(req: Req, res) {
     config.transportPrivateKeyLocation,
     transportTokenKeys.private
   )
-  success(res, { transportToken: transportTokenKeys.public })
+  console.log(
+    '====> TOM LOOK HERE ====> transport_token key:',
+    transportTokenKeys.public
+  )
+  success(res, { transport_key: transportTokenKeys.public })
 }
