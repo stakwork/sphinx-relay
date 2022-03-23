@@ -833,11 +833,12 @@ function complexBalances(ownerPubkey) {
         }
         else {
             const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
+            const spendableBalance = channels.reduce((a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)), 0);
             const response = yield channelBalance(ownerPubkey);
             return {
                 reserve,
                 full_balance: Math.max(0, parseInt(response.balance)),
-                balance: Math.max(0, parseInt(response.balance) - reserve),
+                balance: spendableBalance,
                 pending_open_balance: parseInt(response.pending_open_balance),
             };
         }
