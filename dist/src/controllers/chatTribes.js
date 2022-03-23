@@ -242,7 +242,9 @@ function receiveMemberRequest(payload) {
                 yield theChat.update({ updatedAt: date });
             }
         }
-        catch (e) { }
+        catch (e) {
+            //we want to do nothing here
+        }
         const msg = {
             chatId: chat.id,
             type: constants_1.default.message_types.member_request,
@@ -622,7 +624,9 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 try {
                     content = JSON.parse(m.remoteMessageContent);
                 }
-                catch (e) { }
+                catch (e) {
+                    //We want to do nothing here
+                }
                 let mdate = m.date;
                 if (!mdate)
                     mdate = new Date();

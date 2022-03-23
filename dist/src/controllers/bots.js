@@ -164,7 +164,9 @@ function installBotAsTribeAdmin(chat, bot_json) {
                     // could fail
                     yield models_1.models.ChatBot.create(chatBot);
                 }
-                catch (e) { }
+                catch (e) {
+                    //We want to do nothing here
+                }
             }
         }
     });

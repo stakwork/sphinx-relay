@@ -15,7 +15,15 @@ export enum NodeType {
   NODE_GREENLIGHT = 'node_greenlight',
 }
 
-export function proxynodeinfo(pk: string): Promise<Object> {
+export function proxynodeinfo(pk: string): Promise<{
+  pubkey: string
+  number_channels: number
+  open_channel_data: interfaces.Channel[]
+  largest_local_balance: number
+  largest_remote_balance: number
+  total_local_balance: number
+  node_type: NodeType.NODE_VIRTUAL
+}> {
   return new Promise(async (resolve, reject) => {
     try {
       const channelList = await Lightning.listChannels({})
@@ -94,7 +102,9 @@ export function nodeinfo() {
     let public_ip = ''
     try {
       public_ip = await publicIp.v4()
-    } catch (e) {}
+    } catch (e) {
+      //do nothing here
+    }
 
     const commitHash = await checkCommitHash()
 

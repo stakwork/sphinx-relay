@@ -15,7 +15,7 @@ const boolKeys = [
 
 function toSnake(obj) {
   const ret: { [k: string]: any } = {}
-  for (let [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj)) {
     if (dateKeys.includes(key) && value) {
       const v: any = value
       let d = new Date(v)
@@ -32,7 +32,7 @@ function toSnake(obj) {
 
 function toCamel(obj) {
   const ret: { [k: string]: any } = {}
-  for (let [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj)) {
     ret[changeCase.camelCase(key)] = value
   }
   return ret

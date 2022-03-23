@@ -106,7 +106,9 @@ function nodeinfo() {
         try {
             public_ip = yield publicIp.v4();
         }
-        catch (e) { }
+        catch (e) {
+            //do nothing here
+        }
         const commitHash = yield (0, gitinfo_1.checkCommitHash)();
         const tag = yield (0, gitinfo_1.checkTag)();
         const clean = yield isClean();

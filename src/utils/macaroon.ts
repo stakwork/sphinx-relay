@@ -3,7 +3,7 @@ import { loadConfig } from './config'
 
 const config = loadConfig()
 
-let inMemoryMacaroon: string = '' // hex encoded
+let inMemoryMacaroon = '' // hex encoded
 
 export function getMacaroon(macName?: string) {
   if (config.unlock) {

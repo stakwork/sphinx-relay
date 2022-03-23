@@ -153,13 +153,13 @@ function getProxyTotalBalance() {
 }
 exports.getProxyTotalBalance = getProxyTotalBalance;
 function loadProxyCredentials(macPrefix) {
-    var lndCert = fs.readFileSync(config.proxy_tls_location);
-    var sslCreds = grpc.credentials.createSsl(lndCert);
+    const lndCert = fs.readFileSync(config.proxy_tls_location);
+    const sslCreds = grpc.credentials.createSsl(lndCert);
     const m = fs.readFileSync(config.proxy_macaroons_dir + '/' + macPrefix + '.macaroon');
     const macaroon = m.toString('hex');
-    var metadata = new grpc.Metadata();
+    const metadata = new grpc.Metadata();
     metadata.add('macaroon', macaroon);
-    var macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
+    const macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
         callback(null, metadata);
     });
     return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
@@ -176,11 +176,13 @@ function loadProxyLightning(ownerPubkey) {
                 try {
                     macname = yield getProxyRootPubkey();
                 }
-                catch (e) { }
+                catch (e) {
+                    //do nothing here
+                }
             }
-            var credentials = loadProxyCredentials(macname);
-            var lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto');
-            var lnrpc = lnrpcDescriptor.lnrpc_proxy;
+            const credentials = loadProxyCredentials(macname);
+            const lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto');
+            const lnrpc = lnrpcDescriptor.lnrpc_proxy;
             const the = new lnrpc.Lightning(PROXY_LND_IP + ':' + config.proxy_lnd_port, credentials);
             return the;
         }
@@ -190,7 +192,7 @@ function loadProxyLightning(ownerPubkey) {
     });
 }
 exports.loadProxyLightning = loadProxyLightning;
-var proxyRootPubkey = '';
+let proxyRootPubkey = '';
 function getProxyRootPubkey() {
     return new Promise((resolve, reject) => {
         if (proxyRootPubkey) {
@@ -198,10 +200,10 @@ function getProxyRootPubkey() {
             return;
         }
         // normal client, to get pubkey of LND
-        var credentials = Lightning.loadCredentials();
-        var lnrpcDescriptor = grpc.load('proto/rpc.proto');
-        var lnrpc = lnrpcDescriptor.lnrpc;
-        var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+        const credentials = Lightning.loadCredentials();
+        const lnrpcDescriptor = grpc.load('proto/rpc.proto');
+        const lnrpc = lnrpcDescriptor.lnrpc;
+        const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
         lc.getInfo({}, function (err, response) {
             if (err == null) {
                 proxyRootPubkey = response.identity_pubkey;
@@ -217,10 +219,10 @@ exports.getProxyRootPubkey = getProxyRootPubkey;
 function getProxyLNDBalance() {
     return new Promise((resolve, reject) => {
         // normal client, to get pubkey of LND
-        var credentials = Lightning.loadCredentials();
-        var lnrpcDescriptor = grpc.load('proto/rpc.proto');
-        var lnrpc = lnrpcDescriptor.lnrpc;
-        var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+        const credentials = Lightning.loadCredentials();
+        const lnrpcDescriptor = grpc.load('proto/rpc.proto');
+        const lnrpc = lnrpcDescriptor.lnrpc;
+        const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
         lc.channelBalance({}, function (err, response) {
             if (err == null) {
                 lc.listChannels({}, function (err, channelList) {

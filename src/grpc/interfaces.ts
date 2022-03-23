@@ -188,7 +188,7 @@ interface HTLC {
   forwarding_channel: string
   forwarding_htlc_index: string
 }
-interface Channel {
+export interface Channel {
   active: boolean
   remote_pubkey: string
   channel_point: string

@@ -82,7 +82,9 @@ function requestTransportToken(req, res) {
         try {
             transportPublicKey = fs.readFileSync(config.transportPublicKeyLocation, 'utf8');
         }
-        catch (e) { }
+        catch (e) {
+            //We want to do nothing here
+        }
         if (transportPublicKey != null) {
             (0, res_1.success)(res, { transportToken: transportPublicKey });
             return;

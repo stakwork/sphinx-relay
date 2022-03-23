@@ -60,7 +60,7 @@ const logging: Logging = {
 
 async function sphinxLoggerBase(
   message: any | Array<any>,
-  loggingType: string = 'MISC',
+  loggingType = 'MISC',
   level: string
 ) {
   if (

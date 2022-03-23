@@ -1,12 +1,12 @@
 node_modules
 src/tests
 src/*
+
+
 !src/utils
-src/utils/*
-!src/utils/tribes.ts
-
-
+src/utils/config.ts
 !src/controllers
 !src/network
 !src/utils/msg.ts
 !src/grpc
+
