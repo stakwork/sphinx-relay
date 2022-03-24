@@ -36,9 +36,9 @@ export const checkRoute = async (req: Req, res) => {
   try {
     const amt = parseInt(amount as string) || constants.min_sat_amount
     const r = await Lightning.queryRoute(
-      pubkey,
+      pubkey as string,
       amt,
-      route_hint || '',
+      (route_hint as string) || '',
       owner.publicKey
     )
     success(res, r)

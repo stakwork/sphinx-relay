@@ -38,18 +38,18 @@ function keepalive() {
     }, 59000);
 }
 exports.keepalive = keepalive;
-var schedulerClient = null;
+let schedulerClient = null;
 const loadSchedulerCredentials = () => {
-    var glCert = fs.readFileSync(config.scheduler_tls_location);
-    var glPriv = fs.readFileSync(config.scheduler_key_location);
-    var glChain = fs.readFileSync(config.scheduler_chain_location);
+    const glCert = fs.readFileSync(config.scheduler_tls_location);
+    const glPriv = fs.readFileSync(config.scheduler_key_location);
+    const glChain = fs.readFileSync(config.scheduler_chain_location);
     return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
 function loadScheduler() {
     // 35.236.110.178:2601
-    var descriptor = grpc.load('proto/scheduler.proto');
-    var scheduler = descriptor.scheduler;
-    var options = {
+    const descriptor = grpc.load('proto/scheduler.proto');
+    const scheduler = descriptor.scheduler;
+    const options = {
         'grpc.ssl_target_name_override': 'localhost',
     };
     schedulerClient = new scheduler.Scheduler('35.236.110.178:2601', loadSchedulerCredentials(), options);
@@ -148,7 +148,7 @@ function recoverGreenlight(gid) {
     });
 }
 function writeTlsLocation() {
-    var glCert = fs.readFileSync(config.scheduler_tls_location);
+    const glCert = fs.readFileSync(config.scheduler_tls_location);
     if (glCert) {
         fs.writeFileSync(config.tls_location, glCert);
     }
@@ -259,7 +259,7 @@ function streamHsmRequests() {
         const capabilities_bitset = 1087; // 1 + 2 + 4 + 8 + 16 + 32 + 1024
         try {
             const lightning = yield (0, lightning_1.loadLightning)(true); // try proxy
-            var call = lightning.streamHsmRequests({});
+            const call = lightning.streamHsmRequests({});
             call.on('data', function (response) {
                 return __awaiter(this, void 0, void 0, function* () {
                     logger_1.sphinxLogger.info(`DATA ${response}`);

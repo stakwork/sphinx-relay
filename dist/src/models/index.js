@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
+exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
 // parse BIGINTs to number
 require('pg').defaults.parseInt8 = true;
 const sequelize_typescript_1 = require("sequelize-typescript");
@@ -10,11 +10,14 @@ exports.Chat = chat_1.default;
 const contact_1 = require("./sql/contact");
 exports.Contact = contact_1.default;
 const invite_1 = require("./sql/invite");
+exports.Invite = invite_1.default;
 const message_1 = require("./sql/message");
 exports.Message = message_1.default;
 const subscription_1 = require("./sql/subscription");
+exports.Subscription = subscription_1.default;
 const mediaKey_1 = require("./sql/mediaKey");
 const chatMember_1 = require("./sql/chatMember");
+exports.ChatMember = chatMember_1.default;
 const timer_1 = require("./sql/timer");
 const bot_1 = require("./sql/bot");
 const chatBot_1 = require("./sql/chatBot");

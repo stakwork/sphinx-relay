@@ -180,7 +180,13 @@ interface ChannelConstraints {
   max_accepted_htlcs: number
 }
 interface HTLC {
-  // ...
+  incoming: boolean
+  amount: string
+  hash_lock: Buf
+  expiration_height: number
+  htlc_index: string
+  forwarding_channel: string
+  forwarding_htlc_index: string
 }
 interface Channel {
   active: boolean
@@ -218,7 +224,7 @@ export interface ListChannelsResponse {
 interface GreenlightHTLC {
   direction: string
   id: number
-  amount: string
+  amount: string // int64
   expiry: number
   payment_hash: string
   state: string
@@ -596,7 +602,7 @@ export function connectPeerRequest(
   }
   return <ConnectPeerArgs>{}
 }
-interface ConnectPeerResponse {}
+type ConnectPeerResponse = { [k: string]: any }
 interface GreenlightConnectPeerResponse {
   node_id: string
   features: string
