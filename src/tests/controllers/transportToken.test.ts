@@ -91,7 +91,7 @@ async function check1MinuteOldRequest(
     status: 1,
     route_hint: node2.routeHint || '',
   }
-  const currentTime = moment().unix() - 1 * 60001
+  const currentTime = moment().unix() - 1 * 61
   let error
   try {
     await http.post(node1.external_ip + '/contacts', {

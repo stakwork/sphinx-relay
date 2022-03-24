@@ -148,7 +148,7 @@ export async function ownerMiddleware(req, res, next) {
         createdAt: {
           [Op.lt]: new Date(
             moment().unix() -
-              config.length_of_time_for_transport_token_clear * 60000
+              config.length_of_time_for_transport_token_clear * 60
           ),
         },
       },
@@ -177,7 +177,7 @@ export async function ownerMiddleware(req, res, next) {
     if (
       splitTransportTokenTimestamp <
         moment().unix() -
-          config.length_of_time_for_transport_token_clear * 60000 ||
+          config.length_of_time_for_transport_token_clear * 60 ||
       !splitTransportTokenTimestamp
     ) {
       res.writeHead(401, 'Access invalid for user', {

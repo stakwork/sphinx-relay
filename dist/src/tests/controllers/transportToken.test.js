@@ -69,7 +69,7 @@ function check1MinuteOldRequest(t, node1, node2) {
             status: 1,
             route_hint: node2.routeHint || '',
         };
-        const currentTime = moment().unix() - 1 * 60001;
+        const currentTime = moment().unix() - 1 * 61;
         let error;
         try {
             yield http.post(node1.external_ip + '/contacts', {

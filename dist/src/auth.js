@@ -148,7 +148,7 @@ function ownerMiddleware(req, res, next) {
                 where: {
                     createdAt: {
                         [sequelize_1.Op.lt]: new Date(moment().unix() -
-                            config.length_of_time_for_transport_token_clear * 60000),
+                            config.length_of_time_for_transport_token_clear * 60),
                     },
                 },
             });
@@ -168,7 +168,7 @@ function ownerMiddleware(req, res, next) {
             // choose (1 minute here) to clear out the db of saved recent requests
             if (splitTransportTokenTimestamp <
                 moment().unix() -
-                    config.length_of_time_for_transport_token_clear * 60000 ||
+                    config.length_of_time_for_transport_token_clear * 60 ||
                 !splitTransportTokenTimestamp) {
                 res.writeHead(401, 'Access invalid for user', {
                     'Content-Type': 'text/plain',
