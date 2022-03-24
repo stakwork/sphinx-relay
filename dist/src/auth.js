@@ -139,8 +139,6 @@ function ownerMiddleware(req, res, next) {
         const x_transport_token = req.headers['x-transport-token'] || req.cookies['x-transport-token'];
         // default assign token to x-user-token
         let token = x_user_token;
-        console.log('=====> TOM LOOK HERE ==> x-user-token:', x_user_token);
-        console.log('=====> TOM LOOK HERE ==> x-transport-token:', x_transport_token);
         // If we see the user using the new x_transport_token
         // we will enter this if block and execute this logic
         if (x_transport_token) {
@@ -162,12 +160,10 @@ function ownerMiddleware(req, res, next) {
             const splitTransportToken = rsa
                 .decrypt(transportPrivateKey, x_transport_token)
                 .split('|');
-            console.log('=====> TOM LOOK HERE ==> transport token split:', splitTransportToken);
             // The token will be the first item
             token = splitTransportToken[0];
             // The second item will be the timestamp
             const splitTransportTokenTimestamp = parseInt(splitTransportToken[1]);
-            console.log('=====> TOM LOOK HERE ==> transport token timestamp:', splitTransportTokenTimestamp);
             // Check if the timestamp is within the timeframe we
             // choose (1 minute here) to clear out the db of saved recent requests
             if (splitTransportTokenTimestamp <

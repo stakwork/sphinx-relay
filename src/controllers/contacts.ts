@@ -232,7 +232,6 @@ export const generateToken = async (req: Req, res: Response): Promise<void> => {
   let token = ''
   let xTransportToken = req.headers['x-transport-token']
 
-  console.log('HERE IS THE transport TOKEN: ', xTransportToken)
   if (typeof xTransportToken !== 'string') {
     token = req.body['token']
   } else {
@@ -244,11 +243,6 @@ export const generateToken = async (req: Req, res: Response): Promise<void> => {
       .decrypt(transportTokenKeys, xTransportToken)
       .split('|')
     token = tokenAndTimestamp[0]
-    console.log('HERE IS THE TOKEN: ', token)
-    console.log(
-      'HERE IS THE TOKEN decrypted: ',
-      rsa.decrypt(transportTokenKeys, xTransportToken)
-    )
   }
 
   if (!token) {

@@ -83,7 +83,6 @@ function requestTransportKey(req, res) {
             transportPublicKey = fs.readFileSync(config.transportPublicKeyLocation, 'utf8');
         }
         catch (e) { }
-        console.log('====> TOM LOOK HERE ====> transport_token key: (will skip here if null)', transportPublicKey);
         if (transportPublicKey != null) {
             (0, res_1.success)(res, { transport_key: transportPublicKey });
             return;
@@ -91,7 +90,6 @@ function requestTransportKey(req, res) {
         const transportTokenKeys = yield rsa.genKeys();
         fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public);
         fs.writeFileSync(config.transportPrivateKeyLocation, transportTokenKeys.private);
-        console.log('====> TOM LOOK HERE ====> transport_token key:', transportTokenKeys.public);
         (0, res_1.success)(res, { transport_key: transportTokenKeys.public });
     });
 }

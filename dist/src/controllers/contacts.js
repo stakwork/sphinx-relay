@@ -212,7 +212,6 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     let token = '';
     let xTransportToken = req.headers['x-transport-token'];
-    console.log('HERE IS THE transport TOKEN: ', xTransportToken);
     if (typeof xTransportToken !== 'string') {
         token = req.body['token'];
     }
@@ -222,8 +221,6 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             .decrypt(transportTokenKeys, xTransportToken)
             .split('|');
         token = tokenAndTimestamp[0];
-        console.log('HERE IS THE TOKEN: ', token);
-        console.log('HERE IS THE TOKEN decrypted: ', rsa.decrypt(transportTokenKeys, xTransportToken));
     }
     if (!token) {
         return (0, res_1.failure)(res, 'no token in body');
