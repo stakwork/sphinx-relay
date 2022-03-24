@@ -165,7 +165,7 @@ As noted in the previous section, you might want to protect communications betwe
 
 In order to do that, obtain a domain and an SSL certificate for your **sphinx-relay** server and set up a reverse proxy with NGINX (or a more lightweight alternative).
 
-##### With apach2 and certbot
+##### With apache2 and certbot
 
 Install Apache2 Web Server on your machine.
 
