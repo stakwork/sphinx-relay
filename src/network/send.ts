@@ -252,7 +252,10 @@ export function signAndSend(
           }
         })
       } else {
-        await LND.keysendMessage({ ...opts, data }, ownerPubkey)
+        await LND.keysendMessage(
+          { ...opts, data } as LND.KeysendOpts,
+          ownerPubkey
+        )
       }
       resolve(true)
     } catch (e) {

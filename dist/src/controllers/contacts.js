@@ -46,7 +46,10 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         where,
         raw: true,
     });
-    const invites = yield models_1.models.Invite.findAll({ raw: true, where: { tenant } });
+    const invites = yield models_1.models.Invite.findAll({
+        raw: true,
+        where: { tenant },
+    });
     const chats = yield models_1.models.Chat.findAll({
         where: { deleted: false, tenant },
         raw: true,
@@ -62,21 +65,21 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         },
     });
     const contactsResponse = contacts.map((contact) => {
-        let contactJson = jsonUtils.contactToJson(contact);
-        let invite = invites.find((invite) => invite.contactId == contact.id);
+        const contactJson = jsonUtils.contactToJson(contact);
+        const invite = invites.find((invite) => invite.contactId == contact.id);
         if (invite) {
             contactJson.invite = jsonUtils.inviteToJson(invite);
         }
         return contactJson;
     });
-    const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
+    const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));
     const chatsResponse = chats.map((chat) => {
         const theChat = chat.dataValues || chat;
         if (!pendingMembers)
             return jsonUtils.chatToJson(theChat);
         const membs = pendingMembers.filter((m) => m.chatId === chat.id) || [];
-        theChat.pendingContactIds = membs.map((m) => m.contactId);
-        return jsonUtils.chatToJson(theChat);
+        const pendingContactIds = membs.map((m) => m.contactId);
+        return jsonUtils.chatToJson(Object.assign(Object.assign({}, theChat), { pendingContactIds }));
     });
     (0, res_1.success)(res, {
         contacts: contactsResponse,
@@ -134,8 +137,9 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (pendingContacts) {
             const pendingContactsRet = pendingContacts.map((c) => {
                 const ctc = c.dataValues;
-                ctc.pending = true;
-                return jsonUtils.contactToJson(ctc);
+                const contactJson = jsonUtils.contactToJson(ctc);
+                contactJson.pending = true;
+                return contactJson;
             });
             finalContacts = pendingContactsRet.concat(contactsRet);
         }
@@ -150,7 +154,9 @@ function generateOwnerWithExternalSigner(req, res) {
         }
         const { pubkey, sig } = req.body;
         const where = { isOwner: true, publicKey: pubkey };
-        const owner = yield models_1.models.Contact.findOne({ where });
+        const owner = yield models_1.models.Contact.findOne({
+            where,
+        });
         if (owner) {
             return (0, res_1.failure)(res, 'owner already exists');
         }
@@ -188,7 +194,9 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         where.publicKey = pubkey;
     }
-    const owner = yield models_1.models.Contact.findOne({ where });
+    const owner = yield models_1.models.Contact.findOne({
+        where,
+    });
     if (!owner) {
         return (0, res_1.failure)(res, 'no owner');
     }
@@ -203,14 +211,14 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
     }
     let token = '';
-    let xTransportToken = req.headers['x-transport-token'];
-    console.log('HERE IS THE TOKEN: ', xTransportToken);
-    if (!xTransportToken) {
+
+    const xTransportToken = req.headers['x-transport-token'];
+    if (typeof xTransportToken !== 'string') {
         token = req.body['token'];
     }
     else {
         const transportTokenKeys = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
-        let tokenAndTimestamp = rsa
+        const tokenAndTimestamp = rsa
             .decrypt(transportTokenKeys, xTransportToken)
             .split('|');
         token = tokenAndTimestamp[0];
@@ -229,7 +237,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if ((0, proxy_1.isProxy)()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
-        yield owner.update({ authToken: hash });
+        owner.update({ authToken: hash });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,
@@ -241,7 +249,7 @@ const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function
         return (0, res_1.failure)(res, 'no encrypted_key found');
     }
     const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
-    let hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
+    const hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
     if (!hmacKey) {
         return (0, res_1.failure)(res, 'no decrypted hmac key');
     }
@@ -264,7 +272,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             query: req.query,
         },
     ], logger_1.logging.Network);
-    let attrs = extractAttrs(req.body);
+    const attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({
         where: { id: req.params.id, tenant },
     });
@@ -286,9 +294,9 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
     // send updated owner info to others!
-    const contactIds = yield models_1.models.Contact.findAll({
+    const contactIds = (yield models_1.models.Contact.findAll({
         where: { deleted: false, tenant },
-    })
+    }))
         .filter((c) => c.id !== tenant && c.publicKey)
         .map((c) => c.id);
     if (contactIds.length == 0)
@@ -338,7 +346,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             query: req.query,
         },
     ], logger_1.logging.Network);
-    let attrs = extractAttrs(req.body);
+    const attrs = extractAttrs(req.body);
     const owner = req.owner;
     const existing = attrs['public_key'] &&
         (yield models_1.models.Contact.findOne({
@@ -381,7 +389,9 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         (0, res_1.failure)(res, 'Cannot delete self');
         return;
     }
-    const contact = yield models_1.models.Contact.findOne({ where: { id, tenant } });
+    const contact = yield models_1.models.Contact.findOne({
+        where: { id, tenant },
+    });
     if (!contact)
         return;
     // CHECK IF IN MY TRIBE
@@ -536,7 +546,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
 });
 exports.receiveConfirmContactKey = receiveConfirmContactKey;
 function extractAttrs(body) {
-    let fields_to_update = [
+    const fields_to_update = [
         'public_key',
         'node_alias',
         'alias',
@@ -551,7 +561,7 @@ function extractAttrs(body) {
         'route_hint',
         'price_to_meet',
     ];
-    let attrs = {};
+    const attrs = {};
     Object.keys(body).forEach((key) => {
         if (fields_to_update.includes(key)) {
             attrs[key] = body[key];
@@ -570,13 +580,21 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             updatedAt: { [sequelize_1.Op.gte]: local },
             tenant,
         };
-        const contacts = yield models_1.models.Contact.findAll({ where });
-        const invites = yield models_1.models.Invite.findAll({ where });
-        const chats = yield models_1.models.Chat.findAll({ where });
-        const subscriptions = yield models_1.models.Subscription.findAll({ where });
+        const contacts = yield models_1.models.Contact.findAll({
+            where,
+        });
+        const invites = yield models_1.models.Invite.findAll({
+            where,
+        });
+        const chats = yield models_1.models.Chat.findAll({
+            where,
+        });
+        const subscriptions = yield models_1.models.Subscription.findAll({
+            where,
+        });
         const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
-        const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
-        const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
+        const invitesResponse = invites.map((invite) => jsonUtils.inviteToJson(invite));
+        const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));
         // const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
         const chatIds = chats.map((c) => c.id);
         const pendingMembers = yield models_1.models.ChatMember.findAll({
@@ -591,8 +609,8 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             if (!pendingMembers)
                 return jsonUtils.chatToJson(theChat);
             const membs = pendingMembers.filter((m) => m.chatId === chat.id) || [];
-            theChat.pendingContactIds = membs.map((m) => m.contactId);
-            return jsonUtils.chatToJson(theChat);
+            const pendingContactIds = membs.map((m) => m.contactId);
+            return jsonUtils.chatToJson(Object.assign(Object.assign({}, theChat), { pendingContactIds }));
         });
         (0, res_1.success)(res, {
             contacts: contactsResponse,

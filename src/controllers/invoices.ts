@@ -1,4 +1,4 @@
-import { Message, Chat, models } from '../models'
+import { models, MessageRecord, ChatRecord } from '../models'
 import * as Lightning from '../grpc/lightning'
 import * as interfaces from '../grpc/interfaces'
 import * as socket from '../utils/socket'
@@ -45,9 +45,9 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
 
     sphinxLogger.info(`[pay invoice data] ${response}`)
 
-    const message = (await models.Message.findOne({
+    const message: MessageRecord = await models.Message.findOne({
       where: { payment_request, tenant },
-    })) as unknown as Message
+    })
     if (!message) {
       // invoice still paid
       anonymousInvoice(res, payment_request, tenant)
@@ -60,13 +60,13 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
     const date = new Date()
     date.setMilliseconds(0)
 
-    const chat = (await models.Chat.findOne({
+    const chat: ChatRecord = await models.Chat.findOne({
       where: { id: message.chatId, tenant },
-    })) as unknown as Chat
+    })
     const contactIds: number[] = JSON.parse(chat.contactIds)
     const senderId = contactIds.find((id) => id != message.sender)
 
-    const paidMessage = (await models.Message.create({
+    const paidMessage: MessageRecord = await models.Message.create({
       chatId: message.chatId,
       sender: senderId,
       type: constants.message_types.payment,
@@ -80,7 +80,7 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
       createdAt: date,
       updatedAt: date,
       tenant,
-    })) as unknown as Message
+    })
     sphinxLogger.info(`[pay invoice] stored message ${paidMessage}`)
     success(res, jsonUtils.messageToJson(paidMessage, chat))
   } catch (e) {
@@ -98,7 +98,7 @@ async function anonymousInvoice(
     decodePaymentRequest(payment_request)
   const date = new Date()
   date.setMilliseconds(0)
-  models.Message.create({
+  await models.Message.create({
     chatId: 0,
     type: constants.message_types.payment,
     sender: tenant,
@@ -111,7 +111,7 @@ async function anonymousInvoice(
     createdAt: date,
     updatedAt: date,
     tenant,
-  }) as unknown as Message
+  })
   return success(res, {
     success: true,
     response: { payment_request },
@@ -181,7 +181,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
         const timestamp = parseInt(invoice.timestamp + '000')
         const expiry = parseInt(invoice.timeExpireDate + '000')
 
-        const message = (await models.Message.create({
+        const message: MessageRecord = await models.Message.create({
           chatId: chat.id,
           uuid: short.generate(),
           sender: owner.id,
@@ -198,7 +198,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
           createdAt: new Date(timestamp),
           updatedAt: new Date(timestamp),
           tenant,
-        })) as unknown as Message
+        })
         success(res, jsonUtils.messageToJson(message, chat))
 
         network.sendMessage({
@@ -208,7 +208,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
           message: {
             id: message.id,
             invoice: message.paymentRequest,
-          } as unknown as Message,
+          },
         })
       }
     } catch (err) {
@@ -286,7 +286,7 @@ export const receiveInvoice = async (payload: Payload): Promise<void> => {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
   }
-  const message = (await models.Message.create(msg)) as unknown as Message
+  const message: MessageRecord = await models.Message.create(msg)
   sphinxLogger.info(`received keysend invoice message ${message.id}`)
 
   socket.sendJson(
