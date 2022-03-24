@@ -34,8 +34,9 @@ let io: any = null
 var responseArray: any[] = []
 
 test.serial('test-09-socketIO', async (t: ExecutionContext<Context>) => {
-  await testSocketIO(t, false)
-  //await testSocketIO(t, true)
+  //await testSocketIO(t, false)
+
+  await testSocketIO(t, true)
 })
 
 async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
@@ -149,6 +150,21 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   t.true(
     responseArray[responseArray.length - 2].type == 'attachment',
     'we should get back a attachment type'
+  )
+  t.true(
+    responseArray[responseArray.length - 1].type == 'purchase_accept',
+    'we should get back a purchase_accept type'
+  )
+  //getting the socket io messages sending image the other way
+  await sendImage(t, nodes[1], nodes[0], greenSquare, null, 10)
+  await sleep(1000)
+  t.true(
+    responseArray[responseArray.length - 3].type == 'confirmation',
+    'we should get back a attachment type'
+  )
+  t.true(
+    responseArray[responseArray.length - 2].type == 'purchase',
+    'we should get back a purchase type'
   )
   t.true(
     responseArray[responseArray.length - 1].type == 'purchase_accept',
