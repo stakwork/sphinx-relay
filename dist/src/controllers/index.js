@@ -97,7 +97,7 @@ function set(app) {
         app.post('/purchase', media.purchase);
         app.get('/signer/:challenge', media.signer);
         app.post('/verify_external', auth.verifyAuthRequest);
-        app.get('/request_transport_token', auth.requestTransportToken);
+        app.get('/request_transport_key', auth.requestTransportKey);
         app.post('/stream', feed.streamFeed);
         app.get('/app_versions', details.getAppVersions);
         app.get('/relay_version', details.getRelayVersion);

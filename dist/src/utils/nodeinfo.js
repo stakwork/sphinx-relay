@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isClean = exports.nodeinfo = exports.proxynodeinfo = exports.NodeType = void 0;
 const Lightning = require("../grpc/lightning");
 const publicIp = require("public-ip");
-const gitinfo_1 = require("../utils/gitinfo");
+const gitinfo_1 = require("./gitinfo");
 const models_1 = require("../models");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
@@ -25,36 +25,31 @@ var NodeType;
     NodeType["NODE_GREENLIGHT"] = "node_greenlight";
 })(NodeType = exports.NodeType || (exports.NodeType = {}));
 function proxynodeinfo(pk) {
-    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        try {
-            const channelList = yield Lightning.listChannels({});
-            if (!channelList)
-                return;
-            const { channels } = channelList;
-            const localBalances = channels.map((c) => parseInt(c.local_balance));
-            const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
-            const largestLocalBalance = Math.max(...localBalances);
-            const largestRemoteBalance = Math.max(...remoteBalances);
-            const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
-            resolve({
-                pubkey: pk,
-                number_channels: channels.length,
-                open_channel_data: channels,
-                largest_local_balance: largestLocalBalance,
-                largest_remote_balance: largestRemoteBalance,
-                total_local_balance: totalLocalBalance,
-                // node_type: 'node_virtual'
-                node_type: NodeType.NODE_VIRTUAL,
-            });
-        }
-        catch (e) {
-            return;
-        }
-    }));
+    return __awaiter(this, void 0, void 0, function* () {
+        const channelList = yield Lightning.listChannels({});
+        if (!channelList)
+            throw new Error('cant get channels');
+        const { channels } = channelList;
+        const localBalances = channels.map((c) => parseInt(c.local_balance));
+        const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
+        const largestLocalBalance = Math.max(...localBalances);
+        const largestRemoteBalance = Math.max(...remoteBalances);
+        const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
+        return {
+            pubkey: pk,
+            number_channels: channels.length,
+            open_channel_data: channels,
+            largest_local_balance: largestLocalBalance,
+            largest_remote_balance: largestRemoteBalance,
+            total_local_balance: totalLocalBalance,
+            // node_type: 'node_virtual'
+            node_type: NodeType.NODE_VIRTUAL,
+        };
+    });
 }
 exports.proxynodeinfo = proxynodeinfo;
 function nodeinfo() {
-    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+    return __awaiter(this, void 0, void 0, function* () {
         const nzp = yield listNonZeroPolicies();
         let owner_pubkey;
         let info;
@@ -79,13 +74,11 @@ function nodeinfo() {
             if (!lastActive) {
                 lastActive = new Date();
             }
-            const node = {
+            return {
                 pubkey: owner.publicKey,
                 wallet_locked: true,
                 last_active: lastActive,
             };
-            resolve(node);
-            return;
         }
         let owner;
         try {
@@ -127,10 +120,10 @@ function nodeinfo() {
             if (!info)
                 return;
             const node = {
-                node_alias: process.env.NODE_ALIAS,
-                ip: process.env.NODE_IP,
-                lnd_port: process.env.NODE_LND_PORT,
-                relay_commit: commitHash,
+                node_alias: process.env.NODE_ALIAS || '',
+                ip: process.env.NODE_IP || '',
+                lnd_port: process.env.NODE_LND_PORT || '',
+                relay_commit: commitHash || '',
                 public_ip: public_ip,
                 pubkey: owner.publicKey,
                 route_hint: owner.routeHint,
@@ -142,7 +135,7 @@ function nodeinfo() {
                 largest_remote_balance: largestRemoteBalance,
                 total_local_balance: totalLocalBalance,
                 lnd_version: info.version,
-                relay_version: tag,
+                relay_version: tag || '',
                 payment_channel: '',
                 hosting_provider: '',
                 open_channel_data: channels,
@@ -160,12 +153,12 @@ function nodeinfo() {
                     ? NodeType.NODE_GREENLIGHT
                     : NodeType.NODE_PUBLIC,
             };
-            resolve(node);
+            return node;
         }
         catch (e) {
             logger_1.sphinxLogger.error(`=> ${e}`);
         }
-    }));
+    });
 }
 exports.nodeinfo = nodeinfo;
 function isClean() {

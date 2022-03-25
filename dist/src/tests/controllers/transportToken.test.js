@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const ava_1 = require("ava");
+const moment = require("moment");
 const nodes_1 = require("../nodes");
 const helpers_1 = require("../utils/helpers");
 const get_1 = require("../utils/get");
@@ -32,8 +33,9 @@ function checkDuplicateTransportTokens(t, node1, node2) {
             status: 1,
             route_hint: node2.routeHint || '',
         };
-        const currentTime = new Date(Date.now());
-        const transportToken = rsa.encrypt(node1.transportToken, `${node1.authToken}|${currentTime.toString()}`);
+        const currentTime = moment().unix();
+        console.log('This is the current time: ', currentTime);
+        const transportToken = rsa.encrypt(node1.transportToken, `${node1.authToken}|${moment().unix()}`);
         let added = yield http.post(node1.external_ip + '/contacts', {
             headers: {
                 'x-transport-token': transportToken,
@@ -67,7 +69,7 @@ function check1MinuteOldRequest(t, node1, node2) {
             status: 1,
             route_hint: node2.routeHint || '',
         };
-        const currentTime = new Date(Date.now() - 1 * 60001);
+        const currentTime = moment().unix() - 1 * 61;
         let error;
         try {
             yield http.post(node1.external_ip + '/contacts', {

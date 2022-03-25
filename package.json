@@ -22,9 +22,16 @@
   "author": "",
   "license": "ISC",
   "ava": {
-    "files": ["!src/tests/utils/**", "!src/tests/types"],
-    "extensions": ["ts"],
-    "require": ["ts-node/register"]
+    "files": [
+      "!src/tests/utils/**",
+      "!src/tests/types"
+    ],
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
@@ -112,7 +119,10 @@
     "pretty-quick": "^3.1.1"
   },
   "pkg": {
-    "assets": ["config/*", "dist/config/*"]
+    "assets": [
+      "config/*",
+      "dist/config/*"
+    ]
   },
   "husky": {
     "hooks": {
