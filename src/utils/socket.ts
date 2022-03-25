@@ -3,7 +3,7 @@ import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { loadConfig } from './config'
 import { sphinxLogger } from '../utils/logger'
-import socketio from 'socket.io'
+import * as socketio from 'socket.io'
 import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()

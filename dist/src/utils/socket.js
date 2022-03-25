@@ -15,7 +15,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
-const socket_io_1 = require("socket.io");
+const socketio = require("socket.io");
 const rsa = require("../crypto/rsa");
 const config = (0, config_1.loadConfig)();
 // { ownerID: [client1, client2] }
@@ -24,7 +24,7 @@ let io;
 // let srvr: any
 function connect(server) {
     // srvr = new WebSocket.Server({ server, clientTracking:true })
-    io = (0, socket_io_1.default)(server, {
+    io = socketio(server, {
         handlePreflightRequest: (req, res) => {
             const headers = {
                 'Access-Control-Allow-Headers': 'Content-Type, Accept, x-user-token, X-Requested-With',
