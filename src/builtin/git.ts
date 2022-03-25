@@ -7,6 +7,7 @@ import { getTribeOwnersChatByUUID } from '../utils/tribes'
 // import { sphinxLogger } from '../utils/logger'
 import * as crypto from 'crypto'
 import { getIP } from '../utils/connect'
+import { all_webhook_events } from '../utils/githook'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -105,7 +106,6 @@ async function addWebhookToRepo(
     throw new Error('no GitBot secret supplied')
   }
   const octo = octokit(meta.pat)
-  console.log(octo)
   const arr = repoAndOwner.split('/')
   const owner = arr[0]
   const repo = arr[1]
@@ -113,17 +113,18 @@ async function addWebhookToRepo(
     owner,
     repo,
   })
+  const url = (await getIP()) + '/webhook'
   if (list.data.length) {
-    return
+    const existing = list.data.find((d) => d.config.url === url)
+    if (existing) return
   }
-  const ip = await getIP()
   await octo.request('POST /repos/{owner}/{repo}/hooks', {
     owner,
     repo,
     active: true,
-    events: ['push'],
+    events: all_webhook_events,
     config: {
-      url: ip + '/webhook',
+      url: url,
       content_type: 'json',
       secret: bot_secret,
     },

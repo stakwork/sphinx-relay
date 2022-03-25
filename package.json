@@ -36,6 +36,7 @@
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
     "@grpc/proto-loader": "^0.5.3",
+    "@octokit/webhooks-types": "^5.2.0",
     "@scout_apm/scout-apm": "^0.1.10",
     "@types/node": "^13.5.1",
     "async": "^2.6.2",
