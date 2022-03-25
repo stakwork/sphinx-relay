@@ -239,6 +239,7 @@ export const generateToken = async (req: Req, res: Response): Promise<void> => {
 
   let token = ''
   const xTransportToken = req.headers['x-transport-token']
+
   if (typeof xTransportToken !== 'string') {
     token = req.body['token']
   } else {

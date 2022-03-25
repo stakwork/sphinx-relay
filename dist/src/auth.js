@@ -23,6 +23,7 @@ const scopes_1 = require("./scopes");
 const rsa = require("./crypto/rsa");
 const hmac = require("./crypto/hmac");
 const fs = require("fs");
+const moment = require("moment");
 const config = (0, config_1.loadConfig)();
 /*
 "unlock": true,
@@ -125,7 +126,7 @@ function no_auth(path) {
         path == '/connect' ||
         path == '/connect_peer' ||
         path == '/peered' ||
-        path == '/request_transport_token');
+        path == '/request_transport_key');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -146,7 +147,8 @@ function ownerMiddleware(req, res, next) {
             yield models_1.models.RequestsTransportTokens.destroy({
                 where: {
                     createdAt: {
-                        [sequelize_1.Op.lt]: new Date(Date.now() - config.length_of_time_for_transport_token_clear * 60000),
+                        [sequelize_1.Op.lt]: new Date(moment().unix() -
+                            config.length_of_time_for_transport_token_clear * 60),
                     },
                 },
             });
@@ -161,11 +163,12 @@ function ownerMiddleware(req, res, next) {
             // The token will be the first item
             token = splitTransportToken[0];
             // The second item will be the timestamp
-            const splitTransportTokenTimestamp = splitTransportToken[1];
+            const splitTransportTokenTimestamp = parseInt(splitTransportToken[1]);
             // Check if the timestamp is within the timeframe we
             // choose (1 minute here) to clear out the db of saved recent requests
-            if (new Date(splitTransportTokenTimestamp) <
-                new Date(Date.now() - config.length_of_time_for_transport_token_clear * 60000) ||
+            if (splitTransportTokenTimestamp <
+                moment().unix() -
+                    config.length_of_time_for_transport_token_clear * 60 ||
                 !splitTransportTokenTimestamp) {
                 res.writeHead(401, 'Access invalid for user', {
                     'Content-Type': 'text/plain',
