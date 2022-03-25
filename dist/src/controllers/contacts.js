@@ -211,7 +211,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
     }
     let token = '';
-    let xTransportToken = req.headers['x-transport-token'];
+    const xTransportToken = req.headers['x-transport-token'];
     if (typeof xTransportToken !== 'string') {
         token = req.body['token'];
     }
