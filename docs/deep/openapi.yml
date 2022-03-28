@@ -243,10 +243,10 @@ paths:
         '200':
            description: Success
       parameters:
-        - description: "Authentication token."
+        - description: "X Transport Authentication token."
           in: header
-          name: x-user-token
-          required: true
+          name: x-transport-token
+          required: false 
           schema:
             type: string
       requestBody:
