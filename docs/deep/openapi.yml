@@ -26,7 +26,7 @@ x-tagGroups:
       - tribes
   - name: Authentication
     tags:
-      - request_transport_keys 
+      - request_transport_key 
 paths:
   /tribe_channel:
     post:
@@ -219,7 +219,7 @@ paths:
   /request_transport_key:
     get:
       tags:
-        - tribes
+        - request_transport_key 
       summary: This is used for retriving the key used to encrypt the x-transport-token
       description: Get transport token key.
       operationId: requestTransportKeys 
