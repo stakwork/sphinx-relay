@@ -241,10 +241,23 @@ paths:
       operationId: requestTransportKeys 
       responses:
         '200':
-           content:
-             application/json:
-               schema:
-                 properties:
-                   request_transport_key:
-                     type: string 
            description: Success
+      parameters:
+        - description: "Authentication token."
+          in: header
+          name: x-user-token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                token:
+                  description: (Legacy) Auth token to save with 
+                  type: string
+                pubkey:
+                  description: Owners pubkey.
+                  type: string
+              type: object
