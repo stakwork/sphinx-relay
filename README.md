@@ -111,6 +111,7 @@ If you are using the Docker file, the port is `3300` ([1](https://github.com/sta
 ## Deployment
 
 - [Docker deployment](docs/docker_deployment.md)
+- [Linux deployment](docs/linux_deployment.md)
 - [Raspberry Pi/myNode deployment](docs/myNode_deployment.md)
 - [Raspberry Pi/Raspiblitz deployment](docs/raspiblitz_deployment.md)
 

@@ -12,6 +12,7 @@ import * as rsa from './crypto/rsa'
 import * as hmac from './crypto/hmac'
 import { Req } from './types'
 import * as fs from 'fs'
+import * as moment from 'moment'
 
 const config = loadConfig()
 
@@ -118,7 +119,7 @@ function no_auth(path) {
     path == '/connect' ||
     path == '/connect_peer' ||
     path == '/peered' ||
-    path == '/request_transport_token'
+    path == '/request_transport_key'
   )
 }
 
@@ -146,7 +147,8 @@ export async function ownerMiddleware(req, res, next) {
       where: {
         createdAt: {
           [Op.lt]: new Date(
-            Date.now() - config.length_of_time_for_transport_token_clear * 60000
+            moment().unix() -
+              config.length_of_time_for_transport_token_clear * 60
           ),
         },
       },
@@ -168,15 +170,14 @@ export async function ownerMiddleware(req, res, next) {
     token = splitTransportToken[0]
 
     // The second item will be the timestamp
-    const splitTransportTokenTimestamp = splitTransportToken[1]
+    const splitTransportTokenTimestamp = parseInt(splitTransportToken[1])
 
     // Check if the timestamp is within the timeframe we
     // choose (1 minute here) to clear out the db of saved recent requests
     if (
-      new Date(splitTransportTokenTimestamp) <
-        new Date(
-          Date.now() - config.length_of_time_for_transport_token_clear * 60000
-        ) ||
+      splitTransportTokenTimestamp <
+        moment().unix() -
+          config.length_of_time_for_transport_token_clear * 60 ||
       !splitTransportTokenTimestamp
     ) {
       res.writeHead(401, 'Access invalid for user', {

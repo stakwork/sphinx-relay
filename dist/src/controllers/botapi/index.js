@@ -20,7 +20,7 @@ const pay_1 = require("./pay");
 const logger_1 = require("../../utils/logger");
 const hmac = require("../../crypto/hmac");
 const git_1 = require("../../builtin/git");
-const helpers_1 = require("../../tests/utils/helpers");
+const helpers_1 = require("../../helpers");
 function processWebhook(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);

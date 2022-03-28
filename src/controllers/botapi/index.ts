@@ -8,7 +8,7 @@ import pay from './pay'
 import { sphinxLogger } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta } from '../../builtin/git'
-import { asyncForEach } from '../../tests/utils/helpers'
+import { asyncForEach } from '../../helpers'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random

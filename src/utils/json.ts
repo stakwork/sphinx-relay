@@ -16,7 +16,7 @@ function chatToJson(c) {
   })
 }
 
-function messageToJson(msg, chat, contact?) {
+function messageToJson(msg, chat?, contact?) {
   if (!msg) return {}
   const message = msg.dataValues || msg
   let statusMap = message.statusMap || null
@@ -47,7 +47,7 @@ const accountingToJson = (acc) => toSnake(acc.dataValues || acc)
 
 const jsonToContact = (json) => toCamel(json)
 
-function subscriptionToJson(subscription, chat) {
+function subscriptionToJson(subscription, chat?) {
   const sub = subscription.dataValues || subscription
   const { interval, next } = cronUtils.parse(sub.cron)
   return toSnake({

@@ -74,8 +74,11 @@ export {
   MessageRecord,
   InviteRecord,
   MediaKeyRecord,
+  ChatMember,
   ChatMemberRecord,
   BotRecord,
   ChatBotRecord,
   BotMemberRecord,
+  Invite,
+  Subscription,
 }

@@ -13,6 +13,7 @@ exports.connectWebSocket = void 0;
 const ava_1 = require("ava");
 const socketio = require("socket.io-client");
 const socketiolegacy = require("socket.io-client-legacy");
+const base64images_1 = require("../utils/base64images");
 const nodes_1 = require("../nodes");
 const helpers_1 = require("../utils/helpers");
 //import { tribe3Msgs } from './tribe3Messages.test'
@@ -23,8 +24,8 @@ let handlers = {};
 let io = null;
 var responseArray = [];
 ava_1.default.serial('test-09-socketIO', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield testSocketIO(t, false);
-    //await testSocketIO(t, true)
+    //await testSocketIO(t, false)
+    yield testSocketIO(t, true);
 }));
 function testSocketIO(t, legacy) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -71,6 +72,19 @@ function testSocketIO(t, legacy) {
         yield (0, msg_1.sendInvoice)(t, nodes_1.default[0], nodes_1.default[1], 11, 'Invoice sample text');
         yield (0, helpers_1.sleep)(1000);
         t.true(responseArray[responseArray.length - 1].type == 'invoice', 'we should get back a invoice type');
+        /*
+         * Recieve Purchase
+         */
+        yield (0, msg_1.sendImage)(t, nodes_1.default[0], nodes_1.default[1], base64images_1.greenSquare, null, 10);
+        yield (0, helpers_1.sleep)(1000);
+        t.true(responseArray[responseArray.length - 2].type == 'attachment', 'we should get back a attachment type');
+        t.true(responseArray[responseArray.length - 1].type == 'purchase_accept', 'we should get back a purchase_accept type');
+        //getting the socket io messages sending image the other way
+        yield (0, msg_1.sendImage)(t, nodes_1.default[1], nodes_1.default[0], base64images_1.greenSquare, null, 10);
+        yield (0, helpers_1.sleep)(1000);
+        t.true(responseArray[responseArray.length - 3].type == 'confirmation', 'we should get back a attachment type');
+        t.true(responseArray[responseArray.length - 2].type == 'purchase', 'we should get back a purchase type');
+        t.true(responseArray[responseArray.length - 1].type == 'purchase_accept', 'we should get back a purchase_accept type');
     });
 }
 function connectWebSocket(ip, authToken, legacy, connectedCallback, disconnectCallback) {

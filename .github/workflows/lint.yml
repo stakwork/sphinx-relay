@@ -1,9 +1,6 @@
-name: Lint
+name: Lint and build
 on:
   push:
-    branches:
-      - master
-  pull_request:
     branches:
       - master
 
@@ -23,4 +20,9 @@ jobs:
           git config --global user.name "Github Actions"
           git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git pull github ${GITHUB_REF} --ff-only || echo -n
-          git commit -am "Automatic linter fixes" && git push github HEAD:${GITHUB_REF} || echo -n
+          git add src
+          git commit -m "Automatic linter fixes" || echo -n
+          npm run build || echo -n
+          git add dist
+          git commit -m "Automatic build" || echo -n
+          git push github HEAD:${GITHUB_REF} || echo -n

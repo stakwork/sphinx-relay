@@ -7,7 +7,7 @@ import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
 
 const oktolog = true
-export function loginvoice(response) {
+export function loginvoice(response: { [k: string]: any }): void {
   if (!oktolog) return
   const r = JSON.parse(JSON.stringify(response))
   r.r_hash = ''
@@ -22,12 +22,14 @@ export function loginvoice(response) {
   )
 }
 
-export async function receiveNonKeysend(response) {
+export async function receiveNonKeysend(response: {
+  [k: string]: any
+}): Promise<void> {
   const decoded = bolt11.decode(response['payment_request'])
   const paymentHash =
     decoded.tags.find((t) => t.tagName === 'payment_hash')?.data || ''
 
-  let settleDate = parseInt(response['settle_date'] + '000')
+  const settleDate = parseInt(response['settle_date'] + '000')
 
   const invoice = await models.Message.findOne({
     where: {
