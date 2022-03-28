@@ -19,7 +19,7 @@ import {
 } from '../utils/msg'
 
 import { addContact, joinTribe, createTribe } from '../utils/save'
-import { deleteMessage } from '../utils/del'
+import { deleteMessage, leaveTribe, deleteTribe } from '../utils/del'
 
 /*
   npx ava src/tests/controllers/socketIO.test.ts --verbose --serial --timeout=2m
@@ -168,6 +168,24 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
   t.true(
     responseArray[responseArray.length - 1].type == 'purchase_accept',
+    'we should get back a purchase_accept type'
+  )
+
+  await joinTribe(t, nodes[2], socketTribe)
+  await leaveTribe(t, nodes[2], socketTribe)
+  await sleep(10000)
+  t.true(
+    responseArray[responseArray.length - 2].type == 'group_join',
+    'we should get back a purchase type'
+  )
+  t.true(
+    responseArray[responseArray.length - 1].type == 'group_leave',
+    'we should get back a purchase_accept type'
+  )
+  await deleteTribe(t, nodes[0], socketTribe)
+  await sleep(1000)
+  t.true(
+    responseArray[responseArray.length - 1].type == 'tribe_delete',
     'we should get back a purchase_accept type'
   )
 }
