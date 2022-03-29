@@ -16,14 +16,14 @@ const secureRandom = require("secure-random");
 __exportStar(require("../scopes"), exports);
 // each restart of relay creates new key
 // to revoke any JWT out in the wild, just restart relay
-var signingKey = secureRandom(256, { type: 'Buffer' });
+const signingKey = secureRandom(256, { type: 'Buffer' });
 function createJWT(ownerPubkey, scopes, minutes) {
     const claims = {
         iss: 'relay',
         pubkey: ownerPubkey,
         scope: scopes ? scopes.join(',') : '',
     };
-    var jwt = nJwt.create(claims, signingKey);
+    const jwt = nJwt.create(claims, signingKey);
     const mins = minutes || 5;
     jwt.setExpiration(new Date().getTime() + mins * 60 * 1000);
     return jwt.compact();

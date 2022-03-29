@@ -52,7 +52,7 @@ if (config.media_host.includes('localhost'))
     mediaProtocol = 'http';
 if (config.media_host.includes('meme.sphinx:5555'))
     mediaProtocol = 'http';
-let mediaURL = mediaProtocol + '://' + config.media_host + '/';
+const mediaURL = mediaProtocol + '://' + config.media_host + '/';
 function getMediaToken(ownerPubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
         let protocol = 'https';
@@ -71,7 +71,7 @@ function getMediaToken(ownerPubkey, host) {
             const sig = yield Lightning.signBuffer(Buffer.from(r.challenge, 'base64'), ownerPubkey);
             if (!sig)
                 throw new Error('no signature');
-            let pubkey = ownerPubkey;
+            const pubkey = ownerPubkey;
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = (0, ldat_1.urlBase64FromBytes)(sigBytes);
             logger_1.sphinxLogger.info(`verify ${pubkey}`, logger_1.logging.Meme);
@@ -85,6 +85,7 @@ function getMediaToken(ownerPubkey, host) {
             return body.token;
         }
         catch (e) {
+            logger_1.sphinxLogger.warning('get media token failed', logger_1.logging.Meme);
             throw e;
         }
     });

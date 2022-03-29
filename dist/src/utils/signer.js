@@ -14,23 +14,26 @@ const grpc = require("grpc");
 const Lightning = require("../grpc/lightning");
 const ByteBuffer = require("bytebuffer");
 const config_1 = require("./config");
+const logger_1 = require("./logger");
 // var protoLoader = require('@grpc/proto-loader')
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
-var signerClient = null;
+let signerClient = null;
 const loadSigner = () => {
     if (signerClient) {
         return signerClient;
     }
     else {
         try {
-            var credentials = Lightning.loadCredentials('signer.macaroon');
-            var lnrpcDescriptor = grpc.load('proto/signer.proto');
-            var signer = lnrpcDescriptor.signrpc;
+            const credentials = Lightning.loadCredentials('signer.macaroon');
+            const lnrpcDescriptor = grpc.load('proto/signer.proto');
+            const signer = lnrpcDescriptor.signrpc;
             signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
             return signerClient;
         }
         catch (e) {
+            //only throw here
+            logger_1.sphinxLogger.warning('loadSigner has failed');
             throw e;
         }
     }
@@ -38,7 +41,7 @@ const loadSigner = () => {
 exports.loadSigner = loadSigner;
 const signMessage = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let signer = yield (0, exports.loadSigner)();
+        const signer = yield (0, exports.loadSigner)();
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
@@ -62,7 +65,7 @@ const signMessage = (msg) => {
 exports.signMessage = signMessage;
 const signBuffer = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        let signer = yield (0, exports.loadSigner)();
+        const signer = yield (0, exports.loadSigner)();
         try {
             const options = { msg };
             signer.signMessage(options, function (err, sig) {
@@ -83,7 +86,7 @@ const signBuffer = (msg) => {
 exports.signBuffer = signBuffer;
 function verifyMessage(msg, sig, pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        let signer = yield (0, exports.loadSigner)();
+        const signer = yield (0, exports.loadSigner)();
         if (msg.length === 0) {
             return reject('invalid msg');
         }
@@ -120,6 +123,7 @@ function signAscii(ascii) {
             return sig;
         }
         catch (e) {
+            logger_1.sphinxLogger.warning('signAscii has failed');
             throw e;
         }
     });
@@ -132,15 +136,16 @@ function verifyAscii(ascii, sig, pubkey) {
             return r;
         }
         catch (e) {
+            logger_1.sphinxLogger.warning('verifyAscii has failed');
             throw e;
         }
     });
 }
 exports.verifyAscii = verifyAscii;
 function ascii_to_hexa(str) {
-    var arr1 = [];
-    for (var n = 0, l = str.length; n < l; n++) {
-        var hex = Number(str.charCodeAt(n)).toString(16);
+    const arr1 = [];
+    for (let n = 0, l = str.length; n < l; n++) {
+        const hex = Number(str.charCodeAt(n)).toString(16);
         arr1.push(hex);
     }
     return arr1.join('');

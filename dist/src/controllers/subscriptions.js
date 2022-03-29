@@ -24,7 +24,7 @@ const network = require("../network");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 // store all current running jobs in memory
-let jobs = {};
+const jobs = {};
 // init jobs from DB
 const initializeCronJobs = () => __awaiter(void 0, void 0, void 0, function* () {
     yield helpers.sleep(1000);
@@ -56,7 +56,7 @@ function startCronJob(sub) {
                     // skip, still in jobs{} tho
                     return this.stop();
                 }
-                let STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription);
+                const STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription);
                 if (STOP) {
                     // end the job and return
                     logger_1.sphinxLogger.info('stop');
@@ -124,7 +124,7 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
 function sendSubscriptionPayment(sub, isFirstMessage, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = owner.id;
-        var date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         const subscription = yield models_1.models.Subscription.findOne({
             where: { id: sub.id, tenant },
@@ -272,6 +272,7 @@ function getRawSubs(opts = {}) {
             return subs;
         }
         catch (e) {
+            logger_1.sphinxLogger.warning(`get raw subs failed ${e}`);
             throw e;
         }
     });

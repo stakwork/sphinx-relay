@@ -36,12 +36,12 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     logger_1.sphinxLogger.info(dateToReturn, logger_1.logging.Express);
     const owner = req.owner;
     // const chatId = req.query.chat_id
-    let newMessagesWhere = {
+    const newMessagesWhere = {
         date: { [sequelize_1.Op.gte]: dateToReturn },
         [sequelize_1.Op.or]: [{ receiver: owner.id }, { receiver: null }],
         tenant,
     };
-    let confirmedMessagesWhere = {
+    const confirmedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
         status: {
             [sequelize_1.Op.or]: [constants_1.default.statuses.received],
@@ -49,7 +49,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         sender: owner.id,
         tenant,
     };
-    let deletedMessagesWhere = {
+    const deletedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
         status: {
             [sequelize_1.Op.or]: [constants_1.default.statuses.deleted],
@@ -80,7 +80,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!chatIds.includes(m.chatId))
             chatIds.push(m.chatId);
     });
-    let chats = chatIds.length > 0
+    const chats = chatIds.length > 0
         ? yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
         })
@@ -126,7 +126,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             chatIds.push(m.chatId);
         }
     });
-    let chats = chatIds.length > 0
+    const chats = chatIds.length > 0
         ? yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
         })
@@ -176,7 +176,7 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             chatIds.push(m.chatId);
         }
     });
-    let chats = chatIds.length > 0
+    const chats = chatIds.length > 0
         ? yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
         })
@@ -234,7 +234,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     let msgtype = constants_1.default.message_types.message;
     if (boost)
         msgtype = constants_1.default.message_types.boost;
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const owner = req.owner;
     const chat = yield helpers.findOrCreateChat({
@@ -335,7 +335,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }
     const tenant = owner.id;
     const text = content || '';
-    var date = new Date();
+    let date = new Date();
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
@@ -381,7 +381,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
     const tenant = owner.id;
     const text = content;
-    var date = new Date();
+    let date = new Date();
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
@@ -433,7 +433,7 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
         return logger_1.sphinxLogger.error('=> no group chat!');
     }
     const tenant = owner.id;
-    var date = new Date();
+    let date = new Date();
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
@@ -464,7 +464,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     const tenant = owner.id;
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     // in tribe this is already validated on admin's node
-    let where = { uuid: msg_uuid, tenant };
+    const where = { uuid: msg_uuid, tenant };
     if (!isTribe) {
         where.sender = sender.id; // validate sender
     }
