@@ -111,7 +111,14 @@ const actionsMap: { [k in PropName]: ActionMap } = {
 type PropName = 'issue' | 'pull_request' | 'release'
 
 const props: PropName[] = ['issue', 'pull_request', 'release']
-export function process(event: WebhookEvent) {
+export function process(event: WebhookEvent, repo_filter: string): string {
+  if (repo_filter && 'repository' in event) {
+    const fullname = event.repository?.full_name.toLowerCase()
+    if (fullname !== repo_filter.toLowerCase()) {
+      // skip this altogether if the repo is not right
+      return ''
+    }
+  }
   if ('head_commit' in event) {
     return pushAction(event)
   } else if ('ref_type' in event) {
@@ -128,4 +135,5 @@ export function process(event: WebhookEvent) {
       }
     }
   }
+  return ''
 }

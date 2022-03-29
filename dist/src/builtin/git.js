@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrCreateGitBot = exports.init = exports.GITBOT_UUID = void 0;
+exports.getOrCreateGitBot = exports.patToWebhook = exports.webhookToPat = exports.init = exports.GITBOT_UUID = void 0;
 const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const octokit_1 = require("octokit");
@@ -19,6 +19,7 @@ const tribes_1 = require("../utils/tribes");
 // import { sphinxLogger } from '../utils/logger'
 const crypto = require("crypto");
 const connect_1 = require("../utils/connect");
+const githook_1 = require("../utils/githook");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const prefix = '/git';
@@ -44,7 +45,7 @@ function getStuff(message) {
             });
             if (!chatBot)
                 throw new Error('chat bot not found');
-            const empty = { pat: '', repos: [] };
+            const empty = { repos: [] };
             const meta = chatBot.meta ? JSON.parse(chatBot.meta) : empty;
             return { chat, chatBot, meta };
         }
@@ -75,13 +76,13 @@ function init() {
                 console.log('add');
                 try {
                     const { meta, chat, chatBot } = yield getStuff(message);
-                    if (!meta.pat)
-                        throw new Error('GitBot not connected');
+                    // if (!meta.pat) throw new Error('GitBot not connected')
                     const repo = from_repo_url(words[2]);
                     console.log('repo', repo);
-                    meta.repos.push(repo);
+                    meta.repos.push({ path: repo });
                     const bot = yield getOrCreateGitBot(chat.tenant);
-                    yield addWebhookToRepo(meta, repo, bot.secret);
+                    const pat = yield getPat();
+                    yield addWebhookToRepo(pat, repo, bot.secret);
                     yield chatBot.update({ meta: JSON.stringify(meta) });
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
@@ -98,13 +99,37 @@ function init() {
     }));
 }
 exports.init = init;
-function addWebhookToRepo(meta, repoAndOwner, bot_secret) {
+function getPat() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const existing = yield models_1.models.Bot.findOne({
+            where: { uuid: exports.GITBOT_UUID },
+        });
+        if (existing) {
+            return webhookToPat(existing.webhook);
+        }
+        else
+            throw new Error('no PAT in GitBot');
+    });
+}
+function webhookToPat(webhook) {
+    if (!webhook.includes('|'))
+        throw new Error('no PAT in gitBot webhook');
+    const arr = webhook.split('|');
+    if (arr.length < 2)
+        throw new Error('no PAT in gitBot webhook');
+    return arr[1];
+}
+exports.webhookToPat = webhookToPat;
+function patToWebhook(pat, gitbottype = 'github') {
+    return `${gitbottype}|${pat}`;
+}
+exports.patToWebhook = patToWebhook;
+function addWebhookToRepo(pat, repoAndOwner, bot_secret) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!bot_secret) {
             throw new Error('no GitBot secret supplied');
         }
-        const octo = octokit(meta.pat);
-        console.log(octo);
+        const octo = octokit(pat);
         const arr = repoAndOwner.split('/');
         const owner = arr[0];
         const repo = arr[1];
@@ -112,17 +137,19 @@ function addWebhookToRepo(meta, repoAndOwner, bot_secret) {
             owner,
             repo,
         });
+        const url = (yield (0, connect_1.getIP)()) + '/webhook';
         if (list.data.length) {
-            return;
+            const existing = list.data.find((d) => d.config.url === url);
+            if (existing)
+                return;
         }
-        const ip = yield (0, connect_1.getIP)();
         yield octo.request('POST /repos/{owner}/{repo}/hooks', {
             owner,
             repo,
             active: true,
-            events: ['push'],
+            events: githook_1.all_webhook_events,
             config: {
-                url: ip + '/webhook',
+                url: url,
                 content_type: 'json',
                 secret: bot_secret,
             },

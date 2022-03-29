@@ -19,7 +19,7 @@ const config_1 = require("../utils/config");
 const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
 const config = (0, config_1.loadConfig)();
-var validate = require('bitcoin-address-validation');
+const validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 // const baseurl = 'https://localhost:8080'
@@ -136,7 +136,7 @@ function init() {
                     `--addr=${addy}`,
                 ];
                 logger_1.sphinxLogger.info(`=> SPAWN ${cmd} ${args}`);
-                let childProcess = (0, child_process_1.spawn)(cmd, args);
+                const childProcess = (0, child_process_1.spawn)(cmd, args);
                 childProcess.stdout.on('data', function (data) {
                     const stdout = data.toString();
                     logger_1.sphinxLogger.info(`LOOPBOT stdout: ${stdout}`);

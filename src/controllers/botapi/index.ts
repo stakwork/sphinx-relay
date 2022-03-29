@@ -9,6 +9,7 @@ import { sphinxLogger } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
+import { Req, Res } from '../../types'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -30,7 +31,7 @@ export interface Action {
   parent_id?: number
 }
 
-export async function processWebhook(req, res) {
+export async function processWebhook(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
   if (!sig) return unauthorized(res)
@@ -39,7 +40,7 @@ export async function processWebhook(req, res) {
   if (!gitbot) {
     return failure(res, 'nope')
   }
-  const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret)
+  const valid = hmac.verifyHmac(sig as string, req.rawBody, gitbot.secret)
   if (!valid) {
     return failure(res, 'invalid hmac')
   }
@@ -51,11 +52,13 @@ export async function processWebhook(req, res) {
     try {
       const meta: GitBotMeta = JSON.parse(cb.meta)
       console.log(meta.repos)
-    } catch (e) {}
+    } catch (e) {
+      sphinxLogger.error('failed to parse GitBotMeta')
+    }
   })
 }
 
-export async function processAction(req, res) {
+export async function processAction(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processAction ${req.body}`)
   let body = req.body
   if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
@@ -115,7 +118,7 @@ export async function processAction(req, res) {
   }
 }
 
-export async function finalAction(a: Action) {
+export async function finalAction(a: Action): Promise<void> {
   const {
     bot_id,
     action,

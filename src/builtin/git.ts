@@ -1,7 +1,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { Octokit } from 'octokit'
-import { models } from '../models'
+import { models, BotRecord } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 // import { sphinxLogger } from '../utils/logger'
@@ -17,9 +17,10 @@ const prefix = '/git'
 
 export const GITBOT_UUID = '_gitbot'
 
-type Repo = string
+export interface Repo {
+  path: string
+}
 export interface GitBotMeta {
-  pat: string
   repos: Repo[]
 }
 
@@ -44,7 +45,7 @@ async function getStuff(
       },
     })
     if (!chatBot) throw new Error('chat bot not found')
-    const empty = { pat: '', repos: [] }
+    const empty = { repos: [] }
     const meta: GitBotMeta = chatBot.meta ? JSON.parse(chatBot.meta) : empty
     return { chat, chatBot, meta }
   } catch (_e) {
@@ -52,7 +53,7 @@ async function getStuff(
   }
 }
 
-export function init() {
+export function init(): void {
   if (initted) return
   initted = true
 
@@ -76,12 +77,13 @@ export function init() {
         console.log('add')
         try {
           const { meta, chat, chatBot } = await getStuff(message)
-          if (!meta.pat) throw new Error('GitBot not connected')
+          // if (!meta.pat) throw new Error('GitBot not connected')
           const repo = from_repo_url(words[2])
           console.log('repo', repo)
-          meta.repos.push(repo)
+          meta.repos.push({ path: repo })
           const bot = await getOrCreateGitBot(chat.tenant)
-          await addWebhookToRepo(meta, repo, bot.secret)
+          const pat = await getPat()
+          await addWebhookToRepo(pat, repo, bot.secret)
           await chatBot.update({ meta: JSON.stringify(meta) })
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
@@ -97,15 +99,38 @@ export function init() {
   })
 }
 
+async function getPat(): Promise<string> {
+  const existing: BotRecord = await models.Bot.findOne({
+    where: { uuid: GITBOT_UUID },
+  })
+  if (existing) {
+    return webhookToPat(existing.webhook)
+  } else throw new Error('no PAT in GitBot')
+}
+
+export function webhookToPat(webhook: string): string {
+  if (!webhook.includes('|')) throw new Error('no PAT in gitBot webhook')
+  const arr = webhook.split('|')
+  if (arr.length < 2) throw new Error('no PAT in gitBot webhook')
+  return arr[1]
+}
+type GitBotType = 'github'
+export function patToWebhook(
+  pat: string,
+  gitbottype: GitBotType = 'github'
+): string {
+  return `${gitbottype}|${pat}`
+}
+
 async function addWebhookToRepo(
-  meta: GitBotMeta,
+  pat: string,
   repoAndOwner: string,
   bot_secret: string
 ) {
   if (!bot_secret) {
     throw new Error('no GitBot secret supplied')
   }
-  const octo = octokit(meta.pat)
+  const octo = octokit(pat)
   const arr = repoAndOwner.split('/')
   const owner = arr[0]
   const repo = arr[1]
@@ -141,7 +166,7 @@ function from_repo_url(s: string) {
   return s
 }
 
-export async function getOrCreateGitBot(tenant: number) {
+export async function getOrCreateGitBot(tenant: number): Promise<BotRecord> {
   const existing = await models.Bot.findOne({ where: { uuid: GITBOT_UUID } })
   if (existing) {
     return existing

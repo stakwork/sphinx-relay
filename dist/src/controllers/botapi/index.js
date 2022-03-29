@@ -46,7 +46,9 @@ function processWebhook(req, res) {
                 const meta = JSON.parse(cb.meta);
                 console.log(meta.repos);
             }
-            catch (e) { }
+            catch (e) {
+                logger_1.sphinxLogger.error('failed to parse GitBotMeta');
+            }
         });
     });
 }
