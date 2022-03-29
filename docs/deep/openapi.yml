@@ -17,7 +17,7 @@ info:
     url: 'https://raw.githubusercontent.com/stakwork/sphinx-relay/master/LICENSE'
     identifier: MIT License
 tags:
-  - name: tribes
+  - name: Tribes
     description: Everything about your Tribes
 x-tagGroups:
   - name: Tribes
