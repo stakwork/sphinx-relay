@@ -134,7 +134,7 @@ paths:
           name: tribe_uuid 
           required: true
           type: string
-      operationId: createChannel
+      operationId: updateChannel
       responses:
         '200':
            content:
@@ -239,7 +239,7 @@ paths:
         - Authentication 
       summary: This is used for retriving the key used to encrypt the x-transport-token
       description: Get transport token key.
-      operationId: requestTransportKeys 
+      operationId: saveAuthToken 
       responses:
         '200':
            description: Success
