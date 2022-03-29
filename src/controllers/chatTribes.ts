@@ -80,7 +80,7 @@ export async function joinTribe(req: Req, res) {
     // console.log("CREATE TRIBE OWNER", createdContact);
     contactIds.push(createdContact.id)
   }
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const chatStatus = is_private
@@ -202,7 +202,7 @@ export async function receiveMemberRequest(payload) {
   const isTribe = chat_type === constants.chat_types.tribe
   if (!isTribe || !isTribeOwner) return sphinxLogger.error('not a tribe')
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   let theSender: any = null
@@ -258,7 +258,9 @@ export async function receiveMemberRequest(payload) {
     if (theChat) {
       await theChat.update({ updatedAt: date })
     }
-  } catch (e) {}
+  } catch (e) {
+    //we want to do nothing here
+  }
 
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -308,8 +310,8 @@ export async function pinToTribe(req: Req, res) {
     return failure(res, 'not your tribe')
   }
   try {
-    let td = await tribes.get_tribe_data(chat.uuid)
-    let chatData = chat.dataValues || chat
+    const td = await tribes.get_tribe_data(chat.uuid)
+    const chatData = chat.dataValues || chat
     chatData.pin = pin
     await tribes.edit(mergeTribeAndChatData(chatData, td, owner))
     await models.Chat.update({ pin }, { where: { id, tenant } })
@@ -481,7 +483,7 @@ export async function receiveMemberApprove(payload) {
 
   const tenant: number = owner.id
 
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -542,7 +544,7 @@ export async function receiveMemberReject(payload) {
 
   const tenant: number = owner.id
 
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -580,7 +582,7 @@ export async function receiveTribeDelete(payload) {
   const tenant: number = owner.id
   // await chat.update({status: constants.chat_statuses.rejected})
   // update on tribes server too
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const msg: { [k: string]: any } = {
     chatId: chat.id,
@@ -664,7 +666,9 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
       let content = ''
       try {
         content = JSON.parse(m.remoteMessageContent)
-      } catch (e) {}
+      } catch (e) {
+        //We want to do nothing here
+      }
 
       let mdate = m.date
       if (!mdate) mdate = new Date()
@@ -750,7 +754,7 @@ export async function createTribeChatParams(
   tenant,
   pin
 ): Promise<{ [k: string]: any }> {
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   if (!(owner && contactIds && Array.isArray(contactIds))) {
     return {}

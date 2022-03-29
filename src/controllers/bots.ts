@@ -153,7 +153,9 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
       try {
         // could fail
         await models.ChatBot.create(chatBot)
-      } catch (e) {}
+      } catch (e) {
+        //We want to do nothing here
+      }
     }
   }
 }
@@ -475,7 +477,7 @@ export async function receiveBotRes(dat: Payload) {
     })
     if (!chat)
       return sphinxLogger.error('=> receiveBotRes as sub error no chat')
-    var date = new Date()
+    let date = new Date()
     date.setMilliseconds(0)
     if (date_string) date = new Date(date_string)
 

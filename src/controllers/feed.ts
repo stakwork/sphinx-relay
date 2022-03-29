@@ -47,7 +47,9 @@ export const streamFeed = async (req: Req, res) => {
     let meta
     try {
       meta = JSON.parse(text)
-    } catch (e) {}
+    } catch (e) {
+      //we want to do nothing here
+    }
     if (!meta) {
       return failure(res, 'no meta')
     }
@@ -104,8 +106,8 @@ export async function anonymousKeysend(
   route_hint: string,
   amount: number,
   text: string,
-  onSuccess: Function,
-  onFailure: Function,
+  onSuccess: ({ destination_key: string, amount: number }) => void,
+  onFailure: (error) => void,
   extra_tlv: { [k: string]: string }
 ) {
   const tenant = owner.id
@@ -122,7 +124,7 @@ export async function anonymousKeysend(
     msg,
     success: () => {
       sphinxLogger.info(`payment sent!`)
-      var date = new Date()
+      const date = new Date()
       date.setMilliseconds(0)
       models.Message.create({
         chatId: 0,

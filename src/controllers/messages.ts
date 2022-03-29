@@ -31,13 +31,13 @@ export const getMessages = async (req: Req, res) => {
   const owner = req.owner
   // const chatId = req.query.chat_id
 
-  let newMessagesWhere = {
+  const newMessagesWhere = {
     date: { [Op.gte]: dateToReturn },
     [Op.or]: [{ receiver: owner.id }, { receiver: null }],
     tenant,
   }
 
-  let confirmedMessagesWhere = {
+  const confirmedMessagesWhere = {
     updated_at: { [Op.gte]: dateToReturn },
     status: {
       [Op.or]: [constants.statuses.received],
@@ -46,7 +46,7 @@ export const getMessages = async (req: Req, res) => {
     tenant,
   }
 
-  let deletedMessagesWhere = {
+  const deletedMessagesWhere = {
     updated_at: { [Op.gte]: dateToReturn },
     status: {
       [Op.or]: [constants.statuses.deleted],
@@ -78,7 +78,7 @@ export const getMessages = async (req: Req, res) => {
     if (!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
   })
 
-  let chats =
+  const chats =
     chatIds.length > 0
       ? await models.Chat.findAll({
           where: { deleted: false, id: chatIds, tenant },
@@ -143,7 +143,7 @@ export const getAllMessages = async (req: Req, res) => {
     }
   })
 
-  let chats =
+  const chats =
     chatIds.length > 0
       ? await models.Chat.findAll({
           where: { deleted: false, id: chatIds, tenant },
@@ -205,7 +205,7 @@ export const getMsgs = async (req: Req, res) => {
     }
   })
 
-  let chats =
+  const chats =
     chatIds.length > 0
       ? await models.Chat.findAll({
           where: { deleted: false, id: chatIds, tenant },
@@ -280,7 +280,7 @@ export const sendMessage = async (req: Req, res) => {
   let msgtype = constants.message_types.message
   if (boost) msgtype = constants.message_types.boost
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const owner = req.owner
@@ -404,7 +404,7 @@ export const receiveMessage = async (payload) => {
   const tenant: number = owner.id
   const text = content || ''
 
-  var date = new Date()
+  let date = new Date()
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
@@ -474,7 +474,7 @@ export const receiveBoost = async (payload) => {
   const tenant: number = owner.id
   const text = content
 
-  var date = new Date()
+  let date = new Date()
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
@@ -532,7 +532,7 @@ export const receiveRepayment = async (payload) => {
   }
   const tenant = owner.id
 
-  var date = new Date()
+  let date = new Date()
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
@@ -569,7 +569,7 @@ export const receiveDeleteMessage = async (payload) => {
 
   const isTribe = chat_type === constants.chat_types.tribe
   // in tribe this is already validated on admin's node
-  let where: { [k: string]: any } = { uuid: msg_uuid, tenant }
+  const where: { [k: string]: any } = { uuid: msg_uuid, tenant }
   if (!isTribe) {
     where.sender = sender.id // validate sender
   }

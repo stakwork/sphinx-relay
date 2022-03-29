@@ -15,10 +15,9 @@ const crypto = require("crypto");
 const fs = require("fs");
 const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
+const socketio = require("socket.io");
 const rsa = require("../crypto/rsa");
 const config = (0, config_1.loadConfig)();
-// import * as WebSocket from 'ws'
-const socketio = require('socket.io');
 // { ownerID: [client1, client2] }
 const CLIENTS = {};
 let io;
@@ -38,7 +37,7 @@ function connect(server) {
     });
     io.use((client, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = client.handshake.headers['x-user-token'];
-        let x_transport_token = client.handshake.headers['x-transport-token'];
+        const x_transport_token = client.handshake.headers['x-transport-token'];
         if (x_transport_token) {
             const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
             const userTokenFromTransportToken = rsa

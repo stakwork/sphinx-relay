@@ -21,7 +21,7 @@ export interface Query {
   app: string
 }
 
-let queries: { [k: string]: Query } = {}
+const queries: { [k: string]: Query } = {}
 
 const POLL_MINS = 10
 
@@ -283,7 +283,7 @@ export async function queryOnchainAddress(req: Req, res) {
   }
 
   let i = 0
-  let interval = setInterval(() => {
+  const interval = setInterval(() => {
     if (i >= 15) {
       clearInterval(interval)
       delete queries[uuid]
@@ -321,7 +321,7 @@ export const receiveQuery = async (payload: network.Payload) => {
   sphinxLogger.info(`=> query received ${q}`)
   let result = ''
   switch (q.type) {
-    case 'onchain_address':
+    case 'onchain_address': {
       const addy = await lightning.newAddress(lightning.NESTED_PUBKEY_HASH)
       const acc = {
         date: new Date(),
@@ -335,6 +335,7 @@ export const receiveQuery = async (payload: network.Payload) => {
       }
       await models.Accounting.create(acc)
       result = addy
+    }
   }
   const ret: Query = {
     type: q.type,
