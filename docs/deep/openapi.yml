@@ -79,7 +79,7 @@ paths:
     delete:
       tags:
         - Tribes 
-      summary: delete tribe text channel
+      summary: Delete tribe text channel
       description: delete tribe text channel in the tribes server.
       operationId: deleteChannel
       responses:
@@ -214,8 +214,8 @@ paths:
     get:
       tags:
         - Authentication 
-      summary: This is used for retriving the key used to encrypt the x-transport-token
-      description: Get transport token key.
+      summary: Get transport token key      
+      description: This is used for retriving the key used to encrypt the x-transport-token
       operationId: requestTransportKeys 
       responses:
         '200':
@@ -230,8 +230,8 @@ paths:
     post:
       tags:
         - Authentication 
-      summary: This is used for setting the auth token 
-      description: Get transport token key.
+      summary: Set auth token for owner.
+      description: This is used for setting the auth token 
       operationId: saveAuthToken 
       responses:
         '200':
