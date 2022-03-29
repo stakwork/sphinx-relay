@@ -242,15 +242,7 @@ paths:
         '200':
            description: Success
         '400':
-           description: Failure no pubkey 
-        '400':
-           description: Failure no owner 
-        '400':
-           description: Failure Wrong Password 
-        '400':
-           description: Failure no token in body (no token provide to token in body or as x-transport-toke in header) 
-        '400':
-           description: Failure invalid token (this only happens if wrong token passed and token already set) 
+           description: Failure one of these issue (no pubkey,no owner, Wrong Password, no token in body, invalid token)
       parameters:
         - description: "X Transport Authentication token."
           in: header
