@@ -119,8 +119,8 @@ paths:
     get:
       tags:
         - Tribes
-      summary: update a channel for tribe in tribe server
-      description: Create new tribe text channel.
+      summary: Get a tribe info by uuid
+      description: Get a tribe info from tribes server by providing a uuid.
       parameters:
         - description: The tribe ID.
           in: path
