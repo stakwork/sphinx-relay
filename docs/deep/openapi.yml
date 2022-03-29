@@ -22,8 +22,7 @@ tags:
 x-tagGroups:
   - name: Tribes
     tags:
-      - tribe_channel
-      - tribes
+      - Tribes
   - name: Authentication
     tags:
       - Authentication 
@@ -31,7 +30,7 @@ paths:
   /tribe_channel:
     post:
       tags:
-        - tribe_channel
+        - Tribes 
       summary: Add a new channel for tribe in tribe server
       description: Create new tribe text channel.
       operationId: createChannel
@@ -84,7 +83,7 @@ paths:
               type: object
     delete:
       tags:
-        - tribe_channel
+        - Tribes 
       summary: delete tribe text channel
       description: delete tribe text channel in the tribes server.
       operationId: deleteChannel
@@ -124,7 +123,7 @@ paths:
   /tribes/{tribe_uuid}:
     get:
       tags:
-        - tribes
+        - Tribes
       summary: Add a new channel for tribe in tribe server
       description: Create new tribe text channel.
       parameters:
@@ -242,6 +241,16 @@ paths:
       responses:
         '200':
            description: Success
+        '400':
+           description: Failure no pubkey 
+        '400':
+           description: Failure no owner 
+        '400':
+           description: Failure Wrong Password 
+        '400':
+           description: Failure no token in body (no token provide to token in body or as x-transport-toke in header) 
+        '400':
+           description: Failure invalid token (this only happens if wrong token passed and token already set) 
       parameters:
         - description: "X Transport Authentication token."
           in: header
