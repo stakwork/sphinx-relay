@@ -126,7 +126,7 @@ paths:
     get:
       tags:
         - Tribes
-      summary: Add a new channel for tribe in tribe server
+      summary: update a channel for tribe in tribe server
       description: Create new tribe text channel.
       parameters:
         - description: The tribe ID.
@@ -237,7 +237,7 @@ paths:
     post:
       tags:
         - Authentication 
-      summary: This is used for retriving the key used to encrypt the x-transport-token
+      summary: This is used for setting the auth token 
       description: Get transport token key.
       operationId: saveAuthToken 
       responses:
