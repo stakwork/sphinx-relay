@@ -40,7 +40,9 @@ function getIP() {
                         theIP = yield publicIp.v4();
                     }
                 }
-                catch (e) { }
+                catch (e) {
+                    //do nothing here
+                }
             }
             const isIP = net.isIP(theIP);
             if (isIP) {

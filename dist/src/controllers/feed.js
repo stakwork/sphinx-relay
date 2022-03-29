@@ -28,7 +28,9 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         try {
             meta = JSON.parse(text);
         }
-        catch (e) { }
+        catch (e) {
+            //we want to do nothing here
+        }
         if (!meta) {
             return (0, res_1.failure)(res, 'no meta');
         }
@@ -86,7 +88,7 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
             msg,
             success: () => {
                 logger_1.sphinxLogger.info(`payment sent!`);
-                var date = new Date();
+                const date = new Date();
                 date.setMilliseconds(0);
                 models_1.models.Message.create({
                     chatId: 0,

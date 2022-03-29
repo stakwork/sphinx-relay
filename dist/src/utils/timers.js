@@ -115,7 +115,7 @@ function payBack(t) {
             type: constants_1.default.message_types.repayment,
             realSatsContactId: t.receiver,
             success: function () {
-                var date = new Date();
+                const date = new Date();
                 date.setMilliseconds(0);
                 models_1.models.Message.create({
                     // chatId: chat.id,

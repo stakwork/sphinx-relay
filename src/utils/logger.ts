@@ -55,12 +55,12 @@ const logging: Logging = {
   Proxy: 'PROXY',
   Lsat: 'LSAT',
   Greenlight: 'GREENLIGHT',
-  SSL: 'SSL'
+  SSL: 'SSL',
 }
 
 async function sphinxLoggerBase(
   message: any | Array<any>,
-  loggingType: string = 'MISC',
+  loggingType = 'MISC',
   level: string
 ) {
   if (
@@ -68,9 +68,12 @@ async function sphinxLoggerBase(
     loggingType == 'MISC'
   ) {
     await blgrLogger.open()
-    const [date, time] = new Date(Date.now()).toISOString().split('.')[0].split('T');
-    const dateArr: string[] = date.split('-');
-    dateArr.push((dateArr.shift()!).substring(2));
+    const [date, time] = new Date(Date.now())
+      .toISOString()
+      .split('.')[0]
+      .split('T')
+    const dateArr: string[] = date.split('-')
+    dateArr.push(dateArr.shift()!.substring(2))
     blgrLogger[level](
       `${dateArr.join('-')}T${time}`,
       '[' + loggingType + ']',

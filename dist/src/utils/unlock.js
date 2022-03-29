@@ -25,7 +25,7 @@ function tryToUnlockLND() {
         if (!p)
             return;
         logger_1.sphinxLogger.info(`==> ${p}`);
-        var pwd = yield getFirstLine(config.lnd_pwd_path);
+        const pwd = yield getFirstLine(config.lnd_pwd_path);
         if (!pwd)
             return;
         logger_1.sphinxLogger.info(`==> ${pwd} ${typeof pwd}`);
