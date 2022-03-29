@@ -23,7 +23,7 @@ function monthly() {
     return `${minute} ${hour} ${dayOfMonth} * *`;
 }
 function parse(s) {
-    var interval = parser.parseExpression(s);
+    const interval = parser.parseExpression(s);
     const next = interval.next().toString();
     if (s.endsWith(' * * *')) {
         return { interval: 'daily', next, ms: 86400000 };

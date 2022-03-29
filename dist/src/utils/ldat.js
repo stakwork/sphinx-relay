@@ -49,18 +49,18 @@ exports.tokenFromTerms = tokenFromTerms;
 // host.muid.pk.exp.meta
 function startLDAT(host, muid, pk, exp, meta = {}) {
     const empty = Buffer.from([]);
-    var hostBuf = Buffer.from(host, 'ascii');
-    var muidBuf = Buffer.from(muid, 'base64');
-    var pkBuf = pk ? Buffer.from(pk, 'base64') : empty;
-    var expBuf = exp ? Buffer.from(exp.toString(16), 'hex') : empty;
-    var metaBuf = meta ? Buffer.from(serializeMeta(meta), 'ascii') : empty;
+    const hostBuf = Buffer.from(host, 'ascii');
+    const muidBuf = Buffer.from(muid, 'base64');
+    const pkBuf = pk ? Buffer.from(pk, 'base64') : empty;
+    const expBuf = exp ? Buffer.from(exp.toString(16), 'hex') : empty;
+    const metaBuf = meta ? Buffer.from(serializeMeta(meta), 'ascii') : empty;
     const totalLength = hostBuf.length +
         muidBuf.length +
         pkBuf.length +
         expBuf.length +
         metaBuf.length;
     const buf = Buffer.concat([hostBuf, muidBuf, pkBuf, expBuf, metaBuf], totalLength);
-    let terms = `${urlBase64(hostBuf)}.${urlBase64(muidBuf)}.${urlBase64(pkBuf)}.${urlBase64(expBuf)}.${urlBase64(metaBuf)}`;
+    const terms = `${urlBase64(hostBuf)}.${urlBase64(muidBuf)}.${urlBase64(pkBuf)}.${urlBase64(expBuf)}.${urlBase64(metaBuf)}`;
     return { terms, bytes: buf };
 }
 exports.startLDAT = startLDAT;
@@ -138,9 +138,9 @@ function testLDAT() {
 }
 exports.testLDAT = testLDAT;
 function serializeMeta(obj) {
-    var str = [];
-    for (var p in obj) {
-        if (obj.hasOwnProperty(p)) {
+    const str = [];
+    for (const p in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, p)) {
             str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
         }
     }
@@ -154,7 +154,7 @@ function deserializeMeta(str) {
         })
         : {};
     const ret = {};
-    for (let [k, v] of Object.entries(json)) {
+    for (const [k, v] of Object.entries(json)) {
         const value = (typeof v === 'string' && parseInt(v)) || v;
         ret[k] = value;
     }

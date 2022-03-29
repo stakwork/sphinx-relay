@@ -24,7 +24,7 @@ function monthly() {
 }
 
 function parse(s) {
-  var interval = parser.parseExpression(s)
+  const interval = parser.parseExpression(s)
   const next = interval.next().toString()
 
   if (s.endsWith(' * * *')) {

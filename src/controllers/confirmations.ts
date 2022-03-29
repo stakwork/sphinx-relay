@@ -73,7 +73,9 @@ export async function receiveConfirmation(payload: network.Payload) {
         let statusMap = {}
         try {
           statusMap = JSON.parse(message.statusMap || '{}')
-        } catch (e) {}
+        } catch (e) {
+          //Leave empty we want to do nothing here
+        }
         statusMap[sender.id] = constants.statuses.received
 
         await message.update({
@@ -134,7 +136,9 @@ export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
     let statusMap = {}
     try {
       statusMap = JSON.parse(message.statusMap || '{}')
-    } catch (e) {}
+    } catch (e) {
+      //we want to do nothing here
+    }
     statusMap['chat'] = constants.statuses.received
 
     await message.update({
@@ -185,7 +189,7 @@ export async function receiveHeartbeat(payload: network.Payload) {
   }
 }
 
-let heartbeats: { [k: string]: boolean } = {}
+const heartbeats: { [k: string]: boolean } = {}
 export async function healthcheck(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
@@ -219,7 +223,7 @@ export async function healthcheck(req: Req, res) {
   }
 
   let i = 0
-  let interval = setInterval(() => {
+  const interval = setInterval(() => {
     if (i >= 15) {
       clearInterval(interval)
       delete heartbeats[pubkey]
