@@ -19,6 +19,8 @@ info:
 tags:
   - name: Tribes
     description: Everything about your Tribes
+  - name: Authentication 
+    description: Endpoints to enable and to use relay's authenticated endpoints 
 x-tagGroups:
   - name: Tribes
     tags:
