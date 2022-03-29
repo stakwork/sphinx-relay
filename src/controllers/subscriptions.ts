@@ -261,8 +261,13 @@ export async function restartSubscription(req: Req, res) {
 
 async function getRawSubs(opts = {}) {
   const options: { [k: string]: any } = { order: [['id', 'asc']], ...opts }
-  const subs = await models.Subscription.findAll(options)
-  return subs
+  try {
+    const subs = await models.Subscription.findAll(options)
+    return subs
+  } catch (e) {
+    sphinxLogger.warning(`get raw subs failed ${e}`)
+    throw e
+  }
 }
 
 // all subs

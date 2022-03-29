@@ -267,8 +267,14 @@ exports.restartSubscription = restartSubscription;
 function getRawSubs(opts = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         const options = Object.assign({ order: [['id', 'asc']] }, opts);
-        const subs = yield models_1.models.Subscription.findAll(options);
-        return subs;
+        try {
+            const subs = yield models_1.models.Subscription.findAll(options);
+            return subs;
+        }
+        catch (e) {
+            logger_1.sphinxLogger.warning(`get raw subs failed ${e}`);
+            throw e;
+        }
     });
 }
 // all subs
