@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMessages = exports.deleteTribe = exports.leaveTribe = exports.deleteChat = exports.deleteContact = void 0;
+exports.deleteMessage = exports.deleteMessages = exports.deleteTribe = exports.leaveTribe = exports.deleteChat = exports.deleteContact = void 0;
 var deleteContact_1 = require("./deleteContact");
 Object.defineProperty(exports, "deleteContact", { enumerable: true, get: function () { return deleteContact_1.deleteContact; } });
 var deleteChat_1 = require("./deleteChat");
@@ -11,4 +11,6 @@ var deleteTribe_1 = require("./deleteTribe");
 Object.defineProperty(exports, "deleteTribe", { enumerable: true, get: function () { return deleteTribe_1.deleteTribe; } });
 var deleteMessages_1 = require("./deleteMessages");
 Object.defineProperty(exports, "deleteMessages", { enumerable: true, get: function () { return deleteMessages_1.deleteMessages; } });
+var deleteMessage_1 = require("./deleteMessage");
+Object.defineProperty(exports, "deleteMessage", { enumerable: true, get: function () { return deleteMessage_1.deleteMessage; } });
 //# sourceMappingURL=index.js.map
