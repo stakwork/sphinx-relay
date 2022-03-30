@@ -23,7 +23,7 @@ const node_fetch_1 = require("node-fetch");
 const helpers = require("../helpers");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
-let queries = {};
+const queries = {};
 const POLL_MINS = 10;
 let hub_pubkey = '';
 const hub_url = 'https://hub.sphinx.chat/api/v1/';
@@ -275,7 +275,7 @@ function queryOnchainAddress(req, res) {
             return;
         }
         let i = 0;
-        let interval = setInterval(() => {
+        const interval = setInterval(() => {
             if (i >= 15) {
                 clearInterval(interval);
                 delete queries[uuid];
@@ -314,7 +314,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     logger_1.sphinxLogger.info(`=> query received ${q}`);
     let result = '';
     switch (q.type) {
-        case 'onchain_address':
+        case 'onchain_address': {
             const addy = yield lightning.newAddress(lightning.NESTED_PUBKEY_HASH);
             const acc = {
                 date: new Date(),
@@ -328,6 +328,7 @@ const receiveQuery = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             };
             yield models_1.models.Accounting.create(acc);
             result = addy;
+        }
     }
     const ret = {
         type: q.type,

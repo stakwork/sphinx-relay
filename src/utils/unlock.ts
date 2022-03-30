@@ -16,7 +16,7 @@ export async function tryToUnlockLND() {
 
   sphinxLogger.info(`==> ${p}`)
 
-  var pwd = await getFirstLine(config.lnd_pwd_path)
+  const pwd = await getFirstLine(config.lnd_pwd_path)
   if (!pwd) return
 
   sphinxLogger.info(`==> ${pwd} ${typeof pwd}`)

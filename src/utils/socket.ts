@@ -7,6 +7,11 @@ import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
 // import * as WebSocket from 'ws'
+
+//The newer version of socket.io when imported has a
+//different format than when we import it so we can ignore
+//for now till we feel fine updating this
+// eslint-disable-next-line
 const socketio = require('socket.io')
 
 type ClientMap = Record<number, any[]>
@@ -35,7 +40,7 @@ export function connect(server) {
   io.use(async (client, next) => {
     let userToken = client.handshake.headers['x-user-token']
 
-    let x_transport_token = client.handshake.headers['x-transport-token']
+    const x_transport_token = client.handshake.headers['x-transport-token']
     if (x_transport_token) {
       const transportPrivateKey = fs.readFileSync(
         config.transportPrivateKeyLocation

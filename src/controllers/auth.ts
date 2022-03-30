@@ -76,7 +76,9 @@ export async function requestTransportKey(req: Req, res) {
       config.transportPublicKeyLocation,
       'utf8'
     )
-  } catch (e) {}
+  } catch (e) {
+    //We want to do nothing here
+  }
   if (transportPublicKey != null) {
     success(res, { transport_key: transportPublicKey })
     return

@@ -13,12 +13,12 @@ exports.uploadFile = exports.avatarUpload = void 0;
 const models_1 = require("../models");
 const path = require("path");
 const config_1 = require("../utils/config");
+const multer = require("multer");
 const config = (0, config_1.loadConfig)();
 // setup disk storage
-var multer = require('multer');
-var avatarStorage = multer.diskStorage({
+const avatarStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let dir = __dirname.includes('/dist/')
+        const dir = __dirname.includes('/dist/')
             ? path.join(__dirname, '..')
             : __dirname;
         cb(null, dir + '/../../public/uploads');

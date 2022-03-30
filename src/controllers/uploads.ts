@@ -2,14 +2,14 @@ import { models } from '../models'
 import * as path from 'path'
 import { loadConfig } from '../utils/config'
 import { Req } from '../types'
+import * as multer from 'multer'
 
 const config = loadConfig()
 
 // setup disk storage
-var multer = require('multer')
-var avatarStorage = multer.diskStorage({
+const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let dir = __dirname.includes('/dist/')
+    const dir = __dirname.includes('/dist/')
       ? path.join(__dirname, '..')
       : __dirname
     cb(null, dir + '/../../public/uploads')
@@ -25,7 +25,7 @@ var avatarStorage = multer.diskStorage({
     }
   },
 })
-export var avatarUpload = multer({ storage: avatarStorage })
+export const avatarUpload = multer({ storage: avatarStorage })
 
 function hasProtocol(ip) {
   if (ip.startsWith('https://')) return true

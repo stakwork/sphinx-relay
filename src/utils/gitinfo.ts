@@ -2,7 +2,7 @@ import { exec } from 'child_process'
 import { sphinxLogger } from './logger'
 
 let commitHash
-function checkCommitHash() {
+function checkCommitHash(): Promise<string> {
   return new Promise((resolve, reject) => {
     if (commitHash) {
       return resolve(commitHash)
@@ -28,7 +28,7 @@ function checkCommitHash() {
 }
 
 let tag
-function checkTag() {
+function checkTag(): Promise<string> {
   return new Promise((resolve, reject) => {
     if (tag) {
       return resolve(tag)

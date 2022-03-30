@@ -1,9 +1,9 @@
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs'
 import * as express from 'express'
 import { sphinxLogger, logging } from './logger'
-const qs = require('qs')
-const axios = require('axios')
-var forge = require('node-forge')
+import * as qs from 'qs'
+import axios from 'axios'
+import * as forge from 'node-forge'
 const apiUrl = 'https://api.zerossl.com'
 
 function sleep(ms) {
@@ -11,7 +11,7 @@ function sleep(ms) {
 }
 
 function generateCsr(keys, endpoint) {
-  var csr = forge.pki.createCertificationRequest()
+  let csr = forge.pki.createCertificationRequest()
   csr.publicKey = keys.publicKey
   csr.setSubject([
     {
@@ -24,12 +24,12 @@ function generateCsr(keys, endpoint) {
     sphinxLogger.error('Verification of CSR failed.', logging.SSL)
     throw new Error('Verification of CSR failed.')
   }
-  var csr = forge.pki.certificationRequestToPem(csr)
+  csr = forge.pki.certificationRequestToPem(csr)
   return csr.trim()
 }
 
 async function requestCert(endpoint, csr, apiKey) {
-  let res = await axios({
+  const res = await axios({
     method: 'post',
     url: `${apiUrl}/certificates?access_key=${apiKey}`,
     data: qs.stringify({
@@ -46,14 +46,17 @@ async function requestCert(endpoint, csr, apiKey) {
 
 async function validateCert(port, data, endpoint, apiKey) {
   const app = express()
-  var validationObject = data.validation.other_methods[endpoint]
-  var replacement = new RegExp(`http://${endpoint}`, 'g')
-  var path = validationObject.file_validation_url_http.replace(replacement, '')
+  const validationObject = data.validation.other_methods[endpoint]
+  const replacement = new RegExp(`http://${endpoint}`, 'g')
+  const path = validationObject.file_validation_url_http.replace(
+    replacement,
+    ''
+  )
   await app.get(path, (req, res) => {
     res.set('Content-Type', 'text/plain')
     res.send(validationObject.file_validation_content.join('\n'))
   })
-  let server = await app.listen(port, () => {
+  const server = await app.listen(port, () => {
     sphinxLogger.info(
       `validation server started at http://0.0.0.0:${port}`,
       logging.SSL
@@ -62,7 +65,7 @@ async function validateCert(port, data, endpoint, apiKey) {
   await requestValidation(data.id, apiKey)
   sphinxLogger.info(`waiting for certificate to be issued`, logging.SSL)
   while (true) {
-    let certData = await getCert(data.id, apiKey)
+    const certData = await getCert(data.id, apiKey)
     if (certData.status === 'issued') {
       sphinxLogger.info(`certificate was issued`, logging.SSL)
       break
@@ -77,7 +80,7 @@ async function validateCert(port, data, endpoint, apiKey) {
 }
 
 async function requestValidation(id, apiKey) {
-  let res = await axios({
+  const res = await axios({
     method: 'post',
     url: `${apiUrl}/certificates/${id}/challenges?access_key=${apiKey}`,
     data: qs.stringify({
@@ -96,7 +99,7 @@ async function requestValidation(id, apiKey) {
 }
 
 async function getCert(id, apiKey) {
-  let res = await axios({
+  const res = await axios({
     method: 'get',
     url: `${apiUrl}/certificates/${id}?access_key=${apiKey}`,
     headers: {
@@ -107,7 +110,7 @@ async function getCert(id, apiKey) {
 }
 
 async function downloadCert(id, apiKey) {
-  let res = await axios({
+  const res = await axios({
     method: 'get',
     url: `${apiUrl}/certificates/${id}/download/return?access_key=${apiKey}`,
     headers: {
@@ -122,15 +125,15 @@ async function getCertificate(domain, port, save_ssl) {
     existsSync(__dirname + '/zerossl/tls.cert') &&
     existsSync(__dirname + '/zerossl/tls.key')
   ) {
-    var certificate = readFileSync(
+    const certificate = readFileSync(
       __dirname + '/zerossl/tls.cert',
       'utf-8'
     ).toString()
-    var caBundle = readFileSync(
+    const caBundle = readFileSync(
       __dirname + '/zerossl/ca.cert',
       'utf-8'
     ).toString()
-    var privateKey = readFileSync(
+    const privateKey = readFileSync(
       __dirname + '/zerossl/tls.key',
       'utf-8'
     ).toString()
@@ -140,20 +143,20 @@ async function getCertificate(domain, port, save_ssl) {
       caBundle: caBundle,
     }
   }
-  var apiKey = process.env.ZEROSSL_API_KEY
+  const apiKey = process.env.ZEROSSL_API_KEY
   if (!apiKey) {
     sphinxLogger.error('ZEROSSL_API_KEY is not set', logging.SSL)
     throw new Error('ZEROSSL_API_KEY is not set')
   }
-  var endpoint_tmp = domain.replace('https://', '')
-  var endpoint = endpoint_tmp.replace(':3001', '')
-  var keys = forge.pki.rsa.generateKeyPair(2048)
-  var csr = generateCsr(keys, endpoint)
+  const endpoint_tmp = domain.replace('https://', '')
+  const endpoint = endpoint_tmp.replace(':3001', '')
+  const keys = forge.pki.rsa.generateKeyPair(2048)
+  const csr = generateCsr(keys, endpoint)
   sphinxLogger.info(`Generated CSR`, logging.SSL)
-  var res = await requestCert(endpoint, csr, apiKey)
+  const res = await requestCert(endpoint, csr, apiKey)
   sphinxLogger.info(`Requested certificate`, logging.SSL)
   await validateCert(port, res, endpoint, apiKey)
-  var certData = await downloadCert(res.id, apiKey)
+  const certData = await downloadCert(res.id, apiKey)
   if (save_ssl === true) {
     if (!existsSync(__dirname + '/zerossl')) {
       await mkdirSync(__dirname + '/zerossl')

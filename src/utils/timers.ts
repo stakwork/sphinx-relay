@@ -93,7 +93,7 @@ export async function payBack(t) {
     type: constants.message_types.repayment,
     realSatsContactId: t.receiver,
     success: function () {
-      var date = new Date()
+      const date = new Date()
       date.setMilliseconds(0)
       models.Message.create({
         // chatId: chat.id,
