@@ -4,7 +4,6 @@ info:
     This is a sample server for sphinx-relay below you'll find api docs and such
   version: 1.0.0
   title: Swagger Sphinx-Relay
-  summary: My lovely API
   termsOfService: 'http://swagger.io/terms/'
   contact:
     name: Sphinx Support
@@ -15,7 +14,6 @@ info:
   license:
     name: MIT License
     url: 'https://raw.githubusercontent.com/stakwork/sphinx-relay/master/LICENSE'
-    identifier: MIT License
 tags:
   - name: Tribes
     description: Everything about your Tribes
@@ -126,7 +124,10 @@ paths:
           in: path
           name: tribe_uuid 
           required: true
-          type: string
+          schema:
+            properties:
+              tribe_uuid:
+                type: string
       operationId: updateChannel
       responses:
         '200':
@@ -140,7 +141,7 @@ paths:
                      type: array 
                      items:
                        type: object 
-                       Properties:
+                       properties:
                          id:
                            type: integer
                    channels:
@@ -203,13 +204,6 @@ paths:
            description: Success
         '405':
           description: Invalid input
-          parameters:
-            - description: "Authentication token."
-              in: header
-              name: x-user-token
-              required: true
-              schema:
-                type: string
   /request_transport_key:
     get:
       tags:
@@ -257,3 +251,4 @@ paths:
                   description: Owners pubkey.
                   type: string
               type: object
+
