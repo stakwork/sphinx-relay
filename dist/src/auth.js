@@ -102,7 +102,7 @@ function hmacMiddleware(req, res, next) {
         const sig = req.headers['x-hmac'] || req.cookies['x-hmac'];
         if (!sig)
             return (0, res_1.unauthorized)(res);
-        const message = `${req.method}|${req.originalUrl}|${req.rawBody}`;
+        const message = `${req.method}|${req.originalUrl}|${req.rawBody || ''}`;
         const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey);
         console.log('valid sig!', valid);
         if (!valid) {

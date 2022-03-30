@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
+exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.getHmacKey = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -262,6 +262,23 @@ const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function
     });
 });
 exports.registerHmacKey = registerHmacKey;
+const getHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const hmac = req.owner.hmacKey;
+    if (!hmac)
+        return (0, res_1.failure)(res, 'no hmac set');
+    const contact_key = req.owner.contactKey;
+    if (!contact_key)
+        return (0, res_1.failure)(res, 'no contact_key');
+    const encrypted_key = rsa.encrypt(contact_key, hmac);
+    if (!encrypted_key)
+        return (0, res_1.failure)(res, 'failed to encrypt hmac key');
+    (0, res_1.success)(res, {
+        encrypted_key,
+    });
+});
+exports.getHmacKey = getHmacKey;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');

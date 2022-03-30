@@ -36,7 +36,7 @@ async function checkContactsWithHmac(
   const key = crypto.randomBytes(20).toString('hex').toLowerCase()
   const success = await addHmacKey(t, node1, key)
   console.log('HMAC:', success)
-  let added = await addContact(t, node1, node2, key)
+  const added = await addContact(t, node1, node2, key)
   t.true(added, 'node1 should add node2 as contact')
   console.log('added contact!')
 
@@ -87,7 +87,7 @@ async function addContact(
   t.true(typeof add.response === 'object', 'add contact should return object')
   console.log('add.response', add.response)
   //create node2 id based on the post response
-  var node2id = add && add.response && add.response.id
+  const node2id = add && add.response && add.response.id
   //check that node2id is a number and therefore exists (contact was posted)
   t.true(typeof node2id === 'number', 'node1id should be a number')
 

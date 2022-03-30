@@ -95,7 +95,7 @@ export async function hmacMiddleware(req: Req, res, next) {
   // req.headers['x-hub-signature-256']
   const sig = req.headers['x-hmac'] || req.cookies['x-hmac']
   if (!sig) return unauthorized(res)
-  const message = `${req.method}|${req.originalUrl}|${req.rawBody}`
+  const message = `${req.method}|${req.originalUrl}|${req.rawBody || ''}`
   const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey)
   console.log('valid sig!', valid)
   if (!valid) {
