@@ -147,6 +147,8 @@ export async function sendMessage({
     `=> sending to ${contactIds.length} 'contacts'`,
     logging.Network
   )
+
+  let batchContents
   await asyncForEach(contactIds, async (contactId) => {
     // console.log("=> TENANT", tenant)
     if (contactId === tenant) {
@@ -189,6 +191,7 @@ export async function sendMessage({
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
     // console.log('-> personalized msg', m)
+
     const opts = {
       dest: destkey,
       data: m,
@@ -198,15 +201,25 @@ export async function sendMessage({
 
     // console.log("==> SENDER",sender)
     // console.log("==> OK SIGN AND SEND", opts);
-    try {
-      const r = await signAndSend(opts, sender, mqttTopic)
-      yes = r
-    } catch (e) {
-      sphinxLogger.error(`KEYSEND ERROR ${e}`)
-      no = e
+    if (!mqttTopic) {
+      try {
+        const r = await signAndSend(opts, sender, mqttTopic)
+        yes = r
+      } catch (e) {
+        sphinxLogger.error(`KEYSEND ERROR ${e}`)
+        no = e
+      }
+    } else {
+      let data = JSON.stringify(m)
+      const sig = await LND.signAscii(data, sender.publicKey)
+      data = data + sig
+      const batchItem = { mqttTopic: mqttTopic, data: data }
+      batchContents.push(batchItem)
     }
     await sleep(10)
   })
+  const tribeBatch = { chatUUID: chat.uuid, batchContents: batchContents }
+  await tribes.sendTribeBatchMessage(tribeBatch, sender.publicKey)
   if (no) {
     if (failure) failure(no)
   } else {
