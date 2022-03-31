@@ -624,7 +624,7 @@ export async function verifySignedTimestamp(
   }
 }
 
-export async function sendTribeBatchMessage(tribeBatch, owner_pubkey) {
+export async function sendTribeBatchMessage(tribeBatch, owner_pubkey: string) {
   const host = getHost()
   try {
     const token = await genSignedTimestamp(owner_pubkey)
