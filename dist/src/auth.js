@@ -100,8 +100,11 @@ function hmacMiddleware(req, res, next) {
         }
         // req.headers['x-hub-signature-256']
         const sig = req.headers['x-hmac'] || req.cookies['x-hmac'];
-        if (!sig)
-            return (0, res_1.unauthorized)(res);
+        if (!sig) {
+            // FIXME optional sig for now
+            next();
+            return;
+        }
         const message = `${req.method}|${req.originalUrl}|${req.rawBody || ''}`;
         const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey);
         console.log('valid sig!', valid);

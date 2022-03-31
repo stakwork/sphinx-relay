@@ -10,7 +10,7 @@ import * as jwtUtils from './utils/jwt'
 import { allowedJwtRoutes } from './scopes'
 import * as rsa from './crypto/rsa'
 import * as hmac from './crypto/hmac'
-import { Req } from './types'
+import { Req, Res } from './types'
 import * as fs from 'fs'
 import * as moment from 'moment'
 
@@ -72,7 +72,7 @@ export async function unlocker(req: Req, res): Promise<boolean> {
   }
 }
 
-export async function hmacMiddleware(req: Req, res, next) {
+export async function hmacMiddleware(req: Req, res: Res, next): Promise<void> {
   if (no_auth(req.path)) {
     next()
     return
@@ -94,7 +94,11 @@ export async function hmacMiddleware(req: Req, res, next) {
   }
   // req.headers['x-hub-signature-256']
   const sig = req.headers['x-hmac'] || req.cookies['x-hmac']
-  if (!sig) return unauthorized(res)
+  if (!sig) {
+    // FIXME optional sig for now
+    next()
+    return
+  }
   const message = `${req.method}|${req.originalUrl}|${req.rawBody || ''}`
   const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey)
   console.log('valid sig!', valid)

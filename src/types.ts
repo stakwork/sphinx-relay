@@ -5,3 +5,5 @@ export interface Req extends express.Request {
   owner: Contact
   rawBody: string
 }
+
+export type Res = express.Response
