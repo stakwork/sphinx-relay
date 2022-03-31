@@ -20,7 +20,7 @@ const tribes_1 = require("../../utils/tribes");
 const logger_1 = require("../../utils/logger");
 function broadcast(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id } = a;
+        const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id, } = a;
         logger_1.sphinxLogger.info(`=> BOT BROADCAST`);
         if (!content)
             return logger_1.sphinxLogger.error(`no content`);
@@ -38,7 +38,7 @@ function broadcast(a) {
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
         const encryptedText = rsa.encrypt(theChat.groupKey, content);
         const textMap = { chat: encryptedText };
-        var date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         const alias = bot_name || 'Bot';
         const botContactId = -1;

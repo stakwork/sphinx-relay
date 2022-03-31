@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrCreateGitBot = exports.patToWebhook = exports.webhookToPat = exports.init = exports.GITBOT_UUID = void 0;
+exports.getOrCreateGitBot = exports.updateGitBotPat = exports.patToBotWebhookField = exports.botWebhookFieldToPat = exports.init = exports.GITBOT_UUID = void 0;
 const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const octokit_1 = require("octokit");
@@ -73,7 +73,7 @@ function init() {
                 console.log('pay user');
                 return;
             case 'add':
-                console.log('add');
+                // console.log('add')
                 try {
                     const { meta, chat, chatBot } = yield getStuff(message);
                     // if (!meta.pat) throw new Error('GitBot not connected')
@@ -81,7 +81,7 @@ function init() {
                     console.log('repo', repo);
                     meta.repos.push({ path: repo });
                     const bot = yield getOrCreateGitBot(chat.tenant);
-                    const pat = yield getPat();
+                    const pat = yield getPat(chat.tenant);
                     yield addWebhookToRepo(pat, repo, bot.secret);
                     yield chatBot.update({ meta: JSON.stringify(meta) });
                     const embed = new Sphinx.MessageEmbed()
@@ -95,23 +95,64 @@ function init() {
                         .setDescription('Error: ' + e.message);
                     return message.channel.send({ embed });
                 }
+            case 'remove':
+                // console.log('remove')
+                try {
+                    const stuff = yield getStuff(message);
+                    // if (!meta.pat) throw new Error('GitBot not connected')
+                    const repo = from_repo_url(words[2]);
+                    const repos = stuff.meta.repos.filter((r) => r.path !== repo);
+                    yield stuff.chatBot.update({
+                        meta: JSON.stringify(Object.assign(Object.assign({}, stuff.meta), { repos })),
+                    });
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('GitBot')
+                        .setDescription(repo + ' repo has been removed!');
+                    return message.channel.send({ embed });
+                }
+                catch (e) {
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('GitBot')
+                        .setDescription('Error: ' + e.message);
+                    return message.channel.send({ embed });
+                }
+            case 'list':
+                // console.log('list')
+                try {
+                    const stuff = yield getStuff(message);
+                    if (!stuff.meta.repos.length)
+                        throw new Error('no repos!');
+                    const embed3 = new Sphinx.MessageEmbed()
+                        .setAuthor('MotherBot')
+                        .setTitle('Bots:')
+                        .addFields(stuff.meta.repos.map((b) => {
+                        return { name: b.path, value: '' };
+                    }));
+                    message.channel.send({ embed: embed3 });
+                }
+                catch (e) {
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('GitBot')
+                        .setDescription('Error: ' + e.message);
+                    return message.channel.send({ embed });
+                }
         }
     }));
 }
 exports.init = init;
-function getPat() {
+function getPat(tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         const existing = yield models_1.models.Bot.findOne({
-            where: { uuid: exports.GITBOT_UUID },
+            where: { uuid: exports.GITBOT_UUID, tenant },
         });
         if (existing) {
-            return webhookToPat(existing.webhook);
+            return botWebhookFieldToPat(existing.webhook);
         }
         else
             throw new Error('no PAT in GitBot');
     });
 }
-function webhookToPat(webhook) {
+function botWebhookFieldToPat(webhook) {
     if (!webhook.includes('|'))
         throw new Error('no PAT in gitBot webhook');
     const arr = webhook.split('|');
@@ -119,11 +160,11 @@ function webhookToPat(webhook) {
         throw new Error('no PAT in gitBot webhook');
     return arr[1];
 }
-exports.webhookToPat = webhookToPat;
-function patToWebhook(pat, gitbottype = 'github') {
+exports.botWebhookFieldToPat = botWebhookFieldToPat;
+function patToBotWebhookField(pat, gitbottype = 'github') {
     return `${gitbottype}|${pat}`;
 }
-exports.patToWebhook = patToWebhook;
+exports.patToBotWebhookField = patToBotWebhookField;
 function addWebhookToRepo(pat, repoAndOwner, bot_secret) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!bot_secret) {
@@ -165,9 +206,18 @@ function from_repo_url(s) {
         throw new Error('invalid repo');
     return s;
 }
+function updateGitBotPat(tenant, pat) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const gitBot = yield getOrCreateGitBot(tenant);
+        yield gitBot.update({ webhook: patToBotWebhookField(pat, 'github') });
+    });
+}
+exports.updateGitBotPat = updateGitBotPat;
 function getOrCreateGitBot(tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existing = yield models_1.models.Bot.findOne({ where: { uuid: exports.GITBOT_UUID } });
+        const existing = yield models_1.models.Bot.findOne({
+            where: { uuid: exports.GITBOT_UUID, tenant },
+        });
         if (existing) {
             return existing;
         }

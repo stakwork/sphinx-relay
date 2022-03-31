@@ -21,35 +21,70 @@ const logger_1 = require("../../utils/logger");
 const hmac = require("../../crypto/hmac");
 const git_1 = require("../../builtin/git");
 const helpers_1 = require("../../helpers");
+const githook_1 = require("../../utils/githook");
 function processWebhook(req, res) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);
         const sig = req.headers['x-hub-signature-256'];
         if (!sig)
             return (0, res_1.unauthorized)(res);
-        // find bot by uuid = GITBOT_UUID - secret
-        const gitbot = yield models_1.models.Bot.findOne({ where: { uuid: git_1.GITBOT_UUID } });
-        if (!gitbot) {
-            return (0, res_1.failure)(res, 'nope');
+        const event = req.body;
+        let repo = '';
+        if ('repository' in event) {
+            repo = ((_a = event.repository) === null || _a === void 0 ? void 0 : _a.full_name.toLowerCase()) || '';
         }
-        const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret);
-        if (!valid) {
-            return (0, res_1.failure)(res, 'invalid hmac');
+        if (!repo)
+            return (0, res_1.unauthorized)(res);
+        let ok = false;
+        try {
+            // for all "owners"
+            const allChatBots = yield models_1.models.ChatBot.findAll({
+                where: { botUuid: git_1.GITBOT_UUID },
+            });
+            const allGitBots = yield models_1.models.Bot.findOne({
+                where: { uuid: git_1.GITBOT_UUID },
+            });
+            yield (0, helpers_1.asyncForEach)(allChatBots, (cb) => __awaiter(this, void 0, void 0, function* () {
+                const meta = cb.meta ? JSON.parse(cb.meta) : { repos: [] };
+                yield (0, helpers_1.asyncForEach)(meta.repos, (r) => __awaiter(this, void 0, void 0, function* () {
+                    if (r.path === repo) {
+                        const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant);
+                        if (gitbot) {
+                            const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret);
+                            if (valid) {
+                                ok = true;
+                                // process!
+                                const chat = yield models_1.models.Chat.findOne({
+                                    where: { id: cb.chatId },
+                                });
+                                if (chat) {
+                                    const content = (0, githook_1.processGithook)(req.body);
+                                    if (content) {
+                                        const a = {
+                                            action: 'broadcast',
+                                            bot_id: gitbot.id,
+                                            chat_uuid: chat.uuid,
+                                            amount: 0,
+                                            bot_name: gitbot.name,
+                                        };
+                                        yield (0, broadcast_1.default)(a);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }));
+            }));
         }
-        const chatbots = yield models_1.models.ChatBot.findAll({
-            where: { botUuid: git_1.GITBOT_UUID },
-        });
-        yield (0, helpers_1.asyncForEach)(chatbots, (cb) => {
-            if (!cb.meta)
-                return;
-            try {
-                const meta = JSON.parse(cb.meta);
-                console.log(meta.repos);
-            }
-            catch (e) {
-                logger_1.sphinxLogger.error('failed to parse GitBotMeta');
-            }
-        });
+        catch (e) {
+            logger_1.sphinxLogger.error('failed to process webhook', e);
+            (0, res_1.unauthorized)(res);
+        }
+        if (ok)
+            (0, res_1.success)(res, { ok: true });
+        else
+            (0, res_1.unauthorized)(res);
     });
 }
 exports.processWebhook = processWebhook;

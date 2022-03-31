@@ -7,7 +7,7 @@
   "rules": {
     "no-async-promise-executor": 1,
     "no-constant-condition": 1,
-    "no-case-declarations": 1,
+    "no-case-declarations": 0,
     "@typescript-eslint/no-empty-function": 1,
     "@typescript-eslint/no-unused-vars": 1,
     "@typescript-eslint/no-explicit-any": 1,

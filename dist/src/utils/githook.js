@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.process = exports.all_webhook_events = void 0;
+exports.processGithook = exports.all_webhook_events = void 0;
 exports.all_webhook_events = [
     'push',
     'release',
@@ -72,7 +72,7 @@ const actionsMap = {
     release: releaseActions,
 };
 const props = ['issue', 'pull_request', 'release'];
-function process(event, repo_filter) {
+function processGithook(event, repo_filter) {
     var _a;
     if (repo_filter && 'repository' in event) {
         const fullname = (_a = event.repository) === null || _a === void 0 ? void 0 : _a.full_name.toLowerCase();
@@ -100,5 +100,5 @@ function process(event, repo_filter) {
     }
     return '';
 }
-exports.process = process;
+exports.processGithook = processGithook;
 //# sourceMappingURL=githook.js.map

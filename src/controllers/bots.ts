@@ -12,9 +12,10 @@ import { Msg, Payload } from '../network/interfaces'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import * as short from 'short-uuid'
-import { Req } from '../types'
+import { Req, Res } from '../types'
+import { updateGitBotPat } from '../builtin/git'
 
-export const getBots = async (req: Req, res) => {
+export const getBots = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -27,7 +28,7 @@ export const getBots = async (req: Req, res) => {
   }
 }
 
-export const createBot = async (req: Req, res) => {
+export const createBot = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { name, webhook, price_per_use, img, description, tags } = req.body
@@ -64,7 +65,7 @@ export const createBot = async (req: Req, res) => {
   }
 }
 
-export const deleteBot = async (req: Req, res) => {
+export const deleteBot = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id
@@ -84,7 +85,7 @@ export const deleteBot = async (req: Req, res) => {
   }
 }
 
-export async function installBotAsTribeAdmin(chat, bot_json) {
+export async function installBotAsTribeAdmin(chat, bot_json): Promise<void> {
   const chatId = chat && chat.id
   const chat_uuid = chat && chat.uuid
   const tenant = chat.tenant
@@ -252,7 +253,7 @@ export async function botKeysend(
   }
 }
 
-export async function receiveBotInstall(dat: Payload) {
+export async function receiveBotInstall(dat: Payload): Promise<void> {
   sphinxLogger.info(['=> receiveBotInstall', dat], logging.Network)
 
   const sender_pub_key = dat.sender && dat.sender.pub_key
@@ -301,7 +302,7 @@ export async function receiveBotInstall(dat: Payload) {
 }
 
 // ONLY FOR BOT MAKER
-export async function receiveBotCmd(dat: Payload) {
+export async function receiveBotCmd(dat: Payload): Promise<void> {
   sphinxLogger.info('=> receiveBotCmd', logging.Network)
 
   const sender_pub_key = dat.sender.pub_key
@@ -416,7 +417,7 @@ export function buildBotPayload(msg: Msg): SphinxBot.Message {
   return m
 }
 
-export async function receiveBotRes(dat: Payload) {
+export async function receiveBotRes(dat: Payload): Promise<void> {
   sphinxLogger.info('=> receiveBotRes', logging.Network) //, payload)
 
   if (!dat.chat || !dat.message || !dat.sender) {
@@ -510,5 +511,17 @@ export async function receiveBotRes(dat: Payload) {
       },
       tenant
     )
+  }
+}
+
+export const addPatToGitBot = async (req: Req, res: Res): Promise<void> => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  if (!req.body.pat) return failure(res, 'no pat')
+  try {
+    await updateGitBotPat(tenant, req.body.pat)
+    success(res, { updated: true })
+  } catch (e) {
+    failure(res, 'no bots')
   }
 }

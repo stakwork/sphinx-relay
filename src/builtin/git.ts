@@ -1,7 +1,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { Octokit } from 'octokit'
-import { models, BotRecord } from '../models'
+import { models, BotRecord, ChatRecord, ChatBotRecord } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 // import { sphinxLogger } from '../utils/logger'
@@ -31,7 +31,7 @@ function octokit(pat: string): Octokit {
 
 async function getStuff(
   message: Sphinx.Message
-): Promise<{ chat: any; chatBot: any; meta: GitBotMeta }> {
+): Promise<{ chat: ChatRecord; chatBot: ChatBotRecord; meta: GitBotMeta }> {
   try {
     const chat = await getTribeOwnersChatByUUID(message.channel.id)
     // console.log("=> WelcomeBot chat", chat);
@@ -74,7 +74,7 @@ export function init(): void {
         return
 
       case 'add':
-        console.log('add')
+        // console.log('add')
         try {
           const { meta, chat, chatBot } = await getStuff(message)
           // if (!meta.pat) throw new Error('GitBot not connected')
@@ -82,7 +82,7 @@ export function init(): void {
           console.log('repo', repo)
           meta.repos.push({ path: repo })
           const bot = await getOrCreateGitBot(chat.tenant)
-          const pat = await getPat()
+          const pat = await getPat(chat.tenant)
           await addWebhookToRepo(pat, repo, bot.secret)
           await chatBot.update({ meta: JSON.stringify(meta) })
           const embed = new Sphinx.MessageEmbed()
@@ -95,27 +95,71 @@ export function init(): void {
             .setDescription('Error: ' + e.message)
           return message.channel.send({ embed })
         }
+
+      case 'remove':
+        // console.log('remove')
+        try {
+          const stuff = await getStuff(message)
+          // if (!meta.pat) throw new Error('GitBot not connected')
+          const repo = from_repo_url(words[2])
+          const repos = stuff.meta.repos.filter((r) => r.path !== repo)
+          await stuff.chatBot.update({
+            meta: JSON.stringify({ ...stuff.meta, repos }),
+          })
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('GitBot')
+            .setDescription(repo + ' repo has been removed!')
+          return message.channel.send({ embed })
+        } catch (e) {
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('GitBot')
+            .setDescription('Error: ' + e.message)
+          return message.channel.send({ embed })
+        }
+
+      case 'list':
+        // console.log('list')
+        try {
+          const stuff = await getStuff(message)
+          if (!stuff.meta.repos.length) throw new Error('no repos!')
+          const embed3 = new Sphinx.MessageEmbed()
+            .setAuthor('MotherBot')
+            .setTitle('Bots:')
+            .addFields(
+              stuff.meta.repos.map((b) => {
+                return { name: b.path, value: '' }
+              })
+            )
+          message.channel.send({ embed: embed3 })
+        } catch (e) {
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('GitBot')
+            .setDescription('Error: ' + e.message)
+          return message.channel.send({ embed })
+        }
     }
   })
 }
 
-async function getPat(): Promise<string> {
+async function getPat(tenant: number): Promise<string> {
   const existing: BotRecord = await models.Bot.findOne({
-    where: { uuid: GITBOT_UUID },
+    where: { uuid: GITBOT_UUID, tenant },
   })
   if (existing) {
-    return webhookToPat(existing.webhook)
+    return botWebhookFieldToPat(existing.webhook)
   } else throw new Error('no PAT in GitBot')
 }
 
-export function webhookToPat(webhook: string): string {
+export function botWebhookFieldToPat(webhook: string): string {
   if (!webhook.includes('|')) throw new Error('no PAT in gitBot webhook')
   const arr = webhook.split('|')
   if (arr.length < 2) throw new Error('no PAT in gitBot webhook')
   return arr[1]
 }
+
 type GitBotType = 'github'
-export function patToWebhook(
+
+export function patToBotWebhookField(
   pat: string,
   gitbottype: GitBotType = 'github'
 ): string {
@@ -166,8 +210,18 @@ function from_repo_url(s: string) {
   return s
 }
 
+export async function updateGitBotPat(
+  tenant: number,
+  pat: string
+): Promise<void> {
+  const gitBot = await getOrCreateGitBot(tenant)
+  await gitBot.update({ webhook: patToBotWebhookField(pat, 'github') })
+}
+
 export async function getOrCreateGitBot(tenant: number): Promise<BotRecord> {
-  const existing = await models.Bot.findOne({ where: { uuid: GITBOT_UUID } })
+  const existing = await models.Bot.findOne({
+    where: { uuid: GITBOT_UUID, tenant },
+  })
   if (existing) {
     return existing
   }
