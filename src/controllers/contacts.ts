@@ -275,7 +275,10 @@ export const generateToken = async (req: Req, res: Response): Promise<void> => {
   })
 }
 
-export const registerHmacKey = async (req: Req, res) => {
+export const registerHmacKey = async (
+  req: Req,
+  res: Response
+): Promise<void> => {
   if (!req.body.encrypted_key) {
     return failure(res, 'no encrypted_key found')
   }
@@ -292,6 +295,19 @@ export const registerHmacKey = async (req: Req, res) => {
 
   success(res, {
     registered: true,
+  })
+}
+
+export const getHmacKey = async (req: Req, res: Response): Promise<void> => {
+  if (!req.owner) return failure(res, 'no owner')
+  const hmac: string = req.owner.hmacKey
+  if (!hmac) return failure(res, 'no hmac set')
+  const contact_key = req.owner.contactKey
+  if (!contact_key) return failure(res, 'no contact_key')
+  const encrypted_key = rsa.encrypt(contact_key, hmac)
+  if (!encrypted_key) return failure(res, 'failed to encrypt hmac key')
+  success(res, {
+    encrypted_key,
   })
 }
 

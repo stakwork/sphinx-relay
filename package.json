@@ -89,7 +89,7 @@
     "sequelize-typescript": "^1.1.0",
     "short-uuid": "^3.1.1",
     "sjcl": "^1.0.8",
-    "socket.io": "^2.4.0",
+    "socket.io": "^4.4.1",
     "sphinx-bot": "^0.2.21",
     "sqlite3": "4.1.1",
     "tail": "^2.0.3",
@@ -110,7 +110,9 @@
     "eslint-config-prettier": "^8.3.0",
     "husky": "^7.0.1",
     "prettier": "^2.3.2",
-    "pretty-quick": "^3.1.1"
+    "pretty-quick": "^3.1.1",
+    "socket.io-client": "^4.4.1",
+    "socket.io-client-legacy": "npm:socket.io-client@^2.4.0"
   },
   "pkg": {
     "assets": ["config/*", "dist/config/*"]

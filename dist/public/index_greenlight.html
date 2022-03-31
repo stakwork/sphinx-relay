@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sphinx Relay</title>
+    <link rel="icon" href="/static/sphinx-logo.png" />
+    <style>
+      html {
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+      }
+
+      body {
+        background: #292a2d;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #qr-wrap {
+        background: white;
+        width: 300px;
+        height: 300px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      canvas {
+        height: 280px;
+        width: 280px;
+      }
+
+      pre {
+        margin-top: 8px;
+        border-radius: 10px;
+        max-width: 250px;
+        padding: 18px 25px 0px 25px;
+        border: 1px solid tan;
+        background: white;
+        overflow: hidden;
+        overflow-wrap: break-word;
+        display: block;
+        white-space: pre-wrap;
+        color: darkslategray;
+      }
+
+      img {
+        height: 100px;
+        width: 100px;
+        margin-top: 20px;
+      }
+
+      p {
+        margin-top: 30px;
+        max-width: 305px;
+        text-align: center;
+      }
+
+      ul {
+        list-style: none;
+        max-width: 333px;
+      }
+
+      li {
+        margin-top: 8px;
+      }
+
+      input[type='checkbox'] {
+        pointer-events: none;
+      }
+
+      a {
+        color: #628aff;
+        font-weight: bold;
+      }
+      a:visited {
+        color: #628aff;
+        font-weight: bold;
+      }
+      button {
+        margin-top:15px;
+        padding:10px 20px;
+        cursor: pointer;
+        max-height: 42px;
+      }
+      button:enabled:hover {
+        background-color: #628aff;
+        color:white;
+      }
+      #chanpoint {
+        word-break: break-all;
+      }
+      @keyframes spin {
+        from {
+          transform:rotate(0deg);
+        }
+        to {
+          transform:rotate(360deg);
+        }
+      }
+      svg {
+        animation-name: spin;
+        animation-duration: 600ms;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear; 
+      }
+      #peer svg {
+        display: none;
+      }
+      #peer:disabled svg {
+        display: inline-block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <img src="/static/sphinx-logo.png" alt="logo" />
+
+    <p id="scan">Scan this QR code with your Sphinx app:</p>
+    <div id="qr-wrap">
+      <canvas id="qr"></canvas>
+    </div>
+
+    <pre id="connection-string">
+      CONNECTION_STRING
+    </pre>
+
+    <div style="margin-top:10px;">Peer to Sphinx router node:</div>
+
+    <button id="peer">
+      <svg height="16" width="16" viewbox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <path fill="white" stroke="grey" d="M988 548c-19.9 0-36-16.1-36-36 0-59.4-11.6-117-34.6-171.3a440.45 440.45 0 0 0-94.3-139.9 437.71 437.71 0 0 0-139.9-94.3C629 83.6 571.4 72 512 72c-19.9 0-36-16.1-36-36s16.1-36 36-36c69.1 0 136.2 13.5 199.3 40.3C772.3 66 827 103 874 150c47 47 83.9 101.8 109.7 162.7 26.7 63.1 40.2 130.2 40.2 199.3.1 19.9-16 36-35.9 36z" />
+      </svg>
+      <span style="margin:0 8px;">PEER NOW</span>
+    </button>
+
+    <p id="conn">You are connected to a Sphinx Routing Node!</p>
+    <p id="pending">You are connected to a Sphinx Routing Node! Please wait for channel to open and confirm...</p>
+    <p id="chanpoint"></p>
+
+    <script src="/static/js/qrious.js"></script>
+    <script>
+      ;(function () {
+        var qr = new QRious({
+          element: document.getElementById('qr'),
+          value: 'CONNECTION_STRING',
+          size: 300,
+        })
+      })()
+    </script>
+    <script>
+      function get(id) {
+        return document.getElementById(id)
+      }
+
+      const qr = get('qr-wrap')
+      const string = get('connection-string')
+      const scan = get('scan')
+      const peer = get('peer')
+      const conn = get('conn')
+      const pending = get('pending')
+      const chanpoint = get('chanpoint')
+
+      function initial_state() {
+        peer.disabled = true
+        peer.style.display = 'none'
+        scan.style.display = 'none' // showqr
+        qr.style.display = 'none' // showqr
+        string.style.display = 'none'
+        conn.style.display = 'none'
+        pending.style.display = 'none'
+      }
+
+      peer.onclick = async function () {
+        console.log('PEER NOW')
+        peer.disabled = true
+        const r = await fetch('/connect_peer', {
+          method: 'POST',
+        })
+        const j = await r.json()
+        console.log(j)  
+        await sleep(1000)
+        startup(true)      
+      }
+
+      async function startup(reset) {
+        if(reset) initial_state() // HIDE ALL
+        const r = await fetch('/peered')
+        const j = await r.json()
+        console.log(j)
+        txid = ''
+        confirmations = 0
+        if (j.response.channel_point) {
+          txid = j.response.channel_point.split(':')[0]
+
+          const tip_height_res = await fetch('https://mempool.space/api/blocks/tip/height')
+          const tip_height = await tip_height_res.json()
+
+          const txid_status_res = await fetch('https://mempool.space/api/tx/' + txid + '/status')
+          const txid_status = await txid_status_res.json()
+          if (txid_status.confirmed) {
+            const txid_confs = txid_status.block_height
+            confirmations = tip_height - txid_confs + 1
+          }
+        }
+        console.log(j.response)
+        console.log(j.response.channel_point)
+        console.log(confirmations)
+
+        // NOT PEERED
+        if (j && j.success && j.response && j.response.peered==false) {
+          peer.style.display = 'block'
+          peer.disabled = false
+        // PEERED BUT NOT ACTIVE
+        } else if (j && j.success && j.response && j.response.peered && confirmations < 8) {
+          pending.style.display = 'block'
+          // CHANNEL CREATED
+          if (j.response.channel_point) {
+            chanpoint.innerHTML = 'TXID: ' + txid + '<br> Confirmations: ' + confirmations + '/8'
+          }
+        // ACTIVE AFTER 8 CONFS ONLY
+        } else if (j && j.success && j.response && j.response.peered && j.response.active) {
+          conn.style.display = 'block'
+          qr.style.display = 'flex'
+          string.style.display = 'block'
+          scan.style.display = 'block'
+          pending.style.display = 'none'
+          chanpoint.style.display = 'none'
+        }
+      }
+      startup(true) // refresh
+      setInterval(function() {
+        startup(false)
+      }, 20000)
+
+      async function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+      }
+    </script>
+  </body>
+</html>

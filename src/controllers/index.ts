@@ -73,6 +73,7 @@ export async function set(app) {
   app.get('/latest_contacts', contacts.getLatestContacts)
   app.post('/generate_external', contacts.generateOwnerWithExternalSigner)
   app.post('/hmac_key', contacts.registerHmacKey)
+  app.get('/hmac_key', contacts.getHmacKey)
 
   app.post('/profile', personal.createPeopleProfile)
   app.delete('/profile', personal.deletePersonProfile)
