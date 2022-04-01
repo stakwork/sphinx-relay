@@ -148,7 +148,7 @@ export async function sendMessage({
     logging.Network
   )
 
-  let batchContents
+  let batchContents: Array<{ mqtt_topic: string; data: string }> = []
   await asyncForEach(contactIds, async (contactId) => {
     // console.log("=> TENANT", tenant)
     if (contactId === tenant) {
@@ -213,13 +213,16 @@ export async function sendMessage({
       let data = JSON.stringify(m)
       const sig = await LND.signAscii(data, sender.publicKey)
       data = data + sig
-      const batchItem = { mqttTopic: mqttTopic, data: data }
+      const batchItem = { mqtt_topic: mqttTopic, data: data }
       batchContents.push(batchItem)
     }
     await sleep(10)
   })
-  const tribeBatch = { chatUUID: chat.uuid, batchContents: batchContents }
-  await tribes.sendTribeBatchMessage(tribeBatch, sender.publicKey)
+  console.log('SENDING TRIBE BATCH MESSAGE')
+  if (isTribeOwner) {
+    const tribeBatch = { chat_uuid: chat.uuid, batch_contents: batchContents }
+    await tribes.sendTribeBatchMessage(tribeBatch, sender.publicKey)
+  }
   if (no) {
     if (failure) failure(no)
   } else {

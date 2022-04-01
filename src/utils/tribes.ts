@@ -634,7 +634,7 @@ export async function sendTribeBatchMessage(tribeBatch, owner_pubkey: string) {
       protocol + '://' + host + '/tribe/messageBundle' + '?token=' + token,
       {
         method: 'POST',
-        body: tribeBatch,
+        body: JSON.stringify(tribeBatch),
         headers: { 'Content-Type': 'application/json' },
       }
     )
