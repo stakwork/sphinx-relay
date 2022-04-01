@@ -223,6 +223,7 @@ function getOrCreateGitBot(tenant) {
             return existing;
         }
         const newBot = {
+            id: crypto.randomBytes(10).toString('hex').toLowerCase(),
             name: 'GitBot',
             uuid: exports.GITBOT_UUID,
             secret: crypto.randomBytes(20).toString('hex').toLowerCase(),

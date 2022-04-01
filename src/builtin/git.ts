@@ -227,6 +227,7 @@ export async function getOrCreateGitBot(tenant: number): Promise<BotRecord> {
     return existing
   }
   const newBot = {
+    id: crypto.randomBytes(10).toString('hex').toLowerCase(),
     name: 'GitBot',
     uuid: GITBOT_UUID,
     secret: crypto.randomBytes(20).toString('hex').toLowerCase(),
