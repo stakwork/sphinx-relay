@@ -38,14 +38,20 @@ export interface Action {
 export async function processWebhook(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
-  if (!sig) return unauthorized(res)
+  if (!sig) {
+    console.log('===> nosig')
+    return unauthorized(res)
+  }
 
   const event = req.body as WebhookEvent
   let repo = ''
   if ('repository' in event) {
     repo = event.repository?.full_name.toLowerCase() || ''
   }
-  if (!repo) return unauthorized(res)
+  if (!repo) {
+    console.log('===> norepo')
+    return unauthorized(res)
+  }
 
   let ok = false
 

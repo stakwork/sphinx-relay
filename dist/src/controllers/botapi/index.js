@@ -27,15 +27,19 @@ function processWebhook(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);
         const sig = req.headers['x-hub-signature-256'];
-        if (!sig)
+        if (!sig) {
+            console.log('===> nosig');
             return (0, res_1.unauthorized)(res);
+        }
         const event = req.body;
         let repo = '';
         if ('repository' in event) {
             repo = ((_a = event.repository) === null || _a === void 0 ? void 0 : _a.full_name.toLowerCase()) || '';
         }
-        if (!repo)
+        if (!repo) {
+            console.log('===> norepo');
             return (0, res_1.unauthorized)(res);
+        }
         let ok = false;
         try {
             // for all "owners"
