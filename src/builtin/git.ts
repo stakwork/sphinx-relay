@@ -8,6 +8,7 @@ import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import * as crypto from 'crypto'
 import { getIP } from '../utils/connect'
 import { all_webhook_events } from '../utils/githook'
+import { sphinxLogger } from '../utils/logger'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -79,11 +80,11 @@ export function init(): void {
           const { meta, chat, chatBot } = await getStuff(message)
           // if (!meta.pat) throw new Error('GitBot not connected')
           const repo = from_repo_url(words[2])
-          console.log('repo', repo)
-          meta.repos.push({ path: repo })
+          sphinxLogger.info('==> repo: ' + repo)
           const bot = await getOrCreateGitBot(chat.tenant)
           const pat = await getPat(chat.tenant)
           await addWebhookToRepo(pat, repo, bot.secret)
+          meta.repos.push({ path: repo })
           await chatBot.update({ meta: JSON.stringify(meta) })
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')

@@ -14,6 +14,11 @@ import { logging, sphinxLogger } from '../utils/logger'
 import * as short from 'short-uuid'
 import { Req, Res } from '../types'
 import { updateGitBotPat } from '../builtin/git'
+import * as fs from 'fs'
+import * as rsa from '../crypto/rsa'
+import { loadConfig } from '../utils/config'
+
+const config = loadConfig()
 
 export const getBots = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -517,9 +522,15 @@ export async function receiveBotRes(dat: Payload): Promise<void> {
 export const addPatToGitBot = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  if (!req.body.pat) return failure(res, 'no pat')
+  if (!req.body.encrypted_pat) return failure(res, 'no pat')
+  const transportTokenKey = fs.readFileSync(
+    config.transportPrivateKeyLocation,
+    'utf8'
+  )
+  const pat = rsa.decrypt(transportTokenKey, req.body.encrypted_pat)
+  if (!pat) return failure(res, 'failed to decrypt pat')
   try {
-    await updateGitBotPat(tenant, req.body.pat)
+    await updateGitBotPat(tenant, pat)
     success(res, { updated: true })
   } catch (e) {
     failure(res, 'no bots')

@@ -20,6 +20,7 @@ const tribes_1 = require("../utils/tribes");
 const crypto = require("crypto");
 const connect_1 = require("../utils/connect");
 const githook_1 = require("../utils/githook");
+const logger_1 = require("../utils/logger");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const prefix = '/git';
@@ -78,11 +79,11 @@ function init() {
                     const { meta, chat, chatBot } = yield getStuff(message);
                     // if (!meta.pat) throw new Error('GitBot not connected')
                     const repo = from_repo_url(words[2]);
-                    console.log('repo', repo);
-                    meta.repos.push({ path: repo });
+                    logger_1.sphinxLogger.info('==> repo: ' + repo);
                     const bot = yield getOrCreateGitBot(chat.tenant);
                     const pat = yield getPat(chat.tenant);
                     yield addWebhookToRepo(pat, repo, bot.secret);
+                    meta.repos.push({ path: repo });
                     yield chatBot.update({ meta: JSON.stringify(meta) });
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
