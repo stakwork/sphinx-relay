@@ -29,12 +29,17 @@ let hub_pubkey = '';
 const hub_url = 'https://hub.sphinx.chat/api/v1/';
 function get_hub_pubkey() {
     return __awaiter(this, void 0, void 0, function* () {
-        const r = yield (0, node_fetch_1.default)(hub_url + '/routingnode');
-        const j = yield r.json();
-        if (j && j.pubkey) {
-            // console.log("=> GOT HUB PUBKEY", j.pubkey)
-            hub_pubkey = j.pubkey;
-            return j.pubkey;
+        try {
+            const r = yield (0, node_fetch_1.default)(hub_url + '/routingnode');
+            const j = yield r.json();
+            if (j && j.pubkey) {
+                // console.log("=> GOT HUB PUBKEY", j.pubkey)
+                hub_pubkey = j.pubkey;
+                return j.pubkey;
+            }
+        }
+        catch (e) {
+            logger_1.sphinxLogger.warning(`Could not retrive hub routing node pubkey: Error: ${e}`);
         }
         return '';
     });
