@@ -4,7 +4,6 @@ info:
     This is a sample server for sphinx-relay below you'll find api docs and such
   version: 1.0.0
   title: Swagger Sphinx-Relay
-  summary: My lovely API
   termsOfService: 'http://swagger.io/terms/'
   contact:
     name: Sphinx Support
@@ -15,20 +14,16 @@ info:
   license:
     name: MIT License
     url: 'https://raw.githubusercontent.com/stakwork/sphinx-relay/master/LICENSE'
-    identifier: MIT License
 tags:
-  - name: tribes
-    description: Everything about your Tribes
-x-tagGroups:
   - name: Tribes
-    tags:
-      - tribe_channel
-      - tribes
+    description: Everything about your Tribes
+  - name: Authentication 
+    description: Endpoints to enable and to use relay's authenticated endpoints 
 paths:
   /tribe_channel:
     post:
       tags:
-        - tribe_channel
+        - Tribes 
       summary: Add a new channel for tribe in tribe server
       description: Create new tribe text channel.
       operationId: createChannel
@@ -81,8 +76,8 @@ paths:
               type: object
     delete:
       tags:
-        - tribe_channel
-      summary: delete tribe text channel
+        - Tribes 
+      summary: Delete tribe text channel
       description: delete tribe text channel in the tribes server.
       operationId: deleteChannel
       responses:
@@ -121,16 +116,19 @@ paths:
   /tribes/{tribe_uuid}:
     get:
       tags:
-        - tribes
-      summary: Add a new channel for tribe in tribe server
-      description: Create new tribe text channel.
+        - Tribes
+      summary: Get a tribe info by uuid
+      description: Get a tribe info from tribes server by providing a uuid.
       parameters:
         - description: The tribe ID.
           in: path
           name: tribe_uuid 
           required: true
-          type: string
-      operationId: createChannel
+          schema:
+            properties:
+              tribe_uuid:
+                type: string
+      operationId: updateChannel
       responses:
         '200':
            content:
@@ -143,7 +141,7 @@ paths:
                      type: array 
                      items:
                        type: object 
-                       Properties:
+                       properties:
                          id:
                            type: integer
                    channels:
@@ -206,10 +204,51 @@ paths:
            description: Success
         '405':
           description: Invalid input
-          parameters:
-            - description: "Authentication token."
-              in: header
-              name: x-user-token
-              required: true
-              schema:
-                type: string
+  /request_transport_key:
+    get:
+      tags:
+        - Authentication 
+      summary: Get transport token key      
+      description: This is used for retriving the key used to encrypt the x-transport-token
+      operationId: requestTransportKeys 
+      responses:
+        '200':
+           content:
+             application/json:
+               schema:
+                 properties:
+                   request_transport_key:
+                     type: string 
+           description: Success
+  /contacts/tokens:
+    post:
+      tags:
+        - Authentication 
+      summary: Set auth token for owner.
+      description: This is used for setting the auth token 
+      operationId: saveAuthToken 
+      responses:
+        '200':
+           description: Success
+        '400':
+           description: Failure one of these issue (no pubkey,no owner, Wrong Password, no token in body, invalid token)
+      parameters:
+        - description: "X Transport Authentication token."
+          in: header
+          name: x-transport-token
+          required: false 
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                token:
+                  description: (Legacy) Auth token to save with 
+                  type: string
+                pubkey:
+                  description: Owners pubkey.
+                  type: string
+              type: object
+
