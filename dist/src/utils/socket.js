@@ -15,9 +15,14 @@ const crypto = require("crypto");
 const fs = require("fs");
 const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
-const socketio = require("socket.io");
 const rsa = require("../crypto/rsa");
 const config = (0, config_1.loadConfig)();
+// import * as WebSocket from 'ws'
+//The newer version of socket.io when imported has a
+//different format than when we import it so we can ignore
+//for now till we feel fine updating this
+// eslint-disable-next-line
+const socketio = require('socket.io');
 // { ownerID: [client1, client2] }
 const CLIENTS = {};
 let io;
@@ -25,6 +30,7 @@ let io;
 function connect(server) {
     // srvr = new WebSocket.Server({ server, clientTracking:true })
     io = socketio(server, {
+        allowEIO3: true,
         handlePreflightRequest: (req, res) => {
             const headers = {
                 'Access-Control-Allow-Headers': 'Content-Type, Accept, x-user-token, X-Requested-With',

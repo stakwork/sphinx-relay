@@ -3,11 +3,16 @@ import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { loadConfig } from './config'
 import { sphinxLogger } from '../utils/logger'
-import * as socketio from 'socket.io'
 import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
 // import * as WebSocket from 'ws'
+
+//The newer version of socket.io when imported has a
+//different format than when we import it so we can ignore
+//for now till we feel fine updating this
+// eslint-disable-next-line
+const socketio = require('socket.io')
 
 type ClientMap = Record<number, any[]>
 // { ownerID: [client1, client2] }
@@ -20,6 +25,7 @@ export function connect(server) {
   // srvr = new WebSocket.Server({ server, clientTracking:true })
 
   io = socketio(server, {
+    allowEIO3: true,
     handlePreflightRequest: (req, res) => {
       const headers = {
         'Access-Control-Allow-Headers':
