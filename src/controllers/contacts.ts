@@ -772,7 +772,7 @@ async function switchBlock(
   success(res, jsonUtils.contactToJson(updated))
 }
 
-export const blockContact = async (req: Req, res) => {
+export const blockContact = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const contactId = parseInt(req.params.contact_id as string)
   switchBlock(res, req.owner.id, contactId, true)
