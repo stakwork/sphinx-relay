@@ -18,6 +18,7 @@ export default async function broadcast(a: Action): Promise<void> {
     msg_uuid,
     reply_uuid,
     parent_id,
+    bot_pic,
   } = a
 
   sphinxLogger.info(`=> BOT BROADCAST`)
@@ -74,6 +75,7 @@ export default async function broadcast(a: Action): Promise<void> {
       alias,
       id: botContactId,
       role: constants.chat_roles.reader,
+      ...(bot_pic && { photoUrl: bot_pic }),
     },
     message: {
       content: textMap,

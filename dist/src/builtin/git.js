@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrCreateGitBot = exports.updateGitBotPat = exports.patToBotWebhookField = exports.botWebhookFieldToPat = exports.init = exports.GITBOT_UUID = void 0;
+exports.getOrCreateGitBot = exports.updateGitBotPat = exports.patToBotWebhookField = exports.botWebhookFieldToPat = exports.init = exports.GITBOT_PIC = exports.GITBOT_UUID = void 0;
 const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const octokit_1 = require("octokit");
@@ -25,6 +25,7 @@ const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const prefix = '/git';
 exports.GITBOT_UUID = '_gitbot';
+exports.GITBOT_PIC = 'https://stakwork-assets.s3.amazonaws.com/github-logo.png';
 function octokit(pat) {
     const octokit = new octokit_1.Octokit({ auth: pat });
     return octokit;

@@ -18,6 +18,9 @@ const prefix = '/git'
 
 export const GITBOT_UUID = '_gitbot'
 
+export const GITBOT_PIC =
+  'https://stakwork-assets.s3.amazonaws.com/github-logo.png'
+
 export interface Repo {
   path: string
 }

@@ -20,7 +20,7 @@ const tribes_1 = require("../../utils/tribes");
 const logger_1 = require("../../utils/logger");
 function broadcast(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id, } = a;
+        const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id, bot_pic, } = a;
         logger_1.sphinxLogger.info(`=> BOT BROADCAST`);
         if (!content)
             return logger_1.sphinxLogger.error(`no content`);
@@ -69,7 +69,7 @@ function broadcast(a) {
         // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
         yield network.sendMessage({
             chat: theChat,
-            sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }),
+            sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }), (bot_pic && { photoUrl: bot_pic })),
             message: {
                 content: textMap,
                 id: message.id,

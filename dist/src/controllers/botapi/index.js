@@ -70,6 +70,7 @@ function processWebhook(req, res) {
                                             amount: 0,
                                             bot_name: gitbot.name,
                                             content,
+                                            bot_pic: git_1.GITBOT_PIC,
                                         };
                                         yield (0, broadcast_1.default)(a);
                                     }

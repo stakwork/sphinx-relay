@@ -7,7 +7,7 @@ import broadcast from './broadcast'
 import pay from './pay'
 import { sphinxLogger } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
-import { GITBOT_UUID, GitBotMeta, Repo } from '../../builtin/git'
+import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
 import { Req, Res } from '../../types'
 import { WebhookEvent } from '@octokit/webhooks-types'
@@ -33,6 +33,7 @@ export interface Action {
   route_hint?: string
   recipient_id?: number
   parent_id?: number
+  bot_pic?: string
 }
 
 export async function processWebhook(req: Req, res: Res): Promise<void> {
@@ -88,6 +89,7 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
                     amount: 0,
                     bot_name: gitbot.name,
                     content,
+                    bot_pic: GITBOT_PIC,
                   }
                   await broadcast(a)
                 } else {
