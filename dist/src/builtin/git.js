@@ -103,7 +103,7 @@ function init() {
                     const stuff = yield getStuff(message);
                     // if (!meta.pat) throw new Error('GitBot not connected')
                     const repo = from_repo_url(words[2]);
-                    const repos = stuff.meta.repos.filter((r) => r.path !== repo);
+                    const repos = stuff.meta.repos.filter((r) => r.path.toLowerCase() !== repo.toLowerCase());
                     yield stuff.chatBot.update({
                         meta: JSON.stringify(Object.assign(Object.assign({}, stuff.meta), { repos })),
                     });
@@ -127,10 +127,10 @@ function init() {
                     const embed3 = new Sphinx.MessageEmbed()
                         .setAuthor('MotherBot')
                         .setTitle('Bots:')
-                        .addFields(stuff.meta.repos.map((b) => {
-                        return { name: b.path, value: '' };
+                        .addFields(stuff.meta.repos.map((b, i) => {
+                        return { name: i + 1 + '', value: b.path };
                     }));
-                    message.channel.send({ embed: embed3 });
+                    return message.channel.send({ embed: embed3 });
                 }
                 catch (e) {
                     const embed = new Sphinx.MessageEmbed()
@@ -138,6 +138,16 @@ function init() {
                         .setDescription('Error: ' + e.message);
                     return message.channel.send({ embed });
                 }
+            default:
+                const embed = new Sphinx.MessageEmbed()
+                    .setAuthor('GitBot')
+                    .setTitle('Commands:')
+                    .addFields([
+                    { name: 'Add a repo', value: '/git add owner/repo' },
+                    { name: 'Remove a repo', value: '/git remove owner/repo' },
+                    { name: 'List repos', value: '/git list' },
+                ]);
+                message.channel.send({ embed });
         }
     }));
 }
