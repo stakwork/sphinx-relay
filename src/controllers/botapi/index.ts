@@ -39,7 +39,6 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
   if (!sig) {
-    console.log('===> nosig')
     return unauthorized(res)
   }
 
@@ -49,7 +48,6 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
     repo = event.repository?.full_name.toLowerCase() || ''
   }
   if (!repo) {
-    console.log('===> norepo')
     return unauthorized(res)
   }
 
@@ -63,12 +61,8 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
     const allGitBots: BotRecord[] = await models.Bot.findAll({
       where: { uuid: GITBOT_UUID },
     })
-    console.log('chatbots len:', allChatBots.length)
-    console.log('bots len', allGitBots.length)
     await asyncForEach(allChatBots, async (cb: ChatBotRecord) => {
       const meta: GitBotMeta = cb.meta ? JSON.parse(cb.meta) : { repos: [] }
-      console.log('repos:', meta.repos)
-      console.log('the repo', repo)
       await asyncForEach(meta.repos, async (r: Repo) => {
         if (r.path.toLowerCase() === repo.toLowerCase()) {
           const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant)
@@ -93,22 +87,23 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
                     chat_uuid: chat.uuid,
                     amount: 0,
                     bot_name: gitbot.name,
+                    content,
                   }
                   await broadcast(a)
                 } else {
-                  console.log('no content!!!')
+                  sphinxLogger.debug('no content!!! (gitbot)')
                 }
               } else {
-                console.log('no chat')
+                sphinxLogger.debug('no chat (gitbot)')
               }
             } else {
-              console.log('HMAC nOt VALID')
+              sphinxLogger.debug('HMAC nOt VALID (gitbot)')
             }
           } else {
-            console.log('no matching gitbot')
+            sphinxLogger.debug('no matching gitbot (gitbot)')
           }
         } else {
-          console.log('no repo match')
+          sphinxLogger.debug('no repo match (gitbot)')
         }
       })
     })

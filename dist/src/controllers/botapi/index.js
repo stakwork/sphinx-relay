@@ -28,7 +28,6 @@ function processWebhook(req, res) {
         logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);
         const sig = req.headers['x-hub-signature-256'];
         if (!sig) {
-            console.log('===> nosig');
             return (0, res_1.unauthorized)(res);
         }
         const event = req.body;
@@ -37,7 +36,6 @@ function processWebhook(req, res) {
             repo = ((_a = event.repository) === null || _a === void 0 ? void 0 : _a.full_name.toLowerCase()) || '';
         }
         if (!repo) {
-            console.log('===> norepo');
             return (0, res_1.unauthorized)(res);
         }
         let ok = false;
@@ -49,12 +47,8 @@ function processWebhook(req, res) {
             const allGitBots = yield models_1.models.Bot.findAll({
                 where: { uuid: git_1.GITBOT_UUID },
             });
-            console.log('chatbots len:', allChatBots.length);
-            console.log('bots len', allGitBots.length);
             yield (0, helpers_1.asyncForEach)(allChatBots, (cb) => __awaiter(this, void 0, void 0, function* () {
                 const meta = cb.meta ? JSON.parse(cb.meta) : { repos: [] };
-                console.log('repos:', meta.repos);
-                console.log('the repo', repo);
                 yield (0, helpers_1.asyncForEach)(meta.repos, (r) => __awaiter(this, void 0, void 0, function* () {
                     if (r.path.toLowerCase() === repo.toLowerCase()) {
                         const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant);
@@ -75,27 +69,28 @@ function processWebhook(req, res) {
                                             chat_uuid: chat.uuid,
                                             amount: 0,
                                             bot_name: gitbot.name,
+                                            content,
                                         };
                                         yield (0, broadcast_1.default)(a);
                                     }
                                     else {
-                                        console.log('no content!!!');
+                                        logger_1.sphinxLogger.debug('no content!!! (gitbot)');
                                     }
                                 }
                                 else {
-                                    console.log('no chat');
+                                    logger_1.sphinxLogger.debug('no chat (gitbot)');
                                 }
                             }
                             else {
-                                console.log('HMAC nOt VALID');
+                                logger_1.sphinxLogger.debug('HMAC nOt VALID (gitbot)');
                             }
                         }
                         else {
-                            console.log('no matching gitbot');
+                            logger_1.sphinxLogger.debug('no matching gitbot (gitbot)');
                         }
                     }
                     else {
-                        console.log('no repo match');
+                        logger_1.sphinxLogger.debug('no repo match (gitbot)');
                     }
                 }));
             }));
