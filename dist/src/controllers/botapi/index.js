@@ -46,7 +46,7 @@ function processWebhook(req, res) {
             const allChatBots = yield models_1.models.ChatBot.findAll({
                 where: { botUuid: git_1.GITBOT_UUID },
             });
-            const allGitBots = yield models_1.models.Bot.findOne({
+            const allGitBots = yield models_1.models.Bot.findAll({
                 where: { uuid: git_1.GITBOT_UUID },
             });
             console.log('chatbots len:', allChatBots.length);
@@ -56,7 +56,7 @@ function processWebhook(req, res) {
                 console.log('repos:', meta.repos);
                 console.log('the repo', repo);
                 yield (0, helpers_1.asyncForEach)(meta.repos, (r) => __awaiter(this, void 0, void 0, function* () {
-                    if (r.path === repo) {
+                    if (r.path.toLowerCase() === repo.toLowerCase()) {
                         const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant);
                         if (gitbot) {
                             const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret);

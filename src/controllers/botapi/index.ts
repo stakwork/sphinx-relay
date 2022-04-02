@@ -60,7 +60,7 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
     const allChatBots: ChatBotRecord[] = await models.ChatBot.findAll({
       where: { botUuid: GITBOT_UUID },
     })
-    const allGitBots: BotRecord[] = await models.Bot.findOne({
+    const allGitBots: BotRecord[] = await models.Bot.findAll({
       where: { uuid: GITBOT_UUID },
     })
     console.log('chatbots len:', allChatBots.length)
@@ -70,7 +70,7 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
       console.log('repos:', meta.repos)
       console.log('the repo', repo)
       await asyncForEach(meta.repos, async (r: Repo) => {
-        if (r.path === repo) {
+        if (r.path.toLowerCase() === repo.toLowerCase()) {
           const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant)
           if (gitbot) {
             const valid = hmac.verifyHmac(
