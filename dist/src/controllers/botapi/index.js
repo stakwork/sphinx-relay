@@ -49,8 +49,12 @@ function processWebhook(req, res) {
             const allGitBots = yield models_1.models.Bot.findOne({
                 where: { uuid: git_1.GITBOT_UUID },
             });
+            console.log('chatbots len:', allChatBots.length);
+            console.log('bots len', allGitBots.length);
             yield (0, helpers_1.asyncForEach)(allChatBots, (cb) => __awaiter(this, void 0, void 0, function* () {
                 const meta = cb.meta ? JSON.parse(cb.meta) : { repos: [] };
+                console.log('repos:', meta.repos);
+                console.log('the repo', repo);
                 yield (0, helpers_1.asyncForEach)(meta.repos, (r) => __awaiter(this, void 0, void 0, function* () {
                     if (r.path === repo) {
                         const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant);
@@ -74,9 +78,24 @@ function processWebhook(req, res) {
                                         };
                                         yield (0, broadcast_1.default)(a);
                                     }
+                                    else {
+                                        console.log('no content!!!');
+                                    }
+                                }
+                                else {
+                                    console.log('no chat');
                                 }
                             }
+                            else {
+                                console.log('HMAC nOt VALID');
+                            }
                         }
+                        else {
+                            console.log('no matching gitbot');
+                        }
+                    }
+                    else {
+                        console.log('no repo match');
                     }
                 }));
             }));

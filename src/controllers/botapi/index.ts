@@ -63,8 +63,12 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
     const allGitBots: BotRecord[] = await models.Bot.findOne({
       where: { uuid: GITBOT_UUID },
     })
+    console.log('chatbots len:', allChatBots.length)
+    console.log('bots len', allGitBots.length)
     await asyncForEach(allChatBots, async (cb: ChatBotRecord) => {
       const meta: GitBotMeta = cb.meta ? JSON.parse(cb.meta) : { repos: [] }
+      console.log('repos:', meta.repos)
+      console.log('the repo', repo)
       await asyncForEach(meta.repos, async (r: Repo) => {
         if (r.path === repo) {
           const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant)
@@ -91,10 +95,20 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
                     bot_name: gitbot.name,
                   }
                   await broadcast(a)
+                } else {
+                  console.log('no content!!!')
                 }
+              } else {
+                console.log('no chat')
               }
+            } else {
+              console.log('HMAC nOt VALID')
             }
+          } else {
+            console.log('no matching gitbot')
           }
+        } else {
+          console.log('no repo match')
         }
       })
     })
