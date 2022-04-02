@@ -58,6 +58,7 @@ export default async function broadcast(a: Action): Promise<void> {
     tenant,
   }
   if (parent_id) msg.parentId = parent_id
+  if (bot_pic) msg.senderPic = bot_pic
   const message = await models.Message.create(msg)
   socket.sendJson(
     {

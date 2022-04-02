@@ -60,6 +60,8 @@ function broadcast(a) {
         };
         if (parent_id)
             msg.parentId = parent_id;
+        if (bot_pic)
+            msg.senderPic = bot_pic;
         const message = yield models_1.models.Message.create(msg);
         socket.sendJson({
             type: 'message',
