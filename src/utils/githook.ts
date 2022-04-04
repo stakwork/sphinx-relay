@@ -11,9 +11,18 @@ import {
   ReleaseReleasedEvent,
 } from '@octokit/webhooks-types'
 
-// https://localtunnel.github.io/www/
+/*
 
-// lt --port 8000
+### git bot
+
+Make a place in Profile where user can add a Github Personal Access Token:
+
+"Generate a Personal Access Token on github with the `repo` scope:"
+
+POST /bot/git
+{ "encrypted_pat": "xxx" } // encrypted with RSA key
+
+*/
 
 export type WebhookEventName =
   | 'push'
@@ -84,9 +93,32 @@ const releaseActions: ActionMap = {
     return `New Release in ${e.repository.full_name}! ${e.release.tag_name}`
   },
 }
+
+interface RefReturn {
+  name: string
+  kind: RefReturnKind // "branch" or "tag"
+}
+type RefReturnKind = 'branch' | 'tag'
+function ref(inref: string): RefReturn | undefined {
+  const refArray = inref.split('/')
+  if (refArray.length < 3) return
+  const branch = refArray[refArray.length - 1]
+  const headsOrTags = refArray[refArray.length - 2]
+  const labels: { [k: string]: RefReturnKind } = {
+    heads: 'branch',
+    tags: 'tag',
+  }
+  return <RefReturn>{
+    name: branch,
+    kind: labels[headsOrTags],
+  }
+}
+
 function pushAction(e: PushEvent): string {
   if (e.head_commit) {
-    return `New commit in ${e.repository.full_name} by ${e.pusher.name}: ${e.head_commit.message}`
+    const r = ref(e.ref)
+    const refStr = r ? `(${r.name} ${r.kind}) ` : ''
+    return `New commit in ${e.repository.full_name} ${refStr}by ${e.pusher.name}: ${e.head_commit.message}`
   } else {
     return ''
   }

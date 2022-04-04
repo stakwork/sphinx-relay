@@ -47,9 +47,26 @@ const releaseActions = {
         return `New Release in ${e.repository.full_name}! ${e.release.tag_name}`;
     },
 };
+function ref(inref) {
+    const refArray = inref.split('/');
+    if (refArray.length < 3)
+        return;
+    const branch = refArray[refArray.length - 1];
+    const headsOrTags = refArray[refArray.length - 2];
+    const labels = {
+        heads: 'branch',
+        tags: 'tag',
+    };
+    return {
+        name: branch,
+        kind: labels[headsOrTags],
+    };
+}
 function pushAction(e) {
     if (e.head_commit) {
-        return `New commit in ${e.repository.full_name} by ${e.pusher.name}: ${e.head_commit.message}`;
+        const r = ref(e.ref);
+        const refStr = r ? `(${r.name} ${r.kind}) ` : '';
+        return `New commit in ${e.repository.full_name} ${refStr}by ${e.pusher.name}: ${e.head_commit.message}`;
     }
     else {
         return '';

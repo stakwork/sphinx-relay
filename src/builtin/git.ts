@@ -133,7 +133,7 @@ export function init(): void {
             .setTitle('Bots:')
             .addFields(
               stuff.meta.repos.map((b, i) => {
-                return { name: i + 1 + '', value: b.path }
+                return { name: i + 1 + ':', value: b.path, inline: true }
               })
             )
           return message.channel.send({ embed: embed3 })
