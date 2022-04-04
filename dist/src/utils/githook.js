@@ -77,7 +77,7 @@ function createAction(e) {
         return `New branch created in ${e.repository.full_name}`;
     }
     else if (e.ref_type === 'tag') {
-        return `New tag created in ${e.repository.full_name}`;
+        return `New tag created in ${e.repository.full_name}: ${e.ref}`;
     }
     else {
         return '';

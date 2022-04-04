@@ -68,7 +68,7 @@ export const all_webhook_events: WebhookEventName[] = [
   'status', // When the status of a Git commit changes
 ]
 
-type ActionMap = { [k: string]: (body: any) => string }
+type ActionMap = { [k: string]: (body: WebhookEvent) => string }
 const issueActionMap: ActionMap = {
   closed: (e: IssuesClosedEvent) => {
     return `Issue #${e.issue.number} closed in ${e.repository.full_name}`
@@ -127,7 +127,7 @@ function createAction(e: CreateEvent | DeleteEvent): string {
   if (e.ref_type === 'branch') {
     return `New branch created in ${e.repository.full_name}`
   } else if (e.ref_type === 'tag') {
-    return `New tag created in ${e.repository.full_name}`
+    return `New tag created in ${e.repository.full_name}: ${e.ref}`
   } else {
     return ''
   }
