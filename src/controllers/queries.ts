@@ -29,12 +29,18 @@ let hub_pubkey = ''
 
 const hub_url = 'https://hub.sphinx.chat/api/v1/'
 export async function get_hub_pubkey(): Promise<string> {
-  const r = await fetch(hub_url + '/routingnode')
-  const j = await r.json()
-  if (j && j.pubkey) {
-    // console.log("=> GOT HUB PUBKEY", j.pubkey)
-    hub_pubkey = j.pubkey
-    return j.pubkey
+  try {
+    const r = await fetch(hub_url + '/routingnode')
+    const j = await r.json()
+    if (j && j.pubkey) {
+      // console.log("=> GOT HUB PUBKEY", j.pubkey)
+      hub_pubkey = j.pubkey
+      return j.pubkey
+    }
+  } catch (e) {
+    sphinxLogger.warning(
+      `Could not retrive hub routing node pubkey: Error: ${e}`
+    )
   }
   return ''
 }
