@@ -87,7 +87,9 @@ export function init(): void {
           const bot = await getOrCreateGitBot(chat.tenant)
           const pat = await getPat(chat.tenant)
           await addWebhookToRepo(pat, repo, bot.secret)
-          meta.repos.push({ path: repo })
+          if (!meta.repos.find((r) => r.path === repo)) {
+            meta.repos.push({ path: repo })
+          }
           await chatBot.update({ meta: JSON.stringify(meta) })
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
@@ -129,8 +131,8 @@ export function init(): void {
           const stuff = await getStuff(message)
           if (!stuff.meta.repos.length) throw new Error('no repos!')
           const embed3 = new Sphinx.MessageEmbed()
-            .setAuthor('MotherBot')
-            .setTitle('Bots:')
+            .setAuthor('GitBot')
+            .setTitle('Repos:')
             .addFields(
               stuff.meta.repos.map((b, i) => {
                 return { name: i + 1 + ':', value: b.path, inline: true }
