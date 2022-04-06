@@ -84,12 +84,8 @@ function hmacMiddleware(req, res, next) {
             return;
         }
         // creating hmac key for the first time does not require one of course
+        // and for getting the encrypted key
         if (req.path == '/hmac_key') {
-            next();
-            return;
-        }
-        // separate hmac with bot hmac secret
-        if (req.path == '/webhook') {
             next();
             return;
         }
@@ -129,7 +125,8 @@ function no_auth(path) {
         path == '/connect' ||
         path == '/connect_peer' ||
         path == '/peered' ||
-        path == '/request_transport_key');
+        path == '/request_transport_key' ||
+        path == '/webhook');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {

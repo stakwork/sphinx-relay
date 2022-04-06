@@ -1,5 +1,5 @@
 import * as network from '../../network'
-import { models } from '../../models'
+import { BotRecord, ChatBotRecord, ChatRecord, models } from '../../models'
 import { success, failure, unauthorized } from '../../utils/res'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
@@ -7,16 +7,21 @@ import broadcast from './broadcast'
 import pay from './pay'
 import { sphinxLogger } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
-import { GITBOT_UUID, GitBotMeta } from '../../builtin/git'
+import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
+import { Req, Res } from '../../types'
+import { WebhookEvent } from '@octokit/webhooks-types'
+import { processGithook } from '../../utils/githook'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 
+export type ActionType = 'broadcast' | 'pay' | 'keysend'
+
 export interface Action {
-  action: string
+  action: ActionType
   chat_uuid: string
   bot_id: string
   bot_name?: string
@@ -28,34 +33,91 @@ export interface Action {
   route_hint?: string
   recipient_id?: number
   parent_id?: number
+  bot_pic?: string
 }
 
-export async function processWebhook(req, res) {
+export async function processWebhook(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
-  if (!sig) return unauthorized(res)
-  // find bot by uuid = GITBOT_UUID - secret
-  const gitbot = await models.Bot.findOne({ where: { uuid: GITBOT_UUID } })
-  if (!gitbot) {
-    return failure(res, 'nope')
+  if (!sig) {
+    return unauthorized(res)
   }
-  const valid = hmac.verifyHmac(sig, req.rawBody, gitbot.secret)
-  if (!valid) {
-    return failure(res, 'invalid hmac')
+
+  const event = req.body as WebhookEvent
+  let repo = ''
+  if ('repository' in event) {
+    repo = event.repository?.full_name.toLowerCase() || ''
   }
-  const chatbots = await models.ChatBot.findAll({
-    where: { botUuid: GITBOT_UUID },
-  })
-  await asyncForEach(chatbots, (cb) => {
-    if (!cb.meta) return
-    try {
-      const meta: GitBotMeta = JSON.parse(cb.meta)
-      console.log(meta.repos)
-    } catch (e) {}
-  })
+  if (!repo) {
+    return unauthorized(res)
+  }
+
+  let ok = false
+
+  try {
+    // for all "owners"
+    const allChatBots: ChatBotRecord[] = await models.ChatBot.findAll({
+      where: { botUuid: GITBOT_UUID },
+    })
+    const allGitBots: BotRecord[] = await models.Bot.findAll({
+      where: { uuid: GITBOT_UUID },
+    })
+    await asyncForEach(allChatBots, async (cb: ChatBotRecord) => {
+      const meta: GitBotMeta = cb.meta ? JSON.parse(cb.meta) : { repos: [] }
+      await asyncForEach(meta.repos, async (r: Repo) => {
+        if (r.path.toLowerCase() === repo.toLowerCase()) {
+          const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant)
+          if (gitbot) {
+            const valid = hmac.verifyHmac(
+              sig as string,
+              req.rawBody,
+              gitbot.secret
+            )
+            if (valid) {
+              ok = true
+              // process!
+              const chat: ChatRecord = await models.Chat.findOne({
+                where: { id: cb.chatId },
+              })
+              if (chat) {
+                const content = processGithook(req.body)
+                if (content) {
+                  const a: Action = {
+                    action: 'broadcast',
+                    bot_id: gitbot.id,
+                    chat_uuid: chat.uuid,
+                    amount: 0,
+                    bot_name: gitbot.name,
+                    content,
+                    bot_pic: GITBOT_PIC,
+                  }
+                  await broadcast(a)
+                } else {
+                  sphinxLogger.debug('no content!!! (gitbot)')
+                }
+              } else {
+                sphinxLogger.debug('no chat (gitbot)')
+              }
+            } else {
+              sphinxLogger.debug('HMAC nOt VALID (gitbot)')
+            }
+          } else {
+            sphinxLogger.debug('no matching gitbot (gitbot)')
+          }
+        } else {
+          sphinxLogger.debug('no repo match (gitbot)')
+        }
+      })
+    })
+  } catch (e) {
+    sphinxLogger.error('failed to process webhook', e)
+    unauthorized(res)
+  }
+  if (ok) success(res, { ok: true })
+  else unauthorized(res)
 }
 
-export async function processAction(req, res) {
+export async function processAction(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processAction ${req.body}`)
   let body = req.body
   if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
@@ -115,7 +177,7 @@ export async function processAction(req, res) {
   }
 }
 
-export async function finalAction(a: Action) {
+export async function finalAction(a: Action): Promise<void> {
   const {
     bot_id,
     action,

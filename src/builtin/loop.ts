@@ -9,7 +9,7 @@ import { getTribeOwnersChatByUUID } from '../utils/tribes'
 
 const config = loadConfig()
 
-var validate = require('bitcoin-address-validation')
+const validate = require('bitcoin-address-validation')
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
@@ -130,7 +130,7 @@ export function init() {
           `--addr=${addy}`,
         ]
         sphinxLogger.info(`=> SPAWN ${cmd} ${args}`)
-        let childProcess = spawn(cmd, args)
+        const childProcess = spawn(cmd, args)
         childProcess.stdout.on('data', function (data) {
           const stdout = data.toString()
           sphinxLogger.info(`LOOPBOT stdout: ${stdout}`)

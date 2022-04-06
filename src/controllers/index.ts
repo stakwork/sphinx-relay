@@ -139,6 +139,7 @@ export async function set(app) {
   app.get('/bots', bots.getBots)
   app.post('/bot', bots.createBot)
   app.delete('/bot/:id', bots.deleteBot)
+  app.post('/bot/git', bots.addPatToGitBot)
 
   app.get('/healthcheck', confirmations.healthcheck)
 
