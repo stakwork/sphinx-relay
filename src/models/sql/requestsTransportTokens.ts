@@ -10,6 +10,6 @@ export default class RequestsTransportTokens extends Model<RequestsTransportToke
   })
   id: number
 
-  @Column
+  @Column(DataType.TEXT)
   transportToken: string
 }

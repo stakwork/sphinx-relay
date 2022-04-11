@@ -22,7 +22,7 @@ __decorate([
     __metadata("design:type", Number)
 ], RequestsTransportTokens.prototype, "id", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], RequestsTransportTokens.prototype, "transportToken", void 0);
 RequestsTransportTokens = __decorate([
