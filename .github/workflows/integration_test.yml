@@ -24,7 +24,7 @@ jobs:
         npm install && npm run build && docker build -t sphinxlightning/sphinx-relay . 
     - name: Checkout stack
       run: |
-        git clone https://github.com/stakwork/sphinx-stack.git stack
+        git clone -b lightingLabsLnd https://github.com/stakwork/sphinx-stack.git stack
     - name: give permissions 
       working-directory: ./stack
       run: |
@@ -37,7 +37,7 @@ jobs:
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-         sleep 360;
+         sleep 120;
          docker-compose ps;
          ls  ./lnd/alice/.lnd
          docker logs stack_lndsetup_1;
