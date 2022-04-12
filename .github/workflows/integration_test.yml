@@ -39,6 +39,7 @@ jobs:
       run: |
          sleep 360;
          docker-compose ps;
+         ls  ./lnd/alice/.lnd
          docker logs stack_lndsetup_1;
          docker logs stack_relaysetup_1;
          docker logs alice.sphinx;
