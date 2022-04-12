@@ -168,4 +168,4 @@ You can [check their actual status on GitHub](https://github.com/stakwork/sphinx
 
 # Roadmap
 
-- linking recurring payments to files, to enable use cases such as subscribing to podcasts with BTC!
+- linking recurring payments to files, to enable use cases such as subscribing to podcasts with BTC
