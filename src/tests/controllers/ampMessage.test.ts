@@ -31,7 +31,7 @@ async function ampMessage(t, nodes) {
   //NODE1 SENDS PAYMENT TO NODE2
   const amount = 1500000
   const paymentText = 'this eleven payment'
-  const payment = await sendPayment(t, nodes[0], nodes[1], amount, paymentText)
+  const payment = await sendPayment(t, nodes[0], nodes[2], amount, paymentText)
   t.true(payment, 'payment should be sent')
   console.log(payment)
   console.log('payment sent [Alice] -> [Bob]')

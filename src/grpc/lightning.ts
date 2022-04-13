@@ -355,6 +355,8 @@ export function keysend(
           // new sendPayment (with optional route hints)
           options.fee_limit_sat = FEE_LIMIT_SAT
           options.timeout_seconds = 16
+          options.amp = true
+          console.log(JSON.stringify(options))
           const router = await loadRouter()
           const call = router.sendPaymentV2(options)
           call.on('data', function (payment) {
@@ -871,7 +873,12 @@ export async function complexBalances(
       0
     )
     const spendableBalance = channels.reduce(
-      (a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)),
+      (a, chan) =>
+        a +
+        Math.max(
+          0,
+          parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)
+        ),
       0
     )
     const response = await channelBalance(ownerPubkey)
