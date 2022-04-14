@@ -243,20 +243,17 @@ function ownerMiddleware(req, res, next) {
         }
         else {
             if (x_transport_token) {
-                // Checking the db last since it'll take the most compute power and will
-                // grow if we get lots of requests and will let us reject incorrect tokens faster
-                const savedTransportTokens = yield models_1.models.RequestsTransportTokens.findAll();
-                // Here we are checking all of the saved x_transport_tokens
-                // to see if we hav a repeat
-                savedTransportTokens.forEach((token) => {
-                    if (token.dataValues.transportToken == x_transport_token) {
-                        res.writeHead(401, 'Access invalid for user', {
-                            'Content-Type': 'text/plain',
-                        });
-                        res.end('invalid credentials');
-                        return;
-                    }
+                // Checking the db for a dupe
+                const duplicate = yield models_1.models.RequestsTransportTokens.findOne({
+                    where: { transportToken: x_transport_token },
                 });
+                if (duplicate) {
+                    res.writeHead(401, 'Access invalid for user', {
+                        'Content-Type': 'text/plain',
+                    });
+                    res.end('invalid credentials');
+                    return;
+                }
                 // Here we are saving the x_transport_token that we just
                 // used into the db to be checked against later
                 const transportTokenDBValues = { transportToken: x_transport_token };
