@@ -147,10 +147,9 @@ export async function ownerMiddleware(req, res, next) {
     await models.RequestsTransportTokens.destroy({
       where: {
         createdAt: {
-          [Op.lt]: new Date(
+          [Op.lt]:
             moment().unix() -
-              config.length_of_time_for_transport_token_clear * 60
-          ),
+            config.length_of_time_for_transport_token_clear * 60,
         },
       },
     })

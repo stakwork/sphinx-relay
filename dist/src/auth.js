@@ -147,8 +147,8 @@ function ownerMiddleware(req, res, next) {
             yield models_1.models.RequestsTransportTokens.destroy({
                 where: {
                     createdAt: {
-                        [sequelize_1.Op.lt]: new Date(moment().unix() -
-                            config.length_of_time_for_transport_token_clear * 60),
+                        [sequelize_1.Op.lt]: moment().unix() -
+                            config.length_of_time_for_transport_token_clear * 60,
                     },
                 },
             });
