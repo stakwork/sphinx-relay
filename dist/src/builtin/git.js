@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrCreateGitBot = exports.init = exports.GITBOT_UUID = void 0;
+exports.getOrCreateGitBot = exports.updateGitBotPat = exports.patToBotWebhookField = exports.botWebhookFieldToPat = exports.init = exports.GITBOT_PIC = exports.GITBOT_UUID = void 0;
 const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const octokit_1 = require("octokit");
@@ -19,10 +19,13 @@ const tribes_1 = require("../utils/tribes");
 // import { sphinxLogger } from '../utils/logger'
 const crypto = require("crypto");
 const connect_1 = require("../utils/connect");
+const githook_1 = require("../utils/githook");
+const logger_1 = require("../utils/logger");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const prefix = '/git';
 exports.GITBOT_UUID = '_gitbot';
+exports.GITBOT_PIC = 'https://stakwork-assets.s3.amazonaws.com/github-logo.png';
 function octokit(pat) {
     const octokit = new octokit_1.Octokit({ auth: pat });
     return octokit;
@@ -44,7 +47,7 @@ function getStuff(message) {
             });
             if (!chatBot)
                 throw new Error('chat bot not found');
-            const empty = { pat: '', repos: [] };
+            const empty = { repos: [] };
             const meta = chatBot.meta ? JSON.parse(chatBot.meta) : empty;
             return { chat, chatBot, meta };
         }
@@ -72,16 +75,18 @@ function init() {
                 console.log('pay user');
                 return;
             case 'add':
-                console.log('add');
+                // console.log('add')
                 try {
                     const { meta, chat, chatBot } = yield getStuff(message);
-                    if (!meta.pat)
-                        throw new Error('GitBot not connected');
+                    // if (!meta.pat) throw new Error('GitBot not connected')
                     const repo = from_repo_url(words[2]);
-                    console.log('repo', repo);
-                    meta.repos.push(repo);
+                    logger_1.sphinxLogger.info('==> repo: ' + repo);
                     const bot = yield getOrCreateGitBot(chat.tenant);
-                    yield addWebhookToRepo(meta, repo, bot.secret);
+                    const pat = yield getPat(chat.tenant);
+                    yield addWebhookToRepo(pat, repo, bot.secret);
+                    if (!meta.repos.find((r) => r.path === repo)) {
+                        meta.repos.push({ path: repo });
+                    }
                     yield chatBot.update({ meta: JSON.stringify(meta) });
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
@@ -94,17 +99,92 @@ function init() {
                         .setDescription('Error: ' + e.message);
                     return message.channel.send({ embed });
                 }
+            case 'remove':
+                // console.log('remove')
+                try {
+                    const stuff = yield getStuff(message);
+                    // if (!meta.pat) throw new Error('GitBot not connected')
+                    const repo = from_repo_url(words[2]);
+                    const repos = stuff.meta.repos.filter((r) => r.path.toLowerCase() !== repo.toLowerCase());
+                    yield stuff.chatBot.update({
+                        meta: JSON.stringify(Object.assign(Object.assign({}, stuff.meta), { repos })),
+                    });
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('GitBot')
+                        .setDescription(repo + ' repo has been removed!');
+                    return message.channel.send({ embed });
+                }
+                catch (e) {
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('GitBot')
+                        .setDescription('Error: ' + e.message);
+                    return message.channel.send({ embed });
+                }
+            case 'list':
+                // console.log('list')
+                try {
+                    const stuff = yield getStuff(message);
+                    if (!stuff.meta.repos.length)
+                        throw new Error('no repos!');
+                    const embed3 = new Sphinx.MessageEmbed()
+                        .setAuthor('GitBot')
+                        .setTitle('Repos:')
+                        .addFields(stuff.meta.repos.map((b, i) => {
+                        return { name: i + 1 + ':', value: b.path, inline: true };
+                    }));
+                    return message.channel.send({ embed: embed3 });
+                }
+                catch (e) {
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('GitBot')
+                        .setDescription('Error: ' + e.message);
+                    return message.channel.send({ embed });
+                }
+            default:
+                const embed = new Sphinx.MessageEmbed()
+                    .setAuthor('GitBot')
+                    .setTitle('Commands:')
+                    .addFields([
+                    { name: 'Add a repo', value: '/git add owner/repo' },
+                    { name: 'Remove a repo', value: '/git remove owner/repo' },
+                    { name: 'List repos', value: '/git list' },
+                ]);
+                message.channel.send({ embed });
         }
     }));
 }
 exports.init = init;
-function addWebhookToRepo(meta, repoAndOwner, bot_secret) {
+function getPat(tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const existing = yield models_1.models.Bot.findOne({
+            where: { uuid: exports.GITBOT_UUID, tenant },
+        });
+        if (existing) {
+            return botWebhookFieldToPat(existing.webhook);
+        }
+        else
+            throw new Error('no PAT in GitBot');
+    });
+}
+function botWebhookFieldToPat(webhook) {
+    if (!webhook.includes('|'))
+        throw new Error('no PAT in gitBot webhook');
+    const arr = webhook.split('|');
+    if (arr.length < 2)
+        throw new Error('no PAT in gitBot webhook');
+    return arr[1];
+}
+exports.botWebhookFieldToPat = botWebhookFieldToPat;
+function patToBotWebhookField(pat, gitbottype = 'github') {
+    return `${gitbottype}|${pat}`;
+}
+exports.patToBotWebhookField = patToBotWebhookField;
+function addWebhookToRepo(pat, repoAndOwner, bot_secret) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!bot_secret) {
             throw new Error('no GitBot secret supplied');
         }
-        const octo = octokit(meta.pat);
-        console.log(octo);
+        const octo = octokit(pat);
         const arr = repoAndOwner.split('/');
         const owner = arr[0];
         const repo = arr[1];
@@ -112,17 +192,19 @@ function addWebhookToRepo(meta, repoAndOwner, bot_secret) {
             owner,
             repo,
         });
+        const url = (yield (0, connect_1.getIP)()) + '/webhook';
         if (list.data.length) {
-            return;
+            const existing = list.data.find((d) => d.config.url === url);
+            if (existing)
+                return;
         }
-        const ip = yield (0, connect_1.getIP)();
         yield octo.request('POST /repos/{owner}/{repo}/hooks', {
             owner,
             repo,
             active: true,
-            events: ['push'],
+            events: githook_1.all_webhook_events,
             config: {
-                url: ip + '/webhook',
+                url: url,
                 content_type: 'json',
                 secret: bot_secret,
             },
@@ -138,13 +220,23 @@ function from_repo_url(s) {
         throw new Error('invalid repo');
     return s;
 }
+function updateGitBotPat(tenant, pat) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const gitBot = yield getOrCreateGitBot(tenant);
+        yield gitBot.update({ webhook: patToBotWebhookField(pat, 'github') });
+    });
+}
+exports.updateGitBotPat = updateGitBotPat;
 function getOrCreateGitBot(tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existing = yield models_1.models.Bot.findOne({ where: { uuid: exports.GITBOT_UUID } });
+        const existing = yield models_1.models.Bot.findOne({
+            where: { uuid: exports.GITBOT_UUID, tenant },
+        });
         if (existing) {
             return existing;
         }
         const newBot = {
+            id: crypto.randomBytes(10).toString('hex').toLowerCase(),
             name: 'GitBot',
             uuid: exports.GITBOT_UUID,
             secret: crypto.randomBytes(20).toString('hex').toLowerCase(),

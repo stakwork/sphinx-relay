@@ -89,14 +89,14 @@ function uploadPublicPic(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const { img_base64, img_type } = req.body;
-        let imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type;
+        const imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type;
         try {
             const host = config.media_host;
             let imageBase64 = img_base64;
             if (img_base64.indexOf(',') > -1) {
                 imageBase64 = img_base64.substr(img_base64.indexOf(',') + 1);
             }
-            var encImgBuffer = Buffer.from(imageBase64, 'base64');
+            const encImgBuffer = Buffer.from(imageBase64, 'base64');
             const token = yield meme.lazyToken(req.owner.publicKey, host);
             const form = new FormData();
             form.append('file', encImgBuffer, {
@@ -115,7 +115,7 @@ function uploadPublicPic(req, res) {
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
                 body: form,
             });
-            let json = yield resp.json();
+            const json = yield resp.json();
             if (!json.muid)
                 return (0, res_1.failure)(res, 'no muid');
             let theHost = host;

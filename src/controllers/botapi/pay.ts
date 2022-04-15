@@ -6,9 +6,18 @@ import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import { sphinxLogger } from '../../utils/logger'
+import { Action } from './index'
 
-export default async function pay(a) {
-  const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id } = a
+export default async function pay(a: Action): Promise<void> {
+  const {
+    amount,
+    bot_name,
+    chat_uuid,
+    msg_uuid,
+    reply_uuid,
+    recipient_id,
+    parent_id,
+  } = a
 
   sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
   if (!recipient_id) return sphinxLogger.error(`no recipient_id`)
@@ -24,9 +33,9 @@ export default async function pay(a) {
   const alias = bot_name || owner.alias
   const botContactId = -1
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
-  const msg: { [k: string]: any } = {
+  const msg: { [k: string]: string | number | Date } = {
     chatId: theChat.id,
     uuid: msg_uuid || short.generate(),
     type: constants.message_types.boost,
@@ -64,7 +73,7 @@ export default async function pay(a) {
       id: message.id,
       uuid: message.uuid,
       replyUuid: message.replyUuid,
-      parentId: message.parentId || 0
+      parentId: message.parentId || 0,
     },
     type: constants.message_types.boost,
     success: () => ({ success: true }),
