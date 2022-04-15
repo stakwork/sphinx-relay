@@ -7,7 +7,6 @@ import {
   Message,
   models,
 } from '../models'
-import { ChatPlusMembers } from '../network/send'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as helpers from '../helpers'
@@ -90,8 +89,10 @@ export async function kickChatMember(req: Req, res: Response): Promise<void> {
 
   const owner = req.owner as Contact
   network.sendMessage({
-    //            contactIds already exists on Chat but then as a string
-    chat: chat.dataValues as Partial<ChatPlusMembers> /*, contactIds: [ contactId ] */, // send only to the guy u kicked
+    chat: {
+      ...chat.dataValues,
+      contactIds: JSON.stringify([contactId]), // send only to the guy u kicked
+    },
     sender: owner,
     message: {} as Message,
     type: constants.message_types.group_kick,
