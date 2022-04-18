@@ -140,7 +140,7 @@ export interface LdatTerms {
   skipSigning?: boolean
 }
 
-async function testLDAT() {
+async function testLDAT(): Promise<void> {
   sphinxLogger.info(`testLDAT`)
   const terms: LdatTerms = {
     host: '',

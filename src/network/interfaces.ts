@@ -19,7 +19,11 @@ export interface MessageContent {
   push?: boolean
   mediaTerms?: ldat.LdatTerms
   skipPaymentProcessing?: boolean
+  recipientAlias?: string
+  recipientPic?: string
 }
+
+export type ChatMembers = { [k: string]: ChatMember }
 
 // fro group join msgs, etc
 export interface ChatMember {

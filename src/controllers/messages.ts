@@ -1,5 +1,5 @@
 import { models } from '../models'
-import { Op } from 'sequelize'
+import { Op, FindOptions } from 'sequelize'
 import { indexBy } from 'underscore'
 import { sendNotification, resetNotifyTribeCount } from '../hub'
 import * as socket from '../utils/socket'
@@ -9,14 +9,15 @@ import { failure, success } from '../utils/res'
 import * as timers from '../utils/timers'
 import { sendConfirmation } from './confirmations'
 import * as network from '../network'
+import { Payload } from '../network'
 import type { SendMessageParams } from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { Req } from '../types'
+import { Req, Res } from '../types'
 
 // deprecated
-export const getMessages = async (req: Req, res) => {
+export const getMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -104,7 +105,7 @@ export const getMessages = async (req: Req, res) => {
   res.end()
 }
 
-export const getAllMessages = async (req: Req, res) => {
+export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -120,7 +121,7 @@ export const getAllMessages = async (req: Req, res) => {
     logging.Express
   )
 
-  const clause: { [k: string]: any } = {
+  const clause: FindOptions = {
     order: [['id', order]],
     where: { tenant },
   }
@@ -161,7 +162,7 @@ export const getAllMessages = async (req: Req, res) => {
   })
 }
 
-export const getMsgs = async (req: Req, res) => {
+export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -220,7 +221,7 @@ export const getMsgs = async (req: Req, res) => {
   })
 }
 
-export async function deleteMessage(req: Req, res) {
+export async function deleteMessage(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -256,7 +257,7 @@ export async function deleteMessage(req: Req, res) {
   })
 }
 
-export const sendMessage = async (req: Req, res) => {
+export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   // try {
@@ -275,10 +276,14 @@ export const sendMessage = async (req: Req, res) => {
     boost,
     message_price,
     parent_id,
+    pay,
   } = req.body
 
   let msgtype = constants.message_types.message
   if (boost) msgtype = constants.message_types.boost
+  if (pay) msgtype = constants.message_types.direct_payment
+  let boostOrPay = false
+  if (boost || pay) boostOrPay = true
 
   const date = new Date()
   date.setMilliseconds(0)
@@ -292,13 +297,15 @@ export const sendMessage = async (req: Req, res) => {
   if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
   let realSatsContactId
+  let recipientAlias
+  let recipientPic
   // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
   if (!chat) {
     return failure(res, 'no Chat')
   }
   const isTribe = chat.type === constants.chat_types.tribe
   const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey
-  if (reply_uuid && boost && amount) {
+  if (reply_uuid && boostOrPay && amount) {
     const ogMsg = await models.Message.findOne({
       where: {
         uuid: reply_uuid,
@@ -307,6 +314,10 @@ export const sendMessage = async (req: Req, res) => {
     })
     if (ogMsg && ogMsg.sender) {
       realSatsContactId = ogMsg.sender
+      if (pay) {
+        recipientAlias = ogMsg.senderAlias
+        recipientPic = ogMsg.senderPic
+      }
     }
   }
 
@@ -318,7 +329,7 @@ export const sendMessage = async (req: Req, res) => {
   const uuid = short.generate()
   let amtToStore = amount || 0
   if (
-    boost &&
+    boostOrPay &&
     message_price &&
     typeof message_price === 'number' &&
     amount &&
@@ -326,7 +337,7 @@ export const sendMessage = async (req: Req, res) => {
   ) {
     amtToStore = amount - message_price
   }
-  const msg: { [k: string]: any } = {
+  const msg: { [k: string]: string | number | Date } = {
     chatId: chat.id,
     uuid: uuid,
     type: msgtype,
@@ -346,12 +357,14 @@ export const sendMessage = async (req: Req, res) => {
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
+  if (recipientAlias) msg.recipientAlias = recipientAlias
+  if (recipientPic) msg.recipientPic = recipientPic
   // console.log(msg)
   const message = await models.Message.create(msg)
 
   success(res, jsonUtils.messageToJson(message, chat))
 
-  const msgToSend: { [k: string]: any } = {
+  const msgToSend: { [k: string]: string | number } = {
     id: message.id,
     uuid: message.uuid,
     content: remote_text_map || remote_text || text,
@@ -359,6 +372,8 @@ export const sendMessage = async (req: Req, res) => {
   }
   if (reply_uuid) msgToSend.replyUuid = reply_uuid
   if (parent_id) msgToSend.parentId = parent_id
+  if (recipientAlias) msgToSend.recipientAlias = recipientAlias
+  if (recipientPic) msgToSend.recipientPic = recipientPic
 
   const sendMessageParams: SendMessageParams = {
     chat: chat,
@@ -377,7 +392,7 @@ export const sendMessage = async (req: Req, res) => {
   network.sendMessage(sendMessageParams)
 }
 
-export const receiveMessage = async (payload) => {
+export const receiveMessage = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received message ${payload}`)
 
   const {
@@ -408,7 +423,7 @@ export const receiveMessage = async (payload) => {
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
-  const msg: { [k: string]: any } = {
+  const msg: { [k: string]: string | number | Date } = {
     chatId: chat.id,
     uuid: msg_uuid,
     type: constants.message_types.message,
@@ -445,7 +460,7 @@ export const receiveMessage = async (payload) => {
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
-export const receiveBoost = async (payload) => {
+export const receiveBoost = async (payload: Payload): Promise<void> => {
   const {
     owner,
     sender,
@@ -465,7 +480,7 @@ export const receiveBoost = async (payload) => {
   } = await helpers.parseReceiveParams(payload)
 
   sphinxLogger.info(
-    `=> received boost  ${amount} sats on network: ${network_type}`,
+    `=> received boost ${amount} sats on network: ${network_type}`,
     logging.Network
   )
   if (!owner || !sender || !chat) {
@@ -478,7 +493,7 @@ export const receiveBoost = async (payload) => {
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
-  const msg: { [k: string]: any } = {
+  const msg: { [k: string]: string | number | Date } = {
     chatId: chat.id,
     uuid: msg_uuid,
     type: constants.message_types.boost,
@@ -514,7 +529,7 @@ export const receiveBoost = async (payload) => {
 
   if (msg.replyUuid) {
     const ogMsg = await models.Message.findOne({
-      where: { uuid: msg.replyUuid, tenant },
+      where: { uuid: msg.replyUuid as string, tenant },
     })
     if (ogMsg && ogMsg.sender === tenant) {
       sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner)
@@ -522,7 +537,7 @@ export const receiveBoost = async (payload) => {
   }
 }
 
-export const receiveRepayment = async (payload) => {
+export const receiveRepayment = async (payload: Payload): Promise<void> => {
   const { owner, sender, chat, date_string, amount, network_type } =
     await helpers.parseReceiveParams(payload)
 
@@ -558,7 +573,7 @@ export const receiveRepayment = async (payload) => {
   )
 }
 
-export const receiveDeleteMessage = async (payload) => {
+export const receiveDeleteMessage = async (payload: Payload): Promise<void> => {
   sphinxLogger.info('=> received delete message', logging.Network)
   const { owner, sender, chat, chat_type, msg_uuid } =
     await helpers.parseReceiveParams(payload)
@@ -569,7 +584,7 @@ export const receiveDeleteMessage = async (payload) => {
 
   const isTribe = chat_type === constants.chat_types.tribe
   // in tribe this is already validated on admin's node
-  const where: { [k: string]: any } = { uuid: msg_uuid, tenant }
+  const where: { [k: string]: string | number } = { uuid: msg_uuid, tenant }
   if (!isTribe) {
     where.sender = sender.id // validate sender
   }
@@ -586,7 +601,7 @@ export const receiveDeleteMessage = async (payload) => {
   )
 }
 
-export const readMessages = async (req: Req, res) => {
+export const readMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
 
   const chat_id = req.params.chat_id
@@ -624,11 +639,11 @@ export const readMessages = async (req: Req, res) => {
   }
 }
 
-export const clearMessages = (req: Req, res) => {
+export const clearMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  models.Message.destroy({ where: { tenant }, truncate: true })
+  await models.Message.destroy({ where: { tenant }, truncate: true })
 
   success(res, {})
 }

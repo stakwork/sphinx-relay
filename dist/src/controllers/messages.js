@@ -230,10 +230,15 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, pay, } = req.body;
     let msgtype = constants_1.default.message_types.message;
     if (boost)
         msgtype = constants_1.default.message_types.boost;
+    if (pay)
+        msgtype = constants_1.default.message_types.direct_payment;
+    let boostOrPay = false;
+    if (boost || pay)
+        boostOrPay = true;
     const date = new Date();
     date.setMilliseconds(0);
     const owner = req.owner;
@@ -245,13 +250,15 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!chat)
         return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
     let realSatsContactId;
+    let recipientAlias;
+    let recipientPic;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
     if (!chat) {
         return (0, res_1.failure)(res, 'no Chat');
     }
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
-    if (reply_uuid && boost && amount) {
+    if (reply_uuid && boostOrPay && amount) {
         const ogMsg = yield models_1.models.Message.findOne({
             where: {
                 uuid: reply_uuid,
@@ -260,6 +267,10 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
         if (ogMsg && ogMsg.sender) {
             realSatsContactId = ogMsg.sender;
+            if (pay) {
+                recipientAlias = ogMsg.senderAlias;
+                recipientPic = ogMsg.senderPic;
+            }
         }
     }
     const hasRealAmount = amount && amount > constants_1.default.min_sat_amount;
@@ -268,7 +279,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         : remote_text;
     const uuid = short.generate();
     let amtToStore = amount || 0;
-    if (boost &&
+    if (boostOrPay &&
         message_price &&
         typeof message_price === 'number' &&
         amount &&
@@ -296,6 +307,10 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
+    if (recipientAlias)
+        msg.recipientAlias = recipientAlias;
+    if (recipientPic)
+        msg.recipientPic = recipientPic;
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
     (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
@@ -309,6 +324,10 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msgToSend.replyUuid = reply_uuid;
     if (parent_id)
         msgToSend.parentId = parent_id;
+    if (recipientAlias)
+        msgToSend.recipientAlias = recipientAlias;
+    if (recipientPic)
+        msgToSend.recipientPic = recipientPic;
     const sendMessageParams = {
         chat: chat,
         sender: owner,
@@ -375,7 +394,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, } = yield helpers.parseReceiveParams(payload);
-    logger_1.sphinxLogger.info(`=> received boost  ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
+    logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
     }
@@ -510,12 +529,12 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.readMessages = readMessages;
-const clearMessages = (req, res) => {
+const clearMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    models_1.models.Message.destroy({ where: { tenant }, truncate: true });
+    yield models_1.models.Message.destroy({ where: { tenant }, truncate: true });
     (0, res_1.success)(res, {});
-};
+});
 exports.clearMessages = clearMessages;
 //# sourceMappingURL=messages.js.map

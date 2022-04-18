@@ -1,7 +1,10 @@
 import { sequelize } from '../models'
 import { logging, sphinxLogger } from './logger'
 
-export default async function migrate() {
+export default async function migrate(): Promise<void> {
+  addTableColumn('sphinx_messages', 'recipient_alias')
+  addTableColumn('sphinx_messages', 'recipient_pic')
+
   addTableColumn('sphinx_contacts', 'hmac_key')
 
   addTableColumn('sphinx_chats', 'feed_type', 'INT')
