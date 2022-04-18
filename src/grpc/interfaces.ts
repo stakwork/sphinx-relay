@@ -363,6 +363,7 @@ export interface KeysendRequest {
   fee_limit?: { [k: string]: number }
   fee_limit_sat?: number
   timeout_seconds?: number
+  amp?: boolean
 }
 interface GreenlightHop {
   node_id: Buf
