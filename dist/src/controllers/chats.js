@@ -85,8 +85,7 @@ function kickChatMember(req, res) {
         });
         const owner = req.owner;
         network.sendMessage({
-            //            contactIds already exists on Chat but then as a string
-            chat: chat.dataValues /*, contactIds: [ contactId ] */,
+            chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: JSON.stringify([contactId]) }),
             sender: owner,
             message: {},
             type: constants_1.default.message_types.group_kick,
