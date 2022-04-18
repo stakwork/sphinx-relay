@@ -42,7 +42,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         tenant,
     };
     const confirmedMessagesWhere = {
-        updated_at: { [sequelize_1.Op.gte]: dateToReturn },
+        updatedAt: { [sequelize_1.Op.gte]: dateToReturn },
         status: {
             [sequelize_1.Op.or]: [constants_1.default.statuses.received],
         },
@@ -50,7 +50,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         tenant,
     };
     const deletedMessagesWhere = {
-        updated_at: { [sequelize_1.Op.gte]: dateToReturn },
+        updatedAt: { [sequelize_1.Op.gte]: dateToReturn },
         status: {
             [sequelize_1.Op.or]: [constants_1.default.statuses.deleted],
         },
@@ -159,7 +159,7 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const clause = {
         order: [['id', order]],
         where: {
-            updated_at: { [sequelize_1.Op.gte]: dateToReturn },
+            updatedAt: { [sequelize_1.Op.gte]: dateToReturn },
             tenant,
         },
     };
