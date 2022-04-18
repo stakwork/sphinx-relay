@@ -25,6 +25,14 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], RequestsTransportTokens.prototype, "transportToken", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Date)
+], RequestsTransportTokens.prototype, "createdAt", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Date)
+], RequestsTransportTokens.prototype, "updatedAt", void 0);
 RequestsTransportTokens = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_requests_transport_tokens', underscored: true })
 ], RequestsTransportTokens);

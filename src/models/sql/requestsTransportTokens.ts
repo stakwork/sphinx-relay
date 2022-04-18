@@ -12,4 +12,10 @@ export default class RequestsTransportTokens extends Model<RequestsTransportToke
 
   @Column(DataType.TEXT)
   transportToken: string
+
+  @Column
+  createdAt: Date
+
+  @Column
+  updatedAt: Date
 }

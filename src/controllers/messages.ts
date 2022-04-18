@@ -39,7 +39,7 @@ export const getMessages = async (req: Req, res: Res): Promise<void> => {
   }
 
   const confirmedMessagesWhere = {
-    updatedAt: { [Op.gte]: dateToReturn },
+    updated_at: { [Op.gte]: dateToReturn },
     status: {
       [Op.or]: [constants.statuses.received],
     },
@@ -48,7 +48,7 @@ export const getMessages = async (req: Req, res: Res): Promise<void> => {
   }
 
   const deletedMessagesWhere = {
-    updatedAt: { [Op.gte]: dateToReturn },
+    updated_at: { [Op.gte]: dateToReturn },
     status: {
       [Op.or]: [constants.statuses.deleted],
     },
@@ -185,7 +185,7 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   const clause: { [k: string]: any } = {
     order: [['id', order]],
     where: {
-      updatedAt: { [Op.gte]: dateToReturn },
+      updated_at: { [Op.gte]: dateToReturn },
       tenant,
     },
   }

@@ -179,7 +179,8 @@ function migrate() {
     CREATE TABLE sphinx_requests_transport_tokens (
       id BIGINT NOT NULL PRIMARY KEY,
       transport_token TEXT,
-			created_at DATETIME
+			created_at DATETIME,
+      updated_at DATETIME
     )`);
         }
         catch (e) {
