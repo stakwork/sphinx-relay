@@ -16,7 +16,7 @@ __decorate([
     (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
-        unique: true,
+        unique: false,
         autoIncrement: true,
     }),
     __metadata("design:type", Number)
