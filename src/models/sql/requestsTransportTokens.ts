@@ -3,11 +3,10 @@ import { Table, Column, Model, DataType } from 'sequelize-typescript'
 @Table({ tableName: 'sphinx_requests_transport_tokens', underscored: true })
 export default class RequestsTransportTokens extends Model<RequestsTransportTokens> {
   @Column({
-    type: DataType.BIGINT,
+    type: DataType.INTEGER,
     primaryKey: true,
     unique: true,
     autoIncrement: true,
-    // allowNull: false,
   })
   id: number
 

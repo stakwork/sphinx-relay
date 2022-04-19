@@ -14,7 +14,7 @@ let RequestsTransportTokens = class RequestsTransportTokens extends sequelize_ty
 };
 __decorate([
     (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.BIGINT,
+        type: sequelize_typescript_1.DataType.INTEGER,
         primaryKey: true,
         unique: true,
         autoIncrement: true,
