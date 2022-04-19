@@ -7,6 +7,7 @@ export default class RequestsTransportTokens extends Model<RequestsTransportToke
     primaryKey: true,
     unique: false,
     autoIncrement: true,
+    allowNull: false,
   })
   id: number
 
