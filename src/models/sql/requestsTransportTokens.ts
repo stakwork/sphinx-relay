@@ -5,9 +5,9 @@ export default class RequestsTransportTokens extends Model<RequestsTransportToke
   @Column({
     type: DataType.BIGINT,
     primaryKey: true,
-    unique: false,
+    unique: true,
     autoIncrement: true,
-    allowNull: false,
+    // allowNull: false,
   })
   id: number
 

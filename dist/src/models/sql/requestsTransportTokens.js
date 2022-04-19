@@ -16,9 +16,9 @@ __decorate([
     (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
-        unique: false,
+        unique: true,
         autoIncrement: true,
-        allowNull: false,
+        // allowNull: false,
     }),
     __metadata("design:type", Number)
 ], RequestsTransportTokens.prototype, "id", void 0);
