@@ -199,7 +199,7 @@ export default async function migrate(): Promise<void> {
     sphinxLogger.info('adding requestsTransportTokens table', logging.DB)
     await sequelize.query(`
     CREATE TABLE sphinx_requests_transport_tokens (
-      id BIGINT NOT NULL PRIMARY KEY,
+      id INTEGER NOT NULL PRIMARY KEY,
       transport_token TEXT,
 			created_at DATETIME,
       updated_at DATETIME

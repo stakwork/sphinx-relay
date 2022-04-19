@@ -177,7 +177,7 @@ function migrate() {
             logger_1.sphinxLogger.info('adding requestsTransportTokens table', logger_1.logging.DB);
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_requests_transport_tokens (
-      id BIGINT NOT NULL PRIMARY KEY,
+      id INTEGER NOT NULL PRIMARY KEY,
       transport_token TEXT,
 			created_at DATETIME,
       updated_at DATETIME
