@@ -18,7 +18,6 @@ __decorate([
         primaryKey: true,
         unique: true,
         autoIncrement: true,
-        // allowNull: false,
     }),
     __metadata("design:type", Number)
 ], RequestsTransportTokens.prototype, "id", void 0);

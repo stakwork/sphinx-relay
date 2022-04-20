@@ -303,7 +303,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             : constants_1.default.network_types.mqtt,
         tenant,
     };
-    if (reply_uuid)
+    // "pay" someone who sent a msg is not a reply
+    if (reply_uuid && !pay)
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
@@ -320,7 +321,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         content: remote_text_map || remote_text || text,
         amount: amtToStore,
     };
-    if (reply_uuid)
+    if (reply_uuid && !pay)
         msgToSend.replyUuid = reply_uuid;
     if (parent_id)
         msgToSend.parentId = parent_id;

@@ -355,7 +355,8 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
         : constants.network_types.mqtt,
     tenant,
   }
-  if (reply_uuid) msg.replyUuid = reply_uuid
+  // "pay" someone who sent a msg is not a reply
+  if (reply_uuid && !pay) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   if (recipientAlias) msg.recipientAlias = recipientAlias
   if (recipientPic) msg.recipientPic = recipientPic
@@ -370,7 +371,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     content: remote_text_map || remote_text || text,
     amount: amtToStore,
   }
-  if (reply_uuid) msgToSend.replyUuid = reply_uuid
+  if (reply_uuid && !pay) msgToSend.replyUuid = reply_uuid
   if (parent_id) msgToSend.parentId = parent_id
   if (recipientAlias) msgToSend.recipientAlias = recipientAlias
   if (recipientPic) msgToSend.recipientPic = recipientPic

@@ -41,6 +41,7 @@ export const typesToForward = [
   msgtypes.attachment,
   msgtypes.delete,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 export const typesToSkipIfSkipBroadcastJoins = [
   msgtypes.group_join,
@@ -51,6 +52,7 @@ const typesThatNeedPricePerMessage = [
   msgtypes.message,
   msgtypes.attachment,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 export const typesToReplay = [
   // should match typesToForward
@@ -59,6 +61,7 @@ export const typesToReplay = [
   msgtypes.group_leave,
   msgtypes.bot_res,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 const botTypes = [
   constants.message_types.bot_install,
