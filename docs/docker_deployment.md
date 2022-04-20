@@ -56,6 +56,8 @@ docker-compose exec lnd lncli unlock
 
 NOTE: All lncli commands need to be prepended with `docker-compose exec lnd`, this tells docker to execute **something** on the lnd container.
 
+---
+
 ### Configure
 
 Make sure your LND is running with the `--accept-keysend` flag! If you are using lnd.conf file, add `accept-keysend=1`, if necessary
@@ -73,6 +75,8 @@ To connect to your app
 
 - edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
+---
+
 ### run
 
 `npm run prod`
@@ -80,3 +84,37 @@ To connect to your app
 When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android & iOS) to connect!
 
 [Back to README](https://github.com/dimaatmelodromru/sphinx-relay/tree/docs-edit#connecting-a-mobile-client)
+
+---
+
+### example of what a relay would look like in a docker-compose.yml file
+
+```yaml
+  sphinx-relay:
+    restart: unless-stopped
+    image: sphinxlightning/sphinx-relay:latest
+    depends_on:
+      - lnd
+    container_name: sphinx-relay
+    hostname: sphinx-relay
+    environment:
+      TZ: America/Chicago
+      NODE_ENV: production
+      # NODE_IP: sphinx-relay
+      # NODE_ALIAS: ${LIGHTNING_ALIAS}
+      LND_IP: lnd
+      LND_PORT: 10009
+      PORT: 3300
+      # MACAROON_LOCATION: /relay/lnd/admin.macaroon
+      # ROUTER_MACAROON_LOCATION: /relay/lnd/data/chain/bitcoin/mainnet/router.macaroon
+      # SIGNER_MACAROON_LOCATION: /relay/lnd/data/chain/bitcoin/mainnet/signer.macaroon
+      # TLS_LOCATION: /relay/lnd/tls.cert
+      # LND_LOG_LOCATION: /relay/lnd/logs/bitcoin/mainnet/lnd.log
+      PUBLIC_URL: http://satellite.overmind.home:3300
+    ports:
+      - 3300:3300
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt/cache/lnd:/relay/.lnd
+```
