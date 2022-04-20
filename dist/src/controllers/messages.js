@@ -321,7 +321,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         content: remote_text_map || remote_text || text,
         amount: amtToStore,
     };
-    if (reply_uuid && !pay)
+    // even if its a "pay" send the reply_uuid so admin can forward
+    if (reply_uuid)
         msgToSend.replyUuid = reply_uuid;
     if (parent_id)
         msgToSend.parentId = parent_id;
@@ -336,11 +337,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         type: msgtype,
         message: msgToSend,
     };
-    if (realSatsContactId)
+    if (isTribeOwner && realSatsContactId) {
         sendMessageParams.realSatsContactId = realSatsContactId;
-    // tribe owner deducts the "price per message + escrow amount"
-    if (realSatsContactId && isTribeOwner && amtToStore) {
-        sendMessageParams.amount = amtToStore;
+        // tribe owner deducts the "price per message + escrow amount"
+        if (amtToStore) {
+            sendMessageParams.amount = amtToStore;
+        }
     }
     // final send
     // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)

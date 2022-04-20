@@ -23,6 +23,7 @@ const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const logger_1 = require("../utils/logger");
+const confirmations_1 = require("./confirmations");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -131,7 +132,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendPayment = sendPayment;
 const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received payment ${{ payload }}`);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, remote_content, sender_photo_url, date_string, recipient_alias, recipient_pic, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, msg_id, parent_id, network_type, remote_content, sender_photo_url, date_string, recipient_alias, recipient_pic, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
@@ -166,8 +167,8 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         if (remote_content)
             msg.remoteMessageContent = remote_content;
     }
-    if (reply_uuid)
-        msg.replyUuid = reply_uuid;
+    // direct_payment is never a reply (thats a boost)
+    // if (reply_uuid) msg.replyUuid = reply_uuid
     if (parent_id)
         msg.parentId = parent_id;
     if (recipient_alias)
@@ -181,6 +182,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
     (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -198,7 +200,6 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         type: {
                             [sequelize_1.Op.or]: [
                                 constants_1.default.message_types.payment,
-                                constants_1.default.message_types.direct_payment,
                                 constants_1.default.message_types.keysend,
                                 constants_1.default.message_types.purchase,
                             ],
@@ -211,6 +212,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                                 constants_1.default.message_types.message,
                                 constants_1.default.message_types.boost,
                                 constants_1.default.message_types.repayment,
+                                constants_1.default.message_types.direct_payment, // can be a payment in a tribe
                             ],
                         },
                         amount: {

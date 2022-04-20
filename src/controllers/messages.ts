@@ -371,7 +371,8 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     content: remote_text_map || remote_text || text,
     amount: amtToStore,
   }
-  if (reply_uuid && !pay) msgToSend.replyUuid = reply_uuid
+  // even if its a "pay" send the reply_uuid so admin can forward
+  if (reply_uuid) msgToSend.replyUuid = reply_uuid
   if (parent_id) msgToSend.parentId = parent_id
   if (recipientAlias) msgToSend.recipientAlias = recipientAlias
   if (recipientPic) msgToSend.recipientPic = recipientPic
@@ -383,11 +384,14 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     type: msgtype,
     message: msgToSend,
   }
-  if (realSatsContactId) sendMessageParams.realSatsContactId = realSatsContactId
-  // tribe owner deducts the "price per message + escrow amount"
-  if (realSatsContactId && isTribeOwner && amtToStore) {
-    sendMessageParams.amount = amtToStore
+  if (isTribeOwner && realSatsContactId) {
+    sendMessageParams.realSatsContactId = realSatsContactId
+    // tribe owner deducts the "price per message + escrow amount"
+    if (amtToStore) {
+      sendMessageParams.amount = amtToStore
+    }
   }
+
   // final send
   // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
   network.sendMessage(sendMessageParams)

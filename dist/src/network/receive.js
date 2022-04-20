@@ -190,7 +190,9 @@ function onReceive(payload, dest) {
             // forward boost sats to recipient
             let realSatsContactId = null;
             let amtToForward = 0;
-            if (payload.type === msgtypes.boost && payload.message.replyUuid) {
+            const boostOrPay = payload.type === msgtypes.boost ||
+                payload.type === msgtypes.direct_payment;
+            if (boostOrPay && payload.message.replyUuid) {
                 const ogMsg = yield models_1.models.Message.findOne({
                     where: {
                         uuid: payload.message.replyUuid,

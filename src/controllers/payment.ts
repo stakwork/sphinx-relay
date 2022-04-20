@@ -13,6 +13,7 @@ import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
+import { sendConfirmation } from './confirmations'
 
 export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -158,7 +159,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
     chat_type,
     sender_alias,
     msg_uuid,
-    reply_uuid,
+    msg_id,
     parent_id,
     network_type,
     remote_content,
@@ -198,7 +199,8 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
     msg.senderPic = sender_photo_url
     if (remote_content) msg.remoteMessageContent = remote_content
   }
-  if (reply_uuid) msg.replyUuid = reply_uuid
+  // direct_payment is never a reply (thats a boost)
+  // if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   if (recipient_alias) msg.recipientAlias = recipient_alias
   if (recipient_pic) msg.recipientPic = recipient_pic
@@ -216,6 +218,8 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
   )
 
   sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+
+  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
 export const listPayments = async (req: Req, res: Res): Promise<void> => {
@@ -234,7 +238,6 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
             type: {
               [Op.or]: [
                 constants.message_types.payment,
-                constants.message_types.direct_payment,
                 constants.message_types.keysend,
                 constants.message_types.purchase,
               ],
@@ -247,6 +250,7 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
                 constants.message_types.message, // paid bot msgs, or price_per_message msgs
                 constants.message_types.boost,
                 constants.message_types.repayment,
+                constants.message_types.direct_payment, // can be a payment in a tribe
               ],
             },
             amount: {
