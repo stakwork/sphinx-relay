@@ -209,6 +209,10 @@ function onReceive(payload, dest) {
                         amtToForward = theAmtToForward;
                         if (amtToForward && payload.message && payload.message.amount) {
                             payload.message.amount = amtToForward; // mutate the payload amount
+                            if (payload.type === msgtypes.direct_payment) {
+                                // remove the reply_uuid since its not actually a reply
+                                payload.message.replyUuid = undefined;
+                            }
                         }
                     }
                 }

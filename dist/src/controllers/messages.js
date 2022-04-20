@@ -322,8 +322,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         amount: amtToStore,
     };
     // even if its a "pay" send the reply_uuid so admin can forward
-    if (reply_uuid)
-        msgToSend.replyUuid = reply_uuid;
+    if (reply_uuid) {
+        // unless YOU are admin, then there is no forwarding
+        if (!isTribeOwner) {
+            msgToSend.replyUuid = reply_uuid;
+        }
+    }
     if (parent_id)
         msgToSend.parentId = parent_id;
     if (recipientAlias)
