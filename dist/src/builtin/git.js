@@ -194,10 +194,10 @@ function addWebhookToRepo(pat, repoAndOwner, bot_secret) {
         });
         let url = yield (0, connect_1.getIP)();
         if (url.endsWith('.onion')) {
-            url = url + '.to'; // tor2web
+            url = url + '.ws'; // tor2web
         }
         if (url.endsWith('.onion/')) {
-            url = url.slice(0, -1) + '.to'; // tor2web
+            url = url.slice(0, -1) + '.ws'; // tor2web
         }
         if (list.data.length) {
             const existing = list.data.find((d) => d.config.url === url);
