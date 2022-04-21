@@ -205,6 +205,9 @@ async function addWebhookToRepo(
   if (url.endsWith('.onion')) {
     url = url + '.to' // tor2web
   }
+  if (url.endsWith('.onion/')) {
+    url = url.slice(0, -1) + '.to' // tor2web
+  }
   if (list.data.length) {
     const existing = list.data.find((d) => d.config.url === url)
     if (existing) return
