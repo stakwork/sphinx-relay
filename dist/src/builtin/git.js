@@ -192,7 +192,10 @@ function addWebhookToRepo(pat, repoAndOwner, bot_secret) {
             owner,
             repo,
         });
-        const url = (yield (0, connect_1.getIP)()) + '/webhook';
+        let url = yield (0, connect_1.getIP)();
+        if (url.endsWith('.onion')) {
+            url = url + '.to'; // tor2web
+        }
         if (list.data.length) {
             const existing = list.data.find((d) => d.config.url === url);
             if (existing)
@@ -204,7 +207,7 @@ function addWebhookToRepo(pat, repoAndOwner, bot_secret) {
             active: true,
             events: githook_1.all_webhook_events,
             config: {
-                url: url,
+                url: url + '/webhook',
                 content_type: 'json',
                 secret: bot_secret,
             },

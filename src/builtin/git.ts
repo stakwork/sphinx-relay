@@ -201,7 +201,10 @@ async function addWebhookToRepo(
     owner,
     repo,
   })
-  const url = (await getIP()) + '/webhook'
+  let url = await getIP()
+  if (url.endsWith('.onion')) {
+    url = url + '.to' // tor2web
+  }
   if (list.data.length) {
     const existing = list.data.find((d) => d.config.url === url)
     if (existing) return
@@ -212,7 +215,7 @@ async function addWebhookToRepo(
     active: true,
     events: all_webhook_events,
     config: {
-      url: url,
+      url: url + '/webhook',
       content_type: 'json',
       secret: bot_secret,
     },
