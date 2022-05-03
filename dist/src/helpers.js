@@ -229,6 +229,7 @@ function parseReceiveParams(payload) {
         const purchaser_id = dat.message.purchaser;
         const network_type = dat.network_type || 0;
         const isTribeOwner = dat.isTribeOwner ? true : false;
+        const hasForwardedSats = dat.hasForwardedSats ? true : false;
         const dest = dat.dest;
         const recipient_alias = dat.message.recipientAlias;
         const recipient_pic = dat.message.recipientPic;
@@ -275,6 +276,7 @@ function parseReceiveParams(payload) {
             sender_route_hint,
             sender_alias,
             isTribeOwner,
+            hasForwardedSats,
             chat_uuid,
             amount,
             content,

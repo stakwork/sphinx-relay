@@ -355,7 +355,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendMessage = sendMessage;
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
@@ -378,6 +378,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         status: message_status || constants_1.default.statuses.received,
         network_type: network_type,
         tenant,
+        forwardedSats: hasForwardedSats,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -400,7 +401,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
@@ -424,6 +425,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         status: constants_1.default.statuses.received,
         network_type,
         tenant,
+        forwardedSats: hasForwardedSats,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {

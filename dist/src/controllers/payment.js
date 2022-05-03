@@ -132,7 +132,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendPayment = sendPayment;
 const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received payment ${{ payload }}`);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, msg_id, parent_id, network_type, remote_content, sender_photo_url, date_string, recipient_alias, recipient_pic, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, msg_id, parent_id, network_type, remote_content, sender_photo_url, date_string, recipient_alias, recipient_pic, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
@@ -154,6 +154,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         updatedAt: date,
         network_type,
         tenant,
+        forwardedSats: hasForwardedSats,
     };
     if (content)
         msg.messageContent = content;
@@ -220,6 +221,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         },
                         network_type: constants_1.default.network_types.lightning,
                         status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },
+                        forwarded_sats: { [sequelize_1.Op.not]: true },
                     },
                 ],
                 tenant,

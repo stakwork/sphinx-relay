@@ -422,6 +422,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     message_status,
+    hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
@@ -446,6 +447,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     status: message_status || constants.statuses.received,
     network_type: network_type,
     tenant,
+    forwardedSats: hasForwardedSats,
   }
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {
@@ -487,6 +489,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     msg_id,
+    hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
 
   sphinxLogger.info(
@@ -516,6 +519,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     status: constants.statuses.received,
     network_type,
     tenant,
+    forwardedSats: hasForwardedSats,
   }
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {

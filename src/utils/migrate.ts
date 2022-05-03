@@ -2,6 +2,8 @@ import { sequelize } from '../models'
 import { logging, sphinxLogger } from './logger'
 
 export default async function migrate(): Promise<void> {
+  addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN')
+
   addTableColumn('sphinx_messages', 'recipient_alias')
   addTableColumn('sphinx_messages', 'recipient_pic')
 

@@ -106,6 +106,9 @@ export default class Message extends Model<Message> {
 
   @Column(DataType.TEXT)
   recipientPic: string // for direct payment display in tribes
+
+  @Column
+  forwardedSats: boolean
 }
 
 /*

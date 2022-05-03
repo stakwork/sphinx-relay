@@ -73,10 +73,14 @@ interface PayloadMessageContent extends MessageContent {
   skipPaymentProcessing?: boolean
 }
 
-export interface Payload extends BotMsg {
+export interface Payload extends BotMsg, AdminPayload {
   network_type?: number
-  isTribeOwner?: boolean
   dest?: string
   owner: Contact
   message: PayloadMessageContent
+}
+
+export interface AdminPayload {
+  isTribeOwner?: boolean
+  hasForwardedSats?: boolean
 }

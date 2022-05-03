@@ -167,6 +167,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
     date_string,
     recipient_alias,
     recipient_pic,
+    hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error(`=> no group chat!`)
@@ -190,6 +191,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
     updatedAt: date,
     network_type,
     tenant,
+    forwardedSats: hasForwardedSats,
   }
   if (content) msg.messageContent = content
   if (mediaType) msg.mediaType = mediaType
@@ -258,6 +260,7 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
             },
             network_type: constants.network_types.lightning,
             status: { [Op.not]: constants.statuses.failed },
+            forwarded_sats: { [Op.not]: true },
           },
         ],
         tenant,

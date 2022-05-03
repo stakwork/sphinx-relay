@@ -207,6 +207,7 @@ function onReceive(payload, dest) {
                     if (theAmtToForward > 0) {
                         realSatsContactId = ogMsg.sender;
                         amtToForward = theAmtToForward;
+                        toAddIn.hasForwardedSats = true;
                         if (amtToForward && payload.message && payload.message.amount) {
                             payload.message.amount = amtToForward; // mutate the payload amount
                             if (payload.type === msgtypes.direct_payment) {
@@ -275,7 +276,8 @@ function doTheAction(data, owner) {
             });
             const pld = yield (0, msg_1.decryptMessage)(data, chat);
             const me = owner;
-            payload = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
+            const encrypted = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
+            payload = encrypted;
             if (ogContent)
                 payload.message.remoteContent = JSON.stringify({ chat: ogContent }); // this is the key
             //if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
