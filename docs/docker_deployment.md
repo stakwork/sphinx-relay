@@ -99,22 +99,20 @@ When Relay starts up, it will print a QR in the terminal. You can scan this in y
     hostname: sphinx-relay
     environment:
       TZ: America/Chicago
+      # See src/utils/config.js for more configuration variables
       NODE_ENV: production
-      # NODE_IP: sphinx-relay
-      # NODE_ALIAS: ${LIGHTNING_ALIAS}
       LND_IP: lnd
       LND_PORT: 10009
       PORT: 3300
-      # MACAROON_LOCATION: /relay/lnd/admin.macaroon
-      # ROUTER_MACAROON_LOCATION: /relay/lnd/data/chain/bitcoin/mainnet/router.macaroon
-      # SIGNER_MACAROON_LOCATION: /relay/lnd/data/chain/bitcoin/mainnet/signer.macaroon
-      # TLS_LOCATION: /relay/lnd/tls.cert
-      # LND_LOG_LOCATION: /relay/lnd/logs/bitcoin/mainnet/lnd.log
-      PUBLIC_URL: http://satellite.overmind.home:3300
+      PUBLIC_URL: http://your-public-url.com:3300
     ports:
       - 3300:3300
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /mnt/cache/lnd:/relay/.lnd
+      # If not using a named volume, make sure uid or gid 1000 has write permissions.
+      # If you use a named volume, if you delete it you'll need to restore your account
+      # from backup.
+      - ./data/sphinx_creds:/relay/creds
 ```
