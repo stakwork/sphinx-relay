@@ -9,6 +9,7 @@ import * as crypto from 'crypto'
 import { getIP } from '../utils/connect'
 import { all_webhook_events } from '../utils/githook'
 import { sphinxLogger } from '../utils/logger'
+import 'url' // for "new URL"
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -201,9 +202,9 @@ async function addWebhookToRepo(
     owner,
     repo,
   })
-  const url = (await getIP()) + '/webhook'
+  const theURL = (await tor2webUrl()) + '/webhook'
   if (list.data.length) {
-    const existing = list.data.find((d) => d.config.url === url)
+    const existing = list.data.find((d) => d.config.url === theURL)
     if (existing) return
   }
   await octo.request('POST /repos/{owner}/{repo}/hooks', {
@@ -212,11 +213,23 @@ async function addWebhookToRepo(
     active: true,
     events: all_webhook_events,
     config: {
-      url: url,
+      url: theURL,
       content_type: 'json',
       secret: bot_secret,
     },
   })
+}
+
+async function tor2webUrl() {
+  const u = await getIP()
+  if (u.includes('.onion')) {
+    return stripPort(u) + '.ws' // tor2web
+  }
+  return u
+}
+function stripPort(theurl) {
+  const u = new URL(theurl)
+  return u.protocol + '//' + u.hostname
 }
 
 // const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">

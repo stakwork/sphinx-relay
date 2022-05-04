@@ -56,6 +56,8 @@ docker-compose exec lnd lncli unlock
 
 NOTE: All lncli commands need to be prepended with `docker-compose exec lnd`, this tells docker to execute **something** on the lnd container.
 
+---
+
 ### Configure
 
 Make sure your LND is running with the `--accept-keysend` flag! If you are using lnd.conf file, add `accept-keysend=1`, if necessary
@@ -73,6 +75,8 @@ To connect to your app
 
 - edit the `public_url` in config/app.json to equal your public IP or fully qualified domain name
 
+---
+
 ### run
 
 `npm run prod`
@@ -80,3 +84,35 @@ To connect to your app
 When Relay starts up, it will print a QR in the terminal. You can scan this in your app (Android & iOS) to connect!
 
 [Back to README](https://github.com/dimaatmelodromru/sphinx-relay/tree/docs-edit#connecting-a-mobile-client)
+
+---
+
+### example of what a relay would look like in a docker-compose.yml file
+
+```yaml
+  sphinx-relay:
+    restart: unless-stopped
+    image: sphinxlightning/sphinx-relay:latest
+    depends_on:
+      - lnd
+    container_name: sphinx-relay
+    hostname: sphinx-relay
+    environment:
+      TZ: America/Chicago
+      # See src/utils/config.js for more configuration variables
+      NODE_ENV: production
+      LND_IP: lnd
+      LND_PORT: 10009
+      PORT: 3300
+      PUBLIC_URL: http://your-public-url.com:3300
+    ports:
+      - 3300:3300
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt/cache/lnd:/relay/.lnd
+      # If not using a named volume, make sure uid or gid 1000 has write permissions.
+      # If you use a named volume, if you delete it you'll need to restore your account
+      # from backup.
+      - ./data/sphinx_creds:/relay/creds
+```
