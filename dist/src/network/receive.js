@@ -188,7 +188,7 @@ function onReceive(payload, dest) {
                 }
             }
             // forward boost sats to recipient
-            let realSatsContactId = null;
+            let realSatsContactId = undefined;
             let amtToForward = 0;
             const boostOrPay = payload.type === msgtypes.boost ||
                 payload.type === msgtypes.direct_payment;
@@ -205,9 +205,9 @@ function onReceive(payload, dest) {
                         (chat.pricePerMessage || 0) -
                         (chat.escrowAmount || 0);
                     if (theAmtToForward > 0) {
-                        realSatsContactId = ogMsg.sender;
+                        realSatsContactId = ogMsg.sender; // recipient of sats
                         amtToForward = theAmtToForward;
-                        toAddIn.hasForwardedSats = true;
+                        toAddIn.hasForwardedSats = ogMsg.sender !== tenant;
                         if (amtToForward && payload.message && payload.message.amount) {
                             payload.message.amount = amtToForward; // mutate the payload amount
                             if (payload.type === msgtypes.direct_payment) {

@@ -5,7 +5,7 @@ import * as interfaces from '../grpc/interfaces'
 import { ACTIONS } from '../controllers'
 import * as tribes from '../utils/tribes'
 import * as signer from '../utils/signer'
-import { models, ContactRecord, Contact } from '../models'
+import { models, ContactRecord, Contact, Message } from '../models'
 import { sendMessage } from './send'
 import {
   modifyPayloadAndSaveMediaKey,
@@ -190,13 +190,13 @@ async function onReceive(payload: Payload, dest: string) {
       }
     }
     // forward boost sats to recipient
-    let realSatsContactId = null
+    let realSatsContactId: number | undefined = undefined
     let amtToForward = 0
     const boostOrPay =
       payload.type === msgtypes.boost ||
       payload.type === msgtypes.direct_payment
     if (boostOrPay && payload.message.replyUuid) {
-      const ogMsg = await models.Message.findOne({
+      const ogMsg: Message = await models.Message.findOne({
         where: {
           uuid: payload.message.replyUuid,
           tenant,
@@ -209,9 +209,9 @@ async function onReceive(payload: Payload, dest: string) {
           (chat.pricePerMessage || 0) -
           (chat.escrowAmount || 0)
         if (theAmtToForward > 0) {
-          realSatsContactId = ogMsg.sender
+          realSatsContactId = ogMsg.sender // recipient of sats
           amtToForward = theAmtToForward
-          toAddIn.hasForwardedSats = true
+          toAddIn.hasForwardedSats = ogMsg.sender !== tenant
           if (amtToForward && payload.message && payload.message.amount) {
             payload.message.amount = amtToForward // mutate the payload amount
             if (payload.type === msgtypes.direct_payment) {
