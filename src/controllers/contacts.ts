@@ -25,13 +25,11 @@ import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
 import { loadConfig } from '../utils/config'
-import { Req } from '../types'
-
-import { Response } from 'express'
+import { Req, Res } from '../types'
 
 const config = loadConfig()
 
-export const getContacts = async (req: Req, res: Response): Promise<void> => {
+export const getContacts = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -103,10 +101,7 @@ export const getContacts = async (req: Req, res: Response): Promise<void> => {
   })
 }
 
-export const getContactsForChat = async (
-  req: Req,
-  res: Response
-): Promise<void> => {
+export const getContactsForChat = async (req: Req, res: Res): Promise<void> => {
   const chat_id = parseInt(req.params.chat_id)
   if (!chat_id) return failure(res, 'no chat id')
   if (!req.owner) return failure(res, 'no owner')
@@ -168,7 +163,7 @@ export const getContactsForChat = async (
 
 export async function generateOwnerWithExternalSigner(
   req: Req,
-  res: Response
+  res: Res
 ): Promise<void> {
   if (!isProxy()) {
     return failure(res, 'only proxy')
@@ -201,7 +196,7 @@ export async function generateOwnerWithExternalSigner(
   success(res, { id: (created && created.id) || 0 })
 }
 
-export const generateToken = async (req: Req, res: Response): Promise<void> => {
+export const generateToken = async (req: Req, res: Res): Promise<void> => {
   sphinxLogger.info([
     '=> generateToken called',
     {
@@ -275,10 +270,7 @@ export const generateToken = async (req: Req, res: Response): Promise<void> => {
   })
 }
 
-export const registerHmacKey = async (
-  req: Req,
-  res: Response
-): Promise<void> => {
+export const registerHmacKey = async (req: Req, res: Res): Promise<void> => {
   if (!req.body.encrypted_key) {
     return failure(res, 'no encrypted_key found')
   }
@@ -298,7 +290,7 @@ export const registerHmacKey = async (
   })
 }
 
-export const getHmacKey = async (req: Req, res: Response): Promise<void> => {
+export const getHmacKey = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const hmac: string = req.owner.hmacKey
   if (!hmac) return failure(res, 'no hmac set')
@@ -311,7 +303,7 @@ export const getHmacKey = async (req: Req, res: Response): Promise<void> => {
   })
 }
 
-export const updateContact = async (req: Req, res: Response): Promise<void> => {
+export const updateContact = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(
@@ -372,7 +364,7 @@ export const updateContact = async (req: Req, res: Response): Promise<void> => {
   })
 }
 
-export const exchangeKeys = async (req: Req, res: Response): Promise<void> => {
+export const exchangeKeys = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(
@@ -401,7 +393,7 @@ export const exchangeKeys = async (req: Req, res: Response): Promise<void> => {
   })
 }
 
-export const createContact = async (req: Req, res: Response): Promise<void> => {
+export const createContact = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(
@@ -458,7 +450,7 @@ export const createContact = async (req: Req, res: Response): Promise<void> => {
   })
 }
 
-export const deleteContact = async (req: Req, res: Response): Promise<void> => {
+export const deleteContact = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id || '0')
@@ -690,10 +682,7 @@ function extractAttrs(body): {
   return attrs
 }
 
-export const getLatestContacts = async (
-  req: Req,
-  res: Response
-): Promise<void> => {
+export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -756,7 +745,7 @@ export const getLatestContacts = async (
 }
 
 async function switchBlock(
-  res: Response,
+  res: Res,
   tenant: number,
   id: number,
   blocked: boolean
@@ -772,13 +761,13 @@ async function switchBlock(
   success(res, jsonUtils.contactToJson(updated))
 }
 
-export const blockContact = async (req: Req, res: Response): Promise<void> => {
+export const blockContact = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const contactId = parseInt(req.params.contact_id as string)
   switchBlock(res, req.owner.id, contactId, true)
 }
 
-export const unblockContact = async (req: Req, res) => {
+export const unblockContact = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const contactId = parseInt(req.params.contact_id as string)
   switchBlock(res, req.owner.id, contactId, false)

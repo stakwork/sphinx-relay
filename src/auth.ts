@@ -272,7 +272,11 @@ export async function ownerMiddleware(req, res, next) {
       // Here we are saving the x_transport_token that we just
       // used into the db to be checked against later
       const transportTokenDBValues = { transportToken: x_transport_token }
-      await models.RequestsTransportTokens.create(transportTokenDBValues)
+      try {
+        await models.RequestsTransportTokens.create(transportTokenDBValues)
+      } catch (e) {
+        console.log('Error when creating transport token', e)
+      }
     }
 
     req.owner = owner.dataValues

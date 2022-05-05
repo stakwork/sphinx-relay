@@ -1,7 +1,12 @@
 import { sequelize } from '../models'
 import { logging, sphinxLogger } from './logger'
 
-export default async function migrate() {
+export default async function migrate(): Promise<void> {
+  addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN')
+
+  addTableColumn('sphinx_messages', 'recipient_alias')
+  addTableColumn('sphinx_messages', 'recipient_pic')
+
   addTableColumn('sphinx_contacts', 'hmac_key')
 
   addTableColumn('sphinx_chats', 'feed_type', 'INT')
@@ -196,9 +201,10 @@ export default async function migrate() {
     sphinxLogger.info('adding requestsTransportTokens table', logging.DB)
     await sequelize.query(`
     CREATE TABLE sphinx_requests_transport_tokens (
-      id BIGINT NOT NULL PRIMARY KEY,
+      id INTEGER NOT NULL PRIMARY KEY,
       transport_token TEXT,
-			created_at DATETIME
+			created_at DATETIME,
+      updated_at DATETIME
     )`)
   } catch (e) {
     //Do nothing here

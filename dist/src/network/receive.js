@@ -44,6 +44,7 @@ exports.typesToForward = [
     msgtypes.attachment,
     msgtypes.delete,
     msgtypes.boost,
+    msgtypes.direct_payment,
 ];
 exports.typesToSkipIfSkipBroadcastJoins = [
     msgtypes.group_join,
@@ -54,6 +55,7 @@ const typesThatNeedPricePerMessage = [
     msgtypes.message,
     msgtypes.attachment,
     msgtypes.boost,
+    msgtypes.direct_payment,
 ];
 exports.typesToReplay = [
     // should match typesToForward
@@ -62,6 +64,7 @@ exports.typesToReplay = [
     msgtypes.group_leave,
     msgtypes.bot_res,
     msgtypes.boost,
+    msgtypes.direct_payment,
 ];
 const botTypes = [
     constants_1.default.message_types.bot_install,
@@ -185,9 +188,11 @@ function onReceive(payload, dest) {
                 }
             }
             // forward boost sats to recipient
-            let realSatsContactId = null;
+            let realSatsContactId = undefined;
             let amtToForward = 0;
-            if (payload.type === msgtypes.boost && payload.message.replyUuid) {
+            const boostOrPay = payload.type === msgtypes.boost ||
+                payload.type === msgtypes.direct_payment;
+            if (boostOrPay && payload.message.replyUuid) {
                 const ogMsg = yield models_1.models.Message.findOne({
                     where: {
                         uuid: payload.message.replyUuid,
@@ -200,10 +205,15 @@ function onReceive(payload, dest) {
                         (chat.pricePerMessage || 0) -
                         (chat.escrowAmount || 0);
                     if (theAmtToForward > 0) {
-                        realSatsContactId = ogMsg.sender;
+                        realSatsContactId = ogMsg.sender; // recipient of sats
                         amtToForward = theAmtToForward;
+                        toAddIn.hasForwardedSats = ogMsg.sender !== tenant;
                         if (amtToForward && payload.message && payload.message.amount) {
                             payload.message.amount = amtToForward; // mutate the payload amount
+                            if (payload.type === msgtypes.direct_payment) {
+                                // remove the reply_uuid since its not actually a reply
+                                payload.message.replyUuid = undefined;
+                            }
                         }
                     }
                 }
@@ -266,7 +276,8 @@ function doTheAction(data, owner) {
             });
             const pld = yield (0, msg_1.decryptMessage)(data, chat);
             const me = owner;
-            payload = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
+            const encrypted = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
+            payload = encrypted;
             if (ogContent)
                 payload.message.remoteContent = JSON.stringify({ chat: ogContent }); // this is the key
             //if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})

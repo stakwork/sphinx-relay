@@ -13,6 +13,9 @@ const models_1 = require("../models");
 const logger_1 = require("./logger");
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN');
+        addTableColumn('sphinx_messages', 'recipient_alias');
+        addTableColumn('sphinx_messages', 'recipient_pic');
         addTableColumn('sphinx_contacts', 'hmac_key');
         addTableColumn('sphinx_chats', 'feed_type', 'INT');
         addTableColumn('sphinx_contacts', 'blocked', 'BOOLEAN');
@@ -175,9 +178,10 @@ function migrate() {
             logger_1.sphinxLogger.info('adding requestsTransportTokens table', logger_1.logging.DB);
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_requests_transport_tokens (
-      id BIGINT NOT NULL PRIMARY KEY,
+      id INTEGER NOT NULL PRIMARY KEY,
       transport_token TEXT,
-			created_at DATETIME
+			created_at DATETIME,
+      updated_at DATETIME
     )`);
         }
         catch (e) {

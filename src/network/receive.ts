@@ -5,7 +5,7 @@ import * as interfaces from '../grpc/interfaces'
 import { ACTIONS } from '../controllers'
 import * as tribes from '../utils/tribes'
 import * as signer from '../utils/signer'
-import { models } from '../models'
+import { models, ContactRecord, Contact, Message } from '../models'
 import { sendMessage } from './send'
 import {
   modifyPayloadAndSaveMediaKey,
@@ -23,7 +23,7 @@ import { isProxy } from '../utils/proxy'
 import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger, logging } from '../utils/logger'
-import { Payload } from './interfaces'
+import { Payload, AdminPayload } from './interfaces'
 
 const config = loadConfig()
 /*
@@ -41,6 +41,7 @@ export const typesToForward = [
   msgtypes.attachment,
   msgtypes.delete,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 export const typesToSkipIfSkipBroadcastJoins = [
   msgtypes.group_join,
@@ -51,6 +52,7 @@ const typesThatNeedPricePerMessage = [
   msgtypes.message,
   msgtypes.attachment,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 export const typesToReplay = [
   // should match typesToForward
@@ -59,6 +61,7 @@ export const typesToReplay = [
   msgtypes.group_leave,
   msgtypes.bot_res,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 const botTypes = [
   constants.message_types.bot_install,
@@ -80,13 +83,13 @@ async function onReceive(payload: Payload, dest: string) {
   if (!(payload.type || payload.type === 0))
     return sphinxLogger.error(`no payload.type`)
 
-  const owner = await models.Contact.findOne({
+  const owner: ContactRecord = await models.Contact.findOne({
     where: { isOwner: true, publicKey: dest },
   })
   if (!owner) return sphinxLogger.error(`=> RECEIVE: owner not found`)
   const tenant: number = owner.id
 
-  const ownerDataValues = owner.dataValues || owner
+  const ownerDataValues: Contact = owner.dataValues || owner
 
   if (botTypes.includes(payload.type)) {
     // if is admin on tribe? or is bot maker?
@@ -100,7 +103,7 @@ async function onReceive(payload: Payload, dest: string) {
   }
   // if tribe, owner must forward to MQTT
   let doAction = true
-  const toAddIn: { [k: string]: any } = {}
+  const toAddIn: AdminPayload = {}
   let isTribe = false
   let isTribeOwner = false
   let chat
@@ -187,10 +190,13 @@ async function onReceive(payload: Payload, dest: string) {
       }
     }
     // forward boost sats to recipient
-    let realSatsContactId = null
+    let realSatsContactId: number | undefined = undefined
     let amtToForward = 0
-    if (payload.type === msgtypes.boost && payload.message.replyUuid) {
-      const ogMsg = await models.Message.findOne({
+    const boostOrPay =
+      payload.type === msgtypes.boost ||
+      payload.type === msgtypes.direct_payment
+    if (boostOrPay && payload.message.replyUuid) {
+      const ogMsg: Message = await models.Message.findOne({
         where: {
           uuid: payload.message.replyUuid,
           tenant,
@@ -203,10 +209,15 @@ async function onReceive(payload: Payload, dest: string) {
           (chat.pricePerMessage || 0) -
           (chat.escrowAmount || 0)
         if (theAmtToForward > 0) {
-          realSatsContactId = ogMsg.sender
+          realSatsContactId = ogMsg.sender // recipient of sats
           amtToForward = theAmtToForward
+          toAddIn.hasForwardedSats = ogMsg.sender !== tenant
           if (amtToForward && payload.message && payload.message.amount) {
             payload.message.amount = amtToForward // mutate the payload amount
+            if (payload.type === msgtypes.direct_payment) {
+              // remove the reply_uuid since its not actually a reply
+              payload.message.replyUuid = undefined
+            }
           }
         }
       }
@@ -259,7 +270,7 @@ async function onReceive(payload: Payload, dest: string) {
   if (doAction) doTheAction({ ...payload, ...toAddIn }, ownerDataValues)
 }
 
-async function doTheAction(data, owner) {
+async function doTheAction(data: Payload, owner: Contact) {
   // console.log("=> doTheAction", data, owner)
   let payload = data
   if (payload.isTribeOwner) {
@@ -273,7 +284,8 @@ async function doTheAction(data, owner) {
     })
     const pld = await decryptMessage(data, chat)
     const me = owner
-    payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
+    const encrypted = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
+    payload = encrypted as Payload
     if (ogContent)
       payload.message.remoteContent = JSON.stringify({ chat: ogContent }) // this is the key
     //if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})

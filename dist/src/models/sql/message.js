@@ -141,6 +141,18 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
 ], Message.prototype, "tenant", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Message.prototype, "recipientAlias", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
+    __metadata("design:type", String)
+], Message.prototype, "recipientPic", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Boolean)
+], Message.prototype, "forwardedSats", void 0);
 Message = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_messages', underscored: true })
 ], Message);

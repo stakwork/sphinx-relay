@@ -19,7 +19,11 @@ export interface MessageContent {
   push?: boolean
   mediaTerms?: ldat.LdatTerms
   skipPaymentProcessing?: boolean
+  recipientAlias?: string
+  recipientPic?: string
 }
+
+export type ChatMembers = { [k: string]: ChatMember }
 
 // fro group join msgs, etc
 export interface ChatMember {
@@ -69,10 +73,14 @@ interface PayloadMessageContent extends MessageContent {
   skipPaymentProcessing?: boolean
 }
 
-export interface Payload extends BotMsg {
+export interface Payload extends BotMsg, AdminPayload {
   network_type?: number
-  isTribeOwner?: boolean
   dest?: string
   owner: Contact
   message: PayloadMessageContent
+}
+
+export interface AdminPayload {
+  isTribeOwner?: boolean
+  hasForwardedSats?: boolean
 }

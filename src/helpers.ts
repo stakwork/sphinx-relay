@@ -9,7 +9,7 @@ export const findOrCreateChat = async (params) => {
   const { chat_id, owner_id, recipient_id } = params
   // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
   let chat
-  let date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   // console.log("findOrCreateChat", chat_id, typeof chat_id, owner_id, typeof owner_id)
   if (chat_id) {
@@ -93,16 +93,15 @@ export const sendContactKeys = async ({
 
   let yes: any = null
   let no: any = null
-  let cids = contactIds || []
+  const cids = contactIds || []
 
   await asyncForEach(cids, async (contactId) => {
-    let destination_key: string
     if (contactId == sender.id) {
       return
     }
     const contact = await models.Contact.findOne({ where: { id: contactId } })
     if (!(contact && contact.publicKey)) return
-    destination_key = contact.publicKey
+    const destination_key = contact.publicKey
     const route_hint = contact.routeHint
 
     // console.log("=> KEY EXCHANGE", msg)
@@ -217,7 +216,7 @@ export async function findOrCreateChatByUUID(
     where: { uuid: chat_uuid, tenant, deleted: false },
   })
   if (!chat) {
-    var date = new Date()
+    const date = new Date()
     date.setMilliseconds(0)
     chat = await models.Chat.create({
       uuid: chat_uuid,
@@ -249,7 +248,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
   const sender_photo_url = dat.sender.photo_url || ''
   const chat_uuid = dat.chat.uuid
   const chat_type = dat.chat.type
-  const chat_members: { [k: string]: any } = dat.chat.members || {}
+  const chat_members: { [k: string]: ChatMember } = dat.chat.members || {}
   const chat_name = dat.chat.name
   const chat_key = dat.chat.groupKey
   const chat_host = dat.chat.host
@@ -270,7 +269,10 @@ export async function parseReceiveParams(payload: Payload): Promise<{
   const purchaser_id = dat.message.purchaser
   const network_type = dat.network_type || 0
   const isTribeOwner = dat.isTribeOwner ? true : false
+  const hasForwardedSats = dat.hasForwardedSats ? true : false
   const dest = dat.dest
+  const recipient_alias = dat.message.recipientAlias
+  const recipient_pic = dat.message.recipientPic
 
   const isConversation =
     !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
@@ -325,6 +327,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
     sender_route_hint,
     sender_alias,
     isTribeOwner,
+    hasForwardedSats,
     chat_uuid,
     amount,
     content,
@@ -348,6 +351,8 @@ export async function parseReceiveParams(payload: Payload): Promise<{
     sender_photo_url,
     network_type,
     message_status,
+    recipient_alias,
+    recipient_pic,
   }
 }
 

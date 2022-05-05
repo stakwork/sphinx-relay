@@ -12,9 +12,9 @@ import { Op } from 'sequelize'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import type { Tribe } from '../models/ts/tribe'
-import { Req } from '../types'
+import { Req, Res } from '../types'
 
-export async function joinTribe(req: Req, res) {
+export async function joinTribe(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
