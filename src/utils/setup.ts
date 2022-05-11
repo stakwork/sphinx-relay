@@ -4,7 +4,6 @@ import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import { checkTag, checkCommitHash } from '../utils/gitinfo'
 import * as fs from 'fs'
-import * as rsa from '../crypto/rsa'
 import { isClean } from './nodeinfo'
 import { getQR } from './connect'
 import { loadConfig } from './config'
@@ -63,10 +62,16 @@ const setupOwnerContact = async () => {
           authToken,
           tenant,
         })
-        sphinxLogger.info(['created node owner contact, id:', contact.id], logging.DB)
+        sphinxLogger.info(
+          ['created node owner contact, id:', contact.id],
+          logging.DB
+        )
       }
     } catch (err) {
-      sphinxLogger.info(['error creating node owner due to lnd failure', err], logging.DB)
+      sphinxLogger.info(
+        ['error creating node owner due to lnd failure', err],
+        logging.DB
+      )
     }
   }
 }
@@ -91,22 +96,7 @@ const runMigrations = async () => {
   })
 }
 
-export {
-  setupTransportToken,
-  setupDatabase,
-  setupOwnerContact,
-  runMigrations,
-  setupDone,
-}
-
-async function setupTransportToken() {
-  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
-  fs.writeFileSync(
-    config.transportPrivateKeyLocation,
-    transportTokenKeys.private
-  )
-  fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
-}
+export { setupDatabase, setupOwnerContact, runMigrations, setupDone }
 
 async function setupDone() {
   await printGitInfo()

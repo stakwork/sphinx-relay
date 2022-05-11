@@ -16,7 +16,7 @@
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
     "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
     "start-ecs": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js",
-    "lint": "eslint ./src/*.ts ./src/**/*.ts --fix --max-warnings 518"
+    "lint": "eslint ./src/*.ts ./src/**/*.ts --fix --max-warnings 517"
   },
   "keywords": [],
   "author": "",
