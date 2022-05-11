@@ -9,14 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = exports.setupTransportToken = void 0;
+exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
 const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
 const QRCode = require("qrcode");
 const gitinfo_1 = require("../utils/gitinfo");
 const fs = require("fs");
-const rsa = require("../crypto/rsa");
 const nodeinfo_1 = require("./nodeinfo");
 const connect_1 = require("./connect");
 const config_1 = require("./config");
@@ -102,14 +101,6 @@ const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.runMigrations = runMigrations;
-function setupTransportToken() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const transportTokenKeys = yield rsa.genKeys();
-        fs.writeFileSync(config.transportPrivateKeyLocation, transportTokenKeys.private);
-        fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public);
-    });
-}
-exports.setupTransportToken = setupTransportToken;
 function setupDone() {
     return __awaiter(this, void 0, void 0, function* () {
         yield printGitInfo();
