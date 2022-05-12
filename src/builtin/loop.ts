@@ -6,17 +6,17 @@ import { spawn } from 'child_process'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger } from '../utils/logger'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
+import validate from 'bitcoin-address-validation'
 
 const config = loadConfig()
 
-const validate = require('bitcoin-address-validation')
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
 
 // const baseurl = 'https://localhost:8080'
 
-export function init() {
+export function init(): void {
   if (initted) return
   initted = true
 
@@ -182,25 +182,27 @@ export function init() {
       }
       switch (cmd) {
         case 'help':
-          const embed = new Sphinx.MessageEmbed()
-            .setAuthor('LoopBot')
-            .setTitle('LoopBot Commands:')
-            .addFields([
-              {
-                name: 'Send to your on-chain address',
-                value: '/loopout {ADDRESS} {AMOUNT}',
-              },
-              { name: 'Set Channel', value: '/loopout setchan=***' },
-              { name: 'Help', value: '/loopout help' },
-            ])
-            .setThumbnail(botSVG)
-          message.channel.send({ embed })
+          message.channel.send({
+            embed: new Sphinx.MessageEmbed()
+              .setAuthor('LoopBot')
+              .setTitle('LoopBot Commands:')
+              .addFields([
+                {
+                  name: 'Send to your on-chain address',
+                  value: '/loopout {ADDRESS} {AMOUNT}',
+                },
+                { name: 'Set Channel', value: '/loopout setchan=***' },
+                { name: 'Help', value: '/loopout help' },
+              ])
+              .setThumbnail(botSVG)
+            })
           return
         default:
-          const embed2 = new Sphinx.MessageEmbed()
-            .setAuthor('LoopBot')
-            .setDescription('Command not recognized')
-          message.channel.send({ embed: embed2 })
+          message.channel.send({
+            embed: new Sphinx.MessageEmbed()
+              .setAuthor('LoopBot')
+              .setDescription('Command not recognized')
+            })
           return
       }
     } // end else
