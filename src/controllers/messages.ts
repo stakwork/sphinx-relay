@@ -374,7 +374,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   // even if its a "pay" send the reply_uuid so admin can forward
   if (reply_uuid) {
     // unless YOU are admin, then there is no forwarding
-    if (!isTribeOwner) {
+    if (!(isTribeOwner && pay)) {
       msgToSend.replyUuid = reply_uuid
     }
   }
