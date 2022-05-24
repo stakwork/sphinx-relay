@@ -38,7 +38,7 @@ jobs:
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-         sleep 120;
+         sleep 360;
          docker wait stack_relaysetup_1;
     - name: copy file
       uses: canastro/copy-file-action@master
