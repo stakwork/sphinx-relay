@@ -30,7 +30,8 @@ jobs:
       working-directory: ./stack
       run: |
         chmod 777 ./bitcoind;    
-        chmod 777 ./relay;
+        chmod 777 -R ./relay;
+        chmod 777 -R ./lnd;
         chmod 777 -R ./proxy;
     - name: Turn on Stack 
       working-directory: ./stack
