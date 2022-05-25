@@ -33,7 +33,6 @@ jobs:
         chmod 777 -R ./relay;
         chmod 777 -R ./lnd;
         chmod 777 -R ./proxy;
-        chmod 777 -R ./lnd/dave/.lnd/data/chain/bitcoin/regtest;
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
@@ -47,7 +46,6 @@ jobs:
          docker logs dave-lnd.sphinx
          docker logs dave.sphinx
          docker logs stack_lndsetup_1
-         docker exec -i proxy.sphinx ls /lnd/.lnd/data/chain/bitcoin/regtest -a
          docker wait stack_relaysetup_1;
     - name: copy file
       uses: canastro/copy-file-action@master
