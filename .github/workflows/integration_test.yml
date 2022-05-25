@@ -33,6 +33,7 @@ jobs:
         chmod 777 -R ./relay;
         chmod 777 -R ./lnd;
         chmod 777 -R ./proxy;
+        chmod 777 -R ./lnd/dave/.lnd/data/chain/bitcoin/regtest;
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
