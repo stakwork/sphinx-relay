@@ -16,22 +16,28 @@
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
     "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
     "start-ecs": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js",
-    "lint": "eslint ./src/*.ts ./src/**/*.ts --fix --max-warnings 517"
+    "lint": "eslint ./src/*.ts ./src/**/*.ts --fix --max-warnings 470"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "ava": {
-    "files": ["!src/tests/utils/**", "!src/tests/types"],
-    "extensions": ["ts"],
-    "require": ["ts-node/register"]
+    "files": [
+      "!src/tests/utils/**",
+      "!src/tests/types"
+    ],
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
     "@grpc/proto-loader": "^0.5.3",
     "@octokit/webhooks-types": "^5.2.0",
     "@scout_apm/scout-apm": "^0.1.10",
-    "@types/node": "^13.5.1",
     "async": "^2.6.2",
     "async-lock": "^1.2.2",
     "axios": "^0.21.1",
@@ -102,6 +108,7 @@
     "zbase32": "^1.0.2"
   },
   "devDependencies": {
+    "@types/node": "^17.0.35",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.33.0",
     "ava": "^3.15.0",
@@ -115,7 +122,10 @@
     "socket.io-client-legacy": "npm:socket.io-client@^2.4.0"
   },
   "pkg": {
-    "assets": ["config/*", "dist/config/*"]
+    "assets": [
+      "config/*",
+      "dist/config/*"
+    ]
   },
   "husky": {
     "hooks": {
