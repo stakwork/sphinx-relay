@@ -39,6 +39,8 @@ jobs:
       working-directory: ./stack
       run: |
          sleep 360;
+         docker-compose ps
+         docker logs proxy.sphinx
          docker wait stack_relaysetup_1;
     - name: copy file
       uses: canastro/copy-file-action@master
