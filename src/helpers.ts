@@ -5,10 +5,10 @@ import type { Msg, Payload, ChatMember } from './network/interfaces'
 import constants from './constants'
 import { logging, sphinxLogger } from './utils/logger'
 
-export const findOrCreateChat = async (params) => {
+export const findOrCreateChat = async (params: { chat_id: number, owner_id: number, recipient_id: number }): Promise<ChatRecord | undefined> => {
   const { chat_id, owner_id, recipient_id } = params
   // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
-  let chat
+  let chat: ChatRecord
   const date = new Date()
   date.setMilliseconds(0)
   // console.log("findOrCreateChat", chat_id, typeof chat_id, owner_id, typeof owner_id)
@@ -18,7 +18,7 @@ export const findOrCreateChat = async (params) => {
     })
     // console.log('findOrCreateChat: chat_id exists')
   } else {
-    if (!owner_id || !recipient_id) return null
+    if (!owner_id || !recipient_id) return
     sphinxLogger.info(`chat does not exists, create new`)
     const owner: ContactRecord = await models.Contact.findOne({
       where: { id: owner_id },
@@ -39,8 +39,8 @@ export const findOrCreateChat = async (params) => {
       chat = await models.Chat.create({
         uuid: uuid,
         contactIds: JSON.stringify([
-          parseInt(owner_id),
-          parseInt(recipient_id),
+          owner_id,
+          recipient_id,
         ]),
         createdAt: date,
         updatedAt: date,
@@ -65,12 +65,12 @@ export const sendContactKeys = async ({
   type: number
   contactIds: number[]
   sender: any
-  success?: Function
-  failure?: Function
+  success?: ({ destination_key: string, amount: number }) => void
+  failure?: (error: Error) => void
   dontActuallySendContactKey?: boolean
   contactPubKey?: string
   routeHint?: string
-}) => {
+}): Promise<void> => {
   const msg = newkeyexchangemsg(
     type,
     sender,
@@ -101,7 +101,7 @@ export const sendContactKeys = async ({
     }
     const contact = await models.Contact.findOne({ where: { id: contactId } })
     if (!(contact && contact.publicKey)) return
-    const destination_key = contact.publicKey
+    const destination_key: string = contact.publicKey
     const route_hint = contact.routeHint
 
     // console.log("=> KEY EXCHANGE", msg)
@@ -143,11 +143,11 @@ export const performKeysendMessage = async ({
   route_hint?: string
   amount: number
   msg: Partial<Msg>
-  success?: Function
-  failure?: Function
+  success?: (arg: {destination_key: string, amount: number} | boolean) => void
+  failure?: (error: Error) => void
   sender: any
   extra_tlv?: { [k: string]: any }
-}) => {
+}): Promise<void> => {
   const opts = {
     dest: destination_key,
     data: msg || {},
@@ -174,7 +174,7 @@ export async function findOrCreateContactByPubkeyAndRouteHint(
   senderAlias: string,
   owner: Contact,
   realAmount: number
-) {
+): Promise<ContactRecord> {
   let sender = await models.Contact.findOne({
     where: { publicKey: senderPubKey, tenant: owner.id },
   })
@@ -207,11 +207,7 @@ export async function findOrCreateContactByPubkeyAndRouteHint(
   return sender
 }
 
-export async function findOrCreateChatByUUID(
-  chat_uuid,
-  contactIds,
-  tenant
-): Promise<ChatRecord> {
+export async function findOrCreateChatByUUID(chat_uuid: string, contactIds: number[], tenant: number): Promise<ChatRecord> {
   let chat = await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant, deleted: false },
   })
@@ -230,7 +226,7 @@ export async function findOrCreateChatByUUID(
   return chat
 }
 
-export async function sleep(ms) {
+export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
@@ -356,7 +352,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
   }
 }
 
-export async function asyncForEach(array, callback) {
+export async function asyncForEach<T>(array: T[], callback: (value: T, index: number, array: T[]) => Promise<void>): Promise<void> {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
   }

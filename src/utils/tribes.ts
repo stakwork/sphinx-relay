@@ -41,7 +41,7 @@ export async function getTribeOwnersChatByUUID(uuid: string): Promise<any> {
         model: models.Chat,
         mapToModel: true, // pass true here if you have any mapped fields
       }
-    ) as unknown as Chat
+    )
     // console.log('=> getTribeOwnersChatByUUID r:', r)
     return r && r[0] && r[0].dataValues
   } catch (e) {
@@ -138,7 +138,7 @@ async function initAndSubscribeTopics(onMessage: (topic: string, message: Buffer
     if (isProxy()) {
       const allOwners: Contact[] = await models.Contact.findAll({
         where: { isOwner: true },
-      }) as unknown as Contact[]
+      })
       if (!(allOwners && allOwners.length)) return
       asyncForEach(allOwners, async c => {
         if (c.id === 1) return // the proxy non user
@@ -170,7 +170,7 @@ async function subExtraHostsForTenant(
       tenant,
       host: { [Op.ne]: host }, // not the host from config
     },
-  }) as unknown as Chat[]
+  })
   if (!(externalTribes && externalTribes.length)) return
   const usedHosts: string[] = []
   externalTribes.forEach(async (et) => {
@@ -233,7 +233,7 @@ async function updateTribeStats(myPubkey) {
       ownerPubkey: myPubkey,
       deleted: false,
     },
-  }) as unknown as Chat[]
+  })
   await asyncForEach(myTribes, async (tribe) => {
     try {
       const contactIds = JSON.parse(tribe.contactIds)

@@ -1,4 +1,4 @@
-import { Message, Chat, models } from '../models'
+import { Message, ChatRecord, models } from '../models'
 import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
@@ -14,6 +14,7 @@ import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { sendConfirmation } from './confirmations'
+import { ChatPlusMembers } from '../network/send'
 
 export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -120,11 +121,11 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   // if remote text map, put that in
   let theChat = chat
   if (contact_ids) {
-    theChat = { ...chat.dataValues, contactIds: contact_ids } as Chat
+    theChat = <ChatRecord>{ ...chat.dataValues, contactIds: contact_ids }
     if (remote_text_map) msgToSend.content = remote_text_map
   }
   network.sendMessage({
-    chat: theChat,
+    chat: theChat as Partial<ChatPlusMembers>,
     sender: owner,
     type: constants.message_types.direct_payment,
     message: msgToSend as Message,

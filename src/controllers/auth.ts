@@ -84,7 +84,7 @@ export async function requestTransportKey(req: Req, res) {
     return
   }
 
-  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
+  const transportTokenKeys = await rsa.genKeys()
   fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
   fs.writeFileSync(
     config.transportPrivateKeyLocation,

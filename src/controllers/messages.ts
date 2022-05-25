@@ -15,6 +15,7 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
+import { ChatPlusMembers } from '../network/send'
 
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
@@ -383,7 +384,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   if (recipientPic) msgToSend.recipientPic = recipientPic
 
   const sendMessageParams: SendMessageParams = {
-    chat: chat,
+    chat: chat as Partial<ChatPlusMembers>,
     sender: owner,
     amount: amount || 0,
     type: msgtype,

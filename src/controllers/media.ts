@@ -18,6 +18,7 @@ import { loadConfig } from '../utils/config'
 import { failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
+import { ChatPlusMembers } from '../network/send'
 
 const config = loadConfig()
 
@@ -143,7 +144,7 @@ export const sendAttachmentMessage = async (req: Req, res) => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   network.sendMessage({
-    chat: chat,
+    chat: chat as Partial<ChatPlusMembers>,
     sender: owner,
     type: constants.message_types.attachment,
     amount: amount || 0,
@@ -230,7 +231,7 @@ export const purchase = async (req: Req, res) => {
     purchaser: owner.id, // for tribe, knows who sent
   }
   network.sendMessage({
-    chat: { ...chat.dataValues, contactIds: [contact_id] },
+    chat: { ...chat.dataValues, contactIds: JSON.stringify([ contact_id ]) },
     sender: owner,
     type: constants.message_types.purchase,
     realSatsContactId: contact_id, // ALWAYS will be keysend, so doesnt matter if tribe owner or not
