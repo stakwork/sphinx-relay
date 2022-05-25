@@ -38,6 +38,7 @@
     "@grpc/proto-loader": "^0.5.3",
     "@octokit/webhooks-types": "^5.2.0",
     "@scout_apm/scout-apm": "^0.1.10",
+    "@types/underscore": "^1.11.4",
     "async": "^2.6.2",
     "async-lock": "^1.2.2",
     "axios": "^0.21.1",
