@@ -86,7 +86,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
         }
         // LND
         const credentials = loadCredentials();
-        const lnrpcDescriptor = grpc.load('proto/rpc.proto');
+        const lnrpcDescriptor = grpc.load('proto/lightning.proto');
         const lnrpc = lnrpcDescriptor.lnrpc;
         lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
         return lightningClient;
@@ -897,7 +897,7 @@ function ascii_to_hexa(str) {
 //     return lightningClient
 //   } else {
 //   	var credentials = loadCredentials()
-//     const packageDefinition = await protoLoader.load("rpc.proto", {})
+//     const packageDefinition = await protoLoader.load("lightning.proto", {})
 //     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
 //     var { lnrpc } = lnrpcDescriptor;
 //     lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
