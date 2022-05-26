@@ -41,6 +41,8 @@ jobs:
       working-directory: ./stack
       run: |
          sleep 240;
+         docker-compose ps
+         docker logs meme.sphinx
          docker logs dave.sphinx
          docker wait stack_relaysetup_1;
     - name: copy file
