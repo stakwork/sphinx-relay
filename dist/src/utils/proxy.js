@@ -209,7 +209,7 @@ function getProxyRootPubkey() {
         }
         // normal client, to get pubkey of LND
         const credentials = Lightning.loadCredentials();
-        const lnrpcDescriptor = grpc.load('proto/rpc.proto');
+        const lnrpcDescriptor = grpc.load('proto/lightning.proto');
         const lnrpc = lnrpcDescriptor.lnrpc;
         const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
         lc.getInfo({}, function (err, response) {
@@ -228,7 +228,7 @@ function getProxyLNDBalance() {
     return new Promise((resolve, reject) => {
         // normal client, to get pubkey of LND
         const credentials = Lightning.loadCredentials();
-        const lnrpcDescriptor = grpc.load('proto/rpc.proto');
+        const lnrpcDescriptor = grpc.load('proto/lightning.proto');
         const lnrpc = lnrpcDescriptor.lnrpc;
         const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
         lc.channelBalance({}, function (err, response) {
