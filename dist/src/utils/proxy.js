@@ -17,6 +17,7 @@ const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
+const helpers_1 = require("../helpers");
 // var protoLoader = require('@grpc/proto-loader')
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -180,7 +181,11 @@ function loadProxyLightning(ownerPubkey) {
                     //do nothing here
                 }
             }
-            const credentials = loadProxyCredentials(macname);
+            let credentials;
+            for (let i = 0; i < 100 && credentials != undefined; i++) {
+                credentials = loadProxyCredentials(macname);
+                yield (0, helpers_1.sleep)(1000);
+            }
             const lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto');
             const lnrpc = lnrpcDescriptor.lnrpc_proxy;
             const the = new lnrpc.Lightning(PROXY_LND_IP + ':' + config.proxy_lnd_port, credentials);

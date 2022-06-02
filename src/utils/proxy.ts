@@ -5,6 +5,7 @@ import * as Lightning from '../grpc/lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
+import { sleep } from '../helpers'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -163,7 +164,11 @@ export async function loadProxyLightning(ownerPubkey?: string) {
         //do nothing here
       }
     }
-    const credentials = loadProxyCredentials(macname)
+    let credentials
+    for (let i = 0; i < 100 && credentials != undefined; i++) {
+      credentials = loadProxyCredentials(macname)
+      await sleep(1000)
+    }
     const lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto')
     const lnrpc: any = lnrpcDescriptor.lnrpc_proxy
     const the = new lnrpc.Lightning(
