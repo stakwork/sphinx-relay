@@ -5,6 +5,7 @@ import * as Lightning from '../grpc/lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
+import { sleep } from '../helpers'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -133,12 +134,18 @@ export async function getProxyTotalBalance() {
   }
 }
 
-export function loadProxyCredentials(macPrefix: string) {
-  const lndCert = fs.readFileSync(config.proxy_tls_location)
+export async function loadProxyCredentials(macPrefix: string) {
+  let lndCert
+  for (let i = 0; i < 100 && lndCert == undefined; i++) {
+    lndCert = fs.readFileSync(config.proxy_tls_location)
+    console.log('IS proxy creds undefined:', lndCert)
+    await sleep(1000)
+  }
   const sslCreds = grpc.credentials.createSsl(lndCert)
   const m = fs.readFileSync(
     config.proxy_macaroons_dir + '/' + macPrefix + '.macaroon'
   )
+
   const macaroon = m.toString('hex')
   const metadata = new grpc.Metadata()
   metadata.add('macaroon', macaroon)
@@ -163,7 +170,7 @@ export async function loadProxyLightning(ownerPubkey?: string) {
         //do nothing here
       }
     }
-    const credentials = loadProxyCredentials(macname)
+    const credentials = await loadProxyCredentials(macname)
     const lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto')
     const lnrpc: any = lnrpcDescriptor.lnrpc_proxy
     const the = new lnrpc.Lightning(
