@@ -50,6 +50,7 @@ export async function messageLengthTest(t, node1, node2) {
   await sleep(1000)
   const text4 = randomText()
   await sendMessage(t, node1, node2, text4)
+  await sleep(5000)
   //t.true(messageSent.success, 'node1 should send text message to node2')
 
   const newMessagesResponse = await getCheckMsgs(
@@ -60,6 +61,7 @@ export async function messageLengthTest(t, node1, node2) {
     offset,
     'desc'
   )
+  console.log('number of new messages:', newMessagesResponse.new_messages_total)
   t.true(
     newMessagesResponse.new_messages_total == 4,
     'node2 should have 4 new message'
