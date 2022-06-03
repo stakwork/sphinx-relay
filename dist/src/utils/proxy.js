@@ -155,9 +155,9 @@ function getProxyTotalBalance() {
 exports.getProxyTotalBalance = getProxyTotalBalance;
 function loadProxyCredentials(macPrefix) {
     return __awaiter(this, void 0, void 0, function* () {
-        for (let i = 0; i < 100 && fs.existsSync(config.proxy_tls_location); i++) {
+        for (let i = 0; i < 100 && !fs.existsSync(config.proxy_tls_location); i++) {
             console.log('lndCert not found trying again:');
-            yield (0, helpers_1.sleep)(1000);
+            yield (0, helpers_1.sleep)(10000);
         }
         const lndCert = fs.readFileSync(config.proxy_tls_location);
         const sslCreds = grpc.credentials.createSsl(lndCert);

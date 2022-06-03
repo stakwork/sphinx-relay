@@ -135,9 +135,9 @@ export async function getProxyTotalBalance() {
 }
 
 export async function loadProxyCredentials(macPrefix: string) {
-  for (let i = 0; i < 100 && fs.existsSync(config.proxy_tls_location); i++) {
+  for (let i = 0; i < 100 && !fs.existsSync(config.proxy_tls_location); i++) {
     console.log('lndCert not found trying again:')
-    await sleep(1000)
+    await sleep(10000)
   }
   const lndCert = fs.readFileSync(config.proxy_tls_location)
   const sslCreds = grpc.credentials.createSsl(lndCert)
