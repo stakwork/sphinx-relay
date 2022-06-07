@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requestTransportKey = exports.requestExternalTokens = exports.verifyAuthRequest = void 0;
+exports.generateTransportTokenKeys = exports.requestTransportKey = exports.requestExternalTokens = exports.verifyAuthRequest = void 0;
 const jwt_1 = require("../utils/jwt");
 const res_1 = require("../utils/res");
 const config_1 = require("../utils/config");
@@ -89,11 +89,18 @@ function requestTransportKey(req, res) {
             (0, res_1.success)(res, { transport_key: transportPublicKey });
             return;
         }
-        const transportTokenKeys = yield rsa.genKeys();
-        fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public);
-        fs.writeFileSync(config.transportPrivateKeyLocation, transportTokenKeys.private);
-        (0, res_1.success)(res, { transport_key: transportTokenKeys.public });
+        const transportTokenKeys = yield generateTransportTokenKeys();
+        (0, res_1.success)(res, { transport_key: transportTokenKeys });
     });
 }
 exports.requestTransportKey = requestTransportKey;
+function generateTransportTokenKeys() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const transportTokenKeys = yield rsa.genKeys();
+        fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public);
+        fs.writeFileSync(config.transportPrivateKeyLocation, transportTokenKeys.private);
+        return transportTokenKeys.public;
+    });
+}
+exports.generateTransportTokenKeys = generateTransportTokenKeys;
 //# sourceMappingURL=auth.js.map
