@@ -16,7 +16,7 @@ interface tokenStore {
 // {pubkey: {host: {token,ts} }}
 const tokens: { [k: string]: { [k: string]: tokenStore } } = {}
 
-export async function lazyToken(pubkey: string, host: string) {
+export async function lazyToken(pubkey: string, host: string): Promise<string | undefined> {
   if (tokens[pubkey] && tokens[pubkey][host]) {
     const ts = tokens[pubkey][host].ts
     const now = moment().unix()
@@ -44,7 +44,7 @@ if (config.media_host.includes('localhost')) mediaProtocol = 'http'
 if (config.media_host.includes('meme.sphinx:5555')) mediaProtocol = 'http'
 const mediaURL = mediaProtocol + '://' + config.media_host + '/'
 
-export async function getMediaToken(ownerPubkey: string, host?: string) {
+export async function getMediaToken(ownerPubkey: string, host?: string): Promise<string> {
   let protocol = 'https'
   if (host?.includes('localhost')) protocol = 'http'
   if (host?.includes('meme.sphinx:5555')) protocol = 'http'

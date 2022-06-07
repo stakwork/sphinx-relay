@@ -1,4 +1,4 @@
-import { models, Contact } from './models'
+import { Invite, Contact, models } from './models'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
 import * as socket from './utils/socket'
@@ -12,6 +12,7 @@ import * as https from 'https'
 import { isProxy } from './utils/proxy'
 import { sendNotification, resetNotifyTribeCount } from './notify'
 import { logging, sphinxLogger } from './utils/logger'
+import { asyncForEach } from './helpers'
 
 const pingAgent = new https.Agent({
   keepAlive: true,
@@ -29,7 +30,7 @@ const checkInviteHub = async (params = {}) => {
   }
   //console.log('[hub] checking invites ping')
 
-  const inviteStrings = await models.Invite.findAll({
+  const inviteStrings = (await models.Invite.findAll({
     where: {
       status: {
         [Op.notIn]: [
@@ -38,7 +39,7 @@ const checkInviteHub = async (params = {}) => {
         ],
       },
     },
-  }).map((invite) => invite.inviteString)
+  }) as unknown as Invite[]).map((invite) => invite.inviteString)
   if (inviteStrings.length === 0) {
     return // skip if no invites
   }
@@ -60,13 +61,13 @@ const checkInviteHub = async (params = {}) => {
 
           const dbInvite = await models.Invite.findOne({
             where: { inviteString: invite.pin },
-          })
+          }) as unknown as Invite
           const contact = await models.Contact.findOne({
             where: { id: dbInvite.contactId },
-          })
+          }) as unknown as Contact
           const owner = await models.Contact.findOne({
             where: { id: dbInvite.tenant },
-          })
+          }) as unknown as Contact
 
           if (dbInvite.status != invite.invite_status) {
             const updateObj: { [k: string]: any } = {
@@ -86,7 +87,7 @@ const checkInviteHub = async (params = {}) => {
             )
 
             if (dbInvite.status == constants.invite_statuses.ready && contact) {
-              sendNotification(-1, contact.alias, 'invite', owner)
+              sendNotification(undefined, contact.alias, 'invite', owner)
             }
           }
 
@@ -102,7 +103,7 @@ const checkInviteHub = async (params = {}) => {
             if (routeHint) updateObj.routeHint = routeHint
             await contact.update(updateObj)
 
-            var contactJson = jsonUtils.contactToJson(contact)
+            const contactJson = jsonUtils.contactToJson(contact)
             contactJson.invite = jsonUtils.inviteToJson(dbInvite)
 
             socket.sendJson(
@@ -128,7 +129,7 @@ const checkInviteHub = async (params = {}) => {
 }
 
 const pingHub = async (params = {}) => {
-  if (env != 'production' || config.dont_ping_hub === 'true') {
+  if (env != 'production' || config.dont_ping_hub) {
     return
   }
 
@@ -148,7 +149,7 @@ async function massPingHubFromProxies(rn) {
       isOwner: true,
       id: { [Op.ne]: 1 },
     },
-  })
+  }) as unknown as Contact[]
   const nodes: { [k: string]: any }[] = []
   await asyncForEach(owners, async (o: Contact) => {
     const proxyNodeInfo = await proxynodeinfo(o.publicKey)
@@ -186,7 +187,7 @@ async function massPingHubFromProxies(rn) {
   }
 }
 
-async function sendHubCall(body, mass?: boolean) {
+async function sendHubCall(body: { [k: string]: any }, mass?: boolean): Promise<void> {
   try {
     // console.log("=> PING BODY", body)
     const r = await fetch(
@@ -208,15 +209,15 @@ async function sendHubCall(body, mass?: boolean) {
   }
 }
 
-const pingHubInterval = (ms) => {
+const pingHubInterval = (ms: number): void => {
   setInterval(pingHub, ms)
 }
 
-const checkInvitesHubInterval = (ms) => {
+const checkInvitesHubInterval = (ms: number): void => {
   setInterval(checkInviteHub, ms)
 }
 
-export function sendInvoice(payReq, amount) {
+export function sendInvoice(payReq: string, amount: number): void { // is amount a number? -> in src/grpc/regular.ts:50 it is used as string
   sphinxLogger.info(`[hub] sending invoice`)
   fetch(config.hub_api_url + '/invoices', {
     method: 'POST',
@@ -227,7 +228,7 @@ export function sendInvoice(payReq, amount) {
   })
 }
 
-const finishInviteInHub = (params, onSuccess, onFailure) => {
+const finishInviteInHub = (params: { [k: string]: any }, onSuccess: (j: { [k: string]: any }) => void, onFailure: (e: Error) => void): void => {
   fetch(config.hub_api_url + '/invites/finish', {
     method: 'POST',
     body: JSON.stringify(params),
@@ -244,7 +245,7 @@ const finishInviteInHub = (params, onSuccess, onFailure) => {
     })
 }
 
-const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
+const payInviteInHub = (invite_string: string, params: { [k: string]: any }, onSuccess: (j: { [k: string]: any }) => void, onFailure: (e: Error) => void): void => {
   fetch(config.hub_api_url + '/invites/' + invite_string + '/pay', {
     method: 'POST',
     body: JSON.stringify(params),
@@ -262,7 +263,7 @@ const payInviteInHub = (invite_string, params, onSuccess, onFailure) => {
     })
 }
 
-async function payInviteInvoice(invoice, pubkey: string, onSuccess, onFailure) {
+async function payInviteInvoice(invoice: string, pubkey: string, onSuccess: (j: { [k: string]: any }) => void, onFailure: (e: Error) => void): Promise<void> {
   try {
     const res = Lightning.sendPayment(invoice, pubkey)
     onSuccess(res)
@@ -271,7 +272,7 @@ async function payInviteInvoice(invoice, pubkey: string, onSuccess, onFailure) {
   }
 }
 
-const createInviteInHub = (params, onSuccess, onFailure) => {
+const createInviteInHub = (params: { [k: string]: any }, onSuccess: (j: { [k: string]: any }) => void, onFailure: (e: Error) => void): void => {
   fetch(config.hub_api_url + '/invites_new', {
     method: 'POST',
     body: JSON.stringify(params),
@@ -289,7 +290,7 @@ const createInviteInHub = (params, onSuccess, onFailure) => {
     })
 }
 
-export async function getAppVersionsFromHub() {
+export async function getAppVersionsFromHub(): Promise<{ [k: string]: any } | undefined> {
   try {
     const r = await fetch(config.hub_api_url + '/app_versions', {
       method: 'GET',
@@ -298,7 +299,7 @@ export async function getAppVersionsFromHub() {
     const j = await r.json()
     return j
   } catch (e) {
-    return null
+    // dont care about the error
   }
 }
 
@@ -312,10 +313,4 @@ export {
   payInviteInHub,
   payInviteInvoice,
   resetNotifyTribeCount,
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
 }

@@ -29,7 +29,7 @@ async function queryRoutes(
   if (node2.routeHint) {
     q += `&route_hint=${node2.routeHint}`
   }
-  var route = await http.get(node1.external_ip + `/route?${q}`, makeArgs(node1))
+  const route = await http.get(node1.external_ip + `/route?${q}`, makeArgs(node1))
   t.truthy(
     route.response.success_prob,
     'route response success prob should exist'

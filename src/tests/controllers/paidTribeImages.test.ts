@@ -24,12 +24,12 @@ export async function paidTribeImages(t, node1, node2) {
   console.log(`${node1.alias} and ${node2.alias}`)
 
   //NODE1 CREATES A TRIBE
-  let tribe = await createTribe(t, node1)
+  const tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
 
   //NODE2 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join = await joinTribe(t, node2, tribe)
+  const join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
 
   //NODE1 SEND IMAGE TO NODE2
@@ -45,10 +45,10 @@ export async function paidTribeImages(t, node1, node2) {
   t.true(imageSent2, 'message should have been sent')
 
   //NODE2 LEAVES TRIBE
-  let left2 = await leaveTribe(t, node2, tribe)
+  const left2 = await leaveTribe(t, node2, tribe)
   t.true(left2, 'node2 should leave tribe')
 
   //NODE1 DELETES TRIBE
-  let delTribe2 = await deleteTribe(t, node1, tribe)
+  const delTribe2 = await deleteTribe(t, node1, tribe)
   t.true(delTribe2, 'node1 should delete tribe')
 }

@@ -100,6 +100,8 @@ export default class Message extends Model<Message> {
 
   @Column
   tenant: number
+
+  dataValues: { [k: string]: any }
 }
 
 /*

@@ -14,8 +14,8 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
 import { Req } from '../types'
-import { Response } from 'express'
 
 function stripLightningPrefix(s: string): string {
   if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)

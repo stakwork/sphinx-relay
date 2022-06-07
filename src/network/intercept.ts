@@ -1,10 +1,11 @@
 import { Msg } from './interfaces'
-import { models } from '../models'
+import { Chat, Message, ChatBot, Bot, models, Contact } from '../models'
 import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
 import * as SphinxBot from 'sphinx-bot'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
+import { asyncForEach } from '../helpers'
 
 /*
 default show or not
@@ -15,7 +16,7 @@ restrictions (be able to toggle, or dont show chat)
 export async function isBotMsg(
   m: Msg,
   sentByMe: boolean,
-  sender,
+  sender: Contact,
   forwardedFromContactId?: number
 ): Promise<boolean> {
   const tenant: number = sender.id
@@ -24,7 +25,7 @@ export async function isBotMsg(
     return false
   }
 
-  const msg = JSON.parse(JSON.stringify(m))
+  const msg: Msg = JSON.parse(JSON.stringify(m))
   msg.sender.id = forwardedFromContactId || tenant
 
   // console.log('=> isBotMsg', msg)
@@ -39,9 +40,9 @@ export async function isBotMsg(
   if (!uuid) return false
 
   try {
-    const chat = await models.Chat.findOne({
+    const chat: Chat = await models.Chat.findOne({
       where: { uuid, tenant },
-    })
+    }) as unknown as Chat
     if (!chat) return false
 
     let didEmit = false
@@ -54,31 +55,31 @@ export async function isBotMsg(
 
     // reply back to the bot!
     if (reply_uuid) {
-      const ogBotMsg = await models.Message.findOne({
+      const ogBotMsg: Message = await models.Message.findOne({
         where: {
           uuid: reply_uuid,
           tenant,
           sender: -1,
         },
-      })
+      }) as unknown as Message
       if (ogBotMsg && ogBotMsg.senderAlias) {
-        const ogSenderBot = await models.ChatBot.findOne({
+        const ogSenderBot: ChatBot = await models.ChatBot.findOne({
           where: {
             chatId: chat.id,
             tenant,
             botPrefix: '/' + ogBotMsg.senderAlias,
           },
-        })
-        return await emitMessageToBot(msg, ogSenderBot.dataValues, sender)
+        }) as unknown as ChatBot
+        return await emitMessageToBot(msg, ogSenderBot.dataValues as ChatBot, sender)
       }
     }
 
-    const botsInTribe = await models.ChatBot.findAll({
+    const botsInTribe: ChatBot[] = await models.ChatBot.findAll({
       where: {
         chatId: chat.id,
         tenant,
       },
-    })
+    }) as unknown as ChatBot[]
     sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logging.Network) //, payload)
 
     if (!(botsInTribe && botsInTribe.length)) return false
@@ -97,7 +98,7 @@ export async function isBotMsg(
             if (isMsgAndHasText || isNotMsg) {
               didEmit = await emitMessageToBot(
                 msg,
-                botInTribe.dataValues,
+                botInTribe.dataValues as ChatBot,
                 sender
               )
             }
@@ -110,7 +111,11 @@ export async function isBotMsg(
         // no message types defined, do all?
         if (txt && txt.startsWith(`${botInTribe.botPrefix} `)) {
           // console.log('=> botInTribe.msgTypes else', botInTribe.dataValues)
-          didEmit = await emitMessageToBot(msg, botInTribe.dataValues, sender)
+          didEmit = await emitMessageToBot(
+            msg,
+            botInTribe.dataValues as ChatBot,
+            sender
+          )
         }
       }
     })
@@ -122,7 +127,7 @@ export async function isBotMsg(
   }
 }
 
-async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
+async function emitMessageToBot(msg: Msg, botInTribe: ChatBot, sender: Contact): Promise<boolean> {
   // console.log('=> emitMessageToBot',JSON.stringify(msg,null,2))
   sphinxLogger.info(`=> emitMessageToBot ${msg}`, logging.Network) //, payload)
 
@@ -141,18 +146,12 @@ async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
           uuid: botInTribe.botUuid,
           tenant,
         },
-      })
+      }) as unknown as Bot
       return postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE)
     }
     case constants.bot_types.remote:
       return keysendBotCmd(msg, botInTribe, sender)
     default:
       return false
-  }
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
   }
 }

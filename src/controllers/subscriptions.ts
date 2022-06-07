@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { Subscription, Contact, Chat, Message, models } from '../models'
 import { success, failure } from '../utils/res'
 import { CronJob } from 'cron'
 import { toCamel } from '../utils/case'
@@ -11,13 +11,14 @@ import * as moment from 'moment'
 import * as network from '../network'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
 import { Req } from '../types'
 
 // store all current running jobs in memory
 const jobs = {}
 
 // init jobs from DB
-export const initializeCronJobs = async () => {
+export const initializeCronJobs = async (): Promise<void> => {
   await helpers.sleep(1000)
   const subs = await getRawSubs({ where: { ended: false } })
   subs.length &&
@@ -31,13 +32,13 @@ export const initializeCronJobs = async () => {
     })
 }
 
-async function startCronJob(sub) {
+async function startCronJob(sub): Promise<void> {
   jobs[sub.id] = new CronJob(
     sub.cron,
     async function () {
       const subscription = await models.Subscription.findOne({
         where: { id: sub.id },
-      })
+      }) as unknown as Subscription
       if (!subscription) {
         delete jobs[sub.id]
         return this.stop()
@@ -58,7 +59,7 @@ async function startCronJob(sub) {
       }
 
       const tenant = subscription.tenant
-      const owner = await models.Contact.findOne({ where: { id: tenant } })
+      const owner = await models.Contact.findOne({ where: { id: tenant } }) as unknown as Contact
       // SEND PAYMENT!!!
       sendSubscriptionPayment(subscription, false, owner)
     },
@@ -125,13 +126,13 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 
   const subscription = await models.Subscription.findOne({
     where: { id: sub.id, tenant },
-  })
+  }) as unknown as Subscription
   if (!subscription) {
     return
   }
   const chat = await models.Chat.findOne({
     where: { id: subscription.chatId, tenant },
-  })
+  }) as unknown as Chat
   if (!subscription) {
     sphinxLogger.error('=> no sub for this payment!!!')
     return
@@ -140,22 +141,22 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
   const forMe = false
   const text = msgForSubPayment(owner, sub, isFirstMessage, forMe)
 
-  const contact = await models.Contact.findByPk(sub.contactId)
+  const contact = await models.Contact.findByPk(sub.contactId) as unknown as Contact
   const enc = rsa.encrypt(contact.contactKey, text)
 
   network.sendMessage({
     chat: chat,
     sender: owner,
     type: constants.message_types.direct_payment,
-    message: { amount: sub.amount, content: enc },
+    message: { amount: sub.amount, content: enc } as unknown as Message,
     amount: sub.amount,
     success: async (data) => {
       const shouldEnd = checkSubscriptionShouldEndAfterThisPayment(subscription)
       const obj = {
         totalPaid:
-          parseFloat(subscription.totalPaid || 0) +
-          parseFloat(subscription.amount),
-        count: parseInt(subscription.count || 0) + 1,
+          (subscription.totalPaid || 0) +
+          subscription.amount,
+        count: (subscription.count || 0) + 1,
         ended: false,
       }
       if (shouldEnd) {
@@ -175,13 +176,13 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         status: constants.statuses.confirmed,
         messageContent: encText,
         amount: subscription.amount,
-        amountMsat: parseFloat(subscription.amount) * 1000,
+        amountMsat: subscription.amount * 1000,
         date: date,
         createdAt: date,
         updatedAt: date,
         subscriptionId: subscription.id,
         tenant,
-      })
+      }) as unknown as Message
       socket.sendJson(
         {
           type: 'direct_payment',
@@ -192,7 +193,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
     },
     failure: async (err) => {
       sphinxLogger.error('SEND PAY ERROR')
-      let errMessage = constants.payment_errors[err] || 'Unknown'
+      let errMessage = constants.payment_errors[typeof err === 'string' ? err : err.message] || 'Unknown'
       errMessage = 'Payment Failed: ' + errMessage
       const message = await models.Message.create({
         chatId: chat.id,
@@ -207,7 +208,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         updatedAt: date,
         subscriptionId: sub.id,
         tenant,
-      })
+      }) as unknown as Message
       socket.sendJson(
         {
           type: 'direct_payment',
@@ -220,16 +221,16 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 }
 
 // pause sub
-export async function pauseSubscription(req: Req, res) {
+export async function pauseSubscription(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
   try {
-    const sub = await models.Subscription.findOne({ where: { id, tenant } })
+    const sub = await models.Subscription.findOne({ where: { id, tenant } }) as unknown as Subscription
     if (sub) {
       sub.update({ paused: true })
       if (jobs[id]) jobs[id].stop()
-      success(res, jsonUtils.subscriptionToJson(sub, null))
+      success(res, jsonUtils.subscriptionToJson(sub))
     } else {
       failure(res, 'not found')
     }
@@ -240,16 +241,16 @@ export async function pauseSubscription(req: Req, res) {
 }
 
 // restart sub
-export async function restartSubscription(req: Req, res) {
+export async function restartSubscription(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
   try {
-    const sub = await models.Subscription.findOne({ where: { id, tenant } })
+    const sub = await models.Subscription.findOne({ where: { id, tenant } }) as unknown as Subscription
     if (sub) {
       sub.update({ paused: false })
       if (jobs[id]) jobs[id].start()
-      success(res, jsonUtils.subscriptionToJson(sub, null))
+      success(res, jsonUtils.subscriptionToJson(sub))
     } else {
       failure(res, 'not found')
     }
@@ -259,7 +260,7 @@ export async function restartSubscription(req: Req, res) {
   }
 }
 
-async function getRawSubs(opts = {}) {
+async function getRawSubs(opts = {}): Promise<Subscription[]> {
   const options: { [k: string]: any } = { order: [['id', 'asc']], ...opts }
   try {
     const subs = await models.Subscription.findAll(options)
@@ -271,14 +272,14 @@ async function getRawSubs(opts = {}) {
 }
 
 // all subs
-export const getAllSubscriptions = async (req: Req, res) => {
+export const getAllSubscriptions = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
     const subs = await getRawSubs({ where: { tenant } })
     success(
       res,
-      subs.map((sub) => jsonUtils.subscriptionToJson(sub, null))
+      subs.map((sub) => jsonUtils.subscriptionToJson(sub))
     )
   } catch (e) {
     sphinxLogger.error(['ERROR getAllSubscriptions', e])
@@ -287,14 +288,14 @@ export const getAllSubscriptions = async (req: Req, res) => {
 }
 
 // one sub by id
-export async function getSubscription(req: Req, res) {
+export async function getSubscription(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
     const sub = await models.Subscription.findOne({
       where: { id: req.params.id, tenant },
-    })
-    success(res, jsonUtils.subscriptionToJson(sub, null))
+    }) as unknown as Subscription
+    success(res, jsonUtils.subscriptionToJson(sub))
   } catch (e) {
     sphinxLogger.error(['ERROR getSubscription', e])
     failure(res, e)
@@ -302,7 +303,7 @@ export async function getSubscription(req: Req, res) {
 }
 
 // delete sub by id
-export async function deleteSubscription(req: Req, res) {
+export async function deleteSubscription(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id
@@ -321,7 +322,7 @@ export async function deleteSubscription(req: Req, res) {
 }
 
 // all subs for contact id
-export const getSubscriptionsForContact = async (req: Req, res) => {
+export const getSubscriptionsForContact = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -330,7 +331,7 @@ export const getSubscriptionsForContact = async (req: Req, res) => {
     })
     success(
       res,
-      subs.map((sub) => jsonUtils.subscriptionToJson(sub, null))
+      subs.map((sub) => jsonUtils.subscriptionToJson(sub))
     )
   } catch (e) {
     sphinxLogger.error(['ERROR getSubscriptionsForContact', e])
@@ -339,7 +340,7 @@ export const getSubscriptionsForContact = async (req: Req, res) => {
 }
 
 // create new sub
-export async function createSubscription(req: Req, res) {
+export async function createSubscription(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -370,7 +371,7 @@ export async function createSubscription(req: Req, res) {
     if (!owner || !chat) {
       return failure(res, 'Invalid chat or contact')
     }
-    const sub = await models.Subscription.create(s)
+    const sub = await models.Subscription.create(s) as unknown as Subscription
     startCronJob(sub)
     const isFirstMessage = true
     sendSubscriptionPayment(sub, isFirstMessage, owner)
@@ -381,7 +382,7 @@ export async function createSubscription(req: Req, res) {
   }
 }
 
-export async function editSubscription(req: Req, res) {
+export async function editSubscription(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -401,7 +402,7 @@ export async function editSubscription(req: Req, res) {
     if (!id || !s.chatId || !s.cron) {
       return failure(res, 'Invalid data')
     }
-    const subRecord = await models.Subscription.findOne({ where: { id } })
+    const subRecord = await models.Subscription.findOne({ where: { id } }) as unknown as Subscription
     if (!subRecord) {
       return failure(res, 'No subscription found')
     }
@@ -423,7 +424,7 @@ export async function editSubscription(req: Req, res) {
     } else {
       startCronJob(sub) // restart
     }
-    const chat = await models.Chat.findOne({ where: { id: s.chatId, tenant } })
+    const chat = await models.Chat.findOne({ where: { id: s.chatId, tenant } }) as unknown as Chat
     success(res, jsonUtils.subscriptionToJson(sub, chat))
   } catch (e) {
     sphinxLogger.error(['ERROR createSubscription', e])

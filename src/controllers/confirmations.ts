@@ -1,16 +1,18 @@
 import lock from '../utils/lock'
-import { models } from '../models'
+import { Contact, Chat, Message, models } from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as network from '../network'
+import { Msg, Payload } from '../network'
 import constants from '../constants'
 import { success, failure200, failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
 import { Req } from '../types'
 
-/* 
+/*
  if in tribe: dont send
- UNLESS tribe admin: 
+ UNLESS tribe admin:
    then send only to the og sender
 */
 export function sendConfirmation({
@@ -23,7 +25,7 @@ export function sendConfirmation({
   sender: any
   msg_id: number
   receiver?: any
-}) {
+}): void {
   if (!msg_id || !chat || !sender) return
 
   let theChat = chat
@@ -37,12 +39,12 @@ export function sendConfirmation({
   network.sendMessage({
     chat: theChat,
     sender,
-    message: { id: msg_id },
+    message: { id: msg_id } as unknown as Message,
     type: constants.message_types.confirmation,
   })
 }
 
-export async function receiveConfirmation(payload: network.Payload) {
+export async function receiveConfirmation(payload: network.Payload): Promise<void> {
   sphinxLogger.info(
     `=> received confirmation ${payload.message && payload.message.id}`,
     logging.Network
@@ -57,18 +59,18 @@ export async function receiveConfirmation(payload: network.Payload) {
 
   const sender = await models.Contact.findOne({
     where: { publicKey: sender_pub_key, tenant },
-  })
+  }) as unknown as Contact
   const chat = await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant },
-  })
+  }) as unknown as Chat
 
   // new confirmation logic
   if (msg_id) {
-    lock.acquire('confirmation', async function (done) {
+    lock.acquire('confirmation', async function (done: () => void) {
       // console.log("update status map")
       const message = await models.Message.findOne({
         where: { id: msg_id, tenant },
-      })
+      }) as unknown as Message
       if (message) {
         let statusMap = {}
         try {
@@ -108,7 +110,7 @@ export async function receiveConfirmation(payload: network.Payload) {
         tenant,
       },
       order: [['createdAt', 'desc']],
-    })
+    }) as unknown as Message[]
 
     const message = messages[0]
     message.update({ status: constants.statuses.received })
@@ -123,14 +125,14 @@ export async function receiveConfirmation(payload: network.Payload) {
   }
 }
 
-export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
+export async function tribeOwnerAutoConfirmation(msg_id: number, chat_uuid: string, tenant: number): Promise<void> {
   if (!msg_id || !chat_uuid) return
-  const message = await models.Message.findOne({
+  const message: Message = await models.Message.findOne({
     where: { id: msg_id, tenant },
-  })
+  }) as unknown as Message
   const chat = await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant },
-  })
+  }) as unknown as Chat
 
   if (message) {
     let statusMap = {}
@@ -148,14 +150,14 @@ export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
     socket.sendJson(
       {
         type: 'confirmation',
-        response: jsonUtils.messageToJson(message, chat, null),
+        response: jsonUtils.messageToJson(message, chat),
       },
       tenant
     )
   }
 }
 
-export async function receiveHeartbeat(payload: network.Payload) {
+export async function receiveHeartbeat(payload: network.Payload): Promise<boolean> {
   sphinxLogger.info(`=> received heartbeat`, logging.Network)
 
   const dat = payload
@@ -165,9 +167,14 @@ export async function receiveHeartbeat(payload: network.Payload) {
   const owner = dat.owner
   // const tenant:number = owner.id
 
-  if (!(sender_pub_key && sender_pub_key.length === 66))
-    return sphinxLogger.error(`no sender`)
-  if (!receivedAmount) return sphinxLogger.error(`no amount`)
+  if (!(sender_pub_key && sender_pub_key.length === 66)) {
+    sphinxLogger.error(`no sender`)
+    return false
+  }
+  if (!receivedAmount) {
+    sphinxLogger.error(`no amount`)
+    return false
+  }
 
   const amount = Math.round(receivedAmount / 2)
   const amt = Math.max(amount || constants.min_sat_amount)
@@ -190,15 +197,15 @@ export async function receiveHeartbeat(payload: network.Payload) {
 }
 
 const heartbeats: { [k: string]: boolean } = {}
-export async function healthcheck(req: Req, res) {
+export async function healthcheck(req: Req, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 
-  const pubkey: string = req.query.pubkey as string
+  const pubkey: string = (req.query.pubkey || '').toString()
   if (!(pubkey && pubkey.length === 66)) {
     return failure200(res, 'missing pubkey')
   }
-  const routeHint: string = req.query.route_hint as string
+  const routeHint: string = (req.query.route_hint || '').toString()
 
   const owner = req.owner
 
@@ -240,7 +247,7 @@ export async function healthcheck(req: Req, res) {
   }, 1000)
 }
 
-export async function receiveHeartbeatConfirmation(payload: network.Payload) {
+export async function receiveHeartbeatConfirmation(payload: network.Payload): Promise<void> {
   sphinxLogger.info(`=> received heartbeat confirmation`, logging.Network)
 
   const dat = payload

@@ -12,4 +12,6 @@ export default class RequestsTransportTokens extends Model<RequestsTransportToke
 
   @Column
   transportToken: string
+
+  dataValues: { [k: string]: any }
 }

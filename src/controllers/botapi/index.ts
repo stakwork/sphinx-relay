@@ -1,11 +1,12 @@
 import * as network from '../../network'
-import { models } from '../../models'
+import { Bot, Contact, BotMember, models } from '../../models'
 import { success, failure, unauthorized } from '../../utils/res'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import broadcast from './broadcast'
 import pay from './pay'
 import { sphinxLogger } from '../../utils/logger'
+import { Request, Response } from 'express'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
@@ -30,7 +31,7 @@ export interface Action {
   parent_id?: number
 }
 
-export async function processWebhook(req, res) {
+export async function processWebhook(req: Request, res: Response): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
   if (!sig) return unauthorized(res)
@@ -55,7 +56,7 @@ export async function processWebhook(req, res) {
   })
 }
 
-export async function processAction(req, res) {
+export async function processAction(req: Request, res: Response): Promise<void> {
   sphinxLogger.info(`=> processAction ${req.body}`)
   let body = req.body
   if (body.data && typeof body.data === 'string' && body.data[1] === "'") {
@@ -83,7 +84,7 @@ export async function processAction(req, res) {
   } = body
 
   if (!bot_id) return failure(res, 'no bot_id')
-  const bot = await models.Bot.findOne({ where: { id: bot_id } })
+  const bot = await models.Bot.findOne({ where: { id: bot_id } }) as unknown as Bot
   if (!bot) return failure(res, 'no bot')
 
   if (!(bot.secret && bot.secret === bot_secret)) {
@@ -108,8 +109,8 @@ export async function processAction(req, res) {
   }
 
   try {
-    const r = await finalAction(a)
-    success(res, r)
+    await finalAction(a)
+    success(res, {})
   } catch (e) {
     failure(res, e)
   }
@@ -138,7 +139,7 @@ export async function finalAction(a: Action) {
       where: {
         id: bot_id,
       },
-    })
+    }) as unknown as Bot
     if (chat_uuid) {
       const myChat = await getTribeOwnersChatByUUID(chat_uuid)
       // ACTUALLY ITS A LOCAL (FOR MY TRIBE) message! kill myBot
@@ -149,7 +150,7 @@ export async function finalAction(a: Action) {
   // console.log("=> ACTION HIT", a);
   if (myBot) {
     // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-    const owner = await models.Contact.findOne({ where: { id: myBot.tenant } })
+    const owner = await models.Contact.findOne({ where: { id: myBot.tenant } }) as unknown as Contact
     // THIS is a bot member cmd res (i am bot maker)
     const botMember = await models.BotMember.findOne({
       where: {
@@ -157,7 +158,7 @@ export async function finalAction(a: Action) {
         botId: bot_id,
         tenant: owner.id,
       },
-    })
+    }) as unknown as BotMember
     if (!botMember) return sphinxLogger.error(`no botMember`)
 
     const dest = botMember.memberPubkey

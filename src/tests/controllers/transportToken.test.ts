@@ -47,7 +47,7 @@ async function checkDuplicateTransportTokens(
     node1.transportToken,
     `${node1.authToken}|${moment().unix()}`
   )
-  let added = await http.post(node1.external_ip + '/contacts', {
+  const added = await http.post(node1.external_ip + '/contacts', {
     headers: {
       'x-transport-token': transportToken,
     },
@@ -126,12 +126,12 @@ async function checkContactsWithTransportToken(
   )
   // NODE1 ADDS NODE2 AS A CONTACT
   // contact_key should be populated via key exchange in a few seconds
-  let added = await addContact(t, node1, node2)
+  const added = await addContact(t, node1, node2)
   t.true(added, 'node1 should add node2 as contact')
   console.log('added contact!')
 
   const text = randomText()
-  let messageSent = await sendMessageAndCheckDecryption(t, node1, node2, text)
+  const messageSent = await sendMessageAndCheckDecryption(t, node1, node2, text)
   t.truthy(messageSent, 'node1 should send text message to node2')
   console.log('sent message!')
 }
@@ -156,7 +156,7 @@ async function addContact(
   )
   t.true(typeof add.response === 'object', 'add contact should return object')
   //create node2 id based on the post response
-  var node2id = add && add.response && add.response.id
+  const node2id = add && add.response && add.response.id
   //check that node2id is a number and therefore exists (contact was posted)
   t.true(typeof node2id === 'number', 'node1id should be a number')
 

@@ -6,15 +6,15 @@ import { getCheckContacts } from '../get'
 export async function sendInvoice(t, node1, node2, amount, text) {
   //SEND INVOICE FROM NODE1 TO NODE2 ===>
 
-  let [node1contact, node2contact] = await getCheckContacts(t, node1, node2)
+  const [node1contact, node2contact] = await getCheckContacts(t, node1, node2)
   //encrypt random string with node1 contact_key
   const encryptedText = encrypt(node1contact.contact_key, text)
   //encrypt random string with node2 contact_key
   const remoteText = encrypt(node2contact.contact_key, text)
 
   //create node2 contact id
-  let contact_id = node2contact.id
-  let destination_key = ''
+  const contact_id = node2contact.id
+  const destination_key = ''
 
   //create payment object
   const v = {

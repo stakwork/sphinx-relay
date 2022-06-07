@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { ChatBot, models } from '../models'
 import { getHost } from './tribes'
 import fetch from 'node-fetch'
 import { loadConfig } from './config'
@@ -7,7 +7,13 @@ import { sphinxLogger, logging } from './logger'
 
 const config = loadConfig()
 
-export async function delete_bot({ uuid, owner_pubkey }) {
+export async function delete_bot({
+  uuid,
+  owner_pubkey
+}: {
+  uuid: string,
+  owner_pubkey: string
+}): Promise<boolean> {
   const host = getHost()
   const token = await genSignedTimestamp(owner_pubkey)
   try {
@@ -37,8 +43,20 @@ export async function declare_bot({
   unlisted,
   deleted,
   owner_route_hint,
-  owner_alias,
-}) {
+  owner_alias
+}: {
+  uuid: string,
+  name: string,
+  description: string,
+  tags: any[],
+  img: string,
+  price_per_use: number,
+  owner_pubkey: string,
+  unlisted: boolean,
+  deleted: boolean,
+  owner_route_hint: string,
+  owner_alias: string
+}): Promise<void> {
   const host = getHost()
   try {
     let protocol = 'https'
@@ -68,12 +86,12 @@ export async function declare_bot({
   }
 }
 
-export async function makeBotsJSON(tribeID) {
-  const bots = await models.ChatBot.findAll({
+export async function makeBotsJSON(tribeID: number): Promise<BotJSON[]> {
+  const bots: ChatBot[] = await models.ChatBot.findAll({
     where: {
       chatId: tribeID,
     },
-  })
+  }) as unknown as ChatBot[] as ChatBot[]
   if (!bots) return []
   if (!bots.length) return []
   return bots.map((b) => {

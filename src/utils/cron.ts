@@ -1,13 +1,18 @@
 import * as parser from 'cron-parser'
 
-function daily() {
+type Interval = 'daily' | 'weekly' | 'monthly';
+
+// a day in milliseconds
+const day = 24 * 60 * 60 * 1000;
+
+function daily(): string {
   const now = new Date()
   const minute = now.getMinutes()
   const hour = now.getHours()
   return `${minute} ${hour} * * *`
 }
 
-function weekly() {
+function weekly(): string {
   const now = new Date()
   const minute = now.getMinutes()
   const hour = now.getHours()
@@ -15,7 +20,7 @@ function weekly() {
   return `${minute} ${hour} * * ${dayOfWeek}`
 }
 
-function monthly() {
+function monthly(): string {
   const now = new Date()
   const minute = now.getMinutes()
   const hour = now.getHours()
@@ -23,23 +28,21 @@ function monthly() {
   return `${minute} ${hour} ${dayOfMonth} * *`
 }
 
-function parse(s) {
-  const interval = parser.parseExpression(s)
-  const next = interval.next().toString()
+export function parse(s: string): { interval: Interval, next: string, ms: number } {
+  const next = parser.parseExpression(s).next().toString()
 
   if (s.endsWith(' * * *')) {
-    return { interval: 'daily', next, ms: 86400000 }
+    return { interval: 'daily', next, ms: day }
   }
   if (s.endsWith(' * *')) {
-    return { interval: 'monthly', next, ms: 86400000 * 30 }
+    return { interval: 'monthly', next, ms: day * 30 }
   }
-  return { interval: 'weekly', next, ms: 86400000 * 7 }
+  return { interval: 'weekly', next, ms: day * 7 }
 }
 
-function make(interval) {
+export function make(interval: Interval): string {
   if (interval === 'daily') return daily()
   if (interval === 'weekly') return weekly()
   if (interval === 'monthly') return monthly()
+  throw new Error('Invalid interval')
 }
-
-export { parse, make }

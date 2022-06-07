@@ -32,6 +32,8 @@ export default class ChatMember extends Model<ChatMember> {
 
   @Column
   tenant: number
+
+  dataValues: { [k: string]: any }
 }
 
 export interface ChatMemberRecord extends ChatMember {

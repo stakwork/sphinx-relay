@@ -24,7 +24,7 @@ async function tokenFromTerms({
   ttl,
   pubkey,
   meta,
-  ownerPubkey,
+  ownerPubkey
 }: LdatTerms) {
   const theHost = host || config.media_host || ''
 
@@ -51,7 +51,7 @@ function startLDAT(
   pk: string,
   exp: number,
   meta: { [k: string]: any } = {}
-) {
+): { terms: string, bytes: Buffer } {
   const empty = Buffer.from([])
   const hostBuf = Buffer.from(host, 'ascii')
   const muidBuf = Buffer.from(muid, 'base64')
@@ -90,7 +90,7 @@ const termKeys = [
   },
   {
     key: 'ts',
-    func: (buf) => parseInt('0x' + buf.toString('hex')),
+    func: (buf) => parseInt(buf.toString('hex'), 16),
   },
   {
     key: 'meta',
@@ -105,7 +105,7 @@ const termKeys = [
   },
 ]
 
-function parseLDAT(ldat): LdatTerms {
+function parseLDAT(ldat: string): LdatTerms {
   const a = ldat.split('.')
   const o: { [k: string]: any } = {}
   termKeys.forEach((t, i) => {
@@ -140,7 +140,7 @@ export interface LdatTerms {
   skipSigning?: boolean
 }
 
-async function testLDAT() {
+async function testLDAT(): Promise<void> {
   sphinxLogger.info(`testLDAT`)
   const terms: LdatTerms = {
     host: '',
@@ -176,15 +176,13 @@ async function testLDAT() {
   sphinxLogger.info(parseLDAT(token2))
 }
 
-function serializeMeta(obj) {
-  const str: string[] = []
-  for (const p in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, p)) {
-      str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]))
-    }
-  }
-  str.sort((a, b) => (a > b ? 1 : -1))
-  return str.join('&')
+function serializeMeta(obj: { [k: string]: any }) {
+  return Object.entries(obj)
+    .map(p => {
+      return `${encodeURIComponent(p[0])}=${encodeURIComponent(p[1])}`
+    })
+    .sort((a, b) => (a > b ? 1 : -1))
+    .join('&')
 }
 
 function deserializeMeta(str) {
@@ -205,23 +203,26 @@ function deserializeMeta(str) {
   return ret
 }
 
-function urlBase64(buf) {
+function urlBase64(buf: Buffer): string {
   return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 }
-function urlBase64FromBytes(buf) {
-  return Buffer.from(buf)
+
+function urlBase64FromBytes(bytes: Uint8Array): string {
+  return Buffer.from(bytes)
     .toString('base64')
     .replace(/\//g, '_')
     .replace(/\+/g, '-')
 }
-function urlBase64FromAscii(ascii) {
+
+function urlBase64FromAscii(ascii: string): string {
   return Buffer.from(ascii, 'ascii')
     .toString('base64')
     .replace(/\//g, '_')
     .replace(/\+/g, '-')
 }
-function urlBase64FromHex(ascii) {
-  return Buffer.from(ascii, 'hex')
+
+function urlBase64FromHex(hex: string): string {
+  return Buffer.from(hex, 'hex')
     .toString('base64')
     .replace(/\//g, '_')
     .replace(/\+/g, '-')

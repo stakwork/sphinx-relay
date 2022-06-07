@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import { models } from './models'
+import { Contact, RequestsTransportTokens, models } from './models'
 import { Op } from 'sequelize'
 import * as cryptoJS from 'crypto-js'
 import { success, failure, unauthorized } from './utils/res'
@@ -9,6 +9,8 @@ import { isProxy } from './utils/proxy'
 import * as jwtUtils from './utils/jwt'
 import { allowedJwtRoutes } from './scopes'
 import * as rsa from './crypto/rsa'
+import { Request, Response } from 'express'
+import * as fs from 'fs'
 import * as hmac from './crypto/hmac'
 import { Req } from './types'
 import * as fs from 'fs'
@@ -21,7 +23,7 @@ const config = loadConfig()
 "encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
 */
 
-export async function unlocker(req: Req, res): Promise<boolean> {
+export async function unlocker(req: Req, res: Response): Promise<boolean> {
   const { password } = req.body
   if (!password) {
     failure(res, 'no password')
@@ -72,7 +74,7 @@ export async function unlocker(req: Req, res): Promise<boolean> {
   }
 }
 
-export async function hmacMiddleware(req: Req, res, next) {
+export async function hmacMiddleware(req: Req, res: Response, next: () => void): Promise<void> {
   if (no_auth(req.path)) {
     next()
     return
@@ -104,7 +106,7 @@ export async function hmacMiddleware(req: Req, res, next) {
   next()
 }
 
-function no_auth(path) {
+function no_auth(path: string) {
   return (
     path == '/app' ||
     path == '/is_setup' ||
@@ -123,7 +125,7 @@ function no_auth(path) {
   )
 }
 
-export async function ownerMiddleware(req, res, next) {
+export async function ownerMiddleware(req: Request, res: Response, next: () => void): Promise<void> {
   if (no_auth(req.path)) {
     next()
     return
@@ -197,14 +199,14 @@ export async function ownerMiddleware(req, res, next) {
         .digest('base64')
       const owner = await models.Contact.findOne({
         where: { authToken: hashedToken, isOwner: true },
-      })
+      }) as unknown as Contact
       if (owner) {
         req.owner = owner.dataValues
       }
     } else if (!isProxy()) {
       const owner2 = await models.Contact.findOne({
         where: { isOwner: true },
-      })
+      }) as unknown as Contact
       if (owner2) req.owner = owner2.dataValues
     }
     if (req.path === '/invoices') {
@@ -223,7 +225,7 @@ export async function ownerMiddleware(req, res, next) {
     return
   }
 
-  let owner
+  let owner: Contact | undefined
 
   // find by auth token
   if (token) {
@@ -233,7 +235,7 @@ export async function ownerMiddleware(req, res, next) {
       .digest('base64')
     owner = await models.Contact.findOne({
       where: { authToken: hashedToken, isOwner: true },
-    })
+    }) as unknown as Contact
   }
 
   // find by JWT
@@ -245,7 +247,7 @@ export async function ownerMiddleware(req, res, next) {
       if (allowed && publicKey) {
         owner = await models.Contact.findOne({
           where: { publicKey, isOwner: true },
-        })
+        }) as unknown as Contact
       }
     }
   }
@@ -259,13 +261,13 @@ export async function ownerMiddleware(req, res, next) {
     if (x_transport_token) {
       // Checking the db last since it'll take the most compute power and will
       // grow if we get lots of requests and will let us reject incorrect tokens faster
-      const savedTransportTokens =
-        await models.RequestsTransportTokens.findAll()
+      const savedTransportTokens: RequestsTransportTokens[] =
+        await models.RequestsTransportTokens.findAll() as unknown as RequestsTransportTokens[]
 
       // Here we are checking all of the saved x_transport_tokens
       // to see if we hav a repeat
       savedTransportTokens.forEach((token) => {
-        if (token.dataValues.transportToken == x_transport_token) {
+        if ((token.dataValues as RequestsTransportTokens).transportToken == x_transport_token) {
           res.writeHead(401, 'Access invalid for user', {
             'Content-Type': 'text/plain',
           })
@@ -277,7 +279,7 @@ export async function ownerMiddleware(req, res, next) {
       // Here we are saving the x_transport_token that we just
       // used into the db to be checked against later
       const transportTokenDBValues = { transportToken: x_transport_token }
-      await models.RequestsTransportTokens.create(transportTokenDBValues)
+      await models.RequestsTransportTokens.create(transportTokenDBValues) as unknown as RequestsTransportTokens
     }
 
     req.owner = owner.dataValues
@@ -285,7 +287,7 @@ export async function ownerMiddleware(req, res, next) {
   }
 }
 
-function decryptMacaroon(password: string, macaroon: string) {
+function decryptMacaroon(password: string, macaroon: string): string {
   try {
     const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(
       cryptoJS.enc.Base64
@@ -299,7 +301,7 @@ function decryptMacaroon(password: string, macaroon: string) {
   }
 }
 
-export function base64ToHex(str) {
+export function base64ToHex(str: string): string {
   const raw = atob(str)
   let result = ''
   for (let i = 0; i < raw.length; i++) {
@@ -309,16 +311,16 @@ export function base64ToHex(str) {
   return result.toUpperCase()
 }
 
-const atob = (a) => Buffer.from(a, 'base64').toString('binary')
+const atob = (a: string): string => Buffer.from(a, 'base64').toString('binary')
 
-async function sleep(ms) {
+async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/
 
 /* deprecated */
-export async function authModule(req, res, next) {
+export async function authModule(req: Request, res: Response, next: () => void): Promise<void> {
   if (
     req.path == '/app' ||
     req.path == '/' ||
@@ -351,7 +353,7 @@ export async function authModule(req, res, next) {
     })
     res.end('Invalid credentials')
   } else {
-    const user = await models.Contact.findOne({ where: { isOwner: true } })
+    const user = await models.Contact.findOne({ where: { isOwner: true } }) as unknown as Contact
     const hashedToken = crypto
       .createHash('sha256')
       .update(token)

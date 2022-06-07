@@ -27,9 +27,8 @@ export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
 const FEE_LIMIT_SAT = 10000
 
-let lightningClient = <any>null
-let walletUnlocker = <any>null
-let routerClient = <any>null
+type LightningClient = any // for now
+let lightningClient: LightningClient
 
 export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   try {
@@ -171,8 +170,8 @@ export async function queryRoute(
       routes: [],
     }
   }
-  return new Promise(async function (resolve, reject) {
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  return new Promise((resolve, reject) => {
     const options: { [k: string]: any } = { pub_key, amt }
     if (route_hint && route_hint.includes(':')) {
       const arr = route_hint.split(':')
@@ -202,8 +201,8 @@ export type NewAddressType = 0 | 1 | 2 | 3
 export async function newAddress(
   type: NewAddressType = NESTED_PUBKEY_HASH
 ): Promise<string> {
-  return new Promise(async function (resolve, reject) {
-    const lightning = await loadLightning()
+  const lightning = await loadLightning()
+  return new Promise((resolve, reject) => {
     lightning.newAddress({ type }, (err, response) => {
       if (err) {
         reject(err)
@@ -218,14 +217,14 @@ export async function newAddress(
   })
 }
 
-// for payingn invoice and invite invoice
+// for paying invoice and invite invoice
 export async function sendPayment(
   payment_request: string,
   ownerPubkey?: string
 ): Promise<interfaces.SendPaymentResponse> {
   sphinxLogger.info('sendPayment', logging.Lightning)
-  return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  return new Promise((resolve, reject) => {
     if (isProxy()) {
       const opts = {
         payment_request,
@@ -289,8 +288,7 @@ export function keysend(
   sphinxLogger.info('keysend', logging.Lightning)
   return new Promise(async function (resolve, reject) {
     try {
-      const randoStr = crypto.randomBytes(32).toString('hex')
-      const preimage = ByteBuffer.fromHex(randoStr)
+      const preimage = ByteBuffer.wrap(crypto.randomBytes(32))
       const dest_custom_records = {
         [`${LND_KEYSEND_KEY}`]: preimage,
       }
@@ -427,7 +425,7 @@ export async function keysendMessage(
     let res: any = null
     const ts = new Date().valueOf()
     // WEAVE MESSAGE If TOO LARGE
-    await asyncForEach(Array.from(Array(n)), async (u, i) => {
+    for (let i = 0; i < n; i++) {
       const spliti = Math.ceil((opts.data || '').length / n)
       const m = (opts.data || '').substring(i * spliti, i * spliti + spliti)
       const isLastThread = i === n - 1
@@ -447,19 +445,13 @@ export async function keysendMessage(
         sphinxLogger.error(e)
         fail = true
       }
-    })
+    }
     if (success && !fail) {
       resolve(res)
     } else {
       reject(new Error('fail'))
     }
   })
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
 }
 
 export async function signAscii(
@@ -490,14 +482,14 @@ export function listInvoices(): Promise<any> {
   })
 }
 
-export async function listAllInvoices(): Promise<any> {
+export async function listAllInvoices(): Promise<interfaces.Invoice[]> {
   sphinxLogger.info(`=> list all invoices`)
-  const invs = await paginateInvoices(40)
-  return invs
+  return paginateInvoices(40)
 }
-async function paginateInvoices(limit, i = 0) {
+
+async function paginateInvoices(limit: number, i = 0): Promise<interfaces.Invoice[]> {
   try {
-    const r: any = await listInvoicesPaginated(limit, i)
+    const r = await listInvoicesPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset)
     if (lastOffset > 0) {
       return r.invoices.concat(await paginateInvoices(limit, lastOffset))
@@ -507,7 +499,8 @@ async function paginateInvoices(limit, i = 0) {
     return []
   }
 }
-function listInvoicesPaginated(limit, offset) {
+
+function listInvoicesPaginated(limit: number, offset: number): Promise<{ first_index_offset: string, invoices: interfaces.Invoice[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listInvoices(
@@ -525,15 +518,16 @@ function listInvoicesPaginated(limit, offset) {
 }
 
 // need to upgrade to .10 for this
-export async function listAllPayments(): Promise<any> {
+export async function listAllPayments(): Promise<interfaces.Payment[]> {
   sphinxLogger.info('=> list all payments')
   const pays = await paginatePayments(40) // max num
   sphinxLogger.info(`pays ${pays && pays.length}`)
   return pays
 }
-async function paginatePayments(limit, i = 0) {
+
+async function paginatePayments(limit: number, i = 0): Promise<interfaces.Payment[]> {
   try {
-    const r: any = await listPaymentsPaginated(limit, i)
+    const r = await listPaymentsPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset) // this is "first" cuz its in reverse (lowest index)
     if (lastOffset > 0) {
       return r.payments.concat(await paginatePayments(limit, lastOffset))
@@ -543,10 +537,8 @@ async function paginatePayments(limit, i = 0) {
     return []
   }
 }
-export function listPaymentsPaginated(
-  limit: number,
-  offset: number
-): Promise<any> {
+
+export function listPaymentsPaginated(limit: number, offset: number): Promise<{ first_index_offset: string, payments: interfaces.Payment[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listPayments(
@@ -563,7 +555,7 @@ export function listPaymentsPaginated(
   })
 }
 
-export function listAllPaymentsFull(): Promise<any> {
+export function listAllPaymentsFull(): Promise<{ payments: interfaces.Payment[] }> {
   sphinxLogger.info('=> list all payments')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
@@ -578,13 +570,8 @@ export function listAllPaymentsFull(): Promise<any> {
 }
 
 // msg is hex
-export async function signMessage(
-  msg: string,
-  ownerPubkey?: string
-): Promise<string> {
-  // log('signMessage')
-  const r = await signBuffer(Buffer.from(msg, 'hex'), ownerPubkey)
-  return r
+export async function signMessage(msg: string, ownerPubkey?: string): Promise<string> {
+  return signBuffer(Buffer.from(msg, 'hex'), ownerPubkey)
 }
 
 export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
@@ -599,7 +586,7 @@ export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
         const recidBytes = sigBuf.subarray(66, 67)
         // 31 is the magic EC recid (27+4) for compressed pubkeys
         const ecRecid = Buffer.from(recidBytes).readUIntBE(0, 1) + 31
-        const finalRecid = Buffer.from('00', 'hex')
+        const finalRecid = Buffer.allocUnsafe(1)
         finalRecid.writeUInt8(ecRecid, 0)
         const finalSig = Buffer.concat([finalRecid, sigBytes], 65)
         resolve(zbase32.encode(finalSig))
@@ -628,7 +615,7 @@ export async function verifyBytes(
   return r
 }
 
-interface VerifyResponse {
+export interface VerifyResponse {
   valid: boolean
   pubkey: string
 }
@@ -662,7 +649,7 @@ export function verifyMessage(
             )
           )
         )
-        const recoveredPubkey = secp256k1.recover(
+        const recoveredPubkey: Buffer = secp256k1.recover(
           Buffer.from(hash), // 32 byte hash of message
           sigBytes, // 64 byte signature of message (not DER, 32 byte R and 32 byte S with 0x00 padding)
           recid, // number 1 or 0. This will usually be encoded in the base64 message signature

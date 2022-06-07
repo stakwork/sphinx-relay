@@ -25,17 +25,17 @@ async function tribeTest(
   node2: NodeConfig
 ) {
   //NODE1 CREATES A TRIBE
-  let tribe = await createTribe(t, node1)
+  const tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
 
   //NODE2 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join = await joinTribe(t, node2, tribe)
+  const join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
 
   //NODE1 SENDS A TEXT MESSAGE IN TRIBE
   const text = randomText()
-  let tribeMessage = await sendTribeMessageAndCheckDecryption(
+  const tribeMessage = await sendTribeMessageAndCheckDecryption(
     t,
     node1,
     node2,
@@ -46,7 +46,7 @@ async function tribeTest(
 
   //NODE2 SENDS A TEXT MESSAGE IN TRIBE
   const text2 = randomText()
-  let tribeMessage2 = await sendTribeMessageAndCheckDecryption(
+  const tribeMessage2 = await sendTribeMessageAndCheckDecryption(
     t,
     node2,
     node1,
@@ -56,10 +56,10 @@ async function tribeTest(
   t.true(!!tribeMessage2, 'node1 should send message to tribe')
 
   //NODE2 LEAVES THE TRIBE
-  let left = await leaveTribe(t, node2, tribe)
+  const left = await leaveTribe(t, node2, tribe)
   t.true(left, 'node2 should leave tribe')
 
   //NODE2 LEAVES THE TRIBE
-  let delTribe = await deleteTribe(t, node1, tribe)
+  const delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')
 }

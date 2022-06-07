@@ -1,5 +1,5 @@
-import test from 'ava'
-import { asyncForEach } from '../utils/helpers'
+import test, { Assertions } from 'ava'
+import { asyncForEach } from '../../helpers'
 import { deleteChat } from '../utils/del'
 import { getChats } from '../utils/get'
 import nodes from '../nodes'
@@ -12,7 +12,7 @@ test('test-99-clearAllChats: clear all chats from nodes', async (t) => {
   await clearAllChats(t)
 })
 
-async function clearAllChats(t) {
+async function clearAllChats(t: Assertions) {
   //DELETE ALL CHATS ===>
 
   await asyncForEach(nodes, async (node) => {
@@ -28,7 +28,7 @@ async function clearAllChats(t) {
 
     //delete any chat that node is a part of
     await asyncForEach(chats, async (c) => {
-      const deletion = await deleteChat(t, node, c)
+      const deletion = await deleteChat(t, node, c.id)
       t.true(deletion, 'node should delete chat')
     })
 

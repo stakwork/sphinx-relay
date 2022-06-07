@@ -1,6 +1,8 @@
 import { sphinxLogger } from './logger'
+import { Response } from 'express'
 
-function success(res, json) {
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function success(res: Response, json: {} | string): void {
   res.status(200)
   res.json({
     success: true,
@@ -9,8 +11,8 @@ function success(res, json) {
   res.end()
 }
 
-function failure(res, e) {
-  const errorMessage = (e && e.message) || e
+export function failure(res: Response, e: Error | string): void {
+  const errorMessage = typeof e === 'string' ? e : e.message
   sphinxLogger.error(`--> failure: ${errorMessage}`)
   res.status(400)
   res.json({
@@ -20,20 +22,18 @@ function failure(res, e) {
   res.end()
 }
 
-function failure200(res, e) {
+export function failure200(res: Response, e: Error | string): void {
   res.status(200)
   res.json({
     success: false,
-    error: (e && e.message) || e,
+    error: typeof e === 'string' ? e : e.message,
   })
   res.end()
 }
 
-function unauthorized(res) {
+export function unauthorized(res: Response): void {
   res.writeHead(401, 'Access invalid for user', {
     'Content-Type': 'text/plain',
   })
   res.end('invalid credentials')
 }
-
-export { success, failure, failure200, unauthorized }

@@ -34,6 +34,8 @@ export default class BotMember extends Model<BotMember> {
 
   @Column
   tenant: number
+
+  dataValues: { [k: string]: any }
 }
 
 export interface BotMemberRecord extends BotMember {

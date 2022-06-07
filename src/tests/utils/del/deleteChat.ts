@@ -8,7 +8,7 @@ export async function deleteChat(
   node: NodeConfig,
   chatID: number
 ): Promise<boolean> {
-  let deletion = await http.del(
+  const deletion = await http.del(
     node.external_ip + '/chat/' + chatID,
     makeArgs(node)
   )

@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as grpc from 'grpc'
 import { loadConfig } from './config'
 import * as Lightning from '../grpc/lightning'
-import { models } from '../models'
+import { Contact, models } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
 
@@ -14,14 +14,14 @@ const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost'
 const check_proxy_balance = false
 
 export function isProxy(): boolean {
-  return config.proxy_lnd_port &&
+  return !!(
+    config.proxy_lnd_port &&
     config.proxy_macaroons_dir &&
     config.proxy_tls_location
-    ? true
-    : false
+  )
 }
 
-export function genUsersInterval(ms) {
+export function genUsersInterval(ms: number): void {
   if (!isProxy()) return
   setTimeout(() => {
     // so it starts a bit later than pingHub
@@ -35,20 +35,20 @@ const NEW_USER_NUM =
     : 2
 const SATS_PER_USER = config.proxy_initial_sats || 5000
 // isOwner users with no authToken
-export async function generateNewUsers() {
+export async function generateNewUsers(): Promise<void> {
   if (!isProxy()) {
     sphinxLogger.error(`not proxy`, logging.Proxy)
     return
   }
-  const newusers = await models.Contact.findAll({
+  const newusers: Contact[] = await models.Contact.findAll({
     where: { isOwner: true, authToken: null },
-  })
+  }) as unknown as Contact[]
   if (newusers.length >= NEW_USER_NUM) {
     sphinxLogger.error(`already have new users`, logging.Proxy)
     return // we already have the mimimum
   }
   const n1 = NEW_USER_NUM - newusers.length
-  let n // the number of new users to create
+  let n: number // the number of new users to create
   if (check_proxy_balance) {
     const virtualBal = await getProxyTotalBalance()
     sphinxLogger.info(`total balance ${virtualBal}`, logging.Proxy)
@@ -58,7 +58,7 @@ export async function generateNewUsers() {
     let availableBalance = realBal - virtualBal
     if (availableBalance < SATS_PER_USER) availableBalance = 1
     const n2 = Math.floor(availableBalance / SATS_PER_USER)
-    const n = Math.min(n1, n2)
+    n = Math.min(n1, n2)
 
     if (!n) {
       sphinxLogger.error(`not enough sats`, logging.Proxy)
@@ -69,17 +69,16 @@ export async function generateNewUsers() {
   }
   sphinxLogger.info(`gen new users: ${n}`, logging.Proxy)
 
-  const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
-  await asyncForEach(arr, async () => {
+  for (let i = 0; i < n; i++) {
     await generateNewUser(rootpk)
-  })
+  }
 }
 
 const adminURL = config.proxy_admin_url
   ? config.proxy_admin_url + '/'
   : 'http://localhost:5555/'
-export async function generateNewUser(rootpk: string) {
+export async function generateNewUser(rootpk: string): Promise<void> {
   try {
     const r = await fetch(adminURL + 'generate', {
       method: 'POST',
@@ -92,7 +91,7 @@ export async function generateNewUser(rootpk: string) {
       isOwner: true,
       authToken: null,
     }
-    const created = await models.Contact.create(contact)
+    const created = await models.Contact.create(contact) as unknown as Contact
     // set tenant to self!
     created.update({ tenant: created.id })
     sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
@@ -101,7 +100,7 @@ export async function generateNewUser(rootpk: string) {
   }
 }
 
-export async function generateNewExternalUser(pubkey: string, sig: string) {
+export async function generateNewExternalUser(pubkey: string, sig: string): Promise<{ publicKey: string, routeHint: string } | undefined> {
   try {
     const r = await fetch(adminURL + 'create_external', {
       method: 'POST',
@@ -120,7 +119,7 @@ export async function generateNewExternalUser(pubkey: string, sig: string) {
 }
 
 // "total" is in msats
-export async function getProxyTotalBalance() {
+export async function getProxyTotalBalance(): Promise<number> {
   try {
     const r = await fetch(adminURL + 'balances', {
       method: 'GET',
@@ -133,7 +132,7 @@ export async function getProxyTotalBalance() {
   }
 }
 
-export function loadProxyCredentials(macPrefix: string) {
+export function loadProxyCredentials(macPrefix: string): grpc.ChannelCredentials {
   const lndCert = fs.readFileSync(config.proxy_tls_location)
   const sslCreds = grpc.credentials.createSsl(lndCert)
   const m = fs.readFileSync(
@@ -151,9 +150,9 @@ export function loadProxyCredentials(macPrefix: string) {
   return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds)
 }
 
-export async function loadProxyLightning(ownerPubkey?: string) {
+export async function loadProxyLightning(ownerPubkey?: string): Promise<any> {
   try {
-    let macname
+    let macname: string
     if (ownerPubkey && ownerPubkey.length === 66) {
       macname = ownerPubkey
     } else {
@@ -227,10 +226,4 @@ function getProxyLNDBalance(): Promise<number> {
       }
     })
   })
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
 }

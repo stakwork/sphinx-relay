@@ -12,6 +12,7 @@ import constants from '../constants'
 import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
 import { Req } from '../types'
 import { Response } from 'express'
 
@@ -254,7 +255,7 @@ export const listPayments = async (req: Req, res: Response): Promise<void> => {
       order: [['createdAt', 'desc']],
       limit,
       offset,
-    })
+    }) as unknown as Message[]
     const ret = msgs || []
     success(
       res,

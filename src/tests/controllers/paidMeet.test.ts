@@ -39,7 +39,7 @@ async function paidMeet(t, node1, node2) {
   t.true(self.price_to_meet === 13, 'node1 should have updated price_to_meet')
 
   //NODE2 ADDS NODE1 AS A CONTACT
-  let added = await addContact(t, node2, node1)
+  const added = await addContact(t, node2, node1)
   t.true(added, 'node2 should add node1 as contact')
 
   //NODE2 SENDS A TEXT MESSAGE TO NODE1
@@ -90,7 +90,7 @@ async function paidMeet(t, node1, node2) {
   t.truthy(clear, 'all contacts should be cleared')
 
   //NODE2 ADDS NODE1 AS A CONTACT WITH CORRECT PRICE TO MEET
-  let added3 = await addContact(t, node2, node1)
+  const added3 = await addContact(t, node2, node1)
   t.true(added3, 'node2 should add node1 as contact again')
 
   //NODE2 SENDS A TEXT MESSAGE TO NODE1

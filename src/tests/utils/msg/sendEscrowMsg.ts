@@ -18,10 +18,10 @@ export async function sendEscrowMsg(t, node, admin, tribe, text) {
   const escrowMillis = tribe.escrow_millis
   t.true(escrowMillis != 0, 'escrow time should not be zero')
 
-  var pricePerMessage = 0
+  let pricePerMessage = 0
   if (tribe.price_per_message) pricePerMessage = tribe.price_per_message
 
-  let nodeContact = await getSelf(t, node)
+  const nodeContact = await getSelf(t, node)
 
   //encrypt random string with node contact_key
   const encryptedText = encrypt(nodeContact.contact_key, text)

@@ -22,7 +22,7 @@ async function streamPayment(t, node1, node2, node3) {
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
 
   //NODE1 ADDS NODE2 AS A CONTACT
-  let added = await addContact(t, node1, node2)
+  const added = await addContact(t, node1, node2)
   t.true(added, 'node1 should add node2 as contact')
 
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
@@ -30,11 +30,11 @@ async function streamPayment(t, node1, node2, node3) {
   await sendMessageAndCheckDecryption(t, node1, node2, text)
 
   //STREAM PAYMENT FROM NODE1 TO NODE2
-  var stream1 = await payStream(t, node1, node2, null, 14)
+  const stream1 = await payStream(t, node1, node2, null, 14)
   t.true(stream1)
 
   //STREAM SPLIT PAYMENT FROM NODE1 TO NODE2 AND NODE3 (50% SPLIT)
-  var stream2 = await payStream(t, node1, node2, node3, 14)
+  const stream2 = await payStream(t, node1, node2, node3, 14)
   t.true(stream2)
 
   //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS

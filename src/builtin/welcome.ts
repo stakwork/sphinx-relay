@@ -1,6 +1,6 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
-import { models } from '../models'
+import { ChatBot, models } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import { sphinxLogger } from '../utils/logger'
@@ -9,7 +9,7 @@ const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
 
-export function init() {
+export function init(): void {
   if (initted) return
   initted = true
 
@@ -38,7 +38,7 @@ export function init() {
             botType: constants.bot_types.builtin,
             tenant: chat.tenant,
           },
-        })
+        }) as unknown as ChatBot
         if (!chatBot) return
         let meta = 'Welcome to the tribe!'
         if (chatBot && chatBot.meta) {
@@ -61,7 +61,7 @@ export function init() {
     if (!isAdmin) return
 
     switch (cmd) {
-      case 'setmessage':
+      case 'setmessage': {
         if (arr.length < 3) return
         sphinxLogger.info(`setmsg ${arr[2]}`)
         const chat = await getTribeOwnersChatByUUID(message.channel.id)
@@ -74,7 +74,7 @@ export function init() {
             botType: constants.bot_types.builtin,
             tenant: chat.tenant,
           },
-        })
+        }) as unknown as ChatBot
         if (!chatBot) return
         const meta = arr.slice(2, arr.length).join(' ')
         await chatBot.update({ meta })
@@ -83,20 +83,21 @@ export function init() {
           .setDescription('Your welcome message has been updated')
         message.channel.send({ embed: resEmbed })
         return
-
+      }
       default:
-        const embed = new Sphinx.MessageEmbed()
-          .setAuthor('WelcomeBot')
-          .setTitle('Bot Commands:')
-          .addFields([
-            {
-              name: 'Set welcome message',
-              value: '/welcome setmessage {MESSAGE}',
-            },
-            { name: 'Help', value: '/welcome help' },
-          ])
-          .setThumbnail(botSVG)
-        message.channel.send({ embed })
+        message.channel.send({
+          embed: new Sphinx.MessageEmbed()
+            .setAuthor('WelcomeBot')
+            .setTitle('Bot Commands:')
+            .addFields([
+              {
+                name: 'Set welcome message',
+                value: '/welcome setmessage {MESSAGE}',
+              },
+              { name: 'Help', value: '/welcome help' },
+            ])
+            .setThumbnail(botSVG)
+        })
         return
     }
   })

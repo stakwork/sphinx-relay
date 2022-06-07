@@ -21,7 +21,7 @@ export interface MessageContent {
   skipPaymentProcessing?: boolean
 }
 
-// fro group join msgs, etc
+// from group join msgs, etc
 export interface ChatMember {
   role?: number
   key: string

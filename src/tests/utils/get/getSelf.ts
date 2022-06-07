@@ -10,7 +10,7 @@ export const getSelf = async (
 ): Promise<Contact> => {
   const r = await http.get(node.external_ip + '/contacts', makeArgs(node))
   t.true(r.success, 'should get node contacts')
-  let nodeContact = r.response.contacts.find(
+  const nodeContact = r.response.contacts.find(
     (contact) => contact.public_key === node.pubkey
   )
   t.true(

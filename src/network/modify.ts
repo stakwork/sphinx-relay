@@ -4,7 +4,7 @@ import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
 import * as meme from '../utils/meme'
 import * as FormData from 'form-data'
-import { models, Chat, Contact, ContactRecord, ChatRecord } from '../models'
+import { MediaKey, Message, Contact, Chat, models, ContactRecord, ChatRecord } from '../models'
 import * as RNCryptor from 'jscryptor-2'
 import { sendMessage } from './send'
 // import { Op } from 'sequelize'
@@ -65,7 +65,7 @@ export async function purchaseFromOriginalSender(
 
   const mediaKey = await models.MediaKey.findOne({
     where: { originalMuid: muid, tenant },
-  })
+  }) as unknown as MediaKey
 
   const terms = parseLDAT(mt)
   const price = (terms.meta && terms.meta.amt) || 0
@@ -86,14 +86,14 @@ export async function purchaseFromOriginalSender(
       mediaKey: mediaKey.key,
       originalMuid: mediaKey.originalMuid,
       mediaType: mediaKey.mediaType,
-    }
+    } as unknown as Message
     sendMessage({
       chat: { ...chat.dataValues, contactIds: JSON.stringify([purchaser.id]) }, // the merchant id
       sender: owner,
       type: constants.message_types.purchase_accept,
       message: msg,
-      success: () => {},
-      failure: () => {},
+      success: void 0,
+      failure: void 0,
     })
     // PAY THE OG POSTER HERE!!!
     sendMessage({
@@ -108,21 +108,21 @@ export async function purchaseFromOriginalSender(
       message: {
         mediaToken: mt,
         skipPaymentProcessing: true,
-      },
-      success: () => {},
-      failure: () => {},
+      } as Message,
+      success: void 0,
+      failure: void 0,
     })
   } else {
     const ogmsg = await models.Message.findOne({
       where: { chatId: chat.id, mediaToken: mt, tenant },
-    })
+    }) as unknown as Message
     if (!ogmsg) return
     // purchase it from creator (send "purchase")
-    const msg = { mediaToken: mt, purchaser: purchaser.id }
+    const msg = { mediaToken: mt, purchaser: purchaser.id } as unknown as Message
     sendMessage({
-      chat: { ...chat.dataValues, contactIds: JSON.stringify([ogmsg.sender]) },
+      chat: { ...chat.dataValues as Chat, contactIds: JSON.stringify([ogmsg.sender]) },
       sender: {
-        ...owner.dataValues,
+        ...owner.dataValues as Contact,
         ...(purchaser && purchaser.alias && { alias: purchaser.alias }),
         role: constants.chat_roles.reader,
       },
@@ -130,8 +130,8 @@ export async function purchaseFromOriginalSender(
       realSatsContactId: ogmsg.sender,
       message: msg,
       amount: amount,
-      success: () => {},
-      failure: () => {},
+      success: void 0,
+      failure: void 0,
       isForwarded: true,
     })
   }
@@ -158,18 +158,21 @@ export async function sendFinalMemeIfFirstPurchaser(
 
   const existingMediaKey = await models.MediaKey.findOne({
     where: { muid, tenant },
-  })
+  }) as unknown as MediaKey
   if (existingMediaKey) return // no need, its already been sent
 
   // const host = mt.split('.')[0]
 
   const terms = parseLDAT(mt)
+
+  if (purchaserID === undefined) return
+
   const ogPurchaser = await models.Contact.findOne({
     where: {
       id: purchaserID,
       tenant,
     },
-  })
+  }) as unknown as Contact
 
   if (!ogPurchaser) return sphinxLogger.warning('no ogPurchaser')
 
@@ -213,8 +216,8 @@ export async function sendFinalMemeIfFirstPurchaser(
   }
 }
 
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 export async function downloadAndUploadAndSaveReturningTermsAndKey(

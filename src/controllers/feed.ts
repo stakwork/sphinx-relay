@@ -1,8 +1,10 @@
-import { models } from '../models'
+import { Chat, Message, Contact, models } from '../models'
 import * as helpers from '../helpers'
 import { failure, success } from '../utils/res'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
+import { asyncForEach } from '../helpers'
 import { Req } from '../types'
 
 export interface ChatMeta {
@@ -22,7 +24,7 @@ export interface Destination {
   custom_value: string
 }
 
-export const streamFeed = async (req: Req, res) => {
+export const streamFeed = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
@@ -62,7 +64,7 @@ export const streamFeed = async (req: Req, res) => {
       }
       const chat = await models.Chat.findOne({
         where: { id: chat_id, tenant },
-      })
+      }) as unknown as Chat
       if (!chat) {
         return failure(res, 'no chat')
       }
@@ -89,8 +91,8 @@ export const streamFeed = async (req: Req, res) => {
           d.route_hint,
           amt,
           text,
-          function () {},
-          function () {},
+          void 0,
+          void 0,
           extra_tlv
         )
       }
@@ -101,7 +103,7 @@ export const streamFeed = async (req: Req, res) => {
 }
 
 export async function anonymousKeysend(
-  owner,
+  owner: Contact,
   destination_key: string,
   route_hint: string,
   amount: number,
@@ -109,7 +111,7 @@ export async function anonymousKeysend(
   onSuccess: ({ destination_key: string, amount: number }) => void,
   onFailure: (error) => void,
   extra_tlv: { [k: string]: string }
-) {
+): Promise<void> {
   const tenant = owner.id
   const msg: { [k: string]: any } = {
     type: constants.message_types.keysend,
@@ -139,18 +141,16 @@ export async function anonymousKeysend(
         createdAt: date,
         updatedAt: date,
         tenant,
-      })
-      onSuccess({ destination_key, amount })
+      }) as unknown as Message
+      if (onSuccess) {
+        onSuccess({ destination_key, amount })
+      }
     },
-    failure: (error) => {
-      onFailure(error)
+    failure: err => {
+      if (onFailure) {
+        onFailure(err)
+      }
     },
     extra_tlv,
   })
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
 }

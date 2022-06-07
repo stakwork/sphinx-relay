@@ -4,6 +4,7 @@ import { loadConfig } from '../utils/config'
 import * as rsa from '../crypto/rsa'
 import * as tribes from '../utils/tribes'
 import * as fs from 'fs'
+import { Request, Response } from 'express'
 import { Req } from '../types'
 
 const config = loadConfig()
@@ -18,7 +19,7 @@ interface MeInfo {
   jwt: string
 }
 
-export async function verifyAuthRequest(req: Req, res) {
+export async function verifyAuthRequest(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   try {
     const sc = [scopes.PERSONAL, scopes.BOTS]
@@ -51,7 +52,7 @@ export async function verifyAuthRequest(req: Req, res) {
   }
 }
 
-export async function requestExternalTokens(req: Req, res) {
+export async function requestExternalTokens(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   try {
     const result: MeInfo = {
@@ -69,7 +70,7 @@ export async function requestExternalTokens(req: Req, res) {
   }
 }
 
-export async function requestTransportKey(req: Req, res) {
+export async function requestTransportKey(req: Req, res: Response): Promise<void> {
   let transportPublicKey: string | null = null
   try {
     transportPublicKey = fs.readFileSync(
@@ -84,7 +85,7 @@ export async function requestTransportKey(req: Req, res) {
     return
   }
 
-  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
+  const transportTokenKeys = await rsa.genKeys()
   fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
   fs.writeFileSync(
     config.transportPrivateKeyLocation,

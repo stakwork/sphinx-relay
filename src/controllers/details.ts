@@ -3,21 +3,23 @@ import { success, failure } from '../utils/res'
 import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo'
 import constants from '../constants'
-import { models } from '../models'
+import { Contact, Chat, models } from '../models'
 import { loadConfig } from '../utils/config'
 import { getAppVersionsFromHub } from '../hub'
 import { Op } from 'sequelize'
 import { sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
+import { asyncForEach } from '../helpers'
 import { Req } from '../types'
 
 const config = loadConfig()
 
 const VERSION = 2
-export async function getRelayVersion(req: Req, res) {
+export async function getRelayVersion(req: Req, res: Response): Promise<void> {
   success(res, { version: VERSION })
 }
 
-export async function getAppVersions(req: Req, res) {
+export async function getAppVersions(req: Req, res: Response): Promise<void> {
   const vs = await getAppVersionsFromHub()
   if (vs) {
     success(res, vs)
@@ -26,7 +28,7 @@ export async function getAppVersions(req: Req, res) {
   }
 }
 
-export const checkRoute = async (req: Req, res) => {
+export const checkRoute = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
 
   const { pubkey, amount, route_hint } = req.query
@@ -47,7 +49,7 @@ export const checkRoute = async (req: Req, res) => {
   }
 }
 
-export const checkRouteByContactOrChat = async (req: Req, res) => {
+export const checkRouteByContactOrChat = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
 
   const chatID = req.query.chat_id as string
@@ -57,20 +59,20 @@ export const checkRouteByContactOrChat = async (req: Req, res) => {
   let pubkey = ''
   let routeHint = ''
   if (contactID) {
-    const contactId = parseInt(contactID)
-    const contact = await models.Contact.findOne({ where: { id: contactId } })
+    const contactId = parseInt(contactID.toString())
+    const contact = await models.Contact.findOne({ where: { id: contactId } }) as unknown as Contact
     if (!contact) return failure(res, 'cant find contact')
     pubkey = contact.publicKey
     routeHint = contact.routeHint
   } else if (chatID) {
-    const chatId = parseInt(chatID)
-    const chat = await models.Chat.findOne({ where: { id: chatId } })
+    const chatId = parseInt(chatID.toString())
+    const chat = await models.Chat.findOne({ where: { id: chatId } }) as unknown as Chat
     if (!chat) return failure(res, 'cant find chat')
     if (!chat.ownerPubkey) return failure(res, 'cant find owern_pubkey')
     pubkey = chat.ownerPubkey
     const chatowner = await models.Contact.findOne({
       where: { publicKey: chat.ownerPubkey },
-    })
+    }) as unknown as Contact
     if (!chatowner) return failure(res, 'cant find chat owner')
     if (chatowner.routeHint) routeHint = chatowner.routeHint
   }
@@ -80,7 +82,7 @@ export const checkRouteByContactOrChat = async (req: Req, res) => {
   const amount = req.query.amount as string
   const owner = req.owner
   try {
-    const amt = parseInt(amount) || constants.min_sat_amount
+    const amt = parseInt((amount || '').toString()) || constants.min_sat_amount
     const r = await Lightning.queryRoute(
       pubkey,
       amt,
@@ -98,7 +100,8 @@ const defaultLogFiles = [
   '/home/lnd/.pm2/logs/app-error.log',
   '/var/log/syslog',
 ]
-export async function getLogsSince(req: Req, res) {
+
+export async function getLogsSince(req: Req, res: Response): Promise<void> {
   const logFiles = config.log_file ? [config.log_file] : defaultLogFiles
   let txt
   let err
@@ -120,7 +123,7 @@ export async function getLogsSince(req: Req, res) {
   else failure(res, err)
 }
 
-export const getLightningInfo = async (req: Req, res) => {
+export const getLightningInfo = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   res.status(200)
   try {
@@ -132,7 +135,7 @@ export const getLightningInfo = async (req: Req, res) => {
   res.end()
 }
 
-export const getChannels = async (req: Req, res) => {
+export const getChannels = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
 
   res.status(200)
@@ -145,13 +148,13 @@ export const getChannels = async (req: Req, res) => {
   res.end()
 }
 
-export const getBalance = async (req: Req, res) => {
+export const getBalance = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   const date = new Date()
   date.setMilliseconds(0)
-  const owner = await models.Contact.findOne({ where: { id: tenant } })
+  const owner = await models.Contact.findOne({ where: { id: tenant } }) as unknown as Contact
   owner.update({ lastActive: date })
 
   res.status(200)
@@ -168,7 +171,7 @@ export const getBalance = async (req: Req, res) => {
   res.end()
 }
 
-export const getLocalRemoteBalance = async (req: Req, res) => {
+export const getLocalRemoteBalance = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   res.status(200)
   try {
@@ -196,33 +199,23 @@ export const getLocalRemoteBalance = async (req: Req, res) => {
   res.end()
 }
 
-export const getNodeInfo = async (req: Req, res) => {
+export const getNodeInfo = async (req: Req, res: Response): Promise<void> => {
   const ipOfSource = req.connection.remoteAddress as string
   if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
     res.status(401)
     res.end()
     return
   }
-  const node = await nodeinfo()
-  res.status(200)
-  res.json(node)
+  res.status(401)
   res.end()
 }
 
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
-}
 
-export async function clearForTesting(req: Req, res) {
+export async function clearForTesting(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   if (!config.allow_test_clearing) {
-    return failure(res, 'nope')
-  }
-  if (config.allow_test_clearing !== 'true') {
     return failure(res, 'nope')
   }
 
@@ -245,7 +238,7 @@ export async function clearForTesting(req: Req, res) {
     })
     const me = await models.Contact.findOne({
       where: { isOwner: true, tenant },
-    })
+    }) as unknown as Contact
     await me.update({
       authToken: '',
       photoUrl: '',

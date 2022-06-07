@@ -13,11 +13,11 @@ const boolKeys = [
   'skipBroadcastJoins',
 ]
 
-function toSnake(obj) {
+export function toSnake(obj: { [k: string]: any }): { [k: string]: any } {
   const ret: { [k: string]: any } = {}
   for (const [key, value] of Object.entries(obj)) {
     if (dateKeys.includes(key) && value) {
-      const v: any = value
+      const v = value
       let d = new Date(v)
       if (isNaN(d.getTime())) d = new Date()
       ret[changeCase.snakeCase(key)] = d.toISOString()
@@ -30,12 +30,10 @@ function toSnake(obj) {
   return ret
 }
 
-function toCamel(obj) {
+export function toCamel(obj: { [k: string]: any }): { [k: string]: any } {
   const ret: { [k: string]: any } = {}
   for (const [key, value] of Object.entries(obj)) {
     ret[changeCase.camelCase(key)] = value
   }
   return ret
 }
-
-export { toSnake, toCamel }

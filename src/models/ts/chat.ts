@@ -32,6 +32,16 @@ export interface Chat {
   tenant: number
   skipBroadcastJoins: boolean
   pin: string
+
+  dataValues: { [k: string]: any }
+  update: Function
+  members: { [k: string]: { [k: string]: string | number } }
+  pendingContactIds?: number[]
+}
+
+export interface ChatRecord extends Chat {
+  dataValues: Contact
+  pendingContactIds: Array<string>
 }
 
 export interface ChatRecord extends Chat {

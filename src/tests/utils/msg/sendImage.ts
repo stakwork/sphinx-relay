@@ -25,16 +25,16 @@ export async function sendImage(
   node2: NodeConfig,
   image: string,
   tribe?: Chat | null,
-  price?: Number
+  price?: number
 ) {
   //NODE1 SENDS AN IMAGE TO NODE2
 
   var token = await getToken(t, node1)
-  let host = config.memeHost
-  let fileBase64 = 'data:image/jpg;base64,' + image
-  let typ = 'image/jpg'
-  let filename = 'Image.jpg'
-  let isPublic = false
+  const host = config.memeHost
+  const fileBase64 = 'data:image/jpg;base64,' + image
+  const typ = 'image/jpg'
+  const filename = 'Image.jpg'
+  const isPublic = false
 
   const upload = await uploadMeme(
     fileBase64,
@@ -57,7 +57,7 @@ export async function sendImage(
   }
 
   //encrypt media_key with node1 contact_key, node1 perspective
-  let encrypted_media_key = encrypt(n1contactP1.contact_key, upload.media_key)
+  const encrypted_media_key = encrypt(n1contactP1.contact_key, upload.media_key)
   let encrypted_media_key2
   let contactIdP1: number | null = null
   let tribeIdP1: number | null = null
@@ -85,7 +85,7 @@ export async function sendImage(
   //person_sending: person_sending_contact_key
 
   //create
-  let i = {
+  const i = {
     contact_id: contactIdP1,
     chat_id: tribeIdP1,
     muid: upload.muid,
@@ -104,7 +104,7 @@ export async function sendImage(
   //make sure msg exists
   t.true(img.success, 'sent image should exist')
   const imgMsg = img.response
-  let imgUuid = imgMsg.uuid
+  const imgUuid = imgMsg.uuid
   let url = ''
   let node2MediaKey = ''
   let decryptMediaKey = ''
@@ -116,7 +116,7 @@ export async function sendImage(
     //create contact_id for purchase message
     let n1contactP2: Contact = {} as Contact
     ;[, n1contactP2] = await getContacts(t, node2, node1)
-    let purchContact = n1contactP2.id
+    const purchContact = n1contactP2.id
 
     //create chat_id for purchase message (in tribe and outside tribe)
     let purchChat: number | null | undefined = null
@@ -138,7 +138,7 @@ export async function sendImage(
     const mediaToken = lastPrePurchMsg.media_token
 
     //create purchase message object
-    let p = {
+    const p = {
       contact_id: purchContact,
       chat_id: purchChat,
       amount: price,
@@ -155,7 +155,7 @@ export async function sendImage(
       'purchase message should be posted ' + purchased.error
     )
     //get payment accepted message
-    let paymentMsg = await getCheckNewPaidMsgs(t, node2, imgMsg)
+    const paymentMsg = await getCheckNewPaidMsgs(t, node2, imgMsg)
 
     //get media key from payment accepted message
     //(Last message by token.media_key, type 8, purchase message)

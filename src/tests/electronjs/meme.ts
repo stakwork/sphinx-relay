@@ -6,7 +6,7 @@ import * as FormData from 'form-data'
 
 async function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
   try {
-    let imgBuf = dataURLtoBuf(fileBase64)
+    const imgBuf = dataURLtoBuf(fileBase64)
 
     let finalImgBuffer
     let newKey = ''
@@ -39,7 +39,7 @@ async function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
       }
     )
 
-    let json = await resp.json()
+    const json = await resp.json()
     if (!json.muid) throw new Error('no muid')
 
     return {

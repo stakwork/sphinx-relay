@@ -60,11 +60,11 @@ async function encryptTribeBroadcast(
   if (isTribeOwner) {
     // has been previously decrypted
     if (message.content) {
-      const encContent = await rsa.encrypt(contact.contactKey, message.content)
+      const encContent = rsa.encrypt(contact.contactKey, message.content)
       obj.content = encContent
     }
     if (message.mediaKey) {
-      const encMediaKey = await rsa.encrypt(
+      const encMediaKey = rsa.encrypt(
         contact.contactKey,
         message.mediaKey
       )
@@ -154,7 +154,7 @@ async function decryptMessage(
   }
 
   // console.log("OBJ FILLED",fillmsg(full, obj))
-  return fillmsg(full, obj)
+  return fillmsg(full, obj) as Msg
 }
 
 async function personalizeMessage(

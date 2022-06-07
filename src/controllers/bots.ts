@@ -1,6 +1,6 @@
 import * as tribes from '../utils/tribes'
 import * as crypto from 'crypto'
-import { models } from '../models'
+import { Bot, Contact, BotMember, Chat, models, ChatBot, Message } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
@@ -12,13 +12,14 @@ import { Msg, Payload } from '../network/interfaces'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import * as short from 'short-uuid'
+import { Response } from 'express'
 import { Req } from '../types'
 
-export const getBots = async (req: Req, res) => {
+export const getBots = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
-    const bots = await models.Bot.findAll({ where: { tenant } })
+    const bots = await models.Bot.findAll({ where: { tenant } }) as unknown as Bot[]
     success(res, {
       bots: bots.map((b) => jsonUtils.botToJson(b)),
     })
@@ -27,7 +28,7 @@ export const getBots = async (req: Req, res) => {
   }
 }
 
-export const createBot = async (req: Req, res) => {
+export const createBot = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { name, webhook, price_per_use, img, description, tags } = req.body
@@ -43,7 +44,7 @@ export const createBot = async (req: Req, res) => {
     tenant,
   }
   try {
-    const theBot = await models.Bot.create(newBot)
+    const theBot = await models.Bot.create(newBot) as unknown as Bot
     // post to tribes.sphinx.chat
     tribes.declare_bot({
       uuid,
@@ -64,14 +65,14 @@ export const createBot = async (req: Req, res) => {
   }
 }
 
-export const deleteBot = async (req: Req, res) => {
+export const deleteBot = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id
   const owner_pubkey = req.owner.publicKey
   if (!id || owner_pubkey) return
   try {
-    const bot = await models.Bot.findOne({ where: { id, tenant } })
+    const bot = await models.Bot.findOne({ where: { id, tenant } }) as unknown as Bot
     await tribes.delete_bot({
       uuid: bot.uuid,
       owner_pubkey,
@@ -84,7 +85,7 @@ export const deleteBot = async (req: Req, res) => {
   }
 }
 
-export async function installBotAsTribeAdmin(chat, bot_json) {
+export async function installBotAsTribeAdmin(chat: Chat, bot_json: { [k: string]: any }): Promise<void> {
   const chatId = chat && chat.id
   const chat_uuid = chat && chat.uuid
   const tenant = chat.tenant
@@ -92,7 +93,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
     return sphinxLogger.error('no chat id in installBot')
 
   sphinxLogger.info(['=> chat to install bot into', chat.name])
-  const owner = await models.Contact.findOne({ where: { id: tenant } })
+  const owner: Contact = await models.Contact.findOne({ where: { id: tenant } }) as unknown as Contact
   if (!owner)
     return sphinxLogger.error('cant find owner in installBotAsTribeAdmin')
   const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey)
@@ -125,7 +126,7 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
         uuid: bot_json.uuid,
         tenant,
       },
-    })
+    }) as unknown as Bot
     if (myBot) {
       const success = await postToBotServer(
         <network.Msg>{
@@ -143,12 +144,12 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
         myBot,
         SphinxBot.MSG_TYPE.INSTALL
       )
-      if (success) await models.ChatBot.create(chatBot)
+      if (success) await models.ChatBot.create(chatBot) as unknown as ChatBot
     }
   } else {
     // keysend to bot maker
     sphinxLogger.info(['installBot INSTALL REMOTE BOT NOW', chatBot])
-    const succeeded = await keysendBotInstall(chatBot, chat_uuid, owner)
+    const succeeded = await keysendBotInstall(chatBot as ChatBot, chat_uuid, owner)
     if (succeeded) {
       try {
         // could fail
@@ -161,9 +162,9 @@ export async function installBotAsTribeAdmin(chat, bot_json) {
 }
 
 export async function keysendBotInstall(
-  b,
+  b: ChatBot,
   chat_uuid: string,
-  owner
+  owner: Contact
 ): Promise<boolean> {
   return await botKeysend(
     constants.message_types.bot_install,
@@ -176,7 +177,7 @@ export async function keysendBotInstall(
   )
 }
 
-export async function keysendBotCmd(msg, b, sender): Promise<boolean> {
+export async function keysendBotCmd(msg: Msg, b: ChatBot, sender: Contact): Promise<boolean> {
   const amount = msg.message.amount || 0
   const amt = Math.max(amount, b.pricePerUse)
   return await botKeysend(
@@ -192,12 +193,12 @@ export async function keysendBotCmd(msg, b, sender): Promise<boolean> {
 }
 
 export async function botKeysend(
-  msg_type,
-  bot_uuid,
-  botmaker_pubkey,
-  amount,
+  msg_type: number,
+  bot_uuid: string,
+  botmaker_pubkey: string,
+  amount: number,
   chat_uuid: string,
-  sender,
+  sender: Contact,
   botmaker_route_hint?: string,
   msg?: Msg
 ): Promise<boolean> {
@@ -252,7 +253,7 @@ export async function botKeysend(
   }
 }
 
-export async function receiveBotInstall(dat: Payload) {
+export async function receiveBotInstall(dat: Payload): Promise<void> {
   sphinxLogger.info(['=> receiveBotInstall', dat], logging.Network)
 
   const sender_pub_key = dat.sender && dat.sender.pub_key
@@ -264,12 +265,15 @@ export async function receiveBotInstall(dat: Payload) {
   if (!chat_uuid || !sender_pub_key || !bot_uuid)
     return sphinxLogger.info('=> no chat uuid or sender pub key or bot_uuid')
 
-  const bot = await models.Bot.findOne({
+  if (!bot_uuid)
+    return sphinxLogger.info('no bot uuid')
+
+  const bot: Bot = await models.Bot.findOne({
     where: {
       uuid: bot_uuid,
       tenant,
     },
-  })
+  }) as unknown as Bot
   if (!bot) return
 
   const verifiedOwnerPubkey = await tribes.verifySignedTimestamp(bot_uuid)
@@ -282,15 +286,15 @@ export async function receiveBotInstall(dat: Payload) {
       tenant,
     }
     sphinxLogger.info(['CREATE bot MEMBER', botMember])
-    await models.BotMember.create(botMember)
+    await models.BotMember.create(botMember) as unknown as BotMember
   }
 
-  const contact = await models.Contact.findOne({
+  const contact: Contact = await models.Contact.findOne({
     where: {
       tenant,
       publicKey: sender_pub_key,
     },
-  })
+  }) as unknown as Contact
   if (!contact) {
     return sphinxLogger.error('=> receiveBotInstall no contact')
   }
@@ -301,7 +305,7 @@ export async function receiveBotInstall(dat: Payload) {
 }
 
 // ONLY FOR BOT MAKER
-export async function receiveBotCmd(dat: Payload) {
+export async function receiveBotCmd(dat: Payload): Promise<void> {
   sphinxLogger.info('=> receiveBotCmd', logging.Network)
 
   const sender_pub_key = dat.sender.pub_key
@@ -318,7 +322,7 @@ export async function receiveBotCmd(dat: Payload) {
       uuid: bot_uuid,
       tenant,
     },
-  })
+  }) as unknown as Bot
   if (!bot) return
 
   const botMember = await models.BotMember.findOne({
@@ -327,17 +331,17 @@ export async function receiveBotCmd(dat: Payload) {
       tribeUuid: chat_uuid,
       tenant,
     },
-  })
+  }) as unknown as BotMember
   if (!botMember) return
 
-  botMember.update({ msgCount: (botMember || 0) + 1 })
+  botMember.update({ msgCount: (botMember.msgCount || 0) + 1 })
 
   const contact = await models.Contact.findOne({
     where: {
       tenant,
       publicKey: sender_pub_key,
     },
-  })
+  }) as unknown as Contact
   if (!contact) {
     return sphinxLogger.error('=> receiveBotInstall no contact')
   }
@@ -350,8 +354,8 @@ export async function receiveBotCmd(dat: Payload) {
 }
 
 export async function postToBotServer(
-  msg,
-  bot,
+  msg: Msg,
+  bot: Bot,
   route: string
 ): Promise<boolean> {
   sphinxLogger.info('=> postToBotServer', logging.Network) //, payload)
@@ -393,8 +397,8 @@ export function buildBotPayload(msg: Msg): SphinxBot.Message {
     reply_id: msg.message.replyUuid,
     channel: {
       id: chat_uuid,
-      send: function () {},
-      pay: function () {},
+      send: () => {},
+      pay: () => {},
     },
     content: msg.message.content,
     amount: msg.message.amount,
@@ -416,7 +420,7 @@ export function buildBotPayload(msg: Msg): SphinxBot.Message {
   return m
 }
 
-export async function receiveBotRes(dat: Payload) {
+export async function receiveBotRes(dat: Payload): Promise<void> {
   sphinxLogger.info('=> receiveBotRes', logging.Network) //, payload)
 
   if (!dat.chat || !dat.message || !dat.sender) {
@@ -443,7 +447,7 @@ export async function receiveBotRes(dat: Payload) {
 
   const chat = await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant },
-  })
+  }) as unknown as Chat
   if (!chat) return sphinxLogger.error('=> receiveBotRes Error no chat')
 
   const tribeOwnerPubKey = chat && chat.ownerPubkey
@@ -474,7 +478,7 @@ export async function receiveBotRes(dat: Payload) {
         uuid: chat_uuid,
         tenant,
       },
-    })
+    }) as unknown as Chat
     if (!chat)
       return sphinxLogger.error('=> receiveBotRes as sub error no chat')
     let date = new Date()
@@ -483,7 +487,7 @@ export async function receiveBotRes(dat: Payload) {
 
     const sender = await models.Contact.findOne({
       where: { publicKey: sender_pub_key, tenant },
-    })
+    }) as unknown as Contact
     const msg: { [k: string]: any } = {
       chatId: chat.id,
       uuid: msg_uuid,
@@ -502,7 +506,7 @@ export async function receiveBotRes(dat: Payload) {
       tenant,
     }
     if (parent_id) msg.parentId = parent_id
-    const message = await models.Message.create(msg)
+    const message = await models.Message.create(msg) as unknown as Message
     socket.sendJson(
       {
         type: 'message',

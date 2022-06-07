@@ -53,6 +53,8 @@ export default class ChatBot extends Model<ChatBot> {
 
   @Column
   tenant: number
+
+  dataValues: { [k: string]: any }
 }
 
 export interface ChatBotRecord extends ChatBot {

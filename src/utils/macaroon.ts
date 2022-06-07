@@ -5,7 +5,7 @@ const config = loadConfig()
 
 let inMemoryMacaroon = '' // hex encoded
 
-export function getMacaroon(macName?: string) {
+export function getMacaroon(macName?: string): string {
   if (config.unlock) {
     return inMemoryMacaroon
   } else {
@@ -19,6 +19,6 @@ export function getMacaroon(macName?: string) {
   }
 }
 
-export function setInMemoryMacaroon(mac: string) {
+export function setInMemoryMacaroon(mac: string): void {
   inMemoryMacaroon = mac
 }

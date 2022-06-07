@@ -1,5 +1,5 @@
 import { logging } from './utils/logger'
-import { models } from './models'
+import { Contact, Chat, models } from './models'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
 import constants from './constants'
@@ -16,14 +16,14 @@ type NotificationType =
   | 'boost'
 
 const sendNotification = async (
-  chat,
-  name,
+  chat: Chat | undefined,
+  name: string,
   type: NotificationType,
-  owner,
+  owner: Contact,
   amount?: number
-) => {
+): Promise<void> => {
   if (!owner) return sphinxLogger.error(`=> sendNotification error: no owner`)
-
+  
   let message = `You have a new message from ${name}`
   if (type === 'invite') {
     message = `Your invite to ${name} is ready`
@@ -40,6 +40,8 @@ const sendNotification = async (
   if (type === 'keysend') {
     message = `You have received a payment of ${amount} sats`
   }
+
+  if (!chat) return sphinxLogger.error(`=> sendNotification error: no chat NotificationType ${type}`)
 
   // group
   if (
@@ -72,7 +74,11 @@ const sendNotification = async (
   const isAndroid = !isIOS
 
   const params: { [k: string]: any } = { device_id }
-  const notification: { [k: string]: any } = {
+  const notification: {
+    chat_id: number,
+    sound: string,
+    message?: string
+  } = {
     chat_id: chat.id || 0,
     sound: '',
   }
@@ -91,7 +97,7 @@ const sendNotification = async (
         const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : ''
         params.notification.message = chat.isMuted
           ? ''
-          : `You have ${count}new messages in ${chat.name}`
+          : `You have ${count}new message${tribeCounts[chat.id] == 1 ? '' : 's'} in ${chat.name}`
         finalNotification(owner.id, params, isTribeOwner)
       },
       chat.id,
@@ -99,9 +105,10 @@ const sendNotification = async (
     )
   } else if (chat.type == constants.chat_types.conversation) {
     try {
-      const cids = JSON.parse(chat.contactIds || '[]')
+      const cids: number[] = JSON.parse(chat && chat.contactIds || '[]')
       const notme = cids.find((id) => id !== 1)
-      const other = models.Contact.findOne({ where: { id: notme } })
+      if (notme === undefined) return
+      const other = models.Contact.findOne({ where: { id: notme } }) as unknown as Contact
       if (other.blocked) return
       finalNotification(owner.id, params, isTribeOwner)
     } catch (e) {
@@ -129,7 +136,7 @@ async function finalNotification(
   }
   const mutedChats = await models.Chat.findAll({
     where: { isMuted: true },
-  })
+  }) as unknown as Chat[]
   const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)
   const where: { [k: string]: any } = {
@@ -141,7 +148,7 @@ async function finalNotification(
   // if (!isTribeOwner) {
   //   where.type = { [Op.notIn]: typesToNotNotify };
   // }
-  let unseenMessages = await models.Message.count({
+  const unseenMessages = await models.Message.count({
     where,
   })
   // if(!unseenMessages) return
@@ -167,19 +174,16 @@ export { sendNotification }
 
 const bounceTimeouts = {}
 const tribeCounts = {}
-function debounce(func, id, delay) {
-  const context = this
-  const args = arguments
+function debounce(func: () => void, id: number, delay: number) {
   if (bounceTimeouts[id]) clearTimeout(bounceTimeouts[id])
   if (!tribeCounts[id]) tribeCounts[id] = 0
   tribeCounts[id] += 1
   bounceTimeouts[id] = setTimeout(() => {
-    func.apply(context, args)
-    // setTimeout(()=> tribeCounts[id]=0, 15)
+    func()
     tribeCounts[id] = 0
   }, delay)
 }
 
-export function resetNotifyTribeCount(chatID: number) {
+export function resetNotifyTribeCount(chatID: number): void {
   tribeCounts[chatID] = 0
 }

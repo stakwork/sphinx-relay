@@ -2,7 +2,8 @@ import * as expressWinston from 'express-winston'
 import * as winston from 'winston'
 import * as moment from 'moment'
 import { loadConfig } from './config'
-import * as blgr from 'blgr'
+import * as blgr from 'blgr' // doesn't exist on npm
+import { Request } from 'express'
 
 const config = loadConfig()
 
@@ -22,7 +23,7 @@ const logger = expressWinston.logger({
   // msg: "HTTP {{req.method}} {{req.url}}", // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
   expressFormat: true, // Use the default Express/morgan request formatting. Enabling this will override any msg if true. Will only output colors with colorize set to true
   colorize: true, // Color the text and status code, using the Express/morgan color palette (text: gray, status: default green, 3XX cyan, 4XX yellow, 5XX red).
-  ignoreRoute: function (req, res) {
+  ignoreRoute: function (req: Request) {
     if (req.path.startsWith('/json')) return true // debugger
     return false
   }, // optional: allows to skip some log messages based on request and/or response
@@ -44,7 +45,7 @@ interface Logging {
   SSL: string
 }
 
-const logging: Logging = {
+export const logging: Logging = {
   Express: 'EXPRESS',
   Lightning: 'LIGHTNING',
   Meme: 'MEME',
@@ -68,12 +69,9 @@ async function sphinxLoggerBase(
     loggingType == 'MISC'
   ) {
     await blgrLogger.open()
-    const [date, time] = new Date(Date.now())
-      .toISOString()
-      .split('.')[0]
-      .split('T')
-    const dateArr: string[] = date.split('-')
-    dateArr.push(dateArr.shift()!.substring(2))
+    const [date, time] = new Date(Date.now()).toISOString().split('.')[0].split('T');
+    const dateArr = date.split('-');
+    dateArr.push(dateArr.shift()!.substring(2));
     blgrLogger[level](
       `${dateArr.join('-')}T${time}`,
       '[' + loggingType + ']',
@@ -85,41 +83,41 @@ async function sphinxLoggerBase(
 async function sphinxLoggerNone(
   message: any | Array<any>,
   loggingType?: string
-) {
-  sphinxLoggerBase(message, loggingType, 'none')
+): Promise<void> {
+  await sphinxLoggerBase(message, loggingType, 'none')
 }
 async function sphinxLoggerError(
   message: any | Array<any>,
   loggingType?: string
-) {
-  sphinxLoggerBase(message, loggingType, 'error')
+): Promise<void> {
+  await sphinxLoggerBase(message, loggingType, 'error')
 }
 async function sphinxLoggerWarning(
   message: any | Array<any>,
   loggingType?: string
-) {
-  sphinxLoggerBase(message, loggingType, 'warning')
+): Promise<void> {
+  await sphinxLoggerBase(message, loggingType, 'warning')
 }
 async function sphinxLoggerInfo(
   message: any | Array<any>,
   loggingType?: string
-) {
-  sphinxLoggerBase(message, loggingType, 'info')
+): Promise<void> {
+  await sphinxLoggerBase(message, loggingType, 'info')
 }
 async function sphinxLoggerDebug(
   message: any | Array<any>,
   loggingType?: string
-) {
-  sphinxLoggerBase(message, loggingType, 'debug')
+): Promise<void> {
+  await sphinxLoggerBase(message, loggingType, 'debug')
 }
 async function sphinxLoggerSpam(
   message: any | Array<any>,
   loggingType?: string
-) {
-  sphinxLoggerBase(message, loggingType, 'spam')
+): Promise<void> {
+  await sphinxLoggerBase(message, loggingType, 'spam')
 }
 
-const sphinxLogger = {
+export const sphinxLogger = {
   none: sphinxLoggerNone,
   error: sphinxLoggerError,
   warning: sphinxLoggerWarning,
@@ -127,5 +125,3 @@ const sphinxLogger = {
   debug: sphinxLoggerDebug,
   spam: sphinxLoggerSpam,
 }
-
-export { logging, sphinxLogger }

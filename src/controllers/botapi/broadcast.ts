@@ -1,5 +1,5 @@
 import * as network from '../../network'
-import { models } from '../../models'
+import { Contact, models, Message } from '../../models'
 import * as short from 'short-uuid'
 import * as rsa from '../../crypto/rsa'
 import * as jsonUtils from '../../utils/json'
@@ -20,13 +20,13 @@ export default async function broadcast(a: any) {
     return sphinxLogger.error(`not a tribe`)
   const owner = await models.Contact.findOne({
     where: { id: theChat.tenant },
-  })
+  }) as unknown as Contact
   const tenant: number = owner.id
 
   const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
   const encryptedText = rsa.encrypt(theChat.groupKey, content)
   const textMap = { chat: encryptedText }
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const alias = bot_name || 'Bot'
   const botContactId = -1
@@ -48,7 +48,7 @@ export default async function broadcast(a: any) {
     tenant,
   }
   if (parent_id) msg.parentId = parent_id
-  const message = await models.Message.create(msg)
+  const message = await models.Message.create(msg) as unknown as Message
   socket.sendJson(
     {
       type: 'message',
@@ -61,7 +61,7 @@ export default async function broadcast(a: any) {
   await network.sendMessage({
     chat: theChat,
     sender: {
-      ...owner.dataValues,
+      ...owner.dataValues as Contact,
       alias,
       id: botContactId,
       role: constants.chat_roles.reader,
@@ -72,7 +72,7 @@ export default async function broadcast(a: any) {
       uuid: message.uuid,
       replyUuid: message.replyUuid,
       parentId: message.parentId || 0,
-    },
+    } as unknown as Message,
     type: constants.message_types.bot_res,
     success: () => ({ success: true }),
     failure: (e) => {

@@ -5,9 +5,9 @@
     "tls_location": "/Users/evanfeenstra/Library/Application Support/Lnd/tls.cert",
     "node_ip": "127.0.0.1",
     "lnd_ip": "127.0.0.1",
-    "lnd_port": "10001",
+    "lnd_port": 10001,
     "node_http_protocol": "http",
-    "node_http_port": "3001",
+    "node_http_port": 3001,
     "hub_api_url": "http://lvh.me/api/v1",
     "hub_url": "http://lvh.me/ping",
     "hub_invite_url": "http://lvh.me/invites",
@@ -19,12 +19,12 @@
     "ssl": {
       "enabled": false,
       "save": true,
-      "port": "80"
+      "port": 80
     },
     "proxy_macaroons_dir": "/Users/evanfeenstra/code/sphinx-proxy/macaroons",
     "proxy_tls_location": "/Users/evanfeenstra/code/sphinx-proxy/cert/tls.cert",
     "proxy_lnd_ip": "127.0.0.1",
-    "proxy_lnd_port": "11111",
+    "proxy_lnd_port": 11111,
     "proxy_admin_token": "d86hnf8irgbcv093jdns"
   },
   "production": {
@@ -35,8 +35,8 @@
     "node_ip": "localhost",
     "lnd_ip": "localhost",
     "node_http_protocol": "http",
-    "node_http_port": "3001",
-    "lnd_port": "10009",
+    "node_http_port": 3001,
+    "lnd_port": 10009,
     "hub_api_url": "https://hub.sphinx.chat/api/v1",
     "hub_url": "https://hub.sphinx.chat/ping",
     "hub_invite_url": "https://hub.sphinx.chat/invites",
@@ -48,7 +48,7 @@
     "ssl": {
       "enabled": false,
       "save": true,
-      "port": "80"
+      "port": 80
     }
   }
 }

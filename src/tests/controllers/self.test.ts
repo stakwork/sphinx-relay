@@ -15,7 +15,7 @@ test.serial('checkSelf', async (t: ExecutionContext<Context>) => {
     if (!node) return
 
     //get list of contacts as node
-    var me = await getSelf(t, node)
+    const me = await getSelf(t, node)
     //check that the structure object
     t.true(typeof me === 'object') // json object by default
     //check that first contact public_key === node pubkey

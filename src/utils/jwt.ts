@@ -24,10 +24,10 @@ export function createJWT(
   return jwt.compact()
 }
 
-export function verifyJWT(token: string) {
+export function verifyJWT(token: string): nJwt.Jwt | undefined {
   try {
     return nJwt.verify(token, signingKey)
   } catch (e) {
-    return false
+    return
   }
 }

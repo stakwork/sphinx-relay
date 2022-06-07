@@ -1,9 +1,9 @@
 import './tv42_zbase32_gopherjs'
 
-function encode(b) {
-  return global['zbase32'].Encode(b)
+export function encode(bytes: Uint8Array): string {
+  return global['zbase32'].Encode(bytes)
 }
-function decode(txt) {
+
+export function decode(txt: string): Uint8Array {
   return global['zbase32'].Decode(txt)
 }
-export { encode, decode }

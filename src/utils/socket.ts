@@ -1,8 +1,10 @@
-import { models } from '../models'
+import { Contact, models } from '../models'
 import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { loadConfig } from './config'
 import { sphinxLogger } from '../utils/logger'
+import { Server } from 'http'
+import { Request, Response } from 'express'
 import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
@@ -21,17 +23,17 @@ const CLIENTS: ClientMap = {}
 let io: any
 // let srvr: any
 
-export function connect(server) {
+export function connect(server: Server): void {
   // srvr = new WebSocket.Server({ server, clientTracking:true })
 
   io = socketio(server, {
     allowEIO3: true,
-    handlePreflightRequest: (req, res) => {
+    handlePreflightRequest: (req: Request, res: Response) => {
       const headers = {
         'Access-Control-Allow-Headers':
-          'Content-Type, Accept, x-user-token, X-Requested-With',
-        'Access-Control-Allow-Origin': req.headers.origin, //or the specific origin you want to give access to,
-        'Access-Control-Allow-Credentials': true,
+        'Content-Type, Accept, x-user-token, X-Requested-With',
+        'Access-Control-Allow-Origin': req.headers.origin, // or the specific origin you want to give access to,
+        'Access-Control-Allow-Credentials': 'true',
       }
       res.writeHead(200, headers)
       res.end()
@@ -96,20 +98,20 @@ async function getOwnerFromToken(
   const hashedToken = crypto.createHash('sha256').update(token).digest('base64')
   const owner = await models.Contact.findOne({
     where: { authToken: hashedToken, isOwner: true },
-  })
+  }) as unknown as Contact
   if (owner && owner.id) {
     return owner.dataValues // failed
   }
   return null
 }
 
-export const send = (body, tenant) => {
+export function send(body: string, tenant: number): void {
   if (!io) return // io.sockets.emit('message', body)
   const clients = CLIENTS[tenant]
   if (!clients) return
   clients.forEach((c) => c.emit('message', body))
 }
 
-export const sendJson = (object, tenant: number) => {
+export function sendJson(object: unknown, tenant: number): void {
   send(JSON.stringify(object), tenant)
 }

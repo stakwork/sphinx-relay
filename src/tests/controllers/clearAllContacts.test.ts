@@ -18,11 +18,11 @@ export async function clearAllContacts(t) {
     if (!node) return
 
     //get all contacts from node
-    var res = await http.get(
+    const res = await http.get(
       node.external_ip + '/contacts?unmet=include',
       makeArgs(node)
     )
-    var contacts = res.response.contacts
+    const contacts = res.response.contacts
     t.truthy(contacts, 'should have at least one contact')
 
     if (contacts.length === 1) {
@@ -33,7 +33,7 @@ export async function clearAllContacts(t) {
     //delete any contact basides itself
     await asyncForEach(contacts, async (c) => {
       if (c.public_key !== node.pubkey) {
-        let deletion = await http.del(
+        const deletion = await http.del(
           node.external_ip + '/contacts/' + c.id,
           makeArgs(node)
         )

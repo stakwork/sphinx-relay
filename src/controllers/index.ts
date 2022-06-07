@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { Message, models } from '../models'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -23,9 +23,10 @@ import { failure } from '../utils/res'
 import * as auth from './auth'
 import * as personal from './api/personal'
 import * as lsats from './lsats'
+import { Request, Response, Express } from 'express'
 import { Req } from '../types'
 
-export async function set(app) {
+export async function set(app: Express): Promise<void> {
   builtInBots.init()
 
   if (models && models.Subscription) {
@@ -142,19 +143,19 @@ export async function set(app) {
 
   app.get('/healthcheck', confirmations.healthcheck)
 
-  app.get('/version', async function (req: Req, res) {
+  app.get('/version', async function (req: Req, res: Response) {
     const version = await checkTag()
     res.send({ version })
   })
 
-  app.get('/latest', async function (req: Req, res) {
+  app.get('/latest', async function (req: Req, res: Response) {
     if (!req.owner) return failure(res, 'no owner')
     const tenant: number = req.owner.id
     const lasts = await models.Message.findAll({
       limit: 1,
       order: [['createdAt', 'DESC']],
       where: { tenant },
-    })
+    }) as unknown as Message[]
     const last = lasts && lasts[0]
     if (!last) {
       res.status(404).send('Not found')

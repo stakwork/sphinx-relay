@@ -2,16 +2,17 @@ import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'
 import * as people from '../../utils/people'
-import { models } from '../../models'
+import { Contact, models } from '../../models'
 import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
 import { createJWT, scopes } from '../../utils/jwt'
+import { Request, Response } from 'express'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
 // U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
-export async function createPeopleProfile(req, res) {
+export async function createPeopleProfile(req: Request, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -20,7 +21,7 @@ export async function createPeopleProfile(req, res) {
   try {
     const owner = await models.Contact.findOne({
       where: { tenant, isOwner: true },
-    })
+    }) as unknown as Contact
     const {
       id,
       host,
@@ -62,14 +63,14 @@ export async function createPeopleProfile(req, res) {
 }
 
 // accessed from people.sphinx.chat website
-export async function deletePersonProfile(req, res) {
+export async function deletePersonProfile(req: Request, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   try {
     const owner = await models.Contact.findOne({
       where: { tenant, isOwner: true },
-    })
+    }) as unknown as Contact
     const { id, host } = req.body
     if (!id) {
       return failure(res, 'no id')
@@ -84,11 +85,11 @@ export async function deletePersonProfile(req, res) {
   }
 }
 
-export async function uploadPublicPic(req, res) {
+export async function uploadPublicPic(req: Request, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
 
   const { img_base64, img_type } = req.body
-  let imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type
+  const imgType = img_type === 'image/jpeg' ? 'image/jpg' : img_type
   try {
     const host = config.media_host
 
@@ -97,7 +98,7 @@ export async function uploadPublicPic(req, res) {
       imageBase64 = img_base64.substr(img_base64.indexOf(',') + 1)
     }
 
-    var encImgBuffer = Buffer.from(imageBase64, 'base64')
+    const encImgBuffer = Buffer.from(imageBase64, 'base64')
 
     const token = await meme.lazyToken(req.owner.publicKey, host)
 
@@ -120,7 +121,7 @@ export async function uploadPublicPic(req, res) {
       body: form,
     })
 
-    let json = await resp.json()
+    const json = await resp.json()
     if (!json.muid) return failure(res, 'no muid')
 
     let theHost = host
@@ -133,7 +134,7 @@ export async function uploadPublicPic(req, res) {
   }
 }
 
-export async function refreshJWT(req, res) {
+export async function refreshJWT(req: Request, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   const sc = [scopes.PERSONAL]
   const jot = createJWT(req.owner.publicKey, sc, 10080) // one week
@@ -142,14 +143,14 @@ export async function refreshJWT(req, res) {
   })
 }
 
-export async function claimOnLiquid(req, res) {
+export async function claimOnLiquid(req: Request, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   try {
     const owner = await models.Contact.findOne({
       where: { tenant, isOwner: true },
-    })
+    }) as unknown as Contact
     const { asset, to, amount, memo } = req.body
 
     const r = await people.claimOnLiquid({

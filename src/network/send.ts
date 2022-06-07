@@ -70,10 +70,7 @@ export async function sendMessage({
     return
   }
 
-  let contactIds =
-    (typeof chat.contactIds === 'string'
-      ? JSON.parse(chat.contactIds)
-      : chat.contactIds) || []
+  let contactIds: number[] = JSON.parse(chat.contactIds)
   let justMe = false
   if (contactIds.length === 1) {
     if (contactIds[0] === tenant) {
@@ -129,7 +126,7 @@ export async function sendMessage({
       // if tribe, send to owner only
       const tribeOwner = await models.Contact.findOne({
         where: { publicKey: chat.ownerPubkey as string, tenant },
-      })
+      }) as unknown as Contact
       contactIds = tribeOwner ? [tribeOwner.id] : []
     }
   } else {
@@ -140,8 +137,8 @@ export async function sendMessage({
     }
   }
 
-  let yes: any = true
-  let no: any = null
+  let yes = true
+  let no: Error | string | undefined
 
   sphinxLogger.info(
     `=> sending to ${contactIds.length} 'contacts'`,
@@ -155,7 +152,7 @@ export async function sendMessage({
       return
     }
 
-    const contact = await models.Contact.findOne({ where: { id: contactId } })
+    const contact = await models.Contact.findOne({ where: { id: contactId } }) as unknown as Contact
     if (!contact) {
       // console.log('=> sendMessage no contact')
       return // skip if u simply dont have the contact
@@ -199,8 +196,7 @@ export async function sendMessage({
     // console.log("==> SENDER",sender)
     // console.log("==> OK SIGN AND SEND", opts);
     try {
-      const r = await signAndSend(opts, sender, mqttTopic)
-      yes = r
+      yes = await signAndSend(opts, sender, mqttTopic)
     } catch (e) {
       sphinxLogger.error(`KEYSEND ERROR ${e}`)
       no = e
@@ -324,18 +320,6 @@ export function newmsg(
   }
 }
 
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-// function urlBase64FromHex(ascii){
-//     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }
-// function urlBase64FromBytes(buf){
-//     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }

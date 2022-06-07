@@ -25,9 +25,9 @@ import {
 } from './chatTribes'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { Req } from '../types'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import { asyncForEach } from '../helpers'
+import { Req } from '../types'
 
 export async function updateChat(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
@@ -159,7 +159,7 @@ export async function getChats(req: Req, res: Response): Promise<void> {
   const chats: Chat[] = await models.Chat.findAll({
     where: { deleted: false, tenant },
     raw: true,
-  })
+  }) as unknown as Chat[]
   const c = chats.map((chat) => jsonUtils.chatToJson(chat))
   success(res, c)
 }
@@ -222,7 +222,7 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
   await asyncForEach(contact_ids, async (cid) => {
     const contact: Contact = await models.Contact.findOne({
       where: { id: cid, tenant },
-    })
+    }) as unknown as Contact
     members[contact.publicKey] = {
       key: contact.contactKey,
       alias: contact.alias || '',
@@ -313,7 +313,7 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
             role: constants.chat_roles.owner,
             status: constants.chat_statuses.approved,
             tenant,
-          })
+          }) as unknown as ChatMember
         } catch (e) {
           sphinxLogger.error(`=> createGroupChat failed to UPSERT ${e}`)
         }
@@ -343,14 +343,14 @@ export async function addGroupMembers(req: Req, res: Response): Promise<void> {
   if (chat.type === constants.chat_types.tribe) {
     const me: ChatMember = await models.ChatMember.findOne({
       where: { contactId: owner.id, chatId: chat.id, tenant },
-    })
+    }) as unknown as ChatMember
     if (me) members[owner.publicKey].role = me.role
   }
   const allContactIds = contactIds.concat(contact_ids)
   await asyncForEach(allContactIds, async (cid) => {
     const contact: Contact = await models.Contact.findOne({
       where: { id: cid, tenant },
-    })
+    }) as unknown as Contact
     if (contact) {
       members[contact.publicKey] = {
         key: contact.contactKey,
@@ -358,7 +358,7 @@ export async function addGroupMembers(req: Req, res: Response): Promise<void> {
       }
       const member: ChatMember = await models.ChatMember.findOne({
         where: { contactId: owner.id, chatId: chat.id, tenant },
-      })
+      }) as unknown as ChatMember
       if (member) members[contact.publicKey].role = member.role
     }
   })
@@ -469,7 +469,7 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
   if (!isTribe || isTribeOwner) {
     const sender: Contact = await models.Contact.findOne({
       where: { publicKey: sender_pub_key, tenant },
-    })
+    }) as unknown as Contact
     const contactIds = JSON.parse(chat.contactIds || '[]')
     if (sender) {
       theSender = sender // might already include??
@@ -491,7 +491,7 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
           photoUrl: sender_photo_url,
           tenant,
           routeHint: sender_route_hint || '',
-        })
+        }) as unknown as Contact
         theSender = createdContact
         contactIds.push(createdContact.id)
       }
@@ -600,7 +600,7 @@ export async function receiveGroupLeave(payload: Payload): Promise<void> {
   if (!isTribe || isTribeOwner) {
     const sender = await models.Contact.findOne({
       where: { publicKey: sender_pub_key, tenant },
-    })
+    }) as unknown as Contact
     if (!sender)
       return sphinxLogger.error(`=> receiveGroupLeave cant find sender`)
 
@@ -702,7 +702,7 @@ export async function receiveGroupCreateOrInvite(
   for (const [pubkey, member] of Object.entries(chat_members)) {
     const contact: ContactRecord = await models.Contact.findOne({
       where: { publicKey: pubkey, tenant },
-    })
+    }) as unknown as Contact
     let addContact = false
     if (chat_type === constants.chat_types.group && member && member.key) {
       addContact = true
@@ -754,7 +754,7 @@ export async function receiveGroupCreateOrInvite(
     ...(chat_host && { host: chat_host }),
     ...(chat_key && { groupKey: chat_key }),
     tenant,
-  })
+  }) as unknown as Chat
 
   if (isTribe) {
     // IF TRIBE, ADD TO XREF
@@ -765,14 +765,14 @@ export async function receiveGroupCreateOrInvite(
         role: c.role || constants.chat_roles.reader,
         lastActive: date,
         status: constants.chat_statuses.approved,
-      })
+      }) as unknown as ChatMember
     })
   }
 
   socket.sendJson(
     {
       type: 'group_create',
-      response: jsonUtils.messageToJson({ newContacts }, chat),
+      response: jsonUtils.anyToJson({ newContacts }, chat),
     },
     tenant
   )
@@ -789,7 +789,7 @@ export async function receiveGroupCreateOrInvite(
             alias: owner.alias || '',
           },
         },
-      },
+      } as unknown as Chat,
       sender: owner,
       message: {} as Message,
       type: constants.message_types.group_join,

@@ -15,14 +15,14 @@ export async function getContacts(
     makeArgs(node1)
   )
   // node1 contact object from node1 perspective
-  let n1contactP1 = res.response.contacts.find(
+  const n1contactP1 = res.response.contacts.find(
     (contact) => contact.public_key === node1.pubkey
   )
   t.true(typeof n1contactP1 === 'object')
 
   if (node2) {
     // node2 contact object from node1 perspective
-    let n2contactP1 = res.response.contacts.find(
+    const n2contactP1 = res.response.contacts.find(
       (contact) => contact.public_key === node2.pubkey
     )
     t.true(typeof n2contactP1 === 'object')

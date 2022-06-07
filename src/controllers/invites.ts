@@ -1,13 +1,14 @@
-import { models } from '../models'
+import { Invite, Contact, models } from '../models'
 import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 // import * as proxy from '../utils/proxy'
 import { failure } from '../utils/res'
 import { sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
 import { Req } from '../types'
 
-export const finishInvite = async (req: Req, res) => {
+export const finishInvite = async (req: Req, res: Response): Promise<void> => {
   const { invite_string } = req.body
   const params = {
     invite: {
@@ -29,14 +30,14 @@ export const finishInvite = async (req: Req, res) => {
   finishInviteInHub(params, onSuccess, onFailure)
 }
 
-export const payInvite = async (req: Req, res) => {
+export const payInvite = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   const invite_string = req.params['invite_string']
   const dbInvite = await models.Invite.findOne({
     where: { inviteString: invite_string, tenant },
-  })
+  }) as unknown as Invite
 
   const onSuccess = async (response) => {
     // const invite = response.object
@@ -70,7 +71,7 @@ export const payInvite = async (req: Req, res) => {
   payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure)
 }
 
-export const createInvite = async (req: Req, res) => {
+export const createInvite = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { nickname, welcome_message } = req.body
@@ -97,7 +98,7 @@ export const createInvite = async (req: Req, res) => {
       alias: nickname,
       status: 0,
       tenant,
-    })
+    }) as unknown as Contact
     const invite = await models.Invite.create({
       welcomeMessage: inviteCreated.message,
       contactId: contact.id,

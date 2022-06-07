@@ -116,6 +116,8 @@ export default class Chat extends Model<Chat> {
 
   @Column
   pin: string
+
+  dataValues: { [k: string]: any }
 }
 
 export interface ChatRecord extends Chat {

@@ -101,7 +101,7 @@ async function sphinxPeople(t, node1) {
   //GET PERSON FROM RELAY
   const res = await http.get(node1.external_ip + '/contacts', makeArgs(node1))
   //create node contact object from node perspective
-  let self = res.response.contacts.find(
+  const self = res.response.contacts.find(
     (contact) => contact.public_key === node1.pubkey
   )
 
@@ -142,7 +142,7 @@ async function sphinxPeople(t, node1) {
   //GET PERSON FROM RELAY
   const res2 = await http.get(node1.external_ip + '/contacts', makeArgs(node1))
   //create node contact object from node perspective
-  let self2 = res2.response.contacts.find(
+  const self2 = res2.response.contacts.find(
     (contact) => contact.public_key === node1.pubkey
   )
 

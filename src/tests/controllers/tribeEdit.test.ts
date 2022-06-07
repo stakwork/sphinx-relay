@@ -25,13 +25,13 @@ async function tribeEdit(t, node1, node2) {
 
   //NODE1 CREATES A TRIBE
   console.log('create tribe')
-  let tribe = await createTribe(t, node1)
+  const tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
 
   //NODE2 JOINS TRIBE CREATED BY NODE1
   console.log('join tribe')
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join = await joinTribe(t, node2, tribe)
+  const join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
 
   //GET TRIBE ID FROM NODE1 PERSPECTIVE
@@ -90,11 +90,11 @@ async function tribeEdit(t, node1, node2) {
 
   //NODE2 LEAVES THE TRIBE
   console.log('leave tribe')
-  let left = await leaveTribe(t, node2, tribe)
+  const left = await leaveTribe(t, node2, tribe)
   t.true(left, 'node2 should leave tribe')
 
   //NODE1 DELETES THE TRIBE
   console.log('delete tribe')
-  let delTribe = await deleteTribe(t, node1, tribe)
+  const delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')
 }

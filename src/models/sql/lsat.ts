@@ -56,4 +56,6 @@ export default class Lsat extends Model<Lsat> {
 
   @Column
   tenant: number
+
+  dataValues: { [k: string]: any }
 }

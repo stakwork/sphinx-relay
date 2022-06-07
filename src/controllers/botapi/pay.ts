@@ -1,5 +1,5 @@
 import * as network from '../../network'
-import { models } from '../../models'
+import { Contact, models, Message } from '../../models'
 import * as short from 'short-uuid'
 import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
@@ -19,12 +19,12 @@ export default async function pay(a) {
     return sphinxLogger.error(`not a tribe`)
   const owner = await models.Contact.findOne({
     where: { id: theChat.tenant },
-  })
+  }) as unknown as Contact
   const tenant: number = owner.id
   const alias = bot_name || owner.alias
   const botContactId = -1
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const msg: { [k: string]: any } = {
     chatId: theChat.id,
@@ -41,7 +41,7 @@ export default async function pay(a) {
     tenant,
   }
   if (parent_id) msg.parentId = parent_id
-  const message = await models.Message.create(msg)
+  const message = await models.Message.create(msg) as unknown as Message
   socket.sendJson(
     {
       type: 'boost',
@@ -53,19 +53,19 @@ export default async function pay(a) {
   await network.sendMessage({
     chat: theChat,
     sender: {
-      ...owner.dataValues,
+      ...owner.dataValues as Contact,
       alias,
       id: botContactId,
       role: constants.chat_roles.owner,
     },
     message: {
-      content: '',
+      // content: '', // content doesnt exist on type Message, and it empty so can be removed?
       amount: message.amount,
       id: message.id,
       uuid: message.uuid,
       replyUuid: message.replyUuid,
       parentId: message.parentId || 0
-    },
+    } as Message,
     type: constants.message_types.boost,
     success: () => ({ success: true }),
     failure: (e) => {

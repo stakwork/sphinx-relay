@@ -351,7 +351,7 @@ export function listPeersResponse(
 }
 
 export type Buf = Buffer | ByteBuffer | ArrayBuffer
-type DestCustomRecords = { [key: string]: Buf }
+type DestCustomRecords = { [k: string]: Buf }
 export interface KeysendRequest {
   amt: number
   final_cltv_delta: number
@@ -531,6 +531,10 @@ export interface Invoice {
   features: { [k: string]: any }
   is_keysend: boolean
 }
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Payment {
+  // if any fields are needed add them
+}
 interface GreenlightOffchainPayment {
   label: string
   preimage: Buf
@@ -608,19 +612,24 @@ interface GreenlightConnectPeerResponse {
   features: string
 }
 export function connectPeerResponse(
-  res: ConnectPeerResponse | GreenlightConnectPeerResponse
-): ConnectPeerResponse {
-  if (IS_LND) return res as ConnectPeerResponse
+//  res: ConnectPeerResponse | GreenlightConnectPeerResponse
+  res: {} | GreenlightConnectPeerResponse
+//): ConnectPeerResponse {
+): {} {
+//  if (IS_LND) return res as ConnectPeerResponse
+  if (IS_LND) return res as {}
   if (IS_GREENLIGHT) {
     return <GreenlightConnectPeerResponse>{}
   }
-  return <ConnectPeerResponse>{}
+//  return <ConnectPeerResponse>{}
+  return <{}>{}
 }
 
 interface AmountsRes {
   satoshi: string
   millisatoshi: string
 }
+
 function greenlightAmoutToAmounts(a: GreenlightAmount): AmountsRes {
   let satoshi = ''
   let millisatoshi = ''
@@ -683,7 +692,6 @@ enum GreenlightChannelState {
 }
 
 function shortChanIDfromInt64(int: string): string {
-  if (typeof int !== 'string') return ''
   const l = long.fromString(int, true)
   const blockHeight = l.shiftRight(40)
   const txIndex = l.shiftRight(16).and(0xffffff)

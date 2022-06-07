@@ -21,7 +21,7 @@ test('test-40-latestTest: create timestamp, add contact and chat, get latest, de
 async function latestTest(t, node1, node2, node3: NodeConfig | null = null) {
   //TWO NODES SEND TEXT MESSAGES TO EACH OTHER ===>
 
-  var aliases = `${node1.alias} and ${node2.alias}`
+  let aliases = `${node1.alias} and ${node2.alias}`
   if (node3) aliases = aliases + ` and ${node3?.alias}`
   console.log(aliases)
 
@@ -32,17 +32,17 @@ async function latestTest(t, node1, node2, node3: NodeConfig | null = null) {
   await sleep(1000)
 
   //NODE1 GETS LATEST
-  let latest = await getLatest(t, node1, dateq1)
+  const latest = await getLatest(t, node1, dateq1)
   t.true(latest.success, 'node1 should get latest')
   t.true(latest.response.contacts.length === 0, 'there should be no contacts')
   t.true(latest.response.chats.length === 0, 'there should be no chats')
 
   //NODE1 ADDS NODE2 AS A CONTACT
-  let added = await addContact(t, node1, node2)
+  const added = await addContact(t, node1, node2)
   t.true(added, 'node1 should add node2 as contact')
 
   //NODE1 GETS LATEST
-  let latest2 = await getLatest(t, node1, dateq1)
+  const latest2 = await getLatest(t, node1, dateq1)
   t.true(latest2.success, 'node1 should get latest')
   t.true(latest2.response.contacts.length >= 1, 'there should be one contacts')
   t.true(
@@ -52,7 +52,7 @@ async function latestTest(t, node1, node2, node3: NodeConfig | null = null) {
 
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
   const text = randomText()
-  let messageSent = await sendMessageAndCheckDecryption(t, node1, node2, text)
+  const messageSent = await sendMessageAndCheckDecryption(t, node1, node2, text)
 
   //CHECK THAT NODE1'S DECRYPTED MESSAGE IS SAME AS INPUT
   const check = await checkMessageDecryption(t, node2, messageSent.uuid, text)
@@ -61,7 +61,7 @@ async function latestTest(t, node1, node2, node3: NodeConfig | null = null) {
   await sleep(1000)
 
   //NODE1 GETS LATEST
-  let latest3 = await getLatest(t, node2, dateq1)
+  const latest3 = await getLatest(t, node2, dateq1)
   t.true(latest3.success, 'node2 should get latest')
   t.true(latest3.response.contacts.length === 1, 'there should be no contacts')
   t.true(latest3.response.chats.length === 1, 'there should be no chats')

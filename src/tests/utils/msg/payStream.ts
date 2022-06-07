@@ -17,7 +17,7 @@ export async function payStream(
   //check and record balances for all nodes
   const beforeBal = await getBalance(t, node1)
   const beforeBal2 = await getBalance(t, node2)
-  var beforeBal3 = 0
+  let beforeBal3 = 0
   if (node3) beforeBal3 = await getBalance(t, node3)
 
   //create destinations array for node2 with 100% of payment
@@ -65,7 +65,7 @@ export async function payStream(
   }
 
   //node1 sends a stream/feed payment
-  var stream = await http.post(
+  const stream = await http.post(
     node1.external_ip + '/stream',
     makeArgs(node1, v)
   )
@@ -89,7 +89,7 @@ export async function payStream(
   //get and record balances after payment
   const afterBal = await getBalance(t, node1)
   const afterBal2 = await getBalance(t, node2)
-  var afterBal3 = 0
+  let afterBal3 = 0
   if (node3) afterBal3 = await getBalance(t, node3)
 
   //check that balances have moved within range of Allowed Fee

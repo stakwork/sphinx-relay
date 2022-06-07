@@ -7,7 +7,7 @@ export function getCheckNewPaidMsgs(
   node: NodeConfig,
   imgMsg: Message
 ): Promise<Message> {
-  var msgToken = imgMsg.media_token.split('.')[1]
+  const msgToken = imgMsg.media_token.split('.')[1]
 
   return new Promise((resolve, reject) => {
     let i = 0

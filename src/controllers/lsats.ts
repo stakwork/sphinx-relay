@@ -1,5 +1,5 @@
 import { Lsat } from 'lsat-js'
-import { models } from '../models'
+import { Lsat as LsatModel, models } from '../models'
 import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
@@ -11,7 +11,7 @@ export interface LsatRequestBody {
   issuer: string
   paths?: string
   metadata?: string
-  [key: string]: string | undefined
+  [k: string]: string | undefined
 }
 
 export interface RelayRequest extends Request {
@@ -43,7 +43,7 @@ async function lsatAlreadyExists(lsat): Promise<boolean> {
   const model = await models.Lsat.findOne({
     where: { identifier },
     attributes: lsatResponseAttributes,
-  })
+  }) as unknown as LsatModel
 
   if (model) return true
   return false
@@ -136,7 +136,7 @@ export async function saveLsat(
       paths,
       metadata,
       tenant,
-    })
+    }) as unknown as Lsat
 
     return success(res, { lsat: lsat.toToken() })
   } catch (e) {
@@ -157,7 +157,7 @@ export async function getLsat(
     const lsat: LsatResponse = await models.Lsat.findOne({
       where: { tenant, identifier },
       attributes: lsatResponseAttributes,
-    })
+    }) as unknown as LsatModel
     if (!lsat)
       return res.status(404).json({
         success: false,
@@ -177,10 +177,10 @@ export async function listLsats(
 
   sphinxLogger.info(`=> listLsats`, logging.Express)
   try {
-    const lsats: LsatResponse[] = await models.Lsat.findAll({
+    const lsats = await models.Lsat.findAll({
       where: { tenant },
       attributes: lsatResponseAttributes,
-    })
+    }) as unknown as LsatModel[]
     return success(res, { lsats })
   } catch (e) {
     return failure(res, `could not retrieve lsats`)

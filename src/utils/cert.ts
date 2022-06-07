@@ -5,13 +5,14 @@ import * as qs from 'qs'
 import axios from 'axios'
 import * as forge from 'node-forge'
 const apiUrl = 'https://api.zerossl.com'
+import { Request, Response } from 'express'
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function generateCsr(keys, endpoint) {
-  let csr = forge.pki.createCertificationRequest()
+function generateCsr(keys: forge.pki.rsa.KeyPair, endpoint: string) {
+  const csr = forge.pki.createCertificationRequest()
   csr.publicKey = keys.publicKey
   csr.setSubject([
     {
@@ -24,11 +25,10 @@ function generateCsr(keys, endpoint) {
     sphinxLogger.error('Verification of CSR failed.', logging.SSL)
     throw new Error('Verification of CSR failed.')
   }
-  csr = forge.pki.certificationRequestToPem(csr)
-  return csr.trim()
+  return forge.pki.certificationRequestToPem(csr).trim()
 }
 
-async function requestCert(endpoint, csr, apiKey) {
+async function requestCert(endpoint: string, csr: string, apiKey: string) {
   const res = await axios({
     method: 'post',
     url: `${apiUrl}/certificates?access_key=${apiKey}`,
@@ -44,19 +44,16 @@ async function requestCert(endpoint, csr, apiKey) {
   return res.data
 }
 
-async function validateCert(port, data, endpoint, apiKey) {
+async function validateCert(port: number, data, endpoint: string, apiKey: string): Promise<void> {
   const app = express()
   const validationObject = data.validation.other_methods[endpoint]
   const replacement = new RegExp(`http://${endpoint}`, 'g')
-  const path = validationObject.file_validation_url_http.replace(
-    replacement,
-    ''
-  )
-  await app.get(path, (req, res) => {
+  const path = validationObject.file_validation_url_http.replace(replacement, '')
+  app.get(path, (req: Request, res: Response) => {
     res.set('Content-Type', 'text/plain')
     res.send(validationObject.file_validation_content.join('\n'))
   })
-  const server = await app.listen(port, () => {
+  const server = app.listen(port, () => {
     sphinxLogger.info(
       `validation server started at http://0.0.0.0:${port}`,
       logging.SSL
@@ -120,7 +117,9 @@ async function downloadCert(id, apiKey) {
   return res.data
 }
 
-async function getCertificate(domain, port, save_ssl) {
+// looks unused
+// TODO remove?
+async function getCertificate(domain: string, port: number, save_ssl: boolean): Promise<{ privateKey: string, certificate: string, caBundle: string }> {
   if (
     existsSync(__dirname + '/zerossl/tls.cert') &&
     existsSync(__dirname + '/zerossl/tls.key')
@@ -159,9 +158,9 @@ async function getCertificate(domain, port, save_ssl) {
   const certData = await downloadCert(res.id, apiKey)
   if (save_ssl === true) {
     if (!existsSync(__dirname + '/zerossl')) {
-      await mkdirSync(__dirname + '/zerossl')
+      mkdirSync(__dirname + '/zerossl')
     }
-    await writeFile(
+    writeFile(
       __dirname + '/zerossl/tls.cert',
       certData['certificate.crt'],
       function (err) {
@@ -171,7 +170,7 @@ async function getCertificate(domain, port, save_ssl) {
         sphinxLogger.info(`wrote tls certificate`, logging.SSL)
       }
     )
-    await writeFile(
+    writeFile(
       __dirname + '/zerossl/ca.cert',
       certData['ca_bundle.crt'],
       function (err) {
@@ -181,7 +180,7 @@ async function getCertificate(domain, port, save_ssl) {
         sphinxLogger.info(`wrote tls ca bundle`, logging.SSL)
       }
     )
-    await writeFile(
+    writeFile(
       __dirname + '/zerossl/tls.key',
       forge.pki.privateKeyToPem(keys.privateKey),
       function (err) {

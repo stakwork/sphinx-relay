@@ -5,7 +5,7 @@ import * as interfaces from '../grpc/interfaces'
 import { ACTIONS } from '../controllers'
 import * as tribes from '../utils/tribes'
 import * as signer from '../utils/signer'
-import { models } from '../models'
+import { Contact, Chat, ChatMember, Message, models, Timer } from '../models'
 import { sendMessage } from './send'
 import {
   modifyPayloadAndSaveMediaKey,
@@ -22,8 +22,9 @@ import * as jsonUtils from '../utils/json'
 import { isProxy } from '../utils/proxy'
 import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
+import { asyncForEach } from '../helpers'
+import { Msg, Payload } from './interfaces'
 import { sphinxLogger, logging } from '../utils/logger'
-import { Payload } from './interfaces'
 
 const config = loadConfig()
 /*
@@ -82,7 +83,7 @@ async function onReceive(payload: Payload, dest: string) {
 
   const owner = await models.Contact.findOne({
     where: { isOwner: true, publicKey: dest },
-  })
+  }) as unknown as Contact
   if (!owner) return sphinxLogger.error(`=> RECEIVE: owner not found`)
   const tenant: number = owner.id
 
@@ -109,7 +110,7 @@ async function onReceive(payload: Payload, dest: string) {
     isTribe = payload.chat.type === constants.chat_types.tribe
     chat = await models.Chat.findOne({
       where: { uuid: payload.chat.uuid, tenant },
-    })
+    }) as unknown as Chat
     if (chat) chat.update({ seen: false })
   }
   if (isTribe) {
@@ -125,14 +126,16 @@ async function onReceive(payload: Payload, dest: string) {
     // CHECK THEY ARE IN THE GROUP if message
     const senderContact = await models.Contact.findOne({
       where: { publicKey: payload.sender.pub_key, tenant },
-    })
+    }) as unknown as Contact
     // if (!senderContact) return console.log("=> no sender contact")
     const senderContactId = senderContact && senderContact.id
     forwardedFromContactId = senderContactId
-    if (needsPricePerMessage && senderContactId) {
+    if (!chat) {
+      doAction = false
+    } else if (needsPricePerMessage && senderContactId) {
       const senderMember = await models.ChatMember.findOne({
         where: { contactId: senderContactId, chatId: chat.id, tenant },
-      })
+      }) as unknown as ChatMember
       if (!senderMember) doAction = false
     }
     // CHECK PRICES
@@ -141,15 +144,19 @@ async function onReceive(payload: Payload, dest: string) {
         doAction = false
       }
       if (chat.escrowAmount && senderContactId) {
-        timers.addTimer({
-          // pay them back
-          amount: chat.escrowAmount,
-          millis: chat.escrowMillis,
-          receiver: senderContactId,
-          msgId: payload.message.id,
-          chatId: chat.id,
-          tenant,
-        })
+        if (payload.message.id === undefined) {
+          sphinxLogger.error("cant pay back escrow! no message id")
+        } else {
+          timers.addTimer({
+            // pay them back
+            amount: chat.escrowAmount,
+            millis: chat.escrowMillis,
+            receiver: senderContactId,
+            msgId: payload.message.id,
+            chatId: chat.id,
+            tenant,
+          } as Timer)
+        }
       }
     }
     // check price to join AND private chat
@@ -161,7 +168,7 @@ async function onReceive(payload: Payload, dest: string) {
         // check if has been approved
         const senderMember = await models.ChatMember.findOne({
           where: { contactId: senderContactId, chatId: chat.id, tenant },
-        })
+        }) as unknown as ChatMember
         if (
           !(
             senderMember &&
@@ -182,12 +189,12 @@ async function onReceive(payload: Payload, dest: string) {
             sender: senderContactId,
             tenant,
           },
-        })
+        }) as unknown as Message
         if (ogMsg) doAction = true
       }
     }
     // forward boost sats to recipient
-    let realSatsContactId = null
+    let realSatsContactId: number | undefined
     let amtToForward = 0
     if (payload.type === msgtypes.boost && payload.message.replyUuid) {
       const ogMsg = await models.Message.findOne({
@@ -195,7 +202,7 @@ async function onReceive(payload: Payload, dest: string) {
           uuid: payload.message.replyUuid,
           tenant,
         },
-      })
+      }) as unknown as Message
       if (ogMsg && ogMsg.sender) {
         // even include "me"
         const theAmtToForward =
@@ -235,12 +242,12 @@ async function onReceive(payload: Payload, dest: string) {
         sender: tenant,
         tenant,
       },
-    })
+    }) as unknown as Message
     if (!myAttachmentMessage) {
       // someone else's attachment
       const senderContact = await models.Contact.findOne({
         where: { publicKey: payload.sender.pub_key, tenant },
-      })
+      }) as unknown as Contact
       purchaseFromOriginalSender(payload, chat, senderContact, owner)
       doAction = false
     }
@@ -251,7 +258,7 @@ async function onReceive(payload: Payload, dest: string) {
     if (!iAmPurchaser) {
       const senderContact = await models.Contact.findOne({
         where: { publicKey: payload.sender.pub_key, tenant },
-      })
+      }) as unknown as Contact
       sendFinalMemeIfFirstPurchaser(payload, chat, senderContact, owner)
       doAction = false // skip this! we dont need it
     }
@@ -270,7 +277,7 @@ async function doTheAction(data, owner) {
     /* decrypt and re-encrypt with phone's pubkey for storage */
     const chat = await models.Chat.findOne({
       where: { uuid: payload.chat.uuid, tenant: owner.id },
-    })
+    }) as unknown as Chat
     const pld = await decryptMessage(data, chat)
     const me = owner
     payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
@@ -300,11 +307,11 @@ async function uniqueifyAlias(
   const owner_alias = chat.myAlias || owner.alias
   const sender_alias = payload.sender && payload.sender.alias
   let final_sender_alias = sender_alias
-  const chatMembers = await models.ChatMember.findAll({
+  const chatMembers: ChatMember[] = await models.ChatMember.findAll({
     where: { chatId: chat.id, tenant: owner.id },
-  })
+  }) as unknown as ChatMember[]
   if (!(chatMembers && chatMembers.length)) return payload
-  asyncForEach(chatMembers, (cm) => {
+  asyncForEach(chatMembers, async cm => {
     if (cm.contactId === senderContactId) return // dont check against self of course
     if (sender_alias === cm.lastAlias || sender_alias === owner_alias) {
       // impersonating! switch it up!
@@ -341,7 +348,7 @@ async function forwardMessageToTribe(
   const tenant = owner.id
   const chat = await models.Chat.findOne({
     where: { uuid: ogpayload.chat.uuid, tenant },
-  })
+  }) as unknown as Chat
   if (!chat) return
 
   if (chat.skipBroadcastJoins) {
@@ -358,12 +365,12 @@ async function forwardMessageToTribe(
   }
 
   const type = payload.type
-  const message = payload.message
+  const message = payload.message as unknown as Message
   sendMessage({
     type,
     message,
     sender: {
-      ...owner.dataValues,
+      ...owner.dataValues as Contact,
       alias: (payload.sender && payload.sender.alias) || '',
       photoUrl: (payload.sender && payload.sender.photo_url) || '',
       role: constants.chat_roles.reader,
@@ -414,7 +421,7 @@ export async function initTribesSubscriptions(): Promise<void> {
   tribes.connect(receiveMqttMessage)
 }
 
-function parsePayload(data): Payload {
+function parsePayload(data: string): Payload | '' {
   const li = data.lastIndexOf('}')
   const msg = data.substring(0, li + 1)
   const payload = JSON.parse(msg)
@@ -422,8 +429,8 @@ function parsePayload(data): Payload {
 }
 
 // VERIFY PUBKEY OF SENDER from sig
-async function parseAndVerifyPayload(data): Promise<Payload | null> {
-  let payload
+async function parseAndVerifyPayload(data: string): Promise<Payload | undefined> {
+  let payload: Payload | undefined
   const li = data.lastIndexOf('}')
   const msg = data.substring(0, li + 1)
   const sig = data.substring(li + 1)
@@ -445,11 +452,9 @@ async function parseAndVerifyPayload(data): Promise<Payload | null> {
       }
     } else {
       sphinxLogger.error(`no sender.pub_key`)
-      return null
     }
   } catch (e) {
-    if (payload) return payload // => RM THIS
-    return null
+    return payload // => RM THIS
   }
 }
 
@@ -458,7 +463,7 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
   if (sender_pubkey) {
     const theSender = await models.Contact.findOne({
       where: { publicKey: sender_pubkey, tenant },
-    })
+    }) as unknown as Contact
     if (theSender && theSender.id) {
       sender = theSender.id
     }
@@ -480,11 +485,11 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
     updatedAt: date,
     network_type: constants.network_types.lightning,
     tenant,
-  })
+  }) as unknown as Message
   socket.sendJson(
     {
       type: 'keysend',
-      response: jsonUtils.messageToJson(msg, null),
+      response: jsonUtils.messageToJson(msg),
     },
     tenant
   )
@@ -506,7 +511,7 @@ export async function parseKeysendInvoice(
   const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
 
   let dest = ''
-  let owner
+  let owner: Contact | undefined
   if (isProxy()) {
     try {
       const invoice = bolt11.decode(i.payment_request)
@@ -515,13 +520,13 @@ export async function parseKeysendInvoice(
       dest = invoice.payeeNodeKey
       owner = await models.Contact.findOne({
         where: { isOwner: true, publicKey: dest },
-      })
+      }) as unknown as Contact
     } catch (e) {
       sphinxLogger.error(`FAILURE TO DECODE PAY REQ ${e}`)
     }
   } else {
     // non-proxy, only one "owner"
-    owner = await models.Contact.findOne({ where: { isOwner: true } })
+    owner = await models.Contact.findOne({ where: { isOwner: true } }) as unknown as Contact
     dest = owner.publicKey
   }
   if (!owner || !dest) {
@@ -538,7 +543,7 @@ export async function parseKeysendInvoice(
   // and should be saved even if there is NO content
   let isKeysendType = false
   let memo = ''
-  let sender_pubkey
+  let sender_pubkey: string | undefined
   if (data) {
     try {
       const payload: Payload = parsePayload(data)
@@ -557,7 +562,7 @@ export async function parseKeysendInvoice(
   }
   if (isKeysendType) {
     if (!memo) {
-      sendNotification({}, '', 'keysend', owner, value || 0)
+      sendNotification(undefined, '', 'keysend', owner, value || 0)
     }
     saveAnonymousKeysend(i, memo, sender_pubkey, owner.id)
     return
@@ -584,32 +589,26 @@ export async function parseKeysendInvoice(
   }
 }
 
-const chunks = {}
-function weave(p) {
+const chunks: { [ts: string]: { i: string, n: string, m: string }[] } = {}
+function weave(p: string): string | undefined {
   const pa = p.split('_')
   if (pa.length < 4) return
   const ts = pa[0]
   const i = pa[1]
   const n = pa[2]
   const m = pa.filter((u, i) => i > 2).join('_')
-  chunks[ts] = chunks[ts] ? [...chunks[ts], { i, n, m }] : [{ i, n, m }]
+  chunks[ts] = chunks[ts] ? [ ...chunks[ts], { i, n, m } ] : [ { i, n, m } ]
   if (chunks[ts].length === parseInt(n)) {
     // got em all!
     const all = chunks[ts]
     let payload = ''
     all
       .slice()
-      .sort((a, b) => a.i - b.i)
+      .sort((a, b) => parseInt(a.i) - parseInt(b.i))
       .forEach((obj) => {
         payload += obj.m
       })
     delete chunks[ts]
     return payload
-  }
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
   }
 }

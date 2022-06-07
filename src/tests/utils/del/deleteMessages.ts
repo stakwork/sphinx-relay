@@ -7,7 +7,7 @@ export async function deleteMessages(
   t: Assertions,
   node: NodeConfig
 ): Promise<boolean> {
-  let deletion = await http.post(
+  const deletion = await http.post(
     node.external_ip + '/messages/clear',
     makeArgs(node)
   )

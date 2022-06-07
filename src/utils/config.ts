@@ -1,5 +1,67 @@
 import * as path from 'path'
 import * as minimist from 'minimist'
+import { readFileSync } from 'fs'
+
+export type LightningProvider = 'LND' | 'GREENLIGHT'
+
+export interface Config {
+  lightning_provider: LightningProvider,
+  logging: string,
+  senza_url: string,
+  macaroon_location: string,
+  router_macaroon_location: string,
+  signer_macaroon_location: string,
+  tls_location: string,
+  tls_key_location: string,
+  tls_chain_location: string,
+  scheduler_tls_location: string,
+  scheduler_key_location: string,
+  scheduler_chain_location: string,
+  hsm_secret_path: string,
+  lnd_log_location:  string,
+  node_ip: string,
+  lnd_ip: string,
+  node_http_protocol:  string,
+  node_http_port: number,
+  lnd_port: number,
+  hub_api_url: string,
+  hub_url: string,
+  hub_invite_url: string,
+  hub_check_invite_url: string,
+  media_host: string,
+  tribes_host: string,
+  tribes_mqtt_port: number,
+  mqtt_host: string,
+  tribes_insecure: boolean,
+  public_url: string,
+  connection_string_path: string,
+  ssl: {
+    enabled: boolean,
+    save: boolean,
+    port: number,
+  },
+  encrypted_macaroon_path: string,
+  loop_macaroon_location: string,
+  log_file: string,
+  unlock: boolean,
+  lnd_pwd_path: string,
+  connect_ui: string,
+  proxy_macaroons_dir: string,
+  proxy_tls_location: string,
+  proxy_lnd_ip: string,
+  proxy_lnd_port: number,
+  proxy_admin_token: string,
+  proxy_admin_url: string,
+  proxy_new_nodes: number, // what TODO
+  proxy_initial_sats: number,
+  allow_test_clearing: boolean,
+  sql_log: string,
+  dont_ping_hub: boolean,
+  transportPrivateKeyLocation: string,
+  transportPublicKeyLocation: string,
+  logging_level: string,
+  length_of_time_for_transport_token_clear: number
+}
 
 const argv = minimist(process.argv.slice(2))
 
@@ -12,10 +74,8 @@ const configFile = argv.config
   : path.join(__dirname, '../../config/app.json')
 
 const env = process.env.NODE_ENV || 'development'
-const config = require(configFile)[env]
+const config = JSON.parse(readFileSync(configFile).toString())[env]
 const ENV = process.env
-
-type LightningProvider = 'LND' | 'GREENLIGHT'
 
 const DEFAULT_HSM_SECRET_PATH = './creds/hsm_secret'
 const DEFAULT_TLS_LOCATION = './creds/ca.pem'
@@ -30,13 +90,12 @@ const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION =
   './creds/transportTokenPrivateKey.pem'
 const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1
 
-export function loadConfig() {
-  const logg = ENV.LOGGING || config.logging
-  const provider: LightningProvider =
-    ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND'
-  return {
-    lightning_provider: provider,
-    logging: logg || 'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT',
+export function loadConfig(): Config {
+  return <Config>{
+    lightning_provider: ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND',
+    logging:
+      (ENV.LOGGING || config.logging) ||
+      'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT',
     senza_url: ENV.SENZA_URL || config.senza_url,
     macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
     router_macaroon_location:
@@ -71,8 +130,8 @@ export function loadConfig() {
     node_ip: ENV.NODE_IP || config.node_ip,
     lnd_ip: ENV.LND_IP || config.lnd_ip,
     node_http_protocol: ENV.NODE_HTTP_PROTOCOL || config.node_http_protocol,
-    node_http_port: ENV.NODE_HTTP_PORT || config.node_http_port,
-    lnd_port: ENV.LND_PORT || config.lnd_port,
+    node_http_port: parseInt(ENV.NODE_HTTP_PORT || config.node_http_port) || 3001,
+    lnd_port: parseInt(ENV.LND_PORT || config.lnd_port) || 10009,
     hub_api_url: ENV.HUB_API_URL || config.hub_api_url,
     hub_url: ENV.HUB_URL || config.hub_url,
     hub_invite_url: ENV.HUB_INVITE_URL || config.hub_invite_url,
@@ -90,7 +149,7 @@ export function loadConfig() {
       enabled:
         ENV.SSL_ENABLED || (config.ssl && config.ssl.enabled) ? true : false,
       save: ENV.SSL_SAVE || (config.ssl && config.ssl.save) ? true : false,
-      port: ENV.SSL_PORT || (config.ssl && config.ssl.port),
+      port: parseInt(ENV.SSL_PORT || (config.ssl && config.ssl.port)) || 80,
     },
     encrypted_macaroon_path:
       ENV.ENCRYPTED_MACAROON_PATH || config.encrypted_macaroon_path,

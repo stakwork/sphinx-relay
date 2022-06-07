@@ -29,12 +29,12 @@ async function checkContact(
   console.log(`=> checkContact ${node1.alias} -> ${node2.alias}`)
   // NODE1 ADDS NODE2 AS A CONTACT
   // contact_key should be populated via key exchange in a few seconds
-  let added = await addContact(t, node1, node2)
+  const added = await addContact(t, node1, node2)
   t.true(added, 'node1 should add node2 as contact')
   console.log('added contact!')
 
   const text = randomText()
-  let messageSent = await sendMessageAndCheckDecryption(t, node1, node2, text)
+  const messageSent = await sendMessageAndCheckDecryption(t, node1, node2, text)
   t.truthy(messageSent, 'node1 should send text message to node2')
   console.log('sent message!')
 }

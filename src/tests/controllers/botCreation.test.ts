@@ -23,12 +23,12 @@ async function botCreation(t, node1, node2, node3) {
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
 
   //NODE1 CREATES A TRIBE
-  let tribe = await createTribe(t, node1)
+  const tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
 
   //NODE2 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join = await joinTribe(t, node2, tribe)
+  const join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
 
   //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
@@ -36,7 +36,7 @@ async function botCreation(t, node1, node2, node3) {
   await sendTribeMessage(t, node1, tribe, text)
 
   //NODE1 AWAIT REPLY FROM BOT
-  var botAlias = 'MotherBot'
+  let botAlias = 'MotherBot'
   const botReply = await getCheckBotMsg(t, node1, botAlias)
   t.truthy(botReply, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply))
@@ -65,7 +65,7 @@ async function botCreation(t, node1, node2, node3) {
 
   //NODE3 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join2 = await joinTribe(t, node3, tribe)
+  const join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
 
   //NODE3 AWAIT REPLY FROM BOT
@@ -120,14 +120,14 @@ async function botCreation(t, node1, node2, node3) {
   // return
 
   //NODE2 LEAVES THE TRIBE
-  let left = await leaveTribe(t, node2, tribe)
+  const left = await leaveTribe(t, node2, tribe)
   t.true(left, 'node2 should leave tribe')
 
   //NODE3 LEAVES THE TRIBE
-  let left2 = await leaveTribe(t, node3, tribe)
+  const left2 = await leaveTribe(t, node3, tribe)
   t.true(left2, 'node3 should leave tribe')
 
   //NODE1 DELETES THE TRIBE
-  let delTribe = await deleteTribe(t, node1, tribe)
+  const delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')
 }

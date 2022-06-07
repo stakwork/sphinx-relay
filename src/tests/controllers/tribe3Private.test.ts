@@ -33,17 +33,17 @@ export async function tribe3Private(t, node1, node2, node3) {
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
 
   //NODE1 CREATES A TRIBE
-  let tribe = await createTribe(t, node1, 0, 0, 0, true)
+  const tribe = await createTribe(t, node1, 0, 0, 0, true)
   t.truthy(tribe, 'tribe should have been created by node1')
 
   //NODE2 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join = await joinTribe(t, node2, tribe)
+  const join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
 
   //NODE3 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join2 = await joinTribe(t, node3, tribe)
+  const join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
 
   //NODE1 CHECKS FOR JOIN MESSAGE FROM NODE2
@@ -66,7 +66,7 @@ export async function tribe3Private(t, node1, node2, node3) {
 
   //NODE2 SENDS A TEXT MESSAGE IN TRIBE
   const text2 = randomText()
-  let tribeMessage2 = await sendTribeMessage(t, node2, tribe, text2)
+  const tribeMessage2 = await sendTribeMessage(t, node2, tribe, text2)
 
   //NODE1 (ADMIN) SHOULD DECRYPT NODE2'S MESSAGE
   const n1check2 = await checkMessageDecryption(
@@ -112,7 +112,7 @@ export async function tribe3Private(t, node1, node2, node3) {
 
   //NODE1 SENDS A TEXT MESSAGE IN TRIBE
   const text = randomText()
-  let tribeMessage = await sendTribeMessage(t, node1, tribe, text)
+  const tribeMessage = await sendTribeMessage(t, node1, tribe, text)
 
   //NODE2 SHOULD DECRYPT NODE1'S MESSAGE
   const n1check = await checkMessageDecryption(
@@ -128,12 +128,12 @@ export async function tribe3Private(t, node1, node2, node3) {
   t.true(n3check, 'message should not exist')
 
   //NODE3 LEAVES THE TRIBE
-  let n3left2 = await leaveTribe(t, node3, tribe)
+  const n3left2 = await leaveTribe(t, node3, tribe)
   t.true(n3left2, 'node3 should leave tribe')
 
   //NODE3 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join3 = await joinTribe(t, node3, tribe)
+  const join3 = await joinTribe(t, node3, tribe)
   t.true(join3, 'node3 should join tribe')
 
   //NODE1 CHECK FOR JOIN MESSAGE FROM NODE3
@@ -152,7 +152,7 @@ export async function tribe3Private(t, node1, node2, node3) {
 
   //NODE2 SENDS A TEXT MESSAGE IN TRIBE
   const text3 = randomText()
-  let tribeMessage3 = await sendTribeMessage(t, node2, tribe, text3)
+  const tribeMessage3 = await sendTribeMessage(t, node2, tribe, text3)
 
   //NODE1 (ADMIN) SHOULD DECRYPT NODE2'S MESSAGE
   const n1check3 = await checkMessageDecryption(
@@ -173,14 +173,14 @@ export async function tribe3Private(t, node1, node2, node3) {
   t.true(n3check3, 'message should exist')
 
   //NODE2 LEAVES THE TRIBE
-  let n2left = await leaveTribe(t, node2, tribe)
+  const n2left = await leaveTribe(t, node2, tribe)
   t.true(n2left, 'node2 should leave tribe')
 
   //NODE3 LEAVES THE TRIBE
-  let n3left = await leaveTribe(t, node3, tribe)
+  const n3left = await leaveTribe(t, node3, tribe)
   t.true(n3left, 'node3 should leave tribe')
 
   //NODE1 DELETES THE TRIBE
-  let delTribe = await deleteTribe(t, node1, tribe)
+  const delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')
 }

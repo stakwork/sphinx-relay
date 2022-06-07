@@ -1,4 +1,4 @@
-import { models, Chat } from '../models'
+import { Chat, Contact, Message, ChatMember, MediaKey, models } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
@@ -12,9 +12,13 @@ import { Op } from 'sequelize'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import type { Tribe } from '../models/ts/tribe'
+import { Request, Response } from 'express'
+import { asyncForEach } from '../helpers'
+import { Payload } from '../network'
+import { MessageContent } from '../network/interfaces'
 import { Req } from '../types'
 
-export async function joinTribe(req: Req, res) {
+export async function joinTribe(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -38,7 +42,7 @@ export async function joinTribe(req: Req, res) {
   )
   const is_private = req.body.private ? true : false
 
-  const existing = await models.Chat.findOne({ where: { uuid, tenant } })
+  const existing = await models.Chat.findOne({ where: { uuid, tenant } }) as unknown as Chat
   if (existing) {
     sphinxLogger.error('You are already in this tribe', logging.Tribes)
     return failure(res, 'cant find tribe')
@@ -54,7 +58,7 @@ export async function joinTribe(req: Req, res) {
 
   const tribeOwner = await models.Contact.findOne({
     where: { publicKey: ownerPubKey, tenant },
-  })
+  }) as unknown as Contact
 
   let theTribeOwner
   const owner = req.owner
@@ -75,7 +79,7 @@ export async function joinTribe(req: Req, res) {
       fromGroup: true,
       tenant,
       routeHint: owner_route_hint || '',
-    })
+    }) as unknown as Contact
     theTribeOwner = createdContact
     // console.log("CREATE TRIBE OWNER", createdContact);
     contactIds.push(createdContact.id)
@@ -101,7 +105,7 @@ export async function joinTribe(req: Req, res) {
     status: chatStatus,
     priceToJoin: amount || 0,
     tenant,
-  }
+  } as Chat
   if (my_alias) chatParams.myAlias = my_alias
   if (my_photo_url) chatParams.myPhotoUrl = my_photo_url
 
@@ -130,14 +134,14 @@ export async function joinTribe(req: Req, res) {
     },
     amount: amount || 0,
     sender: theOwner,
-    message: {},
+    message: {} as Message,
     type: typeToSend,
     failure: function (e) {
       failure(res, e)
     },
     success: async function () {
       // console.log("=> joinTribe: CREATE CHAT RECORD NOW");
-      const chat = await models.Chat.create(chatParams)
+      const chat = await models.Chat.create(chatParams) as unknown as Chat
       models.ChatMember.create({
         contactId: theTribeOwner.id,
         chatId: chat.id,
@@ -145,7 +149,7 @@ export async function joinTribe(req: Req, res) {
         lastActive: date,
         status: constants.chat_statuses.approved,
         tenant,
-      })
+      }) as unknown as ChatMember
       // console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
       tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage)
       success(res, jsonUtils.chatToJson(chat))
@@ -153,7 +157,7 @@ export async function joinTribe(req: Req, res) {
   })
 }
 
-export async function createChannel(req: Req, res) {
+export async function createChannel(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const owner = req.owner
   //const tenant: number = req.owner.id
@@ -168,7 +172,7 @@ export async function createChannel(req: Req, res) {
   success(res, channel)
 }
 
-export async function deleteChannel(req: Req, res) {
+export async function deleteChannel(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
 
   const owner = req.owner
@@ -181,7 +185,7 @@ export async function deleteChannel(req: Req, res) {
   success(res, channel)
 }
 
-export async function receiveMemberRequest(payload) {
+export async function receiveMemberRequest(payload: Payload): Promise<void> {
   sphinxLogger.info('=> receiveMemberRequest', logging.Network)
   const {
     owner,
@@ -211,7 +215,7 @@ export async function receiveMemberRequest(payload) {
 
   const sender = await models.Contact.findOne({
     where: { publicKey: sender_pub_key, tenant },
-  })
+  }) as unknown as Contact
   if (sender) {
     theSender = sender // might already include??
   } else {
@@ -225,7 +229,7 @@ export async function receiveMemberRequest(payload) {
         photoUrl: sender_photo_url,
         tenant,
         routeHint: sender_route_hint || '',
-      })
+      }) as unknown as Contact
       theSender = createdContact
     }
   }
@@ -254,7 +258,7 @@ export async function receiveMemberRequest(payload) {
       tenant,
     })
     // also update the chat
-    const theChat = await models.Chat.findOne({ where: { id: chat.id } })
+    const theChat = await models.Chat.findOne({ where: { id: chat.id } }) as unknown as Chat
     if (theChat) {
       await theChat.update({ updatedAt: date })
     }
@@ -279,7 +283,7 @@ export async function receiveMemberRequest(payload) {
     msg.senderAlias = senderAlias
     msg.senderPic = sender_photo_url
   }
-  const message = await models.Message.create(msg)
+  const message = await models.Message.create(msg) as unknown as Message
 
   const theChat = await addPendingContactIdsToChat(chat, tenant)
   socket.sendJson(
@@ -295,13 +299,13 @@ export async function receiveMemberRequest(payload) {
   )
 }
 
-export async function pinToTribe(req: Req, res) {
+export async function pinToTribe(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { pin } = req.body
   const { id } = req.params
   if (!id) return failure(res, 'group id is required')
-  const chat = await models.Chat.findOne({ where: { id, tenant } })
+  const chat = await models.Chat.findOne({ where: { id, tenant } }) as unknown as Chat
   if (!chat) {
     return failure(res, 'cant find chat')
   }
@@ -311,7 +315,7 @@ export async function pinToTribe(req: Req, res) {
   }
   try {
     const td = await tribes.get_tribe_data(chat.uuid)
-    const chatData = chat.dataValues || chat
+    const chatData = chat.dataValues as Chat || chat
     chatData.pin = pin
     await tribes.edit(mergeTribeAndChatData(chatData, td, owner))
     await models.Chat.update({ pin }, { where: { id, tenant } })
@@ -321,7 +325,7 @@ export async function pinToTribe(req: Req, res) {
   }
 }
 
-export async function editTribe(req: Req, res) {
+export async function editTribe(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
@@ -343,7 +347,7 @@ export async function editTribe(req: Req, res) {
 
   if (!id) return failure(res, 'group id is required')
 
-  const chat = await models.Chat.findOne({ where: { id, tenant } })
+  const chat = await models.Chat.findOne({ where: { id, tenant } }) as unknown as Chat
   if (!chat) {
     return failure(res, 'cant find chat')
   }
@@ -405,29 +409,29 @@ export async function editTribe(req: Req, res) {
 }
 
 type ChatMemberStatus = 'approved' | 'rejected'
-export async function approveOrRejectMember(req: Req, res) {
+export async function approveOrRejectMember(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
   sphinxLogger.info('=> approve or reject tribe member')
   const msgId = parseInt(req.params['messageId'])
   const contactId = parseInt(req.params['contactId'])
-  const status: ChatMemberStatus = req.params['status'] as ChatMemberStatus
 
-  const msg = await models.Message.findOne({ where: { id: msgId, tenant } })
+  const msg = await models.Message.findOne({ where: { id: msgId, tenant } }) as unknown as Message
   if (!msg) return failure(res, 'no message')
   const chatId = msg.chatId
 
-  const chat = await models.Chat.findOne({ where: { id: chatId, tenant } })
+  const chat = await models.Chat.findOne({ where: { id: chatId, tenant } }) as unknown as Chat
   if (!chat) return failure(res, 'no chat')
 
   if (
     !msgId ||
     !contactId ||
-    !(status === 'approved' || status === 'rejected')
+    !(req.params['status'] === 'approved' || req.params['status'] === 'rejected')
   ) {
     return failure(res, 'incorrect status')
   }
+  const status: ChatMemberStatus = req.params['status']
 
   let memberStatus = constants.chat_statuses.rejected
   let msgType = constants.message_types.member_reject
@@ -443,7 +447,7 @@ export async function approveOrRejectMember(req: Req, res) {
 
   const member = await models.ChatMember.findOne({
     where: { contactId, chatId },
-  })
+  }) as unknown as ChatMember
   if (!member) {
     return failure(res, 'cant find chat member')
   }
@@ -456,14 +460,14 @@ export async function approveOrRejectMember(req: Req, res) {
   }
 
   const owner = req.owner
-  const chatToSend = chat.dataValues || chat
+  const chatToSend = chat.dataValues as Chat || chat
 
   network.sendMessage({
     // send to the requester
-    chat: { ...chatToSend, contactIds: [member.contactId] },
+    chat: { ...chatToSend, contactIds: JSON.stringify([member.contactId]) },
     amount: 0,
     sender: owner,
-    message: {},
+    message: {} as Message,
     type: msgType,
   })
 
@@ -474,7 +478,7 @@ export async function approveOrRejectMember(req: Req, res) {
   })
 }
 
-export async function receiveMemberApprove(payload) {
+export async function receiveMemberApprove(payload: Payload): Promise<void> {
   sphinxLogger.info('-> receiveMemberApprove', logging.Network)
   const { owner, chat, sender, network_type } =
     await helpers.parseReceiveParams(payload)
@@ -498,7 +502,7 @@ export async function receiveMemberApprove(payload) {
     network_type,
     tenant,
   }
-  const message = await models.Message.create(msg)
+  const message = await models.Message.create(msg) as unknown as Message
   socket.sendJson(
     {
       type: 'member_approve',
@@ -510,7 +514,7 @@ export async function receiveMemberApprove(payload) {
     tenant
   )
 
-  const amount = chat.priceToJoin || 0
+  const amount: number = chat.priceToJoin || 0
   const theChat = chat.dataValues || chat
   const theOwner = owner
   const theAlias = chat.myAlias || owner.alias
@@ -528,14 +532,14 @@ export async function receiveMemberApprove(payload) {
     },
     amount,
     sender: theOwner,
-    message: {},
+    message: {} as Message,
     type: constants.message_types.group_join,
   })
 
   // sendNotification(chat, chat_name, "group", theOwner);
 }
 
-export async function receiveMemberReject(payload) {
+export async function receiveMemberReject(payload: Payload): Promise<void> {
   sphinxLogger.info('-> receiveMemberReject', logging.Network)
   const { owner, chat, sender, chat_name, network_type } =
     await helpers.parseReceiveParams(payload)
@@ -559,7 +563,7 @@ export async function receiveMemberReject(payload) {
     network_type,
     tenant,
   }
-  const message = await models.Message.create(msg)
+  const message = await models.Message.create(msg) as unknown as Message
   socket.sendJson(
     {
       type: 'member_reject',
@@ -574,7 +578,7 @@ export async function receiveMemberReject(payload) {
   sendNotification(chat, chat_name, 'reject', owner)
 }
 
-export async function receiveTribeDelete(payload) {
+export async function receiveTribeDelete(payload: Payload): Promise<void> {
   sphinxLogger.info('-> receiveTribeDelete', logging.Network)
   const { owner, chat, sender, network_type } =
     await helpers.parseReceiveParams(payload)
@@ -597,7 +601,7 @@ export async function receiveTribeDelete(payload) {
     network_type,
     tenant,
   }
-  const message = await models.Message.create(msg)
+  const message = await models.Message.create(msg) as unknown as Message
   socket.sendJson(
     {
       type: 'tribe_delete',
@@ -610,16 +614,16 @@ export async function receiveTribeDelete(payload) {
   )
 }
 
-export async function replayChatHistory(chat, contact, ownerRecord) {
-  const owner = ownerRecord.dataValues || ownerRecord
-  const tenant: number = owner.id
+export async function replayChatHistory(chat: Chat, contact: Contact, ownerRecord: Contact): Promise<void> {
+  const owner = ownerRecord.dataValues as Contact || ownerRecord
+  const tenant = owner.id
   sphinxLogger.info('-> replayHistory', logging.Tribes)
   if (!(chat && chat.id && contact && contact.id)) {
     return sphinxLogger.info('cant replay history', logging.Tribes)
   }
 
   try {
-    const msgs = await models.Message.findAll({
+    const msgs: Message[] = await models.Message.findAll({
       where: {
         tenant,
         chatId: chat.id,
@@ -627,7 +631,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
       },
       order: [['id', 'desc']],
       limit: 40,
-    })
+    }) as unknown as Message[]
     msgs.reverse()
 
     // if theres a pinned msg in this chat
@@ -642,7 +646,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
             type: { [Op.in]: network.typesToReplay },
             uuid: chat.pin,
           },
-        })
+        }) as unknown as Message
         // add it
         if (pinnedMsg) {
           msgs.push(pinnedMsg)
@@ -674,20 +678,20 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
       if (!mdate) mdate = new Date()
       const dateString = mdate.toISOString()
 
-      let mediaKeyMap
-      let newMediaTerms
+      let mediaKeyMap: { chat: string } | undefined
+      let newMediaTerms: { muid: string } | undefined
       if (m.type === constants.message_types.attachment) {
         if (m.mediaKey && m.mediaToken) {
           const muid =
             m.mediaToken.split('.').length && m.mediaToken.split('.')[1]
           if (muid) {
-            const mediaKey = await models.MediaKey.findOne({
+            const mediaKey: MediaKey = await models.MediaKey.findOne({
               where: {
                 muid,
                 chatId: chat.id,
                 tenant,
               },
-            })
+            }) as unknown as MediaKey
             // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
             mediaKeyMap = { chat: mediaKey.key }
             newMediaTerms = { muid: mediaKey.muid }
@@ -711,7 +715,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
           ...(newMediaTerms && { mediaToken: newMediaTerms }),
           ...(m.mediaType && { mediaType: m.mediaType }),
           ...(dateString && { date: dateString }),
-        },
+        } as unknown as MessageContent,
         isForwarded,
         includeStatus
       )
@@ -738,30 +742,30 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
 }
 
 export async function createTribeChatParams(
-  owner,
-  contactIds,
-  name,
-  img,
-  price_per_message,
-  price_to_join,
-  escrow_amount,
-  escrow_millis,
-  unlisted,
-  is_private,
-  app_url,
-  feed_url,
-  feed_type,
-  tenant,
-  pin
+  owner: Contact,
+  contactIds: number[],
+  name: string,
+  img: string,
+  price_per_message: number,
+  price_to_join: number,
+  escrow_amount: number,
+  escrow_millis: number,
+  unlisted: boolean,
+  is_private: boolean,
+  app_url: string,
+  feed_url: string,
+  feed_type: number,
+  tenant: number,
+  pin: string
 ): Promise<{ [k: string]: any }> {
   const date = new Date()
   date.setMilliseconds(0)
-  if (!(owner && contactIds && Array.isArray(contactIds))) {
+  if (!(owner && contactIds)) {
     return {}
   }
 
   // make ts sig here w LNd pubkey - that is UUID
-  const keys: { [k: string]: string } = await rsa.genKeys()
+  const keys = await rsa.genKeys()
   const groupUUID = await tribes.genSignedTimestamp(owner.publicKey)
   const theContactIds = contactIds.includes(owner.id)
     ? contactIds
@@ -792,30 +796,24 @@ export async function createTribeChatParams(
   }
 }
 
-export async function addPendingContactIdsToChat(achat, tenant) {
-  const members = await models.ChatMember.findAll({
+export async function addPendingContactIdsToChat(achat: Chat, tenant: number): Promise<Chat> {
+  const members: ChatMember[] = await models.ChatMember.findAll({ // TODO type
     where: {
       chatId: achat.id,
       status: constants.chat_statuses.pending, // only pending
       tenant,
     },
-  })
+  }) as unknown as ChatMember[]
   if (!members) return achat
   const pendingContactIds: number[] = members.map((m) => m.contactId)
   const chat = achat.dataValues || achat
   return {
     ...chat,
     pendingContactIds,
-  }
+  } as Chat
 }
 
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
-}
-
-function mergeTribeAndChatData(chat, td: Tribe, owner) {
+function mergeTribeAndChatData(chat: Chat, td: Tribe, owner: Contact) {
   return {
     uuid: chat.uuid,
     name: chat.name,

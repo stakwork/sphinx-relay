@@ -1,6 +1,7 @@
 import { success, failure } from '../utils/res'
-import { models } from '../models'
+import { Accounting, Contact, models } from '../models'
 import * as network from '../network'
+import { Payload } from '../network'
 import constants from '../constants'
 import * as short from 'short-uuid'
 import * as lightning from '../grpc/lightning'
@@ -11,6 +12,8 @@ import fetch from 'node-fetch'
 import * as helpers from '../helpers'
 import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Request, Response } from 'express'
+import { asyncForEach } from '../helpers'
 import { Req } from '../types'
 
 type QueryType = 'onchain_address'
@@ -40,26 +43,13 @@ export async function get_hub_pubkey(): Promise<string> {
 }
 get_hub_pubkey()
 
-interface Accounting {
-  id: number
-  pubkey: string
-  onchainAddress: string
-  amount: number
-  confirmations: number
-  sourceApp: string
-  date: string
-  fundingTxid: string
-  onchainTxid: string
-  routeHint: string
-}
-
 async function getReceivedAccountings(): Promise<Accounting[]> {
   const accountings = await models.Accounting.findAll({
     where: {
       status: constants.statuses.received,
     },
-  })
-  return accountings.map((a) => a.dataValues || a)
+  }) as unknown as Accounting[]
+  return accountings.map((a) => a.dataValues as Accounting || a)
 }
 
 async function getPendingAccountings(): Promise<Accounting[]> {
@@ -72,7 +62,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
       },
       status: constants.statuses.pending,
     },
-  })
+  }) as unknown as Accounting[]
 
   // console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
   const ret: Accounting[] = []
@@ -80,7 +70,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
     const utxo = utxos.find((u) => u.address === a.onchainAddress)
     if (utxo) {
       sphinxLogger.info(`[WATCH] UTXO ${utxo}`)
-      const onchainTxid = utxo.outpoint && utxo.outpoint.txid_str
+      const onchainTxid = utxo.outpoint
       ret.push(<Accounting>{
         id: a.id,
         pubkey: a.pubkey,
@@ -96,7 +86,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
   return ret
 }
 
-export async function listUTXOs(req: Req, res) {
+export async function listUTXOs(req: Req, res: Response): Promise<void> {
   try {
     const ret: Accounting[] = await getPendingAccountings()
     success(
@@ -150,7 +140,7 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
     sphinxLogger.info(`[WATCH]=> ACCOUNTINGS UPDATED to received! ${acc.id}`)
   } catch (e) {
     sphinxLogger.error(`[ACCOUNTING] error creating channel ${e}`)
-    const existing = await models.Accounting.findOne({ where: { id: acc.id } })
+    const existing = await models.Accounting.findOne({ where: { id: acc.id } }) as unknown as Accounting
     if (existing) {
       if (!existing.amount) {
         await existing.update({ amount: acc.amount })
@@ -187,7 +177,7 @@ async function checkForConfirmedChannels() {
 }
 
 async function checkChannelsAndKeysend(rec: Accounting) {
-  const owner = await models.Contact.findOne({ where: { isOwner: true } })
+  const owner = await models.Contact.findOne({ where: { isOwner: true } }) as unknown as Contact
   const chans = await lightning.listChannels({
     active_only: true,
     peer: rec.pubkey,
@@ -240,11 +230,11 @@ async function checkChannelsAndKeysend(rec: Accounting) {
   })
 }
 
-export function startWatchingUTXOs() {
+export function startWatchingUTXOs(): void {
   setInterval(pollUTXOs, POLL_MINS * 60 * 1000) // every 1 minutes
 }
 
-export async function queryOnchainAddress(req: Req, res) {
+export async function queryOnchainAddress(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 
@@ -291,7 +281,7 @@ export async function queryOnchainAddress(req: Req, res) {
       return
     }
     if (queries[uuid]) {
-      success(res, queries[uuid].result)
+      success(res, queries[uuid].result || '')
       clearInterval(interval)
       delete queries[uuid]
       return
@@ -300,7 +290,7 @@ export async function queryOnchainAddress(req: Req, res) {
   }, 1000)
 }
 
-export const receiveQuery = async (payload: network.Payload) => {
+export const receiveQuery = async (payload: network.Payload): Promise<void> => {
   const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
@@ -333,7 +323,7 @@ export const receiveQuery = async (payload: network.Payload) => {
         error: '',
         routeHint: sender_route_hint,
       }
-      await models.Accounting.create(acc)
+      await models.Accounting.create(acc) as unknown as Accounting
       result = addy
     }
   }
@@ -363,7 +353,7 @@ export const receiveQuery = async (payload: network.Payload) => {
   }
 }
 
-export const receiveQueryResponse = async (payload: network.Payload) => {
+export const receiveQueryResponse = async (payload: network.Payload): Promise<void> => {
   sphinxLogger.info(`=> receiveQueryResponse`, logging.Network)
   const dat = payload
   // const sender_pub_key = dat.sender.pub_key
@@ -373,11 +363,5 @@ export const receiveQueryResponse = async (payload: network.Payload) => {
     queries[q.uuid] = q
   } catch (e) {
     sphinxLogger.error(`=> ERROR receiveQueryResponse, ${e}`)
-  }
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
   }
 }

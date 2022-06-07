@@ -25,6 +25,7 @@ import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
 import { loadConfig } from '../utils/config'
+import { Request, Response } from 'express'
 import { Req } from '../types'
 
 import { Response } from 'express'
@@ -73,7 +74,7 @@ export const getContacts = async (req: Req, res: Response): Promise<void> => {
       status: constants.chat_statuses.pending,
       tenant,
     },
-  })
+  }) as unknown as ChatMember[]
 
   const contactsResponse = contacts.map((contact) => {
     const contactJson = jsonUtils.contactToJson(contact)
@@ -114,7 +115,7 @@ export const getContactsForChat = async (
 
   const chat: ChatRecord = await models.Chat.findOne({
     where: { id: chat_id, tenant },
-  })
+  }) as unknown as Chat
   if (!chat) return failure(res, 'chat not found')
 
   let contactIDs
@@ -129,7 +130,7 @@ export const getContactsForChat = async (
       chatId: chat_id,
       tenant,
     },
-  })
+  }) as unknown as ChatMember[]
 
   if (!contactIDs || !contactIDs.length)
     return failure(res, 'no contact ids length')
@@ -141,7 +142,7 @@ export const getContactsForChat = async (
     limit,
     offset,
     order: [['alias', 'asc']],
-  })
+  }) as unknown as Contact[]
   if (!contacts) return failure(res, 'no contacts found')
   const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c))
 
@@ -151,7 +152,7 @@ export const getContactsForChat = async (
     const pendingContacts: ContactRecord[] = await models.Contact.findAll({
       where: { id: { [Op.in]: pendingContactIDs }, tenant },
       order: [['alias', 'asc']],
-    })
+    }) as unknown as Contact[]
     if (pendingContacts) {
       const pendingContactsRet = pendingContacts.map((c) => {
         const ctc = c.dataValues as Contact
@@ -330,7 +331,7 @@ export const updateContact = async (req: Req, res: Response): Promise<void> => {
 
   const contact: Contact = await models.Contact.findOne({
     where: { id: req.params.id, tenant },
-  })
+  }) as unknown as Contact
   if (!contact) {
     return failure(res, 'no contact found')
   }
@@ -389,7 +390,7 @@ export const exchangeKeys = async (req: Req, res: Response): Promise<void> => {
 
   const contact: Contact = await models.Contact.findOne({
     where: { id: req.params.id, tenant },
-  })
+  }) as unknown as Contact
   const owner = req.owner
 
   success(res, jsonUtils.contactToJson(contact))
@@ -424,7 +425,7 @@ export const createContact = async (req: Req, res: Response): Promise<void> => {
     attrs['public_key'] &&
     (await models.Contact.findOne({
       where: { publicKey: attrs['public_key'], tenant },
-    }))
+    }) as unknown as Contact)
   if (existing) {
     const updateObj: { fromGroup: boolean; alias?: string } = {
       fromGroup: false,
@@ -476,7 +477,7 @@ export const deleteContact = async (req: Req, res: Response): Promise<void> => {
   const owner = req.owner
   const tribesImAdminOf: Chat[] = await models.Chat.findAll({
     where: { ownerPubkey: owner.publicKey, tenant },
-  })
+  }) as unknown as Chat[]
   const tribesIdArray =
     tribesImAdminOf &&
     tribesImAdminOf.length &&
@@ -485,7 +486,7 @@ export const deleteContact = async (req: Req, res: Response): Promise<void> => {
   if (tribesIdArray && tribesIdArray.length) {
     const thisContactMembers: ChatMember[] = await models.ChatMember.findAll({
       where: { contactId: id, chatId: { [Op.in]: tribesIdArray }, tenant },
-    })
+    }) as unknown as ChatMember[]
     if (thisContactMembers && thisContactMembers.length) {
       // IS A MEMBER! dont delete, instead just set from_group=true
       okToDelete = false
@@ -496,7 +497,7 @@ export const deleteContact = async (req: Req, res: Response): Promise<void> => {
   // CHECK IF IM IN THEIR TRIBE
   const tribesTheyreAdminOf: Chat[] = await models.Chat.findAll({
     where: { ownerPubkey: contact.publicKey, tenant, deleted: false },
-  })
+  }) as unknown as Chat[]
   if (tribesTheyreAdminOf && tribesTheyreAdminOf.length) {
     okToDelete = false
     await contact.update({ fromGroup: true })
@@ -515,7 +516,7 @@ export const deleteContact = async (req: Req, res: Response): Promise<void> => {
   // find and destroy chat & messages
   const chats: Chat[] = await models.Chat.findAll({
     where: { deleted: false, tenant },
-  })
+  }) as unknown as Chat[]
   chats.map(async (chat) => {
     if (chat.type === constants.chat_types.conversation) {
       const contactIds = JSON.parse(chat.contactIds)
@@ -561,7 +562,7 @@ export const receiveContactKey = async (payload: Payload): Promise<void> => {
       status: constants.contact_statuses.confirmed,
       tenant,
     },
-  })
+  }) as unknown as Contact
   let msgIncludedContactKey = false // ???????
   if (sender_contact_key) {
     msgIncludedContactKey = true
@@ -627,7 +628,7 @@ export const receiveConfirmContactKey = async (
       status: constants.contact_statuses.confirmed,
       tenant,
     },
-  })
+  }) as unknown as Contact
   if (sender_contact_key && sender) {
     const objToUpdate: {
       alias?: string
@@ -734,7 +735,7 @@ export const getLatestContacts = async (
         tenant,
         chatId: { [Op.in]: chatIds },
       },
-    })
+    }) as unknown as ChatMember[]
     const chatsResponse = chats.map((chat) => {
       const theChat = (chat.dataValues as Chat) || chat
       if (!pendingMembers) return jsonUtils.chatToJson(theChat)
@@ -763,7 +764,7 @@ async function switchBlock(
 ) {
   const contact: Contact = await models.Contact.findOne({
     where: { id, tenant },
-  })
+  }) as unknown as Contact
   if (!contact) {
     return failure(res, 'no contact found')
   }
@@ -772,13 +773,13 @@ async function switchBlock(
   success(res, jsonUtils.contactToJson(updated))
 }
 
-export const blockContact = async (req: Req, res) => {
+export const blockContact = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const contactId = parseInt(req.params.contact_id as string)
   switchBlock(res, req.owner.id, contactId, true)
 }
 
-export const unblockContact = async (req: Req, res) => {
+export const unblockContact = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const contactId = parseInt(req.params.contact_id as string)
   switchBlock(res, req.owner.id, contactId, false)

@@ -1,3 +1,5 @@
+import type { JwtBody } from 'njwt'
+
 export enum scopes {
   PERSONAL = 'personal', // manage contacts
   BOTS = 'bots',
@@ -16,13 +18,13 @@ export const routes: { [k: string]: string[] } = {
   [scopes.BOTS]: ['/bots', '/bot', '/bot/*'],
 }
 
-export function allowedJwtRoutes(jwt, path): boolean {
-  const scopes = jwt.scope.split(',')
+export function allowedJwtRoutes(jwt: JwtBody, path: string): boolean {
+  const scopes = (jwt as any).scope.split(',')
   let ok = false
   scopes.forEach((sc) => {
     if (routes[sc]) {
       // convert to regex with wildcards
-      let rs = routes[sc].map((r) => wildcardToRegExp(r))
+      const rs = routes[sc].map((r) => wildcardToRegExp(r))
       rs.forEach((r) => {
         if (path.match(r)) ok = true
       })

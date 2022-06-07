@@ -15,11 +15,11 @@ export interface NodeConfig {
 }
 
 export interface RequestBody {
-  [key: string]: unknown
+  [k: string]: unknown
 }
 
 export interface Headers {
-  [key: string]: string
+  [k: string]: string
 }
 
 export interface RequestArgs {

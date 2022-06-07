@@ -1,28 +1,32 @@
-import { models } from '../models'
+import { Timer, Chat, Contact, Message, models } from '../models'
 import * as network from '../network'
 import constants from '../constants'
 
-const timerz = {}
-function clearTimer(t) {
+const timerz: { [k: string]: NodeJS.Timeout } = {}
+
+function clearTimer(t: Timer) {
   const name = makeName(t)
   if (name) clearTimeout(timerz[name])
 }
-export async function removeTimerByMsgId(msgId) {
-  const t = await models.Timer.findOne({ where: { msgId } })
+
+export async function removeTimerByMsgId(msgId: number): Promise<void> {
+  const t = await models.Timer.findOne({ where: { msgId } }) as unknown as Timer
   clearTimer(t)
   models.Timer.destroy({ where: { msgId } })
 }
-export async function removeTimersByContactId(contactId, tenant) {
+
+export async function removeTimersByContactId(contactId: number, tenant: number): Promise<void> {
   const ts = await models.Timer.findAll({
     where: { receiver: contactId, tenant },
-  })
+  }) as unknown as Timer[]
   ts.forEach((t) => clearTimer(t))
   models.Timer.destroy({ where: { receiver: contactId, tenant } })
 }
-export async function removeTimersByContactIdChatId(contactId, chatId, tenant) {
+
+export async function removeTimersByContactIdChatId(contactId: number, chatId: number, tenant: number): Promise<void> {
   const ts = await models.Timer.findAll({
     where: { receiver: contactId, chatId, tenant },
-  })
+  }) as unknown as Timer[]
   ts.forEach((t) => clearTimer(t))
   models.Timer.destroy({ where: { receiver: contactId, chatId, tenant } })
 }
@@ -33,8 +37,8 @@ export async function addTimer({
   receiver,
   msgId,
   chatId,
-  tenant,
-}) {
+  tenant
+}: Timer): Promise<void> {
   const now = new Date().valueOf()
   const when = now + millis
   const t = await models.Timer.create({
@@ -44,12 +48,13 @@ export async function addTimer({
     msgId,
     chatId,
     tenant,
-  })
+  }) as unknown as Timer
   setTimer(makeName(t), when, async () => {
     payBack(t)
   })
 }
-export function setTimer(name: string, when: number, cb) {
+
+export function setTimer(name: string, when: number, cb: () => void): void {
   const now = new Date().valueOf()
   const ms = when - now
   if (ms < 0) {
@@ -58,13 +63,14 @@ export function setTimer(name: string, when: number, cb) {
     timerz[name] = setTimeout(cb, ms)
   }
 }
-function makeName(t) {
+
+function makeName(t: Timer): string {
   if (!t) return ''
   return `${t.chatId}_${t.receiver}_${t.msgId}`
 }
 
-export async function reloadTimers() {
-  const timers = await models.Timer.findAll()
+export async function reloadTimers(): Promise<void> {
+  const timers = await models.Timer.findAll() as unknown as Timer[]
   timers &&
     timers.forEach((t, i) => {
       const name = makeName(t)
@@ -75,20 +81,21 @@ export async function reloadTimers() {
       })
     })
 }
-export async function payBack(t) {
+
+export async function payBack(t: Timer): Promise<void> {
   const chat = await models.Chat.findOne({
     where: { id: t.chatId, tenant: t.tenant },
-  })
-  const owner = await models.Contact.findOne({ where: { id: t.tenant } })
+  }) as unknown as Chat
+  const owner = await models.Contact.findOne({ where: { id: t.tenant } }) as unknown as Contact
   if (!chat) {
     models.Timer.destroy({ where: { id: t.id } })
     return
   }
-  const theChat = { ...chat.dataValues, contactIds: [t.receiver] }
+  const theChat = { ...chat.dataValues as Chat, contactIds: JSON.stringify([t.receiver]) }
   network.sendMessage({
     chat: theChat,
     sender: owner,
-    message: { id: t.msgId, amount: t.amount },
+    message: { id: t.msgId, amount: t.amount } as unknown as Message,
     amount: t.amount,
     type: constants.message_types.repayment,
     realSatsContactId: t.receiver,
@@ -107,7 +114,7 @@ export async function payBack(t) {
         status: constants.statuses.received,
         network_type: constants.network_types.lightning,
         tenant: t.tenant,
-      })
+      }) as unknown as Message
     },
   })
   models.Timer.destroy({ where: { id: t.id } })

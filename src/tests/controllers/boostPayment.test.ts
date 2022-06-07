@@ -15,9 +15,9 @@ test('test boostPayment: create tribe, join tribe, send messages, boost messages
 
 export async function boostPayment(t, index1, index2, index3) {
   //TWO NODES SEND IMAGES WITHIN A TRIBE ===>
-  let node1 = nodes[index1]
-  let node2 = nodes[index2]
-  let node3 = nodes[index3]
+  const node1 = nodes[index1]
+  const node2 = nodes[index2]
+  const node3 = nodes[index3]
   t.truthy(node3, 'this test requires three nodes')
 
   console.log(
@@ -25,22 +25,22 @@ export async function boostPayment(t, index1, index2, index3) {
   )
 
   //NODE1 CREATES A TRIBE
-  let tribe = await createTribe(t, node1)
+  const tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
 
   //NODE2 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join = await joinTribe(t, node2, tribe)
+  const join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
 
   //NODE3 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
-  let join2 = await joinTribe(t, node3, tribe)
+  const join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
 
   //NODE1 SENDS A MESSAGE IN THE TRIBE AND NODE2 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text = randomText()
-  let tribeMessage1 = await sendTribeMessageAndCheckDecryption(
+  const tribeMessage1 = await sendTribeMessageAndCheckDecryption(
     t,
     node1,
     node2,
@@ -51,7 +51,7 @@ export async function boostPayment(t, index1, index2, index3) {
 
   //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text2 = randomText()
-  let tribeMessage2 = await sendTribeMessageAndCheckDecryption(
+  const tribeMessage2 = await sendTribeMessageAndCheckDecryption(
     t,
     node2,
     node3,
@@ -62,7 +62,7 @@ export async function boostPayment(t, index1, index2, index3) {
 
   //NODE3 SENDS A MESSAGE IN THE TRIBE AND NODE1 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text3 = randomText()
-  let tribeMessage3 = await sendTribeMessageAndCheckDecryption(
+  const tribeMessage3 = await sendTribeMessageAndCheckDecryption(
     t,
     node3,
     node1,
@@ -84,14 +84,14 @@ export async function boostPayment(t, index1, index2, index3) {
   t.true(boost3.success)
 
   //NODE2 LEAVES TRIBE
-  let left2 = await leaveTribe(t, node2, tribe)
+  const left2 = await leaveTribe(t, node2, tribe)
   t.true(left2, 'node2 should leave tribe')
 
   //NODE3 LEAVES TRIBE
-  let left3 = await leaveTribe(t, node3, tribe)
+  const left3 = await leaveTribe(t, node3, tribe)
   t.true(left3, 'node3 should leave tribe')
 
   //NODE1 DELETES TRIBE
-  let delTribe2 = await deleteTribe(t, node1, tribe)
+  const delTribe2 = await deleteTribe(t, node1, tribe)
   t.true(delTribe2, 'node1 should delete tribe')
 }

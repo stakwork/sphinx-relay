@@ -16,9 +16,9 @@ export function getCheckTribe(
 }
 
 async function timeout(i, node, tribeId, resolve, reject) {
-  let res = await http.get(node.external_ip + '/contacts', makeArgs(node))
+  const res = await http.get(node.external_ip + '/contacts', makeArgs(node))
   if (res) {
-    let r = res.response.chats.find((chat) => chat.id === tribeId)
+    const r = res.response.chats.find((chat) => chat.id === tribeId)
     if (r) {
       return resolve(r)
     }

@@ -9,7 +9,7 @@ export function getCheckMsgs(
   date: any,
   limit: number,
   offset: number,
-  order: string = 'asc'
+  order = 'asc'
 ): Promise<{ new_messages: Array<Message>; new_messages_total: number }> {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {

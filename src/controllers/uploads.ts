@@ -1,6 +1,8 @@
-import { models } from '../models'
+import { Contact, Chat, models } from '../models'
 import * as path from 'path'
 import { loadConfig } from '../utils/config'
+import * as multer from 'multer'
+import { Request, Response } from 'express'
 import { Req } from '../types'
 import * as multer from 'multer'
 
@@ -8,7 +10,7 @@ const config = loadConfig()
 
 // setup disk storage
 const avatarStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (req: Request, file, cb) => {
     const dir = __dirname.includes('/dist/')
       ? path.join(__dirname, '..')
       : __dirname
@@ -37,9 +39,13 @@ interface UploadReq extends Req {
   file: any
 }
 
-export const uploadFile = async (req: UploadReq, res) => {
+export const uploadFile = async (req: UploadReq, res: Response): Promise<void> => {
   const { contact_id, chat_id } = req.body
   const { file } = req
+
+  if (!file) {
+    throw new Error('uploadFile needs a file field in `req`')
+  }
 
   const ip = String(process.env.NODE_IP)
   let theIP = ip
@@ -49,12 +55,12 @@ export const uploadFile = async (req: UploadReq, res) => {
   const photo_url = theIP + '/static/uploads/' + file.filename
 
   if (contact_id) {
-    const contact = await models.Contact.findOne({ where: { id: contact_id } })
+    const contact = await models.Contact.findOne({ where: { id: contact_id } }) as unknown as Contact
     if (contact) contact.update({ photoUrl: photo_url })
   }
 
   if (chat_id) {
-    const chat = await models.Chat.findOne({ where: { id: chat_id } })
+    const chat = await models.Chat.findOne({ where: { id: chat_id } }) as unknown as Chat
     if (chat) chat.update({ photoUrl: photo_url })
   }
 

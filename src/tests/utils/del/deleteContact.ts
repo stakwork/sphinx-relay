@@ -8,7 +8,7 @@ export async function deleteContact(
   node: NodeConfig,
   contactID: number
 ): Promise<boolean> {
-  let deletion = await http.del(
+  const deletion = await http.del(
     node.external_ip + '/contacts/' + contactID,
     makeArgs(node)
   )
