@@ -22,7 +22,7 @@ jobs:
     - name: Build Relay
       working-directory: ./relay
       run: |
-        npm install && npm run build && docker build -t sphinxlightning/sphinx-relay . 
+        npm install && npm ci && npm run build && docker build -t sphinxlightning/sphinx-relay . 
     - name: Checkout stack
       run: |
         git clone -b proxy https://github.com/kevkevinpal/sphinx-stack.git stack
