@@ -22,9 +22,16 @@
   "author": "",
   "license": "ISC",
   "ava": {
-    "files": ["!src/tests/utils/**", "!src/tests/types"],
-    "extensions": ["ts"],
-    "require": ["ts-node/register"]
+    "files": [
+      "!src/tests/utils/**",
+      "!src/tests/types"
+    ],
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
@@ -84,7 +91,7 @@
     "rncryptor-js": "0.0.1",
     "secp256k1": "3.8.0",
     "secure-random": "^1.1.2",
-    "sequelize": "5.19.3",
+    "sequelize": "^5.19.3",
     "sequelize-cli": "^5.5.1",
     "sequelize-typescript": "^1.1.0",
     "short-uuid": "^3.1.1",
@@ -115,7 +122,10 @@
     "socket.io-client-legacy": "npm:socket.io-client@^2.4.0"
   },
   "pkg": {
-    "assets": ["config/*", "dist/config/*"]
+    "assets": [
+      "config/*",
+      "dist/config/*"
+    ]
   },
   "husky": {
     "hooks": {
