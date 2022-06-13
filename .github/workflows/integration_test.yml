@@ -19,6 +19,9 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         path: relay
+    - uses: actions/setup-node@v3
+      with:
+      node-version: 14
     - name: Build Relay
       working-directory: ./relay
       run: |
