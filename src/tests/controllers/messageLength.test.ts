@@ -61,7 +61,6 @@ export async function messageLengthTest(t, node1, node2) {
     offset,
     'desc'
   )
-  console.log('number of new messages:', newMessagesResponse.new_messages_total)
   t.true(
     newMessagesResponse.new_messages_total == 4,
     'node2 should have 4 new message'
