@@ -1,8 +1,8 @@
 import { createJWT, scopes } from '../utils/jwt'
 import { success, failure } from '../utils/res'
 import { loadConfig } from '../utils/config'
-import * as rsa from '../crypto/rsa'
 import * as tribes from '../utils/tribes'
+import { generateTransportTokenKeys } from '../utils/cert'
 import * as fs from 'fs'
 import { Req } from '../types'
 
@@ -84,11 +84,6 @@ export async function requestTransportKey(req: Req, res) {
     return
   }
 
-  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
-  fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
-  fs.writeFileSync(
-    config.transportPrivateKeyLocation,
-    transportTokenKeys.private
-  )
-  success(res, { transport_key: transportTokenKeys.public })
+  const transportTokenKeys = await generateTransportTokenKeys()
+  success(res, { transport_key: transportTokenKeys })
 }
