@@ -9,14 +9,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCertificate = void 0;
+exports.generateTransportTokenKeys = exports.getCertificate = void 0;
 const fs_1 = require("fs");
 const express = require("express");
+const rsa = require("../crypto/rsa");
+const fs = require("fs");
 const logger_1 = require("./logger");
 const qs = require("qs");
 const axios_1 = require("axios");
 const forge = require("node-forge");
 const apiUrl = 'https://api.zerossl.com';
+const config_1 = require("../utils/config");
+const config = (0, config_1.loadConfig)();
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -186,4 +190,13 @@ function getCertificate(domain, port, save_ssl) {
     });
 }
 exports.getCertificate = getCertificate;
+function generateTransportTokenKeys() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const transportTokenKeys = yield rsa.genKeys();
+        fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public);
+        fs.writeFileSync(config.transportPrivateKeyLocation, transportTokenKeys.private);
+        return transportTokenKeys.public;
+    });
+}
+exports.generateTransportTokenKeys = generateTransportTokenKeys;
 //# sourceMappingURL=cert.js.map

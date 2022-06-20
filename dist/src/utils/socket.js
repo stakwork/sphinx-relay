@@ -15,7 +15,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
-const auth_1 = require("../controllers/auth");
+const cert_1 = require("../utils/cert");
 const rsa = require("../crypto/rsa");
 const config = (0, config_1.loadConfig)();
 // import * as WebSocket from 'ws'
@@ -48,7 +48,7 @@ function connect(server) {
         const x_transport_token = client.handshake.headers['x-transport-token'];
         if (x_transport_token) {
             if (!fs.existsSync(config.transportPrivateKeyLocation)) {
-                yield (0, auth_1.generateTransportTokenKeys)();
+                yield (0, cert_1.generateTransportTokenKeys)();
             }
             const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
             const userTokenFromTransportToken = rsa
