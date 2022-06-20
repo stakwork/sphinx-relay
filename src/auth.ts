@@ -13,7 +13,7 @@ import * as hmac from './crypto/hmac'
 import { Req, Res } from './types'
 import * as fs from 'fs'
 import * as moment from 'moment'
-import { generateTransportTokenKeys } from './controllers/auth'
+import { generateTransportTokenKeys } from './utils/cert'
 
 const config = loadConfig()
 
