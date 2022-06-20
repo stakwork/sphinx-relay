@@ -1,10 +1,15 @@
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs'
 import * as express from 'express'
+import * as rsa from '../crypto/rsa'
+import * as fs from 'fs'
 import { sphinxLogger, logging } from './logger'
 import * as qs from 'qs'
 import axios from 'axios'
 import * as forge from 'node-forge'
 const apiUrl = 'https://api.zerossl.com'
+import { loadConfig } from '../utils/config'
+
+const config = loadConfig()
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -199,7 +204,7 @@ async function getCertificate(domain, port, save_ssl) {
   }
 }
 
-export async function generateTransportTokenKeys() {
+async function generateTransportTokenKeys() {
   const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
   fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
   fs.writeFileSync(

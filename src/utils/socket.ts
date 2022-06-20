@@ -3,7 +3,7 @@ import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { loadConfig } from './config'
 import { sphinxLogger } from '../utils/logger'
-import { generateTransportTokenKeys } from '../utils/auth'
+import { generateTransportTokenKeys } from '../utils/cert'
 import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
