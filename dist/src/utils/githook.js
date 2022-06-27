@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.processGithook = exports.all_webhook_events = void 0;
+const MAX_MSG_LENGTH = 250;
 exports.all_webhook_events = [
     'push',
     'release',
@@ -77,7 +78,7 @@ function pushAction(e) {
     if (e.head_commit) {
         const r = ref(e.ref);
         const refStr = r ? `(${r.name} ${r.kind}) ` : '';
-        return `New commit in ${e.repository.full_name} ${refStr}by ${e.pusher.name}: ${e.head_commit.message}`;
+        return `New commit in ${e.repository.full_name} ${refStr}by ${e.pusher.name}: ${trunc(e.head_commit.message)}`;
     }
     else {
         return '';
@@ -85,9 +86,7 @@ function pushAction(e) {
 }
 function createAction(e) {
     if (e.ref_type === 'branch') {
-        const r = ref(e.ref);
-        const branchName = r ? r.name : '';
-        return `New branch created in ${e.repository.full_name}: ${branchName}`;
+        return `New branch created in ${e.repository.full_name}: ${e.ref}`;
     }
     else if (e.ref_type === 'tag') {
         return `New tag created in ${e.repository.full_name}: ${e.ref}`;
@@ -98,9 +97,7 @@ function createAction(e) {
 }
 function deleteAction(e) {
     if (e.ref_type === 'branch') {
-        const r = ref(e.ref);
-        const branchName = r ? r.name + ' ' : '';
-        return `Branch ${branchName}deleted in ${e.repository.full_name}`;
+        return `Branch ${e.ref} deleted in ${e.repository.full_name}`;
     }
     else if (e.ref_type === 'tag') {
         return `Tag deleted in ${e.repository.full_name}: ${e.ref}`;
@@ -146,7 +143,7 @@ function processGithook(event, event_name, repo_filter) {
 }
 exports.processGithook = processGithook;
 function trunc(str) {
-    return truncateString(str, 100);
+    return truncateString(str, MAX_MSG_LENGTH);
 }
 function truncateString(str, num) {
     if (str.length <= num) {

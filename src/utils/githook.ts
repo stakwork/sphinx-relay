@@ -14,6 +14,8 @@ import {
   IssueCommentDeletedEvent,
 } from '@octokit/webhooks-types'
 
+const MAX_MSG_LENGTH = 250
+
 /*
 
 https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
@@ -136,16 +138,16 @@ function pushAction(e: PushEvent): string {
   if (e.head_commit) {
     const r = ref(e.ref)
     const refStr = r ? `(${r.name} ${r.kind}) ` : ''
-    return `New commit in ${e.repository.full_name} ${refStr}by ${e.pusher.name}: ${e.head_commit.message}`
+    return `New commit in ${e.repository.full_name} ${refStr}by ${
+      e.pusher.name
+    }: ${trunc(e.head_commit.message)}`
   } else {
     return ''
   }
 }
 function createAction(e: CreateEvent): string {
   if (e.ref_type === 'branch') {
-    const r = ref(e.ref)
-    const branchName = r ? r.name : ''
-    return `New branch created in ${e.repository.full_name}: ${branchName}`
+    return `New branch created in ${e.repository.full_name}: ${e.ref}`
   } else if (e.ref_type === 'tag') {
     return `New tag created in ${e.repository.full_name}: ${e.ref}`
   } else {
@@ -154,9 +156,7 @@ function createAction(e: CreateEvent): string {
 }
 function deleteAction(e: DeleteEvent): string {
   if (e.ref_type === 'branch') {
-    const r = ref(e.ref)
-    const branchName = r ? r.name + ' ' : ''
-    return `Branch ${branchName}deleted in ${e.repository.full_name}`
+    return `Branch ${e.ref} deleted in ${e.repository.full_name}`
   } else if (e.ref_type === 'tag') {
     return `Tag deleted in ${e.repository.full_name}: ${e.ref}`
   } else {
@@ -204,7 +204,7 @@ export function processGithook(
 }
 
 function trunc(str: string) {
-  return truncateString(str, 100)
+  return truncateString(str, MAX_MSG_LENGTH)
 }
 function truncateString(str: string, num: number) {
   if (str.length <= num) {
