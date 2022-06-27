@@ -9,9 +9,14 @@ import {
   PullRequestClosedEvent,
   PullRequestOpenedEvent,
   ReleaseReleasedEvent,
+  IssueCommentCreatedEvent,
+  IssueCommentEditedEvent,
+  IssueCommentDeletedEvent,
 } from '@octokit/webhooks-types'
 
 /*
+
+https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
 
 ### git bot
 
@@ -80,6 +85,19 @@ const issueActionMap: ActionMap = {
     return `Issue #${e.issue.number} reopened in ${e.repository.full_name}`
   },
 }
+const issueCommentActionMap: ActionMap = {
+  created: (e: IssueCommentCreatedEvent) => {
+    return `New comment on issue ${e.issue.number} created: ${trunc(
+      e.comment.body
+    )}`
+  },
+  edited: (e: IssueCommentEditedEvent) => {
+    return `Edited comment on issue ${e.issue.number}`
+  },
+  deleted: (e: IssueCommentDeletedEvent) => {
+    return `Deleted comment on issue ${e.issue.number}`
+  },
+}
 const prActionMap: ActionMap = {
   opened: (e: PullRequestOpenedEvent) => {
     return `New Pull Request opened in ${e.repository.full_name}: ${e.pull_request.title}`
@@ -123,7 +141,7 @@ function pushAction(e: PushEvent): string {
     return ''
   }
 }
-function createAction(e: CreateEvent | DeleteEvent): string {
+function createAction(e: CreateEvent): string {
   if (e.ref_type === 'branch') {
     return `New branch created in ${e.repository.full_name}`
   } else if (e.ref_type === 'tag') {
@@ -132,19 +150,27 @@ function createAction(e: CreateEvent | DeleteEvent): string {
     return ''
   }
 }
-const actionsMap: { [k in PropName]: ActionMap } = {
-  issue: issueActionMap,
+function deleteAction(e: DeleteEvent): string {
+  if (e.ref_type === 'branch') {
+    return `New branch deleted in ${e.repository.full_name}`
+  } else if (e.ref_type === 'tag') {
+    return `New tag deleted in ${e.repository.full_name}: ${e.ref}`
+  } else {
+    return ''
+  }
+}
+// this one needs to support every single event name
+// const actionsMap: { [k in WebhookEventName]: ActionMap } = {
+const actionsMap: { [k: string]: ActionMap } = {
+  issues: issueActionMap,
   pull_request: prActionMap,
   release: releaseActions,
+  issue_comment: issueCommentActionMap,
 }
 
-// head_commit is for "push"
-// "ref_type" = branch or tag. for "create"
-type PropName = 'issue' | 'pull_request' | 'release'
-
-const props: PropName[] = ['issue', 'pull_request', 'release']
 export function processGithook(
   event: WebhookEvent,
+  event_name: WebhookEventName,
   repo_filter?: string
 ): string {
   if (repo_filter && 'repository' in event) {
@@ -154,21 +180,31 @@ export function processGithook(
       return ''
     }
   }
-  if ('head_commit' in event) {
-    return pushAction(event)
-  } else if ('ref_type' in event) {
-    return createAction(event)
+  if (event_name === 'push') {
+    return pushAction(event as PushEvent)
   }
-  for (const prop of props) {
-    if (prop in event) {
-      if ('action' in event) {
-        if (actionsMap[prop]) {
-          if (actionsMap[prop][event.action]) {
-            return actionsMap[prop][event.action](event)
-          }
-        }
+  if (event_name === 'create') {
+    return createAction(event as CreateEvent)
+  }
+  if (event_name === 'delete') {
+    return deleteAction(event as DeleteEvent)
+  }
+  if ('action' in event) {
+    if (actionsMap[event_name]) {
+      if (actionsMap[event_name][event.action]) {
+        return actionsMap[event_name][event.action](event)
       }
     }
   }
   return ''
+}
+
+function trunc(str: string) {
+  return truncateString(str, 100)
+}
+function truncateString(str: string, num: number) {
+  if (str.length <= num) {
+    return str
+  }
+  return str.slice(0, num) + '...'
 }
