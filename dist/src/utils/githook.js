@@ -36,13 +36,13 @@ const issueActionMap = {
 };
 const issueCommentActionMap = {
     created: (e) => {
-        return `New comment on issue ${e.issue.number} created: ${trunc(e.comment.body)}`;
+        return `New comment on issue #${e.issue.number} (${e.repository.full_name}): ${trunc(e.comment.body)}`;
     },
     edited: (e) => {
-        return `Edited comment on issue ${e.issue.number}`;
+        return `Edited comment on issue #${e.issue.number} (${e.repository.full_name})`;
     },
     deleted: (e) => {
-        return `Deleted comment on issue ${e.issue.number}`;
+        return `Deleted comment on issue #${e.issue.number} (${e.repository.full_name})`;
     },
 };
 const prActionMap = {
@@ -85,7 +85,9 @@ function pushAction(e) {
 }
 function createAction(e) {
     if (e.ref_type === 'branch') {
-        return `New branch created in ${e.repository.full_name}`;
+        const r = ref(e.ref);
+        const branchName = r ? r.name : '';
+        return `New branch created in ${e.repository.full_name}: ${branchName}`;
     }
     else if (e.ref_type === 'tag') {
         return `New tag created in ${e.repository.full_name}: ${e.ref}`;
@@ -96,10 +98,12 @@ function createAction(e) {
 }
 function deleteAction(e) {
     if (e.ref_type === 'branch') {
-        return `New branch deleted in ${e.repository.full_name}`;
+        const r = ref(e.ref);
+        const branchName = r ? r.name + ' ' : '';
+        return `Branch ${branchName}deleted in ${e.repository.full_name}`;
     }
     else if (e.ref_type === 'tag') {
-        return `New tag deleted in ${e.repository.full_name}: ${e.ref}`;
+        return `Tag deleted in ${e.repository.full_name}: ${e.ref}`;
     }
     else {
         return '';
