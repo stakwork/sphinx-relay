@@ -30,6 +30,10 @@ function processWebhook(req, res) {
         if (!sig) {
             return (0, res_1.unauthorized)(res);
         }
+        const event_type = req.headers['x-github-event'] || req.headers['X-GitHub-Event'];
+        if (!event_type) {
+            return (0, res_1.unauthorized)(res);
+        }
         const event = req.body;
         let repo = '';
         if ('repository' in event) {
@@ -61,7 +65,7 @@ function processWebhook(req, res) {
                                     where: { id: cb.chatId },
                                 });
                                 if (chat) {
-                                    const content = (0, githook_1.processGithook)(req.body);
+                                    const content = (0, githook_1.processGithook)(req.body, event_type);
                                     if (content) {
                                         const a = {
                                             action: 'broadcast',

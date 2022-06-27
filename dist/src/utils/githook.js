@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.processGithook = exports.all_webhook_events = void 0;
+const MAX_MSG_LENGTH = 250;
 exports.all_webhook_events = [
     'push',
     'release',
@@ -32,6 +33,17 @@ const issueActionMap = {
     },
     reopened: (e) => {
         return `Issue #${e.issue.number} reopened in ${e.repository.full_name}`;
+    },
+};
+const issueCommentActionMap = {
+    created: (e) => {
+        return `New comment on issue #${e.issue.number} (${e.repository.full_name}): ${trunc(e.comment.body)}`;
+    },
+    edited: (e) => {
+        return `Edited comment on issue #${e.issue.number} (${e.repository.full_name})`;
+    },
+    deleted: (e) => {
+        return `Deleted comment on issue #${e.issue.number} (${e.repository.full_name})`;
     },
 };
 const prActionMap = {
@@ -66,7 +78,7 @@ function pushAction(e) {
     if (e.head_commit) {
         const r = ref(e.ref);
         const refStr = r ? `(${r.name} ${r.kind}) ` : '';
-        return `New commit in ${e.repository.full_name} ${refStr}by ${e.pusher.name}: ${e.head_commit.message}`;
+        return `New commit in ${e.repository.full_name} ${refStr}by ${e.pusher.name}: ${trunc(e.head_commit.message)}`;
     }
     else {
         return '';
@@ -74,7 +86,7 @@ function pushAction(e) {
 }
 function createAction(e) {
     if (e.ref_type === 'branch') {
-        return `New branch created in ${e.repository.full_name}`;
+        return `New branch created in ${e.repository.full_name}: ${e.ref}`;
     }
     else if (e.ref_type === 'tag') {
         return `New tag created in ${e.repository.full_name}: ${e.ref}`;
@@ -83,13 +95,26 @@ function createAction(e) {
         return '';
     }
 }
+function deleteAction(e) {
+    if (e.ref_type === 'branch') {
+        return `Branch ${e.ref} deleted in ${e.repository.full_name}`;
+    }
+    else if (e.ref_type === 'tag') {
+        return `Tag deleted in ${e.repository.full_name}: ${e.ref}`;
+    }
+    else {
+        return '';
+    }
+}
+// this one needs to support every single event name
+// const actionsMap: { [k in WebhookEventName]: ActionMap } = {
 const actionsMap = {
-    issue: issueActionMap,
+    issues: issueActionMap,
     pull_request: prActionMap,
     release: releaseActions,
+    issue_comment: issueCommentActionMap,
 };
-const props = ['issue', 'pull_request', 'release'];
-function processGithook(event, repo_filter) {
+function processGithook(event, event_name, repo_filter) {
     var _a;
     if (repo_filter && 'repository' in event) {
         const fullname = (_a = event.repository) === null || _a === void 0 ? void 0 : _a.full_name.toLowerCase();
@@ -98,24 +123,32 @@ function processGithook(event, repo_filter) {
             return '';
         }
     }
-    if ('head_commit' in event) {
+    if (event_name === 'push') {
         return pushAction(event);
     }
-    else if ('ref_type' in event) {
+    if (event_name === 'create') {
         return createAction(event);
     }
-    for (const prop of props) {
-        if (prop in event) {
-            if ('action' in event) {
-                if (actionsMap[prop]) {
-                    if (actionsMap[prop][event.action]) {
-                        return actionsMap[prop][event.action](event);
-                    }
-                }
+    if (event_name === 'delete') {
+        return deleteAction(event);
+    }
+    if ('action' in event) {
+        if (actionsMap[event_name]) {
+            if (actionsMap[event_name][event.action]) {
+                return actionsMap[event_name][event.action](event);
             }
         }
     }
     return '';
 }
 exports.processGithook = processGithook;
+function trunc(str) {
+    return truncateString(str, MAX_MSG_LENGTH);
+}
+function truncateString(str, num) {
+    if (str.length <= num) {
+        return str;
+    }
+    return str.slice(0, num) + '...';
+}
 //# sourceMappingURL=githook.js.map
