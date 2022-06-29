@@ -122,8 +122,9 @@ type RefReturnKind = 'branch' | 'tag'
 function ref(inref: string): RefReturn | undefined {
   const refArray = inref.split('/')
   if (refArray.length < 3) return
-  const branch = refArray[refArray.length - 1]
-  const headsOrTags = refArray[refArray.length - 2]
+  refArray.shift() // remove "refs"
+  const headsOrTags = refArray.shift() as string // "heads" or "tags"
+  const branch = refArray.join('/')
   const labels: { [k: string]: RefReturnKind } = {
     heads: 'branch',
     tags: 'tag',
