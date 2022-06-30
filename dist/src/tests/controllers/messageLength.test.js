@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.messageLengthTest = void 0;
+exports.longMessage = exports.messageLengthTest = void 0;
 const ava_1 = require("ava");
 const rsa = require("../../crypto/rsa");
 const helpers_1 = require("../utils/helpers");
@@ -21,6 +21,7 @@ const nodes_1 = require("../nodes");
 ava_1.default.serial('test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
         yield messageLengthTest(t, node1, node2);
+        yield longMessage(t, node1, node2);
     }));
 }));
 function messageLengthTest(t, node1, node2) {
@@ -47,7 +48,6 @@ function messageLengthTest(t, node1, node2) {
         yield (0, helpers_1.sleep)(1000);
         const text4 = (0, helpers_1.randomText)();
         yield (0, msg_1.sendMessage)(t, node1, node2, text4);
-        yield (0, helpers_1.sleep)(5000);
         //t.true(messageSent.success, 'node1 should send text message to node2')
         const newMessagesResponse = yield (0, get_1.getCheckMsgs)(t, node2, date, limit, offset, 'desc');
         t.true(newMessagesResponse.new_messages_total == 4, 'node2 should have 4 new message');
@@ -72,4 +72,31 @@ exports.messageLengthTest = messageLengthTest;
 function decrypt(message, node) {
     return rsa.decrypt(node.privkey, message.message_content);
 }
+function longMessage(t, node1, node2) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const limit = 1;
+        const offset = 0;
+        const added = yield (0, save_1.addContact)(t, node1, node2);
+        t.true(added, 'n1 should add n2 as contact');
+        //Send the message
+        const longText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Risus feugiat in ante metus dictum at tempor. Ut enim blandit volutpat maecenas volutpat. Velit dignissim sodales ut eu. Eget nunc scelerisque viverra mauris in aliquam sem. Dictum varius duis at consectetur lorem. Maecenas volutpat blandit aliquam etiam erat velit scelerisque. Id velit ut tortor pretium viverra suspendisse potenti. Placerat vestibulum lectus mauris ultrices eros in cursus turpis. Integer vitae justo eget magna. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi nullam. Vitae congue mauris rhoncus aenean vel elit scelerisque mauris. Vitae sapien pellentesque habitant morbi tristique. Varius vel pharetra vel turpis nunc eget lorem dolor. Pellentesque massa placerat duis ultricies lacus sed turpis. Augue neque gravida in fermentum et sollicitudin. Adipiscing elit pellentesque habitant morbi tristique.";
+        console.log("sending long message to", node2.alias);
+        yield (0, msg_1.sendMessage)(t, node1, node2, longText);
+        yield (0, helpers_1.sleep)(1000);
+        //Checking for the new long message
+        const onlyMessage = yield (0, get_1.getCheckAllMessages)(t, node2, limit, offset, 'desc');
+        t.true(decrypt(onlyMessage.new_messages[0], node2) == longText, 'reciever should get long message');
+        // clean up
+        //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
+        const allContacts = yield (0, get_1.getContacts)(t, node1);
+        let deletion;
+        for (const contact of allContacts) {
+            if (contact.public_key == node2.pubkey) {
+                deletion = yield (0, del_1.deleteContact)(t, node1, contact.id);
+                t.true(deletion, 'contacts should be deleted');
+            }
+        }
+    });
+}
+exports.longMessage = longMessage;
 //# sourceMappingURL=messageLength.test.js.map
