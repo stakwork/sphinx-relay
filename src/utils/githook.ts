@@ -89,15 +89,15 @@ const issueActionMap: ActionMap = {
 }
 const issueCommentActionMap: ActionMap = {
   created: (e: IssueCommentCreatedEvent) => {
-    return `New comment on issue #${e.issue.number} (${
-      e.repository.full_name
-    }): ${trunc(e.comment.body)}`
+    return `New comment on issue #${e.issue.number} by ${
+      e.comment.user.login
+    } (${e.repository.full_name}): ${trunc(e.comment.body)}`
   },
   edited: (e: IssueCommentEditedEvent) => {
-    return `Edited comment on issue #${e.issue.number} (${e.repository.full_name})`
+    return `${e.comment.user.login} edited comment on issue #${e.issue.number} (${e.repository.full_name})`
   },
   deleted: (e: IssueCommentDeletedEvent) => {
-    return `Deleted comment on issue #${e.issue.number} (${e.repository.full_name})`
+    return `${e.comment.user.login} deleted comment on issue #${e.issue.number} (${e.repository.full_name})`
   },
 }
 const prActionMap: ActionMap = {

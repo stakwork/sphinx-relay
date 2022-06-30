@@ -45,7 +45,7 @@ export async function generateNewUsers() {
     where: { isOwner: true, authToken: null },
   })
   if (newusers.length >= NEW_USER_NUM) {
-    sphinxLogger.error(`already have new users`, logging.Proxy)
+    sphinxLogger.info(`already have new users`, logging.Proxy)
     return // we already have the mimimum
   }
   const n1 = NEW_USER_NUM - newusers.length
