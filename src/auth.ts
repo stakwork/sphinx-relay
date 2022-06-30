@@ -13,6 +13,7 @@ import * as hmac from './crypto/hmac'
 import { Req, Res } from './types'
 import * as fs from 'fs'
 import * as moment from 'moment'
+import { generateTransportTokenKeys } from './utils/cert'
 
 const config = loadConfig()
 
@@ -155,6 +156,9 @@ export async function ownerMiddleware(req, res, next) {
     })
 
     // Read the transport private key since we will need to decrypt with this
+    if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+      await generateTransportTokenKeys()
+    }
     const transportPrivateKey = fs.readFileSync(
       config.transportPrivateKeyLocation,
       'utf8'

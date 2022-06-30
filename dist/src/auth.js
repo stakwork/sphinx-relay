@@ -24,6 +24,7 @@ const rsa = require("./crypto/rsa");
 const hmac = require("./crypto/hmac");
 const fs = require("fs");
 const moment = require("moment");
+const cert_1 = require("./utils/cert");
 const config = (0, config_1.loadConfig)();
 /*
 "unlock": true,
@@ -153,6 +154,9 @@ function ownerMiddleware(req, res, next) {
                 },
             });
             // Read the transport private key since we will need to decrypt with this
+            if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+                yield (0, cert_1.generateTransportTokenKeys)();
+            }
             const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
             // Decrypt the token and split by space not sure what
             // the correct way to do the delimiting so I just put

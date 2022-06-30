@@ -13,8 +13,8 @@ exports.requestTransportKey = exports.requestExternalTokens = exports.verifyAuth
 const jwt_1 = require("../utils/jwt");
 const res_1 = require("../utils/res");
 const config_1 = require("../utils/config");
-const rsa = require("../crypto/rsa");
 const tribes = require("../utils/tribes");
+const cert_1 = require("../utils/cert");
 const fs = require("fs");
 const config = (0, config_1.loadConfig)();
 function verifyAuthRequest(req, res) {
@@ -89,10 +89,8 @@ function requestTransportKey(req, res) {
             (0, res_1.success)(res, { transport_key: transportPublicKey });
             return;
         }
-        const transportTokenKeys = yield rsa.genKeys();
-        fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public);
-        fs.writeFileSync(config.transportPrivateKeyLocation, transportTokenKeys.private);
-        (0, res_1.success)(res, { transport_key: transportTokenKeys.public });
+        const transportTokenKeys = yield (0, cert_1.generateTransportTokenKeys)();
+        (0, res_1.success)(res, { transport_key: transportTokenKeys });
     });
 }
 exports.requestTransportKey = requestTransportKey;

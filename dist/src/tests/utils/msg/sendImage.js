@@ -15,13 +15,14 @@ const http = require("ava-http");
 const RNCryptor = require("jscryptor-2");
 const meme_1 = require("../../electronjs/meme");
 const rsa_1 = require("../../electronjs/rsa");
-const get_1 = require("../get");
 const helpers_1 = require("../helpers");
+const get_1 = require("../get");
+const helpers_2 = require("../helpers");
 const config_1 = require("../../config");
 function sendImage(t, node1, node2, image, tribe, price) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS AN IMAGE TO NODE2
-        var token = yield (0, helpers_1.getToken)(t, node1);
+        var token = yield (0, helpers_2.getToken)(t, node1);
         let host = config_1.config.memeHost;
         let fileBase64 = 'data:image/jpg;base64,' + image;
         let typ = 'image/jpg';
@@ -79,7 +80,7 @@ function sendImage(t, node1, node2, image, tribe, price) {
             price: 0 || price,
         };
         //send message from node1 to node2
-        const img = yield http.post(node1.external_ip + '/attachment', (0, helpers_1.makeArgs)(node1, i));
+        const img = yield http.post(node1.external_ip + '/attachment', (0, helpers_2.makeArgs)(node1, i));
         //make sure msg exists
         t.true(img.success, 'sent image should exist');
         const imgMsg = img.response;
@@ -103,7 +104,7 @@ function sendImage(t, node1, node2, image, tribe, price) {
                 const chats = yield (0, get_1.getChats)(t, node2);
                 const selfie = yield (0, get_1.getSelf)(t, node2);
                 const selfId = selfie.id;
-                const sharedChat = chats.find((chat) => (0, helpers_1.arraysEqual)(chat.contact_ids, [selfId, n1contactP2.id]));
+                const sharedChat = chats.find((chat) => (0, helpers_2.arraysEqual)(chat.contact_ids, [selfId, n1contactP2.id]));
                 t.truthy(sharedChat, 'there should be a chat with node1 and node2');
                 purchChat = sharedChat === null || sharedChat === void 0 ? void 0 : sharedChat.id;
             }
@@ -117,7 +118,7 @@ function sendImage(t, node1, node2, image, tribe, price) {
                 media_token: mediaToken,
             };
             //send purchase message from node2 purchasing node1 image
-            const purchased = yield http.post(node2.external_ip + '/purchase', (0, helpers_1.makeArgs)(node2, p));
+            const purchased = yield http.post(node2.external_ip + '/purchase', (0, helpers_2.makeArgs)(node2, p));
             t.true(purchased.success, 'purchase message should be posted ' + purchased.error);
             //get payment accepted message
             let paymentMsg = yield (0, get_1.getCheckNewPaidMsgs)(t, node2, imgMsg);
@@ -126,24 +127,25 @@ function sendImage(t, node1, node2, image, tribe, price) {
             node2MediaKey = paymentMsg.media_key;
             t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist');
             //create url with media_token
-            const protocol = (0, helpers_1.memeProtocol)(config_1.config.memeHost);
+            const protocol = (0, helpers_2.memeProtocol)(config_1.config.memeHost);
             url = `${protocol}://${config_1.config.memeHost}/file/${paymentMsg.media_token}`;
         }
         else {
             //RECEIVE UNPAID IMAGE ===>
             //Check that image message was received
+            yield (0, helpers_1.sleep)(20000);
             const lastMessage2 = yield (0, get_1.getCheckNewMsgs)(t, node2, imgUuid);
             //get media_key from received image message
             node2MediaKey = lastMessage2.media_key;
             t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist');
             //create url with media_token
-            const protocol = (0, helpers_1.memeProtocol)(config_1.config.memeHost);
+            const protocol = (0, helpers_2.memeProtocol)(config_1.config.memeHost);
             url = `${protocol}://${config_1.config.memeHost}/file/${lastMessage2.media_token}`;
         }
         //DECRYPT IMAGE
         decryptMediaKey = (0, rsa_1.decrypt)(node2.privkey, node2MediaKey);
         t.true(typeof decryptMediaKey === 'string', 'decryptMediaKey should exist');
-        var token = yield (0, helpers_1.getToken)(t, node2);
+        var token = yield (0, helpers_2.getToken)(t, node2);
         t.true(typeof token === 'string', 'should get media token');
         const res2 = yield (0, node_fetch_1.default)(url, {
             headers: { Authorization: `Bearer ${token}` },

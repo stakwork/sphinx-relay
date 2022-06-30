@@ -11,7 +11,7 @@ import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
 import { Req, Res } from '../../types'
 import { WebhookEvent } from '@octokit/webhooks-types'
-import { processGithook } from '../../utils/githook'
+import { processGithook, WebhookEventName } from '../../utils/githook'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -40,6 +40,12 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
   if (!sig) {
+    return unauthorized(res)
+  }
+
+  const event_type =
+    req.headers['x-github-event'] || req.headers['X-GitHub-Event']
+  if (!event_type) {
     return unauthorized(res)
   }
 
@@ -80,7 +86,10 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
                 where: { id: cb.chatId },
               })
               if (chat) {
-                const content = processGithook(req.body)
+                const content = processGithook(
+                  req.body,
+                  event_type as WebhookEventName
+                )
                 if (content) {
                   const a: Action = {
                     action: 'broadcast',

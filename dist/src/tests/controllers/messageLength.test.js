@@ -47,6 +47,7 @@ function messageLengthTest(t, node1, node2) {
         yield (0, helpers_1.sleep)(1000);
         const text4 = (0, helpers_1.randomText)();
         yield (0, msg_1.sendMessage)(t, node1, node2, text4);
+        yield (0, helpers_1.sleep)(5000);
         //t.true(messageSent.success, 'node1 should send text message to node2')
         const newMessagesResponse = yield (0, get_1.getCheckMsgs)(t, node2, date, limit, offset, 'desc');
         t.true(newMessagesResponse.new_messages_total == 4, 'node2 should have 4 new message');

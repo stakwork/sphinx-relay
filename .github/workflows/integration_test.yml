@@ -33,15 +33,20 @@ jobs:
       working-directory: ./stack
       run: |
         chmod 777 ./bitcoind;    
-        chmod 777 ./relay;
+        chmod 777 -R ./relay;
+        chmod 777 -R ./lnd;
+        chmod 777 -R ./proxy;
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
-        GITACTION_ENV=gitactionenv docker-compose up -d 
+        GITACTION_ENV=gitactionenv docker-compose -f alts/proxy.yml --project-dir . up -d 
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-         sleep 120;
+         sleep 240;
+         docker-compose ps
+         docker logs meme.sphinx
+         docker logs dave.sphinx
          docker wait stack_relaysetup_1;
     - name: copy file
       uses: canastro/copy-file-action@master
