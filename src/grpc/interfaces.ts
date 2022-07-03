@@ -99,7 +99,7 @@ export interface AddInvoiceRequest {
   route_hints?: RouteHint[]
   expiry?: number
 }
-type GreenlightAmountUnit = 'millisatoshi' | 'satoshi' | 'bitcoin'
+type GreenlightAmountUnit = 'millisatoshi' | 'satoshi' | 'bitcoin' | 'all' | 'any'
 interface GreenlightAmount {
   unit: GreenlightAmountUnit
   millisatoshi?: string
@@ -150,7 +150,7 @@ interface GreenlightInvoice {
   payment_hash: Buffer
   payment_preimage: Buffer
 }
-export function addInvoiceCommand(): string {
+export function addInvoiceCommand(): 'addInvoice' | 'createInvoice' {
   if (IS_LND) return 'addInvoice'
   if (IS_GREENLIGHT) return 'createInvoice'
   return 'addInvoice'
@@ -284,7 +284,7 @@ export function listChannelsResponse(
   }
   return <ListChannelsResponse>{}
 }
-export function listChannelsCommand(): string {
+export function listChannelsCommand(): 'listChannels' | 'listPeers' {
   if (IS_LND) return 'listChannels'
   if (IS_GREENLIGHT) return 'listPeers'
   return 'listChannels'
@@ -478,7 +478,7 @@ export function keysendResponse(
   return <SendPaymentResponse>{}
 }
 
-export function subscribeCommand(): string {
+export function subscribeCommand(): 'subscribeInvoices' | 'streamIncoming' {
   if (IS_LND) return 'subscribeInvoices'
   if (IS_GREENLIGHT) return 'streamIncoming'
   return 'subscribeInvoices'
@@ -621,7 +621,7 @@ interface AmountsRes {
   satoshi: string
   millisatoshi: string
 }
-function greenlightAmoutToAmounts(a: GreenlightAmount): AmountsRes {
+export function greenlightAmoutToAmounts(a: GreenlightAmount): AmountsRes {
   let satoshi = ''
   let millisatoshi = ''
   if (a.unit === 'satoshi') {

@@ -16,6 +16,13 @@ import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight'
 import { Req } from '../types'
 
+import type { LightningClient } from './types/lnrpc/Lightning'
+import { AddressType } from './types/lnrpc/AddressType'
+//import type { NodeClient } from './types/greenlight/Node'
+//import type { LightningClient as ProxyLightningClient } from './types/lnrpc_proxy/Lightning'
+import type { RouterClient } from './types/routerrpc/Router'
+import type { WalletUnlockerClient } from './types/lnrpc/WalletUnlocker'
+
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
@@ -27,9 +34,9 @@ export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
 const FEE_LIMIT_SAT = 10000
 
-let lightningClient = <any>null
-let walletUnlocker = <any>null
-let routerClient = <any>null
+let lightningClient: any//: LightningClient | ProxyLightningClient | NodeClient | undefined
+let walletUnlocker: any//: WalletUnlockerClient | undefined
+let routerClient: any//: RouterClient | undefined
 
 export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   try {
@@ -62,7 +69,7 @@ export async function loadLightning(
   tryProxy?: boolean,
   ownerPubkey?: string,
   noCache?: boolean
-): Promise<any> {
+): Promise<any>{//LightningClient | ProxyLightningClient | NodeClient | undefined> {
   // only if specified AND available
   if (tryProxy && isProxy() && ownerPubkey) {
     const pl = await loadProxyLightning(ownerPubkey)
@@ -87,16 +94,15 @@ export async function loadLightning(
 
   // LND
   const credentials = loadCredentials()
-  const lnrpcDescriptor = grpc.load('proto/lightning.proto')
-  const lnrpc: any = lnrpcDescriptor.lnrpc
-  lightningClient = new lnrpc.Lightning(
+  const lnrpcDescriptor: any = grpc.load('proto/lightning.proto')
+  const lnrpc = lnrpcDescriptor.lnrpc
+  return lightningClient = new lnrpc.Lightning(
     LND_IP + ':' + config.lnd_port,
     credentials
   )
-  return lightningClient
 }
 
-export function loadWalletUnlocker(): any {
+export function loadWalletUnlocker(): WalletUnlockerClient {
   if (walletUnlocker) {
     return walletUnlocker
   } else {
@@ -104,28 +110,28 @@ export function loadWalletUnlocker(): any {
       const credentials = loadCredentials()
       const lnrpcDescriptor = grpc.load('proto/walletunlocker.proto')
       const lnrpc: any = lnrpcDescriptor.lnrpc
-      walletUnlocker = new lnrpc.WalletUnlocker(
+      return walletUnlocker = new lnrpc.WalletUnlocker(
         LND_IP + ':' + config.lnd_port,
         credentials
       )
-      return walletUnlocker
     } catch (e) {
       sphinxLogger.error(e)
+      throw e
     }
   }
 }
 
 export function unlockWallet(pwd: string): Promise<void> {
   return new Promise(async function (resolve, reject) {
-    const wu = await loadWalletUnlocker()
+    const wu = loadWalletUnlocker()
     wu.unlockWallet(
-      { wallet_password: ByteBuffer.fromUTF8(pwd) },
-      (err, response) => {
+      { wallet_password: Buffer.from(pwd, 'utf-8') },
+      (err) => {
         if (err) {
           reject(err)
           return
         }
-        resolve(response)
+        resolve()
       }
     )
   })
@@ -139,7 +145,7 @@ export function getHeaders(req: Req): { [k: string]: any } {
 }
 
 let isLocked = false
-let lockTimeout: ReturnType<typeof setTimeout>
+let lockTimeout: NodeJS.Timeout
 export function getLock(): boolean {
   return isLocked
 }
@@ -194,16 +200,11 @@ export async function queryRoute(
   })
 }
 
-export const WITNESS_PUBKEY_HASH = 0
-export const NESTED_PUBKEY_HASH = 1
-export const UNUSED_WITNESS_PUBKEY_HASH = 2
-export const UNUSED_NESTED_PUBKEY_HASH = 3
-export type NewAddressType = 0 | 1 | 2 | 3
 export async function newAddress(
-  type: NewAddressType = NESTED_PUBKEY_HASH
+  type: AddressType = AddressType.WITNESS_PUBKEY_HASH
 ): Promise<string> {
   return new Promise(async function (resolve, reject) {
-    const lightning = await loadLightning()
+    const lightning: LightningClient = await loadLightning() as any
     lightning.newAddress({ type }, (err, response) => {
       if (err) {
         reject(err)
@@ -355,7 +356,7 @@ export function keysend(
           // new sendPayment (with optional route hints)
           options.fee_limit_sat = FEE_LIMIT_SAT
           options.timeout_seconds = 16
-          const router = await loadRouter()
+          const router: any = await loadRouter()
           const call = router.sendPaymentV2(options)
           call.on('data', function (payment) {
             const state = payment.status || payment.state
@@ -385,18 +386,17 @@ export function keysend(
   })
 }
 
-export function loadRouter(): any {
+export function loadRouter(): RouterClient {
   if (routerClient) {
     return routerClient
   } else {
     const credentials = loadCredentials('router.macaroon')
     const descriptor = grpc.load('proto/router.proto')
     const router: any = descriptor.routerrpc
-    routerClient = new router.Router(
+    return routerClient = new router.Router(
       LND_IP + ':' + config.lnd_port,
       credentials
     )
-    return routerClient
   }
 }
 

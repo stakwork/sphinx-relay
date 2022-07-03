@@ -434,7 +434,7 @@ function parsePayload(data): Payload {
 }
 
 // VERIFY PUBKEY OF SENDER from sig
-async function parseAndVerifyPayload(data): Promise<Payload | null> {
+async function parseAndVerifyPayload(data: string): Promise<Payload | null> {
   let payload
   const li = data.lastIndexOf('}')
   const msg = data.substring(0, li + 1)

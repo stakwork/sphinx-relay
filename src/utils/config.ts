@@ -15,7 +15,7 @@ const env = process.env.NODE_ENV || 'development'
 const config = require(configFile)[env]
 const ENV = process.env
 
-type LightningProvider = 'LND' | 'GREENLIGHT'
+export type LightningProvider = 'LND' | 'GREENLIGHT'
 
 const DEFAULT_HSM_SECRET_PATH = './creds/hsm_secret'
 const DEFAULT_TLS_LOCATION = './creds/ca.pem'

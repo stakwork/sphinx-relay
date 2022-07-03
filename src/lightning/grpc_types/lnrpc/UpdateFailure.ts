@@ -1,0 +1,9 @@
+// Original file: proto/lightning.proto
+
+export enum UpdateFailure {
+  UPDATE_FAILURE_UNKNOWN = 0,
+  UPDATE_FAILURE_PENDING = 1,
+  UPDATE_FAILURE_NOT_FOUND = 2,
+  UPDATE_FAILURE_INTERNAL_ERR = 3,
+  UPDATE_FAILURE_INVALID_PARAMETER = 4,
+}

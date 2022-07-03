@@ -7,6 +7,8 @@ import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
 
+import type { LightningClient as ProxyLightningClient } from '../grpc/types/lnrpc_proxy/Lightning'
+
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
@@ -157,7 +159,7 @@ export async function loadProxyCredentials(macPrefix: string) {
   return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds)
 }
 
-export async function loadProxyLightning(ownerPubkey?: string) {
+export async function loadProxyLightning(ownerPubkey?: string): Promise<ProxyLightningClient | undefined> {
   try {
     let macname
     if (ownerPubkey && ownerPubkey.length === 66) {

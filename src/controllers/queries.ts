@@ -12,6 +12,7 @@ import * as helpers from '../helpers'
 import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
+import { AddressType } from '../grpc/types/lnrpc/AddressType'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -328,7 +329,7 @@ export const receiveQuery = async (payload: network.Payload) => {
   let result = ''
   switch (q.type) {
     case 'onchain_address': {
-      const addy = await lightning.newAddress(lightning.NESTED_PUBKEY_HASH)
+      const addy = await lightning.newAddress(AddressType.WITNESS_PUBKEY_HASH)
       const acc = {
         date: new Date(),
         pubkey: sender_pub_key,
