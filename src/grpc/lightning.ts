@@ -21,6 +21,7 @@ const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
+const IS_CLN = config.lightning_provider === 'CLN'
 
 export const LND_KEYSEND_KEY = 5482373484
 export const SPHINX_CUSTOM_RECORD_KEY = 133773310
@@ -82,6 +83,17 @@ export async function loadLightning(
     const uri = get_greenlight_grpc_uri().split('//')
     if (!uri[1]) return
     lightningClient = new greenlight.Node(uri[1], credentials, options)
+    return lightningClient
+  }
+  if (IS_CLN) {
+    const credentials = loadGreenlightCredentials()
+    const descriptor = grpc.load('proto/cln.proto')
+    const cln: any = descriptor.cln
+    const options = {
+      'grpc.ssl_target_name_override': 'localhost',
+    }
+    const uri = 'localhost:10019'
+    lightningClient = new cln.Node(uri, credentials, options)
     return lightningClient
   }
 
@@ -166,6 +178,13 @@ export async function queryRoute(
   sphinxLogger.info('queryRoute', logging.Lightning)
   if (IS_GREENLIGHT) {
     // shim for now
+    return {
+      success_prob: 1,
+      routes: [],
+    }
+  }
+  if (IS_CLN) {
+    // shim for now, because no route_hint avail
     return {
       success_prob: 1,
       routes: [],
@@ -871,7 +890,12 @@ export async function complexBalances(
       0
     )
     const spendableBalance = channels.reduce(
-      (a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)),
+      (a, chan) =>
+        a +
+        Math.max(
+          0,
+          parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)
+        ),
       0
     )
     const response = await channelBalance(ownerPubkey)
