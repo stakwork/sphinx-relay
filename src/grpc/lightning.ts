@@ -52,7 +52,7 @@ export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   }
 }
 
-const loadGreenlightCredentials = () => {
+const loadMTLSCredentials = () => {
   const glCert = fs.readFileSync(config.tls_location)
   const glPriv = fs.readFileSync(config.tls_key_location)
   const glChain = fs.readFileSync(config.tls_chain_location)
@@ -74,7 +74,7 @@ export async function loadLightning(
   }
 
   if (IS_GREENLIGHT) {
-    const credentials = loadGreenlightCredentials()
+    const credentials = loadMTLSCredentials()
     const descriptor = grpc.load('proto/greenlight.proto')
     const greenlight: any = descriptor.greenlight
     const options = {
@@ -86,13 +86,13 @@ export async function loadLightning(
     return lightningClient
   }
   if (IS_CLN) {
-    const credentials = loadGreenlightCredentials()
+    const credentials = loadMTLSCredentials()
     const descriptor = grpc.load('proto/cln.proto')
     const cln: any = descriptor.cln
     const options = {
       'grpc.ssl_target_name_override': 'localhost',
     }
-    const uri = 'localhost:10019'
+    const uri = config.lnd_ip + ':' + config.lnd_port
     lightningClient = new cln.Node(uri, credentials, options)
     return lightningClient
   }
@@ -724,7 +724,7 @@ export async function getInfo(
   tryProxy?: boolean,
   noCache?: boolean
 ): Promise<interfaces.GetInfoResponse> {
-  // log('getInfo')
+  // console.log('======> getInfo')
   return new Promise(async (resolve, reject) => {
     try {
       const lightning = await loadLightning(
@@ -734,8 +734,10 @@ export async function getInfo(
       ) // try proxy
       lightning.getInfo({}, function (err, response) {
         if (err == null) {
+          console.log(response)
           resolve(interfaces.getInfoResponse(response))
         } else {
+          console.log(err)
           reject(err)
         }
       })

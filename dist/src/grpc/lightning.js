@@ -31,6 +31,7 @@ const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
+const IS_CLN = config.lightning_provider === 'CLN';
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
 const FEE_LIMIT_SAT = 10000;
@@ -55,7 +56,7 @@ function loadCredentials(macName) {
     }
 }
 exports.loadCredentials = loadCredentials;
-const loadGreenlightCredentials = () => {
+const loadMTLSCredentials = () => {
     const glCert = fs.readFileSync(config.tls_location);
     const glPriv = fs.readFileSync(config.tls_key_location);
     const glChain = fs.readFileSync(config.tls_chain_location);
@@ -72,7 +73,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             return lightningClient;
         }
         if (IS_GREENLIGHT) {
-            const credentials = loadGreenlightCredentials();
+            const credentials = loadMTLSCredentials();
             const descriptor = grpc.load('proto/greenlight.proto');
             const greenlight = descriptor.greenlight;
             const options = {
@@ -82,6 +83,17 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             if (!uri[1])
                 return;
             lightningClient = new greenlight.Node(uri[1], credentials, options);
+            return lightningClient;
+        }
+        if (IS_CLN) {
+            const credentials = loadMTLSCredentials();
+            const descriptor = grpc.load('proto/cln.proto');
+            const cln = descriptor.cln;
+            const options = {
+                'grpc.ssl_target_name_override': 'localhost',
+            };
+            const uri = config.lnd_ip + ':' + config.lnd_port;
+            lightningClient = new cln.Node(uri, credentials, options);
             return lightningClient;
         }
         // LND
@@ -155,6 +167,13 @@ function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
         logger_1.sphinxLogger.info('queryRoute', logger_1.logging.Lightning);
         if (IS_GREENLIGHT) {
             // shim for now
+            return {
+                success_prob: 1,
+                routes: [],
+            };
+        }
+        if (IS_CLN) {
+            // shim for now, because no route_hint avail
             return {
                 success_prob: 1,
                 routes: [],
@@ -683,15 +702,17 @@ function verifyAscii(ascii, sig, ownerPubkey) {
 exports.verifyAscii = verifyAscii;
 function getInfo(tryProxy, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
-        // log('getInfo')
+        console.log('======> getInfo');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache); // try proxy
-                lightning.getInfo({}, function (err, response) {
+                lightning.getinfo({}, function (err, response) {
                     if (err == null) {
+                        console.log(response);
                         resolve(interfaces.getInfoResponse(response));
                     }
                     else {
+                        console.log(err);
                         reject(err);
                     }
                 });
@@ -833,7 +854,8 @@ function complexBalances(ownerPubkey) {
         }
         else {
             const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
-            const spendableBalance = channels.reduce((a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)), 0);
+            const spendableBalance = channels.reduce((a, chan) => a +
+                Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)), 0);
             const response = yield channelBalance(ownerPubkey);
             return {
                 reserve,
