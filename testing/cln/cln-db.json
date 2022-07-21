@@ -1,0 +1,6 @@
+{
+  "development": {
+    "dialect": "sqlite",
+    "storage": "/Users/evanfeenstra/code/sphinx/sphinx-relay/testing/cln/cln.db"
+  }
+}
