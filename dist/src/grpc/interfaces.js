@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.greenlightSignMessagePayload = exports.connectPeerResponse = exports.connectPeerRequest = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listPeersResponse = exports.listPeersRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
+exports.greenlightSignMessagePayload = exports.connectPeerResponse = exports.connectPeerRequest = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listPeersResponse = exports.listPeersRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = exports.getInfoCommand = void 0;
 const config_1 = require("../utils/config");
 const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
@@ -9,6 +9,17 @@ const long = require("long");
 const config = (0, config_1.loadConfig)();
 const IS_LND = config.lightning_provider === 'LND';
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
+const IS_CLN = config.lightning_provider === 'CLN';
+function getInfoCommand() {
+    if (IS_LND)
+        return 'getInfo';
+    if (IS_GREENLIGHT)
+        return 'getInfo';
+    if (IS_CLN)
+        return 'getinfo';
+    return 'getInfo';
+}
+exports.getInfoCommand = getInfoCommand;
 function getInfoResponse(res) {
     if (IS_LND) {
         // LND

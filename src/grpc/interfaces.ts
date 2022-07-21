@@ -8,6 +8,7 @@ const config = loadConfig()
 
 const IS_LND = config.lightning_provider === 'LND'
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
+const IS_CLN = config.lightning_provider === 'CLN'
 
 /* GET INFO */
 interface Feature {
@@ -53,6 +54,12 @@ interface GreenlightGetInfoResponse {
   version: string
   blockheight: number
   network: string
+}
+export function getInfoCommand(): string {
+  if (IS_LND) return 'getInfo'
+  if (IS_GREENLIGHT) return 'getInfo'
+  if (IS_CLN) return 'getinfo'
+  return 'getInfo'
 }
 export function getInfoResponse(
   res: GetInfoResponse | GreenlightGetInfoResponse

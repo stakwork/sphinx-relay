@@ -702,11 +702,12 @@ function verifyAscii(ascii, sig, ownerPubkey) {
 exports.verifyAscii = verifyAscii;
 function getInfo(tryProxy, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('======> getInfo');
+        // console.log('======> getInfo')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache); // try proxy
-                lightning.getinfo({}, function (err, response) {
+                const cmd = interfaces.getInfoCommand();
+                lightning[cmd]({}, function (err, response) {
                     if (err == null) {
                         console.log(response);
                         resolve(interfaces.getInfoResponse(response));

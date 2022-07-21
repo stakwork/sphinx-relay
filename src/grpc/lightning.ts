@@ -732,7 +732,8 @@ export async function getInfo(
         undefined,
         noCache
       ) // try proxy
-      lightning.getInfo({}, function (err, response) {
+      const cmd = interfaces.getInfoCommand()
+      lightning[cmd]({}, function (err, response) {
         if (err == null) {
           console.log(response)
           resolve(interfaces.getInfoResponse(response))
