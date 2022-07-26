@@ -14,7 +14,7 @@ import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './botapi'
 import * as queries from './queries'
-import { checkTag } from '../utils/gitinfo'
+import * as gitinfo from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
@@ -144,8 +144,7 @@ export async function set(app) {
   app.get('/healthcheck', confirmations.healthcheck)
 
   app.get('/version', async function (req: Req, res) {
-    const version = await checkTag()
-    res.send({ version })
+    res.send({ version: gitinfo.tag })
   })
 
   app.get('/latest', async function (req: Req, res) {

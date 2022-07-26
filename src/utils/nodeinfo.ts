@@ -1,6 +1,6 @@
 import * as Lightning from '../grpc/lightning'
 import * as publicIp from 'public-ip'
-import { checkTag, checkCommitHash } from './gitinfo'
+import * as gitinfo from './gitinfo'
 import { models, MessageRecord } from '../models'
 import * as interfaces from '../grpc/interfaces'
 import { loadConfig } from './config'
@@ -132,10 +132,6 @@ export async function nodeinfo(): Promise<NodeInfoCore | NodeInfo | undefined> {
     //do nothing here
   }
 
-  const commitHash = await checkCommitHash()
-
-  const tag = await checkTag()
-
   const clean = await isClean()
 
   const latest_message = await latestMessage()
@@ -157,7 +153,7 @@ export async function nodeinfo(): Promise<NodeInfoCore | NodeInfo | undefined> {
       node_alias: process.env.NODE_ALIAS || '',
       ip: process.env.NODE_IP || '',
       lnd_port: process.env.NODE_LND_PORT || '',
-      relay_commit: commitHash || '',
+      relay_commit: gitinfo.commitHash,
       public_ip: public_ip,
       pubkey: owner.publicKey,
       route_hint: owner.routeHint,
@@ -169,7 +165,7 @@ export async function nodeinfo(): Promise<NodeInfoCore | NodeInfo | undefined> {
       largest_remote_balance: largestRemoteBalance,
       total_local_balance: totalLocalBalance,
       lnd_version: info.version,
-      relay_version: tag || '',
+      relay_version: gitinfo.tag,
       payment_channel: '', // ?
       hosting_provider: '', // ?
       open_channel_data: channels,
