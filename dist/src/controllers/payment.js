@@ -102,9 +102,9 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msgToSend.parentId = parent_id;
     // if contact_ids, replace that in "chat" below
     // if remote text map, put that in
-    let theChat = chat;
+    const theChat = chat.dataValues;
     if (contact_ids) {
-        theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: contact_ids });
+        theChat.contactIds = contact_ids;
         if (remote_text_map)
             msgToSend.content = remote_text_map;
     }

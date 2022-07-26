@@ -30,7 +30,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     }
     else {
         if (!owner_id || !recipient_id)
-            return null;
+            return;
         logger_1.sphinxLogger.info(`chat does not exists, create new`);
         const owner = yield models_1.models.Contact.findOne({
             where: { id: owner_id },
@@ -49,8 +49,8 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
             chat = yield models_1.models.Chat.create({
                 uuid: uuid,
                 contactIds: JSON.stringify([
-                    parseInt(owner_id),
-                    parseInt(recipient_id),
+                    owner_id,
+                    recipient_id,
                 ]),
                 createdAt: date,
                 updatedAt: date,

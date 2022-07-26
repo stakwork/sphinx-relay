@@ -213,7 +213,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         purchaser: owner.id, // for tribe, knows who sent
     };
     network.sendMessage({
-        chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: [contact_id] }),
+        chat: Object.assign(Object.assign({}, chat.dataValues), { contactIds: JSON.stringify([contact_id]) }),
         sender: owner,
         type: constants_1.default.message_types.purchase,
         realSatsContactId: contact_id,

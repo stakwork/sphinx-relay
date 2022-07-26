@@ -5,12 +5,12 @@ const child_process_1 = require("child_process");
 const logger_1 = require("./logger");
 let commitHash;
 function checkCommitHash() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (commitHash) {
             return resolve(commitHash);
         }
         try {
-            (0, child_process_1.exec)(`git log -1 --pretty=format:%h`, { timeout: 999 }, (error, stdout, stderr) => {
+            (0, child_process_1.exec)(`git log -1 --pretty=format:%h`, { timeout: 999 }, (error, stdout) => {
                 if (stdout) {
                     commitHash = stdout.trim();
                     return resolve(commitHash);
@@ -29,12 +29,12 @@ function checkCommitHash() {
 exports.checkCommitHash = checkCommitHash;
 let tag;
 function checkTag() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (tag) {
             return resolve(tag);
         }
         try {
-            (0, child_process_1.exec)(`git describe --abbrev=0 --tags`, { timeout: 999 }, (error, stdout, stderr) => {
+            (0, child_process_1.exec)(`git describe --abbrev=0 --tags`, { timeout: 999 }, (error, stdout) => {
                 if (stdout) {
                     tag = stdout.trim();
                     return resolve(tag);
