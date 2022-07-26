@@ -18,7 +18,7 @@ export async function sendTribeMessage(
   t: Assertions,
   node1: NodeConfig,
   tribe: Chat,
-  text: String,
+  text: string,
   options?: SendMessageOptions
 ): Promise<Message> {
   //NODE1 SENDS TEXT MESSAGE TO NODE2

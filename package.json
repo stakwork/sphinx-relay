@@ -16,7 +16,7 @@
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
     "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
     "start-ecs": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js",
-    "lint": "eslint ./src/*.ts ./src/**/*.ts --fix --max-warnings 517"
+    "lint": "eslint ./src/*.ts ./src/**/*.ts --fix --max-warnings 466"
   },
   "keywords": [],
   "author": "",
@@ -38,7 +38,6 @@
     "@grpc/proto-loader": "^0.5.3",
     "@octokit/webhooks-types": "^5.2.0",
     "@scout_apm/scout-apm": "^0.1.10",
-    "@types/node": "^13.5.1",
     "async": "^2.6.4",
     "async-lock": "^1.2.2",
     "axios": "^0.21.1",
@@ -109,6 +108,17 @@
     "zbase32": "^1.0.2"
   },
   "devDependencies": {
+    "@types/cron": "^2.0.0",
+    "@types/crypto-js": "^4.1.1",
+    "@types/ip": "^1.1.0",
+    "@types/md5": "^2.3.2",
+    "@types/minimist": "^1.2.2",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^17.0.35",
+    "@types/pg": "^8.6.5",
+    "@types/qrcode": "^1.4.2",
+    "@types/secure-random": "^1.1.0",
+    "@types/underscore": "^1.11.4",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.33.0",
     "ava": "^3.15.0",

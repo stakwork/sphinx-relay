@@ -204,8 +204,8 @@ async function getCertificate(domain, port, save_ssl) {
   }
 }
 
-async function generateTransportTokenKeys() {
-  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
+async function generateTransportTokenKeys(): Promise<string> {
+  const transportTokenKeys = await rsa.genKeys()
   fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
   fs.writeFileSync(
     config.transportPrivateKeyLocation,

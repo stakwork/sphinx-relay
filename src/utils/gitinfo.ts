@@ -3,7 +3,7 @@ import { sphinxLogger } from './logger'
 
 let commitHash
 function checkCommitHash(): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (commitHash) {
       return resolve(commitHash)
     }
@@ -11,7 +11,7 @@ function checkCommitHash(): Promise<string> {
       exec(
         `git log -1 --pretty=format:%h`,
         { timeout: 999 },
-        (error, stdout, stderr) => {
+        (error, stdout) => {
           if (stdout) {
             commitHash = stdout.trim()
             return resolve(commitHash)
@@ -29,7 +29,7 @@ function checkCommitHash(): Promise<string> {
 
 let tag
 function checkTag(): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (tag) {
       return resolve(tag)
     }
@@ -37,7 +37,7 @@ function checkTag(): Promise<string> {
       exec(
         `git describe --abbrev=0 --tags`,
         { timeout: 999 },
-        (error, stdout, stderr) => {
+        (error, stdout) => {
           if (stdout) {
             tag = stdout.trim()
             return resolve(tag)
