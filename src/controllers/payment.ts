@@ -1,4 +1,4 @@
-import { Message, Chat, models } from '../models'
+import { Message, models } from '../models'
 import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
@@ -118,9 +118,9 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
 
   // if contact_ids, replace that in "chat" below
   // if remote text map, put that in
-  let theChat = chat
+  const theChat = chat.dataValues;
   if (contact_ids) {
-    theChat = { ...chat.dataValues, contactIds: contact_ids } as Chat
+    theChat.contactIds = contact_ids
     if (remote_text_map) msgToSend.content = remote_text_map
   }
   network.sendMessage({

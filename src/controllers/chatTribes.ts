@@ -761,7 +761,7 @@ export async function createTribeChatParams(
   }
 
   // make ts sig here w LNd pubkey - that is UUID
-  const keys: { [k: string]: string } = await rsa.genKeys()
+  const keys = await rsa.genKeys()
   const groupUUID = await tribes.genSignedTimestamp(owner.publicKey)
   const theContactIds = contactIds.includes(owner.id)
     ? contactIds

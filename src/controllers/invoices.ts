@@ -16,6 +16,7 @@ import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 import { Response } from 'express'
+import { ChatPlusMembers } from '../network/send'
 
 function stripLightningPrefix(s: string): string {
   if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)
@@ -202,7 +203,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
         success(res, jsonUtils.messageToJson(message, chat))
 
         network.sendMessage({
-          chat: chat,
+          chat: chat as Partial<ChatPlusMembers>,
           sender: owner,
           type: constants.message_types.invoice,
           message: {
