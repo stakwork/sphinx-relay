@@ -26,7 +26,7 @@ const uploads = require("./uploads");
 const confirmations = require("./confirmations");
 const actions = require("./botapi");
 const queries = require("./queries");
-const gitinfo_1 = require("../utils/gitinfo");
+const gitinfo = require("../utils/gitinfo");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
@@ -128,8 +128,7 @@ function set(app) {
         app.get('/healthcheck', confirmations.healthcheck);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
-                const version = yield (0, gitinfo_1.checkTag)();
-                res.send({ version });
+                res.send({ version: gitinfo.tag });
             });
         });
         app.get('/latest', function (req, res) {
