@@ -19,7 +19,7 @@ jobs:
         run: |
           find lnd/lnrpc -name '*.proto' -exec bash -c 'test -e proto/`basename {}` && cp {} proto' \;
           sed -i 's/^import.*\//import "/' proto/*
-          git config user.name Github Actions
+          git config user.name 'Github Actions'
           git config user.email github-actions@github.com
           git add proto
           git commit -m "Update proto files" || echo -n
