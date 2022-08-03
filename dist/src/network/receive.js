@@ -373,7 +373,8 @@ function initGrpcSubscriptions(noCache) {
                 yield Greenlight.initGreenlight();
                 Greenlight.keepalive();
             }
-            yield Lightning.getInfo(true, noCache); // try proxy
+            const info = yield Lightning.getInfo(true, noCache); // try proxy
+            console.log('INFO', info);
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

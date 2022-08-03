@@ -395,7 +395,8 @@ export async function initGrpcSubscriptions(noCache?: boolean): Promise<void> {
       await Greenlight.initGreenlight()
       Greenlight.keepalive()
     }
-    await Lightning.getInfo(true, noCache) // try proxy
+    const info = await Lightning.getInfo(true, noCache) // try proxy
+    console.log('INFO', info)
     await lndService.subscribeInvoices(parseKeysendInvoice)
   } catch (e) {
     console.log('=> initGrpcSubscriptions error', e)

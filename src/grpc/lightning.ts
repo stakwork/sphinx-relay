@@ -237,7 +237,7 @@ export async function newAddress(
   })
 }
 
-// for payingn invoice and invite invoice
+// for paying invoice and invite invoice
 export async function sendPayment(
   payment_request: string,
   ownerPubkey?: string
@@ -735,10 +735,8 @@ export async function getInfo(
       const cmd = interfaces.getInfoCommand()
       lightning[cmd]({}, function (err, response) {
         if (err == null) {
-          console.log(response)
           resolve(interfaces.getInfoResponse(response))
         } else {
-          console.log(err)
           reject(err)
         }
       })

@@ -230,7 +230,7 @@ function newAddress(type = exports.NESTED_PUBKEY_HASH) {
     });
 }
 exports.newAddress = newAddress;
-// for payingn invoice and invite invoice
+// for paying invoice and invite invoice
 function sendPayment(payment_request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('sendPayment', logger_1.logging.Lightning);
@@ -709,11 +709,9 @@ function getInfo(tryProxy, noCache) {
                 const cmd = interfaces.getInfoCommand();
                 lightning[cmd]({}, function (err, response) {
                     if (err == null) {
-                        console.log(response);
                         resolve(interfaces.getInfoResponse(response));
                     }
                     else {
-                        console.log(err);
                         reject(err);
                     }
                 });

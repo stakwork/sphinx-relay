@@ -43,6 +43,23 @@ function getInfoResponse(res) {
             testnet: false,
         };
     }
+    if (IS_CLN) {
+        const r = res;
+        return {
+            identity_pubkey: Buffer.from(r.id).toString('hex'),
+            version: r.version,
+            alias: r.alias,
+            color: r.color,
+            num_peers: r.num_peers,
+            num_active_channels: r.num_active_channels,
+            num_pending_channels: r.num_pending_channels,
+            // FAKE VALUES
+            synced_to_chain: true,
+            synced_to_graph: true,
+            best_header_timestamp: 0,
+            testnet: false,
+        };
+    }
     return {};
 }
 exports.getInfoResponse = getInfoResponse;
@@ -59,6 +76,14 @@ function addInvoiceRequest(req) {
             description: req.memo,
         };
     }
+    if (IS_CLN) {
+        return {
+            amount_msat: { value: 'msat', amount: { msat: req.value } },
+            label: makeLabel(),
+            description: req.memo || '',
+            fallbacks: [],
+        };
+    }
     return {};
 }
 exports.addInvoiceRequest = addInvoiceRequest;
@@ -73,6 +98,8 @@ function addInvoiceCommand() {
         return 'addInvoice';
     if (IS_GREENLIGHT)
         return 'createInvoice';
+    if (IS_CLN)
+        return 'invoice';
     return 'addInvoice';
 }
 exports.addInvoiceCommand = addInvoiceCommand;
@@ -80,6 +107,14 @@ function addInvoiceResponse(res) {
     if (IS_LND)
         return res;
     if (IS_GREENLIGHT) {
+        const r = res;
+        return {
+            payment_request: r.bolt11,
+            r_hash: r.payment_hash,
+            add_index: 0,
+        };
+    }
+    if (IS_CLN) {
         const r = res;
         return {
             payment_request: r.bolt11,
@@ -120,6 +155,8 @@ function listChannelsCommand() {
         return 'listChannels';
     if (IS_GREENLIGHT)
         return 'listPeers';
+    if (IS_CLN)
+        return 'listChannels';
     return 'listChannels';
 }
 exports.listChannelsCommand = listChannelsCommand;
@@ -130,6 +167,8 @@ function listChannelsRequest(args) {
             opts.peer = ByteBuffer.fromHex(args.peer);
         if (IS_GREENLIGHT)
             opts.node_id = args.peer;
+        if (IS_CLN)
+            opts.destination = ByteBuffer.fromHex(args.peer);
     }
     return opts;
 }
@@ -207,6 +246,12 @@ var GreenlightPaymentStatus;
     GreenlightPaymentStatus[GreenlightPaymentStatus["COMPLETE"] = 1] = "COMPLETE";
     GreenlightPaymentStatus[GreenlightPaymentStatus["FAILED"] = 2] = "FAILED";
 })(GreenlightPaymentStatus || (GreenlightPaymentStatus = {}));
+var ClnPaymentStatus;
+(function (ClnPaymentStatus) {
+    ClnPaymentStatus[ClnPaymentStatus["COMPLETE"] = 0] = "COMPLETE";
+    ClnPaymentStatus[ClnPaymentStatus["PENDING"] = 1] = "PENDING";
+    ClnPaymentStatus[ClnPaymentStatus["FAILED"] = 2] = "FAILED";
+})(ClnPaymentStatus || (ClnPaymentStatus = {}));
 function keysendResponse(res) {
     if (IS_LND)
         return res;
@@ -218,6 +263,18 @@ function keysendResponse(res) {
         route.total_amt_msat = millisatoshi;
         return {
             payment_error: r.status === GreenlightPaymentStatus.FAILED ? 'payment failed' : '',
+            payment_preimage: r.payment_preimage,
+            payment_hash: r.payment_hash,
+            payment_route: route,
+        };
+    }
+    if (IS_CLN) {
+        const r = res;
+        const route = {};
+        route.total_amt_msat = r.amount_msat.msat + '';
+        route.total_amt = Math.round(r.amount_msat.msat / 1000) + '';
+        return {
+            payment_error: r.status === ClnPaymentStatus.FAILED ? 'payment failed' : '',
             payment_preimage: r.payment_preimage,
             payment_hash: r.payment_hash,
             payment_route: route,
