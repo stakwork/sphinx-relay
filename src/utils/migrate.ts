@@ -196,6 +196,14 @@ export default async function migrate(): Promise<void> {
     // sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
   }
 
+  alterColumnType('sphinx_lsats', 'macaroon', 'TEXT')
+  alterColumnType('sphinx_lsats', 'identifier', 'TEXT')
+  alterColumnType('sphinx_lsats', 'payment_request', 'TEXT')
+  alterColumnType('sphinx_lsats', 'preimage', 'TEXT')
+  alterColumnType('sphinx_lsats', 'issuer', 'TEXT')
+  alterColumnType('sphinx_lsats', 'paths', 'TEXT')
+  alterColumnType('sphinx_lsats', 'metadata', 'TEXT')
+
   // add RequestTransportToken table
   try {
     sphinxLogger.info('adding requestsTransportTokens table', logging.DB)
@@ -227,5 +235,13 @@ async function addTableColumn(table: string, column: string, type = 'TEXT') {
     await sequelize.query(`alter table ${table} add ${column} ${type}`)
   } catch (e) {
     // sphinxLogger.error(['=> migrate failed', e], logging.DB)
+  }
+}
+
+async function alterColumnType(table: string, column: string, type: string){
+  try {
+    await sequelize.query(`alter table ${table} alter ${column} type ${type}`)
+  } catch (e) {
+    sphinxLogger.error(['=> migrate failed', e], logging.DB)
   }
 }
