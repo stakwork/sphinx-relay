@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as Lightning from '../grpc/lightning'
 import { success, failure } from '../utils/res'
 import * as readLastLines from 'read-last-lines'

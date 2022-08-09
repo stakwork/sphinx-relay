@@ -1,4 +1,6 @@
-import { models } from '../models'
+// @ts-nocheck
+import { models, ContactRecord, Timer, ChatRecord } from '../models'
+import { ChatPlusMembers } from '../network/send'
 import * as network from '../network'
 import constants from '../constants'
 
@@ -64,7 +66,7 @@ function makeName(t) {
 }
 
 export async function reloadTimers() {
-  const timers = await models.Timer.findAll()
+  const timers: Timer = (await models.Timer.findAll()) as Timer
   timers &&
     timers.forEach((t, i) => {
       const name = makeName(t)
@@ -75,16 +77,21 @@ export async function reloadTimers() {
       })
     })
 }
-export async function payBack(t) {
-  const chat = await models.Chat.findOne({
+export async function payBack(t: Timer) {
+  const chat: ChatRecord = (await models.Chat.findOne({
     where: { id: t.chatId, tenant: t.tenant },
-  })
-  const owner = await models.Contact.findOne({ where: { id: t.tenant } })
+  })) as ChatRecord
+  const owner: ContactRecord = (await models.Contact.findOne({
+    where: { id: t.tenant },
+  })) as ContactRecord
   if (!chat) {
     models.Timer.destroy({ where: { id: t.id } })
     return
   }
-  const theChat = { ...chat.dataValues, contactIds: [t.receiver] }
+  const theChat: Partial<ChatPlusMembers> = {
+    ...chat.dataValues,
+    contactIds: [t.receiver],
+  }
   network.sendMessage({
     chat: theChat,
     sender: owner,

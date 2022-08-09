@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as lndService from '../grpc/subscribe'
 import * as Lightning from '../grpc/lightning'
 import * as Greenlight from '../grpc/greenlight'

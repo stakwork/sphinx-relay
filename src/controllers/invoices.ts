@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { models, MessageRecord, ChatRecord } from '../models'
 import * as Lightning from '../grpc/lightning'
 import * as interfaces from '../grpc/interfaces'

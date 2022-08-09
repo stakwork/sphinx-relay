@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { models, Chat, ContactRecord, Contact } from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'

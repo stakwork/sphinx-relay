@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Lsat } from 'lsat-js'
 import { models } from '../models'
 import { logging, sphinxLogger } from '../utils/logger'

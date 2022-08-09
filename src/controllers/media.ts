@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { models } from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'

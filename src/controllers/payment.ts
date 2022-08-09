@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Message, models } from '../models'
 import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'

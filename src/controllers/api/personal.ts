@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'

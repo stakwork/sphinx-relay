@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fetch from 'node-fetch'
 import { LdatTerms, parseLDAT } from '../utils/ldat'
 import * as rsa from '../crypto/rsa'

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { models } from '../models'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'

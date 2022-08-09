@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { models, Contact, ContactRecord, ChatRecord } from './models'
 import * as md5 from 'md5'
 import { signAndSend } from './network'

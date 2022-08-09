@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { models, Chat } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'

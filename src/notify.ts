@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { logging } from './utils/logger'
 import { models } from './models'
 import fetch from 'node-fetch'
@@ -101,7 +102,9 @@ const sendNotification = async (
     try {
       const cids = JSON.parse(chat.contactIds || '[]')
       const notme = cids.find((id) => id !== 1)
-      const other = models.Contact.findOne({ where: { id: notme } })
+      const other: Contact = models.Contact.findOne({
+        where: { id: notme },
+      }) as Contact
       if (other.blocked) return
       finalNotification(owner.id, params, isTribeOwner)
     } catch (e) {

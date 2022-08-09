@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { models, Contact } from './models'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import lock from '../utils/lock'
 import { models } from '../models'
 import * as socket from '../utils/socket'

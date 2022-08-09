@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { models } from '../models'
 import { success, failure } from '../utils/res'
 import { CronJob } from 'cron'

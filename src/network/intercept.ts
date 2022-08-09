@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Msg } from './interfaces'
 import { models } from '../models'
 import { builtinBotEmit } from '../builtin'

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as crypto from 'crypto'
 import { models } from './models'
 import { Op } from 'sequelize'
@@ -203,7 +205,7 @@ export async function ownerMiddleware(req, res, next) {
         where: { authToken: hashedToken, isOwner: true },
       })
       if (owner) {
-        req.owner = owner.dataValues
+        req.owner = owner.getDataValues
       }
     } else if (!isProxy()) {
       const owner2 = await models.Contact.findOne({

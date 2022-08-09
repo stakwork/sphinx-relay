@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as network from '../../network'
 import { BotRecord, ChatBotRecord, ChatRecord, models } from '../../models'
 import { success, failure, unauthorized } from '../../utils/res'

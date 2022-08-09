@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as tribes from '../utils/tribes'
 import * as crypto from 'crypto'
 import { models } from '../models'

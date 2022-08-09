@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { success, failure } from '../utils/res'
 import { models } from '../models'
 import * as network from '../network'
