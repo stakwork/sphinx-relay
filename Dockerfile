@@ -21,7 +21,7 @@ RUN cp /relay/config/config.json /relay/dist/config/config.json
 
 RUN chown -R 1000:1000 /relay
 
-FROM node:13-buster-slim
+FROM node:16-buster-slim
 
 USER 1000
 
