@@ -1,9 +1,7 @@
-// @ts-nocheck
-
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { Octokit } from 'octokit'
-import { models, BotRecord, ChatRecord, ChatBotRecord } from '../models'
+import { models, Bot, BotRecord, ChatRecord, ChatBotRecord } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 // import { sphinxLogger } from '../utils/logger'
@@ -43,14 +41,14 @@ async function getStuff(
     const chat = await getTribeOwnersChatByUUID(message.channel.id)
     // console.log("=> WelcomeBot chat", chat);
     if (!(chat && chat.id)) throw new Error('chat not found')
-    const chatBot = await models.ChatBot.findOne({
+    const chatBot: ChatBotRecord = (await models.ChatBot.findOne({
       where: {
         chatId: chat.id,
         botPrefix: '/git',
         botType: constants.bot_types.builtin,
         tenant: chat.tenant,
       },
-    })
+    })) as ChatBotRecord
     if (!chatBot) throw new Error('chat bot not found')
     const empty = { repos: [] }
     const meta: GitBotMeta = chatBot.meta ? JSON.parse(chatBot.meta) : empty
@@ -164,9 +162,9 @@ export function init(): void {
 }
 
 async function getPat(tenant: number): Promise<string> {
-  const existing: BotRecord = await models.Bot.findOne({
+  const existing: Bot = (await models.Bot.findOne({
     where: { uuid: GITBOT_UUID, tenant },
-  })
+  })) as Bot
   if (existing) {
     return botWebhookFieldToPat(existing.webhook)
   } else throw new Error('no PAT in GitBot')
@@ -253,9 +251,9 @@ export async function updateGitBotPat(
 }
 
 export async function getOrCreateGitBot(tenant: number): Promise<BotRecord> {
-  const existing = await models.Bot.findOne({
+  const existing: BotRecord = (await models.Bot.findOne({
     where: { uuid: GITBOT_UUID, tenant },
-  })
+  })) as BotRecord
   if (existing) {
     return existing
   }
@@ -267,6 +265,6 @@ export async function getOrCreateGitBot(tenant: number): Promise<BotRecord> {
     pricePerUse: 0,
     tenant,
   }
-  const b = await models.Bot.create(newBot)
+  const b: BotRecord = (await models.Bot.create(newBot)) as BotRecord
   return b
 }
