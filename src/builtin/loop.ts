@@ -1,8 +1,6 @@
-// @ts-nocheck
-
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
-import { models } from '../models'
+import { models, Bot } from '../models'
 import constants from '../constants'
 import { spawn } from 'child_process'
 import { loadConfig } from '../utils/config'
@@ -32,7 +30,7 @@ export function init() {
     if (arr[0] !== '/loopout') return
 
     // check installed
-    const bot = await getBot(message.channel.id)
+    const bot: Bot = (await getBot(message.channel.id)) as Bot
     if (!bot) return
 
     const messageAmount = Number(message.amount) || 0

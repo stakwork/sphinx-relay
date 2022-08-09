@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 // import * as SphinxBot from '../../../sphinx-bot'
 import * as SphinxBot from 'sphinx-bot'
 import * as MotherBot from './mother'
