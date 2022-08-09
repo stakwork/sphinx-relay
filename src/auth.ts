@@ -1,7 +1,5 @@
-// @ts-nocheck
-
 import * as crypto from 'crypto'
-import { models } from './models'
+import { models, Contact, ContactRecord } from './models'
 import { Op } from 'sequelize'
 import * as cryptoJS from 'crypto-js'
 import { success, failure, unauthorized } from './utils/res'
@@ -201,16 +199,16 @@ export async function ownerMiddleware(req, res, next) {
         .createHash('sha256')
         .update(token)
         .digest('base64')
-      const owner = await models.Contact.findOne({
+      const owner: ContactRecord = (await models.Contact.findOne({
         where: { authToken: hashedToken, isOwner: true },
-      })
+      })) as ContactRecord
       if (owner) {
-        req.owner = owner.getDataValues
+        req.owner = owner.dataValues
       }
     } else if (!isProxy()) {
-      const owner2 = await models.Contact.findOne({
+      const owner2: ContactRecord = (await models.Contact.findOne({
         where: { isOwner: true },
-      })
+      })) as ContactRecord
       if (owner2) req.owner = owner2.dataValues
     }
     if (req.path === '/invoices') {
@@ -356,7 +354,9 @@ export async function authModule(req, res, next) {
     })
     res.end('Invalid credentials')
   } else {
-    const user = await models.Contact.findOne({ where: { isOwner: true } })
+    const user: Contact = (await models.Contact.findOne({
+      where: { isOwner: true },
+    })) as Contact
     const hashedToken = crypto
       .createHash('sha256')
       .update(token)
