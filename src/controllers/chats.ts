@@ -437,6 +437,36 @@ export const deleteChat = async (req: Req, res: Response): Promise<void> => {
   success(res, { chat_id: id })
 }
 
+export const addTribeMember = async (
+  req: Req,
+  res: Response
+): Promise<void> => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } =
+    req.body
+  const chat: ChatRecord = await models.Chat.findOne({
+    where: { id: chat_id, tenant },
+  })
+  if (!chat) {
+    return failure(res, 'chat not found')
+  }
+  const member = { key: contact_key, alias }
+  let date = new Date()
+  const added = await addMemberToTribe({
+    sender_pub_key: pub_key,
+    tenant,
+    chat,
+    date,
+    senderAlias: alias,
+    member,
+    sender_photo_url: photo_url,
+    sender_route_hint: route_hint,
+    isTribeOwner: true,
+  })
+  success(res, { id: added.theSender.id })
+}
+
 interface AddMemberToTribeRet {
   theSender: Contact
   member_count: number

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
+exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.addTribeMember = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -390,6 +390,33 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     (0, res_1.success)(res, { chat_id: id });
 });
 exports.deleteChat = deleteChat;
+const addTribeMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const tenant = req.owner.id;
+    const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } = req.body;
+    const chat = yield models_1.models.Chat.findOne({
+        where: { id: chat_id, tenant },
+    });
+    if (!chat) {
+        return (0, res_1.failure)(res, 'chat not found');
+    }
+    const member = { key: contact_key, alias };
+    let date = new Date();
+    const added = yield addMemberToTribe({
+        sender_pub_key: pub_key,
+        tenant,
+        chat,
+        date,
+        senderAlias: alias,
+        member,
+        sender_photo_url: photo_url,
+        sender_route_hint: route_hint,
+        isTribeOwner: true,
+    });
+    (0, res_1.success)(res, { id: added.theSender.id });
+});
+exports.addTribeMember = addTribeMember;
 function addMemberToTribe({ sender_pub_key, tenant, chat, date, senderAlias, member, sender_photo_url, sender_route_hint, isTribeOwner, }) {
     return __awaiter(this, void 0, void 0, function* () {
         let theSender = null;
