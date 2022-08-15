@@ -1,11 +1,18 @@
-// @ts-nocheck
 import fetch from 'node-fetch'
 import { LdatTerms, parseLDAT } from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
 import * as crypto from 'crypto'
 import * as meme from '../utils/meme'
 import * as FormData from 'form-data'
-import { models, Chat, Contact, ContactRecord, ChatRecord } from '../models'
+import {
+  models,
+  Chat,
+  Contact,
+  ContactRecord,
+  ChatRecord,
+  Message,
+  MediaKey,
+} from '../models'
 import * as RNCryptor from 'jscryptor-2'
 import { sendMessage } from './send'
 // import { Op } from 'sequelize'
@@ -64,9 +71,9 @@ export async function purchaseFromOriginalSender(
   const muid = mt && mt.split('.').length && mt.split('.')[1]
   if (!muid) return
 
-  const mediaKey = await models.MediaKey.findOne({
+  const mediaKey: MediaKey = (await models.MediaKey.findOne({
     where: { originalMuid: muid, tenant },
-  })
+  })) as MediaKey
 
   const terms = parseLDAT(mt)
   const price = (terms.meta && terms.meta.amt) || 0
@@ -114,9 +121,9 @@ export async function purchaseFromOriginalSender(
       failure: () => {},
     })
   } else {
-    const ogmsg = await models.Message.findOne({
+    const ogmsg: Message = (await models.Message.findOne({
       where: { chatId: chat.id, mediaToken: mt, tenant },
-    })
+    })) as Message
     if (!ogmsg) return
     // purchase it from creator (send "purchase")
     const msg = { mediaToken: mt, purchaser: purchaser.id }
@@ -165,12 +172,12 @@ export async function sendFinalMemeIfFirstPurchaser(
   // const host = mt.split('.')[0]
 
   const terms = parseLDAT(mt)
-  const ogPurchaser = await models.Contact.findOne({
+  const ogPurchaser: Contact = (await models.Contact.findOne({
     where: {
       id: purchaserID,
       tenant,
     },
-  })
+  })) as Contact
 
   if (!ogPurchaser) return sphinxLogger.warning('no ogPurchaser')
 
