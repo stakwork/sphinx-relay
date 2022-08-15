@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { Msg } from './interfaces'
-import { models } from '../models'
+import { models, Bot, Chat, ChatRecord, Message } from '../models'
 import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
 import * as SphinxBot from 'sphinx-bot'
@@ -40,9 +39,9 @@ export async function isBotMsg(
   if (!uuid) return false
 
   try {
-    const chat = await models.Chat.findOne({
+    const chat: Chat = (await models.Chat.findOne({
       where: { uuid, tenant },
-    })
+    })) as Chat
     if (!chat) return false
 
     let didEmit = false
@@ -55,31 +54,31 @@ export async function isBotMsg(
 
     // reply back to the bot!
     if (reply_uuid) {
-      const ogBotMsg = await models.Message.findOne({
+      const ogBotMsg: Message = (await models.Message.findOne({
         where: {
           uuid: reply_uuid,
           tenant,
           sender: -1,
         },
-      })
+      })) as Message
       if (ogBotMsg && ogBotMsg.senderAlias) {
-        const ogSenderBot = await models.ChatBot.findOne({
+        const ogSenderBot: ChatRecord = (await models.ChatBot.findOne({
           where: {
             chatId: chat.id,
             tenant,
             botPrefix: '/' + ogBotMsg.senderAlias,
           },
-        })
+        })) as ChatRecord
         return await emitMessageToBot(msg, ogSenderBot.dataValues, sender)
       }
     }
 
-    const botsInTribe = await models.ChatBot.findAll({
+    const botsInTribe: Bot[] = (await models.ChatBot.findAll({
       where: {
         chatId: chat.id,
         tenant,
       },
-    })
+    })) as Bot[]
     sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logging.Network) //, payload)
 
     if (!(botsInTribe && botsInTribe.length)) return false
@@ -137,12 +136,12 @@ async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
       builtinBotEmit(msg)
       return true
     case constants.bot_types.local: {
-      const bot = await models.Bot.findOne({
+      const bot: Bot = (await models.Bot.findOne({
         where: {
           uuid: botInTribe.botUuid,
           tenant,
         },
-      })
+      })) as Bot
       return postToBotServer(msg, bot, SphinxBot.MSG_TYPE.MESSAGE)
     }
     case constants.bot_types.remote:
