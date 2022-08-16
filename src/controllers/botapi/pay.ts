@@ -1,6 +1,5 @@
-// @ts-nocheck
 import * as network from '../../network'
-import { models } from '../../models'
+import { models, Message, ContactRecord } from '../../models'
 import * as short from 'short-uuid'
 import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
@@ -27,9 +26,9 @@ export default async function pay(a: Action): Promise<void> {
   if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
   if (theChat.type !== constants.chat_types.tribe)
     return sphinxLogger.error(`not a tribe`)
-  const owner = await models.Contact.findOne({
+  const owner: ContactRecord = (await models.Contact.findOne({
     where: { id: theChat.tenant },
-  })
+  })) as ContactRecord
   const tenant: number = owner.id
   const alias = bot_name || owner.alias
   const botContactId = -1
@@ -51,7 +50,7 @@ export default async function pay(a: Action): Promise<void> {
     tenant,
   }
   if (parent_id) msg.parentId = parent_id
-  const message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
   socket.sendJson(
     {
       type: 'boost',
