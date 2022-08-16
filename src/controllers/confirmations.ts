@@ -1,6 +1,5 @@
-// @ts-nocheck
 import lock from '../utils/lock'
-import { models } from '../models'
+import { models, Chat, Message, Contact } from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as network from '../network'
@@ -56,20 +55,20 @@ export async function receiveConfirmation(payload: network.Payload) {
   const owner = dat.owner
   const tenant: number = owner.id
 
-  const sender = await models.Contact.findOne({
+  const sender: Contact = (await models.Contact.findOne({
     where: { publicKey: sender_pub_key, tenant },
-  })
-  const chat = await models.Chat.findOne({
+  })) as Contact
+  const chat: Chat = (await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant },
-  })
+  })) as Chat
 
   // new confirmation logic
   if (msg_id) {
     lock.acquire('confirmation', async function (done) {
       // console.log("update status map")
-      const message = await models.Message.findOne({
+      const message: Message = (await models.Message.findOne({
         where: { id: msg_id, tenant },
-      })
+      })) as Message
       if (message) {
         let statusMap = {}
         try {
@@ -95,7 +94,7 @@ export async function receiveConfirmation(payload: network.Payload) {
     })
   } else {
     // old logic
-    const messages = await models.Message.findAll({
+    const messages: Message[] = (await models.Message.findAll({
       limit: 1,
       where: {
         chatId: chat.id,
@@ -109,7 +108,7 @@ export async function receiveConfirmation(payload: network.Payload) {
         tenant,
       },
       order: [['createdAt', 'desc']],
-    })
+    })) as Message[]
 
     const message = messages[0]
     message.update({ status: constants.statuses.received })
@@ -126,12 +125,12 @@ export async function receiveConfirmation(payload: network.Payload) {
 
 export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
   if (!msg_id || !chat_uuid) return
-  const message = await models.Message.findOne({
+  const message: Message = (await models.Message.findOne({
     where: { id: msg_id, tenant },
-  })
-  const chat = await models.Chat.findOne({
+  })) as Message
+  const chat: Chat = (await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant },
-  })
+  })) as Chat
 
   if (message) {
     let statusMap = {}
