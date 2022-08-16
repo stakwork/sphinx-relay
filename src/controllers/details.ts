@@ -1,10 +1,9 @@
-// @ts-nocheck
 import * as Lightning from '../grpc/lightning'
 import { success, failure } from '../utils/res'
 import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo'
 import constants from '../constants'
-import { models } from '../models'
+import { models, Contact, Chat } from '../models'
 import { loadConfig } from '../utils/config'
 import { getAppVersionsFromHub } from '../hub'
 import { Op } from 'sequelize'
@@ -59,19 +58,23 @@ export const checkRouteByContactOrChat = async (req: Req, res) => {
   let routeHint = ''
   if (contactID) {
     const contactId = parseInt(contactID)
-    const contact = await models.Contact.findOne({ where: { id: contactId } })
+    const contact: Contact = (await models.Contact.findOne({
+      where: { id: contactId },
+    })) as Contact
     if (!contact) return failure(res, 'cant find contact')
     pubkey = contact.publicKey
     routeHint = contact.routeHint
   } else if (chatID) {
     const chatId = parseInt(chatID)
-    const chat = await models.Chat.findOne({ where: { id: chatId } })
+    const chat: Chat = (await models.Chat.findOne({
+      where: { id: chatId },
+    })) as Chat
     if (!chat) return failure(res, 'cant find chat')
     if (!chat.ownerPubkey) return failure(res, 'cant find owern_pubkey')
     pubkey = chat.ownerPubkey
-    const chatowner = await models.Contact.findOne({
+    const chatowner: Contact = (await models.Contact.findOne({
       where: { publicKey: chat.ownerPubkey },
-    })
+    })) as Contact
     if (!chatowner) return failure(res, 'cant find chat owner')
     if (chatowner.routeHint) routeHint = chatowner.routeHint
   }
@@ -152,7 +155,9 @@ export const getBalance = async (req: Req, res) => {
 
   const date = new Date()
   date.setMilliseconds(0)
-  const owner = await models.Contact.findOne({ where: { id: tenant } })
+  const owner: Contact = (await models.Contact.findOne({
+    where: { id: tenant },
+  })) as Contact
   owner.update({ lastActive: date })
 
   res.status(200)
@@ -244,9 +249,9 @@ export async function clearForTesting(req: Req, res) {
         tenant,
       },
     })
-    const me = await models.Contact.findOne({
+    const me: Contact = (await models.Contact.findOne({
       where: { isOwner: true, tenant },
-    })
+    })) as Contact
     await me.update({
       authToken: '',
       photoUrl: '',
