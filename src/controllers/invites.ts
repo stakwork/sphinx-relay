@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { models } from '../models'
+import { models, Invite, Contact } from '../models'
 import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
@@ -35,9 +34,9 @@ export const payInvite = async (req: Req, res) => {
   const tenant: number = req.owner.id
 
   const invite_string = req.params['invite_string']
-  const dbInvite = await models.Invite.findOne({
+  const dbInvite: Invite = (await models.Invite.findOne({
     where: { inviteString: invite_string, tenant },
-  })
+  })) as Invite
 
   const onSuccess = async (response) => {
     // const invite = response.object
@@ -94,11 +93,11 @@ export const createInvite = async (req: Req, res) => {
 
     const inviteCreated = response.object
 
-    const contact = await models.Contact.create({
+    const contact: Contact = (await models.Contact.create({
       alias: nickname,
       status: 0,
       tenant,
-    })
+    })) as Contact
     const invite = await models.Invite.create({
       welcomeMessage: inviteCreated.message,
       contactId: contact.id,
