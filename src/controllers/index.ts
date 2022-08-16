@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { models } from '../models'
+import { models, Message } from '../models'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -151,11 +150,11 @@ export async function set(app) {
   app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')
     const tenant: number = req.owner.id
-    const lasts = await models.Message.findAll({
+    const lasts: Message[] = (await models.Message.findAll({
       limit: 1,
       order: [['createdAt', 'DESC']],
       where: { tenant },
-    })
+    })) as Message[]
     const last = lasts && lasts[0]
     if (!last) {
       res.status(404).send('Not found')
