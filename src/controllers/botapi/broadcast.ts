@@ -1,6 +1,5 @@
-// @ts-nocheck
 import * as network from '../../network'
-import { models } from '../../models'
+import { models, ContactRecord, Message } from '../../models'
 import * as short from 'short-uuid'
 import * as rsa from '../../crypto/rsa'
 import * as jsonUtils from '../../utils/json'
@@ -29,9 +28,9 @@ export default async function broadcast(a: Action): Promise<void> {
   if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
   if (theChat.type !== constants.chat_types.tribe)
     return sphinxLogger.error(`not a tribe`)
-  const owner = await models.Contact.findOne({
+  const owner: ContactRecord = (await models.Contact.findOne({
     where: { id: theChat.tenant },
-  })
+  })) as ContactRecord
   const tenant: number = owner.id
 
   const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
@@ -60,7 +59,7 @@ export default async function broadcast(a: Action): Promise<void> {
   }
   if (parent_id) msg.parentId = parent_id
   if (bot_pic) msg.senderPic = bot_pic
-  const message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
   socket.sendJson(
     {
       type: 'message',
