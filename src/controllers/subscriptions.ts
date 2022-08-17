@@ -156,13 +156,8 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
     success: async (data) => {
       const shouldEnd = checkSubscriptionShouldEndAfterThisPayment(subscription)
       const obj = {
-        totalPaid:
-          // @ts-ignore
-          parseFloat(subscription.totalPaid || 0) +
-          // @ts-ignore
-          parseFloat(subscription.amount),
-        // @ts-ignore
-        count: parseInt(subscription.count || 0) + 1,
+        totalPaid: (subscription.totalPaid || 0) + subscription.amount,
+        count: (subscription.count || 0) + 1,
         ended: false,
       }
       if (shouldEnd) {
@@ -182,8 +177,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         status: constants.statuses.confirmed,
         messageContent: encText,
         amount: subscription.amount,
-        // @ts-ignore
-        amountMsat: parseFloat(subscription.amount) * 1000,
+        amountMsat: subscription.amount * 1000,
         date: date,
         createdAt: date,
         updatedAt: date,
@@ -209,8 +203,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         status: constants.statuses.failed,
         messageContent: errMessage,
         amount: sub.amount,
-        // @ts-ignore
-        amountMsat: parseFloat(sub.amount) * 1000,
+        amountMsat: sub.amount * 1000,
         date: date,
         createdAt: date,
         updatedAt: date,
