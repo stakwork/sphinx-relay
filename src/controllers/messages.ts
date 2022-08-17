@@ -94,16 +94,13 @@ export const getMessages = async (req: Req, res: Res): Promise<void> => {
     success: true,
     response: {
       new_messages: newMessages.map((message) =>
-        // @ts-ignore
-        jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+        jsonUtils.messageToJson(message, chatsById[message.chatId])
       ),
       confirmed_messages: confirmedMessages.map((message) =>
-        // @ts-ignore
-        jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+        jsonUtils.messageToJson(message, chatsById[message.chatId])
       ),
       deleted_messages: deletedMessages.map((message) =>
-        // @ts-ignore
-        jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+        jsonUtils.messageToJson(message, chatsById[message.chatId])
       ),
     },
   })
@@ -165,8 +162,7 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
   // console.log("=> indexed chats");
   success(res, {
     new_messages: messages.map((message) =>
-      // @ts-ignore
-      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+      jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
     new_messages_total: all_messages_length,
     confirmed_messages: [],
@@ -230,8 +226,7 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   const chatsById = indexBy(chats, 'id')
   success(res, {
     new_messages: messages.map((message) =>
-      // @ts-ignore
-      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+      jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
     new_messages_total: numberOfNewMessages,
   })
