@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { success, failure } from '../utils/res'
-import { models } from '../models'
+import { models, AccountingRecord, Accounting } from '../models'
 import * as network from '../network'
 import constants from '../constants'
 import * as short from 'short-uuid'
@@ -47,6 +46,7 @@ export async function get_hub_pubkey(): Promise<string> {
 }
 get_hub_pubkey()
 
+/*
 interface Accounting {
   id: number
   pubkey: string
@@ -59,31 +59,32 @@ interface Accounting {
   onchainTxid: string
   routeHint: string
 }
+*/
 
 async function getReceivedAccountings(): Promise<Accounting[]> {
-  const accountings = await models.Accounting.findAll({
+  const accountings: AccountingRecord[] = (await models.Accounting.findAll({
     where: {
       status: constants.statuses.received,
     },
-  })
+  })) as AccountingRecord[]
   return accountings.map((a) => a.dataValues || a)
 }
 
 async function getPendingAccountings(): Promise<Accounting[]> {
   // console.log('[WATCH] getPendingAccountings')
   const utxos: UTXO[] = await listUnspent()
-  const accountings = await models.Accounting.findAll({
+  const accountings: Accounting[] = (await models.Accounting.findAll({
     where: {
       onchain_address: {
         [Op.in]: utxos.map((utxo) => utxo.address),
       },
       status: constants.statuses.pending,
     },
-  })
+  })) as Accounting[]
 
   // console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
   const ret: Accounting[] = []
-  accountings.forEach((a) => {
+  accountings.forEach((a: Accounting) => {
     const utxo = utxos.find((u) => u.address === a.onchainAddress)
     if (utxo) {
       sphinxLogger.info(`[WATCH] UTXO ${utxo}`)
@@ -157,7 +158,9 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
     sphinxLogger.info(`[WATCH]=> ACCOUNTINGS UPDATED to received! ${acc.id}`)
   } catch (e) {
     sphinxLogger.error(`[ACCOUNTING] error creating channel ${e}`)
-    const existing = await models.Accounting.findOne({ where: { id: acc.id } })
+    const existing: Accounting = (await models.Accounting.findOne({
+      where: { id: acc.id },
+    })) as Accounting
     if (existing) {
       if (!existing.amount) {
         await existing.update({ amount: acc.amount })
