@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { models, ContactRecord, Timer, ChatRecord } from '../models'
 import { ChatPlusMembers } from '../network/send'
 import * as network from '../network'
@@ -39,14 +38,14 @@ export async function addTimer({
 }) {
   const now = new Date().valueOf()
   const when = now + millis
-  const t = await models.Timer.create({
+  const t: Timer = (await models.Timer.create({
     amount,
     millis: when,
     receiver,
     msgId,
     chatId,
     tenant,
-  })
+  })) as Timer
   setTimer(makeName(t), when, async () => {
     payBack(t)
   })
@@ -66,7 +65,7 @@ function makeName(t) {
 }
 
 export async function reloadTimers() {
-  const timers: Timer = (await models.Timer.findAll()) as Timer
+  const timers: Timer[] = (await models.Timer.findAll()) as Timer[]
   timers &&
     timers.forEach((t, i) => {
       const name = makeName(t)
@@ -90,7 +89,7 @@ export async function payBack(t: Timer) {
   }
   const theChat: Partial<ChatPlusMembers> = {
     ...chat.dataValues,
-    contactIds: [t.receiver],
+    contactIds: t.receiver.toString(),
   }
   network.sendMessage({
     chat: theChat,
