@@ -412,13 +412,13 @@ export const createContact = async (req: Req, res: Res): Promise<void> => {
 
   const owner = req.owner
 
-  // @ts-ignore
-  const existing: Contact =
-    attrs['public_key'] &&
-    ((await models.Contact.findOne({
+  let existing: Contact | undefined = undefined
+  if (attrs['public_key']) {
+    existing = (await models.Contact.findOne({
       where: { publicKey: attrs['public_key'], tenant },
-    })) as Contact)
-  if (existing) {
+    })) as Contact
+  }
+  if (!!existing) {
     const updateObj: { fromGroup: boolean; alias?: string } = {
       fromGroup: false,
     }
