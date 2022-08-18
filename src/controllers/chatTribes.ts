@@ -480,8 +480,7 @@ export async function approveOrRejectMember(req: Req, res) {
 
   network.sendMessage({
     // send to the requester
-    // @ts-ignore
-    chat: { ...chatToSend, contactIds: [member.contactId] },
+    chat: { ...chatToSend, contactIds: member.contactId.toString() },
     amount: 0,
     sender: owner,
     message: {},
