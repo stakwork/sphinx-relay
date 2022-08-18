@@ -342,8 +342,7 @@ export async function receiveBotCmd(dat: Payload): Promise<void> {
   })) as BotMember
   if (!botMember) return
 
-  // @ts-ignore
-  botMember.update({ msgCount: (botMember || 0) + 1 })
+  botMember.update({ msgCount: (botMember.msgCount || 0) + 1 })
 
   const contact: Contact = (await models.Contact.findOne({
     where: {
