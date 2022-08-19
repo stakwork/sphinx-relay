@@ -87,9 +87,17 @@ export async function payBack(t: Timer) {
     models.Timer.destroy({ where: { id: t.id } })
     return
   }
+
+  let contactIds: string
+  if (typeof t.receiver === 'number') {
+    contactIds = '[' + t.receiver + ']'
+  } else {
+    contactIds = [t.receiver].toString()
+  }
+
   const theChat: Partial<ChatPlusMembers> = {
     ...chat.dataValues,
-    contactIds: t.receiver.toString(),
+    contactIds: contactIds,
   }
   network.sendMessage({
     chat: theChat,
