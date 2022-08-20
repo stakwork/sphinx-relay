@@ -14,6 +14,6 @@ jobs:
         uses: actions/checkout@v2
       - name: install npm dependencies
         run: npm i
-      - name: lint
+      - name: run tests
         run: npm run test-unit 
 
