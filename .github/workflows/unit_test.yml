@@ -1,0 +1,19 @@
+name: unit-test (Pull Request)
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint:
+    name: Lint (Pull Request)
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install npm dependencies
+        run: npm i
+      - name: lint
+        run: npm run test-unit 
+
