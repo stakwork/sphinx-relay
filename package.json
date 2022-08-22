@@ -24,16 +24,9 @@
   "author": "",
   "license": "ISC",
   "ava": {
-    "files": [
-      "!src/tests/utils/**",
-      "!src/tests/types"
-    ],
-    "extensions": [
-      "ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ]
+    "files": ["!src/tests/utils/**", "!src/tests/types"],
+    "extensions": ["ts"],
+    "require": ["ts-node/register"]
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
@@ -91,7 +84,6 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
     "rncryptor-js": "0.0.1",
-    "save-dev": "0.0.1-security",
     "secp256k1": "3.8.0",
     "secure-random": "^1.1.2",
     "sequelize": "^5.19.3",
@@ -138,10 +130,7 @@
     "socket.io-client-legacy": "npm:socket.io-client@^2.4.0"
   },
   "pkg": {
-    "assets": [
-      "config/*",
-      "dist/config/*"
-    ]
+    "assets": ["config/*", "dist/config/*"]
   },
   "husky": {
     "hooks": {
