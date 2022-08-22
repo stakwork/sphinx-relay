@@ -88,11 +88,9 @@ export async function payBack(t: Timer) {
     return
   }
 
-  const contactIds: string = '[' + parseInt(t.receiver + '') + ']'
-
   const theChat: Partial<ChatPlusMembers> = {
     ...chat.dataValues,
-    contactIds: contactIds,
+    contactIds: JSON.stringify([t.receiver]),
   }
   network.sendMessage({
     chat: theChat,
