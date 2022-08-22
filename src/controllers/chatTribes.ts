@@ -478,12 +478,7 @@ export async function approveOrRejectMember(req: Req, res) {
   const owner = req.owner
   const chatToSend = chat.dataValues || chat
 
-  let contactIds: string
-  if (typeof member.contactId === 'number') {
-    contactIds = '[' + member.contactId + ']'
-  } else {
-    contactIds = [member.contactId].toString()
-  }
+  const contactIds: string = '[' + parseInt(member.contactId + '') + ']'
 
   network.sendMessage({
     // send to the requester

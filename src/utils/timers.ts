@@ -88,12 +88,7 @@ export async function payBack(t: Timer) {
     return
   }
 
-  let contactIds: string
-  if (typeof t.receiver === 'number') {
-    contactIds = '[' + t.receiver + ']'
-  } else {
-    contactIds = [t.receiver].toString()
-  }
+  const contactIds: string = '[' + parseInt(t.receiver + '') + ']'
 
   const theChat: Partial<ChatPlusMembers> = {
     ...chat.dataValues,
