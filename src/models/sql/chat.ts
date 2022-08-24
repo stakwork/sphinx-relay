@@ -120,3 +120,7 @@ export default class Chat extends Model<Chat> {
   @Column(DataType.BIGINT)
   notify: number
 }
+
+export interface ChatRecord extends Chat {
+  dataValues: Chat
+}

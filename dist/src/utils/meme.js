@@ -23,7 +23,6 @@ const config = (0, config_1.loadConfig)();
 const tokens = {};
 function lazyToken(pubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log("[meme] lazyToken for", pubkey)
         if (tokens[pubkey] && tokens[pubkey][host]) {
             const ts = tokens[pubkey][host].ts;
             const now = moment().unix();
@@ -43,7 +42,7 @@ function lazyToken(pubkey, host) {
             return t;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[meme] error getting token ${e}`, logger_1.logging.Meme);
+            logger_1.sphinxLogger.error(`error getting token ${e}`, logger_1.logging.Meme);
         }
     });
 }
@@ -53,10 +52,9 @@ if (config.media_host.includes('localhost'))
     mediaProtocol = 'http';
 if (config.media_host.includes('meme.sphinx:5555'))
     mediaProtocol = 'http';
-let mediaURL = mediaProtocol + '://' + config.media_host + '/';
+const mediaURL = mediaProtocol + '://' + config.media_host + '/';
 function getMediaToken(ownerPubkey, host) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log("[meme] gET MEDIA TOEKN", ownerPubkey)
         let protocol = 'https';
         if (host === null || host === void 0 ? void 0 : host.includes('localhost'))
             protocol = 'http';
@@ -73,10 +71,10 @@ function getMediaToken(ownerPubkey, host) {
             const sig = yield Lightning.signBuffer(Buffer.from(r.challenge, 'base64'), ownerPubkey);
             if (!sig)
                 throw new Error('no signature');
-            let pubkey = ownerPubkey;
+            const pubkey = ownerPubkey;
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = (0, ldat_1.urlBase64FromBytes)(sigBytes);
-            logger_1.sphinxLogger.info(`[meme] verify ${pubkey}`, logger_1.logging.Meme);
+            logger_1.sphinxLogger.info(`verify ${pubkey}`, logger_1.logging.Meme);
             const bod = yield rp.post(theURL + 'verify', {
                 form: { id: r.id, sig: sigBase64, pubkey },
             });
@@ -87,6 +85,7 @@ function getMediaToken(ownerPubkey, host) {
             return body.token;
         }
         catch (e) {
+            logger_1.sphinxLogger.warning('get media token failed', logger_1.logging.Meme);
             throw e;
         }
     });

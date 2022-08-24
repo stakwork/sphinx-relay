@@ -8,15 +8,16 @@ import { loadConfig } from '../utils/config'
 import { getAppVersionsFromHub } from '../hub'
 import { Op } from 'sequelize'
 import { sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 const config = loadConfig()
 
 const VERSION = 2
-export async function getRelayVersion(req, res) {
+export async function getRelayVersion(req: Req, res) {
   success(res, { version: VERSION })
 }
 
-export async function getAppVersions(req, res) {
+export async function getAppVersions(req: Req, res) {
   const vs = await getAppVersionsFromHub()
   if (vs) {
     success(res, vs)
@@ -25,7 +26,7 @@ export async function getAppVersions(req, res) {
   }
 }
 
-export const checkRoute = async (req, res) => {
+export const checkRoute = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
 
   const { pubkey, amount, route_hint } = req.query
@@ -33,11 +34,11 @@ export const checkRoute = async (req, res) => {
 
   const owner = req.owner
   try {
-    const amt = parseInt(amount) || constants.min_sat_amount
+    const amt = parseInt(amount as string) || constants.min_sat_amount
     const r = await Lightning.queryRoute(
-      pubkey,
+      pubkey as string,
       amt,
-      route_hint || '',
+      (route_hint as string) || '',
       owner.publicKey
     )
     success(res, r)
@@ -46,11 +47,11 @@ export const checkRoute = async (req, res) => {
   }
 }
 
-export const checkRouteByContactOrChat = async (req, res) => {
+export const checkRouteByContactOrChat = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
 
-  const chatID = req.query.chat_id
-  const contactID = req.query.contact_id
+  const chatID = req.query.chat_id as string
+  const contactID = req.query.contact_id as string
   if (!chatID && !contactID) return failure(res, 'no chat_id or contact_id')
 
   let pubkey = ''
@@ -76,7 +77,7 @@ export const checkRouteByContactOrChat = async (req, res) => {
 
   if (!(pubkey && pubkey.length === 66)) return failure(res, 'wrong pubkey')
 
-  const amount = req.query.amount
+  const amount = req.query.amount as string
   const owner = req.owner
   try {
     const amt = parseInt(amount) || constants.min_sat_amount
@@ -97,7 +98,7 @@ const defaultLogFiles = [
   '/home/lnd/.pm2/logs/app-error.log',
   '/var/log/syslog',
 ]
-export async function getLogsSince(req, res) {
+export async function getLogsSince(req: Req, res) {
   const logFiles = config.log_file ? [config.log_file] : defaultLogFiles
   let txt
   let err
@@ -119,7 +120,7 @@ export async function getLogsSince(req, res) {
   else failure(res, err)
 }
 
-export const getLightningInfo = async (req, res) => {
+export const getLightningInfo = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   res.status(200)
   try {
@@ -131,7 +132,7 @@ export const getLightningInfo = async (req, res) => {
   res.end()
 }
 
-export const getChannels = async (req, res) => {
+export const getChannels = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
 
   res.status(200)
@@ -144,7 +145,7 @@ export const getChannels = async (req, res) => {
   res.end()
 }
 
-export const getBalance = async (req, res) => {
+export const getBalance = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -167,7 +168,7 @@ export const getBalance = async (req, res) => {
   res.end()
 }
 
-export const getLocalRemoteBalance = async (req, res) => {
+export const getLocalRemoteBalance = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   res.status(200)
   try {
@@ -195,8 +196,8 @@ export const getLocalRemoteBalance = async (req, res) => {
   res.end()
 }
 
-export const getNodeInfo = async (req, res) => {
-  const ipOfSource = req.connection.remoteAddress
+export const getNodeInfo = async (req: Req, res) => {
+  const ipOfSource = req.connection.remoteAddress as string
   if (!(ipOfSource.includes('127.0.0.1') || ipOfSource.includes('localhost'))) {
     res.status(401)
     res.end()
@@ -214,7 +215,7 @@ async function asyncForEach(array, callback) {
   }
 }
 
-export async function clearForTesting(req, res) {
+export async function clearForTesting(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 

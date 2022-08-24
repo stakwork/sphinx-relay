@@ -1,6 +1,6 @@
 # Relay
 
-**Relay** is a Node.js wrapper around [LND](https://github.com/lightningnetwork/lnd), handling connectivity and storage for [**Sphinx**](https://sphinx.chat). Communication between Relay nodes takes place entirely on the Lightning Network, so it is decentralized, untraceable, and encrypted. Message content is also end-to-end encrypted using client public keys, on the ** Sphinx** app itself.
+**Relay** is a Node.js wrapper around [LND](https://github.com/lightningnetwork/lnd), handling connectivity and storage for [**Sphinx**](https://sphinx.chat). Communication between Relay nodes takes place entirely on the Lightning Network, so it is decentralized, untraceable, and encrypted. Message content is also end-to-end encrypted using client public keys, on the **Sphinx** app itself.
 
 ![Relay](https://github.com/stakwork/sphinx-relay/raw/master/public/relay.jpg)
 
@@ -41,16 +41,16 @@ $ lncli newaddress p2wkh
 }
 ```
 
-Send 100000 sats to the provided bitcoin address.
+Send 120000 sats (100000 + some for fees + anchor channel wallet reserve) to the provided bitcoin address.
 
 Check your LND wallet balance with
 
 ```bash
 $ lncli walletbalance
 {
-    "total_balance": "100000",
+    "total_balance": "120000",
     "confirmed_balance": "0",
-    "unconfirmed_balance": "100000"
+    "unconfirmed_balance": "120000"
 }
 ```
 
@@ -58,8 +58,8 @@ until it shows:
 
 ```bash
 {
-    "total_balance": "100000",
-    "confirmed_balance": "100000",
+    "total_balance": "120000",
+    "confirmed_balance": "120000",
     "unconfirmed_balance": "0"
 }
 ```
@@ -71,13 +71,13 @@ $ lncli connect 023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b7
 {
 
 }
-$ lncli openchannel 023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --local_amt=90000 --push_amt=5000 --sat_per_byte=35
+$ lncli openchannel 023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --local_amt=100000 --push_amt=5000 --sat_per_vbyte=35
 {
-    "funding_txid": "76bc738472545c343ab4eecc733bd26f1493fb512d1921f3f7d863d0f0f0fbca"
+    "funding_txid": "<......>"
 }
 ```
 
-> **_NB_** Set the right amount of bitcoin transaction fee in `sat_per_byte`
+> **_NB_** Set the right amount of bitcoin transaction fee in `sat_per_vbyte`
 > We recommend using [mempool.space](https://mempool.space) to determine the necessary fee.
 
 You can monitor the progress of the channel creation operation with `lncli pendingchannels`/`lncli listchannels` commands; the former will show your channel while the operation is still in progress, the latter will show your channel once it's successfully completed.
@@ -86,18 +86,14 @@ Check the payment delivery by making a small payment to the Sphinx.chat LND:
 
 ```bash
 $ lncli sendpayment --dest=023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f --final_cltv_delta=10 --amt=5 --keysend
-+------------+--------------+--------------+--------------+-----+----------+----------+-------+
-| HTLC_STATE | ATTEMPT_TIME | RESOLVE_TIME | RECEIVER_AMT | FEE | TIMELOCK | CHAN_OUT | ROUTE |
 +------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
 | HTLC_STATE | ATTEMPT_TIME | RESOLVE_TIME | RECEIVER_AMT | FEE | TIMELOCK | CHAN_OUT           | ROUTE   |
-+------------+--------------+--------------+--------------+-----+----------+----+------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
-| HTLC_STATE | ATTEMPT_TIME | RESOLVE_TIME | RECEIVER_AMT | FEE | TIMELOCK | CHAN_OUT           | ROUTE   |
 +------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
-| SUCCEEDED  |        1.544 |        5.188 | 5            | 0   |   642053 | 705537919981322241 | gameb_1 |
+| SUCCEEDED  |        1.544 |        5.188 | 5            | 0   |   642053 |      <......>      | gameb_1 |
 +------------+--------------+--------------+--------------+-----+----------+--------------------+---------+
 Amount + fee:   5 + 0 sat
 Payment hash:   <......>
-Payment status: SUCCEEDED, preimage: <.....>
+Payment status: SUCCEEDED, preimage: <......>
 ```
 
 ## Network connectivity
@@ -106,11 +102,12 @@ If you have a permanent public IP on your internet connection and you want your 
 
 If you plan to use your Sphinx clients within the local network, then you do not have to do anything special.
 
-If you are using the Docker file, the port is `3300` ([1](https://github.com/stakwork/sphinx-relay/blob/master/Dockerfile#L32))
+If you are using the Docker file, the port is `3300` ([1](https://github.com/stakwork/sphinx-relay/blob/master/Dockerfile#L31), [2](https://github.com/stakwork/sphinx-relay/blob/master/Dockerfile#L35))
 
 ## Deployment
 
 - [Docker deployment](docs/docker_deployment.md)
+- [Linux deployment](docs/linux_deployment.md)
 - [Raspberry Pi/myNode deployment](docs/myNode_deployment.md)
 - [Raspberry Pi/Raspiblitz deployment](docs/raspiblitz_deployment.md)
 

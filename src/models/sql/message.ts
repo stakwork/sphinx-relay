@@ -100,8 +100,21 @@ export default class Message extends Model<Message> {
 
   @Column
   tenant: number
+
+  @Column
+  recipientAlias: string // for direct payment display in tribes
+
+  @Column(DataType.TEXT)
+  recipientPic: string // for direct payment display in tribes
+
+  @Column
+  forwardedSats: boolean
 }
 
 /*
 ALTER TABLE sphinx_invites ALTER COLUMN invoice TYPE text;
 */
+
+export interface MessageRecord extends Message {
+  dataValues: Message
+}

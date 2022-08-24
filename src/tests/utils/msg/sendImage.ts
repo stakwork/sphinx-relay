@@ -4,6 +4,7 @@ import * as http from 'ava-http'
 import * as RNCryptor from 'jscryptor-2'
 import { uploadMeme } from '../../electronjs/meme'
 import { encrypt, decrypt } from '../../electronjs/rsa'
+import { sleep } from '../helpers'
 import {
   getSelf,
   getCheckNewPaidMsgs,
@@ -169,6 +170,7 @@ export async function sendImage(
     //RECEIVE UNPAID IMAGE ===>
 
     //Check that image message was received
+    await sleep(20000)
     const lastMessage2 = await getCheckNewMsgs(t, node2, imgUuid)
 
     //get media_key from received image message

@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { Message, models } from '../models'
 import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
@@ -6,13 +6,16 @@ import * as helpers from '../helpers'
 import { failure, success } from '../utils/res'
 import { tokenFromTerms } from '../utils/ldat'
 import * as network from '../network'
+import { Payload } from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { Op } from 'sequelize'
 import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
+import { Req, Res } from '../types'
+import { sendConfirmation } from './confirmations'
 
-export const sendPayment = async (req, res) => {
+export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
@@ -63,10 +66,10 @@ export const sendPayment = async (req, res) => {
   })
   if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
-  const msg: { [k: string]: any } = {
+  const msg: { [k: string]: string | number | Date } = {
     chatId: chat.id,
     uuid: short.generate(),
     sender: owner.id,
@@ -98,7 +101,7 @@ export const sendPayment = async (req, res) => {
     msg.mediaType = media_type || ''
   }
 
-  const message = await models.Message.create(msg)
+  const message: Message = await models.Message.create(msg)
 
   const msgToSend: { [k: string]: any } = {
     id: message.id,
@@ -115,22 +118,22 @@ export const sendPayment = async (req, res) => {
 
   // if contact_ids, replace that in "chat" below
   // if remote text map, put that in
-  let theChat = chat
+  const theChat = chat.dataValues;
   if (contact_ids) {
-    theChat = { ...chat.dataValues, contactIds: contact_ids }
+    theChat.contactIds = contact_ids
     if (remote_text_map) msgToSend.content = remote_text_map
   }
   network.sendMessage({
     chat: theChat,
     sender: owner,
     type: constants.message_types.direct_payment,
-    message: msgToSend,
+    message: msgToSend as Message,
     amount: amount,
-    success: async (data) => {
+    success: async () => {
       // console.log('payment sent', { data })
       success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: async (error) => {
+    failure: async () => {
       await message.update({ status: constants.statuses.failed })
       res.status(200)
       res.json({
@@ -142,11 +145,8 @@ export const sendPayment = async (req, res) => {
   })
 }
 
-export const receivePayment = async (payload) => {
+export const receivePayment = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received payment ${{ payload }}`)
-
-  var date = new Date()
-  date.setMilliseconds(0)
 
   const {
     owner,
@@ -159,29 +159,39 @@ export const receivePayment = async (payload) => {
     chat_type,
     sender_alias,
     msg_uuid,
-    reply_uuid,
+    msg_id,
     parent_id,
     network_type,
+    remote_content,
     sender_photo_url,
+    date_string,
+    recipient_alias,
+    recipient_pic,
+    hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error(`=> no group chat!`)
   }
   const tenant: number = owner.id
 
-  const msg: { [k: string]: any } = {
+  let date = new Date()
+  date.setMilliseconds(0)
+  if (date_string) date = new Date(date_string)
+
+  const msg: { [k: string]: string | number | Date } = {
     chatId: chat.id,
     uuid: msg_uuid,
     type: constants.message_types.direct_payment,
     status: constants.statuses.received,
     sender: sender.id,
     amount: amount,
-    amountMsat: parseFloat(amount) * 1000,
+    amountMsat: parseFloat(amount + '') * 1000,
     date: date,
     createdAt: date,
     updatedAt: date,
     network_type,
     tenant,
+    forwardedSats: hasForwardedSats,
   }
   if (content) msg.messageContent = content
   if (mediaType) msg.mediaType = mediaType
@@ -189,11 +199,15 @@ export const receivePayment = async (payload) => {
   if (chat_type === constants.chat_types.tribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
+    if (remote_content) msg.remoteMessageContent = remote_content
   }
-  if (reply_uuid) msg.replyUuid = reply_uuid
+  // direct_payment is never a reply (thats a boost)
+  // if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
+  if (recipient_alias) msg.recipientAlias = recipient_alias
+  if (recipient_pic) msg.recipientPic = recipient_pic
 
-  const message = await models.Message.create(msg)
+  const message: Message = await models.Message.create(msg)
 
   // console.log('saved message', message.dataValues)
 
@@ -206,24 +220,26 @@ export const receivePayment = async (payload) => {
   )
 
   sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+
+  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
-export const listPayments = async (req, res) => {
+export const listPayments = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  const limit = (req.query.limit && parseInt(req.query.limit)) || 100
-  const offset = (req.query.offset && parseInt(req.query.offset)) || 0
+  const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100
+  const offset =
+    (req.query.offset && parseInt(req.query.offset.toString())) || 0
 
   const MIN_VAL = constants.min_sat_amount
   try {
-    const msgs = await models.Message.findAll({
+    const msgs: Message[] = await models.Message.findAll({
       where: {
         [Op.or]: [
           {
             type: {
               [Op.or]: [
                 constants.message_types.payment,
-                constants.message_types.direct_payment,
                 constants.message_types.keysend,
                 constants.message_types.purchase,
               ],
@@ -236,6 +252,7 @@ export const listPayments = async (req, res) => {
                 constants.message_types.message, // paid bot msgs, or price_per_message msgs
                 constants.message_types.boost,
                 constants.message_types.repayment,
+                constants.message_types.direct_payment, // can be a payment in a tribe
               ],
             },
             amount: {
@@ -243,6 +260,7 @@ export const listPayments = async (req, res) => {
             },
             network_type: constants.network_types.lightning,
             status: { [Op.not]: constants.statuses.failed },
+            forwarded_sats: { [Op.not]: true },
           },
         ],
         tenant,
@@ -254,7 +272,7 @@ export const listPayments = async (req, res) => {
     const ret = msgs || []
     success(
       res,
-      ret.map((message) => jsonUtils.messageToJson(message, null))
+      ret.map((message) => jsonUtils.messageToJson(message))
     )
   } catch (e) {
     failure(res, 'cant find payments')

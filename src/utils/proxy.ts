@@ -5,6 +5,7 @@ import * as Lightning from '../grpc/lightning'
 import { models } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
+import { sleep } from '../helpers'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -37,23 +38,23 @@ const SATS_PER_USER = config.proxy_initial_sats || 5000
 // isOwner users with no authToken
 export async function generateNewUsers() {
   if (!isProxy()) {
-    sphinxLogger.error(`[proxy] not proxy`, logging.Proxy)
+    sphinxLogger.error(`not proxy`, logging.Proxy)
     return
   }
   const newusers = await models.Contact.findAll({
     where: { isOwner: true, authToken: null },
   })
   if (newusers.length >= NEW_USER_NUM) {
-    sphinxLogger.error(`[proxy] already have new users`, logging.Proxy)
+    sphinxLogger.info(`already have new users`, logging.Proxy)
     return // we already have the mimimum
   }
   const n1 = NEW_USER_NUM - newusers.length
   let n // the number of new users to create
   if (check_proxy_balance) {
     const virtualBal = await getProxyTotalBalance()
-    sphinxLogger.info(`[proxy] total balance ${virtualBal}`, logging.Proxy)
+    sphinxLogger.info(`total balance ${virtualBal}`, logging.Proxy)
     const realBal = await getProxyLNDBalance()
-    sphinxLogger.info(`[proxy] LND balance ${virtualBal}`, logging.Proxy)
+    sphinxLogger.info(`LND balance ${virtualBal}`, logging.Proxy)
 
     let availableBalance = realBal - virtualBal
     if (availableBalance < SATS_PER_USER) availableBalance = 1
@@ -61,13 +62,13 @@ export async function generateNewUsers() {
     const n = Math.min(n1, n2)
 
     if (!n) {
-      sphinxLogger.error(`[proxy] not enough sats`, logging.Proxy)
+      sphinxLogger.error(`not enough sats`, logging.Proxy)
       return
     }
   } else {
     n = n1
   }
-  sphinxLogger.info(`=> gen new users: ${n}`, logging.Proxy)
+  sphinxLogger.info(`gen new users: ${n}`, logging.Proxy)
 
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
@@ -133,16 +134,21 @@ export async function getProxyTotalBalance() {
   }
 }
 
-export function loadProxyCredentials(macPrefix: string) {
-  var lndCert = fs.readFileSync(config.proxy_tls_location)
-  var sslCreds = grpc.credentials.createSsl(lndCert)
+export async function loadProxyCredentials(macPrefix: string) {
+  for (let i = 0; i < 100 && !fs.existsSync(config.proxy_tls_location); i++) {
+    console.log('lndCert not found trying again:')
+    await sleep(10000)
+  }
+  const lndCert = fs.readFileSync(config.proxy_tls_location)
+  const sslCreds = grpc.credentials.createSsl(lndCert)
   const m = fs.readFileSync(
     config.proxy_macaroons_dir + '/' + macPrefix + '.macaroon'
   )
+
   const macaroon = m.toString('hex')
-  var metadata = new grpc.Metadata()
+  const metadata = new grpc.Metadata()
   metadata.add('macaroon', macaroon)
-  var macaroonCreds = grpc.credentials.createFromMetadataGenerator(
+  const macaroonCreds = grpc.credentials.createFromMetadataGenerator(
     (_args, callback) => {
       callback(null, metadata)
     }
@@ -159,11 +165,13 @@ export async function loadProxyLightning(ownerPubkey?: string) {
     } else {
       try {
         macname = await getProxyRootPubkey()
-      } catch (e) {}
+      } catch (e) {
+        //do nothing here
+      }
     }
-    var credentials = loadProxyCredentials(macname)
-    var lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto')
-    var lnrpc: any = lnrpcDescriptor.lnrpc_proxy
+    const credentials = await loadProxyCredentials(macname)
+    const lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto')
+    const lnrpc: any = lnrpcDescriptor.lnrpc_proxy
     const the = new lnrpc.Lightning(
       PROXY_LND_IP + ':' + config.proxy_lnd_port,
       credentials
@@ -174,7 +182,7 @@ export async function loadProxyLightning(ownerPubkey?: string) {
   }
 }
 
-var proxyRootPubkey = ''
+let proxyRootPubkey = ''
 
 export function getProxyRootPubkey(): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -183,10 +191,10 @@ export function getProxyRootPubkey(): Promise<string> {
       return
     }
     // normal client, to get pubkey of LND
-    var credentials = Lightning.loadCredentials()
-    var lnrpcDescriptor = grpc.load('proto/rpc.proto')
-    var lnrpc: any = lnrpcDescriptor.lnrpc
-    var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials)
+    const credentials = Lightning.loadCredentials()
+    const lnrpcDescriptor = grpc.load('proto/lightning.proto')
+    const lnrpc: any = lnrpcDescriptor.lnrpc
+    const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials)
     lc.getInfo({}, function (err, response) {
       if (err == null) {
         proxyRootPubkey = response.identity_pubkey
@@ -201,10 +209,10 @@ export function getProxyRootPubkey(): Promise<string> {
 function getProxyLNDBalance(): Promise<number> {
   return new Promise((resolve, reject) => {
     // normal client, to get pubkey of LND
-    var credentials = Lightning.loadCredentials()
-    var lnrpcDescriptor = grpc.load('proto/rpc.proto')
-    var lnrpc: any = lnrpcDescriptor.lnrpc
-    var lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials)
+    const credentials = Lightning.loadCredentials()
+    const lnrpcDescriptor = grpc.load('proto/lightning.proto')
+    const lnrpc: any = lnrpcDescriptor.lnrpc
+    const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials)
     lc.channelBalance({}, function (err, response) {
       if (err == null) {
         lc.listChannels({}, function (err, channelList) {

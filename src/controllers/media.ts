@@ -17,6 +17,8 @@ import constants from '../constants'
 import { loadConfig } from '../utils/config'
 import { failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
+import { ChatPlusMembers } from '../network/send'
 
 const config = loadConfig()
 
@@ -38,7 +40,7 @@ purchase_accept should update the original attachment message with the terms and
 purchase_deny returns the sats
 */
 
-export const sendAttachmentMessage = async (req, res) => {
+export const sendAttachmentMessage = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   // try {
@@ -142,7 +144,7 @@ export const sendAttachmentMessage = async (req, res) => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   network.sendMessage({
-    chat: chat,
+    chat: chat as Partial<ChatPlusMembers>,
     sender: owner,
     type: constants.message_types.attachment,
     amount: amount || 0,
@@ -167,9 +169,9 @@ export function saveMediaKeys(
     sphinxLogger.error('wrong type for mediaKeyMap')
     return
   }
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
-  for (let [contactId, key] of Object.entries(mediaKeyMap)) {
+  for (const [contactId, key] of Object.entries(mediaKeyMap)) {
     if (parseInt(contactId) !== tenant) {
       const receiverID = parseInt(contactId) || 0 // 0 is for a tribe
       models.MediaKey.create({
@@ -186,11 +188,11 @@ export function saveMediaKeys(
   }
 }
 
-export const purchase = async (req, res) => {
+export const purchase = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { chat_id, contact_id, amount, media_token } = req.body
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   try {
@@ -229,7 +231,7 @@ export const purchase = async (req, res) => {
     purchaser: owner.id, // for tribe, knows who sent
   }
   network.sendMessage({
-    chat: { ...chat.dataValues, contactIds: [contact_id] },
+    chat: { ...chat.dataValues, contactIds: JSON.stringify([ contact_id ]) },
     sender: owner,
     type: constants.message_types.purchase,
     realSatsContactId: contact_id, // ALWAYS will be keysend, so doesnt matter if tribe owner or not
@@ -248,7 +250,7 @@ export const purchase = async (req, res) => {
 export const receivePurchase = async (payload) => {
   sphinxLogger.info(['=> received purchase', { payload }], logging.Network)
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {
@@ -341,7 +343,7 @@ export const receivePurchase = async (payload) => {
     // didnt pay enough
     return network.sendMessage({
       // "purchase_deny"
-      chat: { ...chat.dataValues, contactIds: [sender.id] }, // only send back to sender
+      chat: { ...chat.dataValues, contactIds: JSON.stringify([sender.id]) }, // only send back to sender
       sender: owner,
       amount: amount,
       type: constants.message_types.purchase_deny,
@@ -386,7 +388,7 @@ export const receivePurchase = async (payload) => {
   }
   if (purchaser_id) msgToSend.purchaser = purchaser_id
   network.sendMessage({
-    chat: { ...chat.dataValues, contactIds: [sender.id] }, // only to sender
+    chat: { ...chat.dataValues, contactIds: JSON.stringify([sender.id]) }, // only to sender
     sender: owner,
     type: constants.message_types.purchase_accept,
     message: msgToSend,
@@ -417,7 +419,7 @@ export const receivePurchase = async (payload) => {
 
 export const receivePurchaseAccept = async (payload) => {
   sphinxLogger.info('=> receivePurchaseAccept', logging.Network)
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {
@@ -477,7 +479,7 @@ export const receivePurchaseAccept = async (payload) => {
 
 export const receivePurchaseDeny = async (payload) => {
   sphinxLogger.info('=> receivePurchaseDeny', logging.Network)
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const { owner, sender, chat, amount, mediaToken, network_type } =
     await helpers.parseReceiveParams(payload)
@@ -512,7 +514,7 @@ export const receivePurchaseDeny = async (payload) => {
 export const receiveAttachment = async (payload) => {
   // console.log('received attachment', { payload })
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const {
@@ -586,7 +588,7 @@ export const receiveAttachment = async (payload) => {
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
-export async function signer(req, res) {
+export async function signer(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
   if (!req.params.challenge) return resUtils.failure(res, 'no challenge')

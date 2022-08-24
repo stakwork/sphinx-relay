@@ -97,7 +97,10 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                             }
                         }
                     }
-                    catch (e) { }
+                    catch (e) {
+                        logger_1.sphinxLogger.error(`error parsing bots in tribe ${e}`);
+                        return false;
+                    }
                 }
                 else {
                     // no message types defined, do all?
@@ -129,7 +132,7 @@ function emitMessageToBot(msg, botInTribe, sender) {
             case constants_1.default.bot_types.builtin:
                 (0, builtin_1.builtinBotEmit)(msg);
                 return true;
-            case constants_1.default.bot_types.local:
+            case constants_1.default.bot_types.local: {
                 const bot = yield models_1.models.Bot.findOne({
                     where: {
                         uuid: botInTribe.botUuid,
@@ -137,6 +140,7 @@ function emitMessageToBot(msg, botInTribe, sender) {
                     },
                 });
                 return (0, bots_1.postToBotServer)(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
+            }
             case constants_1.default.bot_types.remote:
                 return (0, bots_1.keysendBotCmd)(msg, botInTribe, sender);
             default:

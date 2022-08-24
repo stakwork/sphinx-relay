@@ -36,12 +36,12 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     logger_1.sphinxLogger.info(dateToReturn, logger_1.logging.Express);
     const owner = req.owner;
     // const chatId = req.query.chat_id
-    let newMessagesWhere = {
+    const newMessagesWhere = {
         date: { [sequelize_1.Op.gte]: dateToReturn },
         [sequelize_1.Op.or]: [{ receiver: owner.id }, { receiver: null }],
         tenant,
     };
-    let confirmedMessagesWhere = {
+    const confirmedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
         status: {
             [sequelize_1.Op.or]: [constants_1.default.statuses.received],
@@ -49,7 +49,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         sender: owner.id,
         tenant,
     };
-    let deletedMessagesWhere = {
+    const deletedMessagesWhere = {
         updated_at: { [sequelize_1.Op.gte]: dateToReturn },
         status: {
             [sequelize_1.Op.or]: [constants_1.default.statuses.deleted],
@@ -80,7 +80,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!chatIds.includes(m.chatId))
             chatIds.push(m.chatId);
     });
-    let chats = chatIds.length > 0
+    const chats = chatIds.length > 0
         ? yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
         })
@@ -126,7 +126,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             chatIds.push(m.chatId);
         }
     });
-    let chats = chatIds.length > 0
+    const chats = chatIds.length > 0
         ? yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
         })
@@ -176,7 +176,7 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             chatIds.push(m.chatId);
         }
     });
-    let chats = chatIds.length > 0
+    const chats = chatIds.length > 0
         ? yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
         })
@@ -230,11 +230,16 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, pay, } = req.body;
     let msgtype = constants_1.default.message_types.message;
     if (boost)
         msgtype = constants_1.default.message_types.boost;
-    var date = new Date();
+    if (pay)
+        msgtype = constants_1.default.message_types.direct_payment;
+    let boostOrPay = false;
+    if (boost || pay)
+        boostOrPay = true;
+    const date = new Date();
     date.setMilliseconds(0);
     const owner = req.owner;
     const chat = yield helpers.findOrCreateChat({
@@ -245,13 +250,15 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!chat)
         return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
     let realSatsContactId;
+    let recipientAlias;
+    let recipientPic;
     // IF BOOST NEED TO SEND ACTUAL SATS TO OG POSTER
     if (!chat) {
         return (0, res_1.failure)(res, 'no Chat');
     }
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
-    if (reply_uuid && boost && amount) {
+    if (reply_uuid && boostOrPay && amount) {
         const ogMsg = yield models_1.models.Message.findOne({
             where: {
                 uuid: reply_uuid,
@@ -260,6 +267,10 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
         if (ogMsg && ogMsg.sender) {
             realSatsContactId = ogMsg.sender;
+            if (pay) {
+                recipientAlias = ogMsg.senderAlias;
+                recipientPic = ogMsg.senderPic;
+            }
         }
     }
     const hasRealAmount = amount && amount > constants_1.default.min_sat_amount;
@@ -268,7 +279,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         : remote_text;
     const uuid = short.generate();
     let amtToStore = amount || 0;
-    if (boost &&
+    if (boostOrPay &&
         message_price &&
         typeof message_price === 'number' &&
         amount &&
@@ -292,10 +303,15 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             : constants_1.default.network_types.mqtt,
         tenant,
     };
-    if (reply_uuid)
+    // "pay" someone who sent a msg is not a reply
+    if (reply_uuid && !pay)
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
+    if (recipientAlias)
+        msg.recipientAlias = recipientAlias;
+    if (recipientPic)
+        msg.recipientPic = recipientPic;
     // console.log(msg)
     const message = yield models_1.models.Message.create(msg);
     (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
@@ -305,10 +321,19 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         content: remote_text_map || remote_text || text,
         amount: amtToStore,
     };
-    if (reply_uuid)
-        msgToSend.replyUuid = reply_uuid;
+    // even if its a "pay" send the reply_uuid so admin can forward
+    if (reply_uuid) {
+        // unless YOU are admin, then there is no forwarding
+        if (!(isTribeOwner && pay)) {
+            msgToSend.replyUuid = reply_uuid;
+        }
+    }
     if (parent_id)
         msgToSend.parentId = parent_id;
+    if (recipientAlias)
+        msgToSend.recipientAlias = recipientAlias;
+    if (recipientPic)
+        msgToSend.recipientPic = recipientPic;
     const sendMessageParams = {
         chat: chat,
         sender: owner,
@@ -316,11 +341,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         type: msgtype,
         message: msgToSend,
     };
-    if (realSatsContactId)
+    if (isTribeOwner && realSatsContactId) {
         sendMessageParams.realSatsContactId = realSatsContactId;
-    // tribe owner deducts the "price per message + escrow amount"
-    if (realSatsContactId && isTribeOwner && amtToStore) {
-        sendMessageParams.amount = amtToStore;
+        // tribe owner deducts the "price per message + escrow amount"
+        if (amtToStore) {
+            sendMessageParams.amount = amtToStore;
+        }
     }
     // final send
     // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
@@ -329,13 +355,13 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendMessage = sendMessage;
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
     const tenant = owner.id;
     const text = content || '';
-    var date = new Date();
+    let date = new Date();
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
@@ -352,6 +378,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         status: message_status || constants_1.default.statuses.received,
         network_type: network_type,
         tenant,
+        forwardedSats: hasForwardedSats,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -374,14 +401,14 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, } = yield helpers.parseReceiveParams(payload);
-    logger_1.sphinxLogger.info(`=> received boost  ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
+    logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
     }
     const tenant = owner.id;
     const text = content;
-    var date = new Date();
+    let date = new Date();
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
@@ -398,6 +425,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         status: constants_1.default.statuses.received,
         network_type,
         tenant,
+        forwardedSats: hasForwardedSats,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
@@ -433,7 +461,7 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
         return logger_1.sphinxLogger.error('=> no group chat!');
     }
     const tenant = owner.id;
-    var date = new Date();
+    let date = new Date();
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
@@ -464,7 +492,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     const tenant = owner.id;
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     // in tribe this is already validated on admin's node
-    let where = { uuid: msg_uuid, tenant };
+    const where = { uuid: msg_uuid, tenant };
     if (!isTribe) {
         where.sender = sender.id; // validate sender
     }
@@ -510,12 +538,12 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.readMessages = readMessages;
-const clearMessages = (req, res) => {
+const clearMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    models_1.models.Message.destroy({ where: { tenant }, truncate: true });
+    yield models_1.models.Message.destroy({ where: { tenant }, truncate: true });
     (0, res_1.success)(res, {});
-};
+});
 exports.clearMessages = clearMessages;
 //# sourceMappingURL=messages.js.map

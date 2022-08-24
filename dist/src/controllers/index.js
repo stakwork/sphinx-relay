@@ -26,7 +26,7 @@ const uploads = require("./uploads");
 const confirmations = require("./confirmations");
 const actions = require("./botapi");
 const queries = require("./queries");
-const gitinfo_1 = require("../utils/gitinfo");
+const gitinfo = require("../utils/gitinfo");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
@@ -74,6 +74,7 @@ function set(app) {
         app.get('/latest_contacts', contacts.getLatestContacts);
         app.post('/generate_external', contacts.generateOwnerWithExternalSigner);
         app.post('/hmac_key', contacts.registerHmacKey);
+        app.get('/hmac_key', contacts.getHmacKey);
         app.post('/profile', personal.createPeopleProfile);
         app.delete('/profile', personal.deletePersonProfile);
         app.post('/public_pic', personal.uploadPublicPic);
@@ -98,7 +99,7 @@ function set(app) {
         app.post('/purchase', media.purchase);
         app.get('/signer/:challenge', media.signer);
         app.post('/verify_external', auth.verifyAuthRequest);
-        app.get('/request_transport_token', auth.requestTransportToken);
+        app.get('/request_transport_key', auth.requestTransportKey);
         app.post('/stream', feed.streamFeed);
         app.get('/app_versions', details.getAppVersions);
         app.get('/relay_version', details.getRelayVersion);
@@ -124,11 +125,11 @@ function set(app) {
         app.get('/bots', bots.getBots);
         app.post('/bot', bots.createBot);
         app.delete('/bot/:id', bots.deleteBot);
+        app.post('/bot/git', bots.addPatToGitBot);
         app.get('/healthcheck', confirmations.healthcheck);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
-                const version = yield (0, gitinfo_1.checkTag)();
-                res.send({ version });
+                res.send({ version: gitinfo.tag });
             });
         });
         app.get('/latest', function (req, res) {

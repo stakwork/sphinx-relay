@@ -37,7 +37,7 @@ const FEE_LIMIT_SAT = 10000;
 let lightningClient = null;
 let walletUnlocker = null;
 let routerClient = null;
-const loadCredentials = (macName) => {
+function loadCredentials(macName) {
     try {
         const lndCert = fs.readFileSync(config.tls_location);
         const sslCreds = grpc.credentials.createSsl(lndCert);
@@ -53,7 +53,7 @@ const loadCredentials = (macName) => {
         // console.log(e)
         throw 'cannot read LND macaroon or cert';
     }
-};
+}
 exports.loadCredentials = loadCredentials;
 const loadGreenlightCredentials = () => {
     const glCert = fs.readFileSync(config.tls_location);
@@ -72,7 +72,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             return lightningClient;
         }
         if (IS_GREENLIGHT) {
-            var credentials = loadGreenlightCredentials();
+            const credentials = loadGreenlightCredentials();
             const descriptor = grpc.load('proto/greenlight.proto');
             const greenlight = descriptor.greenlight;
             const options = {
@@ -84,27 +84,22 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             lightningClient = new greenlight.Node(uri[1], credentials, options);
             return lightningClient;
         }
-        try {
-            // LND
-            var credentials = (0, exports.loadCredentials)();
-            const lnrpcDescriptor = grpc.load('proto/rpc.proto');
-            const lnrpc = lnrpcDescriptor.lnrpc;
-            lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
-            return lightningClient;
-        }
-        catch (e) {
-            throw e;
-        }
+        // LND
+        const credentials = loadCredentials();
+        const lnrpcDescriptor = grpc.load('proto/lightning.proto');
+        const lnrpc = lnrpcDescriptor.lnrpc;
+        lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+        return lightningClient;
     });
 }
 exports.loadLightning = loadLightning;
-const loadWalletUnlocker = () => {
+function loadWalletUnlocker() {
     if (walletUnlocker) {
         return walletUnlocker;
     }
     else {
         try {
-            const credentials = (0, exports.loadCredentials)();
+            const credentials = loadCredentials();
             const lnrpcDescriptor = grpc.load('proto/walletunlocker.proto');
             const lnrpc = lnrpcDescriptor.lnrpc;
             walletUnlocker = new lnrpc.WalletUnlocker(LND_IP + ':' + config.lnd_port, credentials);
@@ -114,12 +109,12 @@ const loadWalletUnlocker = () => {
             logger_1.sphinxLogger.error(e);
         }
     }
-};
+}
 exports.loadWalletUnlocker = loadWalletUnlocker;
-const unlockWallet = (pwd) => __awaiter(void 0, void 0, void 0, function* () {
+function unlockWallet(pwd) {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
-            const wu = yield (0, exports.loadWalletUnlocker)();
+            const wu = yield loadWalletUnlocker();
             wu.unlockWallet({ wallet_password: ByteBuffer.fromUTF8(pwd) }, (err, response) => {
                 if (err) {
                     reject(err);
@@ -129,20 +124,22 @@ const unlockWallet = (pwd) => __awaiter(void 0, void 0, void 0, function* () {
             });
         });
     });
-});
+}
 exports.unlockWallet = unlockWallet;
-const getHeaders = (req) => {
+function getHeaders(req) {
     return {
         'X-User-Token': req.headers['x-user-token'],
         'X-User-Email': req.headers['x-user-email'],
     };
-};
+}
 exports.getHeaders = getHeaders;
 let isLocked = false;
 let lockTimeout;
-const getLock = () => isLocked;
+function getLock() {
+    return isLocked;
+}
 exports.getLock = getLock;
-const setLock = (value) => {
+function setLock(value) {
     isLocked = value;
     logger_1.sphinxLogger.info({ isLocked });
     if (lockTimeout)
@@ -151,7 +148,7 @@ const setLock = (value) => {
         isLocked = false;
         logger_1.sphinxLogger.info({ isLocked });
     }, 1000 * 60 * 2);
-};
+}
 exports.setLock = setLock;
 function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -163,27 +160,25 @@ function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
                 routes: [],
             };
         }
-        return new Promise(function (resolve, reject) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-                const options = { pub_key, amt };
-                if (route_hint && route_hint.includes(':')) {
-                    const arr = route_hint.split(':');
-                    const node_id = arr[0];
-                    const chan_id = arr[1];
-                    options.route_hints = [
-                        {
-                            hop_hints: [{ node_id, chan_id }],
-                        },
-                    ];
+        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        return new Promise((resolve, reject) => {
+            const options = { pub_key, amt };
+            if (route_hint && route_hint.includes(':')) {
+                const arr = route_hint.split(':');
+                const node_id = arr[0];
+                const chan_id = arr[1];
+                options.route_hints = [
+                    {
+                        hop_hints: [{ node_id, chan_id }],
+                    },
+                ];
+            }
+            lightning.queryRoutes(options, (err, response) => {
+                if (err) {
+                    reject(err);
+                    return;
                 }
-                lightning.queryRoutes(options, (err, response) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve(response);
-                });
+                resolve(response);
             });
         });
     });
@@ -195,31 +190,29 @@ exports.UNUSED_WITNESS_PUBKEY_HASH = 2;
 exports.UNUSED_NESTED_PUBKEY_HASH = 3;
 function newAddress(type = exports.NESTED_PUBKEY_HASH) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(function (resolve, reject) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const lightning = yield loadLightning();
-                lightning.newAddress({ type }, (err, response) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    if (!(response && response.address)) {
-                        reject('no address');
-                        return;
-                    }
-                    resolve(response.address);
-                });
+        const lightning = yield loadLightning();
+        return new Promise((resolve, reject) => {
+            lightning.newAddress({ type }, (err, response) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                if (!(response && response.address)) {
+                    reject('no address');
+                    return;
+                }
+                resolve(response.address);
             });
         });
     });
 }
 exports.newAddress = newAddress;
-// for payingn invoice and invite invoice
+// for paying invoice and invite invoice
 function sendPayment(payment_request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('sendPayment', logger_1.logging.Lightning);
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        return new Promise((resolve, reject) => {
             if ((0, proxy_1.isProxy)()) {
                 const opts = {
                     payment_request,
@@ -269,17 +262,16 @@ function sendPayment(payment_request, ownerPubkey) {
                     call.write({ payment_request });
                 }
             }
-        }));
+        });
     });
 }
 exports.sendPayment = sendPayment;
-const keysend = (opts, ownerPubkey) => {
+function keysend(opts, ownerPubkey) {
     logger_1.sphinxLogger.info('keysend', logger_1.logging.Lightning);
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const randoStr = crypto.randomBytes(32).toString('hex');
-                const preimage = ByteBuffer.fromHex(randoStr);
+                const preimage = ByteBuffer.wrap(crypto.randomBytes(32));
                 const dest_custom_records = {
                     [`${exports.LND_KEYSEND_KEY}`]: preimage,
                 };
@@ -349,7 +341,7 @@ const keysend = (opts, ownerPubkey) => {
                         // new sendPayment (with optional route hints)
                         options.fee_limit_sat = FEE_LIMIT_SAT;
                         options.timeout_seconds = 16;
-                        const router = yield (0, exports.loadRouter)();
+                        const router = yield loadRouter();
                         const call = router.sendPaymentV2(options);
                         call.on('data', function (payment) {
                             const state = payment.status || payment.state;
@@ -358,6 +350,7 @@ const keysend = (opts, ownerPubkey) => {
                             }
                             else {
                                 if (state === 'IN_FLIGHT') {
+                                    // do nothing
                                 }
                                 else if (state === 'FAILED_NO_ROUTE') {
                                     reject(payment.failure_reason || payment);
@@ -382,25 +375,20 @@ const keysend = (opts, ownerPubkey) => {
             }
         });
     });
-};
+}
 exports.keysend = keysend;
-const loadRouter = () => {
+function loadRouter() {
     if (routerClient) {
         return routerClient;
     }
     else {
-        try {
-            const credentials = (0, exports.loadCredentials)('router.macaroon');
-            const descriptor = grpc.load('proto/router.proto');
-            const router = descriptor.routerrpc;
-            routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials);
-            return routerClient;
-        }
-        catch (e) {
-            throw e;
-        }
+        const credentials = loadCredentials('router.macaroon');
+        const descriptor = grpc.load('proto/router.proto');
+        const router = descriptor.routerrpc;
+        routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials);
+        return routerClient;
     }
-};
+}
 exports.loadRouter = loadRouter;
 const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts, ownerPubkey) {
@@ -413,7 +401,7 @@ function keysendMessage(opts, ownerPubkey) {
                 }
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
-                        const res = yield (0, exports.keysend)(opts, ownerPubkey);
+                        const res = yield keysend(opts, ownerPubkey);
                         resolve(res);
                     }
                     catch (e) {
@@ -428,13 +416,13 @@ function keysendMessage(opts, ownerPubkey) {
                 let res = null;
                 const ts = new Date().valueOf();
                 // WEAVE MESSAGE If TOO LARGE
-                yield asyncForEach(Array.from(Array(n)), (u, i) => __awaiter(this, void 0, void 0, function* () {
-                    const spliti = Math.ceil(opts.data.length / n);
-                    const m = opts.data.substr(i * spliti, spliti);
+                for (let i = 0; i < n; i++) {
+                    const spliti = Math.ceil((opts.data || '').length / n);
+                    const m = (opts.data || '').substring(i * spliti, i * spliti + spliti);
                     const isLastThread = i === n - 1;
                     const amt = isLastThread ? opts.amt : constants_1.default.min_sat_amount;
                     try {
-                        res = yield (0, exports.keysend)(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
+                        res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
                         success = true;
                         yield (0, helpers_1.sleep)(432);
                     }
@@ -442,7 +430,7 @@ function keysendMessage(opts, ownerPubkey) {
                         logger_1.sphinxLogger.error(e);
                         fail = true;
                     }
-                }));
+                }
                 if (success && !fail) {
                     resolve(res);
                 }
@@ -454,22 +442,10 @@ function keysendMessage(opts, ownerPubkey) {
     });
 }
 exports.keysendMessage = keysendMessage;
-function asyncForEach(array, callback) {
-    return __awaiter(this, void 0, void 0, function* () {
-        for (let index = 0; index < array.length; index++) {
-            yield callback(array[index], index, array);
-        }
-    });
-}
 function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
-            return sig;
-        }
-        catch (e) {
-            throw e;
-        }
+        const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
+        return sig;
     });
 }
 exports.signAscii = signAscii;
@@ -494,8 +470,7 @@ exports.listInvoices = listInvoices;
 function listAllInvoices() {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> list all invoices`);
-        const invs = yield paginateInvoices(40);
-        return invs;
+        return paginateInvoices(40);
     });
 }
 exports.listAllInvoices = listAllInvoices;
@@ -588,14 +563,7 @@ exports.listAllPaymentsFull = listAllPaymentsFull;
 // msg is hex
 function signMessage(msg, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        // log('signMessage')
-        try {
-            const r = yield signBuffer(Buffer.from(msg, 'hex'), ownerPubkey);
-            return r;
-        }
-        catch (e) {
-            throw e;
-        }
+        return signBuffer(Buffer.from(msg, 'hex'), ownerPubkey);
     });
 }
 exports.signMessage = signMessage;
@@ -611,7 +579,7 @@ function signBuffer(msg, ownerPubkey) {
                 const recidBytes = sigBuf.subarray(66, 67);
                 // 31 is the magic EC recid (27+4) for compressed pubkeys
                 const ecRecid = Buffer.from(recidBytes).readUIntBE(0, 1) + 31;
-                const finalRecid = Buffer.from('00', 'hex');
+                const finalRecid = Buffer.allocUnsafe(1);
                 finalRecid.writeUInt8(ecRecid, 0);
                 const finalSig = Buffer.concat([finalRecid, sigBytes], 65);
                 resolve(zbase32.encode(finalSig));
@@ -637,13 +605,8 @@ function signBuffer(msg, ownerPubkey) {
 exports.signBuffer = signBuffer;
 function verifyBytes(msg, sig) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const r = yield verifyMessage(msg.toString('hex'), sig);
-            return r;
-        }
-        catch (e) {
-            throw e;
-        }
+        const r = yield verifyMessage(msg.toString('hex'), sig);
+        return r;
     });
 }
 exports.verifyBytes = verifyBytes;
@@ -698,13 +661,8 @@ function verifyMessage(msg, sig, ownerPubkey) {
 exports.verifyMessage = verifyMessage;
 function verifyAscii(ascii, sig, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const r = yield verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey);
-            return r;
-        }
-        catch (e) {
-            throw e;
-        }
+        const r = yield verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey);
+        return r;
     });
 }
 exports.verifyAscii = verifyAscii;
@@ -860,11 +818,12 @@ function complexBalances(ownerPubkey) {
         }
         else {
             const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
+            const spendableBalance = channels.reduce((a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)), 0);
             const response = yield channelBalance(ownerPubkey);
             return {
                 reserve,
                 full_balance: Math.max(0, parseInt(response.balance)),
-                balance: Math.max(0, parseInt(response.balance) - reserve),
+                balance: spendableBalance,
                 pending_open_balance: parseInt(response.pending_open_balance),
             };
         }
@@ -923,7 +882,7 @@ function ascii_to_hexa(str) {
 //     return lightningClient
 //   } else {
 //   	var credentials = loadCredentials()
-//     const packageDefinition = await protoLoader.load("rpc.proto", {})
+//     const packageDefinition = await protoLoader.load("lightning.proto", {})
 //     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
 //     var { lnrpc } = lnrpcDescriptor;
 //     lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);

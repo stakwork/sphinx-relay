@@ -7,8 +7,8 @@ import { loadConfig } from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
 import { failure, success } from './res'
 import { sphinxLogger } from './logger'
-const fs = require('fs')
-const net = require('net')
+import * as fs from 'fs'
+import * as net from 'net'
 
 const config = loadConfig()
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
@@ -28,7 +28,9 @@ export async function getIP(): Promise<string> {
         } else {
           theIP = await publicIp.v4()
         }
-      } catch (e) {}
+      } catch (e) {
+        //do nothing here
+      }
     }
     const isIP = net.isIP(theIP)
     if (isIP) {

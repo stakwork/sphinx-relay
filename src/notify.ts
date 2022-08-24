@@ -22,7 +22,7 @@ const sendNotification = async (
   owner,
   amount?: number,
   push?: boolean
-) => {
+): Promise<void> => {
   if (!owner) return sphinxLogger.error(`=> sendNotification error: no owner`)
 
   let message = `You have a new message from ${name}`
@@ -135,7 +135,7 @@ async function finalNotification(
   const mutedAtLeast = push
     ? constants.notify_levels.mute
     : constants.notify_levels.mentions
-  let query = {
+  const query = {
     [Op.or]: [
       {
         isMuted: true,
@@ -159,7 +159,7 @@ async function finalNotification(
   // if (!isTribeOwner) {
   //   where.type = { [Op.notIn]: typesToNotNotify };
   // }
-  let unseenMessages = await models.Message.count({
+  const unseenMessages = await models.Message.count({
     where,
   })
   // if(!unseenMessages) return

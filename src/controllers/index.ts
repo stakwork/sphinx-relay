@@ -14,7 +14,7 @@ import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './botapi'
 import * as queries from './queries'
-import { checkTag } from '../utils/gitinfo'
+import * as gitinfo from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
@@ -23,6 +23,7 @@ import { failure } from '../utils/res'
 import * as auth from './auth'
 import * as personal from './api/personal'
 import * as lsats from './lsats'
+import { Req } from '../types'
 
 export async function set(app) {
   builtInBots.init()
@@ -73,6 +74,7 @@ export async function set(app) {
   app.get('/latest_contacts', contacts.getLatestContacts)
   app.post('/generate_external', contacts.generateOwnerWithExternalSigner)
   app.post('/hmac_key', contacts.registerHmacKey)
+  app.get('/hmac_key', contacts.getHmacKey)
 
   app.post('/profile', personal.createPeopleProfile)
   app.delete('/profile', personal.deletePersonProfile)
@@ -105,7 +107,7 @@ export async function set(app) {
   app.get('/signer/:challenge', media.signer)
 
   app.post('/verify_external', auth.verifyAuthRequest)
-  app.get('/request_transport_token', auth.requestTransportToken)
+  app.get('/request_transport_key', auth.requestTransportKey)
 
   app.post('/stream', feed.streamFeed)
 
@@ -138,15 +140,15 @@ export async function set(app) {
   app.get('/bots', bots.getBots)
   app.post('/bot', bots.createBot)
   app.delete('/bot/:id', bots.deleteBot)
+  app.post('/bot/git', bots.addPatToGitBot)
 
   app.get('/healthcheck', confirmations.healthcheck)
 
-  app.get('/version', async function (req, res) {
-    const version = await checkTag()
-    res.send({ version })
+  app.get('/version', async function (req: Req, res) {
+    res.send({ version: gitinfo.tag })
   })
 
-  app.get('/latest', async function (req, res) {
+  app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')
     const tenant: number = req.owner.id
     const lasts = await models.Message.findAll({

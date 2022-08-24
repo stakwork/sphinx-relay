@@ -23,6 +23,7 @@ const constants_1 = require("../constants");
 const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const logger_1 = require("../utils/logger");
+const confirmations_1 = require("./confirmations");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -47,7 +48,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     });
     if (!chat)
         return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
-    var date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     const msg = {
         chatId: chat.id,
@@ -101,9 +102,9 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msgToSend.parentId = parent_id;
     // if contact_ids, replace that in "chat" below
     // if remote text map, put that in
-    let theChat = chat;
+    const theChat = chat.dataValues;
     if (contact_ids) {
-        theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: contact_ids });
+        theChat.contactIds = contact_ids;
         if (remote_text_map)
             msgToSend.content = remote_text_map;
     }
@@ -113,11 +114,11 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         type: constants_1.default.message_types.direct_payment,
         message: msgToSend,
         amount: amount,
-        success: (data) => __awaiter(void 0, void 0, void 0, function* () {
+        success: () => __awaiter(void 0, void 0, void 0, function* () {
             // console.log('payment sent', { data })
             (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+        failure: () => __awaiter(void 0, void 0, void 0, function* () {
             yield message.update({ status: constants_1.default.statuses.failed });
             res.status(200);
             res.json({
@@ -131,13 +132,15 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendPayment = sendPayment;
 const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received payment ${{ payload }}`);
-    var date = new Date();
-    date.setMilliseconds(0);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, msg_id, parent_id, network_type, remote_content, sender_photo_url, date_string, recipient_alias, recipient_pic, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
     const tenant = owner.id;
+    let date = new Date();
+    date.setMilliseconds(0);
+    if (date_string)
+        date = new Date(date_string);
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
@@ -145,12 +148,13 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         status: constants_1.default.statuses.received,
         sender: sender.id,
         amount: amount,
-        amountMsat: parseFloat(amount) * 1000,
+        amountMsat: parseFloat(amount + '') * 1000,
         date: date,
         createdAt: date,
         updatedAt: date,
         network_type,
         tenant,
+        forwardedSats: hasForwardedSats,
     };
     if (content)
         msg.messageContent = content;
@@ -161,11 +165,17 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (chat_type === constants_1.default.chat_types.tribe) {
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
+        if (remote_content)
+            msg.remoteMessageContent = remote_content;
     }
-    if (reply_uuid)
-        msg.replyUuid = reply_uuid;
+    // direct_payment is never a reply (thats a boost)
+    // if (reply_uuid) msg.replyUuid = reply_uuid
     if (parent_id)
         msg.parentId = parent_id;
+    if (recipient_alias)
+        msg.recipientAlias = recipient_alias;
+    if (recipient_pic)
+        msg.recipientPic = recipient_pic;
     const message = yield models_1.models.Message.create(msg);
     // console.log('saved message', message.dataValues)
     socket.sendJson({
@@ -173,14 +183,15 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
     (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
-    const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+    const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100;
+    const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
     const MIN_VAL = constants_1.default.min_sat_amount;
     try {
         const msgs = yield models_1.models.Message.findAll({
@@ -190,7 +201,6 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         type: {
                             [sequelize_1.Op.or]: [
                                 constants_1.default.message_types.payment,
-                                constants_1.default.message_types.direct_payment,
                                 constants_1.default.message_types.keysend,
                                 constants_1.default.message_types.purchase,
                             ],
@@ -203,6 +213,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                                 constants_1.default.message_types.message,
                                 constants_1.default.message_types.boost,
                                 constants_1.default.message_types.repayment,
+                                constants_1.default.message_types.direct_payment, // can be a payment in a tribe
                             ],
                         },
                         amount: {
@@ -210,6 +221,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         },
                         network_type: constants_1.default.network_types.lightning,
                         status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },
+                        forwarded_sats: { [sequelize_1.Op.not]: true },
                     },
                 ],
                 tenant,
@@ -219,7 +231,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             offset,
         });
         const ret = msgs || [];
-        (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message, null)));
+        (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message)));
     }
     catch (e) {
         (0, res_1.failure)(res, 'cant find payments');

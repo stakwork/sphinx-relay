@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.encryptTribeBroadcast = exports.decryptMessage = exports.personalizeMessage = void 0;
+exports.encryptTribeBroadcast = exports.decryptMessage = exports.personalizeMessage = exports.fillmsg = void 0;
 const ldat_1 = require("./ldat");
 const rsa = require("../crypto/rsa");
 const constants_1 = require("../constants");
@@ -61,11 +61,11 @@ function encryptTribeBroadcast(full, contact, isTribeOwner) {
         if (isTribeOwner) {
             // has been previously decrypted
             if (message.content) {
-                const encContent = yield rsa.encrypt(contact.contactKey, message.content);
+                const encContent = rsa.encrypt(contact.contactKey, message.content.toString());
                 obj.content = encContent;
             }
             if (message.mediaKey) {
-                const encMediaKey = yield rsa.encrypt(contact.contactKey, message.mediaKey);
+                const encMediaKey = rsa.encrypt(contact.contactKey, message.mediaKey);
                 obj.mediaKey = encMediaKey;
             }
         }
@@ -131,7 +131,7 @@ function decryptMessage(full, chat) {
                     content = m.content['chat'];
                 }
             }
-            const decContent = rsa.decrypt(chat.groupPrivateKey, content);
+            const decContent = rsa.decrypt(chat.groupPrivateKey, content.toString());
             obj.content = decContent;
         }
         if (m.mediaKey) {
@@ -156,7 +156,7 @@ function personalizeMessage(m, contact, isTribeOwner) {
         const senderPubkey = m.sender.pub_key;
         const cloned = JSON.parse(JSON.stringify(m));
         const chat = cloned && cloned.chat;
-        const isTribe = chat.type && chat.type === constants_1.default.chat_types.tribe;
+        const isTribe = (chat.type && chat.type === constants_1.default.chat_types.tribe) || false;
         const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe);
         const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey);
         const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey);
@@ -170,6 +170,7 @@ exports.personalizeMessage = personalizeMessage;
 function fillmsg(full, props) {
     return Object.assign(Object.assign({}, full), { message: Object.assign(Object.assign({}, full.message), props) });
 }
+exports.fillmsg = fillmsg;
 function fillchatmsg(full, props) {
     return Object.assign(Object.assign({}, full), { chat: Object.assign(Object.assign({}, full.chat), props) });
 }

@@ -86,3 +86,8 @@ export default class Contact extends Model<Contact> {
   @Column
   hmacKey: string
 }
+
+export interface ContactRecord extends Contact {
+  dataValues: Contact
+  role?: number // injected
+}

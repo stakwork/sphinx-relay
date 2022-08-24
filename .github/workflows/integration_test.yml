@@ -1,4 +1,4 @@
-name: Pull_Request 
+name: Integration Test 
 on: 
   pull_request:
     branches:
@@ -8,8 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-18.04 
     strategy:
+      fail-fast: false
       matrix:
-        test-name: ['boostPayment', 'botCreation', 'chatPayment', 'cleanup', 'clearAllChats', 'clearAllContacts', 'contacts', 'images', 'latestTest', 'lsats', 'paidMeet', 'paidTribeImages', 'queryRoutes', 'self', 'sphinxPeople', 'streamPayment', 'tribe', 'tribe3Escrow', 'tribe3Messages', 'tribe3Private', 'tribe3Profile', 'tribeEdit', 'tribeImages', 'messageLength', 'transportToken', 'pinnedMsg', 'hmac']
+        test-name: ['boostPayment', 'botCreation', 'chatPayment', 'cleanup', 'clearAllChats', 'clearAllContacts', 'contacts', 'images', 'latestTest', 'lsats', 'paidMeet', 'paidTribeImages', 'queryRoutes', 'self', 'sphinxPeople', 'streamPayment', 'tribe', 'tribe3Escrow', 'tribe3Messages', 'tribe3Private', 'tribe3Profile', 'tribeEdit', 'tribeImages', 'messageLength', 'transportToken', 'pinnedMsg', 'hmac', 'socketIO']
     steps:
     - name: Enable docker.host.internal for Ubuntu
       run: |
@@ -18,6 +19,9 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         path: relay
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 14
     - name: Build Relay
       working-directory: ./relay
       run: |
@@ -29,15 +33,20 @@ jobs:
       working-directory: ./stack
       run: |
         chmod 777 ./bitcoind;    
-        chmod 777 ./relay;
+        chmod 777 -R ./relay;
+        chmod 777 -R ./lnd;
+        chmod 777 -R ./proxy;
     - name: Turn on Stack 
       working-directory: ./stack
       run: |
-        GITACTION_ENV=gitactionenv docker-compose up -d 
+        GITACTION_ENV=gitactionenv docker-compose -f alts/proxy.yml --project-dir . up -d 
     - name: Check for NODES.json
       working-directory: ./stack
       run: |
-         sleep 120;
+         sleep 240;
+         docker-compose ps
+         docker logs meme.sphinx
+         docker logs dave.sphinx
          docker wait stack_relaysetup_1;
     - name: copy file
       uses: canastro/copy-file-action@master

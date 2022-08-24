@@ -44,6 +44,7 @@ exports.typesToForward = [
     msgtypes.attachment,
     msgtypes.delete,
     msgtypes.boost,
+    msgtypes.direct_payment,
 ];
 exports.typesToSkipIfSkipBroadcastJoins = [
     msgtypes.group_join,
@@ -54,6 +55,7 @@ const typesThatNeedPricePerMessage = [
     msgtypes.message,
     msgtypes.attachment,
     msgtypes.boost,
+    msgtypes.direct_payment,
 ];
 exports.typesToReplay = [
     // should match typesToForward
@@ -62,6 +64,7 @@ exports.typesToReplay = [
     msgtypes.group_leave,
     msgtypes.bot_res,
     msgtypes.boost,
+    msgtypes.direct_payment,
 ];
 const botTypes = [
     constants_1.default.message_types.bot_install,
@@ -82,13 +85,13 @@ function onReceive(payload, dest) {
         // console.log("===> onReceive", JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return logger_1.sphinxLogger.error(`no payload.type`);
-        let owner = yield models_1.models.Contact.findOne({
+        const owner = yield models_1.models.Contact.findOne({
             where: { isOwner: true, publicKey: dest },
         });
         if (!owner)
             return logger_1.sphinxLogger.error(`=> RECEIVE: owner not found`);
         const tenant = owner.id;
-        const ownerDataValues = owner || owner.dataValues;
+        const ownerDataValues = owner.dataValues || owner;
         if (botTypes.includes(payload.type)) {
             // if is admin on tribe? or is bot maker?
             logger_1.sphinxLogger.info(`=> got bot msg type!`);
@@ -185,9 +188,11 @@ function onReceive(payload, dest) {
                 }
             }
             // forward boost sats to recipient
-            let realSatsContactId = null;
+            let realSatsContactId = undefined;
             let amtToForward = 0;
-            if (payload.type === msgtypes.boost && payload.message.replyUuid) {
+            const boostOrPay = payload.type === msgtypes.boost ||
+                payload.type === msgtypes.direct_payment;
+            if (boostOrPay && payload.message.replyUuid) {
                 const ogMsg = yield models_1.models.Message.findOne({
                     where: {
                         uuid: payload.message.replyUuid,
@@ -200,10 +205,15 @@ function onReceive(payload, dest) {
                         (chat.pricePerMessage || 0) -
                         (chat.escrowAmount || 0);
                     if (theAmtToForward > 0) {
-                        realSatsContactId = ogMsg.sender;
+                        realSatsContactId = ogMsg.sender; // recipient of sats
                         amtToForward = theAmtToForward;
+                        toAddIn.hasForwardedSats = ogMsg.sender !== tenant;
                         if (amtToForward && payload.message && payload.message.amount) {
                             payload.message.amount = amtToForward; // mutate the payload amount
+                            if (payload.type === msgtypes.direct_payment) {
+                                // remove the reply_uuid since its not actually a reply
+                                payload.message.replyUuid = undefined;
+                            }
                         }
                     }
                 }
@@ -266,7 +276,8 @@ function doTheAction(data, owner) {
             });
             const pld = yield (0, msg_1.decryptMessage)(data, chat);
             const me = owner;
-            payload = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
+            const encrypted = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
+            payload = encrypted;
             if (ogContent)
                 payload.message.remoteContent = JSON.stringify({ chat: ogContent }); // this is the key
             //if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
@@ -353,8 +364,6 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
             chat: chat,
             skipPubKey: payload.sender.pub_key,
             realSatsContactId,
-            success: () => { },
-            receive: () => { },
             isForwarded: true,
             forwardedFromContactId,
         });
@@ -390,7 +399,9 @@ function receiveMqttMessage(topic, message) {
             const dest = arr[0];
             onReceive(payload, dest);
         }
-        catch (e) { }
+        catch (e) {
+            logger_1.sphinxLogger.error('failed receiveMqttMessage', logger_1.logging.Network);
+        }
     });
 }
 exports.receiveMqttMessage = receiveMqttMessage;
@@ -403,13 +414,8 @@ exports.initTribesSubscriptions = initTribesSubscriptions;
 function parsePayload(data) {
     const li = data.lastIndexOf('}');
     const msg = data.substring(0, li + 1);
-    try {
-        const payload = JSON.parse(msg);
-        return payload || '';
-    }
-    catch (e) {
-        throw e;
-    }
+    const payload = JSON.parse(msg);
+    return payload || '';
 }
 // VERIFY PUBKEY OF SENDER from sig
 function parseAndVerifyPayload(data) {
@@ -460,7 +466,7 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
             }
         }
         const amount = (inv.value && parseInt(inv.value)) || 0;
-        var date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         const msg = yield models_1.models.Message.create({
             chatId: 0,
@@ -483,7 +489,7 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
         }, tenant);
     });
 }
-let hashCache = {};
+const hashCache = {};
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -537,11 +543,13 @@ function parseKeysendInvoice(i) {
                     // console.log('====> IS KEYSEND TYPE')
                     // console.log('====> MEMOOOO', i.memo)
                     isKeysendType = true;
-                    memo = payload.message && payload.message.content;
+                    memo = (payload.message && payload.message.content);
                     sender_pubkey = payload.sender && payload.sender.pub_key;
                 }
             }
-            catch (e) { } // err could be a threaded TLV
+            catch (e) {
+                logger_1.sphinxLogger.error('failed parsePayload', logger_1.logging.Network);
+            } // err could be a threaded TLV
         }
         else {
             isKeysendType = true;
@@ -558,7 +566,9 @@ function parseKeysendInvoice(i) {
             try {
                 payload = yield parseAndVerifyPayload(data);
             }
-            catch (e) { }
+            catch (e) {
+                logger_1.sphinxLogger.error('failed parseAndVerifyPayload', logger_1.logging.Network);
+            }
         }
         else {
             const threads = weave(data);

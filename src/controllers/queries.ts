@@ -11,6 +11,7 @@ import fetch from 'node-fetch'
 import * as helpers from '../helpers'
 import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 type QueryType = 'onchain_address'
 export interface Query {
@@ -20,7 +21,7 @@ export interface Query {
   app: string
 }
 
-let queries: { [k: string]: Query } = {}
+const queries: { [k: string]: Query } = {}
 
 const POLL_MINS = 10
 
@@ -28,12 +29,18 @@ let hub_pubkey = ''
 
 const hub_url = 'https://hub.sphinx.chat/api/v1/'
 export async function get_hub_pubkey(): Promise<string> {
-  const r = await fetch(hub_url + '/routingnode')
-  const j = await r.json()
-  if (j && j.pubkey) {
-    // console.log("=> GOT HUB PUBKEY", j.pubkey)
-    hub_pubkey = j.pubkey
-    return j.pubkey
+  try {
+    const r = await fetch(hub_url + '/routingnode')
+    const j = await r.json()
+    if (j && j.pubkey) {
+      // console.log("=> GOT HUB PUBKEY", j.pubkey)
+      hub_pubkey = j.pubkey
+      return j.pubkey
+    }
+  } catch (e) {
+    sphinxLogger.warning(
+      `Could not retrive hub routing node pubkey: Error: ${e}`
+    )
   }
   return ''
 }
@@ -95,7 +102,7 @@ async function getPendingAccountings(): Promise<Accounting[]> {
   return ret
 }
 
-export async function listUTXOs(req, res) {
+export async function listUTXOs(req: Req, res) {
   try {
     const ret: Accounting[] = await getPendingAccountings()
     success(
@@ -243,7 +250,7 @@ export function startWatchingUTXOs() {
   setInterval(pollUTXOs, POLL_MINS * 60 * 1000) // every 1 minutes
 }
 
-export async function queryOnchainAddress(req, res) {
+export async function queryOnchainAddress(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 
@@ -282,7 +289,7 @@ export async function queryOnchainAddress(req, res) {
   }
 
   let i = 0
-  let interval = setInterval(() => {
+  const interval = setInterval(() => {
     if (i >= 15) {
       clearInterval(interval)
       delete queries[uuid]
@@ -299,8 +306,8 @@ export async function queryOnchainAddress(req, res) {
   }, 1000)
 }
 
-export const receiveQuery = async (payload) => {
-  const dat = payload.content || payload
+export const receiveQuery = async (payload: network.Payload) => {
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
   const owner = dat.owner
@@ -312,7 +319,7 @@ export const receiveQuery = async (payload) => {
   }
   let q: Query
   try {
-    q = JSON.parse(content)
+    q = JSON.parse(content as string)
   } catch (e) {
     sphinxLogger.error(`=> ERROR receiveQuery, ${e}`)
     return
@@ -320,7 +327,7 @@ export const receiveQuery = async (payload) => {
   sphinxLogger.info(`=> query received ${q}`)
   let result = ''
   switch (q.type) {
-    case 'onchain_address':
+    case 'onchain_address': {
       const addy = await lightning.newAddress(lightning.NESTED_PUBKEY_HASH)
       const acc = {
         date: new Date(),
@@ -334,6 +341,7 @@ export const receiveQuery = async (payload) => {
       }
       await models.Accounting.create(acc)
       result = addy
+    }
   }
   const ret: Query = {
     type: q.type,
@@ -361,13 +369,13 @@ export const receiveQuery = async (payload) => {
   }
 }
 
-export const receiveQueryResponse = async (payload) => {
+export const receiveQueryResponse = async (payload: network.Payload) => {
   sphinxLogger.info(`=> receiveQueryResponse`, logging.Network)
-  const dat = payload.content || payload
+  const dat = payload
   // const sender_pub_key = dat.sender.pub_key
   const content = dat.message.content
   try {
-    const q: Query = JSON.parse(content)
+    const q: Query = JSON.parse(content as string)
     queries[q.uuid] = q
   } catch (e) {
     sphinxLogger.error(`=> ERROR receiveQueryResponse, ${e}`)

@@ -37,3 +37,7 @@ export default class Bot extends Model<Bot> {
   @Column
   tenant: number
 }
+
+export interface BotRecord extends Bot {
+  dataValues: Bot
+}

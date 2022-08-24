@@ -1,14 +1,19 @@
-import { models, Contact } from './models'
+import { models, Contact, ContactRecord, ChatRecord } from './models'
 import * as md5 from 'md5'
-import * as network from './network'
+import { signAndSend } from './network'
+import type { Msg, Payload, ChatMember } from './network/interfaces'
 import constants from './constants'
 import { logging, sphinxLogger } from './utils/logger'
 
-export const findOrCreateChat = async (params) => {
+export const findOrCreateChat = async (params: {
+  chat_id: number
+  owner_id: number
+  recipient_id: number
+}): Promise<ChatRecord | undefined> => {
   const { chat_id, owner_id, recipient_id } = params
   // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
-  let chat
-  let date = new Date()
+  let chat: ChatRecord
+  const date = new Date()
   date.setMilliseconds(0)
   // console.log("findOrCreateChat", chat_id, typeof chat_id, owner_id, typeof owner_id)
   if (chat_id) {
@@ -17,9 +22,11 @@ export const findOrCreateChat = async (params) => {
     })
     // console.log('findOrCreateChat: chat_id exists')
   } else {
-    if (!owner_id || !recipient_id) return null
+    if (!owner_id || !recipient_id) return
     sphinxLogger.info(`chat does not exists, create new`)
-    const owner = await models.Contact.findOne({ where: { id: owner_id } })
+    const owner: ContactRecord = await models.Contact.findOne({
+      where: { id: owner_id },
+    })
     const recipient = await models.Contact.findOne({
       where: { id: recipient_id, tenant: owner_id },
     })
@@ -35,10 +42,7 @@ export const findOrCreateChat = async (params) => {
       sphinxLogger.info(`=> no chat! create new`)
       chat = await models.Chat.create({
         uuid: uuid,
-        contactIds: JSON.stringify([
-          parseInt(owner_id),
-          parseInt(recipient_id),
-        ]),
+        contactIds: JSON.stringify([owner_id, recipient_id]),
         createdAt: date,
         updatedAt: date,
         type: constants.chat_types.conversation,
@@ -62,12 +66,12 @@ export const sendContactKeys = async ({
   type: number
   contactIds: number[]
   sender: any
-  success?: Function
-  failure?: Function
+  success?: ({ destination_key: string, amount: number }) => void
+  failure?: (error: Error) => void
   dontActuallySendContactKey?: boolean
   contactPubKey?: string
   routeHint?: string
-}) => {
+}): Promise<void> => {
   const msg = newkeyexchangemsg(
     type,
     sender,
@@ -90,16 +94,15 @@ export const sendContactKeys = async ({
 
   let yes: any = null
   let no: any = null
-  let cids = contactIds || []
+  const cids = contactIds || []
 
   await asyncForEach(cids, async (contactId) => {
-    let destination_key: string
     if (contactId == sender.id) {
       return
     }
     const contact = await models.Contact.findOne({ where: { id: contactId } })
     if (!(contact && contact.publicKey)) return
-    destination_key = contact.publicKey
+    const destination_key: string = contact.publicKey
     const route_hint = contact.routeHint
 
     // console.log("=> KEY EXCHANGE", msg)
@@ -140,12 +143,12 @@ export const performKeysendMessage = async ({
   destination_key: string
   route_hint?: string
   amount: number
-  msg: { [k: string]: any }
-  success?: Function
-  failure?: Function
+  msg: Partial<Msg>
+  success?: (arg: { destination_key: string; amount: number } | boolean) => void
+  failure?: (error: Error) => void
   sender: any
   extra_tlv?: { [k: string]: any }
-}) => {
+}): Promise<void> => {
   const opts = {
     dest: destination_key,
     data: msg || {},
@@ -154,7 +157,7 @@ export const performKeysendMessage = async ({
     extra_tlv,
   }
   try {
-    const r = await network.signAndSend(opts, sender)
+    const r = await signAndSend(opts, sender)
     // console.log("=> keysend to new contact")
     if (success) success(r)
   } catch (e) {
@@ -172,7 +175,7 @@ export async function findOrCreateContactByPubkeyAndRouteHint(
   senderAlias: string,
   owner: Contact,
   realAmount: number
-) {
+): Promise<ContactRecord> {
   let sender = await models.Contact.findOne({
     where: { publicKey: senderPubKey, tenant: owner.id },
   })
@@ -205,12 +208,16 @@ export async function findOrCreateContactByPubkeyAndRouteHint(
   return sender
 }
 
-export async function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
+export async function findOrCreateChatByUUID(
+  chat_uuid: string,
+  contactIds: number[],
+  tenant: number
+): Promise<ChatRecord> {
   let chat = await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant, deleted: false },
   })
   if (!chat) {
-    var date = new Date()
+    const date = new Date()
     date.setMilliseconds(0)
     chat = await models.Chat.create({
       uuid: chat_uuid,
@@ -224,19 +231,25 @@ export async function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
   return chat
 }
 
-export async function sleep(ms) {
+export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function parseReceiveParams(payload) {
-  const dat = payload.content || payload
+export async function parseReceiveParams(payload: Payload): Promise<{
+  chat_members: { [k: string]: ChatMember }
+  owner: ContactRecord
+  sender: ContactRecord
+  chat: ChatRecord
+  [k: string]: any
+}> {
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_route_hint = dat.sender.route_hint
   const sender_alias = dat.sender.alias
   const sender_photo_url = dat.sender.photo_url || ''
   const chat_uuid = dat.chat.uuid
   const chat_type = dat.chat.type
-  const chat_members: { [k: string]: any } = dat.chat.members || {}
+  const chat_members: { [k: string]: ChatMember } = dat.chat.members || {}
   const chat_name = dat.chat.name
   const chat_key = dat.chat.groupKey
   const chat_host = dat.chat.host
@@ -258,16 +271,19 @@ export async function parseReceiveParams(payload) {
   const force_push = dat.message.push
   const network_type = dat.network_type || 0
   const isTribeOwner = dat.isTribeOwner ? true : false
+  const hasForwardedSats = dat.hasForwardedSats ? true : false
   const dest = dat.dest
+  const recipient_alias = dat.message.recipientAlias
+  const recipient_pic = dat.message.recipientPic
 
   const isConversation =
     !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
-  let sender
-  let chat
-  let owner = dat.owner
+  let sender: ContactRecord
+  let chat: ChatRecord
+  let owner: Contact = dat.owner
   if (!owner) {
-    const ownerRecord = await models.Contact.findOne({
-      where: { isOwner: true, publicKey: dest },
+    const ownerRecord: ContactRecord = await models.Contact.findOne({
+      where: { isOwner: true, publicKey: dest as string },
     })
     owner = ownerRecord.dataValues
   }
@@ -277,14 +293,14 @@ export async function parseReceiveParams(payload) {
       network_type === constants.network_types.lightning ? amount : 0
     sender = await findOrCreateContactByPubkeyAndRouteHint(
       sender_pub_key,
-      sender_route_hint,
+      sender_route_hint as string,
       sender_alias,
-      owner.dataValues,
+      owner,
       realAmount
     )
     chat = await findOrCreateChatByUUID(
       chat_uuid,
-      [parseInt(owner.id), parseInt(sender.id)],
+      [owner.id, sender.id],
       owner.id
     )
     if (sender.fromGroup) {
@@ -298,21 +314,22 @@ export async function parseReceiveParams(payload) {
     })
     // inject a "sender" with an alias
     if (!sender && chat_type == constants.chat_types.tribe) {
-      sender = { id: 0, alias: sender_alias }
+      sender = <ContactRecord>{ id: 0, alias: sender_alias }
     }
     chat = await models.Chat.findOne({
       where: { uuid: chat_uuid, tenant: owner.id },
     })
   }
   return {
+    owner: owner as ContactRecord,
     dest,
-    owner,
     sender,
     chat,
     sender_pub_key,
     sender_route_hint,
     sender_alias,
     isTribeOwner,
+    hasForwardedSats,
     chat_uuid,
     amount,
     content,
@@ -337,10 +354,15 @@ export async function parseReceiveParams(payload) {
     network_type,
     message_status,
     force_push,
+    recipient_alias,
+    recipient_pic,
   }
 }
 
-async function asyncForEach(array, callback) {
+export async function asyncForEach<T>(
+  array: T[],
+  callback: (value: T, index: number, array: T[]) => Promise<void>
+): Promise<void> {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
   }

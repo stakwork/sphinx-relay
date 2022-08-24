@@ -118,7 +118,7 @@ function finalNotification(ownerID, params, push) {
         const mutedAtLeast = push
             ? constants_1.default.notify_levels.mute
             : constants_1.default.notify_levels.mentions;
-        let query = {
+        const query = {
             [sequelize_1.Op.or]: [
                 {
                     isMuted: true,
@@ -142,7 +142,7 @@ function finalNotification(ownerID, params, push) {
         // if (!isTribeOwner) {
         //   where.type = { [Op.notIn]: typesToNotNotify };
         // }
-        let unseenMessages = yield models_1.models.Message.count({
+        const unseenMessages = yield models_1.models.Message.count({
             where,
         });
         // if(!unseenMessages) return

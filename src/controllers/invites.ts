@@ -5,8 +5,9 @@ import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 // import * as proxy from '../utils/proxy'
 import { failure } from '../utils/res'
 import { sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
-export const finishInvite = async (req, res) => {
+export const finishInvite = async (req: Req, res) => {
   const { invite_string } = req.body
   const params = {
     invite: {
@@ -28,7 +29,7 @@ export const finishInvite = async (req, res) => {
   finishInviteInHub(params, onSuccess, onFailure)
 }
 
-export const payInvite = async (req, res) => {
+export const payInvite = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -69,7 +70,7 @@ export const payInvite = async (req, res) => {
   payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure)
 }
 
-export const createInvite = async (req, res) => {
+export const createInvite = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { nickname, welcome_message } = req.body
@@ -105,7 +106,7 @@ export const createInvite = async (req, res) => {
       tenant,
       // invoice: inviteCreated.invoice,
     })
-    let contactJson = jsonUtils.contactToJson(contact)
+    const contactJson = jsonUtils.contactToJson(contact)
     if (invite) {
       contactJson.invite = jsonUtils.inviteToJson(invite)
     }

@@ -447,4 +447,4 @@ $ sudo systemctl start sphinx-relay
 
 `journalctl -u sphinx-relay -f`
 
-[Back to README](https://github.com/dimaatmelodromru/sphinx-relay/tree/docs-edit#connecting-a-mobile-client)
+[Back to README](https://github.com/stakwork/sphinx-relay/blob/master/README.md)

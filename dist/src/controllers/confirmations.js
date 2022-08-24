@@ -45,7 +45,7 @@ exports.sendConfirmation = sendConfirmation;
 function receiveConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> received confirmation ${payload.message && payload.message.id}`, logger_1.logging.Network);
-        const dat = payload.content || payload;
+        const dat = payload;
         const chat_uuid = dat.chat.uuid;
         const msg_id = dat.message.id;
         const sender_pub_key = dat.sender.pub_key;
@@ -70,7 +70,9 @@ function receiveConfirmation(payload) {
                         try {
                             statusMap = JSON.parse(message.statusMap || '{}');
                         }
-                        catch (e) { }
+                        catch (e) {
+                            //Leave empty we want to do nothing here
+                        }
                         statusMap[sender.id] = constants_1.default.statuses.received;
                         yield message.update({
                             status: constants_1.default.statuses.received,
@@ -127,7 +129,9 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
             try {
                 statusMap = JSON.parse(message.statusMap || '{}');
             }
-            catch (e) { }
+            catch (e) {
+                //we want to do nothing here
+            }
             statusMap['chat'] = constants_1.default.statuses.received;
             yield message.update({
                 status: constants_1.default.statuses.received,
@@ -144,7 +148,7 @@ exports.tribeOwnerAutoConfirmation = tribeOwnerAutoConfirmation;
 function receiveHeartbeat(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> received heartbeat`, logger_1.logging.Network);
-        const dat = payload.content || payload;
+        const dat = payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_route_hint = dat.sender.route_hint;
         const receivedAmount = dat.message.amount;
@@ -176,7 +180,7 @@ function receiveHeartbeat(payload) {
     });
 }
 exports.receiveHeartbeat = receiveHeartbeat;
-let heartbeats = {};
+const heartbeats = {};
 function healthcheck(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -209,7 +213,7 @@ function healthcheck(req, res) {
             return;
         }
         let i = 0;
-        let interval = setInterval(() => {
+        const interval = setInterval(() => {
             if (i >= 15) {
                 clearInterval(interval);
                 delete heartbeats[pubkey];
@@ -230,7 +234,7 @@ exports.healthcheck = healthcheck;
 function receiveHeartbeatConfirmation(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> received heartbeat confirmation`, logger_1.logging.Network);
-        const dat = payload.content || payload;
+        const dat = payload;
         const sender_pub_key = dat.sender.pub_key;
         heartbeats[sender_pub_key] = true;
     });

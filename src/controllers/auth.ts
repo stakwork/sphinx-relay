@@ -1,9 +1,10 @@
 import { createJWT, scopes } from '../utils/jwt'
 import { success, failure } from '../utils/res'
 import { loadConfig } from '../utils/config'
-import * as rsa from '../crypto/rsa'
 import * as tribes from '../utils/tribes'
+import { generateTransportTokenKeys } from '../utils/cert'
 import * as fs from 'fs'
+import { Req } from '../types'
 
 const config = loadConfig()
 
@@ -13,11 +14,11 @@ interface MeInfo {
   alias: string
   route_hint: string
   contact_key: string
-  price_to_meet: string
+  price_to_meet: number
   jwt: string
 }
 
-export async function verifyAuthRequest(req, res) {
+export async function verifyAuthRequest(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   try {
     const sc = [scopes.PERSONAL, scopes.BOTS]
@@ -50,7 +51,7 @@ export async function verifyAuthRequest(req, res) {
   }
 }
 
-export async function requestExternalTokens(req, res) {
+export async function requestExternalTokens(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   try {
     const result: MeInfo = {
@@ -68,24 +69,21 @@ export async function requestExternalTokens(req, res) {
   }
 }
 
-export async function requestTransportToken(req, res) {
+export async function requestTransportKey(req: Req, res) {
   let transportPublicKey: string | null = null
   try {
     transportPublicKey = fs.readFileSync(
       config.transportPublicKeyLocation,
       'utf8'
     )
-  } catch (e) {}
+  } catch (e) {
+    //We want to do nothing here
+  }
   if (transportPublicKey != null) {
-    success(res, { transportToken: transportPublicKey })
+    success(res, { transport_key: transportPublicKey })
     return
   }
 
-  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
-  fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
-  fs.writeFileSync(
-    config.transportPrivateKeyLocation,
-    transportTokenKeys.private
-  )
-  success(res, { transportToken: transportTokenKeys.public })
+  const transportTokenKeys = await generateTransportTokenKeys()
+  success(res, { transport_key: transportTokenKeys })
 }

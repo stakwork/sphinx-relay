@@ -22,7 +22,9 @@ const jwtUtils = require("./utils/jwt");
 const scopes_1 = require("./scopes");
 const rsa = require("./crypto/rsa");
 const hmac = require("./crypto/hmac");
-const fs = require('fs');
+const fs = require("fs");
+const moment = require("moment");
+const cert_1 = require("./utils/cert");
 const config = (0, config_1.loadConfig)();
 /*
 "unlock": true,
@@ -83,12 +85,8 @@ function hmacMiddleware(req, res, next) {
             return;
         }
         // creating hmac key for the first time does not require one of course
+        // and for getting the encrypted key
         if (req.path == '/hmac_key') {
-            next();
-            return;
-        }
-        // separate hmac with bot hmac secret
-        if (req.path == '/webhook') {
             next();
             return;
         }
@@ -99,9 +97,12 @@ function hmacMiddleware(req, res, next) {
         }
         // req.headers['x-hub-signature-256']
         const sig = req.headers['x-hmac'] || req.cookies['x-hmac'];
-        if (!sig)
-            return (0, res_1.unauthorized)(res);
-        const message = `${req.method}|${req.originalUrl}|${req.rawBody}`;
+        if (!sig) {
+            // FIXME optional sig for now
+            next();
+            return;
+        }
+        const message = `${req.method}|${req.originalUrl}|${req.rawBody || ''}`;
         const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey);
         console.log('valid sig!', valid);
         if (!valid) {
@@ -125,7 +126,8 @@ function no_auth(path) {
         path == '/connect' ||
         path == '/connect_peer' ||
         path == '/peered' ||
-        path == '/request_transport_token');
+        path == '/request_transport_key' ||
+        path == '/webhook');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -146,11 +148,15 @@ function ownerMiddleware(req, res, next) {
             yield models_1.models.RequestsTransportTokens.destroy({
                 where: {
                     createdAt: {
-                        [sequelize_1.Op.lt]: new Date(Date.now() - config.length_of_time_for_transport_token_clear * 60000),
+                        [sequelize_1.Op.lt]: moment().unix() -
+                            config.length_of_time_for_transport_token_clear * 60,
                     },
                 },
             });
             // Read the transport private key since we will need to decrypt with this
+            if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+                yield (0, cert_1.generateTransportTokenKeys)();
+            }
             const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
             // Decrypt the token and split by space not sure what
             // the correct way to do the delimiting so I just put
@@ -161,11 +167,12 @@ function ownerMiddleware(req, res, next) {
             // The token will be the first item
             token = splitTransportToken[0];
             // The second item will be the timestamp
-            const splitTransportTokenTimestamp = splitTransportToken[1];
+            const splitTransportTokenTimestamp = parseInt(splitTransportToken[1]);
             // Check if the timestamp is within the timeframe we
             // choose (1 minute here) to clear out the db of saved recent requests
-            if (new Date(splitTransportTokenTimestamp) <
-                new Date(Date.now() - config.length_of_time_for_transport_token_clear * 60000) ||
+            if (splitTransportTokenTimestamp <
+                moment().unix() -
+                    config.length_of_time_for_transport_token_clear * 60 ||
                 !splitTransportTokenTimestamp) {
                 res.writeHead(401, 'Access invalid for user', {
                     'Content-Type': 'text/plain',
@@ -240,24 +247,26 @@ function ownerMiddleware(req, res, next) {
         }
         else {
             if (x_transport_token) {
-                // Checking the db last since it'll take the most compute power and will
-                // grow if we get lots of requests and will let us reject incorrect tokens faster
-                const savedTransportTokens = yield models_1.models.RequestsTransportTokens.findAll();
-                // Here we are checking all of the saved x_transport_tokens
-                // to see if we hav a repeat
-                savedTransportTokens.forEach((token) => {
-                    if (token.dataValues.transportToken == x_transport_token) {
-                        res.writeHead(401, 'Access invalid for user', {
-                            'Content-Type': 'text/plain',
-                        });
-                        res.end('invalid credentials');
-                        return;
-                    }
+                // Checking the db for a dupe
+                const duplicate = yield models_1.models.RequestsTransportTokens.findOne({
+                    where: { transportToken: x_transport_token },
                 });
+                if (duplicate) {
+                    res.writeHead(401, 'Access invalid for user', {
+                        'Content-Type': 'text/plain',
+                    });
+                    res.end('invalid credentials');
+                    return;
+                }
                 // Here we are saving the x_transport_token that we just
                 // used into the db to be checked against later
                 const transportTokenDBValues = { transportToken: x_transport_token };
-                yield models_1.models.RequestsTransportTokens.create(transportTokenDBValues);
+                try {
+                    yield models_1.models.RequestsTransportTokens.create(transportTokenDBValues);
+                }
+                catch (e) {
+                    console.log('Error when creating transport token', e);
+                }
             }
             req.owner = owner.dataValues;
             next();

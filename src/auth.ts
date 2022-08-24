@@ -10,8 +10,10 @@ import * as jwtUtils from './utils/jwt'
 import { allowedJwtRoutes } from './scopes'
 import * as rsa from './crypto/rsa'
 import * as hmac from './crypto/hmac'
-
-const fs = require('fs')
+import { Req, Res } from './types'
+import * as fs from 'fs'
+import * as moment from 'moment'
+import { generateTransportTokenKeys } from './utils/cert'
 
 const config = loadConfig()
 
@@ -20,7 +22,7 @@ const config = loadConfig()
 "encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
 */
 
-export async function unlocker(req, res): Promise<boolean> {
+export async function unlocker(req: Req, res): Promise<boolean> {
   const { password } = req.body
   if (!password) {
     failure(res, 'no password')
@@ -71,18 +73,14 @@ export async function unlocker(req, res): Promise<boolean> {
   }
 }
 
-export async function hmacMiddleware(req, res, next) {
+export async function hmacMiddleware(req: Req, res: Res, next): Promise<void> {
   if (no_auth(req.path)) {
     next()
     return
   }
   // creating hmac key for the first time does not require one of course
+  // and for getting the encrypted key
   if (req.path == '/hmac_key') {
-    next()
-    return
-  }
-  // separate hmac with bot hmac secret
-  if (req.path == '/webhook') {
     next()
     return
   }
@@ -93,8 +91,12 @@ export async function hmacMiddleware(req, res, next) {
   }
   // req.headers['x-hub-signature-256']
   const sig = req.headers['x-hmac'] || req.cookies['x-hmac']
-  if (!sig) return unauthorized(res)
-  const message = `${req.method}|${req.originalUrl}|${req.rawBody}`
+  if (!sig) {
+    // FIXME optional sig for now
+    next()
+    return
+  }
+  const message = `${req.method}|${req.originalUrl}|${req.rawBody || ''}`
   const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey)
   console.log('valid sig!', valid)
   if (!valid) {
@@ -118,7 +120,8 @@ function no_auth(path) {
     path == '/connect' ||
     path == '/connect_peer' ||
     path == '/peered' ||
-    path == '/request_transport_token'
+    path == '/request_transport_key' ||
+    path == '/webhook'
   )
 }
 
@@ -145,14 +148,17 @@ export async function ownerMiddleware(req, res, next) {
     await models.RequestsTransportTokens.destroy({
       where: {
         createdAt: {
-          [Op.lt]: new Date(
-            Date.now() - config.length_of_time_for_transport_token_clear * 60000
-          ),
+          [Op.lt]:
+            moment().unix() -
+            config.length_of_time_for_transport_token_clear * 60,
         },
       },
     })
 
     // Read the transport private key since we will need to decrypt with this
+    if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+      await generateTransportTokenKeys()
+    }
     const transportPrivateKey = fs.readFileSync(
       config.transportPrivateKeyLocation,
       'utf8'
@@ -168,15 +174,14 @@ export async function ownerMiddleware(req, res, next) {
     token = splitTransportToken[0]
 
     // The second item will be the timestamp
-    const splitTransportTokenTimestamp = splitTransportToken[1]
+    const splitTransportTokenTimestamp = parseInt(splitTransportToken[1])
 
     // Check if the timestamp is within the timeframe we
     // choose (1 minute here) to clear out the db of saved recent requests
     if (
-      new Date(splitTransportTokenTimestamp) <
-        new Date(
-          Date.now() - config.length_of_time_for_transport_token_clear * 60000
-        ) ||
+      splitTransportTokenTimestamp <
+        moment().unix() -
+          config.length_of_time_for_transport_token_clear * 60 ||
       !splitTransportTokenTimestamp
     ) {
       res.writeHead(401, 'Access invalid for user', {
@@ -256,27 +261,26 @@ export async function ownerMiddleware(req, res, next) {
     res.end('Invalid credentials')
   } else {
     if (x_transport_token) {
-      // Checking the db last since it'll take the most compute power and will
-      // grow if we get lots of requests and will let us reject incorrect tokens faster
-      const savedTransportTokens =
-        await models.RequestsTransportTokens.findAll()
-
-      // Here we are checking all of the saved x_transport_tokens
-      // to see if we hav a repeat
-      savedTransportTokens.forEach((token) => {
-        if (token.dataValues.transportToken == x_transport_token) {
-          res.writeHead(401, 'Access invalid for user', {
-            'Content-Type': 'text/plain',
-          })
-          res.end('invalid credentials')
-          return
-        }
+      // Checking the db for a dupe
+      const duplicate = await models.RequestsTransportTokens.findOne({
+        where: { transportToken: x_transport_token },
       })
+      if (duplicate) {
+        res.writeHead(401, 'Access invalid for user', {
+          'Content-Type': 'text/plain',
+        })
+        res.end('invalid credentials')
+        return
+      }
 
       // Here we are saving the x_transport_token that we just
       // used into the db to be checked against later
       const transportTokenDBValues = { transportToken: x_transport_token }
-      await models.RequestsTransportTokens.create(transportTokenDBValues)
+      try {
+        await models.RequestsTransportTokens.create(transportTokenDBValues)
+      } catch (e) {
+        console.log('Error when creating transport token', e)
+      }
     }
 
     req.owner = owner.dataValues

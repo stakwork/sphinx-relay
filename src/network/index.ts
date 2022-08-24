@@ -1,4 +1,4 @@
-import { sendMessage, signAndSend, newmsg } from './send'
+import { sendMessage, signAndSend, newmsg, SendMessageParams } from './send'
 import {
   initGrpcSubscriptions,
   initTribesSubscriptions,
@@ -8,7 +8,7 @@ import {
   typesToSkipIfSkipBroadcastJoins,
   receiveMqttMessage,
 } from './receive'
-import { Msg, BotMsg } from './interfaces'
+import { Msg, BotMsg, Payload, ChatMember } from './interfaces'
 
 /*
 Abstracts between lightning network and MQTT depending on Chat type and sender
@@ -27,4 +27,7 @@ export {
   receiveMqttMessage,
   Msg,
   BotMsg,
+  Payload,
+  ChatMember,
+  SendMessageParams,
 }

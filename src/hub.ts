@@ -102,7 +102,7 @@ const checkInviteHub = async (params = {}) => {
             if (routeHint) updateObj.routeHint = routeHint
             await contact.update(updateObj)
 
-            var contactJson = jsonUtils.contactToJson(contact)
+            const contactJson = jsonUtils.contactToJson(contact)
             contactJson.invite = jsonUtils.inviteToJson(dbInvite)
 
             socket.sendJson(
@@ -170,7 +170,7 @@ async function massPingHubFromProxies(rn) {
   if (logging.Proxy) {
     const cleanNodes = nodes.filter((n) => n.clean)
     sphinxLogger.info(
-      `[proxy] pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`,
+      `pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`,
       logging.Proxy
     )
   }

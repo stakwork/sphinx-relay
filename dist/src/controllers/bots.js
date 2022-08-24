@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
+exports.addPatToGitBot = exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
 const tribes = require("../utils/tribes");
 const crypto = require("crypto");
 const models_1 = require("../models");
@@ -23,6 +23,11 @@ const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const short = require("short-uuid");
+const git_1 = require("../builtin/git");
+const fs = require("fs");
+const rsa = require("../crypto/rsa");
+const config_1 = require("../utils/config");
+const config = (0, config_1.loadConfig)();
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -164,7 +169,9 @@ function installBotAsTribeAdmin(chat, bot_json) {
                     // could fail
                     yield models_1.models.ChatBot.create(chatBot);
                 }
-                catch (e) { }
+                catch (e) {
+                    //We want to do nothing here
+                }
             }
         }
     });
@@ -235,17 +242,16 @@ function botKeysend(msg_type, bot_uuid, botmaker_pubkey, amount, chat_uuid, send
     });
 }
 exports.botKeysend = botKeysend;
-function receiveBotInstall(payload) {
+function receiveBotInstall(dat) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger_1.sphinxLogger.info(['=> receiveBotInstall', payload], logger_1.logging.Network);
-        const dat = payload.content || payload;
+        logger_1.sphinxLogger.info(['=> receiveBotInstall', dat], logger_1.logging.Network);
         const sender_pub_key = dat.sender && dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
         const chat_uuid = dat.chat && dat.chat.uuid;
         const owner = dat.owner;
         const tenant = owner.id;
-        if (!chat_uuid || !sender_pub_key)
-            return logger_1.sphinxLogger.info('no chat uuid or sender pub key');
+        if (!chat_uuid || !sender_pub_key || !bot_uuid)
+            return logger_1.sphinxLogger.info('=> no chat uuid or sender pub key or bot_uuid');
         const bot = yield models_1.models.Bot.findOne({
             where: {
                 uuid: bot_uuid,
@@ -276,23 +282,22 @@ function receiveBotInstall(payload) {
             return logger_1.sphinxLogger.error('=> receiveBotInstall no contact');
         }
         // sender id needs to be in the msg
-        payload.sender.id = contact.id;
-        postToBotServer(payload, bot, SphinxBot.MSG_TYPE.INSTALL);
+        dat.sender.id = contact.id || 0;
+        postToBotServer(dat, bot, SphinxBot.MSG_TYPE.INSTALL);
     });
 }
 exports.receiveBotInstall = receiveBotInstall;
 // ONLY FOR BOT MAKER
-function receiveBotCmd(payload) {
+function receiveBotCmd(dat) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('=> receiveBotCmd', logger_1.logging.Network);
-        const dat = payload.content || payload;
         const sender_pub_key = dat.sender.pub_key;
         const bot_uuid = dat.bot_uuid;
         const chat_uuid = dat.chat && dat.chat.uuid;
         const sender_id = dat.sender && dat.sender.id;
         const owner = dat.owner;
         const tenant = owner.id;
-        if (!chat_uuid)
+        if (!chat_uuid || !bot_uuid)
             return logger_1.sphinxLogger.error('no chat uuid');
         // const amount = dat.message.amount - check price_per_use
         const bot = yield models_1.models.Bot.findOne({
@@ -323,8 +328,8 @@ function receiveBotCmd(payload) {
             return logger_1.sphinxLogger.error('=> receiveBotInstall no contact');
         }
         // sender id needs to be in the msg
-        payload.sender.id = sender_id || '0';
-        postToBotServer(payload, bot, SphinxBot.MSG_TYPE.MESSAGE);
+        dat.sender.id = sender_id || 0;
+        postToBotServer(dat, bot, SphinxBot.MSG_TYPE.MESSAGE);
         // forward to the entire Action back over MQTT
     });
 }
@@ -396,10 +401,9 @@ function buildBotPayload(msg) {
     return m;
 }
 exports.buildBotPayload = buildBotPayload;
-function receiveBotRes(payload) {
+function receiveBotRes(dat) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('=> receiveBotRes', logger_1.logging.Network); //, payload)
-        const dat = payload.content || payload;
         if (!dat.chat || !dat.message || !dat.sender) {
             return logger_1.sphinxLogger.error('=> receiveBotRes error, no chat||msg||sender');
         }
@@ -431,8 +435,8 @@ function receiveBotRes(payload) {
             // console.log("=> is tribeOwner, do finalAction!")
             // IF IS TRIBE ADMIN forward to the tribe
             // received the entire action?
-            const bot_id = payload.bot_id;
-            const recipient_id = payload.recipient_id;
+            const bot_id = dat.bot_id;
+            const recipient_id = dat.recipient_id;
             (0, botapi_1.finalAction)({
                 bot_id,
                 action,
@@ -455,7 +459,7 @@ function receiveBotRes(payload) {
             });
             if (!chat)
                 return logger_1.sphinxLogger.error('=> receiveBotRes as sub error no chat');
-            var date = new Date();
+            let date = new Date();
             date.setMilliseconds(0);
             if (date_string)
                 date = new Date(date_string);
@@ -490,4 +494,23 @@ function receiveBotRes(payload) {
     });
 }
 exports.receiveBotRes = receiveBotRes;
+const addPatToGitBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const tenant = req.owner.id;
+    if (!req.body.encrypted_pat)
+        return (0, res_1.failure)(res, 'no pat');
+    const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+    const pat = rsa.decrypt(transportTokenKey, req.body.encrypted_pat);
+    if (!pat)
+        return (0, res_1.failure)(res, 'failed to decrypt pat');
+    try {
+        yield (0, git_1.updateGitBotPat)(tenant, pat);
+        (0, res_1.success)(res, { updated: true });
+    }
+    catch (e) {
+        (0, res_1.failure)(res, 'no bots');
+    }
+});
+exports.addPatToGitBot = addPatToGitBot;
 //# sourceMappingURL=bots.js.map

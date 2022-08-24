@@ -2,9 +2,8 @@ import * as Lightning from '../grpc/lightning'
 import { sequelize, models } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
-import { checkTag, checkCommitHash } from '../utils/gitinfo'
+import * as gitinfo from '../utils/gitinfo'
 import * as fs from 'fs'
-import * as rsa from '../crypto/rsa'
 import { isClean } from './nodeinfo'
 import { getQR } from './connect'
 import { loadConfig } from './config'
@@ -16,24 +15,24 @@ const USER_VERSION = 7
 const config = loadConfig()
 
 const setupDatabase = async () => {
-  sphinxLogger.info(['=> [db] starting setup'], logging.DB)
+  sphinxLogger.info('starting setup', logging.DB)
   await setVersion()
-  sphinxLogger.info(['=> [db] sync now'], logging.DB)
+  sphinxLogger.info('sync now', logging.DB)
   try {
     await sequelize.sync()
-    sphinxLogger.info(['=> [db] done syncing'], logging.DB)
+    sphinxLogger.info('done syncing', logging.DB)
   } catch (e) {
-    sphinxLogger.info(['[db] sync failed', e], logging.DB)
+    sphinxLogger.info(['sync failed', e], logging.DB)
   }
   await migrate()
-  sphinxLogger.info(['=> [db] setup done'], logging.DB)
+  sphinxLogger.info('setup done', logging.DB)
 }
 
 async function setVersion() {
   try {
     await sequelize.query(`PRAGMA user_version = ${USER_VERSION}`)
   } catch (e) {
-    sphinxLogger.error('=> [db] setVersion failed')
+    sphinxLogger.error('setVersion failed', logging.DB)
   }
 }
 
@@ -63,13 +62,16 @@ const setupOwnerContact = async () => {
           authToken,
           tenant,
         })
-        sphinxLogger.info(['[db] created node owner contact, id:', contact.id])
+        sphinxLogger.info(
+          ['created node owner contact, id:', contact.id],
+          logging.DB
+        )
       }
     } catch (err) {
-      sphinxLogger.info([
-        '[db] error creating node owner due to lnd failure',
-        err,
-      ])
+      sphinxLogger.info(
+        ['error creating node owner due to lnd failure', err],
+        logging.DB
+      )
     }
   }
 }
@@ -94,22 +96,7 @@ const runMigrations = async () => {
   })
 }
 
-export {
-  setupTransportToken,
-  setupDatabase,
-  setupOwnerContact,
-  runMigrations,
-  setupDone,
-}
-
-async function setupTransportToken() {
-  const transportTokenKeys: { [k: string]: string } = await rsa.genKeys()
-  fs.writeFileSync(
-    config.transportPrivateKeyLocation,
-    transportTokenKeys.private
-  )
-  fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
-}
+export { setupDatabase, setupOwnerContact, runMigrations, setupDone }
 
 async function setupDone() {
   await printGitInfo()
@@ -117,9 +104,7 @@ async function setupDone() {
 }
 
 async function printGitInfo() {
-  const commitHash = await checkCommitHash()
-  const tag = await checkTag()
-  sphinxLogger.info(`=> Relay version: ${tag}, commit: ${commitHash}`)
+  sphinxLogger.info(`=> Relay version: ${gitinfo.tag}, commit: ${gitinfo.commitHash}`)
 }
 
 async function printQR() {

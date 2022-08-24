@@ -3,9 +3,16 @@ import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { loadConfig } from './config'
 import { sphinxLogger } from '../utils/logger'
+import { generateTransportTokenKeys } from '../utils/cert'
+import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
 // import * as WebSocket from 'ws'
+
+//The newer version of socket.io when imported has a
+//different format than when we import it so we can ignore
+//for now till we feel fine updating this
+// eslint-disable-next-line
 const socketio = require('socket.io')
 
 type ClientMap = Record<number, any[]>
@@ -19,29 +26,34 @@ export function connect(server) {
   // srvr = new WebSocket.Server({ server, clientTracking:true })
 
   io = socketio(server, {
-    handlePreflightRequest: (req, res) => {
-      const headers = {
-        'Access-Control-Allow-Headers':
-          'Content-Type, Accept, x-user-token, X-Requested-With',
-        'Access-Control-Allow-Origin': req.headers.origin, //or the specific origin you want to give access to,
-        'Access-Control-Allow-Credentials': true,
-      }
-      res.writeHead(200, headers)
-      res.end()
+    allowEIO3: true,
+    cors: {
+      origin: true,
+      allowedHeaders: [
+        'Content-Type',
+        'Accept',
+        'x-user-token',
+        'X-Requested-With',
+      ],
+      credentials: true,
     },
   })
   io.use(async (client, next) => {
     let userToken = client.handshake.headers['x-user-token']
 
-    let x_transport_token = client.handshake.headers['x-transport-token']
+    const x_transport_token = client.handshake.headers['x-transport-token']
     if (x_transport_token) {
+      if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+        await generateTransportTokenKeys()
+      }
+
       const transportPrivateKey = fs.readFileSync(
         config.transportPrivateKeyLocation
       )
-      let userTokenFromTransportToken = crypto
-        .privateDecrypt(transportPrivateKey, x_transport_token)
-        .toString()
+      const userTokenFromTransportToken = rsa
+        .decrypt(transportPrivateKey, x_transport_token)
         .split('|')[0]
+
       userToken = userTokenFromTransportToken
     }
 

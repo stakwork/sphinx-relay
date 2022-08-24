@@ -91,7 +91,7 @@ function anonymousInvoice(res, payment_request, tenant) {
         const { memo, sat, msat, paymentHash, invoiceDate } = (0, decode_1.decodePaymentRequest)(payment_request);
         const date = new Date();
         date.setMilliseconds(0);
-        models_1.models.Message.create({
+        yield models_1.models.Message.create({
             chatId: 0,
             type: constants_1.default.message_types.payment,
             sender: tenant,
@@ -224,7 +224,7 @@ exports.listInvoices = listInvoices;
 const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received invoice ${payload}`);
     const total_spent = 1;
-    const dat = payload.content || payload;
+    const dat = payload;
     const payment_request = dat.message.invoice;
     const network_type = dat.network_type || 0;
     const date = new Date();

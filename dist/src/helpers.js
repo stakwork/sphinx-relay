@@ -9,17 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
+exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
-const network = require("./network");
+const network_1 = require("./network");
 const constants_1 = require("./constants");
 const logger_1 = require("./utils/logger");
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
     let chat;
-    let date = new Date();
+    const date = new Date();
     date.setMilliseconds(0);
     // console.log("findOrCreateChat", chat_id, typeof chat_id, owner_id, typeof owner_id)
     if (chat_id) {
@@ -30,9 +30,11 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
     }
     else {
         if (!owner_id || !recipient_id)
-            return null;
+            return;
         logger_1.sphinxLogger.info(`chat does not exists, create new`);
-        const owner = yield models_1.models.Contact.findOne({ where: { id: owner_id } });
+        const owner = yield models_1.models.Contact.findOne({
+            where: { id: owner_id },
+        });
         const recipient = yield models_1.models.Contact.findOne({
             where: { id: recipient_id, tenant: owner_id },
         });
@@ -46,10 +48,7 @@ const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function*
             logger_1.sphinxLogger.info(`=> no chat! create new`);
             chat = yield models_1.models.Chat.create({
                 uuid: uuid,
-                contactIds: JSON.stringify([
-                    parseInt(owner_id),
-                    parseInt(recipient_id),
-                ]),
+                contactIds: JSON.stringify([owner_id, recipient_id]),
                 createdAt: date,
                 updatedAt: date,
                 type: constants_1.default.chat_types.conversation,
@@ -77,16 +76,15 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
     }
     let yes = null;
     let no = null;
-    let cids = contactIds || [];
+    const cids = contactIds || [];
     yield asyncForEach(cids, (contactId) => __awaiter(void 0, void 0, void 0, function* () {
-        let destination_key;
         if (contactId == sender.id) {
             return;
         }
         const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
         if (!(contact && contact.publicKey))
             return;
-        destination_key = contact.publicKey;
+        const destination_key = contact.publicKey;
         const route_hint = contact.routeHint;
         // console.log("=> KEY EXCHANGE", msg)
         // console.log("=> TO", destination_key, route_hint)
@@ -122,7 +120,7 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
         extra_tlv,
     };
     try {
-        const r = yield network.signAndSend(opts, sender);
+        const r = yield (0, network_1.signAndSend)(opts, sender);
         // console.log("=> keysend to new contact")
         if (success)
             success(r);
@@ -177,7 +175,7 @@ function findOrCreateChatByUUID(chat_uuid, contactIds, tenant) {
             where: { uuid: chat_uuid, tenant, deleted: false },
         });
         if (!chat) {
-            var date = new Date();
+            const date = new Date();
             date.setMilliseconds(0);
             chat = yield models_1.models.Chat.create({
                 uuid: chat_uuid,
@@ -200,7 +198,7 @@ function sleep(ms) {
 exports.sleep = sleep;
 function parseReceiveParams(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        const dat = payload.content || payload;
+        const dat = payload;
         const sender_pub_key = dat.sender.pub_key;
         const sender_route_hint = dat.sender.route_hint;
         const sender_alias = dat.sender.alias;
@@ -229,7 +227,10 @@ function parseReceiveParams(payload) {
         const force_push = dat.message.push;
         const network_type = dat.network_type || 0;
         const isTribeOwner = dat.isTribeOwner ? true : false;
+        const hasForwardedSats = dat.hasForwardedSats ? true : false;
         const dest = dat.dest;
+        const recipient_alias = dat.message.recipientAlias;
+        const recipient_pic = dat.message.recipientPic;
         const isConversation = !chat_type || (chat_type && chat_type == constants_1.default.chat_types.conversation);
         let sender;
         let chat;
@@ -244,8 +245,8 @@ function parseReceiveParams(payload) {
             logger_1.sphinxLogger.error(`=> parseReceiveParams cannot find owner`);
         if (isConversation) {
             const realAmount = network_type === constants_1.default.network_types.lightning ? amount : 0;
-            sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner.dataValues, realAmount);
-            chat = yield findOrCreateChatByUUID(chat_uuid, [parseInt(owner.id), parseInt(sender.id)], owner.id);
+            sender = yield findOrCreateContactByPubkeyAndRouteHint(sender_pub_key, sender_route_hint, sender_alias, owner, realAmount);
+            chat = yield findOrCreateChatByUUID(chat_uuid, [owner.id, sender.id], owner.id);
             if (sender.fromGroup) {
                 // if a private msg received, update the contact
                 yield sender.update({ fromGroup: false });
@@ -265,14 +266,15 @@ function parseReceiveParams(payload) {
             });
         }
         return {
+            owner: owner,
             dest,
-            owner,
             sender,
             chat,
             sender_pub_key,
             sender_route_hint,
             sender_alias,
             isTribeOwner,
+            hasForwardedSats,
             chat_uuid,
             amount,
             content,
@@ -297,6 +299,8 @@ function parseReceiveParams(payload) {
             network_type,
             message_status,
             force_push,
+            recipient_alias,
+            recipient_pic,
         };
     });
 }
@@ -308,6 +312,7 @@ function asyncForEach(array, callback) {
         }
     });
 }
+exports.asyncForEach = asyncForEach;
 function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
     const includePhotoUrl = sender && sender.photoUrl && !sender.privatePhoto;
     return {

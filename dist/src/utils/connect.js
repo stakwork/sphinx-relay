@@ -19,8 +19,8 @@ const config_1 = require("./config");
 const queries_1 = require("../controllers/queries");
 const res_1 = require("./res");
 const logger_1 = require("./logger");
-const fs = require('fs');
-const net = require('net');
+const fs = require("fs");
+const net = require("net");
 const config = (0, config_1.loadConfig)();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 function getIP() {
@@ -40,7 +40,9 @@ function getIP() {
                         theIP = yield publicIp.v4();
                     }
                 }
-                catch (e) { }
+                catch (e) {
+                    //do nothing here
+                }
             }
             const isIP = net.isIP(theIP);
             if (isIP) {

@@ -11,9 +11,10 @@ import * as moment from 'moment'
 import * as network from '../network'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 // store all current running jobs in memory
-let jobs = {}
+const jobs = {}
 
 // init jobs from DB
 export const initializeCronJobs = async () => {
@@ -47,7 +48,7 @@ async function startCronJob(sub) {
         // skip, still in jobs{} tho
         return this.stop()
       }
-      let STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription)
+      const STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription)
       if (STOP) {
         // end the job and return
         sphinxLogger.info('stop')
@@ -119,7 +120,7 @@ function msgForSubPayment(owner, sub, isFirstMessage, forMe) {
 async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
   const tenant: number = owner.id
 
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
 
   const subscription = await models.Subscription.findOne({
@@ -219,7 +220,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
 }
 
 // pause sub
-export async function pauseSubscription(req, res) {
+export async function pauseSubscription(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
@@ -239,7 +240,7 @@ export async function pauseSubscription(req, res) {
 }
 
 // restart sub
-export async function restartSubscription(req, res) {
+export async function restartSubscription(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = parseInt(req.params.id)
@@ -264,12 +265,13 @@ async function getRawSubs(opts = {}) {
     const subs = await models.Subscription.findAll(options)
     return subs
   } catch (e) {
+    sphinxLogger.warning(`get raw subs failed ${e}`)
     throw e
   }
 }
 
 // all subs
-export const getAllSubscriptions = async (req, res) => {
+export const getAllSubscriptions = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -285,7 +287,7 @@ export const getAllSubscriptions = async (req, res) => {
 }
 
 // one sub by id
-export async function getSubscription(req, res) {
+export async function getSubscription(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -300,7 +302,7 @@ export async function getSubscription(req, res) {
 }
 
 // delete sub by id
-export async function deleteSubscription(req, res) {
+export async function deleteSubscription(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const id = req.params.id
@@ -319,7 +321,7 @@ export async function deleteSubscription(req, res) {
 }
 
 // all subs for contact id
-export const getSubscriptionsForContact = async (req, res) => {
+export const getSubscriptionsForContact = async (req: Req, res) => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -337,7 +339,7 @@ export const getSubscriptionsForContact = async (req, res) => {
 }
 
 // create new sub
-export async function createSubscription(req, res) {
+export async function createSubscription(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -379,7 +381,7 @@ export async function createSubscription(req, res) {
   }
 }
 
-export async function editSubscription(req, res) {
+export async function editSubscription(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 

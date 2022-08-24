@@ -31,7 +31,7 @@ function joinTribe(req, res) {
         logger_1.sphinxLogger.info('=> joinTribe', logger_1.logging.Express);
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url, } = req.body;
         logger_1.sphinxLogger.info(['received owner route hint', owner_route_hint], logger_1.logging.Express);
-        const is_private = req.body.private;
+        const is_private = req.body.private ? true : false;
         const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
         if (existing) {
             logger_1.sphinxLogger.error('You are already in this tribe', logger_1.logging.Tribes);
@@ -71,7 +71,7 @@ function joinTribe(req, res) {
             // console.log("CREATE TRIBE OWNER", createdContact);
             contactIds.push(createdContact.id);
         }
-        let date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         const chatStatus = is_private
             ? constants_1.default.chat_statuses.pending
@@ -100,12 +100,12 @@ function joinTribe(req, res) {
             ? constants_1.default.message_types.member_request
             : constants_1.default.message_types.group_join;
         const contactIdsToSend = is_private
-            ? [theTribeOwner.id] // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
-            : chatParams.contactIds;
+            ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
+            : JSON.stringify(contactIds);
         // console.log("=> joinTribe: typeToSend", typeToSend);
         // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
         // set my alias to be the custom one
-        const theOwner = owner.dataValues || owner;
+        const theOwner = owner;
         if (my_alias)
             theOwner.alias = my_alias;
         network.sendMessage({
@@ -186,7 +186,7 @@ function receiveMemberRequest(payload) {
         const isTribe = chat_type === constants_1.default.chat_types.tribe;
         if (!isTribe || !isTribeOwner)
             return logger_1.sphinxLogger.error('not a tribe');
-        var date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         let theSender = null;
         const member = chat_members[sender_pub_key];
@@ -242,7 +242,9 @@ function receiveMemberRequest(payload) {
                 yield theChat.update({ updatedAt: date });
             }
         }
-        catch (e) { }
+        catch (e) {
+            //we want to do nothing here
+        }
         const msg = {
             chatId: chat.id,
             type: constants_1.default.message_types.member_request,
@@ -291,8 +293,8 @@ function pinToTribe(req, res) {
             return (0, res_1.failure)(res, 'not your tribe');
         }
         try {
-            let td = yield tribes.get_tribe_data(chat.uuid);
-            let chatData = chat.dataValues || chat;
+            const td = yield tribes.get_tribe_data(chat.uuid);
+            const chatData = chat.dataValues || chat;
             chatData.pin = pin;
             yield tribes.edit(mergeTribeAndChatData(chatData, td, owner));
             yield models_1.models.Chat.update({ pin }, { where: { id, tenant } });
@@ -455,7 +457,7 @@ function receiveMemberApprove(payload) {
             return logger_1.sphinxLogger.error('no chat');
         yield chat.update({ status: constants_1.default.chat_statuses.approved });
         const tenant = owner.id;
-        let date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         const msg = {
             chatId: chat.id,
@@ -480,7 +482,7 @@ function receiveMemberApprove(payload) {
         }, tenant);
         const amount = chat.priceToJoin || 0;
         const theChat = chat.dataValues || chat;
-        const theOwner = owner.dataValues || owner;
+        const theOwner = owner;
         const theAlias = chat.myAlias || owner.alias;
         if (theAlias)
             theOwner.alias = theAlias;
@@ -509,7 +511,7 @@ function receiveMemberReject(payload) {
             return logger_1.sphinxLogger.error('no chat');
         yield chat.update({ status: constants_1.default.chat_statuses.rejected });
         const tenant = owner.id;
-        let date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         const msg = {
             chatId: chat.id,
@@ -545,7 +547,7 @@ function receiveTribeDelete(payload) {
         const tenant = owner.id;
         // await chat.update({status: constants.chat_statuses.rejected})
         // update on tribes server too
-        let date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         const msg = {
             chatId: chat.id,
@@ -622,7 +624,9 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 try {
                     content = JSON.parse(m.remoteMessageContent);
                 }
-                catch (e) { }
+                catch (e) {
+                    //We want to do nothing here
+                }
                 let mdate = m.date;
                 if (!mdate)
                     mdate = new Date();
@@ -669,7 +673,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
 exports.replayChatHistory = replayChatHistory;
 function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin) {
     return __awaiter(this, void 0, void 0, function* () {
-        let date = new Date();
+        const date = new Date();
         date.setMilliseconds(0);
         if (!(owner && contactIds && Array.isArray(contactIds))) {
             return {};

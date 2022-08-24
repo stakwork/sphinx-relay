@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, MessageRecord, ChatRecord } from '../models'
 import * as Lightning from '../grpc/lightning'
 import * as interfaces from '../grpc/interfaces'
 import * as socket from '../utils/socket'
@@ -9,17 +9,21 @@ import { sendNotification } from '../hub'
 import { success, failure } from '../utils/res'
 import { sendConfirmation } from './confirmations'
 import * as network from '../network'
+import { Payload } from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
+import { Response } from 'express'
+import { ChatPlusMembers } from '../network/send'
 
-function stripLightningPrefix(s) {
+function stripLightningPrefix(s: string): string {
   if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)
   return s
 }
 
-export const payInvoice = async (req, res) => {
+export const payInvoice = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -42,7 +46,7 @@ export const payInvoice = async (req, res) => {
 
     sphinxLogger.info(`[pay invoice data] ${response}`)
 
-    const message = await models.Message.findOne({
+    const message: MessageRecord = await models.Message.findOne({
       where: { payment_request, tenant },
     })
     if (!message) {
@@ -57,13 +61,13 @@ export const payInvoice = async (req, res) => {
     const date = new Date()
     date.setMilliseconds(0)
 
-    const chat = await models.Chat.findOne({
+    const chat: ChatRecord = await models.Chat.findOne({
       where: { id: message.chatId, tenant },
     })
-    const contactIds = JSON.parse(chat.contactIds)
+    const contactIds: number[] = JSON.parse(chat.contactIds)
     const senderId = contactIds.find((id) => id != message.sender)
 
-    const paidMessage = await models.Message.create({
+    const paidMessage: MessageRecord = await models.Message.create({
       chatId: message.chatId,
       sender: senderId,
       type: constants.message_types.payment,
@@ -86,12 +90,16 @@ export const payInvoice = async (req, res) => {
   }
 }
 
-async function anonymousInvoice(res, payment_request: string, tenant: number) {
+async function anonymousInvoice(
+  res: Response,
+  payment_request: string,
+  tenant: number
+): Promise<void> {
   const { memo, sat, msat, paymentHash, invoiceDate } =
     decodePaymentRequest(payment_request)
   const date = new Date()
   date.setMilliseconds(0)
-  models.Message.create({
+  await models.Message.create({
     chatId: 0,
     type: constants.message_types.payment,
     sender: tenant,
@@ -111,13 +119,13 @@ async function anonymousInvoice(res, payment_request: string, tenant: number) {
   })
 }
 
-export const cancelInvoice = (req, res) => {
+export const cancelInvoice = (req: Req, res: Response): void => {
   res.status(200)
   res.json({ success: false })
   res.end()
 }
 
-export const createInvoice = async (req, res) => {
+export const createInvoice = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -174,7 +182,7 @@ export const createInvoice = async (req, res) => {
         const timestamp = parseInt(invoice.timestamp + '000')
         const expiry = parseInt(invoice.timeExpireDate + '000')
 
-        const message = await models.Message.create({
+        const message: MessageRecord = await models.Message.create({
           chatId: chat.id,
           uuid: short.generate(),
           sender: owner.id,
@@ -195,7 +203,7 @@ export const createInvoice = async (req, res) => {
         success(res, jsonUtils.messageToJson(message, chat))
 
         network.sendMessage({
-          chat: chat,
+          chat: chat as Partial<ChatPlusMembers>,
           sender: owner,
           type: constants.message_types.invoice,
           message: {
@@ -210,7 +218,7 @@ export const createInvoice = async (req, res) => {
   }
 }
 
-export const listInvoices = async (req, res) => {
+export const listInvoices = async (req: Req, res: Response): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
 
   const lightning = await Lightning.loadLightning()
@@ -227,11 +235,11 @@ export const listInvoices = async (req, res) => {
   })
 }
 
-export const receiveInvoice = async (payload) => {
+export const receiveInvoice = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received invoice ${payload}`)
 
   const total_spent = 1
-  const dat = payload.content || payload
+  const dat = payload
   const payment_request = dat.message.invoice
   const network_type = dat.network_type || 0
   const date = new Date()
@@ -279,7 +287,7 @@ export const receiveInvoice = async (payload) => {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
   }
-  const message = await models.Message.create(msg)
+  const message: MessageRecord = await models.Message.create(msg)
   sphinxLogger.info(`received keysend invoice message ${message.id}`)
 
   socket.sendJson(

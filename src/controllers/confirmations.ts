@@ -6,6 +6,7 @@ import * as network from '../network'
 import constants from '../constants'
 import { success, failure200, failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
+import { Req } from '../types'
 
 /* 
  if in tribe: dont send
@@ -41,13 +42,13 @@ export function sendConfirmation({
   })
 }
 
-export async function receiveConfirmation(payload) {
+export async function receiveConfirmation(payload: network.Payload) {
   sphinxLogger.info(
     `=> received confirmation ${payload.message && payload.message.id}`,
     logging.Network
   )
 
-  const dat = payload.content || payload
+  const dat = payload
   const chat_uuid = dat.chat.uuid
   const msg_id = dat.message.id
   const sender_pub_key = dat.sender.pub_key
@@ -72,7 +73,9 @@ export async function receiveConfirmation(payload) {
         let statusMap = {}
         try {
           statusMap = JSON.parse(message.statusMap || '{}')
-        } catch (e) {}
+        } catch (e) {
+          //Leave empty we want to do nothing here
+        }
         statusMap[sender.id] = constants.statuses.received
 
         await message.update({
@@ -133,7 +136,9 @@ export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
     let statusMap = {}
     try {
       statusMap = JSON.parse(message.statusMap || '{}')
-    } catch (e) {}
+    } catch (e) {
+      //we want to do nothing here
+    }
     statusMap['chat'] = constants.statuses.received
 
     await message.update({
@@ -150,10 +155,10 @@ export async function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
   }
 }
 
-export async function receiveHeartbeat(payload) {
+export async function receiveHeartbeat(payload: network.Payload) {
   sphinxLogger.info(`=> received heartbeat`, logging.Network)
 
-  const dat = payload.content || payload
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
   const sender_route_hint = dat.sender.route_hint
   const receivedAmount = dat.message.amount
@@ -184,16 +189,16 @@ export async function receiveHeartbeat(payload) {
   }
 }
 
-let heartbeats: { [k: string]: boolean } = {}
-export async function healthcheck(req, res) {
+const heartbeats: { [k: string]: boolean } = {}
+export async function healthcheck(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   // const tenant:number = req.owner.id
 
-  const pubkey: string = req.query.pubkey
+  const pubkey: string = req.query.pubkey as string
   if (!(pubkey && pubkey.length === 66)) {
     return failure200(res, 'missing pubkey')
   }
-  const routeHint: string = req.query.route_hint
+  const routeHint: string = req.query.route_hint as string
 
   const owner = req.owner
 
@@ -218,7 +223,7 @@ export async function healthcheck(req, res) {
   }
 
   let i = 0
-  let interval = setInterval(() => {
+  const interval = setInterval(() => {
     if (i >= 15) {
       clearInterval(interval)
       delete heartbeats[pubkey]
@@ -235,10 +240,10 @@ export async function healthcheck(req, res) {
   }, 1000)
 }
 
-export async function receiveHeartbeatConfirmation(payload) {
+export async function receiveHeartbeatConfirmation(payload: network.Payload) {
   sphinxLogger.info(`=> received heartbeat confirmation`, logging.Network)
 
-  const dat = payload.content || payload
+  const dat = payload
   const sender_pub_key = dat.sender.pub_key
 
   heartbeats[sender_pub_key] = true

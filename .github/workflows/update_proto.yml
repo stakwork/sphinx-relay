@@ -1,0 +1,26 @@
+name: Update proto files
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+
+jobs:
+  update_proto:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: checkout LND
+        uses: actions/checkout@v3
+        with:
+          repository: lightningnetwork/lnd
+          path: lnd
+      - name: update proto files
+        run: |
+          find lnd/lnrpc -name '*.proto' -exec bash -c 'test -e proto/`basename {}` && cp {} proto' \;
+          sed -i 's/^import.*\//import "/' proto/*
+          git config user.name 'Github Actions'
+          git config user.email github-actions@github.com
+          git add proto
+          git commit -m "Update proto files" || echo -n
+          git push

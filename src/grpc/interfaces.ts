@@ -180,9 +180,15 @@ interface ChannelConstraints {
   max_accepted_htlcs: number
 }
 interface HTLC {
-  // ...
+  incoming: boolean
+  amount: string
+  hash_lock: Buf
+  expiration_height: number
+  htlc_index: string
+  forwarding_channel: string
+  forwarding_htlc_index: string
 }
-interface Channel {
+export interface Channel {
   active: boolean
   remote_pubkey: string
   channel_point: string
@@ -218,7 +224,7 @@ export interface ListChannelsResponse {
 interface GreenlightHTLC {
   direction: string
   id: number
-  amount: string
+  amount: string // int64
   expiry: number
   payment_hash: string
   state: string
@@ -345,7 +351,7 @@ export function listPeersResponse(
 }
 
 export type Buf = Buffer | ByteBuffer | ArrayBuffer
-type DestCustomRecords = { [key: string]: Buf }
+type DestCustomRecords = { [k: string]: Buf }
 export interface KeysendRequest {
   amt: number
   final_cltv_delta: number
@@ -525,6 +531,10 @@ export interface Invoice {
   features: { [k: string]: any }
   is_keysend: boolean
 }
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Payment {
+  // if any fields are needed add them
+}
 interface GreenlightOffchainPayment {
   label: string
   preimage: Buf
@@ -596,7 +606,7 @@ export function connectPeerRequest(
   }
   return <ConnectPeerArgs>{}
 }
-interface ConnectPeerResponse {}
+type ConnectPeerResponse = { [k: string]: any }
 interface GreenlightConnectPeerResponse {
   node_id: string
   features: string
@@ -608,13 +618,14 @@ export function connectPeerResponse(
   if (IS_GREENLIGHT) {
     return <GreenlightConnectPeerResponse>{}
   }
-  return <ConnectPeerResponse>{}
+  return {}
 }
 
 interface AmountsRes {
   satoshi: string
   millisatoshi: string
 }
+
 function greenlightAmoutToAmounts(a: GreenlightAmount): AmountsRes {
   let satoshi = ''
   let millisatoshi = ''
@@ -677,7 +688,6 @@ enum GreenlightChannelState {
 }
 
 function shortChanIDfromInt64(int: string): string {
-  if (typeof int !== 'string') return ''
   const l = long.fromString(int, true)
   const blockHeight = l.shiftRight(40)
   const txIndex = l.shiftRight(16).and(0xffffff)

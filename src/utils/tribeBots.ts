@@ -3,7 +3,7 @@ import { getHost } from './tribes'
 import fetch from 'node-fetch'
 import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
-import { sphinxLogger } from './logger'
+import { sphinxLogger, logging } from './logger'
 
 const config = loadConfig()
 
@@ -21,7 +21,7 @@ export async function delete_bot({ uuid, owner_pubkey }) {
     sphinxLogger.info(`=> bot deleted: ${j}`)
     return true
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to delete bot ${e}`)
+    sphinxLogger.error(`unauthorized to delete bot ${e}`, logging.Tribes)
     throw e
   }
 }
@@ -63,7 +63,7 @@ export async function declare_bot({
     const j = await r.json()
     sphinxLogger.info(`=> bot created: ${j}`)
   } catch (e) {
-    sphinxLogger.error(`[tribes] unauthorized to declare bot ${e}`)
+    sphinxLogger.error(`unauthorized to declare bot ${e}`, logging.Tribes)
     throw e
   }
 }

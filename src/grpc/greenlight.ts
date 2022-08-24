@@ -13,34 +13,34 @@ let GID: GreenlightIdentity
 
 const config = loadConfig()
 
-export async function initGreenlight() {
+export async function initGreenlight(): Promise<void> {
   sphinxLogger.info('=> initGreenlight')
   // if (GID && GID.initialized) return
   await startGreenlightInit()
   // await streamHsmRequests()
 }
 
-export function keepalive() {
+export function keepalive(): void {
   sphinxLogger.info('=> Greenlight keepalive')
   setInterval(() => {
     Lightning.getInfo()
   }, 59000)
 }
 
-var schedulerClient = <any>null
+let schedulerClient = <any>null
 
 const loadSchedulerCredentials = () => {
-  var glCert = fs.readFileSync(config.scheduler_tls_location)
-  var glPriv = fs.readFileSync(config.scheduler_key_location)
-  var glChain = fs.readFileSync(config.scheduler_chain_location)
+  const glCert = fs.readFileSync(config.scheduler_tls_location)
+  const glPriv = fs.readFileSync(config.scheduler_key_location)
+  const glChain = fs.readFileSync(config.scheduler_chain_location)
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
 function loadScheduler() {
   // 35.236.110.178:2601
-  var descriptor = grpc.load('proto/scheduler.proto')
-  var scheduler: any = descriptor.scheduler
-  var options = {
+  const descriptor = grpc.load('proto/scheduler.proto')
+  const scheduler: any = descriptor.scheduler
+  const options = {
     'grpc.ssl_target_name_override': 'localhost',
   }
   schedulerClient = new scheduler.Scheduler(
@@ -63,7 +63,7 @@ interface GreenlightIdentity {
   bolt12_key: string
   initialized: boolean
 }
-export async function startGreenlightInit() {
+export async function startGreenlightInit(): Promise<void> {
   sphinxLogger.info('=> startGreenlightInit')
   try {
     let needToRegister = false
@@ -150,7 +150,7 @@ async function recoverGreenlight(gid: GreenlightIdentity) {
 }
 
 function writeTlsLocation() {
-  var glCert = fs.readFileSync(config.scheduler_tls_location)
+  const glCert = fs.readFileSync(config.scheduler_tls_location)
   if (glCert) {
     fs.writeFileSync(config.tls_location, glCert)
   }
@@ -296,11 +296,11 @@ interface HsmResponse {
   request_id: number
   raw: ByteBuffer
 }
-export async function streamHsmRequests() {
+export async function streamHsmRequests(): Promise<void> {
   const capabilities_bitset = 1087 // 1 + 2 + 4 + 8 + 16 + 32 + 1024
   try {
     const lightning = await loadLightning(true) // try proxy
-    var call = lightning.streamHsmRequests({})
+    const call = lightning.streamHsmRequests({})
     call.on('data', async function (response) {
       sphinxLogger.info(`DATA ${response}`)
       try {

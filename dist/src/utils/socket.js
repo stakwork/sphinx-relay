@@ -15,8 +15,14 @@ const crypto = require("crypto");
 const fs = require("fs");
 const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
+const cert_1 = require("../utils/cert");
+const rsa = require("../crypto/rsa");
 const config = (0, config_1.loadConfig)();
 // import * as WebSocket from 'ws'
+//The newer version of socket.io when imported has a
+//different format than when we import it so we can ignore
+//for now till we feel fine updating this
+// eslint-disable-next-line
 const socketio = require('socket.io');
 // { ownerID: [client1, client2] }
 const CLIENTS = {};
@@ -25,24 +31,28 @@ let io;
 function connect(server) {
     // srvr = new WebSocket.Server({ server, clientTracking:true })
     io = socketio(server, {
-        handlePreflightRequest: (req, res) => {
-            const headers = {
-                'Access-Control-Allow-Headers': 'Content-Type, Accept, x-user-token, X-Requested-With',
-                'Access-Control-Allow-Origin': req.headers.origin,
-                'Access-Control-Allow-Credentials': true,
-            };
-            res.writeHead(200, headers);
-            res.end();
+        allowEIO3: true,
+        cors: {
+            origin: true,
+            allowedHeaders: [
+                'Content-Type',
+                'Accept',
+                'x-user-token',
+                'X-Requested-With',
+            ],
+            credentials: true,
         },
     });
     io.use((client, next) => __awaiter(this, void 0, void 0, function* () {
         let userToken = client.handshake.headers['x-user-token'];
-        let x_transport_token = client.handshake.headers['x-transport-token'];
+        const x_transport_token = client.handshake.headers['x-transport-token'];
         if (x_transport_token) {
+            if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+                yield (0, cert_1.generateTransportTokenKeys)();
+            }
             const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
-            let userTokenFromTransportToken = crypto
-                .privateDecrypt(transportPrivateKey, x_transport_token)
-                .toString()
+            const userTokenFromTransportToken = rsa
+                .decrypt(transportPrivateKey, x_transport_token)
                 .split('|')[0];
             userToken = userTokenFromTransportToken;
         }

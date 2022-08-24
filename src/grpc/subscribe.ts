@@ -1,26 +1,27 @@
 import { loadLightning } from './lightning'
 import * as network from '../network'
-import * as moment from 'moment'
 import { tryToUnlockLND } from '../utils/unlock'
 import { receiveNonKeysend } from './regular'
 import * as interfaces from './interfaces'
 import { isProxy, getProxyRootPubkey } from '../utils/proxy'
-import { sphinxLogger } from '../utils/logger'
+import { sphinxLogger, logging } from '../utils/logger'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
 const ERR_CODE_UNIMPLEMENTED = 12 // locked
 
-export function subscribeInvoices(parseKeysendInvoice) {
+export function subscribeInvoices(
+  parseKeysendInvoice: (i: interfaces.Invoice) => Promise<void>
+): Promise<void | null> {
   return new Promise(async (resolve, reject) => {
-    let ownerPubkey: string = ''
+    let ownerPubkey = ''
     if (isProxy()) {
       ownerPubkey = await getProxyRootPubkey()
     }
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
 
     const cmd = interfaces.subscribeCommand()
-    var call = lightning[cmd]()
+    const call = lightning[cmd]()
     call.on('data', async function (response) {
       // console.log("=> INVOICE RAW", response)
       const inv = interfaces.subscribeResponse(response)
@@ -37,7 +38,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
       }
     })
     call.on('status', function (status) {
-      sphinxLogger.info(`[lightning] Status ${status.code} ${status}`)
+      sphinxLogger.info(`Status ${status.code} ${status}`, logging.Lightning)
       // The server is unavailable, trying to reconnect.
       if (
         status.code == ERR_CODE_UNAVAILABLE ||
@@ -50,8 +51,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
       }
     })
     call.on('error', function (err) {
-      const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-      sphinxLogger.error(`[lightning] Error ${now} ${err.code}`)
+      sphinxLogger.error(`Error ${err.code}`, logging.Lightning)
       if (
         err.code == ERR_CODE_UNAVAILABLE ||
         err.code == ERR_CODE_STREAM_REMOVED
@@ -63,8 +63,7 @@ export function subscribeInvoices(parseKeysendInvoice) {
       }
     })
     call.on('end', function () {
-      const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-      sphinxLogger.info(`[lightning] Closed stream ${now}`)
+      sphinxLogger.info(`Closed stream`, logging.Lightning)
       // The server has closed the stream.
       i = 0
       waitAndReconnect()
@@ -79,28 +78,26 @@ function waitAndReconnect() {
   setTimeout(() => reconnectToLightning(Math.random(), null, true), 2000)
 }
 
-var i = 0
-var ctx = 0
+let i = 0
+let ctx = 0
 export async function reconnectToLightning(
   innerCtx: number,
-  callback?: Function | null,
+  callback?: (() => Promise<void>) | null,
   noCache?: boolean
-) {
+): Promise<void> {
   ctx = innerCtx
   i++
-  const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-  sphinxLogger.info(`=> ${now} [lightning] reconnecting... attempt #${i}`)
+  sphinxLogger.info(`reconnecting... attempt #${i}`, logging.Lightning)
   try {
     await network.initGrpcSubscriptions(true)
-    const now = moment().format('YYYY-MM-DD HH:mm:ss').trim()
-    sphinxLogger.info(`=> [lightning] connected! ${now}`)
+    sphinxLogger.info(`connected!`, logging.Lightning)
     if (callback) callback()
   } catch (e) {
     if (e.code === ERR_CODE_UNIMPLEMENTED) {
-      sphinxLogger.error(`[lightning] LOCKED ${now}`)
+      sphinxLogger.error(`LOCKED`, logging.Lightning)
       await tryToUnlockLND()
     }
-    sphinxLogger.error(`[lightning] ERROR ${e}`)
+    sphinxLogger.error(`ERROR ${e}`, logging.Lightning)
     setTimeout(async () => {
       // retry each 2 secs
       if (ctx === innerCtx) {

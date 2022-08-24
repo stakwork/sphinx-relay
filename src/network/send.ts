@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, Chat, ContactRecord, Contact } from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
 import * as tribes from '../utils/tribes'
@@ -7,41 +7,60 @@ import { typesToForward } from './receive'
 import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { Msg } from './interfaces'
+import { Msg, MessageContent, ChatMember } from './interfaces'
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
-export async function sendMessage(params) {
-  const {
-    type,
-    chat,
-    message,
-    sender,
-    amount,
-    success,
-    failure,
-    skipPubKey,
-    isForwarded,
-    forwardedFromContactId,
-    realSatsContactId,
-  } = params
+export interface ChatPlusMembers extends Chat {
+  members?: { [k: string]: ChatMember }
+}
+
+export interface SendMessageParams {
+  type: number
+  chat: Partial<ChatPlusMembers>
+  message: Partial<MessageContent>
+  sender: Partial<ContactRecord | Contact>
+  amount?: number
+  success?: (data: any) => void
+  failure?: (error: any) => void
+  skipPubKey?: string
+  isForwarded?: boolean
+  forwardedFromContactId?: number
+  realSatsContactId?: number
+}
+
+export async function sendMessage({
+  type,
+  chat,
+  message,
+  sender,
+  amount,
+  success,
+  failure,
+  skipPubKey,
+  isForwarded,
+  forwardedFromContactId,
+  realSatsContactId,
+}: SendMessageParams): Promise<void> {
   if (!chat || !sender) return
-  const tenant: number = sender.id
+  const tenant: number = sender.id as number
   if (!tenant) return
 
   const isTribe = chat.type === constants.chat_types.tribe
-  let isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
+  const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
   // console.log('-> sender.publicKey', sender.publicKey)
   // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 
-  let theSender = sender.dataValues || sender
-  if (isTribeOwner && !isForwarded) {
-    theSender = {
-      ...(sender.dataValues || sender),
-      role: constants.chat_roles.owner,
-    }
+  let aSender = sender
+  if ((sender as ContactRecord).dataValues) {
+    aSender = (sender as ContactRecord).dataValues
   }
-  let msg = newmsg(type, chat, theSender, message, isForwarded)
+  const theSender: ContactRecord = aSender as ContactRecord
+  // let theSender: ContactRecord = (sender.dataValues || sender) as ContactRecord
+  if (isTribeOwner && !isForwarded) {
+    theSender.role = constants.chat_roles.owner
+  }
+  let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false)
 
   // console.log("=> MSG TO SEND",msg)
 
@@ -107,12 +126,16 @@ export async function sendMessage(params) {
     if (isTribeOwner) {
       try {
         // post last_active to tribes server
-        tribes.putActivity(chat.uuid, chat.host, sender.publicKey)
-      } catch (e) {}
+        if (chat.uuid && chat.host) {
+          tribes.putActivity(chat.uuid, chat.host, sender.publicKey)
+        }
+      } catch (e) {
+        sphinxLogger.error('failed to tribes.putActivity', logging.Network)
+      }
     } else {
       // if tribe, send to owner only
       const tribeOwner = await models.Contact.findOne({
-        where: { publicKey: chat.ownerPubkey, tenant },
+        where: { publicKey: chat.ownerPubkey as string, tenant },
       })
       contactIds = tribeOwner ? [tribeOwner.id] : []
     }
@@ -206,12 +229,19 @@ export async function sendMessage(params) {
   }
 }
 
+export interface SignAndSendOpts {
+  amt?: number
+  dest: string
+  route_hint?: string
+  data: Partial<Msg>
+}
+
 export function signAndSend(
-  opts,
+  opts: SignAndSendOpts,
   owner: { [k: string]: any },
   mqttTopic?: string,
   replayingHistory?: boolean
-) {
+): Promise<boolean> {
   // console.log('sign and send!',opts)
   const ownerPubkey = owner.publicKey
   const ownerID = owner.id
@@ -231,13 +261,16 @@ export function signAndSend(
     // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
     try {
       if (mqttTopic) {
-        await tribes.publish(mqttTopic, data, ownerPubkey, function (err) {
+        await tribes.publish(mqttTopic, data, ownerPubkey, () => {
           if (!replayingHistory) {
             if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)
           }
         })
       } else {
-        await LND.keysendMessage({ ...opts, data }, ownerPubkey)
+        await LND.keysendMessage(
+          { ...opts, data } as LND.KeysendOpts,
+          ownerPubkey
+        )
       }
       resolve(true)
     } catch (e) {
@@ -256,10 +289,10 @@ function checkIfAutoConfirm(data, tenant) {
 }
 
 export function newmsg(
-  type,
-  chat,
-  sender,
-  message,
+  type: number,
+  chat: Partial<ChatPlusMembers>,
+  sender: ContactRecord,
+  message: Partial<MessageContent>,
   isForwarded: boolean,
   includeStatus?: boolean
 ): Msg {
@@ -287,14 +320,14 @@ export function newmsg(
   return {
     type: type,
     chat: {
-      uuid: chat.uuid,
+      uuid: chat.uuid as string,
       ...(chat.name && { name: chat.name }),
       ...((chat.type || chat.type === 0) && { type: chat.type }),
       ...(chat.members && { members: chat.members }),
       ...(includeGroupKey && chat.groupKey && { groupKey: chat.groupKey }),
       ...(includeGroupKey && chat.host && { host: chat.host }),
     },
-    message: message,
+    message: message as MessageContent,
     sender: {
       pub_key: sender.publicKey,
       ...(sender.routeHint && { route_hint: sender.routeHint }),

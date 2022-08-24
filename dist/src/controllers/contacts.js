@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
+exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.getHmacKey = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const socket = require("../utils/socket");
@@ -46,7 +46,10 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         where,
         raw: true,
     });
-    const invites = yield models_1.models.Invite.findAll({ raw: true, where: { tenant } });
+    const invites = yield models_1.models.Invite.findAll({
+        raw: true,
+        where: { tenant },
+    });
     const chats = yield models_1.models.Chat.findAll({
         where: { deleted: false, tenant },
         raw: true,
@@ -62,21 +65,21 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         },
     });
     const contactsResponse = contacts.map((contact) => {
-        let contactJson = jsonUtils.contactToJson(contact);
-        let invite = invites.find((invite) => invite.contactId == contact.id);
+        const contactJson = jsonUtils.contactToJson(contact);
+        const invite = invites.find((invite) => invite.contactId == contact.id);
         if (invite) {
             contactJson.invite = jsonUtils.inviteToJson(invite);
         }
         return contactJson;
     });
-    const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
+    const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));
     const chatsResponse = chats.map((chat) => {
         const theChat = chat.dataValues || chat;
         if (!pendingMembers)
             return jsonUtils.chatToJson(theChat);
         const membs = pendingMembers.filter((m) => m.chatId === chat.id) || [];
-        theChat.pendingContactIds = membs.map((m) => m.contactId);
-        return jsonUtils.chatToJson(theChat);
+        const pendingContactIds = membs.map((m) => m.contactId);
+        return jsonUtils.chatToJson(Object.assign(Object.assign({}, theChat), { pendingContactIds }));
     });
     (0, res_1.success)(res, {
         contacts: contactsResponse,
@@ -134,8 +137,9 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (pendingContacts) {
             const pendingContactsRet = pendingContacts.map((c) => {
                 const ctc = c.dataValues;
-                ctc.pending = true;
-                return jsonUtils.contactToJson(ctc);
+                const contactJson = jsonUtils.contactToJson(ctc);
+                contactJson.pending = true;
+                return contactJson;
             });
             finalContacts = pendingContactsRet.concat(contactsRet);
         }
@@ -149,8 +153,13 @@ function generateOwnerWithExternalSigner(req, res) {
             return (0, res_1.failure)(res, 'only proxy');
         }
         const { pubkey, sig } = req.body;
-        const where = { isOwner: true, publicKey: pubkey };
-        const owner = yield models_1.models.Contact.findOne({ where });
+        const where = {
+            isOwner: true,
+            publicKey: pubkey,
+        };
+        const owner = yield models_1.models.Contact.findOne({
+            where,
+        });
         if (owner) {
             return (0, res_1.failure)(res, 'owner already exists');
         }
@@ -188,7 +197,9 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         where.publicKey = pubkey;
     }
-    const owner = yield models_1.models.Contact.findOne({ where });
+    const owner = yield models_1.models.Contact.findOne({
+        where,
+    });
     if (!owner) {
         return (0, res_1.failure)(res, 'no owner');
     }
@@ -203,13 +214,13 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
     }
     let token = '';
-    let xTransportToken = req.headers['x-transport-token'];
-    if (!xTransportToken) {
+    const xTransportToken = req.headers['x-transport-token'];
+    if (typeof xTransportToken !== 'string') {
         token = req.body['token'];
     }
     else {
         const transportTokenKeys = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
-        let tokenAndTimestamp = rsa
+        const tokenAndTimestamp = rsa
             .decrypt(transportTokenKeys, xTransportToken)
             .split('|');
         token = tokenAndTimestamp[0];
@@ -240,7 +251,7 @@ const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function
         return (0, res_1.failure)(res, 'no encrypted_key found');
     }
     const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
-    let hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
+    const hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
     if (!hmacKey) {
         return (0, res_1.failure)(res, 'no decrypted hmac key');
     }
@@ -251,6 +262,23 @@ const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function
     });
 });
 exports.registerHmacKey = registerHmacKey;
+const getHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const hmac = req.owner.hmacKey;
+    if (!hmac)
+        return (0, res_1.failure)(res, 'no hmac set');
+    const contact_key = req.owner.contactKey;
+    if (!contact_key)
+        return (0, res_1.failure)(res, 'no contact_key');
+    const encrypted_key = rsa.encrypt(contact_key, hmac);
+    if (!encrypted_key)
+        return (0, res_1.failure)(res, 'failed to encrypt hmac key');
+    (0, res_1.success)(res, {
+        encrypted_key,
+    });
+});
+exports.getHmacKey = getHmacKey;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -263,7 +291,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             query: req.query,
         },
     ], logger_1.logging.Network);
-    let attrs = extractAttrs(req.body);
+    const attrs = extractAttrs(req.body);
     const contact = yield models_1.models.Contact.findOne({
         where: { id: req.params.id, tenant },
     });
@@ -285,9 +313,9 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
     // send updated owner info to others!
-    const contactIds = yield models_1.models.Contact.findAll({
+    const contactIds = (yield models_1.models.Contact.findAll({
         where: { deleted: false, tenant },
-    })
+    }))
         .filter((c) => c.id !== tenant && c.publicKey)
         .map((c) => c.id);
     if (contactIds.length == 0)
@@ -337,14 +365,16 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             query: req.query,
         },
     ], logger_1.logging.Network);
-    let attrs = extractAttrs(req.body);
+    const attrs = extractAttrs(req.body);
     const owner = req.owner;
     const existing = attrs['public_key'] &&
         (yield models_1.models.Contact.findOne({
             where: { publicKey: attrs['public_key'], tenant },
         }));
     if (existing) {
-        const updateObj = { fromGroup: false };
+        const updateObj = {
+            fromGroup: false,
+        };
         if (attrs['alias'])
             updateObj.alias = attrs['alias'];
         yield existing.update(updateObj);
@@ -358,7 +388,7 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         return (0, res_1.success)(res, jsonUtils.contactToJson(existing));
     }
-    if (attrs['public_key'].length > 66)
+    if (attrs['public_key'] && attrs['public_key'].length > 66)
         attrs['public_key'] = attrs['public_key'].substring(0, 66);
     attrs.tenant = tenant;
     const createdContact = yield models_1.models.Contact.create(attrs);
@@ -380,7 +410,9 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         (0, res_1.failure)(res, 'Cannot delete self');
         return;
     }
-    const contact = yield models_1.models.Contact.findOne({ where: { id, tenant } });
+    const contact = yield models_1.models.Contact.findOne({
+        where: { id, tenant },
+    });
     if (!contact)
         return;
     // CHECK IF IN MY TRIBE
@@ -443,7 +475,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.deleteContact = deleteContact;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const dat = payload.content || payload;
+    const dat = payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_route_hint = dat.sender.route_hint;
     const sender_contact_key = dat.sender.contact_key;
@@ -501,7 +533,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
         `=> confirm contact key for ${payload.sender && payload.sender.pub_key}`,
         JSON.stringify(payload),
     ]);
-    const dat = payload.content || payload;
+    const dat = payload;
     const sender_pub_key = dat.sender.pub_key;
     const sender_contact_key = dat.sender.contact_key;
     const sender_alias = dat.sender.alias || 'Unknown';
@@ -535,7 +567,7 @@ const receiveConfirmContactKey = (payload) => __awaiter(void 0, void 0, void 0, 
 });
 exports.receiveConfirmContactKey = receiveConfirmContactKey;
 function extractAttrs(body) {
-    let fields_to_update = [
+    const fields_to_update = [
         'public_key',
         'node_alias',
         'alias',
@@ -550,7 +582,7 @@ function extractAttrs(body) {
         'route_hint',
         'price_to_meet',
     ];
-    let attrs = {};
+    const attrs = {};
     Object.keys(body).forEach((key) => {
         if (fields_to_update.includes(key)) {
             attrs[key] = body[key];
@@ -569,13 +601,21 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             updatedAt: { [sequelize_1.Op.gte]: local },
             tenant,
         };
-        const contacts = yield models_1.models.Contact.findAll({ where });
-        const invites = yield models_1.models.Invite.findAll({ where });
-        const chats = yield models_1.models.Chat.findAll({ where });
-        const subscriptions = yield models_1.models.Subscription.findAll({ where });
+        const contacts = yield models_1.models.Contact.findAll({
+            where,
+        });
+        const invites = yield models_1.models.Invite.findAll({
+            where,
+        });
+        const chats = yield models_1.models.Chat.findAll({
+            where,
+        });
+        const subscriptions = yield models_1.models.Subscription.findAll({
+            where,
+        });
         const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
-        const invitesResponse = invites.map((invite) => jsonUtils.contactToJson(invite));
-        const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s, null));
+        const invitesResponse = invites.map((invite) => jsonUtils.inviteToJson(invite));
+        const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));
         // const chatsResponse = chats.map((chat) => jsonUtils.chatToJson(chat));
         const chatIds = chats.map((c) => c.id);
         const pendingMembers = yield models_1.models.ChatMember.findAll({
@@ -590,8 +630,8 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             if (!pendingMembers)
                 return jsonUtils.chatToJson(theChat);
             const membs = pendingMembers.filter((m) => m.chatId === chat.id) || [];
-            theChat.pendingContactIds = membs.map((m) => m.contactId);
-            return jsonUtils.chatToJson(theChat);
+            const pendingContactIds = membs.map((m) => m.contactId);
+            return jsonUtils.chatToJson(Object.assign(Object.assign({}, theChat), { pendingContactIds }));
         });
         (0, res_1.success)(res, {
             contacts: contactsResponse,
@@ -621,13 +661,15 @@ function switchBlock(res, tenant, id, blocked) {
 const blockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
-    switchBlock(res, req.owner.id, req.params.contact_id, true);
+    const contactId = parseInt(req.params.contact_id);
+    switchBlock(res, req.owner.id, contactId, true);
 });
 exports.blockContact = blockContact;
 const unblockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
-    switchBlock(res, req.owner.id, req.params.contact_id, false);
+    const contactId = parseInt(req.params.contact_id);
+    switchBlock(res, req.owner.id, contactId, false);
 });
 exports.unblockContact = unblockContact;
 //# sourceMappingURL=contacts.js.map

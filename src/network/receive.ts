@@ -5,7 +5,7 @@ import * as interfaces from '../grpc/interfaces'
 import { ACTIONS } from '../controllers'
 import * as tribes from '../utils/tribes'
 import * as signer from '../utils/signer'
-import { models } from '../models'
+import { models, ContactRecord, Contact, Message } from '../models'
 import { sendMessage } from './send'
 import {
   modifyPayloadAndSaveMediaKey,
@@ -22,7 +22,8 @@ import * as jsonUtils from '../utils/json'
 import { isProxy } from '../utils/proxy'
 import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
-import { sphinxLogger } from '../utils/logger'
+import { sphinxLogger, logging } from '../utils/logger'
+import { Payload, AdminPayload } from './interfaces'
 
 const config = loadConfig()
 /*
@@ -40,6 +41,7 @@ export const typesToForward = [
   msgtypes.attachment,
   msgtypes.delete,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 export const typesToSkipIfSkipBroadcastJoins = [
   msgtypes.group_join,
@@ -50,6 +52,7 @@ const typesThatNeedPricePerMessage = [
   msgtypes.message,
   msgtypes.attachment,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 export const typesToReplay = [
   // should match typesToForward
@@ -58,6 +61,7 @@ export const typesToReplay = [
   msgtypes.group_leave,
   msgtypes.bot_res,
   msgtypes.boost,
+  msgtypes.direct_payment,
 ]
 const botTypes = [
   constants.message_types.bot_install,
@@ -68,7 +72,7 @@ const botMakerTypes = [
   constants.message_types.bot_install,
   constants.message_types.bot_cmd,
 ]
-async function onReceive(payload: { [k: string]: any }, dest: string) {
+async function onReceive(payload: Payload, dest: string) {
   if (dest) {
     if (typeof dest !== 'string' || dest.length !== 66)
       return sphinxLogger.error(`INVALID DEST ${dest}`)
@@ -79,13 +83,13 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
   if (!(payload.type || payload.type === 0))
     return sphinxLogger.error(`no payload.type`)
 
-  let owner = await models.Contact.findOne({
+  const owner: ContactRecord = await models.Contact.findOne({
     where: { isOwner: true, publicKey: dest },
   })
   if (!owner) return sphinxLogger.error(`=> RECEIVE: owner not found`)
   const tenant: number = owner.id
 
-  const ownerDataValues = owner || owner.dataValues
+  const ownerDataValues: Contact = owner.dataValues || owner
 
   if (botTypes.includes(payload.type)) {
     // if is admin on tribe? or is bot maker?
@@ -99,7 +103,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
   }
   // if tribe, owner must forward to MQTT
   let doAction = true
-  const toAddIn: { [k: string]: any } = {}
+  const toAddIn: AdminPayload = {}
   let isTribe = false
   let isTribeOwner = false
   let chat
@@ -186,10 +190,13 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
       }
     }
     // forward boost sats to recipient
-    let realSatsContactId = null
+    let realSatsContactId: number | undefined = undefined
     let amtToForward = 0
-    if (payload.type === msgtypes.boost && payload.message.replyUuid) {
-      const ogMsg = await models.Message.findOne({
+    const boostOrPay =
+      payload.type === msgtypes.boost ||
+      payload.type === msgtypes.direct_payment
+    if (boostOrPay && payload.message.replyUuid) {
+      const ogMsg: Message = await models.Message.findOne({
         where: {
           uuid: payload.message.replyUuid,
           tenant,
@@ -202,10 +209,15 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
           (chat.pricePerMessage || 0) -
           (chat.escrowAmount || 0)
         if (theAmtToForward > 0) {
-          realSatsContactId = ogMsg.sender
+          realSatsContactId = ogMsg.sender // recipient of sats
           amtToForward = theAmtToForward
+          toAddIn.hasForwardedSats = ogMsg.sender !== tenant
           if (amtToForward && payload.message && payload.message.amount) {
             payload.message.amount = amtToForward // mutate the payload amount
+            if (payload.type === msgtypes.direct_payment) {
+              // remove the reply_uuid since its not actually a reply
+              payload.message.replyUuid = undefined
+            }
           }
         }
       }
@@ -258,7 +270,7 @@ async function onReceive(payload: { [k: string]: any }, dest: string) {
   if (doAction) doTheAction({ ...payload, ...toAddIn }, ownerDataValues)
 }
 
-async function doTheAction(data, owner) {
+async function doTheAction(data: Payload, owner: Contact) {
   // console.log("=> doTheAction", data, owner)
   let payload = data
   if (payload.isTribeOwner) {
@@ -272,7 +284,8 @@ async function doTheAction(data, owner) {
     })
     const pld = await decryptMessage(data, chat)
     const me = owner
-    payload = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
+    const encrypted = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
+    payload = encrypted as Payload
     if (ogContent)
       payload.message.remoteContent = JSON.stringify({ chat: ogContent }) // this is the key
     //if(ogMediaKey) payload.message.remoteMediaKey = JSON.stringify({'chat':ogMediaKey})
@@ -286,7 +299,12 @@ async function doTheAction(data, owner) {
   }
 }
 
-async function uniqueifyAlias(payload, sender, chat, owner): Promise<Object> {
+async function uniqueifyAlias(
+  payload: Payload,
+  sender,
+  chat,
+  owner
+): Promise<Payload> {
   if (!chat || !sender || !owner) return payload
   if (!(payload && payload.sender)) return payload
   const senderContactId = sender.id // og msg sender
@@ -329,7 +347,7 @@ async function uniqueifyAlias(payload, sender, chat, owner): Promise<Object> {
 }
 
 async function forwardMessageToTribe(
-  ogpayload,
+  ogpayload: Payload,
   sender,
   realSatsContactId,
   amtToForwardToRealSatsContactId,
@@ -349,7 +367,7 @@ async function forwardMessageToTribe(
     }
   }
 
-  let payload
+  let payload: Payload
   if (sender && typesToModify.includes(ogpayload.type)) {
     payload = await modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, owner)
   } else {
@@ -372,14 +390,12 @@ async function forwardMessageToTribe(
     chat: chat,
     skipPubKey: payload.sender.pub_key, // dont forward back to self
     realSatsContactId,
-    success: () => {},
-    receive: () => {},
     isForwarded: true,
     forwardedFromContactId,
   })
 }
 
-export async function initGrpcSubscriptions(noCache?: boolean) {
+export async function initGrpcSubscriptions(noCache?: boolean): Promise<void> {
   try {
     if (config.lightning_provider === 'GREENLIGHT') {
       await Greenlight.initGreenlight()
@@ -393,7 +409,10 @@ export async function initGrpcSubscriptions(noCache?: boolean) {
   }
 }
 
-export async function receiveMqttMessage(topic, message) {
+export async function receiveMqttMessage(
+  topic: string,
+  message: Buffer
+): Promise<void> {
   try {
     const msg = message.toString()
     // check topic is signed by sender?
@@ -404,26 +423,24 @@ export async function receiveMqttMessage(topic, message) {
     const arr = topic.split('/')
     const dest = arr[0]
     onReceive(payload, dest)
-  } catch (e) {}
-}
-
-export async function initTribesSubscriptions() {
-  tribes.connect(receiveMqttMessage)
-}
-
-function parsePayload(data) {
-  const li = data.lastIndexOf('}')
-  const msg = data.substring(0, li + 1)
-  try {
-    const payload = JSON.parse(msg)
-    return payload || ''
   } catch (e) {
-    throw e
+    sphinxLogger.error('failed receiveMqttMessage', logging.Network)
   }
 }
 
+export async function initTribesSubscriptions(): Promise<void> {
+  tribes.connect(receiveMqttMessage)
+}
+
+function parsePayload(data): Payload {
+  const li = data.lastIndexOf('}')
+  const msg = data.substring(0, li + 1)
+  const payload = JSON.parse(msg)
+  return payload || ''
+}
+
 // VERIFY PUBKEY OF SENDER from sig
-async function parseAndVerifyPayload(data) {
+async function parseAndVerifyPayload(data): Promise<Payload | null> {
   let payload
   const li = data.lastIndexOf('}')
   const msg = data.substring(0, li + 1)
@@ -465,7 +482,7 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
     }
   }
   const amount = (inv.value && parseInt(inv.value)) || 0
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const msg = await models.Message.create({
     chatId: 0,
@@ -491,9 +508,11 @@ async function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
   )
 }
 
-let hashCache: { [k: string]: boolean } = {}
+const hashCache: { [k: string]: boolean } = {}
 
-export async function parseKeysendInvoice(i: interfaces.Invoice) {
+export async function parseKeysendInvoice(
+  i: interfaces.Invoice
+): Promise<void> {
   try {
     const hash = i.r_hash.toString('base64')
     if (hashCache[hash]) return
@@ -540,15 +559,17 @@ export async function parseKeysendInvoice(i: interfaces.Invoice) {
   let sender_pubkey
   if (data) {
     try {
-      const payload = parsePayload(data)
+      const payload: Payload = parsePayload(data)
       if (payload && payload.type === constants.message_types.keysend) {
         // console.log('====> IS KEYSEND TYPE')
         // console.log('====> MEMOOOO', i.memo)
         isKeysendType = true
-        memo = payload.message && payload.message.content
+        memo = (payload.message && payload.message.content) as string
         sender_pubkey = payload.sender && payload.sender.pub_key
       }
-    } catch (e) {} // err could be a threaded TLV
+    } catch (e) {
+      sphinxLogger.error('failed parsePayload', logging.Network)
+    } // err could be a threaded TLV
   } else {
     isKeysendType = true
   }
@@ -564,7 +585,9 @@ export async function parseKeysendInvoice(i: interfaces.Invoice) {
   if (data[0] === '{') {
     try {
       payload = await parseAndVerifyPayload(data)
-    } catch (e) {}
+    } catch (e) {
+      sphinxLogger.error('failed parseAndVerifyPayload', logging.Network)
+    }
   } else {
     const threads = weave(data)
     if (threads) payload = await parseAndVerifyPayload(threads)

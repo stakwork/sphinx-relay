@@ -7,9 +7,19 @@ import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import { sphinxLogger } from '../../utils/logger'
+import { Action } from './index'
 
-export default async function broadcast(a: any) {
-  const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id } = a
+export default async function broadcast(a: Action): Promise<void> {
+  const {
+    amount,
+    content,
+    bot_name,
+    chat_uuid,
+    msg_uuid,
+    reply_uuid,
+    parent_id,
+    bot_pic,
+  } = a
 
   sphinxLogger.info(`=> BOT BROADCAST`)
   if (!content) return sphinxLogger.error(`no content`)
@@ -26,12 +36,12 @@ export default async function broadcast(a: any) {
   const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
   const encryptedText = rsa.encrypt(theChat.groupKey, content)
   const textMap = { chat: encryptedText }
-  var date = new Date()
+  const date = new Date()
   date.setMilliseconds(0)
   const alias = bot_name || 'Bot'
   const botContactId = -1
 
-  const msg: { [k: string]: any } = {
+  const msg: { [k: string]: string | number | Date } = {
     chatId: theChat.id,
     uuid: msg_uuid || short.generate(),
     type: constants.message_types.bot_res,
@@ -48,6 +58,7 @@ export default async function broadcast(a: any) {
     tenant,
   }
   if (parent_id) msg.parentId = parent_id
+  if (bot_pic) msg.senderPic = bot_pic
   const message = await models.Message.create(msg)
   socket.sendJson(
     {
@@ -65,6 +76,7 @@ export default async function broadcast(a: any) {
       alias,
       id: botContactId,
       role: constants.chat_roles.reader,
+      ...(bot_pic && { photoUrl: bot_pic }),
     },
     message: {
       content: textMap,

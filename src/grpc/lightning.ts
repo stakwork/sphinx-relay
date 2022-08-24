@@ -14,6 +14,7 @@ import * as zbase32 from '../utils/zbase32'
 import * as secp256k1 from 'secp256k1'
 import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight'
+import { Req } from '../types'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -30,7 +31,7 @@ let lightningClient = <any>null
 let walletUnlocker = <any>null
 let routerClient = <any>null
 
-export const loadCredentials = (macName?: string) => {
+export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   try {
     const lndCert = fs.readFileSync(config.tls_location)
     const sslCreds = grpc.credentials.createSsl(lndCert)
@@ -61,7 +62,7 @@ export async function loadLightning(
   tryProxy?: boolean,
   ownerPubkey?: string,
   noCache?: boolean
-) {
+): Promise<any> {
   // only if specified AND available
   if (tryProxy && isProxy() && ownerPubkey) {
     const pl = await loadProxyLightning(ownerPubkey)
@@ -72,7 +73,7 @@ export async function loadLightning(
   }
 
   if (IS_GREENLIGHT) {
-    var credentials = loadGreenlightCredentials()
+    const credentials = loadGreenlightCredentials()
     const descriptor = grpc.load('proto/greenlight.proto')
     const greenlight: any = descriptor.greenlight
     const options = {
@@ -84,22 +85,18 @@ export async function loadLightning(
     return lightningClient
   }
 
-  try {
-    // LND
-    var credentials = loadCredentials()
-    const lnrpcDescriptor = grpc.load('proto/rpc.proto')
-    const lnrpc: any = lnrpcDescriptor.lnrpc
-    lightningClient = new lnrpc.Lightning(
-      LND_IP + ':' + config.lnd_port,
-      credentials
-    )
-    return lightningClient
-  } catch (e) {
-    throw e
-  }
+  // LND
+  const credentials = loadCredentials()
+  const lnrpcDescriptor = grpc.load('proto/lightning.proto')
+  const lnrpc: any = lnrpcDescriptor.lnrpc
+  lightningClient = new lnrpc.Lightning(
+    LND_IP + ':' + config.lnd_port,
+    credentials
+  )
+  return lightningClient
 }
 
-export const loadWalletUnlocker = () => {
+export function loadWalletUnlocker(): any {
   if (walletUnlocker) {
     return walletUnlocker
   } else {
@@ -118,7 +115,7 @@ export const loadWalletUnlocker = () => {
   }
 }
 
-export const unlockWallet = async (pwd: string) => {
+export function unlockWallet(pwd: string): Promise<void> {
   return new Promise(async function (resolve, reject) {
     const wu = await loadWalletUnlocker()
     wu.unlockWallet(
@@ -134,7 +131,7 @@ export const unlockWallet = async (pwd: string) => {
   })
 }
 
-export const getHeaders = (req) => {
+export function getHeaders(req: Req): { [k: string]: any } {
   return {
     'X-User-Token': req.headers['x-user-token'],
     'X-User-Email': req.headers['x-user-email'],
@@ -143,8 +140,10 @@ export const getHeaders = (req) => {
 
 let isLocked = false
 let lockTimeout: ReturnType<typeof setTimeout>
-export const getLock = () => isLocked
-export const setLock = (value) => {
+export function getLock(): boolean {
+  return isLocked
+}
+export function setLock(value: boolean): void {
   isLocked = value
   sphinxLogger.info({ isLocked })
   if (lockTimeout) clearTimeout(lockTimeout)
@@ -159,9 +158,9 @@ interface QueryRouteResponse {
   routes: interfaces.Route[]
 }
 export async function queryRoute(
-  pub_key,
-  amt,
-  route_hint,
+  pub_key: string,
+  amt: number,
+  route_hint?: string,
   ownerPubkey?: string
 ): Promise<QueryRouteResponse> {
   sphinxLogger.info('queryRoute', logging.Lightning)
@@ -172,8 +171,8 @@ export async function queryRoute(
       routes: [],
     }
   }
-  return new Promise(async function (resolve, reject) {
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  return new Promise((resolve, reject) => {
     const options: { [k: string]: any } = { pub_key, amt }
     if (route_hint && route_hint.includes(':')) {
       const arr = route_hint.split(':')
@@ -203,8 +202,8 @@ export type NewAddressType = 0 | 1 | 2 | 3
 export async function newAddress(
   type: NewAddressType = NESTED_PUBKEY_HASH
 ): Promise<string> {
-  return new Promise(async function (resolve, reject) {
-    const lightning = await loadLightning()
+  const lightning = await loadLightning()
+  return new Promise((resolve, reject) => {
     lightning.newAddress({ type }, (err, response) => {
       if (err) {
         reject(err)
@@ -219,14 +218,14 @@ export async function newAddress(
   })
 }
 
-// for payingn invoice and invite invoice
+// for paying invoice and invite invoice
 export async function sendPayment(
   payment_request: string,
   ownerPubkey?: string
 ): Promise<interfaces.SendPaymentResponse> {
   sphinxLogger.info('sendPayment', logging.Lightning)
-  return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  return new Promise((resolve, reject) => {
     if (isProxy()) {
       const opts = {
         payment_request,
@@ -276,19 +275,21 @@ export async function sendPayment(
   })
 }
 
-interface KeysendOpts {
+export interface KeysendOpts {
   amt: number
   dest: string
   data?: string
   route_hint?: string
   extra_tlv?: { [k: string]: string }
 }
-export const keysend = (opts: KeysendOpts, ownerPubkey?: string) => {
+export function keysend(
+  opts: KeysendOpts,
+  ownerPubkey?: string
+): Promise<interfaces.SendPaymentResponse> {
   sphinxLogger.info('keysend', logging.Lightning)
   return new Promise(async function (resolve, reject) {
     try {
-      const randoStr = crypto.randomBytes(32).toString('hex')
-      const preimage = ByteBuffer.fromHex(randoStr)
+      const preimage = ByteBuffer.wrap(crypto.randomBytes(32))
       const dest_custom_records = {
         [`${LND_KEYSEND_KEY}`]: preimage,
       }
@@ -361,6 +362,7 @@ export const keysend = (opts: KeysendOpts, ownerPubkey?: string) => {
               reject(payment.payment_error)
             } else {
               if (state === 'IN_FLIGHT') {
+                // do nothing
               } else if (state === 'FAILED_NO_ROUTE') {
                 reject(payment.failure_reason || payment)
               } else if (state === 'FAILED') {
@@ -382,27 +384,26 @@ export const keysend = (opts: KeysendOpts, ownerPubkey?: string) => {
   })
 }
 
-export const loadRouter = () => {
+export function loadRouter(): any {
   if (routerClient) {
     return routerClient
   } else {
-    try {
-      const credentials = loadCredentials('router.macaroon')
-      const descriptor = grpc.load('proto/router.proto')
-      const router: any = descriptor.routerrpc
-      routerClient = new router.Router(
-        LND_IP + ':' + config.lnd_port,
-        credentials
-      )
-      return routerClient
-    } catch (e) {
-      throw e
-    }
+    const credentials = loadCredentials('router.macaroon')
+    const descriptor = grpc.load('proto/router.proto')
+    const router: any = descriptor.routerrpc
+    routerClient = new router.Router(
+      LND_IP + ':' + config.lnd_port,
+      credentials
+    )
+    return routerClient
   }
 }
 
 const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
-export async function keysendMessage(opts, ownerPubkey?: string) {
+export async function keysendMessage(
+  opts: KeysendOpts,
+  ownerPubkey?: string
+): Promise<interfaces.SendPaymentResponse> {
   sphinxLogger.info('keysendMessage', logging.Lightning)
   return new Promise(async function (resolve, reject) {
     if (!opts.data || typeof opts.data !== 'string') {
@@ -425,9 +426,9 @@ export async function keysendMessage(opts, ownerPubkey?: string) {
     let res: any = null
     const ts = new Date().valueOf()
     // WEAVE MESSAGE If TOO LARGE
-    await asyncForEach(Array.from(Array(n)), async (u, i) => {
-      const spliti = Math.ceil(opts.data.length / n)
-      const m = opts.data.substr(i * spliti, spliti)
+    for (let i = 0; i < n; i++) {
+      const spliti = Math.ceil((opts.data || '').length / n)
+      const m = (opts.data || '').substring(i * spliti, i * spliti + spliti)
       const isLastThread = i === n - 1
       const amt = isLastThread ? opts.amt : constants.min_sat_amount
       try {
@@ -445,7 +446,7 @@ export async function keysendMessage(opts, ownerPubkey?: string) {
         sphinxLogger.error(e)
         fail = true
       }
-    })
+    }
     if (success && !fail) {
       resolve(res)
     } else {
@@ -454,22 +455,15 @@ export async function keysendMessage(opts, ownerPubkey?: string) {
   })
 }
 
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
+export async function signAscii(
+  ascii: string,
+  ownerPubkey?: string
+): Promise<string> {
+  const sig = await signMessage(ascii_to_hexa(ascii), ownerPubkey)
+  return sig
 }
 
-export async function signAscii(ascii: string, ownerPubkey?: string) {
-  try {
-    const sig = await signMessage(ascii_to_hexa(ascii), ownerPubkey)
-    return sig
-  } catch (e) {
-    throw e
-  }
-}
-
-export function listInvoices() {
+export function listInvoices(): Promise<any> {
   sphinxLogger.info('listInvoices', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
@@ -489,14 +483,14 @@ export function listInvoices() {
   })
 }
 
-export async function listAllInvoices() {
+export async function listAllInvoices(): Promise<interfaces.Invoice[]> {
   sphinxLogger.info(`=> list all invoices`)
-  const invs = await paginateInvoices(40)
-  return invs
+  return paginateInvoices(40)
 }
-async function paginateInvoices(limit, i = 0) {
+
+async function paginateInvoices(limit: number, i = 0): Promise<interfaces.Invoice[]> {
   try {
-    const r: any = await listInvoicesPaginated(limit, i)
+    const r = await listInvoicesPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset)
     if (lastOffset > 0) {
       return r.invoices.concat(await paginateInvoices(limit, lastOffset))
@@ -506,7 +500,8 @@ async function paginateInvoices(limit, i = 0) {
     return []
   }
 }
-function listInvoicesPaginated(limit, offset) {
+
+function listInvoicesPaginated(limit: number, offset: number): Promise<{ first_index_offset: string, invoices: interfaces.Invoice[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listInvoices(
@@ -524,15 +519,16 @@ function listInvoicesPaginated(limit, offset) {
 }
 
 // need to upgrade to .10 for this
-export async function listAllPayments() {
+export async function listAllPayments(): Promise<interfaces.Payment[]> {
   sphinxLogger.info('=> list all payments')
   const pays = await paginatePayments(40) // max num
   sphinxLogger.info(`pays ${pays && pays.length}`)
   return pays
 }
-async function paginatePayments(limit, i = 0) {
+
+async function paginatePayments(limit: number, i = 0): Promise<interfaces.Payment[]> {
   try {
-    const r: any = await listPaymentsPaginated(limit, i)
+    const r = await listPaymentsPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset) // this is "first" cuz its in reverse (lowest index)
     if (lastOffset > 0) {
       return r.payments.concat(await paginatePayments(limit, lastOffset))
@@ -542,7 +538,8 @@ async function paginatePayments(limit, i = 0) {
     return []
   }
 }
-export function listPaymentsPaginated(limit, offset) {
+
+export function listPaymentsPaginated(limit: number, offset: number): Promise<{ first_index_offset: string, payments: interfaces.Payment[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listPayments(
@@ -559,7 +556,7 @@ export function listPaymentsPaginated(limit, offset) {
   })
 }
 
-export function listAllPaymentsFull() {
+export function listAllPaymentsFull(): Promise<{ payments: interfaces.Payment[] }> {
   sphinxLogger.info('=> list all payments')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
@@ -574,14 +571,8 @@ export function listAllPaymentsFull() {
 }
 
 // msg is hex
-export async function signMessage(msg: string, ownerPubkey?: string) {
-  // log('signMessage')
-  try {
-    const r = await signBuffer(Buffer.from(msg, 'hex'), ownerPubkey)
-    return r
-  } catch (e) {
-    throw e
-  }
+export async function signMessage(msg: string, ownerPubkey?: string): Promise<string> {
+  return signBuffer(Buffer.from(msg, 'hex'), ownerPubkey)
 }
 
 export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
@@ -596,7 +587,7 @@ export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
         const recidBytes = sigBuf.subarray(66, 67)
         // 31 is the magic EC recid (27+4) for compressed pubkeys
         const ecRecid = Buffer.from(recidBytes).readUIntBE(0, 1) + 31
-        const finalRecid = Buffer.from('00', 'hex')
+        const finalRecid = Buffer.allocUnsafe(1)
         finalRecid.writeUInt8(ecRecid, 0)
         const finalSig = Buffer.concat([finalRecid, sigBytes], 65)
         resolve(zbase32.encode(finalSig))
@@ -617,16 +608,15 @@ export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
   })
 }
 
-export async function verifyBytes(msg: Buffer, sig): Promise<VerifyResponse> {
-  try {
-    const r = await verifyMessage(msg.toString('hex'), sig)
-    return r
-  } catch (e) {
-    throw e
-  }
+export async function verifyBytes(
+  msg: Buffer,
+  sig: string
+): Promise<VerifyResponse> {
+  const r = await verifyMessage(msg.toString('hex'), sig)
+  return r
 }
 
-interface VerifyResponse {
+export interface VerifyResponse {
   valid: boolean
   pubkey: string
 }
@@ -660,7 +650,7 @@ export function verifyMessage(
             )
           )
         )
-        const recoveredPubkey = secp256k1.recover(
+        const recoveredPubkey: Buffer = secp256k1.recover(
           Buffer.from(hash), // 32 byte hash of message
           sigBytes, // 64 byte signature of message (not DER, 32 byte R and 32 byte S with 0x00 padding)
           recid, // number 1 or 0. This will usually be encoded in the base64 message signature
@@ -695,12 +685,8 @@ export async function verifyAscii(
   sig: string,
   ownerPubkey?: string
 ): Promise<VerifyResponse> {
-  try {
-    const r = await verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey)
-    return r
-  } catch (e) {
-    throw e
-  }
+  const r = await verifyMessage(ascii_to_hexa(ascii), sig, ownerPubkey)
+  return r
 }
 
 export async function getInfo(
@@ -872,11 +858,15 @@ export async function complexBalances(
       (a, chan) => a + parseInt(chan.local_chan_reserve_sat),
       0
     )
+    const spendableBalance = channels.reduce(
+      (a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)),
+      0
+    )
     const response = await channelBalance(ownerPubkey)
     return <ComplexBalances>{
       reserve,
       full_balance: Math.max(0, parseInt(response.balance)),
-      balance: Math.max(0, parseInt(response.balance) - reserve),
+      balance: spendableBalance,
       pending_open_balance: parseInt(response.pending_open_balance),
     }
   }
@@ -933,7 +923,7 @@ function ascii_to_hexa(str) {
 //     return lightningClient
 //   } else {
 //   	var credentials = loadCredentials()
-//     const packageDefinition = await protoLoader.load("rpc.proto", {})
+//     const packageDefinition = await protoLoader.load("lightning.proto", {})
 //     const lnrpcDescriptor = grpc.loadPackageDefinition(packageDefinition);
 //     var { lnrpc } = lnrpcDescriptor;
 //     lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);

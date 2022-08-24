@@ -26,7 +26,7 @@ const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
 const config = (0, config_1.loadConfig)();
 // {pubkey: {host: Client} }
-let clients = {};
+const clients = {};
 const optz = { qos: 0 };
 // this runs at relay startup
 function connect(onMessage) {
@@ -60,7 +60,7 @@ function getTribeOwnersChatByUUID(uuid) {
 exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
 function initializeClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             let connected = false;
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -74,7 +74,7 @@ function initializeClient(pubkey, host, onMessage) {
                             password: pwd,
                             reconnectPeriod: 0, // dont auto reconnect
                         });
-                        logger_1.sphinxLogger.info(`[tribes] try to connect: ${url}`, logger_1.logging.Tribes);
+                        logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
                         cl.on('connect', function () {
                             return __awaiter(this, void 0, void 0, function* () {
                                 // first check if its already connected to this host (in case it takes a long time)
@@ -85,12 +85,12 @@ function initializeClient(pubkey, host, onMessage) {
                                     resolve(clients[pubkey][host]);
                                     return;
                                 }
-                                logger_1.sphinxLogger.info(`[tribes] connected!`, logger_1.logging.Tribes);
+                                logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Tribes);
                                 if (!clients[pubkey])
                                     clients[pubkey] = {};
                                 clients[pubkey][host] = cl; // ADD TO MAIN STATE
                                 cl.on('close', function (e) {
-                                    logger_1.sphinxLogger.info(`[tribes] CLOSE ${e}`, logger_1.logging.Tribes);
+                                    logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
                                     // setTimeout(() => reconnect(), 2000);
                                     connected = false;
                                     if (clients[pubkey] && clients[pubkey][host]) {
@@ -98,7 +98,7 @@ function initializeClient(pubkey, host, onMessage) {
                                     }
                                 });
                                 cl.on('error', function (e) {
-                                    logger_1.sphinxLogger.error(`[tribes] error:  ${e.message || e}`, logger_1.logging.Tribes);
+                                    logger_1.sphinxLogger.error(`error:  ${e.message}`, logger_1.logging.Tribes);
                                 });
                                 cl.on('message', function (topic, message) {
                                     // console.log("============>>>>> GOT A MSG", topic, message)
@@ -107,9 +107,9 @@ function initializeClient(pubkey, host, onMessage) {
                                 });
                                 cl.subscribe(`${pubkey}/#`, function (err) {
                                     if (err)
-                                        logger_1.sphinxLogger.error(`[tribes] error subscribing ${err}`);
+                                        logger_1.sphinxLogger.error(`error subscribing ${err}`, logger_1.logging.Tribes);
                                     else {
-                                        logger_1.sphinxLogger.info(`[tribes] subscribed! ${pubkey}/#`, logger_1.logging.Tribes);
+                                        logger_1.sphinxLogger.info(`subscribed! ${pubkey}/#`, logger_1.logging.Tribes);
                                         resolve(cl);
                                     }
                                 });
@@ -117,7 +117,7 @@ function initializeClient(pubkey, host, onMessage) {
                         });
                     }
                     catch (e) {
-                        logger_1.sphinxLogger.error(`[tribes] error initializing ${e}`, logger_1.logging.Tribes);
+                        logger_1.sphinxLogger.error(`error initializing ${e}`, logger_1.logging.Tribes);
                     }
                 });
             }
@@ -151,7 +151,7 @@ function initAndSubscribeTopics(onMessage) {
                 });
                 if (!(allOwners && allOwners.length))
                     return;
-                asyncForEach(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+                (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
                     if (c.id === 1)
                         return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
@@ -192,7 +192,7 @@ function subExtraHostsForTenant(tenant, pubkey, onMessage) {
             const client = yield lazyClient(pubkey, host, onMessage);
             client.subscribe(`${pubkey}/#`, optz, function (err) {
                 if (err)
-                    logger_1.sphinxLogger.error(`[tribes] subscribe error 2 ${err}`);
+                    logger_1.sphinxLogger.error(`subscribe error 2 ${err}`, logger_1.logging.Tribes);
             });
         }));
     });
@@ -228,7 +228,7 @@ function mqttURL(h) {
     if (config.tribes_insecure) {
         protocol = 'tcp';
     }
-    let port = '8883';
+    let port = 8883;
     if (config.tribes_mqtt_port) {
         port = config.tribes_mqtt_port;
     }
@@ -249,7 +249,7 @@ function updateTribeStats(myPubkey) {
                 deleted: false,
             },
         });
-        yield asyncForEach(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
+        yield (0, helpers_1.asyncForEach)(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const contactIds = JSON.parse(tribe.contactIds);
                 const member_count = (contactIds && contactIds.length) || 0;
@@ -261,10 +261,12 @@ function updateTribeStats(myPubkey) {
                     owner_pubkey: myPubkey,
                 });
             }
-            catch (e) { }
+            catch (e) {
+                // dont care about the error
+            }
         }));
         if (myTribes.length) {
-            logger_1.sphinxLogger.info(`[tribes] updated stats for ${myTribes.length} tribes`, logger_1.logging.Tribes);
+            logger_1.sphinxLogger.info(`updated stats for ${myTribes.length} tribes`, logger_1.logging.Tribes);
         }
     });
 }
@@ -277,7 +279,7 @@ function subscribe(topic, onMessage) {
         const client = yield lazyClient(pubkey, host, onMessage);
         if (client)
             client.subscribe(topic, function () {
-                logger_1.sphinxLogger.info(`[tribes] added sub ${host} ${topic}`, logger_1.logging.Tribes);
+                logger_1.sphinxLogger.info(`added sub ${host} ${topic}`, logger_1.logging.Tribes);
             });
     });
 }
@@ -291,14 +293,14 @@ function publish(topic, msg, ownerPubkey, cb) {
         if (client)
             client.publish(topic, msg, optz, function (err) {
                 if (err)
-                    logger_1.sphinxLogger.error(`[tribes] error publishing ${err}`);
+                    logger_1.sphinxLogger.error(`error publishing ${err}`, logger_1.logging.Tribes);
                 else if (cb)
                     cb();
             });
     });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin, }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let protocol = 'https';
@@ -335,7 +337,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to declare`);
+            logger_1.sphinxLogger.error(`unauthorized to declare`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -378,7 +380,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to edit`);
+            logger_1.sphinxLogger.error(`unauthorized to edit`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -401,7 +403,7 @@ function delete_tribe(uuid, owner_pubkey) {
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to delete`);
+            logger_1.sphinxLogger.error(`unauthorized to delete`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -422,7 +424,7 @@ function get_tribe_data(uuid) {
             return j;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] couldnt get tribe`);
+            logger_1.sphinxLogger.error(`couldnt get tribe`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -441,13 +443,13 @@ function putActivity(uuid, host, owner_pubkey) {
             });
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to putActivity`);
+            logger_1.sphinxLogger.error(`unauthorized to putActivity`, logger_1.logging.Tribes);
             throw e;
         }
     });
 }
 exports.putActivity = putActivity;
-function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
+function putstats({ uuid, host, member_count, chatId, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!uuid)
             return;
@@ -468,7 +470,7 @@ function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
             });
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to putstats`);
+            logger_1.sphinxLogger.error(`unauthorized to putstats`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -496,11 +498,11 @@ function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
             if (!r.ok) {
                 throw 'failed to create tribe channel ' + r.status;
             }
-            let j = yield r.json();
+            const j = yield r.json();
             return j;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to create channel`);
+            logger_1.sphinxLogger.error(`unauthorized to create channel`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -522,11 +524,11 @@ function deleteChannel({ id, host, owner_pubkey }) {
             if (!r.ok) {
                 throw 'failed to delete channel' + r.status;
             }
-            let j = yield r.json();
+            const j = yield r.json();
             return j;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`[tribes] unauthorized to create channel`);
+            logger_1.sphinxLogger.error(`unauthorized to create channel`, logger_1.logging.Tribes);
             throw e;
         }
     });
@@ -535,18 +537,13 @@ exports.deleteChannel = deleteChannel;
 function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('genSignedTimestamp')
-        try {
-            const now = moment().unix();
-            const tsBytes = Buffer.from(now.toString(16), 'hex');
-            const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
-            const sigBytes = zbase32.decode(sig);
-            const totalLength = tsBytes.length + sigBytes.length;
-            const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
-            return urlBase64(buf);
-        }
-        catch (e) {
-            throw e;
-        }
+        const now = moment().unix();
+        const tsBytes = Buffer.from(now.toString(16), 'hex');
+        const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
+        const sigBytes = zbase32.decode(sig);
+        const totalLength = tsBytes.length + sigBytes.length;
+        const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
+        return urlBase64(buf);
     });
 }
 exports.genSignedTimestamp = genSignedTimestamp;
@@ -559,9 +556,6 @@ function verifySignedTimestamp(stsBase64) {
         if (r.valid) {
             return r.pubkey;
         }
-        else {
-            return false;
-        }
     });
 }
 exports.verifySignedTimestamp = verifySignedTimestamp;
@@ -571,12 +565,5 @@ function getHost() {
 exports.getHost = getHost;
 function urlBase64(buf) {
     return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
-}
-function asyncForEach(array, callback) {
-    return __awaiter(this, void 0, void 0, function* () {
-        for (let index = 0; index < array.length; index++) {
-            yield callback(array[index], index, array);
-        }
-    });
 }
 //# sourceMappingURL=tribes.js.map
