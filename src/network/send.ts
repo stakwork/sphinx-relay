@@ -111,7 +111,7 @@ export async function sendMessage({
       }
       mentionContactIds = await detectMentions(
         msg,
-        isForwarded,
+        isForwarded ? true : false,
         chat.id,
         tenant
       )
@@ -361,7 +361,7 @@ async function detectMentions(
   chatId: number,
   tenant: number
 ): Promise<number[]> {
-  const content = msg.message.content
+  const content = msg.message.content as string
   const words = content.split(' ')
   if (words.includes('@all') && !isForwarded) return [Infinity]
   const ret: number[] = []
