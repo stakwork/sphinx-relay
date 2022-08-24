@@ -112,7 +112,7 @@ export async function sendMessage({
       mentionContactIds = await detectMentions(
         msg,
         isForwarded ? true : false,
-        chat.id,
+        chat.id as number,
         tenant
       )
     }

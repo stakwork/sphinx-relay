@@ -76,7 +76,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
-                mentionContactIds = yield detectMentions(msg, isForwarded, chat.id, tenant);
+                mentionContactIds = yield detectMentions(msg, isForwarded ? true : false, chat.id, tenant);
             }
             // stop here if just me
             if (justMe) {
