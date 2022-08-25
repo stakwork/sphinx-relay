@@ -13,93 +13,45 @@ const ava_1 = require("ava");
 const nodes_1 = require("../nodes");
 const del_1 = require("../utils/del");
 const save_1 = require("../utils/save");
-const helpers_1 = require("../utils/helpers");
 const msg_1 = require("../utils/msg");
-const get_1 = require("../utils/get");
 const http = require("ava-http");
-const helpers_2 = require("../utils/helpers");
-ava_1.default.serial('tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
+const helpers_1 = require("../utils/helpers");
+ava_1.default.serial('tribeMember', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
-        yield tribeTest(t, node1, node2);
-    }));
+    yield tribeMemberTest(t, nodes_1.default[0], nodes_1.default[1]);
 }));
-function tribeTest(t, node1, node2) {
+function tribeMemberTest(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 CREATES A TRIBE
         let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
-        const body = {
-            chat_id: tribe.id,
-            pub_key: node2.pubkey,
-            photo_url: '',
-            route_hint: node2.routeHint || '',
-            alias: node2.alias,
-            contact_key: node2.contact_key,
-        };
+        console.log('tribe created');
+        let body = Object.assign(Object.assign({}, man), { chat_id: tribe.id });
+        // const body = {
+        //   chat_id: tribe.id,
+        //   pub_key: node2.pubkey,
+        //   photo_url: '',
+        //   route_hint: node2.routeHint || '',
+        //   alias: node2.alias,
+        //   contact_key: node2.contact_key,
+        // }
         //node1 creates new tribe
-        let member = yield http.post(node1.external_ip + '/tribe_member', (0, helpers_2.makeArgs)(node1, body));
+        let member = yield http.post(node1.external_ip + '/tribe_member', (0, helpers_1.makeArgs)(node1, body));
+        console.log('member', member);
         //check that new tribe was created successfully
         t.true(member.success, 'member should be successful');
-        //NODE1 SENDS A TEXT MESSAGE IN TRIBE
-        const text = (0, helpers_1.randomText)();
-        let tribeMessage = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node2, text, tribe);
-        t.true(!!tribeMessage, 'node1 should send message to tribe');
-        //NODE2 LEAVES THE TRIBE
+        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, 'hello');
+        console.log('msg sent');
+        //NODE1 DELETES THE TRIBE
         let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
 }
-ava_1.default.serial('Tribe test for seeing that if 2 nodes have the same alias, the sender alias is changed', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    t.true(Array.isArray(nodes_1.default));
-    yield tribeUniqueAliasTest(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);
-}));
-// Tests that if 2 nodes with the same alias join a tribe, their alias assigned in the tribes is different
-function tribeUniqueAliasTest(t, node1, node2, node3) {
-    return __awaiter(this, void 0, void 0, function* () {
-        //NODE1 creates a tribe
-        let tribe = yield (0, save_1.createTribe)(t, node1);
-        t.truthy(tribe, 'tribe should have been created by node1');
-        //Set the alias of NODE2 to be the same as NODE1
-        let old_alias = node2.alias;
-        let newAlias = { alias: node1.alias };
-        const change = yield (0, save_1.updateProfile)(t, node2, newAlias);
-        t.true(change, 'node2 should have updated its profile');
-        const newNode2 = yield (0, get_1.getSelf)(t, node2);
-        t.true(newNode2.alias !== old_alias, 'node2 alias should not be equal to old alias');
-        t.true(newNode2.alias === node1.alias, 'node2 alias should be equal node1 alias');
-        //NODE2 JOINS TRIBE CREATED BY NODE1
-        if (node1.routeHint)
-            tribe.owner_route_hint = node1.routeHint;
-        let join = yield (0, save_1.joinTribe)(t, node2, tribe);
-        t.true(join, 'node2 should join tribe');
-        //NODE3 JOINS TRIBE
-        if (node1.routeHint)
-            tribe.owner_route_hint = node1.routeHint;
-        let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
-        t.true(join2, 'node3 should join tribe');
-        //First node1 sends a message in tribe
-        let text = (0, helpers_1.randomText)();
-        let tribeMessage = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node3, text, tribe);
-        t.true(!!tribeMessage, 'node1 should send message to tribe');
-        //Then node2 sends a message in tribe
-        let text2 = (0, helpers_1.randomText)();
-        let tribeMessage2 = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node2, node3, text2, tribe);
-        t.true(!!tribeMessage2, 'node2 should send message to tribe');
-        let message1 = yield (0, get_1.getCheckNewMsgs)(t, node3, tribeMessage.uuid);
-        let message2 = yield (0, get_1.getCheckNewMsgs)(t, node3, tribeMessage2.uuid);
-        t.true(message1.sender_alias !== message2.sender_alias, 'The sender alias in both messages should be different');
-        //Check that our logic for assigning an alternate alias is working
-        t.true(message2.sender_alias === `${node1.alias}_2`, 'The sender alias should be modified according to our unique alias logic');
-        //NODE3 LEAVES THE TRIBE
-        let left1 = yield (0, del_1.leaveTribe)(t, node3, tribe);
-        t.true(left1, 'node3 should leave tribe');
-        //NODE2 LEAVES THE TRIBE
-        let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
-        t.true(left2, 'node2 should leave tribe');
-        //NODE1 LEAVES THE TRIBE
-        let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
-        t.true(delTribe, 'node1 should delete tribe');
-    });
-}
+const man = {
+    pub_key: '02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097',
+    photo_url: '',
+    route_hint: '',
+    alias: 'cache',
+    contact_key: 'MIIBCgKCAQEAwjAo9bayiHCLnKjsaUOtMf3RigRPsOdipoV76LTAgfcS8gHxaBizVtSfK7lMZSqjqYgm+4/f1IjYFHNGemeGLoPPcmaZGAk5F/3lIuiZuT1lyRv0by/J3B+cjmvH7DLPPhh4fK+GagNbBxQmSjwCLNyXZWp515NSG7OW0+PtFmBlZROB+EBvyEz8DFeWoBYNJG3PbVBL1/BkRjrL/J2NYAFGvqvmDeYXqpd2ot0zzSRTzZsS3fZceu7hopPM55zG3YffOUpMBDjR7Y+bZLFWqamSV13dwa/eTXZlvD2Fs5qszOOyPAv2jEfjYM3e9sR+m4qLLHqAVoWx8jDmqf1OdQIDAQAB',
+};
 //# sourceMappingURL=tribeMember.test.js.map

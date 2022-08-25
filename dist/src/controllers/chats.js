@@ -402,7 +402,7 @@ const addTribeMember = (req, res) => __awaiter(void 0, void 0, void 0, function*
         return (0, res_1.failure)(res, 'chat not found');
     }
     const member = { key: contact_key, alias };
-    let date = new Date();
+    const date = new Date();
     const added = yield addMemberToTribe({
         sender_pub_key: pub_key,
         tenant,
