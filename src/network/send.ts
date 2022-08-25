@@ -362,16 +362,20 @@ async function detectMentions(
   tenant: number
 ): Promise<number[]> {
   const content = msg.message.content as string
-  const words = content.split(' ')
-  if (words.includes('@all') && !isForwarded) return [Infinity]
-  const ret: number[] = []
-  const mentions = words.filter((w) => w.startsWith('@'))
-  await asyncForEach(mentions, async (men) => {
-    const lastAlias = men.substring(1)
-    const member = await models.ChatMember.findOne({
-      where: { lastAlias, tenant, chatId },
+  if (content) {
+    const words = content.split(' ')
+    if (words.includes('@all') && !isForwarded) return [Infinity]
+    const ret: number[] = []
+    const mentions = words.filter((w) => w.startsWith('@'))
+    await asyncForEach(mentions, async (men) => {
+      const lastAlias = men.substring(1)
+      const member = await models.ChatMember.findOne({
+        where: { lastAlias, tenant, chatId },
+      })
+      ret.push(member.id)
     })
-    ret.push(member.id)
-  })
-  return ret
+    return ret
+  } else {
+    return []
+  }
 }
