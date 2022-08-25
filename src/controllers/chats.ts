@@ -446,6 +446,15 @@ export const addTribeMember = async (
   const tenant = 1
   const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } =
     req.body
+  console.log(
+    tenant,
+    chat_id,
+    pub_key,
+    photo_url,
+    route_hint,
+    alias,
+    contact_key
+  )
   const chat: ChatRecord = await models.Chat.findOne({
     where: { id: chat_id, tenant },
   })
@@ -454,6 +463,7 @@ export const addTribeMember = async (
   }
   const member = { key: contact_key, alias }
   const date = new Date()
+  console.log('addd now')
   const added = await addMemberToTribe({
     sender_pub_key: pub_key,
     tenant,

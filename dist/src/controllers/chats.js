@@ -395,6 +395,7 @@ const addTribeMember = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // const tenant: number = req.owner.id
     const tenant = 1;
     const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } = req.body;
+    console.log(tenant, chat_id, pub_key, photo_url, route_hint, alias, contact_key);
     const chat = yield models_1.models.Chat.findOne({
         where: { id: chat_id, tenant },
     });
@@ -403,6 +404,7 @@ const addTribeMember = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     const member = { key: contact_key, alias };
     const date = new Date();
+    console.log('addd now');
     const added = yield addMemberToTribe({
         sender_pub_key: pub_key,
         tenant,
