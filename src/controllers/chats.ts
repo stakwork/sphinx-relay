@@ -441,8 +441,9 @@ export const addTribeMember = async (
   req: Req,
   res: Response
 ): Promise<void> => {
-  if (!req.owner) return failure(res, 'no owner')
-  const tenant: number = req.owner.id
+  // if (!req.owner) return failure(res, 'no owner')
+  // const tenant: number = req.owner.id
+  const tenant = 1
   const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } =
     req.body
   const chat: ChatRecord = await models.Chat.findOne({

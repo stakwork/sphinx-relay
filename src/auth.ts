@@ -121,7 +121,8 @@ function no_auth(path) {
     path == '/connect_peer' ||
     path == '/peered' ||
     path == '/request_transport_key' ||
-    path == '/webhook'
+    path == '/webhook' ||
+    path == '/tribe_member'
   )
 }
 

@@ -391,9 +391,9 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.deleteChat = deleteChat;
 const addTribeMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
-    const tenant = req.owner.id;
+    // if (!req.owner) return failure(res, 'no owner')
+    // const tenant: number = req.owner.id
+    const tenant = 1;
     const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } = req.body;
     const chat = yield models_1.models.Chat.findOne({
         where: { id: chat_id, tenant },
