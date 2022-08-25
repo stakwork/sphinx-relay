@@ -1,4 +1,4 @@
-import { models, Chat } from '../models'
+import { models, Chat, Message } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
@@ -619,7 +619,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
   }
 
   try {
-    const msgs = await models.Message.findAll({
+    const msgs: Message[] = await models.Message.findAll({
       where: {
         tenant,
         chatId: chat.id,
@@ -711,6 +711,8 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
           ...(newMediaTerms && { mediaToken: newMediaTerms }),
           ...(m.mediaType && { mediaType: m.mediaType }),
           ...(dateString && { date: dateString }),
+          ...(m.recipientAlias && { recipientAlias: m.recipientAlias }),
+          ...(m.recipientPic && { recipientPic: m.recipientPic }),
         },
         isForwarded,
         includeStatus
