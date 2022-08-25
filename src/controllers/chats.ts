@@ -452,7 +452,7 @@ export const addTribeMember = async (
     return failure(res, 'chat not found')
   }
   const member = { key: contact_key, alias }
-  let date = new Date()
+  const date = new Date()
   const added = await addMemberToTribe({
     sender_pub_key: pub_key,
     tenant,
