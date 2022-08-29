@@ -447,9 +447,9 @@ export const addTribeMember = async (
   const tenant: number = req.owner.id
   const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } =
     req.body
-  const chat: ChatRecord = await models.Chat.findOne({
+  const chat: ChatRecord = (await models.Chat.findOne({
     where: { id: chat_id, tenant },
-  })
+  })) as ChatRecord
   if (!chat) {
     return failure(res, 'chat not found')
   }
@@ -495,9 +495,9 @@ async function addMemberToTribe({
   isTribeOwner: boolean
 }): Promise<AddMemberToTribeRet> {
   let theSender: Contact | null = null
-  const sender: Contact = await models.Contact.findOne({
+  const sender: Contact = (await models.Contact.findOne({
     where: { publicKey: sender_pub_key, tenant },
-  })
+  })) as Contact
   const contactIds = JSON.parse(chat.contactIds || '[]')
   if (sender) {
     theSender = sender // might already include??
@@ -510,7 +510,7 @@ async function addMemberToTribe({
     }
   } else {
     if (member && member.key) {
-      const createdContact: Contact = await models.Contact.create({
+      const createdContact: Contact = (await models.Contact.create({
         publicKey: sender_pub_key,
         contactKey: member.key,
         alias: senderAlias,
@@ -519,7 +519,7 @@ async function addMemberToTribe({
         photoUrl: sender_photo_url,
         tenant,
         routeHint: sender_route_hint || '',
-      })
+      })) as Contact
       theSender = createdContact
       contactIds.push(createdContact.id)
     }
@@ -588,7 +588,6 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
   const member = chat_members[sender_pub_key]
   const senderAlias = (member && member.alias) || sender_alias || 'Unknown'
 
-
   try {
     const { theSender, member_count } = await addMemberToTribe({
       sender_pub_key,
@@ -632,7 +631,7 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
       msg.senderAlias = sender_alias
       msg.senderPic = sender_photo_url
     }
-    const message: Message = await models.Message.create(msg)
+    const message: Message = (await models.Message.create(msg)) as Message
 
     const theChat = await addPendingContactIdsToChat(chat, tenant)
     socket.sendJson(
