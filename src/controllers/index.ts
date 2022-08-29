@@ -48,6 +48,7 @@ export async function set(app) {
   app.post('/tribe', chatTribes.joinTribe)
   app.post('/tribe_channel', chatTribes.createChannel)
   app.delete('/tribe_channel', chatTribes.deleteChannel)
+  app.post('/tribe_member', chats.addTribeMember)
   app.put(
     '/member/:contactId/:status/:messageId',
     chatTribes.approveOrRejectMember

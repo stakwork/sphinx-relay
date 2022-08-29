@@ -731,6 +731,8 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
           ...(newMediaTerms && { mediaToken: newMediaTerms }),
           ...(m.mediaType && { mediaType: m.mediaType }),
           ...(dateString && { date: dateString }),
+          ...(m.recipientAlias && { recipientAlias: m.recipientAlias }),
+          ...(m.recipientPic && { recipientPic: m.recipientPic }),
         },
         isForwarded,
         includeStatus
