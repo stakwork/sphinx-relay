@@ -1,4 +1,10 @@
-import { models, Chat, ContactRecord, Contact } from '../models'
+import {
+  models,
+  Chat,
+  ContactRecord,
+  Contact,
+  ChatMember as ChatMemberModel,
+} from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
 import * as tribes from '../utils/tribes'
@@ -371,10 +377,10 @@ async function detectMentions(
     const mentions = words.filter((w) => w.startsWith('@'))
     await asyncForEach(mentions, async (men) => {
       const lastAlias = men.substring(1)
-      const member: ChatMember = (await models.ChatMember.findOne({
+      const member: ChatMemberModel = (await models.ChatMember.findOne({
         where: { lastAlias, tenant, chatId },
-      })) as ChatMember
-      ret.push(member.id)
+      })) as ChatMemberModel
+      ret.push(member.contactId)
     })
     return ret
   } else {
