@@ -51,20 +51,20 @@ function receiveConfirmation(payload) {
         const sender_pub_key = dat.sender.pub_key;
         const owner = dat.owner;
         const tenant = owner.id;
-        const sender = yield models_1.models.Contact.findOne({
+        const sender = (yield models_1.models.Contact.findOne({
             where: { publicKey: sender_pub_key, tenant },
-        });
-        const chat = yield models_1.models.Chat.findOne({
+        }));
+        const chat = (yield models_1.models.Chat.findOne({
             where: { uuid: chat_uuid, tenant },
-        });
+        }));
         // new confirmation logic
         if (msg_id) {
             lock_1.default.acquire('confirmation', function (done) {
                 return __awaiter(this, void 0, void 0, function* () {
                     // console.log("update status map")
-                    const message = yield models_1.models.Message.findOne({
+                    const message = (yield models_1.models.Message.findOne({
                         where: { id: msg_id, tenant },
-                    });
+                    }));
                     if (message) {
                         let statusMap = {};
                         try {
@@ -89,7 +89,7 @@ function receiveConfirmation(payload) {
         }
         else {
             // old logic
-            const messages = yield models_1.models.Message.findAll({
+            const messages = (yield models_1.models.Message.findAll({
                 limit: 1,
                 where: {
                     chatId: chat.id,
@@ -103,7 +103,7 @@ function receiveConfirmation(payload) {
                     tenant,
                 },
                 order: [['createdAt', 'desc']],
-            });
+            }));
             const message = messages[0];
             message.update({ status: constants_1.default.statuses.received });
             socket.sendJson({
@@ -118,12 +118,12 @@ function tribeOwnerAutoConfirmation(msg_id, chat_uuid, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!msg_id || !chat_uuid)
             return;
-        const message = yield models_1.models.Message.findOne({
+        const message = (yield models_1.models.Message.findOne({
             where: { id: msg_id, tenant },
-        });
-        const chat = yield models_1.models.Chat.findOne({
+        }));
+        const chat = (yield models_1.models.Chat.findOne({
             where: { uuid: chat_uuid, tenant },
-        });
+        }));
         if (message) {
             let statusMap = {};
             try {

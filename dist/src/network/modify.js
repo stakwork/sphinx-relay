@@ -53,9 +53,9 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
         const muid = mt && mt.split('.').length && mt.split('.')[1];
         if (!muid)
             return;
-        const mediaKey = yield models_1.models.MediaKey.findOne({
+        const mediaKey = (yield models_1.models.MediaKey.findOne({
             where: { originalMuid: muid, tenant },
-        });
+        }));
         const terms = (0, ldat_1.parseLDAT)(mt);
         const price = (terms.meta && terms.meta.amt) || 0;
         if (amount < price)
@@ -100,9 +100,9 @@ function purchaseFromOriginalSender(payload, chat, purchaser, owner) {
             });
         }
         else {
-            const ogmsg = yield models_1.models.Message.findOne({
+            const ogmsg = (yield models_1.models.Message.findOne({
                 where: { chatId: chat.id, mediaToken: mt, tenant },
-            });
+            }));
             if (!ogmsg)
                 return;
             // purchase it from creator (send "purchase")
@@ -142,12 +142,12 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
             return; // no need, its already been sent
         // const host = mt.split('.')[0]
         const terms = (0, ldat_1.parseLDAT)(mt);
-        const ogPurchaser = yield models_1.models.Contact.findOne({
+        const ogPurchaser = (yield models_1.models.Contact.findOne({
             where: {
                 id: purchaserID,
                 tenant,
             },
-        });
+        }));
         if (!ogPurchaser)
             return logger_1.sphinxLogger.warning('no ogPurchaser');
         const amt = (terms.meta && terms.meta.amt) || 0;

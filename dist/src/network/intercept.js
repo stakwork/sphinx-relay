@@ -41,9 +41,9 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
         if (!uuid)
             return false;
         try {
-            const chat = yield models_1.models.Chat.findOne({
+            const chat = (yield models_1.models.Chat.findOne({
                 where: { uuid, tenant },
-            });
+            }));
             if (!chat)
                 return false;
             let didEmit = false;
@@ -55,30 +55,30 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                 return didEmit;
             // reply back to the bot!
             if (reply_uuid) {
-                const ogBotMsg = yield models_1.models.Message.findOne({
+                const ogBotMsg = (yield models_1.models.Message.findOne({
                     where: {
                         uuid: reply_uuid,
                         tenant,
                         sender: -1,
                     },
-                });
+                }));
                 if (ogBotMsg && ogBotMsg.senderAlias) {
-                    const ogSenderBot = yield models_1.models.ChatBot.findOne({
+                    const ogSenderBot = (yield models_1.models.ChatBot.findOne({
                         where: {
                             chatId: chat.id,
                             tenant,
                             botPrefix: '/' + ogBotMsg.senderAlias,
                         },
-                    });
+                    }));
                     return yield emitMessageToBot(msg, ogSenderBot.dataValues, sender);
                 }
             }
-            const botsInTribe = yield models_1.models.ChatBot.findAll({
+            const botsInTribe = (yield models_1.models.ChatBot.findAll({
                 where: {
                     chatId: chat.id,
                     tenant,
                 },
-            });
+            }));
             logger_1.sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logger_1.logging.Network); //, payload)
             if (!(botsInTribe && botsInTribe.length))
                 return false;
@@ -133,12 +133,12 @@ function emitMessageToBot(msg, botInTribe, sender) {
                 (0, builtin_1.builtinBotEmit)(msg);
                 return true;
             case constants_1.default.bot_types.local: {
-                const bot = yield models_1.models.Bot.findOne({
+                const bot = (yield models_1.models.Bot.findOne({
                     where: {
                         uuid: botInTribe.botUuid,
                         tenant,
                     },
-                });
+                }));
                 return (0, bots_1.postToBotServer)(msg, bot, SphinxBot.MSG_TYPE.MESSAGE);
             }
             case constants_1.default.bot_types.remote:

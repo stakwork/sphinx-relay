@@ -104,7 +104,7 @@ function generateNewUser(rootpk) {
                 isOwner: true,
                 authToken: null,
             };
-            const created = yield models_1.models.Contact.create(contact);
+            const created = (yield models_1.models.Contact.create(contact));
             // set tenant to self!
             created.update({ tenant: created.id });
             logger_1.sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`);

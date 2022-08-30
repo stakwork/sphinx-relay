@@ -30,9 +30,9 @@ function pay(a) {
             return logger_1.sphinxLogger.error(`no chat`);
         if (theChat.type !== constants_1.default.chat_types.tribe)
             return logger_1.sphinxLogger.error(`not a tribe`);
-        const owner = yield models_1.models.Contact.findOne({
+        const owner = (yield models_1.models.Contact.findOne({
             where: { id: theChat.tenant },
-        });
+        }));
         const tenant = owner.id;
         const alias = bot_name || owner.alias;
         const botContactId = -1;
@@ -54,7 +54,7 @@ function pay(a) {
         };
         if (parent_id)
             msg.parentId = parent_id;
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'boost',
             response: jsonUtils.messageToJson(message, theChat, owner),

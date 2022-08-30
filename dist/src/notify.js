@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetNotifyTribeCount = exports.sendNotification = void 0;
+// @ts-nocheck
 const logger_1 = require("./utils/logger");
 const models_1 = require("./models");
 const node_fetch_1 = require("node-fetch");
@@ -86,7 +87,9 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
         try {
             const cids = JSON.parse(chat.contactIds || '[]');
             const notme = cids.find((id) => id !== 1);
-            const other = models_1.models.Contact.findOne({ where: { id: notme } });
+            const other = models_1.models.Contact.findOne({
+                where: { id: notme },
+            });
             if (other.blocked)
                 return;
             finalNotification(owner.id, params, isTribeOwner);

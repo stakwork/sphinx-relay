@@ -46,13 +46,27 @@ function get_hub_pubkey() {
 }
 exports.get_hub_pubkey = get_hub_pubkey;
 get_hub_pubkey();
+/*
+interface Accounting {
+  id: number
+  pubkey: string
+  onchainAddress: string
+  amount: number
+  confirmations: number
+  sourceApp: string
+  date: string
+  fundingTxid: string
+  onchainTxid: string
+  routeHint: string
+}
+*/
 function getReceivedAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
-        const accountings = yield models_1.models.Accounting.findAll({
+        const accountings = (yield models_1.models.Accounting.findAll({
             where: {
                 status: constants_1.default.statuses.received,
             },
-        });
+        }));
         return accountings.map((a) => a.dataValues || a);
     });
 }
@@ -60,14 +74,14 @@ function getPendingAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('[WATCH] getPendingAccountings')
         const utxos = yield (0, wallet_1.listUnspent)();
-        const accountings = yield models_1.models.Accounting.findAll({
+        const accountings = (yield models_1.models.Accounting.findAll({
             where: {
                 onchain_address: {
                     [sequelize_1.Op.in]: utxos.map((utxo) => utxo.address),
                 },
                 status: constants_1.default.statuses.pending,
             },
-        });
+        }));
         // console.log('[WATCH] gotPendingAccountings', accountings.length, accountings)
         const ret = [];
         accountings.forEach((a) => {
@@ -146,7 +160,9 @@ function genChannelAndConfirmAccounting(acc) {
         }
         catch (e) {
             logger_1.sphinxLogger.error(`[ACCOUNTING] error creating channel ${e}`);
-            const existing = yield models_1.models.Accounting.findOne({ where: { id: acc.id } });
+            const existing = (yield models_1.models.Accounting.findOne({
+                where: { id: acc.id },
+            }));
             if (existing) {
                 if (!existing.amount) {
                     yield existing.update({ amount: acc.amount });

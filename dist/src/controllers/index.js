@@ -137,11 +137,11 @@ function set(app) {
                 if (!req.owner)
                     return (0, res_1.failure)(res, 'no owner');
                 const tenant = req.owner.id;
-                const lasts = yield models_1.models.Message.findAll({
+                const lasts = (yield models_1.models.Message.findAll({
                     limit: 1,
                     order: [['createdAt', 'DESC']],
                     where: { tenant },
-                });
+                }));
                 const last = lasts && lasts[0];
                 if (!last) {
                     res.status(404).send('Not found');
