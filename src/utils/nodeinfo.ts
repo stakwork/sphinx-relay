@@ -203,10 +203,10 @@ export async function isClean(): Promise<boolean> {
 }
 
 async function latestMessage(): Promise<Date | string> {
-  const lasts: MessageRecord[] = await models.Message.findAll({
+  const lasts: MessageRecord[] = (await models.Message.findAll({
     limit: 1,
     order: [['createdAt', 'DESC']],
-  })
+  })) as MessageRecord[]
   const last = lasts && lasts[0]
   if (last) {
     return last.createdAt

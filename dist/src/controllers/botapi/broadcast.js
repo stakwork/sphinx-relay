@@ -31,9 +31,9 @@ function broadcast(a) {
             return logger_1.sphinxLogger.error(`no chat`);
         if (theChat.type !== constants_1.default.chat_types.tribe)
             return logger_1.sphinxLogger.error(`not a tribe`);
-        const owner = yield models_1.models.Contact.findOne({
+        const owner = (yield models_1.models.Contact.findOne({
             where: { id: theChat.tenant },
-        });
+        }));
         const tenant = owner.id;
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
         const encryptedText = rsa.encrypt(theChat.groupKey, content);
@@ -62,7 +62,7 @@ function broadcast(a) {
             msg.parentId = parent_id;
         if (bot_pic)
             msg.senderPic = bot_pic;
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'message',
             response: jsonUtils.messageToJson(message, theChat, owner),

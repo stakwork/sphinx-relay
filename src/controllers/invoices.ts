@@ -46,9 +46,9 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
 
     sphinxLogger.info(`[pay invoice data] ${response}`)
 
-    const message: MessageRecord = await models.Message.findOne({
+    const message: MessageRecord = (await models.Message.findOne({
       where: { payment_request, tenant },
-    })
+    })) as MessageRecord
     if (!message) {
       // invoice still paid
       anonymousInvoice(res, payment_request, tenant)
@@ -61,13 +61,13 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
     const date = new Date()
     date.setMilliseconds(0)
 
-    const chat: ChatRecord = await models.Chat.findOne({
+    const chat: ChatRecord = (await models.Chat.findOne({
       where: { id: message.chatId, tenant },
-    })
+    })) as ChatRecord
     const contactIds: number[] = JSON.parse(chat.contactIds)
     const senderId = contactIds.find((id) => id != message.sender)
 
-    const paidMessage: MessageRecord = await models.Message.create({
+    const paidMessage: MessageRecord = (await models.Message.create({
       chatId: message.chatId,
       sender: senderId,
       type: constants.message_types.payment,
@@ -81,7 +81,7 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
       createdAt: date,
       updatedAt: date,
       tenant,
-    })
+    })) as MessageRecord
     sphinxLogger.info(`[pay invoice] stored message ${paidMessage}`)
     success(res, jsonUtils.messageToJson(paidMessage, chat))
   } catch (e) {
@@ -182,7 +182,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
         const timestamp = parseInt(invoice.timestamp + '000')
         const expiry = parseInt(invoice.timeExpireDate + '000')
 
-        const message: MessageRecord = await models.Message.create({
+        const message: MessageRecord = (await models.Message.create({
           chatId: chat.id,
           uuid: short.generate(),
           sender: owner.id,
@@ -199,7 +199,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
           createdAt: new Date(timestamp),
           updatedAt: new Date(timestamp),
           tenant,
-        })
+        })) as MessageRecord
         success(res, jsonUtils.messageToJson(message, chat))
 
         network.sendMessage({
@@ -287,7 +287,9 @@ export const receiveInvoice = async (payload: Payload): Promise<void> => {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
   }
-  const message: MessageRecord = await models.Message.create(msg)
+  const message: MessageRecord = (await models.Message.create(
+    msg
+  )) as MessageRecord
   sphinxLogger.info(`received keysend invoice message ${message.id}`)
 
   socket.sendJson(

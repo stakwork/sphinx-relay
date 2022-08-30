@@ -1,6 +1,6 @@
 import * as tribes from '../utils/tribes'
 import * as crypto from 'crypto'
-import { models } from '../models'
+import { models, Message, Contact, Chat, Bot, BotMember } from '../models'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import * as network from '../network'
@@ -24,7 +24,9 @@ export const getBots = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
-    const bots = await models.Bot.findAll({ where: { tenant } })
+    const bots: Bot[] = (await models.Bot.findAll({
+      where: { tenant },
+    })) as Bot[]
     success(res, {
       bots: bots.map((b) => jsonUtils.botToJson(b)),
     })
@@ -49,7 +51,7 @@ export const createBot = async (req: Req, res: Res): Promise<void> => {
     tenant,
   }
   try {
-    const theBot = await models.Bot.create(newBot)
+    const theBot: Bot = (await models.Bot.create(newBot)) as Bot
     // post to tribes.sphinx.chat
     tribes.declare_bot({
       uuid,
@@ -77,7 +79,9 @@ export const deleteBot = async (req: Req, res: Res): Promise<void> => {
   const owner_pubkey = req.owner.publicKey
   if (!id || owner_pubkey) return
   try {
-    const bot = await models.Bot.findOne({ where: { id, tenant } })
+    const bot: Bot = (await models.Bot.findOne({
+      where: { id, tenant },
+    })) as Bot
     await tribes.delete_bot({
       uuid: bot.uuid,
       owner_pubkey,
@@ -98,7 +102,9 @@ export async function installBotAsTribeAdmin(chat, bot_json): Promise<void> {
     return sphinxLogger.error('no chat id in installBot')
 
   sphinxLogger.info(['=> chat to install bot into', chat.name])
-  const owner = await models.Contact.findOne({ where: { id: tenant } })
+  const owner: Contact = (await models.Contact.findOne({
+    where: { id: tenant },
+  })) as Contact
   if (!owner)
     return sphinxLogger.error('cant find owner in installBotAsTribeAdmin')
   const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey)
@@ -126,12 +132,12 @@ export async function installBotAsTribeAdmin(chat, bot_json): Promise<void> {
   }
   if (isLocal) {
     // "install" my local bot and send "INSTALL" event
-    const myBot = await models.Bot.findOne({
+    const myBot: Bot = (await models.Bot.findOne({
       where: {
         uuid: bot_json.uuid,
         tenant,
       },
-    })
+    })) as Bot
     if (myBot) {
       const success = await postToBotServer(
         <BotMsg>{
@@ -270,12 +276,12 @@ export async function receiveBotInstall(dat: Payload): Promise<void> {
   if (!chat_uuid || !sender_pub_key || !bot_uuid)
     return sphinxLogger.info('=> no chat uuid or sender pub key or bot_uuid')
 
-  const bot = await models.Bot.findOne({
+  const bot: Bot = (await models.Bot.findOne({
     where: {
       uuid: bot_uuid,
       tenant,
     },
-  })
+  })) as Bot
   if (!bot) return
 
   const verifiedOwnerPubkey = await tribes.verifySignedTimestamp(bot_uuid)
@@ -291,12 +297,12 @@ export async function receiveBotInstall(dat: Payload): Promise<void> {
     await models.BotMember.create(botMember)
   }
 
-  const contact = await models.Contact.findOne({
+  const contact: Contact = (await models.Contact.findOne({
     where: {
       tenant,
       publicKey: sender_pub_key,
     },
-  })
+  })) as Contact
   if (!contact) {
     return sphinxLogger.error('=> receiveBotInstall no contact')
   }
@@ -319,31 +325,31 @@ export async function receiveBotCmd(dat: Payload): Promise<void> {
   if (!chat_uuid || !bot_uuid) return sphinxLogger.error('no chat uuid')
   // const amount = dat.message.amount - check price_per_use
 
-  const bot = await models.Bot.findOne({
+  const bot: Bot = (await models.Bot.findOne({
     where: {
       uuid: bot_uuid,
       tenant,
     },
-  })
+  })) as Bot
   if (!bot) return
 
-  const botMember = await models.BotMember.findOne({
+  const botMember: BotMember = (await models.BotMember.findOne({
     where: {
       botId: bot.id,
       tribeUuid: chat_uuid,
       tenant,
     },
-  })
+  })) as BotMember
   if (!botMember) return
 
-  botMember.update({ msgCount: (botMember || 0) + 1 })
+  botMember.update({ msgCount: (botMember.msgCount || 0) + 1 })
 
-  const contact = await models.Contact.findOne({
+  const contact: Contact = (await models.Contact.findOne({
     where: {
       tenant,
       publicKey: sender_pub_key,
     },
-  })
+  })) as Contact
   if (!contact) {
     return sphinxLogger.error('=> receiveBotInstall no contact')
   }
@@ -447,9 +453,9 @@ export async function receiveBotRes(dat: Payload): Promise<void> {
   if (!chat_uuid)
     return sphinxLogger.error('=> receiveBotRes Error no chat_uuid')
 
-  const chat = await models.Chat.findOne({
+  const chat: Chat = (await models.Chat.findOne({
     where: { uuid: chat_uuid, tenant },
-  })
+  })) as Chat
   if (!chat) return sphinxLogger.error('=> receiveBotRes Error no chat')
 
   const tribeOwnerPubKey = chat && chat.ownerPubkey
@@ -475,21 +481,21 @@ export async function receiveBotRes(dat: Payload): Promise<void> {
       recipient_id,
     })
   } else {
-    const theChat = await models.Chat.findOne({
+    const theChat: Chat = (await models.Chat.findOne({
       where: {
         uuid: chat_uuid,
         tenant,
       },
-    })
+    })) as Chat
     if (!chat)
       return sphinxLogger.error('=> receiveBotRes as sub error no chat')
     let date = new Date()
     date.setMilliseconds(0)
     if (date_string) date = new Date(date_string)
 
-    const sender = await models.Contact.findOne({
+    const sender: Contact = (await models.Contact.findOne({
       where: { publicKey: sender_pub_key, tenant },
-    })
+    })) as Contact
     const msg: { [k: string]: any } = {
       chatId: chat.id,
       uuid: msg_uuid,
@@ -508,7 +514,7 @@ export async function receiveBotRes(dat: Payload): Promise<void> {
       tenant,
     }
     if (parent_id) msg.parentId = parent_id
-    const message = await models.Message.create(msg)
+    const message: Message = (await models.Message.create(msg)) as Message
     socket.sendJson(
       {
         type: 'message',

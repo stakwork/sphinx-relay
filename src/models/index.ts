@@ -14,7 +14,7 @@ import Timer from './sql/timer'
 import Bot, { BotRecord } from './sql/bot'
 import ChatBot, { ChatBotRecord } from './sql/chatBot'
 import BotMember, { BotMemberRecord } from './sql/botMember'
-import Accounting from './sql/accounting'
+import Accounting, { AccountingRecord } from './sql/accounting'
 import Lsat from './sql/lsat'
 import RequestsTransportTokens from './sql/requestsTransportTokens'
 import * as minimist from 'minimist'
@@ -87,6 +87,7 @@ export {
   Timer,
   Bot,
   Accounting,
+  AccountingRecord,
   MediaKey,
   Lsat,
   BotMember,

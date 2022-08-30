@@ -97,9 +97,9 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             }
             else {
                 // if tribe, send to owner only
-                const tribeOwner = yield models_1.models.Contact.findOne({
+                const tribeOwner = (yield models_1.models.Contact.findOne({
                     where: { publicKey: chat.ownerPubkey, tenant },
-                });
+                }));
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
             }
         }
@@ -121,7 +121,9 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                 // console.log('=> dont send to self')
                 return;
             }
-            const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
+            const contact = (yield models_1.models.Contact.findOne({
+                where: { id: contactId },
+            }));
             if (!contact) {
                 // console.log('=> sendMessage no contact')
                 return; // skip if u simply dont have the contact

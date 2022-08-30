@@ -134,9 +134,9 @@ export async function sendMessage({
       }
     } else {
       // if tribe, send to owner only
-      const tribeOwner = await models.Contact.findOne({
+      const tribeOwner: Contact = (await models.Contact.findOne({
         where: { publicKey: chat.ownerPubkey as string, tenant },
-      })
+      })) as Contact
       contactIds = tribeOwner ? [tribeOwner.id] : []
     }
   } else {
@@ -162,7 +162,9 @@ export async function sendMessage({
       return
     }
 
-    const contact = await models.Contact.findOne({ where: { id: contactId } })
+    const contact: Contact = (await models.Contact.findOne({
+      where: { id: contactId },
+    })) as Contact
     if (!contact) {
       // console.log('=> sendMessage no contact')
       return // skip if u simply dont have the contact

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { models } from '../models'

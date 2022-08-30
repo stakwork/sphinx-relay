@@ -44,9 +44,9 @@ function startCronJob(sub) {
     return __awaiter(this, void 0, void 0, function* () {
         jobs[sub.id] = new cron_1.CronJob(sub.cron, function () {
             return __awaiter(this, void 0, void 0, function* () {
-                const subscription = yield models_1.models.Subscription.findOne({
+                const subscription = (yield models_1.models.Subscription.findOne({
                     where: { id: sub.id },
-                });
+                }));
                 if (!subscription) {
                     delete jobs[sub.id];
                     return this.stop();
@@ -65,7 +65,9 @@ function startCronJob(sub) {
                     return this.stop();
                 }
                 const tenant = subscription.tenant;
-                const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
+                const owner = (yield models_1.models.Contact.findOne({
+                    where: { id: tenant },
+                }));
                 // SEND PAYMENT!!!
                 sendSubscriptionPayment(subscription, false, owner);
             });
@@ -126,22 +128,22 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         const tenant = owner.id;
         const date = new Date();
         date.setMilliseconds(0);
-        const subscription = yield models_1.models.Subscription.findOne({
+        const subscription = (yield models_1.models.Subscription.findOne({
             where: { id: sub.id, tenant },
-        });
+        }));
         if (!subscription) {
             return;
         }
-        const chat = yield models_1.models.Chat.findOne({
+        const chat = (yield models_1.models.Chat.findOne({
             where: { id: subscription.chatId, tenant },
-        });
+        }));
         if (!subscription) {
             logger_1.sphinxLogger.error('=> no sub for this payment!!!');
             return;
         }
         const forMe = false;
         const text = msgForSubPayment(owner, sub, isFirstMessage, forMe);
-        const contact = yield models_1.models.Contact.findByPk(sub.contactId);
+        const contact = (yield models_1.models.Contact.findByPk(sub.contactId));
         const enc = rsa.encrypt(contact.contactKey, text);
         network.sendMessage({
             chat: chat,
@@ -152,9 +154,8 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
             success: (data) => __awaiter(this, void 0, void 0, function* () {
                 const shouldEnd = checkSubscriptionShouldEndAfterThisPayment(subscription);
                 const obj = {
-                    totalPaid: parseFloat(subscription.totalPaid || 0) +
-                        parseFloat(subscription.amount),
-                    count: parseInt(subscription.count || 0) + 1,
+                    totalPaid: (subscription.totalPaid || 0) + subscription.amount,
+                    count: (subscription.count || 0) + 1,
                     ended: false,
                 };
                 if (shouldEnd) {
@@ -167,20 +168,20 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                 const forMe = true;
                 const text2 = msgForSubPayment(owner, sub, isFirstMessage, forMe);
                 const encText = rsa.encrypt(owner.contactKey, text2);
-                const message = yield models_1.models.Message.create({
+                const message = (yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
                     type: constants_1.default.message_types.direct_payment,
                     status: constants_1.default.statuses.confirmed,
                     messageContent: encText,
                     amount: subscription.amount,
-                    amountMsat: parseFloat(subscription.amount) * 1000,
+                    amountMsat: subscription.amount * 1000,
                     date: date,
                     createdAt: date,
                     updatedAt: date,
                     subscriptionId: subscription.id,
                     tenant,
-                });
+                }));
                 socket.sendJson({
                     type: 'direct_payment',
                     response: jsonUtils.messageToJson(message, chat),
@@ -190,20 +191,20 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                 logger_1.sphinxLogger.error('SEND PAY ERROR');
                 let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
                 errMessage = 'Payment Failed: ' + errMessage;
-                const message = yield models_1.models.Message.create({
+                const message = (yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
                     type: constants_1.default.message_types.direct_payment,
                     status: constants_1.default.statuses.failed,
                     messageContent: errMessage,
                     amount: sub.amount,
-                    amountMsat: parseFloat(sub.amount) * 1000,
+                    amountMsat: sub.amount * 1000,
                     date: date,
                     createdAt: date,
                     updatedAt: date,
                     subscriptionId: sub.id,
                     tenant,
-                });
+                }));
                 socket.sendJson({
                     type: 'direct_payment',
                     response: jsonUtils.messageToJson(message, chat),
@@ -220,7 +221,9 @@ function pauseSubscription(req, res) {
         const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id, tenant } });
+            const sub = (yield models_1.models.Subscription.findOne({
+                where: { id, tenant },
+            }));
             if (sub) {
                 sub.update({ paused: true });
                 if (jobs[id])
@@ -246,7 +249,9 @@ function restartSubscription(req, res) {
         const tenant = req.owner.id;
         const id = parseInt(req.params.id);
         try {
-            const sub = yield models_1.models.Subscription.findOne({ where: { id, tenant } });
+            const sub = (yield models_1.models.Subscription.findOne({
+                where: { id, tenant },
+            }));
             if (sub) {
                 sub.update({ paused: false });
                 if (jobs[id])
@@ -268,7 +273,7 @@ function getRawSubs(opts = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         const options = Object.assign({ order: [['id', 'asc']] }, opts);
         try {
-            const subs = yield models_1.models.Subscription.findAll(options);
+            const subs = (yield models_1.models.Subscription.findAll(options));
             return subs;
         }
         catch (e) {
@@ -299,9 +304,9 @@ function getSubscription(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         try {
-            const sub = yield models_1.models.Subscription.findOne({
+            const sub = (yield models_1.models.Subscription.findOne({
                 where: { id: req.params.id, tenant },
-            });
+            }));
             (0, res_1.success)(res, jsonUtils.subscriptionToJson(sub, null));
         }
         catch (e) {
@@ -377,7 +382,7 @@ function createSubscription(req, res) {
             if (!owner || !chat) {
                 return (0, res_1.failure)(res, 'Invalid chat or contact');
             }
-            const sub = yield models_1.models.Subscription.create(s);
+            const sub = (yield models_1.models.Subscription.create(s));
             startCronJob(sub);
             const isFirstMessage = true;
             sendSubscriptionPayment(sub, isFirstMessage, owner);
@@ -404,7 +409,9 @@ function editSubscription(req, res) {
             if (!id || !s.chatId || !s.cron) {
                 return (0, res_1.failure)(res, 'Invalid data');
             }
-            const subRecord = yield models_1.models.Subscription.findOne({ where: { id } });
+            const subRecord = (yield models_1.models.Subscription.findOne({
+                where: { id },
+            }));
             if (!subRecord) {
                 return (0, res_1.failure)(res, 'No subscription found');
             }
@@ -430,7 +437,9 @@ function editSubscription(req, res) {
             else {
                 startCronJob(sub); // restart
             }
-            const chat = yield models_1.models.Chat.findOne({ where: { id: s.chatId, tenant } });
+            const chat = (yield models_1.models.Chat.findOne({
+                where: { id: s.chatId, tenant },
+            }));
             (0, res_1.success)(res, jsonUtils.subscriptionToJson(sub, chat));
         }
         catch (e) {

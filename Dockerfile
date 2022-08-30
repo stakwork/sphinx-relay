@@ -1,4 +1,4 @@
-FROM node:12-buster-slim AS builder
+FROM node:16-buster-slim AS builder
 
 WORKDIR /relay
 RUN mkdir /relay/.lnd
@@ -6,7 +6,8 @@ COPY --chown=1000:1000 . .
 
 RUN apt-get update
 
-RUN apt install -y make python-minimal
+RUN apt install -y make python3-minimal
+RUN which python3
 RUN apt install -y g++ gcc libmcrypt-dev
 RUN apt-get -y install git
 
@@ -20,7 +21,7 @@ RUN cp /relay/config/config.json /relay/dist/config/config.json
 
 RUN chown -R 1000:1000 /relay
 
-FROM node:12-buster-slim
+FROM node:16-buster-slim
 
 USER 1000
 

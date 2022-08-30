@@ -38,7 +38,7 @@ function init() {
         if (arr[0] !== '/loopout')
             return;
         // check installed
-        const bot = yield getBot(message.channel.id);
+        const bot = (yield getBot(message.channel.id));
         if (!bot)
             return;
         const messageAmount = Number(message.amount) || 0;

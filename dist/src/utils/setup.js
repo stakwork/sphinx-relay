@@ -69,13 +69,13 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                 else {
                     tenant = 1; // add tenant here
                 }
-                const contact = yield models_1.models.Contact.create({
+                const contact = (yield models_1.models.Contact.create({
                     id: 1,
                     publicKey: info.identity_pubkey,
                     isOwner: true,
                     authToken,
                     tenant,
-                });
+                }));
                 logger_1.sphinxLogger.info(['created node owner contact, id:', contact.id], logger_1.logging.DB);
             }
         }

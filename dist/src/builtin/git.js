@@ -38,14 +38,14 @@ function getStuff(message) {
             // console.log("=> WelcomeBot chat", chat);
             if (!(chat && chat.id))
                 throw new Error('chat not found');
-            const chatBot = yield models_1.models.ChatBot.findOne({
+            const chatBot = (yield models_1.models.ChatBot.findOne({
                 where: {
                     chatId: chat.id,
                     botPrefix: '/git',
                     botType: constants_1.default.bot_types.builtin,
                     tenant: chat.tenant,
                 },
-            });
+            }));
             if (!chatBot)
                 throw new Error('chat bot not found');
             const empty = { repos: [] };
@@ -157,9 +157,9 @@ function init() {
 exports.init = init;
 function getPat(tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existing = yield models_1.models.Bot.findOne({
+        const existing = (yield models_1.models.Bot.findOne({
             where: { uuid: exports.GITBOT_UUID, tenant },
-        });
+        }));
         if (existing) {
             return botWebhookFieldToPat(existing.webhook);
         }
@@ -243,9 +243,9 @@ function updateGitBotPat(tenant, pat) {
 exports.updateGitBotPat = updateGitBotPat;
 function getOrCreateGitBot(tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existing = yield models_1.models.Bot.findOne({
+        const existing = (yield models_1.models.Bot.findOne({
             where: { uuid: exports.GITBOT_UUID, tenant },
-        });
+        }));
         if (existing) {
             return existing;
         }
@@ -257,7 +257,7 @@ function getOrCreateGitBot(tenant) {
             pricePerUse: 0,
             tenant,
         };
-        const b = yield models_1.models.Bot.create(newBot);
+        const b = (yield models_1.models.Bot.create(newBot));
         return b;
     });
 }

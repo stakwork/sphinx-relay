@@ -39,7 +39,7 @@ function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         const isOwner = (0, proxy_1.isProxy)() ? "'t'" : '1';
         try {
-            const r = yield models_1.sequelize.query(`
+            const r = (yield models_1.sequelize.query(`
       SELECT sphinx_chats.* FROM sphinx_chats
       INNER JOIN sphinx_contacts
       ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
@@ -48,7 +48,7 @@ function getTribeOwnersChatByUUID(uuid) {
       AND sphinx_chats.uuid = '${uuid}'`, {
                 model: models_1.models.Chat,
                 mapToModel: true, // pass true here if you have any mapped fields
-            });
+            }));
             // console.log('=> getTribeOwnersChatByUUID r:', r)
             return r && r[0] && r[0].dataValues;
         }
@@ -146,9 +146,9 @@ function initAndSubscribeTopics(onMessage) {
         const host = getHost();
         try {
             if ((0, proxy_1.isProxy)()) {
-                const allOwners = yield models_1.models.Contact.findAll({
+                const allOwners = (yield models_1.models.Contact.findAll({
                     where: { isOwner: true },
-                });
+                }));
                 if (!(allOwners && allOwners.length))
                     return;
                 (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
@@ -243,12 +243,12 @@ function updateTribeStats(myPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         if ((0, proxy_1.isProxy)())
             return; // skip on proxy for now?
-        const myTribes = yield models_1.models.Chat.findAll({
+        const myTribes = (yield models_1.models.Chat.findAll({
             where: {
                 ownerPubkey: myPubkey,
                 deleted: false,
             },
-        });
+        }));
         yield (0, helpers_1.asyncForEach)(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const contactIds = JSON.parse(tribe.contactIds);
@@ -300,7 +300,7 @@ function publish(topic, msg, ownerPubkey, cb) {
     });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let protocol = 'https';
@@ -449,7 +449,7 @@ function putActivity(uuid, host, owner_pubkey) {
     });
 }
 exports.putActivity = putActivity;
-function putstats({ uuid, host, member_count, chatId, owner_pubkey }) {
+function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!uuid)
             return;
@@ -476,7 +476,7 @@ function putstats({ uuid, host, member_count, chatId, owner_pubkey }) {
     });
 }
 exports.putstats = putstats;
-function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
+function createChannel({ tribe_uuid, host, name, owner_pubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!tribe_uuid)
             return;
@@ -508,7 +508,7 @@ function createChannel({ tribe_uuid, host, name, owner_pubkey }) {
     });
 }
 exports.createChannel = createChannel;
-function deleteChannel({ id, host, owner_pubkey }) {
+function deleteChannel({ id, host, owner_pubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!id)
             return;

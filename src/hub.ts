@@ -1,4 +1,4 @@
-import { models, Contact } from './models'
+import { models, Contact, Invite } from './models'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
 import * as socket from './utils/socket'
@@ -29,16 +29,18 @@ const checkInviteHub = async (params = {}) => {
   }
   //console.log('[hub] checking invites ping')
 
-  const inviteStrings = await models.Invite.findAll({
-    where: {
-      status: {
-        [Op.notIn]: [
-          constants.invite_statuses.complete,
-          constants.invite_statuses.expired,
-        ],
+  const inviteStrings: string[] = (
+    (await models.Invite.findAll({
+      where: {
+        status: {
+          [Op.notIn]: [
+            constants.invite_statuses.complete,
+            constants.invite_statuses.expired,
+          ],
+        },
       },
-    },
-  }).map((invite) => invite.inviteString)
+    })) as Invite[]
+  ).map((invite) => invite.inviteString)
   if (inviteStrings.length === 0) {
     return // skip if no invites
   }
@@ -58,15 +60,15 @@ const checkInviteHub = async (params = {}) => {
           const routeHint = object.route_hint
           const price = object.price
 
-          const dbInvite = await models.Invite.findOne({
+          const dbInvite: Invite = (await models.Invite.findOne({
             where: { inviteString: invite.pin },
-          })
-          const contact = await models.Contact.findOne({
+          })) as Invite
+          const contact: Contact = (await models.Contact.findOne({
             where: { id: dbInvite.contactId },
-          })
-          const owner = await models.Contact.findOne({
+          })) as Contact
+          const owner: Contact = (await models.Contact.findOne({
             where: { id: dbInvite.tenant },
-          })
+          })) as Contact
 
           if (dbInvite.status != invite.invite_status) {
             const updateObj: { [k: string]: any } = {

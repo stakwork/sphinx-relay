@@ -112,7 +112,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
         mm.replyUuid = reply_uuid;
     if (parent_id)
         mm.parentId = parent_id;
-    const message = yield models_1.models.Message.create(mm);
+    const message = (yield models_1.models.Message.create(mm));
     logger_1.sphinxLogger.info(['saved attachment msg from me', message.id]);
     saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant);
     const mediaTerms = {
@@ -192,7 +192,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     });
     if (!chat)
         return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
-    const message = yield models_1.models.Message.create({
+    const message = (yield models_1.models.Message.create({
         chatId: chat.id,
         uuid: short.generate(),
         sender: owner.id,
@@ -205,7 +205,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         updatedAt: date,
         network_type: constants_1.default.network_types.lightning,
         tenant,
-    });
+    }));
     const msg = {
         mediaToken: media_token,
         id: message.id,
@@ -237,7 +237,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         return logger_1.sphinxLogger.error('=> group chat not found!');
     }
     const tenant = owner.id;
-    const message = yield models_1.models.Message.create({
+    const message = (yield models_1.models.Message.create({
         chatId: chat.id,
         uuid: msg_uuid,
         sender: sender.id,
@@ -250,7 +250,7 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
         updatedAt: date,
         network_type,
         tenant,
-    });
+    }));
     socket.sendJson({
         type: 'purchase',
         response: jsonUtils.messageToJson(message, chat, sender),
@@ -265,20 +265,20 @@ const receivePurchase = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!muid) {
         return logger_1.sphinxLogger.error('no muid');
     }
-    const ogMessage = yield models_1.models.Message.findOne({
+    const ogMessage = (yield models_1.models.Message.findOne({
         where: { mediaToken, tenant },
-    });
+    }));
     if (!ogMessage) {
         return logger_1.sphinxLogger.error('no original message');
     }
     // find mediaKey for who sent
-    const mediaKey = yield models_1.models.MediaKey.findOne({
+    const mediaKey = (yield models_1.models.MediaKey.findOne({
         where: {
             muid,
             receiver: isTribe ? 0 : sender.id,
             tenant,
         },
-    });
+    }));
     // console.log('mediaKey found!',mediaKey.dataValues)
     if (!mediaKey)
         return; // this is from another person (admin is forwarding)

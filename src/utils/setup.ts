@@ -1,5 +1,5 @@
 import * as Lightning from '../grpc/lightning'
-import { sequelize, models } from '../models'
+import { sequelize, models, Contact } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as gitinfo from '../utils/gitinfo'
@@ -55,13 +55,13 @@ const setupOwnerContact = async () => {
         } else {
           tenant = 1 // add tenant here
         }
-        const contact = await models.Contact.create({
+        const contact: Contact = (await models.Contact.create({
           id: 1,
           publicKey: info.identity_pubkey,
           isOwner: true,
           authToken,
           tenant,
-        })
+        })) as Contact
         sphinxLogger.info(
           ['created node owner contact, id:', contact.id],
           logging.DB
@@ -104,7 +104,9 @@ async function setupDone() {
 }
 
 async function printGitInfo() {
-  sphinxLogger.info(`=> Relay version: ${gitinfo.tag}, commit: ${gitinfo.commitHash}`)
+  sphinxLogger.info(
+    `=> Relay version: ${gitinfo.tag}, commit: ${gitinfo.commitHash}`
+  )
 }
 
 async function printQR() {
