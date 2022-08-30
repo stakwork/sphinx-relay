@@ -1,4 +1,4 @@
-import { Msg, BotMsg } from './interfaces'
+import { BotMsg } from './interfaces'
 import { models, Bot, Chat, ChatRecord, Message } from '../models'
 
 import { builtinBotEmit } from '../builtin'

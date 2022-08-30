@@ -371,9 +371,9 @@ async function detectMentions(
     const mentions = words.filter((w) => w.startsWith('@'))
     await asyncForEach(mentions, async (men) => {
       const lastAlias = men.substring(1)
-      const member = await models.ChatMember.findOne({
+      const member: ChatMember = (await models.ChatMember.findOne({
         where: { lastAlias, tenant, chatId },
-      })
+      })) as ChatMember
       ret.push(member.id)
     })
     return ret
