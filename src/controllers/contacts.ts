@@ -418,7 +418,7 @@ export const createContact = async (req: Req, res: Res): Promise<void> => {
       where: { publicKey: attrs['public_key'], tenant },
     })) as Contact
   }
-  if (!!existing) {
+  if (existing) {
     const updateObj: { fromGroup: boolean; alias?: string } = {
       fromGroup: false,
     }
