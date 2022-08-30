@@ -101,7 +101,7 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
     msg.mediaType = media_type || ''
   }
 
-  const message: Message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   const msgToSend: { [k: string]: any } = {
     id: message.id,
@@ -118,7 +118,7 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
 
   // if contact_ids, replace that in "chat" below
   // if remote text map, put that in
-  const theChat = chat.dataValues;
+  const theChat = chat.dataValues
   if (contact_ids) {
     theChat.contactIds = contact_ids
     if (remote_text_map) msgToSend.content = remote_text_map
@@ -207,7 +207,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
   if (recipient_alias) msg.recipientAlias = recipient_alias
   if (recipient_pic) msg.recipientPic = recipient_pic
 
-  const message: Message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   // console.log('saved message', message.dataValues)
 
@@ -233,7 +233,7 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
 
   const MIN_VAL = constants.min_sat_amount
   try {
-    const msgs: Message[] = await models.Message.findAll({
+    const msgs: Message[] = (await models.Message.findAll({
       where: {
         [Op.or]: [
           {
@@ -268,7 +268,7 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
       order: [['createdAt', 'desc']],
       limit,
       offset,
-    })
+    })) as Message[]
     const ret = msgs || []
     success(
       res,

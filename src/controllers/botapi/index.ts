@@ -1,5 +1,13 @@
 import * as network from '../../network'
-import { BotRecord, ChatBotRecord, ChatRecord, models } from '../../models'
+import {
+  Bot,
+  BotMember,
+  Contact,
+  BotRecord,
+  ChatBotRecord,
+  ChatRecord,
+  models,
+} from '../../models'
 import { success, failure, unauthorized } from '../../utils/res'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
@@ -62,12 +70,12 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
 
   try {
     // for all "owners"
-    const allChatBots: ChatBotRecord[] = await models.ChatBot.findAll({
+    const allChatBots: ChatBotRecord[] = (await models.ChatBot.findAll({
       where: { botUuid: GITBOT_UUID },
-    })
-    const allGitBots: BotRecord[] = await models.Bot.findAll({
+    })) as ChatBotRecord[]
+    const allGitBots: BotRecord[] = (await models.Bot.findAll({
       where: { uuid: GITBOT_UUID },
-    })
+    })) as BotRecord[]
     await asyncForEach(allChatBots, async (cb: ChatBotRecord) => {
       const meta: GitBotMeta = cb.meta ? JSON.parse(cb.meta) : { repos: [] }
       await asyncForEach(meta.repos, async (r: Repo) => {
@@ -82,9 +90,9 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
             if (valid) {
               ok = true
               // process!
-              const chat: ChatRecord = await models.Chat.findOne({
+              const chat: ChatRecord = (await models.Chat.findOne({
                 where: { id: cb.chatId },
-              })
+              })) as ChatRecord
               if (chat) {
                 const content = processGithook(
                   req.body,
@@ -154,7 +162,7 @@ export async function processAction(req: Req, res: Res): Promise<void> {
   } = body
 
   if (!bot_id) return failure(res, 'no bot_id')
-  const bot = await models.Bot.findOne({ where: { id: bot_id } })
+  const bot: Bot = (await models.Bot.findOne({ where: { id: bot_id } })) as Bot
   if (!bot) return failure(res, 'no bot')
 
   if (!(bot.secret && bot.secret === bot_secret)) {
@@ -202,14 +210,14 @@ export async function finalAction(a: Action): Promise<void> {
     recipient_id,
   } = a
 
-  let myBot
+  let myBot: Bot | null = null
   // not for tribe admin, for bot maker
   if (bot_id) {
-    myBot = await models.Bot.findOne({
+    myBot = (await models.Bot.findOne({
       where: {
         id: bot_id,
       },
-    })
+    })) as Bot
     if (chat_uuid) {
       const myChat = await getTribeOwnersChatByUUID(chat_uuid)
       // ACTUALLY ITS A LOCAL (FOR MY TRIBE) message! kill myBot
@@ -220,15 +228,17 @@ export async function finalAction(a: Action): Promise<void> {
   // console.log("=> ACTION HIT", a);
   if (myBot) {
     // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-    const owner = await models.Contact.findOne({ where: { id: myBot.tenant } })
+    const owner: Contact = (await models.Contact.findOne({
+      where: { id: myBot.tenant },
+    })) as Contact
     // THIS is a bot member cmd res (i am bot maker)
-    const botMember = await models.BotMember.findOne({
+    const botMember: BotMember = (await models.BotMember.findOne({
       where: {
         tribeUuid: chat_uuid,
         botId: bot_id,
         tenant: owner.id,
       },
-    })
+    })) as BotMember
     if (!botMember) return sphinxLogger.error(`no botMember`)
 
     const dest = botMember.memberPubkey

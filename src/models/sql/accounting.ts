@@ -54,4 +54,11 @@ export default class Accounting extends Model<Accounting> {
 
   @Column(DataType.BIGINT)
   extraAmount: number
+
+  @Column(DataType.BIGINT)
+  confirmations: number
+}
+
+export interface AccountingRecord extends Accounting {
+  dataValues: Accounting
 }

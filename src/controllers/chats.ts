@@ -36,7 +36,9 @@ export async function updateChat(req: Req, res: Response): Promise<void> {
   if (!id) {
     return failure(res, 'missing id')
   }
-  const chat: Chat = await models.Chat.findOne({ where: { id, tenant } })
+  const chat: Chat = (await models.Chat.findOne({
+    where: { id, tenant },
+  })) as Chat
   if (!chat) {
     return failure(res, 'chat not found')
   }
@@ -72,9 +74,9 @@ export async function kickChatMember(req: Req, res: Response): Promise<void> {
     return failure(res, 'missing param')
   }
   // remove chat.contactIds
-  const chat: ChatRecord = await models.Chat.findOne({
+  const chat: ChatRecord = (await models.Chat.findOne({
     where: { id: chatId, tenant },
-  })
+  })) as ChatRecord
   const contactIds = JSON.parse(chat.contactIds || '[]')
   const newContactIds = contactIds.filter((cid) => cid !== contactId)
   await chat.update({ contactIds: JSON.stringify(newContactIds) })
@@ -139,7 +141,7 @@ export async function receiveGroupKick(payload: Payload): Promise<void> {
     network_type,
     tenant,
   }
-  const message: Message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   socket.sendJson(
     {
@@ -157,10 +159,10 @@ export async function receiveGroupKick(payload: Payload): Promise<void> {
 export async function getChats(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  const chats: Chat[] = await models.Chat.findAll({
+  const chats: Chat[] = (await models.Chat.findAll({
     where: { deleted: false, tenant },
     raw: true,
-  })
+  })) as Chat[]
   const c = chats.map((chat) => jsonUtils.chatToJson(chat))
   success(res, c)
 }
@@ -176,9 +178,9 @@ export async function mute(req: Req, res: Response): Promise<void> {
     return failure(res, 'invalid option for mute')
   }
 
-  const chat: Chat = await models.Chat.findOne({
+  const chat: Chat = (await models.Chat.findOne({
     where: { id: chatId, tenant },
-  })
+  })) as Chat
 
   if (!chat) {
     return failure(res, 'chat not found')
@@ -221,9 +223,9 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
     alias: owner.alias,
   }
   await asyncForEach(contact_ids, async (cid) => {
-    const contact: Contact = await models.Contact.findOne({
+    const contact: Contact = (await models.Contact.findOne({
       where: { id: cid, tenant },
-    })
+    })) as Contact
     members[contact.publicKey] = {
       key: contact.contactKey,
       alias: contact.alias || '',
@@ -304,7 +306,7 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
       failure(res, e)
     },
     success: async function () {
-      const chat: Chat = await models.Chat.create(chatParams)
+      const chat: Chat = (await models.Chat.create(chatParams)) as Chat
       if (chat.type === constants.chat_types.tribe) {
         // save me as owner when i create
         try {
@@ -334,32 +336,32 @@ export async function addGroupMembers(req: Req, res: Response): Promise<void> {
 
   const members: { [k: string]: ChatMemberNetwork } = {} //{pubkey:{key,alias}, ...}
   const owner = req.owner
-  const chat: ChatRecord = await models.Chat.findOne({
+  const chat: ChatRecord = (await models.Chat.findOne({
     where: { id, tenant },
-  })
+  })) as ChatRecord
 
   const contactIds: number[] = JSON.parse(chat.contactIds || '[]')
   // for all members (existing and new)
   members[owner.publicKey] = { key: owner.contactKey, alias: owner.alias }
   if (chat.type === constants.chat_types.tribe) {
-    const me: ChatMember = await models.ChatMember.findOne({
+    const me: ChatMember = (await models.ChatMember.findOne({
       where: { contactId: owner.id, chatId: chat.id, tenant },
-    })
+    })) as ChatMember
     if (me) members[owner.publicKey].role = me.role
   }
   const allContactIds = contactIds.concat(contact_ids)
   await asyncForEach(allContactIds, async (cid) => {
-    const contact: Contact = await models.Contact.findOne({
+    const contact: Contact = (await models.Contact.findOne({
       where: { id: cid, tenant },
-    })
+    })) as Contact
     if (contact) {
       members[contact.publicKey] = {
         key: contact.contactKey,
         alias: contact.alias,
       }
-      const member: ChatMember = await models.ChatMember.findOne({
+      const member: ChatMember = (await models.ChatMember.findOne({
         where: { contactId: owner.id, chatId: chat.id, tenant },
-      })
+      })) as ChatMember
       if (member) members[contact.publicKey].role = member.role
     }
   })
@@ -382,9 +384,9 @@ export const deleteChat = async (req: Req, res: Response): Promise<void> => {
   const { id } = req.params
 
   const owner = req.owner
-  const chat: Chat = await models.Chat.findOne({
+  const chat: Chat = (await models.Chat.findOne({
     where: { id, tenant },
-  })
+  })) as Chat
   if (!chat) {
     return failure(res, 'you are not in this group')
   }
@@ -445,9 +447,9 @@ export const addTribeMember = async (
   const tenant: number = req.owner.id
   const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } =
     req.body
-  const chat: ChatRecord = await models.Chat.findOne({
+  const chat: ChatRecord = (await models.Chat.findOne({
     where: { id: chat_id, tenant },
-  })
+  })) as ChatRecord
   if (!chat) {
     return failure(res, 'chat not found')
   }
@@ -493,9 +495,9 @@ async function addMemberToTribe({
   isTribeOwner: boolean
 }): Promise<AddMemberToTribeRet> {
   let theSender: Contact | null = null
-  const sender: Contact = await models.Contact.findOne({
+  const sender: Contact = (await models.Contact.findOne({
     where: { publicKey: sender_pub_key, tenant },
-  })
+  })) as Contact
   const contactIds = JSON.parse(chat.contactIds || '[]')
   if (sender) {
     theSender = sender // might already include??
@@ -508,7 +510,7 @@ async function addMemberToTribe({
     }
   } else {
     if (member && member.key) {
-      const createdContact: Contact = await models.Contact.create({
+      const createdContact: Contact = (await models.Contact.create({
         publicKey: sender_pub_key,
         contactKey: member.key,
         alias: senderAlias,
@@ -517,7 +519,7 @@ async function addMemberToTribe({
         photoUrl: sender_photo_url,
         tenant,
         routeHint: sender_route_hint || '',
-      })
+      })) as Contact
       theSender = createdContact
       contactIds.push(createdContact.id)
     }
@@ -629,7 +631,7 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
       msg.senderAlias = sender_alias
       msg.senderPic = sender_photo_url
     }
-    const message: Message = await models.Message.create(msg)
+    const message: Message = (await models.Message.create(msg)) as Message
 
     const theChat = await addPendingContactIdsToChat(chat, tenant)
     socket.sendJson(
@@ -674,9 +676,9 @@ export async function receiveGroupLeave(payload: Payload): Promise<void> {
   let sender: Contact | undefined
   // EITHER private chat OR tribeOwner
   if (!isTribe || isTribeOwner) {
-    const sender = await models.Contact.findOne({
+    const sender: Contact = (await models.Contact.findOne({
       where: { publicKey: sender_pub_key, tenant },
-    })
+    })) as Contact
     if (!sender)
       return sphinxLogger.error(`=> receiveGroupLeave cant find sender`)
 
@@ -724,7 +726,7 @@ export async function receiveGroupLeave(payload: Payload): Promise<void> {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
   }
-  const message: Message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   socket.sendJson(
     {
@@ -776,9 +778,9 @@ export async function receiveGroupCreateOrInvite(
   const contacts: ContactRecord[] = []
   const newContacts: Contact[] = []
   for (const [pubkey, member] of Object.entries(chat_members)) {
-    const contact: ContactRecord = await models.Contact.findOne({
+    const contact: ContactRecord = (await models.Contact.findOne({
       where: { publicKey: pubkey, tenant },
-    })
+    })) as ContactRecord
     let addContact = false
     if (chat_type === constants.chat_types.group && member && member.key) {
       addContact = true
@@ -793,14 +795,14 @@ export async function receiveGroupCreateOrInvite(
     }
     if (addContact) {
       if (!contact) {
-        const createdContact: ContactRecord = await models.Contact.create({
+        const createdContact: ContactRecord = (await models.Contact.create({
           publicKey: pubkey,
           contactKey: member.key,
           alias: member.alias || 'Unknown',
           status: 1,
           fromGroup: true,
           tenant,
-        })
+        })) as ContactRecord
         contacts.push({
           ...createdContact.dataValues,
           role: member.role,
@@ -820,7 +822,7 @@ export async function receiveGroupCreateOrInvite(
   // make chat
   const date = new Date()
   date.setMilliseconds(0)
-  const chat: ChatRecord = await models.Chat.create({
+  const chat: ChatRecord = (await models.Chat.create({
     uuid: chat_uuid,
     contactIds: JSON.stringify(contactIds),
     createdAt: date,
@@ -830,7 +832,7 @@ export async function receiveGroupCreateOrInvite(
     ...(chat_host && { host: chat_host }),
     ...(chat_key && { groupKey: chat_key }),
     tenant,
-  })
+  })) as ChatRecord
 
   if (isTribe) {
     // IF TRIBE, ADD TO XREF
