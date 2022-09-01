@@ -31,7 +31,13 @@
     ],
     "require": [
       "ts-node/register"
-    ]
+    ],
+    "typescript": {
+      "rewritePaths": {
+        "src/": "build/"
+      },
+      "compile": false
+    }
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
@@ -109,6 +115,9 @@
     "zbase32": "^1.0.2"
   },
   "devDependencies": {
+    "@ava/typescript": "^2.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/mocha": "^9.1.1",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.33.0",
     "ava": "^3.15.0",

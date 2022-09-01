@@ -15,8 +15,9 @@
     "pretty": true,
     "strictNullChecks": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,                                /* Skip type checking all .d.ts files. */
+    "typeRoots": [ "./types", "./node_modules/@types"]
   },
-  "include": ["./app.ts", "./src/*", "./src/**/*", "./config/*.json"],
-  "exclude": ["node_modules"]
+  // "include": ["./app.ts", "./src/*", "./src/**/*", "./config/*.json"],
+  "exclude": ["node_modules", "types"]
 }

@@ -94,6 +94,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             };
             const uri = config.lnd_ip + ':' + config.lnd_port;
             lightningClient = new cln.Node(uri, credentials, options);
+            // console.log('After Trying to connect', lightningClient);
             return lightningClient;
         }
         // LND
@@ -724,6 +725,7 @@ function getInfo(tryProxy, noCache) {
         }));
     });
 }
+
 exports.getInfo = getInfo;
 function addInvoice(request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
