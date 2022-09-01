@@ -130,7 +130,7 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
       })
     })
   } catch (e) {
-    sphinxLogger.error('failed to process webhook', e)
+    sphinxLogger.error(['failed to process webhook', e], logging.Bots)
     unauthorized(res)
   }
   if (ok) success(res, { ok: true })

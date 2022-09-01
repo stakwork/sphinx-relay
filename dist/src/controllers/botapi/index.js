@@ -104,7 +104,7 @@ function processWebhook(req, res) {
             }));
         }
         catch (e) {
-            logger_1.sphinxLogger.error('failed to process webhook', e);
+            logger_1.sphinxLogger.error(['failed to process webhook', e], logger_1.logging.Bots);
             (0, res_1.unauthorized)(res);
         }
         if (ok)
