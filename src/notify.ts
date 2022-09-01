@@ -149,7 +149,7 @@ async function finalNotification(
     ],
   }
   const mutedChats = await models.Chat.findAll({
-    where: { query },
+    where: query,
   })
   const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)

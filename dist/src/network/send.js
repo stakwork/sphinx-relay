@@ -281,19 +281,24 @@ function sleep(ms) {
 function detectMentions(msg, isForwarded, chatId, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         const content = msg.message.content;
-        const words = content.split(' ');
-        if (words.includes('@all') && !isForwarded)
-            return [Infinity];
-        const ret = [];
-        const mentions = words.filter((w) => w.startsWith('@'));
-        yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
-            const lastAlias = men.substring(1);
-            const member = yield models_1.models.ChatMember.findOne({
-                where: { lastAlias, tenant, chatId },
-            });
-            ret.push(member.id);
-        }));
-        return ret;
+        if (content) {
+            const words = content.split(' ');
+            if (words.includes('@all') && !isForwarded)
+                return [Infinity];
+            const ret = [];
+            const mentions = words.filter((w) => w.startsWith('@'));
+            yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
+                const lastAlias = men.substring(1);
+                const member = (yield models_1.models.ChatMember.findOne({
+                    where: { lastAlias, tenant, chatId },
+                }));
+                ret.push(member.contactId);
+            }));
+            return ret;
+        }
+        else {
+            return [];
+        }
     });
 }
 //# sourceMappingURL=send.js.map
