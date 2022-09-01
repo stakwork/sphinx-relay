@@ -113,19 +113,19 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
                   }
                   await broadcast(a)
                 } else {
-                  sphinxLogger.debug('no content!!! (gitbot)')
+                  sphinxLogger.info('==> no content!!! (gitbot)')
                 }
               } else {
-                sphinxLogger.debug('no chat (gitbot)')
+                sphinxLogger.info('==> no chat (gitbot)')
               }
             } else {
-              sphinxLogger.debug('HMAC nOt VALID (gitbot)')
+              sphinxLogger.info('==> HMAC nOt VALID (gitbot)')
             }
           } else {
-            sphinxLogger.debug('no matching gitbot (gitbot)')
+            sphinxLogger.info('==> no matching gitbot (gitbot)')
           }
         } else {
-          sphinxLogger.debug('no repo match (gitbot)')
+          sphinxLogger.info('==> no repo match (gitbot)')
         }
       })
     })

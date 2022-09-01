@@ -82,23 +82,23 @@ function processWebhook(req, res) {
                                         yield (0, broadcast_1.default)(a);
                                     }
                                     else {
-                                        logger_1.sphinxLogger.debug('no content!!! (gitbot)');
+                                        logger_1.sphinxLogger.info('==> no content!!! (gitbot)');
                                     }
                                 }
                                 else {
-                                    logger_1.sphinxLogger.debug('no chat (gitbot)');
+                                    logger_1.sphinxLogger.info('==> no chat (gitbot)');
                                 }
                             }
                             else {
-                                logger_1.sphinxLogger.debug('HMAC nOt VALID (gitbot)');
+                                logger_1.sphinxLogger.info('==> HMAC nOt VALID (gitbot)');
                             }
                         }
                         else {
-                            logger_1.sphinxLogger.debug('no matching gitbot (gitbot)');
+                            logger_1.sphinxLogger.info('==> no matching gitbot (gitbot)');
                         }
                     }
                     else {
-                        logger_1.sphinxLogger.debug('no repo match (gitbot)');
+                        logger_1.sphinxLogger.info('==> no repo match (gitbot)');
                     }
                 }));
             }));
