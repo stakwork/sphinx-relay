@@ -32,10 +32,9 @@ function failure200(res, e) {
 }
 exports.failure200 = failure200;
 function unauthorized(res) {
-    res.writeHead(401, 'Access invalid for user', {
-        'Content-Type': 'text/plain',
-    });
-    res.end('invalid credentials');
+    res.status(401);
+    res.text('Invalid credentials');
+    res.end();
 }
 exports.unauthorized = unauthorized;
 //# sourceMappingURL=res.js.map

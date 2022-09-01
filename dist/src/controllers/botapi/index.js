@@ -28,10 +28,12 @@ function processWebhook(req, res) {
         logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);
         const sig = req.headers['x-hub-signature-256'];
         if (!sig) {
+            logger_1.sphinxLogger.error('invalid signature', logger_1.logging.Bots);
             return (0, res_1.unauthorized)(res);
         }
         const event_type = req.headers['x-github-event'] || req.headers['X-GitHub-Event'];
         if (!event_type) {
+            logger_1.sphinxLogger.error('no github event type', logger_1.logging.Bots);
             return (0, res_1.unauthorized)(res);
         }
         const event = req.body;
@@ -40,6 +42,7 @@ function processWebhook(req, res) {
             repo = ((_a = event.repository) === null || _a === void 0 ? void 0 : _a.full_name.toLowerCase()) || '';
         }
         if (!repo) {
+            logger_1.sphinxLogger.error('repo not configured', logger_1.logging.Bots);
             return (0, res_1.unauthorized)(res);
         }
         let ok = false;
@@ -106,8 +109,10 @@ function processWebhook(req, res) {
         }
         if (ok)
             (0, res_1.success)(res, { ok: true });
-        else
+        else {
+            logger_1.sphinxLogger.error('invalid HMAC', logger_1.logging.Bots);
             (0, res_1.unauthorized)(res);
+        }
     });
 }
 exports.processWebhook = processWebhook;

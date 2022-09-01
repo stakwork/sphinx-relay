@@ -13,7 +13,7 @@ import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import broadcast from './broadcast'
 import pay from './pay'
-import { sphinxLogger } from '../../utils/logger'
+import { sphinxLogger, logging } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
@@ -48,12 +48,14 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
   if (!sig) {
+    sphinxLogger.error('invalid signature', logging.Bots)
     return unauthorized(res)
   }
 
   const event_type =
     req.headers['x-github-event'] || req.headers['X-GitHub-Event']
   if (!event_type) {
+    sphinxLogger.error('no github event type', logging.Bots)
     return unauthorized(res)
   }
 
@@ -63,6 +65,7 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
     repo = event.repository?.full_name.toLowerCase() || ''
   }
   if (!repo) {
+    sphinxLogger.error('repo not configured', logging.Bots)
     return unauthorized(res)
   }
 
@@ -131,7 +134,10 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
     unauthorized(res)
   }
   if (ok) success(res, { ok: true })
-  else unauthorized(res)
+  else {
+    sphinxLogger.error('invalid HMAC', logging.Bots)
+    unauthorized(res)
+  }
 }
 
 export async function processAction(req: Req, res: Res): Promise<void> {
