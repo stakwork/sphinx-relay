@@ -115,8 +115,8 @@ function init() {
             // }
             try {
                 let chan;
-                if (bot && bot.meta)
-                    chan = bot.meta;
+                if (bot && bot.secret)
+                    chan = bot.secret;
                 if (!chan) {
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('LoopBot')
@@ -177,7 +177,7 @@ function init() {
                 const arr = cmd.split('=');
                 if (bot && arr.length > 1) {
                     const chan = arr[1];
-                    yield bot.update({ meta: chan });
+                    yield bot.update({ secret: chan });
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('LoopBot')
                         .setDescription('Channel updated to ' + chan)

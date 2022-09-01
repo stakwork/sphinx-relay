@@ -110,7 +110,6 @@ export default async function migrate(): Promise<void> {
     //Do nothing here
   }
 
-  addTableColumn('sphinx_bots', 'meta')
   addTableColumn('sphinx_bots', 'webhook')
   addTableColumn('sphinx_bots', 'uuid')
   addTableColumn('sphinx_bots', 'price_per_use', 'INT')
