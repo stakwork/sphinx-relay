@@ -31,7 +31,7 @@ function failure200(res, e) {
 
 function unauthorized(res) {
   res.status(401)
-  res.text('Invalid credentials')
+  res.json({ success: false, error: 'Invalid credentials' })
   res.end()
 }
 

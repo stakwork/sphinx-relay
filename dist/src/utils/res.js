@@ -33,7 +33,7 @@ function failure200(res, e) {
 exports.failure200 = failure200;
 function unauthorized(res) {
     res.status(401);
-    res.text('Invalid credentials');
+    res.json({ success: false, error: 'Invalid credentials' });
     res.end();
 }
 exports.unauthorized = unauthorized;
