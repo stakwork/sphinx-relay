@@ -380,7 +380,9 @@ async function detectMentions(
       const member: ChatMemberModel = (await models.ChatMember.findOne({
         where: { lastAlias, tenant, chatId },
       })) as ChatMemberModel
-      ret.push(member.contactId)
+      if (member) {
+        ret.push(member.contactId)
+      }
     })
     return ret
   } else {

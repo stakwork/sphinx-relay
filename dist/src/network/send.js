@@ -292,7 +292,9 @@ function detectMentions(msg, isForwarded, chatId, tenant) {
                 const member = (yield models_1.models.ChatMember.findOne({
                     where: { lastAlias, tenant, chatId },
                 }));
-                ret.push(member.contactId);
+                if (member) {
+                    ret.push(member.contactId);
+                }
             }));
             return ret;
         }

@@ -75,7 +75,7 @@ function init() {
             //   }
             //   let chan
             //   const bot = await getBot(message.channel.id)
-            //   if (bot && bot.meta) chan = bot.meta
+            //   if (bot && bot.secret) chan = bot.secret
             //   if (!chan) {
             //     const embed = new Sphinx.MessageEmbed()
             //       .setAuthor('LoopBot')
