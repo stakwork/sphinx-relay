@@ -78,7 +78,7 @@ const sendNotification = async (
     chat_id: chat.id || 0,
     sound: '',
   }
-  let chatIsMuted = chat.isMuted || chat.notify === constants.notify_levels.mute
+  let chatIsMuted = chat.notify === constants.notify_levels.mute
   if (chat.notify === constants.notify_levels.mentions && !push) {
     chatIsMuted = true
   }
@@ -138,18 +138,11 @@ async function finalNotification(
   const mutedAtLeast = push
     ? constants.notify_levels.mute
     : constants.notify_levels.mentions
-  const query = {
-    [Op.or]: [
-      {
-        isMuted: true,
-      },
-      {
-        notify: { [Op.gte]: mutedAtLeast },
-      },
-    ],
-  }
   const mutedChats = await models.Chat.findAll({
-    where: query,
+    where: {
+      tenant: ownerID,
+      notify: { [Op.gte]: mutedAtLeast },
+    },
   })
   const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)

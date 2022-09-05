@@ -64,7 +64,7 @@ const sendNotification = (chat, name, type, owner, amount, push) => __awaiter(vo
         chat_id: chat.id || 0,
         sound: '',
     };
-    let chatIsMuted = chat.isMuted || chat.notify === constants_1.default.notify_levels.mute;
+    let chatIsMuted = chat.notify === constants_1.default.notify_levels.mute;
     if (chat.notify === constants_1.default.notify_levels.mentions && !push) {
         chatIsMuted = true;
     }
@@ -121,18 +121,11 @@ function finalNotification(ownerID, params, push) {
         const mutedAtLeast = push
             ? constants_1.default.notify_levels.mute
             : constants_1.default.notify_levels.mentions;
-        const query = {
-            [sequelize_1.Op.or]: [
-                {
-                    isMuted: true,
-                },
-                {
-                    notify: { [sequelize_1.Op.gte]: mutedAtLeast },
-                },
-            ],
-        };
         const mutedChats = yield models_1.models.Chat.findAll({
-            where: query,
+            where: {
+                tenant: ownerID,
+                notify: { [sequelize_1.Op.gte]: mutedAtLeast },
+            },
         });
         const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || [];
         mutedChatIds.push(0); // no msgs in non chat (anon keysends)
