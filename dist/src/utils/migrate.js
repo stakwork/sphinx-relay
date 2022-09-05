@@ -9,10 +9,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const helpers_1 = require("../helpers");
 const models_1 = require("../models");
 const logger_1 = require("./logger");
+function migrateMuted() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const chats = (yield models_1.models.Chat.findAll());
+        let mig = false;
+        chats.forEach((c) => {
+            if (c.notify === null) {
+                mig = true;
+            }
+        });
+        if (!mig)
+            return;
+        console.log('===========> migrate is_muted to notify!');
+        yield (0, helpers_1.asyncForEach)(chats, (c) => __awaiter(this, void 0, void 0, function* () {
+            console.log(c.id);
+        }));
+        console.log('===========> finished migrating is_muted to notify!');
+    });
+}
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        yield migrateMuted();
         addTableColumn('sphinx_chats', 'notify', 'BIGINT');
         addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN');
         addTableColumn('sphinx_messages', 'recipient_alias');

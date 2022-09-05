@@ -1,7 +1,26 @@
-import { sequelize } from '../models'
+import { asyncForEach } from '../helpers'
+import { sequelize, models, Chat } from '../models'
 import { logging, sphinxLogger } from './logger'
 
+async function migrateMuted() {
+  const chats = (await models.Chat.findAll()) as Chat[]
+  let mig = false
+  chats.forEach((c) => {
+    if (c.notify === null) {
+      mig = true
+    }
+  })
+  if (!mig) return
+  console.log('===========> migrate is_muted to notify!')
+  await asyncForEach(chats, async (c) => {
+    console.log(c.id)
+  })
+  console.log('===========> finished migrating is_muted to notify!')
+}
+
 export default async function migrate(): Promise<void> {
+  await migrateMuted()
+
   addTableColumn('sphinx_chats', 'notify', 'BIGINT')
 
   addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN')
