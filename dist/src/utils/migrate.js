@@ -12,22 +12,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const helpers_1 = require("../helpers");
 const models_1 = require("../models");
 const logger_1 = require("./logger");
+const constants_1 = require("../constants");
 function migrateMuted() {
     return __awaiter(this, void 0, void 0, function* () {
-        const chats = (yield models_1.models.Chat.findAll());
-        let mig = false;
-        chats.forEach((c) => {
-            if (c.notify === null) {
-                mig = true;
-            }
-        });
-        if (!mig)
-            return;
-        console.log('===========> migrate is_muted to notify!');
-        yield (0, helpers_1.asyncForEach)(chats, (c) => __awaiter(this, void 0, void 0, function* () {
-            console.log(c.id);
-        }));
-        console.log('===========> finished migrating is_muted to notify!');
+        try {
+            const chats = (yield models_1.models.Chat.findAll());
+            let mig = false;
+            chats.forEach((c) => {
+                if (c.notify === null) {
+                    mig = true;
+                }
+            });
+            if (!mig)
+                return;
+            console.log('===========> migrate is_muted to notify!');
+            yield (0, helpers_1.asyncForEach)(chats, (c) => __awaiter(this, void 0, void 0, function* () {
+                console.log(c.id);
+                yield c.update({
+                    notify: c.isMuted
+                        ? constants_1.default.notify_levels.mute
+                        : constants_1.default.notify_levels.all,
+                });
+            }));
+            console.log('===========> finished migrating is_muted to notify!');
+        }
+        catch (e) {
+            console.log('error migrating muted,', e);
+        }
     });
 }
 function migrate() {

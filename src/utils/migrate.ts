@@ -1,21 +1,31 @@
 import { asyncForEach } from '../helpers'
 import { sequelize, models, Chat } from '../models'
 import { logging, sphinxLogger } from './logger'
+import constants from '../constants'
 
 async function migrateMuted() {
-  const chats = (await models.Chat.findAll()) as Chat[]
-  let mig = false
-  chats.forEach((c) => {
-    if (c.notify === null) {
-      mig = true
-    }
-  })
-  if (!mig) return
-  console.log('===========> migrate is_muted to notify!')
-  await asyncForEach(chats, async (c) => {
-    console.log(c.id)
-  })
-  console.log('===========> finished migrating is_muted to notify!')
+  try {
+    const chats = (await models.Chat.findAll()) as Chat[]
+    let mig = false
+    chats.forEach((c) => {
+      if (c.notify === null) {
+        mig = true
+      }
+    })
+    if (!mig) return
+    console.log('===========> migrate is_muted to notify!')
+    await asyncForEach(chats, async (c) => {
+      console.log(c.id)
+      await c.update({
+        notify: c.isMuted
+          ? constants.notify_levels.mute
+          : constants.notify_levels.all,
+      })
+    })
+    console.log('===========> finished migrating is_muted to notify!')
+  } catch (e) {
+    console.log('error migrating muted,', e)
+  }
 }
 
 export default async function migrate(): Promise<void> {
