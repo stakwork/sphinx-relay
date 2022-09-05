@@ -15,12 +15,13 @@ async function migrateMuted() {
     if (!mig) return
     console.log('===========> migrate is_muted to notify!')
     await asyncForEach(chats, async (c) => {
-      console.log(c.id)
-      await c.update({
-        notify: c.isMuted
-          ? constants.notify_levels.mute
-          : constants.notify_levels.all,
-      })
+      if (c.notify === null) {
+        await c.update({
+          notify: c.isMuted
+            ? constants.notify_levels.mute
+            : constants.notify_levels.all,
+        })
+      }
     })
     console.log('===========> finished migrating is_muted to notify!')
   } catch (e) {

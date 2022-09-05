@@ -27,12 +27,13 @@ function migrateMuted() {
                 return;
             console.log('===========> migrate is_muted to notify!');
             yield (0, helpers_1.asyncForEach)(chats, (c) => __awaiter(this, void 0, void 0, function* () {
-                console.log(c.id);
-                yield c.update({
-                    notify: c.isMuted
-                        ? constants_1.default.notify_levels.mute
-                        : constants_1.default.notify_levels.all,
-                });
+                if (c.notify === null) {
+                    yield c.update({
+                        notify: c.isMuted
+                            ? constants_1.default.notify_levels.mute
+                            : constants_1.default.notify_levels.all,
+                    });
+                }
             }));
             console.log('===========> finished migrating is_muted to notify!');
         }
