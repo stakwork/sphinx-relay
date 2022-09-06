@@ -17,6 +17,7 @@ import BotMember, { BotMemberRecord } from './sql/botMember'
 import Accounting, { AccountingRecord } from './sql/accounting'
 import Lsat from './sql/lsat'
 import RequestsTransportTokens from './sql/requestsTransportTokens'
+import LocalData, { LocalDataRecord } from './sql/localData'
 import * as minimist from 'minimist'
 import { loadConfig } from '../utils/config'
 import { isProxy } from '../utils/proxy'
@@ -51,6 +52,7 @@ const opts = {
     Accounting,
     Lsat,
     RequestsTransportTokens,
+    LocalData,
   ],
 }
 if (isProxy()) {
@@ -92,4 +94,6 @@ export {
   Lsat,
   BotMember,
   RequestsTransportTokens,
+  LocalData,
+  LocalDataRecord,
 }
