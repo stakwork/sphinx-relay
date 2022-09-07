@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMediaInfo = exports.verifier = exports.signer = exports.receiveAttachment = exports.receivePurchaseDeny = exports.receivePurchaseAccept = exports.receivePurchase = exports.purchase = exports.saveMediaKeys = exports.sendAttachmentMessage = void 0;
+exports.saveMedia = exports.getMediaInfo = exports.verifier = exports.signer = exports.receiveAttachment = exports.receivePurchaseDeny = exports.receivePurchaseAccept = exports.receivePurchase = exports.purchase = exports.saveMediaKeys = exports.sendAttachmentMessage = void 0;
 const models_1 = require("../models");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
@@ -29,6 +29,7 @@ const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
+const moment = require("moment");
 const config = (0, config_1.loadConfig)();
 /*
 
@@ -550,4 +551,50 @@ function getMediaInfo(muid, pubkey) {
     });
 }
 exports.getMediaInfo = getMediaInfo;
+function saveMedia(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { boost, date, description, episode_title, guest, image_url, keyword, link, node_type, ref_id, show_title, text, timestamp, topics, type, weight, } = req.body;
+        try {
+            let existing = undefined;
+            existing = (yield models_1.models.LocalData.findOne({
+                where: {
+                    refId: ref_id,
+                    tenant,
+                },
+            }));
+            if (existing) {
+                yield existing.increment({ searchFrequency: 1 });
+                return (0, res_1.success)(res, 'Data Stored');
+            }
+            yield models_1.models.LocalData.create({
+                boost,
+                date,
+                description,
+                episodeTile: episode_title,
+                guest: JSON.stringify(guest),
+                imageUrl: image_url,
+                keyword,
+                link,
+                nodeType: node_type,
+                showTitle: show_title,
+                text,
+                timestamp,
+                topics: JSON.stringify(topics),
+                type,
+                weight,
+                tenant,
+                firstInteraction: moment().unix(),
+                refId: ref_id,
+            });
+            return (0, res_1.success)(res, 'Data Stored');
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, 'Internal Server Error');
+        }
+    });
+}
+exports.saveMedia = saveMedia;
 //# sourceMappingURL=media.js.map

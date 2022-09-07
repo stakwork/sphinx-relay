@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
+exports.LocalData = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
 // parse BIGINTs to number
 const pg = require("pg");
 pg.defaults.parseInt8 = true;
@@ -34,6 +34,8 @@ const lsat_1 = require("./sql/lsat");
 exports.Lsat = lsat_1.default;
 const requestsTransportTokens_1 = require("./sql/requestsTransportTokens");
 exports.RequestsTransportTokens = requestsTransportTokens_1.default;
+const localData_1 = require("./sql/localData");
+exports.LocalData = localData_1.default;
 const minimist = require("minimist");
 const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
@@ -60,6 +62,7 @@ const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_l
         accounting_1.default,
         lsat_1.default,
         requestsTransportTokens_1.default,
+        localData_1.default,
     ] });
 if ((0, proxy_1.isProxy)()) {
     opts.pool = {

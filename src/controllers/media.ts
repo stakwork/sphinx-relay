@@ -1,4 +1,4 @@
-import { models, Message, MediaKey } from '../models'
+import { models, Message, MediaKey, LocalDataRecord } from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as resUtils from '../utils/res'
@@ -15,10 +15,11 @@ import * as network from '../network'
 import * as short from 'short-uuid'
 import constants from '../constants'
 import { loadConfig } from '../utils/config'
-import { failure } from '../utils/res'
+import { failure, success } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 import { ChatPlusMembers } from '../network/send'
+import * as moment from 'moment'
 
 const config = loadConfig()
 
@@ -626,5 +627,67 @@ export async function getMediaInfo(muid, pubkey: string) {
     return res
   } catch (e) {
     return null
+  }
+}
+
+export async function saveMedia(req: Req, res: Response) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const {
+    boost,
+    date,
+    description,
+    episode_title,
+    guest,
+    image_url,
+    keyword,
+    link,
+    node_type,
+    ref_id,
+    show_title,
+    text,
+    timestamp,
+    topics,
+    type,
+    weight,
+  } = req.body
+
+  try {
+    let existing: LocalDataRecord | undefined = undefined
+    existing = (await models.LocalData.findOne({
+      where: {
+        refId: ref_id,
+        tenant,
+      },
+    })) as LocalDataRecord
+
+    if (existing) {
+      await existing.increment({ searchFrequency: 1 })
+      return success(res, 'Data Stored')
+    }
+
+    await models.LocalData.create({
+      boost,
+      date,
+      description,
+      episodeTile: episode_title,
+      guest: JSON.stringify(guest),
+      imageUrl: image_url,
+      keyword,
+      link,
+      nodeType: node_type,
+      showTitle: show_title,
+      text,
+      timestamp,
+      topics: JSON.stringify(topics),
+      type,
+      weight,
+      tenant,
+      firstInteraction: moment().unix(),
+      refId: ref_id,
+    })
+    return success(res, 'Data Stored')
+  } catch (error) {
+    return failure(res, 'Internal Server Error')
   }
 }

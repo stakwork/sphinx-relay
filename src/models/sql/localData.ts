@@ -55,12 +55,11 @@ export default class LocalData extends Model<LocalData> {
   @Column
   weight: number
 
-  @Column({
-    type: DataType.BIGINT,
-    defaultValue: 0,
-    allowNull: true,
-  })
-  durationListened: number
+  @Column
+  firstInteraction: number
+
+  @Column
+  history: string
 
   @Column({
     defaultValue: 1,

@@ -98,6 +98,7 @@ function set(app) {
         app.post('/attachment', media.sendAttachmentMessage);
         app.post('/purchase', media.purchase);
         app.get('/signer/:challenge', media.signer);
+        app.post('/save_media', media.saveMedia);
         app.post('/verify_external', auth.verifyAuthRequest);
         app.get('/request_transport_key', auth.requestTransportKey);
         app.post('/stream', feed.streamFeed);
