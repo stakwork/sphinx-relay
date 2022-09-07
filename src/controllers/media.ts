@@ -632,6 +632,12 @@ export async function getMediaInfo(muid, pubkey: string) {
 
 export async function saveMedia(req: Req, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
+
+  try {
+    schemas.mediaData.validateSync(req.body)
+  } catch (error) {
+    return failure(res, error.message)
+  }
   const tenant: number = req.owner.id
   const {
     boost,

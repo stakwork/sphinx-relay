@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.purchase = exports.message = exports.attachment = void 0;
+exports.mediaData = exports.purchase = exports.message = exports.attachment = void 0;
 const yup = require("yup");
 /*
 These schemas validate payloads coming from app,
@@ -19,5 +19,23 @@ exports.purchase = yup.object().shape({
     contact_id: yup.number().required(),
     media_token: yup.string().required(),
     amount: yup.number().required(),
+});
+exports.mediaData = yup.object().shape({
+    boost: yup.number().required(),
+    date: yup.number().required(),
+    description: yup.string().required(),
+    episode_title: yup.string().required(),
+    guests: yup.array().required(),
+    image_url: yup.string().required(),
+    keyword: yup.boolean().required(),
+    link: yup.string().required(),
+    node_type: yup.string().required(),
+    ref_id: yup.string().required(),
+    show_title: yup.string().required(),
+    text: yup.string().required(),
+    timestamp: yup.string().required(),
+    topics: yup.array().required(),
+    type: yup.string().required(),
+    weight: yup.string().required(),
 });
 //# sourceMappingURL=schemas.js.map

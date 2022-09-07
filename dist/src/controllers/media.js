@@ -555,6 +555,12 @@ function saveMedia(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
+        try {
+            schemas.mediaData.validateSync(req.body);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error.message);
+        }
         const tenant = req.owner.id;
         const { boost, date, description, episode_title, guest, image_url, keyword, link, node_type, ref_id, show_title, text, timestamp, topics, type, weight, } = req.body;
         try {
