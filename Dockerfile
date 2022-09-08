@@ -13,7 +13,6 @@ RUN apt-get -y install git
 
 RUN rm ./package-lock.json
 
-RUN npm install bcrypt
 RUN npm install
 
 RUN cp /relay/config/app.json /relay/dist/config/app.json
