@@ -106,7 +106,7 @@ export async function anonymousKeysend(
   route_hint: string,
   amount: number,
   text: string,
-  onSuccess: ({ destination_key: string, amount: number }) => void,
+  onSuccess: ({ destination_key, amount }) => void,
   onFailure: (error) => void,
   extra_tlv: { [k: string]: string }
 ) {
