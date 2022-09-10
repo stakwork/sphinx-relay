@@ -15,6 +15,9 @@ export default class ActionHistory extends Model<ActionHistory> {
 
   @Column(DataType.TEXT)
   metaData: string
+
+  @Column
+  tenant: number
 }
 
 export interface ActionHistoryRecord extends ActionHistory {

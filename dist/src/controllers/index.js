@@ -35,6 +35,7 @@ const res_1 = require("../utils/res");
 const auth = require("./auth");
 const personal = require("./api/personal");
 const lsats = require("./lsats");
+const action = require("./actionHistory");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -132,6 +133,7 @@ function set(app) {
                 res.send({ version: gitinfo.tag });
             });
         });
+        app.post('/action_history', action.saveAction);
         app.get('/latest', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!req.owner)
