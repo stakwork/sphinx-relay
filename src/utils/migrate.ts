@@ -209,6 +209,21 @@ export default async function migrate(): Promise<void> {
   } catch (e) {
     //Do nothing here
   }
+
+  // add actionHistory table
+  try {
+    await sequelize.query(`
+    CREATE TABLE sphinx_action_history (
+      id BIGINT NOT NULL PRIMARY KEY,
+      type TEXT,
+      meta_data TEXT,
+      tenant INTEGER,
+			created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch (e) {
+    //Do nothing here
+  }
 }
 
 async function addTenant(tableName) {

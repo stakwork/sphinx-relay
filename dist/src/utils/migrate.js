@@ -187,6 +187,21 @@ function migrate() {
         catch (e) {
             //Do nothing here
         }
+        // add actionHistory table
+        try {
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_action_history (
+      id BIGINT NOT NULL PRIMARY KEY,
+      type TEXT,
+      meta_data TEXT,
+      tenant INTEGER,
+			created_at DATETIME,
+      updated_at DATETIME
+    )`);
+        }
+        catch (e) {
+            //Do nothing here
+        }
     });
 }
 exports.default = migrate;
