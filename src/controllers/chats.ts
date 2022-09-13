@@ -183,7 +183,8 @@ export async function setNotifyLevel(req: Req, res: Response): Promise<void> {
   if (!chat) {
     return failure(res, 'chat not found')
   }
-  await chat.update({ notify: level })
+  const isMuted: boolean = level === constants.notify_levels.mute
+  await chat.update({ notify: level, isMuted })
 
   success(res, jsonUtils.chatToJson(chat))
 }
@@ -207,7 +208,13 @@ export async function mute(req: Req, res: Response): Promise<void> {
     return failure(res, 'chat not found')
   }
 
-  await chat.update({ isMuted: mute == 'mute' })
+  const isMuted = mute == 'mute'
+  await chat.update({
+    isMuted,
+    notify: isMuted
+      ? constants.notify_levels.mute
+      : constants.notify_levels.all,
+  })
 
   success(res, jsonUtils.chatToJson(chat))
 }

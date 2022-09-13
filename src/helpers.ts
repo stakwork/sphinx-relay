@@ -66,7 +66,7 @@ export const sendContactKeys = async ({
   type: number
   contactIds: number[]
   sender: any
-  success?: ({ destination_key: string, amount: number }) => void
+  success?: ({ destination_key, amount }) => void
   failure?: (error: Error) => void
   dontActuallySendContactKey?: boolean
   contactPubKey?: string

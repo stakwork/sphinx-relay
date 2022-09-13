@@ -177,7 +177,8 @@ function setNotifyLevel(req, res) {
         if (!chat) {
             return (0, res_1.failure)(res, 'chat not found');
         }
-        yield chat.update({ notify: level });
+        const isMuted = level === constants_1.default.notify_levels.mute;
+        yield chat.update({ notify: level, isMuted });
         (0, res_1.success)(res, jsonUtils.chatToJson(chat));
     });
 }
@@ -198,7 +199,13 @@ function mute(req, res) {
         if (!chat) {
             return (0, res_1.failure)(res, 'chat not found');
         }
-        yield chat.update({ isMuted: mute == 'mute' });
+        const isMuted = mute == 'mute';
+        yield chat.update({
+            isMuted,
+            notify: isMuted
+                ? constants_1.default.notify_levels.mute
+                : constants_1.default.notify_levels.all,
+        });
         (0, res_1.success)(res, jsonUtils.chatToJson(chat));
     });
 }
