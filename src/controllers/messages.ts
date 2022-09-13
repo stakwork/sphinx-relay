@@ -435,6 +435,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     message_status,
+    force_push,
     hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
@@ -480,7 +481,14 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    msg.senderAlias || sender.alias,
+    'message',
+    owner,
+    undefined,
+    force_push
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
@@ -502,6 +510,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     msg_id,
+    force_push,
     hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
 
@@ -559,7 +568,14 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
       where: { uuid: msg.replyUuid as string, tenant },
     })) as Message
     if (ogMsg && ogMsg.sender === tenant) {
-      sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner)
+      sendNotification(
+        chat,
+        msg.senderAlias || sender.alias,
+        'boost',
+        owner,
+        undefined,
+        force_push
+      )
     }
   }
 }

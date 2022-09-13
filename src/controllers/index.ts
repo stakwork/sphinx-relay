@@ -42,6 +42,7 @@ export async function set(app) {
   app.post('/group', chats.createGroupChat)
   app.put('/chats/:id', chats.updateChat)
   app.post('/chats/:chat_id/:mute_unmute', chats.mute)
+  app.put('/notify/:chat_id/:level', chats.setNotifyLevel)
   app.delete('/chat/:id', chats.deleteChat)
   app.put('/chat/:id', chats.addGroupMembers)
   app.put('/kick/:chat_id/:contact_id', chats.kickChatMember)

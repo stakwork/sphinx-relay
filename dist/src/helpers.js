@@ -226,6 +226,7 @@ function parseReceiveParams(payload) {
         const reply_uuid = dat.message.replyUuid;
         const parent_id = dat.message.parentId;
         const purchaser_id = dat.message.purchaser;
+        const force_push = dat.message.push;
         const network_type = dat.network_type || 0;
         const isTribeOwner = dat.isTribeOwner ? true : false;
         const hasForwardedSats = dat.hasForwardedSats ? true : false;
@@ -299,6 +300,7 @@ function parseReceiveParams(payload) {
             sender_photo_url,
             network_type,
             message_status,
+            force_push,
             recipient_alias,
             recipient_pic,
         };

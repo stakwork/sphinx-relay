@@ -3,8 +3,8 @@ import * as SphinxBot from 'sphinx-bot'
 import * as MotherBot from './mother'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
+import { BotMsg } from '../network/interfaces'
 import * as GitBot from './git'
-import { Msg } from '../network/interfaces'
 import { buildBotPayload } from '../controllers/bots'
 
 async function init() {
@@ -14,7 +14,7 @@ async function init() {
   GitBot.init()
 }
 
-function builtinBotEmit(msg: Msg) {
+function builtinBotEmit(msg: BotMsg) {
   setTimeout(() => {
     SphinxBot._emit('message', buildBotPayload(msg))
   }, 1200)

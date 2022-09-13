@@ -101,7 +101,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     if (routeHint)
                         updateObj.routeHint = routeHint;
                     yield contact.update(updateObj);
-                    var contactJson = jsonUtils.contactToJson(contact);
+                    const contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
                         type: 'contact',

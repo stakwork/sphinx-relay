@@ -46,6 +46,7 @@ const logging = {
     Lsat: 'LSAT',
     Greenlight: 'GREENLIGHT',
     SSL: 'SSL',
+    Bots: 'BOTS',
 };
 exports.logging = logging;
 function sphinxLoggerBase(message, loggingType = 'MISC', level) {
