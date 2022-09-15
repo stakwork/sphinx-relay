@@ -9,9 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveAction = void 0;
+exports.saveActionBulk = exports.saveAction = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
+const helpers_1 = require("../helpers");
 function saveAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -37,4 +38,38 @@ function saveAction(req, res) {
     });
 }
 exports.saveAction = saveAction;
+function saveActionBulk(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { data } = req.body;
+        if (!Array.isArray(data))
+            return (0, res_1.failure)(res, 'invalid data');
+        if (data.length === 0)
+            return (0, res_1.failure)(res, 'Please provide an array with contents');
+        const insertAction = (value) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield models_1.models.ActionHistory.create({
+                    tenant,
+                    metaData: JSON.stringify(value.meta_data),
+                    type: value.type,
+                });
+            }
+            catch (error) {
+                console.log(error);
+                throw error;
+            }
+        });
+        try {
+            yield (0, helpers_1.asyncForEach)(data, insertAction);
+            return (0, res_1.success)(res, 'Data saved successfully');
+        }
+        catch (error) {
+            console.log(error);
+            return (0, res_1.failure)(res, 'An error occured');
+        }
+    });
+}
+exports.saveActionBulk = saveActionBulk;
 //# sourceMappingURL=actionHistory.js.map
