@@ -28,10 +28,12 @@ function processWebhook(req, res) {
         logger_1.sphinxLogger.info(`=> processWebhook ${req.body}`);
         const sig = req.headers['x-hub-signature-256'];
         if (!sig) {
+            logger_1.sphinxLogger.error('invalid signature', logger_1.logging.Bots);
             return (0, res_1.unauthorized)(res);
         }
         const event_type = req.headers['x-github-event'] || req.headers['X-GitHub-Event'];
         if (!event_type) {
+            logger_1.sphinxLogger.error('no github event type', logger_1.logging.Bots);
             return (0, res_1.unauthorized)(res);
         }
         const event = req.body;
@@ -40,17 +42,18 @@ function processWebhook(req, res) {
             repo = ((_a = event.repository) === null || _a === void 0 ? void 0 : _a.full_name.toLowerCase()) || '';
         }
         if (!repo) {
+            logger_1.sphinxLogger.error('repo not configured', logger_1.logging.Bots);
             return (0, res_1.unauthorized)(res);
         }
         let ok = false;
         try {
             // for all "owners"
-            const allChatBots = yield models_1.models.ChatBot.findAll({
+            const allChatBots = (yield models_1.models.ChatBot.findAll({
                 where: { botUuid: git_1.GITBOT_UUID },
-            });
-            const allGitBots = yield models_1.models.Bot.findAll({
+            }));
+            const allGitBots = (yield models_1.models.Bot.findAll({
                 where: { uuid: git_1.GITBOT_UUID },
-            });
+            }));
             yield (0, helpers_1.asyncForEach)(allChatBots, (cb) => __awaiter(this, void 0, void 0, function* () {
                 const meta = cb.meta ? JSON.parse(cb.meta) : { repos: [] };
                 yield (0, helpers_1.asyncForEach)(meta.repos, (r) => __awaiter(this, void 0, void 0, function* () {
@@ -61,9 +64,9 @@ function processWebhook(req, res) {
                             if (valid) {
                                 ok = true;
                                 // process!
-                                const chat = yield models_1.models.Chat.findOne({
+                                const chat = (yield models_1.models.Chat.findOne({
                                     where: { id: cb.chatId },
-                                });
+                                }));
                                 if (chat) {
                                     const content = (0, githook_1.processGithook)(req.body, event_type);
                                     if (content) {
@@ -79,35 +82,37 @@ function processWebhook(req, res) {
                                         yield (0, broadcast_1.default)(a);
                                     }
                                     else {
-                                        logger_1.sphinxLogger.debug('no content!!! (gitbot)');
+                                        logger_1.sphinxLogger.info('==> no content!!! (gitbot)');
                                     }
                                 }
                                 else {
-                                    logger_1.sphinxLogger.debug('no chat (gitbot)');
+                                    logger_1.sphinxLogger.info('==> no chat (gitbot)');
                                 }
                             }
                             else {
-                                logger_1.sphinxLogger.debug('HMAC nOt VALID (gitbot)');
+                                logger_1.sphinxLogger.info('==> HMAC nOt VALID (gitbot)');
                             }
                         }
                         else {
-                            logger_1.sphinxLogger.debug('no matching gitbot (gitbot)');
+                            logger_1.sphinxLogger.info('==> no matching gitbot (gitbot)');
                         }
                     }
                     else {
-                        logger_1.sphinxLogger.debug('no repo match (gitbot)');
+                        logger_1.sphinxLogger.info('==> no repo match (gitbot)');
                     }
                 }));
             }));
         }
         catch (e) {
-            logger_1.sphinxLogger.error('failed to process webhook', e);
+            logger_1.sphinxLogger.error(['failed to process webhook', e], logger_1.logging.Bots);
             (0, res_1.unauthorized)(res);
         }
         if (ok)
             (0, res_1.success)(res, { ok: true });
-        else
+        else {
+            logger_1.sphinxLogger.error('invalid HMAC', logger_1.logging.Bots);
             (0, res_1.unauthorized)(res);
+        }
     });
 }
 exports.processWebhook = processWebhook;
@@ -130,7 +135,7 @@ function processAction(req, res) {
         const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id, } = body;
         if (!bot_id)
             return (0, res_1.failure)(res, 'no bot_id');
-        const bot = yield models_1.models.Bot.findOne({ where: { id: bot_id } });
+        const bot = (yield models_1.models.Bot.findOne({ where: { id: bot_id } }));
         if (!bot)
             return (0, res_1.failure)(res, 'no bot');
         if (!(bot.secret && bot.secret === bot_secret)) {
@@ -165,14 +170,14 @@ exports.processAction = processAction;
 function finalAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { bot_id, action, pubkey, route_hint, amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id, recipient_id, } = a;
-        let myBot;
+        let myBot = null;
         // not for tribe admin, for bot maker
         if (bot_id) {
-            myBot = yield models_1.models.Bot.findOne({
+            myBot = (yield models_1.models.Bot.findOne({
                 where: {
                     id: bot_id,
                 },
-            });
+            }));
             if (chat_uuid) {
                 const myChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
                 // ACTUALLY ITS A LOCAL (FOR MY TRIBE) message! kill myBot
@@ -183,15 +188,17 @@ function finalAction(a) {
         // console.log("=> ACTION HIT", a);
         if (myBot) {
             // IM NOT ADMIN - its my bot and i need to forward to admin - there is a chat_uuid
-            const owner = yield models_1.models.Contact.findOne({ where: { id: myBot.tenant } });
+            const owner = (yield models_1.models.Contact.findOne({
+                where: { id: myBot.tenant },
+            }));
             // THIS is a bot member cmd res (i am bot maker)
-            const botMember = yield models_1.models.BotMember.findOne({
+            const botMember = (yield models_1.models.BotMember.findOne({
                 where: {
                     tribeUuid: chat_uuid,
                     botId: bot_id,
                     tenant: owner.id,
                 },
-            });
+            }));
             if (!botMember)
                 return logger_1.sphinxLogger.error(`no botMember`);
             const dest = botMember.memberPubkey;

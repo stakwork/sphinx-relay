@@ -1,5 +1,5 @@
-import { Lsat } from 'lsat-js'
-import { models } from '../models'
+import { Lsat as LsatB } from 'lsat-js'
+import { models, Lsat as LsatT } from '../models'
 import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
@@ -19,6 +19,7 @@ export interface RelayRequest extends Request {
   body: LsatRequestBody
 }
 
+/*
 interface LsatResponse {
   paymentRequest: string
   macaroon: string
@@ -27,6 +28,7 @@ interface LsatResponse {
   preimage: string
   metadata: string
 }
+*/
 
 const lsatResponseAttributes = [
   'macaroon',
@@ -40,10 +42,10 @@ const lsatResponseAttributes = [
 
 async function lsatAlreadyExists(lsat): Promise<boolean> {
   const identifier = lsat.id
-  const model = await models.Lsat.findOne({
+  const model: Partial<LsatT> = (await models.Lsat.findOne({
     where: { identifier },
     attributes: lsatResponseAttributes,
-  })
+  })) as Partial<LsatT>
 
   if (model) return true
   return false
@@ -83,9 +85,9 @@ export async function saveLsat(
     return failure(res, 'Missing required LSAT data')
   }
 
-  let lsat: Lsat
+  let lsat: LsatB
   try {
-    lsat = Lsat.fromMacaroon(macaroon, paymentRequest)
+    lsat = LsatB.fromMacaroon(macaroon, paymentRequest)
   } catch (e) {
     sphinxLogger.error(
       ['[save lsat] Problem getting Lsat:', e.message],
@@ -154,10 +156,10 @@ export async function getLsat(
   sphinxLogger.info(`=> getLsat`, logging.Express)
 
   try {
-    const lsat: LsatResponse = await models.Lsat.findOne({
+    const lsat: LsatT = (await models.Lsat.findOne({
       where: { tenant, identifier },
       attributes: lsatResponseAttributes,
-    })
+    })) as LsatT
     if (!lsat)
       return res.status(404).json({
         success: false,
@@ -177,10 +179,10 @@ export async function listLsats(
 
   sphinxLogger.info(`=> listLsats`, logging.Express)
   try {
-    const lsats: LsatResponse[] = await models.Lsat.findAll({
+    const lsats: Partial<LsatT>[] = (await models.Lsat.findAll({
       where: { tenant },
       attributes: lsatResponseAttributes,
-    })
+    })) as Partial<LsatT>[]
     return success(res, { lsats })
   } catch (e) {
     return failure(res, `could not retrieve lsats`)

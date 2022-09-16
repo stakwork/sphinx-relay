@@ -188,17 +188,17 @@ function ownerMiddleware(req, res, next) {
                     .createHash('sha256')
                     .update(token)
                     .digest('base64');
-                const owner = yield models_1.models.Contact.findOne({
+                const owner = (yield models_1.models.Contact.findOne({
                     where: { authToken: hashedToken, isOwner: true },
-                });
+                }));
                 if (owner) {
                     req.owner = owner.dataValues;
                 }
             }
             else if (!(0, proxy_1.isProxy)()) {
-                const owner2 = yield models_1.models.Contact.findOne({
+                const owner2 = (yield models_1.models.Contact.findOne({
                     where: { isOwner: true },
-                });
+                }));
                 if (owner2)
                     req.owner = owner2.dataValues;
             }
@@ -335,7 +335,9 @@ function authModule(req, res, next) {
             res.end('Invalid credentials');
         }
         else {
-            const user = yield models_1.models.Contact.findOne({ where: { isOwner: true } });
+            const user = (yield models_1.models.Contact.findOne({
+                where: { isOwner: true },
+            }));
             const hashedToken = crypto
                 .createHash('sha256')
                 .update(token)

@@ -84,7 +84,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.mediaToken = myMediaToken;
         msg.mediaType = media_type || '';
     }
-    const message = yield models_1.models.Message.create(msg);
+    const message = (yield models_1.models.Message.create(msg));
     const msgToSend = {
         id: message.id,
         uuid: message.uuid,
@@ -102,9 +102,9 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msgToSend.parentId = parent_id;
     // if contact_ids, replace that in "chat" below
     // if remote text map, put that in
-    let theChat = chat;
+    const theChat = chat.dataValues;
     if (contact_ids) {
-        theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: contact_ids });
+        theChat.contactIds = contact_ids;
         if (remote_text_map)
             msgToSend.content = remote_text_map;
     }
@@ -176,7 +176,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.recipientAlias = recipient_alias;
     if (recipient_pic)
         msg.recipientPic = recipient_pic;
-    const message = yield models_1.models.Message.create(msg);
+    const message = (yield models_1.models.Message.create(msg));
     // console.log('saved message', message.dataValues)
     socket.sendJson({
         type: 'direct_payment',
@@ -194,7 +194,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
     const MIN_VAL = constants_1.default.min_sat_amount;
     try {
-        const msgs = yield models_1.models.Message.findAll({
+        const msgs = (yield models_1.models.Message.findAll({
             where: {
                 [sequelize_1.Op.or]: [
                     {
@@ -229,7 +229,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             order: [['createdAt', 'desc']],
             limit,
             offset,
-        });
+        }));
         const ret = msgs || [];
         (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message)));
     }

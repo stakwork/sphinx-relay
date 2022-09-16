@@ -2,7 +2,7 @@ import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'
 import * as people from '../../utils/people'
-import { models } from '../../models'
+import { models, Contact } from '../../models'
 import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
@@ -18,9 +18,9 @@ export async function createPeopleProfile(req, res) {
   const priceToMeet = req.body.price_to_meet || 0
 
   try {
-    const owner = await models.Contact.findOne({
+    const owner: Contact = (await models.Contact.findOne({
       where: { tenant, isOwner: true },
-    })
+    })) as Contact
     const {
       id,
       host,
@@ -67,9 +67,9 @@ export async function deletePersonProfile(req, res) {
   const tenant: number = req.owner.id
 
   try {
-    const owner = await models.Contact.findOne({
+    const owner: Contact = (await models.Contact.findOne({
       where: { tenant, isOwner: true },
-    })
+    })) as Contact
     const { id, host } = req.body
     if (!id) {
       return failure(res, 'no id')
@@ -147,9 +147,9 @@ export async function claimOnLiquid(req, res) {
   const tenant: number = req.owner.id
 
   try {
-    const owner = await models.Contact.findOne({
+    const owner: Contact = (await models.Contact.findOne({
       where: { tenant, isOwner: true },
-    })
+    })) as Contact
     const { asset, to, amount, memo } = req.body
 
     const r = await people.claimOnLiquid({

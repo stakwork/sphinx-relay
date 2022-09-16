@@ -29,9 +29,9 @@ function createPeopleProfile(req, res) {
         const tenant = req.owner.id;
         const priceToMeet = req.body.price_to_meet || 0;
         try {
-            const owner = yield models_1.models.Contact.findOne({
+            const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
-            });
+            }));
             const { id, host, 
             // pubkey,
             owner_alias, description, img, tags, extras, } = req.body;
@@ -67,9 +67,9 @@ function deletePersonProfile(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         try {
-            const owner = yield models_1.models.Contact.findOne({
+            const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
-            });
+            }));
             const { id, host } = req.body;
             if (!id) {
                 return (0, res_1.failure)(res, 'no id');
@@ -149,9 +149,9 @@ function claimOnLiquid(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         try {
-            const owner = yield models_1.models.Contact.findOne({
+            const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
-            });
+            }));
             const { asset, to, amount, memo } = req.body;
             const r = yield people.claimOnLiquid({
                 host: 'liquid.sphinx.chat',

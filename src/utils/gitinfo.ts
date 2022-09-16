@@ -1,56 +1,15 @@
-import { exec } from 'child_process'
+import { execSync } from 'child_process'
 import { sphinxLogger } from './logger'
 
-let commitHash
-function checkCommitHash(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (commitHash) {
-      return resolve(commitHash)
-    }
-    try {
-      exec(
-        `git log -1 --pretty=format:%h`,
-        { timeout: 999 },
-        (error, stdout, stderr) => {
-          if (stdout) {
-            commitHash = stdout.trim()
-            return resolve(commitHash)
-          } else {
-            resolve('')
-          }
-        }
-      )
-    } catch (e) {
-      sphinxLogger.error(e)
-      resolve('')
-    }
-  })
+function git(command: string): string | void {
+  try {
+    return execSync(`git ${command}`).toString().trim()
+  }
+  catch (e) {
+    sphinxLogger.error('Error running a git command, probably not running in a git repository')
+    sphinxLogger.error(e)
+  }
 }
 
-let tag
-function checkTag(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (tag) {
-      return resolve(tag)
-    }
-    try {
-      exec(
-        `git describe --abbrev=0 --tags`,
-        { timeout: 999 },
-        (error, stdout, stderr) => {
-          if (stdout) {
-            tag = stdout.trim()
-            return resolve(tag)
-          } else {
-            resolve('')
-          }
-        }
-      )
-    } catch (e) {
-      sphinxLogger.error(e)
-      resolve('')
-    }
-  })
-}
-
-export { checkCommitHash, checkTag }
+export const commitHash = git('log -1 --pretty=format:%h') || ''
+export const tag = git('describe --abbrev=0 --tags') || ''

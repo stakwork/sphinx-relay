@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, Message } from '../models'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -14,7 +14,7 @@ import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './botapi'
 import * as queries from './queries'
-import { checkTag } from '../utils/gitinfo'
+import * as gitinfo from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
 import constants from '../constants'
@@ -42,12 +42,14 @@ export async function set(app) {
   app.post('/group', chats.createGroupChat)
   app.put('/chats/:id', chats.updateChat)
   app.post('/chats/:chat_id/:mute_unmute', chats.mute)
+  app.put('/notify/:chat_id/:level', chats.setNotifyLevel)
   app.delete('/chat/:id', chats.deleteChat)
   app.put('/chat/:id', chats.addGroupMembers)
   app.put('/kick/:chat_id/:contact_id', chats.kickChatMember)
   app.post('/tribe', chatTribes.joinTribe)
   app.post('/tribe_channel', chatTribes.createChannel)
   app.delete('/tribe_channel', chatTribes.deleteChannel)
+  app.post('/tribe_member', chats.addTribeMember)
   app.put(
     '/member/:contactId/:status/:messageId',
     chatTribes.approveOrRejectMember
@@ -144,18 +146,17 @@ export async function set(app) {
   app.get('/healthcheck', confirmations.healthcheck)
 
   app.get('/version', async function (req: Req, res) {
-    const version = await checkTag()
-    res.send({ version })
+    res.send({ version: gitinfo.tag })
   })
 
   app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')
     const tenant: number = req.owner.id
-    const lasts = await models.Message.findAll({
+    const lasts: Message[] = (await models.Message.findAll({
       limit: 1,
       order: [['createdAt', 'DESC']],
       where: { tenant },
-    })
+    })) as Message[]
     const last = lasts && lasts[0]
     if (!last) {
       res.status(404).send('Not found')

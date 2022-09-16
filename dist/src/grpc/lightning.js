@@ -179,27 +179,25 @@ function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
                 routes: [],
             };
         }
-        return new Promise(function (resolve, reject) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-                const options = { pub_key, amt };
-                if (route_hint && route_hint.includes(':')) {
-                    const arr = route_hint.split(':');
-                    const node_id = arr[0];
-                    const chan_id = arr[1];
-                    options.route_hints = [
-                        {
-                            hop_hints: [{ node_id, chan_id }],
-                        },
-                    ];
+        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        return new Promise((resolve, reject) => {
+            const options = { pub_key, amt };
+            if (route_hint && route_hint.includes(':')) {
+                const arr = route_hint.split(':');
+                const node_id = arr[0];
+                const chan_id = arr[1];
+                options.route_hints = [
+                    {
+                        hop_hints: [{ node_id, chan_id }],
+                    },
+                ];
+            }
+            lightning.queryRoutes(options, (err, response) => {
+                if (err) {
+                    reject(err);
+                    return;
                 }
-                lightning.queryRoutes(options, (err, response) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve(response);
-                });
+                resolve(response);
             });
         });
     });
@@ -211,20 +209,18 @@ exports.UNUSED_WITNESS_PUBKEY_HASH = 2;
 exports.UNUSED_NESTED_PUBKEY_HASH = 3;
 function newAddress(type = exports.NESTED_PUBKEY_HASH) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(function (resolve, reject) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const lightning = yield loadLightning();
-                lightning.newAddress({ type }, (err, response) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    if (!(response && response.address)) {
-                        reject('no address');
-                        return;
-                    }
-                    resolve(response.address);
-                });
+        const lightning = yield loadLightning();
+        return new Promise((resolve, reject) => {
+            lightning.newAddress({ type }, (err, response) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                if (!(response && response.address)) {
+                    reject('no address');
+                    return;
+                }
+                resolve(response.address);
             });
         });
     });
@@ -234,8 +230,8 @@ exports.newAddress = newAddress;
 function sendPayment(payment_request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('sendPayment', logger_1.logging.Lightning);
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        return new Promise((resolve, reject) => {
             if ((0, proxy_1.isProxy)()) {
                 const opts = {
                     payment_request,
@@ -285,7 +281,7 @@ function sendPayment(payment_request, ownerPubkey) {
                     call.write({ payment_request });
                 }
             }
-        }));
+        });
     });
 }
 exports.sendPayment = sendPayment;
@@ -294,8 +290,7 @@ function keysend(opts, ownerPubkey) {
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const randoStr = crypto.randomBytes(32).toString('hex');
-                const preimage = ByteBuffer.fromHex(randoStr);
+                const preimage = ByteBuffer.wrap(crypto.randomBytes(32));
                 const dest_custom_records = {
                     [`${exports.LND_KEYSEND_KEY}`]: preimage,
                 };
@@ -440,7 +435,7 @@ function keysendMessage(opts, ownerPubkey) {
                 let res = null;
                 const ts = new Date().valueOf();
                 // WEAVE MESSAGE If TOO LARGE
-                yield asyncForEach(Array.from(Array(n)), (u, i) => __awaiter(this, void 0, void 0, function* () {
+                for (let i = 0; i < n; i++) {
                     const spliti = Math.ceil((opts.data || '').length / n);
                     const m = (opts.data || '').substring(i * spliti, i * spliti + spliti);
                     const isLastThread = i === n - 1;
@@ -454,7 +449,7 @@ function keysendMessage(opts, ownerPubkey) {
                         logger_1.sphinxLogger.error(e);
                         fail = true;
                     }
-                }));
+                }
                 if (success && !fail) {
                     resolve(res);
                 }
@@ -466,13 +461,6 @@ function keysendMessage(opts, ownerPubkey) {
     });
 }
 exports.keysendMessage = keysendMessage;
-function asyncForEach(array, callback) {
-    return __awaiter(this, void 0, void 0, function* () {
-        for (let index = 0; index < array.length; index++) {
-            yield callback(array[index], index, array);
-        }
-    });
-}
 function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
@@ -501,8 +489,7 @@ exports.listInvoices = listInvoices;
 function listAllInvoices() {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> list all invoices`);
-        const invs = yield paginateInvoices(40);
-        return invs;
+        return paginateInvoices(40);
     });
 }
 exports.listAllInvoices = listAllInvoices;
@@ -595,9 +582,7 @@ exports.listAllPaymentsFull = listAllPaymentsFull;
 // msg is hex
 function signMessage(msg, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        // log('signMessage')
-        const r = yield signBuffer(Buffer.from(msg, 'hex'), ownerPubkey);
-        return r;
+        return signBuffer(Buffer.from(msg, 'hex'), ownerPubkey);
     });
 }
 exports.signMessage = signMessage;
@@ -613,7 +598,7 @@ function signBuffer(msg, ownerPubkey) {
                 const recidBytes = sigBuf.subarray(66, 67);
                 // 31 is the magic EC recid (27+4) for compressed pubkeys
                 const ecRecid = Buffer.from(recidBytes).readUIntBE(0, 1) + 31;
-                const finalRecid = Buffer.from('00', 'hex');
+                const finalRecid = Buffer.allocUnsafe(1);
                 finalRecid.writeUInt8(ecRecid, 0);
                 const finalSig = Buffer.concat([finalRecid, sigBytes], 65);
                 resolve(zbase32.encode(finalSig));

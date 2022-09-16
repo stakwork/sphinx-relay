@@ -51,14 +51,14 @@ function addTimer({ amount, millis, receiver, msgId, chatId, tenant, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const now = new Date().valueOf();
         const when = now + millis;
-        const t = yield models_1.models.Timer.create({
+        const t = (yield models_1.models.Timer.create({
             amount,
             millis: when,
             receiver,
             msgId,
             chatId,
             tenant,
-        });
+        }));
         setTimer(makeName(t), when, () => __awaiter(this, void 0, void 0, function* () {
             payBack(t);
         }));
@@ -83,7 +83,7 @@ function makeName(t) {
 }
 function reloadTimers() {
     return __awaiter(this, void 0, void 0, function* () {
-        const timers = yield models_1.models.Timer.findAll();
+        const timers = (yield models_1.models.Timer.findAll());
         timers &&
             timers.forEach((t, i) => {
                 const name = makeName(t);
@@ -98,15 +98,17 @@ function reloadTimers() {
 exports.reloadTimers = reloadTimers;
 function payBack(t) {
     return __awaiter(this, void 0, void 0, function* () {
-        const chat = yield models_1.models.Chat.findOne({
+        const chat = (yield models_1.models.Chat.findOne({
             where: { id: t.chatId, tenant: t.tenant },
-        });
-        const owner = yield models_1.models.Contact.findOne({ where: { id: t.tenant } });
+        }));
+        const owner = (yield models_1.models.Contact.findOne({
+            where: { id: t.tenant },
+        }));
         if (!chat) {
             models_1.models.Timer.destroy({ where: { id: t.id } });
             return;
         }
-        const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: [t.receiver] });
+        const theChat = Object.assign(Object.assign({}, chat.dataValues), { contactIds: JSON.stringify([t.receiver]) });
         network.sendMessage({
             chat: theChat,
             sender: owner,

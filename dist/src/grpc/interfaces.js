@@ -425,8 +425,6 @@ var GreenlightChannelState;
     GreenlightChannelState["DUALOPEND_AWAITING_LOCKIN"] = "DUALOPEND_AWAITING_LOCKIN";
 })(GreenlightChannelState || (GreenlightChannelState = {}));
 function shortChanIDfromInt64(int) {
-    if (typeof int !== 'string')
-        return '';
     const l = long.fromString(int, true);
     const blockHeight = l.shiftRight(40);
     const txIndex = l.shiftRight(16).and(0xffffff);

@@ -68,7 +68,9 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
     let routeHint = '';
     if (contactID) {
         const contactId = parseInt(contactID);
-        const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
+        const contact = (yield models_1.models.Contact.findOne({
+            where: { id: contactId },
+        }));
         if (!contact)
             return (0, res_1.failure)(res, 'cant find contact');
         pubkey = contact.publicKey;
@@ -76,15 +78,17 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
     }
     else if (chatID) {
         const chatId = parseInt(chatID);
-        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId } });
+        const chat = (yield models_1.models.Chat.findOne({
+            where: { id: chatId },
+        }));
         if (!chat)
             return (0, res_1.failure)(res, 'cant find chat');
         if (!chat.ownerPubkey)
             return (0, res_1.failure)(res, 'cant find owern_pubkey');
         pubkey = chat.ownerPubkey;
-        const chatowner = yield models_1.models.Contact.findOne({
+        const chatowner = (yield models_1.models.Contact.findOne({
             where: { publicKey: chat.ownerPubkey },
-        });
+        }));
         if (!chatowner)
             return (0, res_1.failure)(res, 'cant find chat owner');
         if (chatowner.routeHint)
@@ -170,7 +174,9 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const tenant = req.owner.id;
     const date = new Date();
     date.setMilliseconds(0);
-    const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
+    const owner = (yield models_1.models.Contact.findOne({
+        where: { id: tenant },
+    }));
     owner.update({ lastActive: date });
     res.status(200);
     try {
@@ -260,9 +266,9 @@ function clearForTesting(req, res) {
                     tenant,
                 },
             });
-            const me = yield models_1.models.Contact.findOne({
+            const me = (yield models_1.models.Contact.findOne({
                 where: { isOwner: true, tenant },
-            });
+            }));
             yield me.update({
                 authToken: '',
                 photoUrl: '',

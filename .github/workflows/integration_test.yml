@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-name: ['boostPayment', 'botCreation', 'chatPayment', 'cleanup', 'clearAllChats', 'clearAllContacts', 'contacts', 'images', 'latestTest', 'lsats', 'paidMeet', 'paidTribeImages', 'queryRoutes', 'self', 'sphinxPeople', 'streamPayment', 'tribe', 'tribe3Escrow', 'tribe3Messages', 'tribe3Private', 'tribe3Profile', 'tribeEdit', 'tribeImages', 'messageLength', 'transportToken', 'pinnedMsg', 'hmac', 'socketIO']
+        test-name: ['boostPayment', 'botCreation', 'chatPayment', 'cleanup', 'clearAllChats', 'clearAllContacts', 'contacts', 'images', 'latestTest', 'lsats', 'paidMeet', 'paidTribeImages', 'queryRoutes', 'self', 'sphinxPeople', 'streamPayment', 'tribe', 'tribe3Escrow', 'tribe3Messages', 'tribe3Private', 'tribe3Profile', 'tribeEdit', 'tribeImages', 'messageLength', 'transportToken', 'pinnedMsg', 'hmac', 'socketIO', 'tribeMember']
     steps:
     - name: Enable docker.host.internal for Ubuntu
       run: |
@@ -21,7 +21,7 @@ jobs:
         path: relay
     - uses: actions/setup-node@v3
       with:
-        node-version: 14
+        node-version: 16
     - name: Build Relay
       working-directory: ./relay
       run: |

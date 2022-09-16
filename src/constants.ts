@@ -89,6 +89,11 @@ const constants = {
     writer: 4,
     reader: 5,
   },
+  notify_levels: {
+    all: 0,
+    mentions: 1,
+    mute: 2,
+  },
 }
 
 export default constants

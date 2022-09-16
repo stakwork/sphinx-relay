@@ -58,6 +58,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         }
         let networkType = undefined;
         const chatUUID = chat.uuid;
+        let mentionContactIds = [];
         if (isTribe) {
             if (type === constants_1.default.message_types.confirmation) {
                 // if u are owner, go ahead!
@@ -75,6 +76,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
+                mentionContactIds = yield detectMentions(msg, isForwarded ? true : false, chat.id, tenant);
             }
             // stop here if just me
             if (justMe) {
@@ -95,9 +97,9 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             }
             else {
                 // if tribe, send to owner only
-                const tribeOwner = yield models_1.models.Contact.findOne({
+                const tribeOwner = (yield models_1.models.Contact.findOne({
                     where: { publicKey: chat.ownerPubkey, tenant },
-                });
+                }));
                 contactIds = tribeOwner ? [tribeOwner.id] : [];
             }
         }
@@ -119,7 +121,9 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                 // console.log('=> dont send to self')
                 return;
             }
-            const contact = yield models_1.models.Contact.findOne({ where: { id: contactId } });
+            const contact = (yield models_1.models.Contact.findOne({
+                where: { id: contactId },
+            }));
             if (!contact) {
                 // console.log('=> sendMessage no contact')
                 return; // skip if u simply dont have the contact
@@ -148,6 +152,11 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
+            // send a "push", the user was mentioned
+            if (mentionContactIds.includes(contact.id) ||
+                mentionContactIds.includes(Infinity)) {
+                m.message.push = true;
+            }
             // console.log('-> personalized msg', m)
             const opts = {
                 dest: destkey,
@@ -269,4 +278,29 @@ function sleep(ms) {
 // function urlBase64FromBytes(buf){
 //     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }
+function detectMentions(msg, isForwarded, chatId, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const content = msg.message.content;
+        if (content) {
+            const words = content.split(' ');
+            if (words.includes('@all') && !isForwarded)
+                return [Infinity];
+            const ret = [];
+            const mentions = words.filter((w) => w.startsWith('@'));
+            yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
+                const lastAlias = men.substring(1);
+                const member = (yield models_1.models.ChatMember.findOne({
+                    where: { lastAlias, tenant, chatId },
+                }));
+                if (member) {
+                    ret.push(member.contactId);
+                }
+            }));
+            return ret;
+        }
+        else {
+            return [];
+        }
+    });
+}
 //# sourceMappingURL=send.js.map

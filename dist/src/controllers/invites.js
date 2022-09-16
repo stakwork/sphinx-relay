@@ -42,9 +42,9 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const invite_string = req.params['invite_string'];
-    const dbInvite = yield models_1.models.Invite.findOne({
+    const dbInvite = (yield models_1.models.Invite.findOne({
         where: { inviteString: invite_string, tenant },
-    });
+    }));
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
         // const invite = response.object
         // console.log("response", invite)
@@ -95,11 +95,11 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`response ${response}`);
         const inviteCreated = response.object;
-        const contact = yield models_1.models.Contact.create({
+        const contact = (yield models_1.models.Contact.create({
             alias: nickname,
             status: 0,
             tenant,
-        });
+        }));
         const invite = yield models_1.models.Invite.create({
             welcomeMessage: inviteCreated.message,
             contactId: contact.id,

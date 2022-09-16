@@ -34,18 +34,18 @@ function receiveNonKeysend(response) {
         const decoded = bolt11.decode(response['payment_request']);
         const paymentHash = ((_a = decoded.tags.find((t) => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
         const settleDate = parseInt(response['settle_date'] + '000');
-        const invoice = yield models_1.models.Message.findOne({
+        const invoice = (yield models_1.models.Message.findOne({
             where: {
                 type: constants_1.default.message_types.invoice,
                 payment_request: response['payment_request'],
             },
-        });
+        }));
         if (invoice == null) {
             if (!decoded.payeeNodeKey)
                 return logger_1.sphinxLogger.error(`subscribeInvoices: cant get dest from pay req`);
-            const owner = yield models_1.models.Contact.findOne({
+            const owner = (yield models_1.models.Contact.findOne({
                 where: { isOwner: true, publicKey: decoded.payeeNodeKey },
-            });
+            }));
             if (!owner)
                 return logger_1.sphinxLogger.error(`subscribeInvoices: no owner found`);
             const tenant = owner.id;
@@ -77,14 +77,16 @@ function receiveNonKeysend(response) {
         }
         // invoice is defined
         const tenant = invoice.tenant;
-        const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
+        const owner = (yield models_1.models.Contact.findOne({
+            where: { id: tenant },
+        }));
         models_1.models.Message.update({ status: constants_1.default.statuses.confirmed }, { where: { id: invoice.id } });
-        const chat = yield models_1.models.Chat.findOne({
+        const chat = (yield models_1.models.Chat.findOne({
             where: { id: invoice.chatId, tenant },
-        });
+        }));
         const contactIds = JSON.parse(chat.contactIds);
         const senderId = contactIds.find((id) => id != invoice.sender);
-        const message = yield models_1.models.Message.create({
+        const message = (yield models_1.models.Message.create({
             chatId: invoice.chatId,
             type: constants_1.default.message_types.payment,
             sender: senderId,
@@ -98,10 +100,10 @@ function receiveNonKeysend(response) {
             updatedAt: new Date(settleDate),
             network_type: constants_1.default.network_types.lightning,
             tenant,
-        });
-        const sender = yield models_1.models.Contact.findOne({
+        }));
+        const sender = (yield models_1.models.Contact.findOne({
             where: { id: senderId, tenant },
-        });
+        }));
         socket.sendJson({
             type: 'payment',
             response: jsonUtils.messageToJson(message, chat, sender),

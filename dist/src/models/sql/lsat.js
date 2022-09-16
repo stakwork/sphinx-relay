@@ -22,7 +22,7 @@ __decorate([
 ], Lsat.prototype, "id", void 0);
 __decorate([
     (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.STRING,
+        type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
 ], Lsat.prototype, "identifier", void 0);
@@ -35,27 +35,39 @@ __decorate([
     __metadata("design:type", Date)
 ], Lsat.prototype, "updatedAt", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.TEXT,
+    }),
     __metadata("design:type", String)
 ], Lsat.prototype, "macaroon", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.TEXT,
+    }),
     __metadata("design:type", String)
 ], Lsat.prototype, "paymentRequest", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.TEXT,
+    }),
     __metadata("design:type", String)
 ], Lsat.prototype, "preimage", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.TEXT,
+    }),
     __metadata("design:type", String)
 ], Lsat.prototype, "issuer", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.TEXT,
+    }),
     __metadata("design:type", String)
 ], Lsat.prototype, "paths", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.TEXT,
+    }),
     __metadata("design:type", String)
 ], Lsat.prototype, "metadata", void 0);
 __decorate([

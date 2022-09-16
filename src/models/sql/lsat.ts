@@ -21,7 +21,7 @@ export default class Lsat extends Model<Lsat> {
   id: number
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
   })
   identifier: string
 
@@ -31,27 +31,39 @@ export default class Lsat extends Model<Lsat> {
   @UpdatedAt
   updatedAt: Date
 
-  @Column
+  @Column({
+    type: DataType.TEXT,
+  })
   macaroon: string
 
-  @Column
+  @Column({
+    type: DataType.TEXT,
+  })
   paymentRequest: string
 
-  @Column
+  @Column({
+    type: DataType.TEXT,
+  })
   preimage: string
 
-  @Column
+  @Column({
+    type: DataType.TEXT,
+  })
   issuer: string
 
   // an optional, comma separated list of paths
   // where the lsat can be used for
-  @Column
+  @Column({
+    type: DataType.TEXT,
+  })
   paths: string
 
   // opting to leave this open-ended for now
   // and can be up to consumer to determine what types it's expecting
   // and what to do with it based on the type (e.g. image url, json blob)
-  @Column
+  @Column({
+    type: DataType.TEXT,
+  })
   metadata: string
 
   @Column
