@@ -343,23 +343,15 @@ async function uniqueifyAlias(
     }
   })
 
-  console.log('final sender alalias', final_sender_alias)
+  const ww = { chatId: chat.id, contactId: senderContactId, tenant: owner.id }
   const oldMember = (await models.ChatMember.findOne({
-    where: { chatId: chat.id, contactId: senderContactId, tenant: owner.id },
+    where: ww,
   })) as ChatMember
-  console.log('old sender_alias,', oldMember.lastAlias)
   if (oldMember.lastAlias !== final_sender_alias) {
-    console.log('WHERE ', chat.id, senderContactId, owner.id)
     await models.ChatMember.update(
       // this syntax is necessary when no unique ID on the Model
       { lastAlias: final_sender_alias },
-      {
-        where: {
-          chatId: chat.id,
-          contactId: senderContactId,
-          tenant: owner.id,
-        },
-      }
+      { where: ww }
     )
   }
 
