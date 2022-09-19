@@ -266,6 +266,9 @@ function doTheAction(data, owner) {
         // console.log("=> doTheAction", data, owner)
         let payload = data;
         if (payload.isTribeOwner) {
+            const mentioned = yield (0, send_1.detectMentionsForTribeAdminSelf)(payload, owner.id, owner.alias);
+            if (mentioned)
+                payload.message.push = true;
             // this is only for storing locally, my own messages as tribe owner
             // actual encryption for tribe happens in personalizeMessage
             const ogContent = data.message && data.message.content;
@@ -276,6 +279,7 @@ function doTheAction(data, owner) {
             }));
             const pld = yield (0, msg_1.decryptMessage)(data, chat);
             const me = owner;
+            // encrypt for myself
             const encrypted = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
             payload = encrypted;
             if (ogContent)
@@ -318,7 +322,10 @@ function uniqueifyAlias(payload, sender, chat, owner) {
                 final_sender_alias = `${sender_alias}_2`;
             }
         });
+        console.log('sender_alias,', sender_alias);
+        console.log('final sender alalias', final_sender_alias);
         if (sender_alias !== final_sender_alias) {
+            console.log('WHERE ', chat.id, senderContactId, owner.id);
             yield models_1.models.ChatMember.update(
             // this syntax is necessary when no unique ID on the Model
             { lastAlias: final_sender_alias }, {

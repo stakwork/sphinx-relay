@@ -371,15 +371,18 @@ async function detectMentions(
 ): Promise<number[]> {
   const content = msg.message.content as string
   if (content) {
-    const words = content.split(' ')
-    if (words.includes('@all') && !isForwarded) return [Infinity]
+    const mentions = parseMentions(content)
+    if (mentions.includes('@all') && !isForwarded) return [Infinity]
     const ret: number[] = []
-    const mentions = words.filter((w) => w.startsWith('@'))
+    const allMembers: ChatMemberModel[] = (await models.ChatMember.findAll({
+      where: { tenant, chatId },
+    })) as ChatMemberModel[]
     await asyncForEach(mentions, async (men) => {
       const lastAlias = men.substring(1)
-      const member: ChatMemberModel = (await models.ChatMember.findOne({
-        where: { lastAlias, tenant, chatId },
-      })) as ChatMemberModel
+      // check chat memberss
+      const member = allMembers.find((m) => {
+        m.lastAlias.toLowerCase() === lastAlias.toLowerCase()
+      })
       if (member) {
         ret.push(member.contactId)
       }
@@ -388,4 +391,39 @@ async function detectMentions(
   } else {
     return []
   }
+}
+
+function parseMentions(content: string) {
+  const words = content.split(' ')
+  return words.filter((w) => w.startsWith('@'))
+}
+
+export async function detectMentionsForTribeAdminSelf(
+  msg: Msg,
+  tenant: number,
+  myAlias?: string
+): Promise<boolean> {
+  const content = msg.message.content as string
+  if (!content) return false
+  const mentions = parseMentions(content)
+  if (mentions.includes('@all')) return true
+  let ret = false
+  const owner = (await models.Contact.findOne({
+    where: { tenant, isOwner: true },
+  })) as Contact
+  await asyncForEach(mentions, async (men) => {
+    const lastAlias = men.substring(1)
+    if (myAlias) {
+      // admin's own alias for tribe
+      if (myAlias.toLowerCase() === lastAlias.toLowerCase()) {
+        ret = true
+      }
+    } else {
+      // or owner's default alias
+      if (owner.alias === lastAlias.toLowerCase()) {
+        ret = true
+      }
+    }
+  })
+  return ret
 }

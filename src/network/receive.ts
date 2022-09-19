@@ -13,7 +13,7 @@ import {
   Chat,
   ChatMember,
 } from '../models'
-import { sendMessage } from './send'
+import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import {
   modifyPayloadAndSaveMediaKey,
   purchaseFromOriginalSender,
@@ -281,6 +281,12 @@ async function doTheAction(data: Payload, owner: Contact) {
   // console.log("=> doTheAction", data, owner)
   let payload = data
   if (payload.isTribeOwner) {
+    const mentioned = await detectMentionsForTribeAdminSelf(
+      payload,
+      owner.id,
+      owner.alias
+    )
+    if (mentioned) payload.message.push = true
     // this is only for storing locally, my own messages as tribe owner
     // actual encryption for tribe happens in personalizeMessage
     const ogContent = data.message && data.message.content
@@ -291,6 +297,7 @@ async function doTheAction(data: Payload, owner: Contact) {
     })) as Chat
     const pld = await decryptMessage(data, chat)
     const me = owner
+    // encrypt for myself
     const encrypted = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
     payload = encrypted as Payload
     if (ogContent)
@@ -335,7 +342,10 @@ async function uniqueifyAlias(
       final_sender_alias = `${sender_alias}_2`
     }
   })
+  console.log('sender_alias,', sender_alias)
+  console.log('final sender alalias', final_sender_alias)
   if (sender_alias !== final_sender_alias) {
+    console.log('WHERE ', chat.id, senderContactId, owner.id)
     await models.ChatMember.update(
       // this syntax is necessary when no unique ID on the Model
       { lastAlias: final_sender_alias },
