@@ -266,9 +266,6 @@ function doTheAction(data, owner) {
         // console.log("=> doTheAction", data, owner)
         let payload = data;
         if (payload.isTribeOwner) {
-            const mentioned = yield (0, send_1.detectMentionsForTribeAdminSelf)(payload, owner.id, owner.alias);
-            if (mentioned)
-                payload.message.push = true;
             // this is only for storing locally, my own messages as tribe owner
             // actual encryption for tribe happens in personalizeMessage
             const ogContent = data.message && data.message.content;
@@ -278,6 +275,9 @@ function doTheAction(data, owner) {
                 where: { uuid: payload.chat.uuid, tenant: owner.id },
             }));
             const pld = yield (0, msg_1.decryptMessage)(data, chat);
+            const mentioned = yield (0, send_1.detectMentionsForTribeAdminSelf)(pld, owner.id, owner.alias);
+            if (mentioned)
+                pld.message.push = true;
             const me = owner;
             // encrypt for myself
             const encrypted = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
