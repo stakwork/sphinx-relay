@@ -402,8 +402,8 @@ function parseMentions(content: string) {
 
 export async function detectMentionsForTribeAdminSelf(
   msg: Msg,
-  tenant: number,
-  myAlias?: string
+  mainAlias?: string,
+  aliasInChat?: string
 ): Promise<boolean> {
   console.log('======> detectMentionsForTribeAdminSelf')
   const content = msg.message.content as string
@@ -413,23 +413,20 @@ export async function detectMentionsForTribeAdminSelf(
   console.log('======> mentionds ', mentions)
   if (mentions.includes('@all')) return true
   let ret = false
-  const owner = (await models.Contact.findOne({
-    where: { tenant, isOwner: true },
-  })) as Contact
   await asyncForEach(mentions, async (men) => {
     const lastAlias = men.substring(1)
     console.log('====> last alias', lastAlias)
     if (lastAlias) {
-      console.log('my alias', myAlias)
-      if (myAlias) {
+      console.log('my alias', aliasInChat)
+      if (aliasInChat) {
         // admin's own alias for tribe
-        if (myAlias.toLowerCase() === lastAlias.toLowerCase()) {
+        if (aliasInChat.toLowerCase() === lastAlias.toLowerCase()) {
           ret = true
         }
-      } else if (owner.alias) {
-        console.log('owern aliad', owner.alias)
+      } else if (mainAlias) {
+        console.log('owern aliad', mainAlias)
         // or owner's default alias
-        if (owner.alias.toLowerCase() === lastAlias.toLowerCase()) {
+        if (mainAlias.toLowerCase() === lastAlias.toLowerCase()) {
           ret = true
         }
       }

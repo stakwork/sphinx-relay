@@ -312,7 +312,7 @@ function parseMentions(content) {
     const words = content.split(' ');
     return words.filter((w) => w.startsWith('@'));
 }
-function detectMentionsForTribeAdminSelf(msg, tenant, myAlias) {
+function detectMentionsForTribeAdminSelf(msg, mainAlias, aliasInChat) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('======> detectMentionsForTribeAdminSelf');
         const content = msg.message.content;
@@ -324,24 +324,21 @@ function detectMentionsForTribeAdminSelf(msg, tenant, myAlias) {
         if (mentions.includes('@all'))
             return true;
         let ret = false;
-        const owner = (yield models_1.models.Contact.findOne({
-            where: { tenant, isOwner: true },
-        }));
         yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
             const lastAlias = men.substring(1);
             console.log('====> last alias', lastAlias);
             if (lastAlias) {
-                console.log('my alias', myAlias);
-                if (myAlias) {
+                console.log('my alias', aliasInChat);
+                if (aliasInChat) {
                     // admin's own alias for tribe
-                    if (myAlias.toLowerCase() === lastAlias.toLowerCase()) {
+                    if (aliasInChat.toLowerCase() === lastAlias.toLowerCase()) {
                         ret = true;
                     }
                 }
-                else if (owner.alias) {
-                    console.log('owern aliad', owner.alias);
+                else if (mainAlias) {
+                    console.log('owern aliad', mainAlias);
                     // or owner's default alias
-                    if (owner.alias.toLowerCase() === lastAlias.toLowerCase()) {
+                    if (mainAlias.toLowerCase() === lastAlias.toLowerCase()) {
                         ret = true;
                     }
                 }
