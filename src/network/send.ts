@@ -405,9 +405,11 @@ export async function detectMentionsForTribeAdminSelf(
   tenant: number,
   myAlias?: string
 ): Promise<boolean> {
+  console.log('======> detectMentionsForTribeAdminSelf')
   const content = msg.message.content as string
   if (!content) return false
   const mentions = parseMentions(content)
+  console.log('======> mentionds ', mentions)
   if (mentions.includes('@all')) return true
   let ret = false
   const owner = (await models.Contact.findOne({
@@ -415,15 +417,18 @@ export async function detectMentionsForTribeAdminSelf(
   })) as Contact
   await asyncForEach(mentions, async (men) => {
     const lastAlias = men.substring(1)
+    console.log('====> last alias', lastAlias)
     if (lastAlias) {
+      console.log('my alias', myAlias)
       if (myAlias) {
         // admin's own alias for tribe
         if (myAlias.toLowerCase() === lastAlias.toLowerCase()) {
           ret = true
         }
-      } else {
+      } else if (owner.alias) {
+        console.log('owern aliad', owner.alias)
         // or owner's default alias
-        if (owner.alias === lastAlias.toLowerCase()) {
+        if (owner.alias.toLowerCase() === lastAlias.toLowerCase()) {
           ret = true
         }
       }

@@ -314,10 +314,12 @@ function parseMentions(content) {
 }
 function detectMentionsForTribeAdminSelf(msg, tenant, myAlias) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('======> detectMentionsForTribeAdminSelf');
         const content = msg.message.content;
         if (!content)
             return false;
         const mentions = parseMentions(content);
+        console.log('======> mentionds ', mentions);
         if (mentions.includes('@all'))
             return true;
         let ret = false;
@@ -326,16 +328,19 @@ function detectMentionsForTribeAdminSelf(msg, tenant, myAlias) {
         }));
         yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
             const lastAlias = men.substring(1);
+            console.log('====> last alias', lastAlias);
             if (lastAlias) {
+                console.log('my alias', myAlias);
                 if (myAlias) {
                     // admin's own alias for tribe
                     if (myAlias.toLowerCase() === lastAlias.toLowerCase()) {
                         ret = true;
                     }
                 }
-                else {
+                else if (owner.alias) {
+                    console.log('owern aliad', owner.alias);
                     // or owner's default alias
-                    if (owner.alias === lastAlias.toLowerCase()) {
+                    if (owner.alias.toLowerCase() === lastAlias.toLowerCase()) {
                         ret = true;
                     }
                 }
