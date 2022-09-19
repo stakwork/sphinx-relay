@@ -407,6 +407,7 @@ export async function detectMentionsForTribeAdminSelf(
 ): Promise<boolean> {
   console.log('======> detectMentionsForTribeAdminSelf')
   const content = msg.message.content as string
+  console.log('======> content', content)
   if (!content) return false
   const mentions = parseMentions(content)
   console.log('======> mentionds ', mentions)

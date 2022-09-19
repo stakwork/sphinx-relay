@@ -316,6 +316,7 @@ function detectMentionsForTribeAdminSelf(msg, tenant, myAlias) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('======> detectMentionsForTribeAdminSelf');
         const content = msg.message.content;
+        console.log('======> content', content);
         if (!content)
             return false;
         const mentions = parseMentions(content);
