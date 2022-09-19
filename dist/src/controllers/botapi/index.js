@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.finalAction = exports.processAction = exports.processWebhook = void 0;
+exports.validateAction = exports.finalAction = exports.processAction = exports.processWebhook = void 0;
 const network = require("../../network");
 const models_1 = require("../../models");
 const res_1 = require("../../utils/res");
@@ -17,6 +17,7 @@ const constants_1 = require("../../constants");
 const tribes_1 = require("../../utils/tribes");
 const broadcast_1 = require("./broadcast");
 const pay_1 = require("./pay");
+const dm_1 = require("./dm");
 const logger_1 = require("../../utils/logger");
 const hmac = require("../../crypto/hmac");
 const git_1 = require("../../builtin/git");
@@ -264,10 +265,30 @@ function finalAction(a) {
         else if (action === 'broadcast') {
             (0, broadcast_1.default)(a);
         }
+        else if (action === 'dm') {
+            (0, dm_1.default)(a);
+        }
         else {
             return logger_1.sphinxLogger.error(`invalid action`);
         }
     });
 }
 exports.finalAction = finalAction;
+function validateAction(a) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
+        if (!a.chat_uuid)
+            return logger_1.sphinxLogger.error(`no chat_uuid`);
+        const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(a.chat_uuid);
+        if (!(theChat && theChat.id))
+            return logger_1.sphinxLogger.error(`no chat`);
+        if (theChat.type !== constants_1.default.chat_types.tribe)
+            return logger_1.sphinxLogger.error(`not a tribe`);
+        const owner = (yield models_1.models.Contact.findOne({
+            where: { id: theChat.tenant },
+        }));
+        return { chat: theChat, owner };
+    });
+}
+exports.validateAction = validateAction;
 //# sourceMappingURL=index.js.map

@@ -11,6 +11,7 @@ export default async function pay(a: Action): Promise<void> {
   const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a
 
   sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
+  if (!a.recipient_id) return sphinxLogger.error(`no recipient_id`)
   const ret = await validateAction(a)
   if (!ret) return
   let { chat, owner } = ret
