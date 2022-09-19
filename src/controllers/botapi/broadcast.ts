@@ -1,20 +1,19 @@
 import * as network from '../../network'
-import { models, ContactRecord, Message } from '../../models'
+import { models, Message } from '../../models'
 import * as short from 'short-uuid'
 import * as rsa from '../../crypto/rsa'
 import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
 import constants from '../../constants'
-import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import { sphinxLogger } from '../../utils/logger'
-import { Action } from './index'
+import { Action, validateAction } from './index'
+import { ChatPlusMembers } from '../../network/send'
 
 export default async function broadcast(a: Action): Promise<void> {
   const {
     amount,
     content,
     bot_name,
-    chat_uuid,
     msg_uuid,
     reply_uuid,
     parent_id,
@@ -22,19 +21,13 @@ export default async function broadcast(a: Action): Promise<void> {
   } = a
 
   sphinxLogger.info(`=> BOT BROADCAST`)
-  if (!content) return sphinxLogger.error(`no content`)
-  if (!chat_uuid) return sphinxLogger.error(`no chat_uuid`)
-  const theChat = await getTribeOwnersChatByUUID(chat_uuid)
-  if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
-  if (theChat.type !== constants.chat_types.tribe)
-    return sphinxLogger.error(`not a tribe`)
-  const owner: ContactRecord = (await models.Contact.findOne({
-    where: { id: theChat.tenant },
-  })) as ContactRecord
+  const ret = await validateAction(a)
+  if (!ret) return
+  const { chat, owner } = ret
   const tenant: number = owner.id
 
-  const encryptedForMeText = rsa.encrypt(owner.contactKey, content)
-  const encryptedText = rsa.encrypt(theChat.groupKey, content)
+  const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '')
+  const encryptedText = rsa.encrypt(chat.groupKey, content || '')
   const textMap = { chat: encryptedText }
   const date = new Date()
   date.setMilliseconds(0)
@@ -42,7 +35,7 @@ export default async function broadcast(a: Action): Promise<void> {
   const botContactId = -1
 
   const msg: { [k: string]: string | number | Date } = {
-    chatId: theChat.id,
+    chatId: chat.id,
     uuid: msg_uuid || short.generate(),
     type: constants.message_types.bot_res,
     sender: botContactId,
@@ -63,14 +56,14 @@ export default async function broadcast(a: Action): Promise<void> {
   socket.sendJson(
     {
       type: 'message',
-      response: jsonUtils.messageToJson(message, theChat, owner),
+      response: jsonUtils.messageToJson(message, chat, owner),
     },
     tenant
   )
   // console.log("BOT BROADCASE MSG", owner.dataValues)
   // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
   await network.sendMessage({
-    chat: theChat,
+    chat: chat as ChatPlusMembers,
     sender: {
       ...owner.dataValues,
       alias,

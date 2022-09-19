@@ -1,34 +1,19 @@
 import * as network from '../../network'
-import { models, Message, ContactRecord } from '../../models'
+import { models, Message } from '../../models'
 import * as short from 'short-uuid'
 import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
 import constants from '../../constants'
-import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import { sphinxLogger } from '../../utils/logger'
-import { Action } from './index'
+import { Action, validateAction } from './index'
 
 export default async function pay(a: Action): Promise<void> {
-  const {
-    amount,
-    bot_name,
-    chat_uuid,
-    msg_uuid,
-    reply_uuid,
-    recipient_id,
-    parent_id,
-  } = a
+  const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a
 
   sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
-  if (!recipient_id) return sphinxLogger.error(`no recipient_id`)
-  if (!chat_uuid) return sphinxLogger.error(`no chat_uuid`)
-  const theChat = await getTribeOwnersChatByUUID(chat_uuid)
-  if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
-  if (theChat.type !== constants.chat_types.tribe)
-    return sphinxLogger.error(`not a tribe`)
-  const owner: ContactRecord = (await models.Contact.findOne({
-    where: { id: theChat.tenant },
-  })) as ContactRecord
+  const ret = await validateAction(a)
+  if (!ret) return
+  let { chat, owner } = ret
   const tenant: number = owner.id
   const alias = bot_name || owner.alias
   const botContactId = -1
@@ -36,7 +21,7 @@ export default async function pay(a: Action): Promise<void> {
   const date = new Date()
   date.setMilliseconds(0)
   const msg: { [k: string]: string | number | Date } = {
-    chatId: theChat.id,
+    chatId: chat.id,
     uuid: msg_uuid || short.generate(),
     type: constants.message_types.boost,
     sender: botContactId, // tribe owner is escrow holder
@@ -54,13 +39,13 @@ export default async function pay(a: Action): Promise<void> {
   socket.sendJson(
     {
       type: 'boost',
-      response: jsonUtils.messageToJson(message, theChat, owner),
+      response: jsonUtils.messageToJson(message, chat, owner),
     },
     tenant
   )
 
   await network.sendMessage({
-    chat: theChat,
+    chat: chat as any,
     sender: {
       ...owner.dataValues,
       alias,
