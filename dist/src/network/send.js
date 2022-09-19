@@ -293,7 +293,9 @@ function detectMentions(msg, isForwarded, chatId, tenant) {
                 const lastAlias = men.substring(1);
                 // check chat memberss
                 const member = allMembers.find((m) => {
-                    m.lastAlias.toLowerCase() === lastAlias.toLowerCase();
+                    if (m.lastAlias && lastAlias) {
+                        return m.lastAlias.toLowerCase() === lastAlias.toLowerCase();
+                    }
                 });
                 if (member) {
                     ret.push(member.contactId);
@@ -324,16 +326,18 @@ function detectMentionsForTribeAdminSelf(msg, tenant, myAlias) {
         }));
         yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
             const lastAlias = men.substring(1);
-            if (myAlias) {
-                // admin's own alias for tribe
-                if (myAlias.toLowerCase() === lastAlias.toLowerCase()) {
-                    ret = true;
+            if (lastAlias) {
+                if (myAlias) {
+                    // admin's own alias for tribe
+                    if (myAlias.toLowerCase() === lastAlias.toLowerCase()) {
+                        ret = true;
+                    }
                 }
-            }
-            else {
-                // or owner's default alias
-                if (owner.alias === lastAlias.toLowerCase()) {
-                    ret = true;
+                else {
+                    // or owner's default alias
+                    if (owner.alias === lastAlias.toLowerCase()) {
+                        ret = true;
+                    }
                 }
             }
         }));
