@@ -400,7 +400,6 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    console.log('RECEIVE MESSAGE F?orCE PUSH????', force_push);
     (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner, undefined, force_push);
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });

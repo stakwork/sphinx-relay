@@ -382,7 +382,7 @@ async function detectMentions(
       // check chat memberss
       const member = allMembers.find((m) => {
         if (m.lastAlias && lastAlias) {
-          return m.lastAlias.toLowerCase() === lastAlias.toLowerCase()
+          return compareAliases(m.lastAlias, lastAlias)
         }
       })
       if (member) {
@@ -405,32 +405,41 @@ export async function detectMentionsForTribeAdminSelf(
   mainAlias?: string,
   aliasInChat?: string
 ): Promise<boolean> {
-  console.log('======> detectMentionsForTribeAdminSelf')
   const content = msg.message.content as string
-  console.log('======> content', content)
   if (!content) return false
   const mentions = parseMentions(content)
-  console.log('======> mentionds ', mentions)
   if (mentions.includes('@all')) return true
   let ret = false
   await asyncForEach(mentions, async (men) => {
     const lastAlias = men.substring(1)
-    console.log('====> last alias', lastAlias)
     if (lastAlias) {
-      console.log('my alias', aliasInChat)
       if (aliasInChat) {
         // admin's own alias for tribe
-        if (aliasInChat.toLowerCase() === lastAlias.toLowerCase()) {
+        if (compareAliases(aliasInChat, lastAlias)) {
           ret = true
         }
       } else if (mainAlias) {
-        console.log('owern aliad', mainAlias)
         // or owner's default alias
-        if (mainAlias.toLowerCase() === lastAlias.toLowerCase()) {
+        if (compareAliases(mainAlias, lastAlias)) {
           ret = true
         }
       }
     }
   })
   return ret
+}
+
+// alias1 can have spaces, so remove them
+// then comparse to lower case
+function compareAliases(alias1: string, alias2: string): boolean {
+  const pieces = alias1.split(' ')
+  let match = false
+  pieces.forEach((p) => {
+    if (p && alias2) {
+      if (p.toLowerCase() === alias2.toLowerCase()) {
+        match = true
+      }
+    }
+  })
+  return match
 }

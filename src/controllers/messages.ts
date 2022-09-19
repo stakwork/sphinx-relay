@@ -481,7 +481,6 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     tenant
   )
 
-  console.log('RECEIVE MESSAGE F?orCE PUSH????', force_push)
   sendNotification(
     chat,
     msg.senderAlias || sender.alias,
