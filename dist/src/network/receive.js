@@ -322,9 +322,12 @@ function uniqueifyAlias(payload, sender, chat, owner) {
                 final_sender_alias = `${sender_alias}_2`;
             }
         });
-        console.log('sender_alias,', sender_alias);
         console.log('final sender alalias', final_sender_alias);
-        if (sender_alias !== final_sender_alias) {
+        const oldMember = (yield models_1.models.ChatMember.findOne({
+            where: { chatId: chat.id, contactId: senderContactId, tenant: owner.id },
+        }));
+        console.log('old sender_alias,', oldMember.lastAlias);
+        if (oldMember.lastAlias !== final_sender_alias) {
             console.log('WHERE ', chat.id, senderContactId, owner.id);
             yield models_1.models.ChatMember.update(
             // this syntax is necessary when no unique ID on the Model
