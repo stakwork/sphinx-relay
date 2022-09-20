@@ -1,4 +1,10 @@
-import { models, Chat, ContactRecord, Contact } from '../models'
+import {
+  models,
+  Chat,
+  ContactRecord,
+  Contact,
+  ChatMember as ChatMemberModel,
+} from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
 import * as tribes from '../utils/tribes'
@@ -84,6 +90,7 @@ export async function sendMessage({
 
   let networkType: NetworkType = undefined
   const chatUUID = chat.uuid
+  let mentionContactIds: number[] = []
   if (isTribe) {
     if (type === constants.message_types.confirmation) {
       // if u are owner, go ahead!
@@ -108,6 +115,12 @@ export async function sendMessage({
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
+      mentionContactIds = await detectMentions(
+        msg,
+        isForwarded ? true : false,
+        chat.id as number,
+        tenant
+      )
     }
 
     // stop here if just me
@@ -127,9 +140,9 @@ export async function sendMessage({
       }
     } else {
       // if tribe, send to owner only
-      const tribeOwner = await models.Contact.findOne({
+      const tribeOwner: Contact = (await models.Contact.findOne({
         where: { publicKey: chat.ownerPubkey as string, tenant },
-      })
+      })) as Contact
       contactIds = tribeOwner ? [tribeOwner.id] : []
     }
   } else {
@@ -155,7 +168,9 @@ export async function sendMessage({
       return
     }
 
-    const contact = await models.Contact.findOne({ where: { id: contactId } })
+    const contact: Contact = (await models.Contact.findOne({
+      where: { id: contactId },
+    })) as Contact
     if (!contact) {
       // console.log('=> sendMessage no contact')
       return // skip if u simply dont have the contact
@@ -188,6 +203,14 @@ export async function sendMessage({
     }
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
+
+    // send a "push", the user was mentioned
+    if (
+      mentionContactIds.includes(contact.id) ||
+      mentionContactIds.includes(Infinity)
+    ) {
+      m.message.push = true
+    }
     // console.log('-> personalized msg', m)
     const opts = {
       dest: destkey,
@@ -339,3 +362,30 @@ async function sleep(ms) {
 // function urlBase64FromBytes(buf){
 //     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }
+
+async function detectMentions(
+  msg: Msg,
+  isForwarded: boolean,
+  chatId: number,
+  tenant: number
+): Promise<number[]> {
+  const content = msg.message.content as string
+  if (content) {
+    const words = content.split(' ')
+    if (words.includes('@all') && !isForwarded) return [Infinity]
+    const ret: number[] = []
+    const mentions = words.filter((w) => w.startsWith('@'))
+    await asyncForEach(mentions, async (men) => {
+      const lastAlias = men.substring(1)
+      const member: ChatMemberModel = (await models.ChatMember.findOne({
+        where: { lastAlias, tenant, chatId },
+      })) as ChatMemberModel
+      if (member) {
+        ret.push(member.contactId)
+      }
+    })
+    return ret
+  } else {
+    return []
+  }
+}

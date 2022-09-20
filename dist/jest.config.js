@@ -1,0 +1,10 @@
+module.exports = {
+    preset: 'ts-jest',
+    testEnvironment: 'node',
+    transform: {
+        '^.+\\.ts?$': 'ts-jest',
+    },
+    transformIgnorePatterns: ['<rootDir>/node_modules/'],
+    collectCoverage: true,
+};
+//# sourceMappingURL=jest.config.js.map

@@ -158,6 +158,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], Chat.prototype, "pin", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Chat.prototype, "notify", void 0);
 Chat = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);

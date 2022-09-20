@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
+exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.addTribeMember = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.setNotifyLevel = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -34,7 +34,9 @@ function updateChat(req, res) {
         if (!id) {
             return (0, res_1.failure)(res, 'missing id');
         }
-        const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
+        const chat = (yield models_1.models.Chat.findOne({
+            where: { id, tenant },
+        }));
         if (!chat) {
             return (0, res_1.failure)(res, 'chat not found');
         }
@@ -69,9 +71,9 @@ function kickChatMember(req, res) {
             return (0, res_1.failure)(res, 'missing param');
         }
         // remove chat.contactIds
-        const chat = yield models_1.models.Chat.findOne({
+        const chat = (yield models_1.models.Chat.findOne({
             where: { id: chatId, tenant },
-        });
+        }));
         const contactIds = JSON.parse(chat.contactIds || '[]');
         const newContactIds = contactIds.filter((cid) => cid !== contactId);
         yield chat.update({ contactIds: JSON.stringify(newContactIds) });
@@ -131,7 +133,7 @@ function receiveGroupKick(payload) {
             network_type,
             tenant,
         };
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'group_kick',
             response: {
@@ -148,15 +150,39 @@ function getChats(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        const chats = yield models_1.models.Chat.findAll({
+        const chats = (yield models_1.models.Chat.findAll({
             where: { deleted: false, tenant },
             raw: true,
-        });
+        }));
         const c = chats.map((chat) => jsonUtils.chatToJson(chat));
         (0, res_1.success)(res, c);
     });
 }
 exports.getChats = getChats;
+function setNotifyLevel(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const chatId = req.params['chat_id'];
+        const levelString = req.params['level'];
+        const level = parseInt(levelString);
+        if (!chatId) {
+            return (0, res_1.failure)(res, 'setNotifyLevel no chatId');
+        }
+        if (!Object.values(constants_1.default.notify_levels).includes(level)) {
+            return (0, res_1.failure)(res, 'invalid notify level');
+        }
+        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
+        if (!chat) {
+            return (0, res_1.failure)(res, 'chat not found');
+        }
+        const isMuted = level === constants_1.default.notify_levels.mute;
+        yield chat.update({ notify: level, isMuted });
+        (0, res_1.success)(res, jsonUtils.chatToJson(chat));
+    });
+}
+exports.setNotifyLevel = setNotifyLevel;
 function mute(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -167,13 +193,19 @@ function mute(req, res) {
         if (!['mute', 'unmute'].includes(mute)) {
             return (0, res_1.failure)(res, 'invalid option for mute');
         }
-        const chat = yield models_1.models.Chat.findOne({
+        const chat = (yield models_1.models.Chat.findOne({
             where: { id: chatId, tenant },
-        });
+        }));
         if (!chat) {
             return (0, res_1.failure)(res, 'chat not found');
         }
-        chat.update({ isMuted: mute == 'mute' });
+        const isMuted = mute == 'mute';
+        yield chat.update({
+            isMuted,
+            notify: isMuted
+                ? constants_1.default.notify_levels.mute
+                : constants_1.default.notify_levels.all,
+        });
         (0, res_1.success)(res, jsonUtils.chatToJson(chat));
     });
 }
@@ -194,9 +226,9 @@ function createGroupChat(req, res) {
             alias: owner.alias,
         };
         yield (0, helpers_1.asyncForEach)(contact_ids, (cid) => __awaiter(this, void 0, void 0, function* () {
-            const contact = yield models_1.models.Contact.findOne({
+            const contact = (yield models_1.models.Contact.findOne({
                 where: { id: cid, tenant },
-            });
+            }));
             members[contact.publicKey] = {
                 key: contact.contactKey,
                 alias: contact.alias || '',
@@ -256,7 +288,7 @@ function createGroupChat(req, res) {
             },
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {
-                    const chat = yield models_1.models.Chat.create(chatParams);
+                    const chat = (yield models_1.models.Chat.create(chatParams));
                     if (chat.type === constants_1.default.chat_types.tribe) {
                         // save me as owner when i create
                         try {
@@ -289,32 +321,32 @@ function addGroupMembers(req, res) {
         const { id } = req.params;
         const members = {}; //{pubkey:{key,alias}, ...}
         const owner = req.owner;
-        const chat = yield models_1.models.Chat.findOne({
+        const chat = (yield models_1.models.Chat.findOne({
             where: { id, tenant },
-        });
+        }));
         const contactIds = JSON.parse(chat.contactIds || '[]');
         // for all members (existing and new)
         members[owner.publicKey] = { key: owner.contactKey, alias: owner.alias };
         if (chat.type === constants_1.default.chat_types.tribe) {
-            const me = yield models_1.models.ChatMember.findOne({
+            const me = (yield models_1.models.ChatMember.findOne({
                 where: { contactId: owner.id, chatId: chat.id, tenant },
-            });
+            }));
             if (me)
                 members[owner.publicKey].role = me.role;
         }
         const allContactIds = contactIds.concat(contact_ids);
         yield (0, helpers_1.asyncForEach)(allContactIds, (cid) => __awaiter(this, void 0, void 0, function* () {
-            const contact = yield models_1.models.Contact.findOne({
+            const contact = (yield models_1.models.Contact.findOne({
                 where: { id: cid, tenant },
-            });
+            }));
             if (contact) {
                 members[contact.publicKey] = {
                     key: contact.contactKey,
                     alias: contact.alias,
                 };
-                const member = yield models_1.models.ChatMember.findOne({
+                const member = (yield models_1.models.ChatMember.findOne({
                     where: { contactId: owner.id, chatId: chat.id, tenant },
-                });
+                }));
                 if (member)
                     members[contact.publicKey].role = member.role;
             }
@@ -336,9 +368,9 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const tenant = req.owner.id;
     const { id } = req.params;
     const owner = req.owner;
-    const chat = yield models_1.models.Chat.findOne({
+    const chat = (yield models_1.models.Chat.findOne({
         where: { id, tenant },
-    });
+    }));
     if (!chat) {
         return (0, res_1.failure)(res, 'you are not in this group');
     }
@@ -390,6 +422,99 @@ const deleteChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     (0, res_1.success)(res, { chat_id: id });
 });
 exports.deleteChat = deleteChat;
+const addTribeMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const tenant = req.owner.id;
+    const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } = req.body;
+    const chat = (yield models_1.models.Chat.findOne({
+        where: { id: chat_id, tenant },
+    }));
+    if (!chat) {
+        return (0, res_1.failure)(res, 'chat not found');
+    }
+    const member = { key: contact_key, alias };
+    const date = new Date();
+    const added = yield addMemberToTribe({
+        sender_pub_key: pub_key,
+        tenant,
+        chat,
+        date,
+        senderAlias: alias,
+        member,
+        sender_photo_url: photo_url,
+        sender_route_hint: route_hint,
+        isTribeOwner: true,
+    });
+    (0, res_1.success)(res, { id: added.theSender.id });
+});
+exports.addTribeMember = addTribeMember;
+function addMemberToTribe({ sender_pub_key, tenant, chat, date, senderAlias, member, sender_photo_url, sender_route_hint, isTribeOwner, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let theSender = null;
+        const sender = (yield models_1.models.Contact.findOne({
+            where: { publicKey: sender_pub_key, tenant },
+        }));
+        const contactIds = JSON.parse(chat.contactIds || '[]');
+        if (sender) {
+            theSender = sender; // might already include??
+            if (!contactIds.includes(sender.id))
+                contactIds.push(sender.id);
+            // update sender contacT_key in case they reset?
+            if (member && member.key) {
+                if (sender.contactKey !== member.key) {
+                    yield sender.update({ contactKey: member.key });
+                }
+            }
+        }
+        else {
+            if (member && member.key) {
+                const createdContact = (yield models_1.models.Contact.create({
+                    publicKey: sender_pub_key,
+                    contactKey: member.key,
+                    alias: senderAlias,
+                    status: 1,
+                    fromGroup: true,
+                    photoUrl: sender_photo_url,
+                    tenant,
+                    routeHint: sender_route_hint || '',
+                }));
+                theSender = createdContact;
+                contactIds.push(createdContact.id);
+            }
+        }
+        if (!theSender)
+            throw new Error(`no sender`); // fail (no contact key?)
+        yield chat.update({ contactIds: JSON.stringify(contactIds) });
+        if (isTribeOwner) {
+            // IF TRIBE, ADD new member TO XREF
+            logger_1.sphinxLogger.info(`UPSERT CHAT MEMBER ${{
+                contactId: theSender.id,
+                chatId: chat.id,
+                role: constants_1.default.chat_roles.reader,
+                status: constants_1.default.chat_statuses.pending,
+                lastActive: date,
+                lastAlias: senderAlias,
+                tenant,
+            }}`);
+            try {
+                yield models_1.models.ChatMember.upsert({
+                    contactId: theSender.id,
+                    chatId: chat.id,
+                    role: constants_1.default.chat_roles.reader,
+                    lastActive: date,
+                    status: constants_1.default.chat_statuses.approved,
+                    lastAlias: senderAlias,
+                    tenant,
+                });
+            }
+            catch (e) {
+                logger_1.sphinxLogger.error(`=> groupJoin could not upsert ChatMember`);
+            }
+        }
+        return { theSender, member_count: contactIds.length };
+    });
+}
 function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> receiveGroupJoin`, logger_1.logging.Network);
@@ -402,69 +527,22 @@ function receiveGroupJoin(payload) {
         date.setMilliseconds(0);
         if (date_string)
             date = new Date(date_string);
-        let theSender = null;
+        // let theSender: Contact | null = null
         const member = chat_members[sender_pub_key];
         const senderAlias = (member && member.alias) || sender_alias || 'Unknown';
-        if (!isTribe || isTribeOwner) {
-            const sender = yield models_1.models.Contact.findOne({
-                where: { publicKey: sender_pub_key, tenant },
+        try {
+            const { theSender, member_count } = yield addMemberToTribe({
+                sender_pub_key,
+                tenant,
+                chat,
+                senderAlias,
+                member,
+                date,
+                sender_photo_url,
+                sender_route_hint,
+                isTribeOwner,
             });
-            const contactIds = JSON.parse(chat.contactIds || '[]');
-            if (sender) {
-                theSender = sender; // might already include??
-                if (!contactIds.includes(sender.id))
-                    contactIds.push(sender.id);
-                // update sender contacT_key in case they reset?
-                if (member && member.key) {
-                    if (sender.contactKey !== member.key) {
-                        yield sender.update({ contactKey: member.key });
-                    }
-                }
-            }
-            else {
-                if (member && member.key) {
-                    const createdContact = yield models_1.models.Contact.create({
-                        publicKey: sender_pub_key,
-                        contactKey: member.key,
-                        alias: senderAlias,
-                        status: 1,
-                        fromGroup: true,
-                        photoUrl: sender_photo_url,
-                        tenant,
-                        routeHint: sender_route_hint || '',
-                    });
-                    theSender = createdContact;
-                    contactIds.push(createdContact.id);
-                }
-            }
-            if (!theSender)
-                return logger_1.sphinxLogger.error(`no sender`); // fail (no contact key?)
-            yield chat.update({ contactIds: JSON.stringify(contactIds) });
             if (isTribeOwner) {
-                // IF TRIBE, ADD new member TO XREF
-                logger_1.sphinxLogger.info(`UPSERT CHAT MEMBER ${{
-                    contactId: theSender.id,
-                    chatId: chat.id,
-                    role: constants_1.default.chat_roles.reader,
-                    status: constants_1.default.chat_statuses.pending,
-                    lastActive: date,
-                    lastAlias: senderAlias,
-                    tenant,
-                }}`);
-                try {
-                    yield models_1.models.ChatMember.upsert({
-                        contactId: theSender.id,
-                        chatId: chat.id,
-                        role: constants_1.default.chat_roles.reader,
-                        lastActive: date,
-                        status: constants_1.default.chat_statuses.approved,
-                        lastAlias: senderAlias,
-                        tenant,
-                    });
-                }
-                catch (e) {
-                    logger_1.sphinxLogger.error(`=> groupJoin could not upsert ChatMember`);
-                }
                 setTimeout(() => {
                     (0, chatTribes_1.replayChatHistory)(chat, theSender, owner);
                 }, 2000);
@@ -472,40 +550,43 @@ function receiveGroupJoin(payload) {
                     chatId: chat.id,
                     uuid: chat.uuid,
                     host: chat.host,
-                    member_count: contactIds.length,
+                    member_count,
                     owner_pubkey: owner.publicKey,
                 });
             }
+            const msg = {
+                chatId: chat.id,
+                type: constants_1.default.message_types.group_join,
+                sender: (theSender && theSender.id) || 0,
+                messageContent: '',
+                remoteMessageContent: '',
+                status: constants_1.default.statuses.confirmed,
+                date: date,
+                createdAt: date,
+                updatedAt: date,
+                network_type,
+                tenant,
+            };
+            if (isTribe) {
+                msg.senderAlias = sender_alias;
+                msg.senderPic = sender_photo_url;
+            }
+            const message = (yield models_1.models.Message.create(msg));
+            const theChat = yield (0, chatTribes_1.addPendingContactIdsToChat)(chat, tenant);
+            socket.sendJson({
+                type: 'group_join',
+                response: {
+                    contact: jsonUtils.contactToJson(theSender || {}),
+                    chat: jsonUtils.chatToJson(theChat),
+                    message: jsonUtils.messageToJson(message),
+                },
+            }, tenant);
+            if (isTribeOwner) {
+                (0, hub_1.sendNotification)(chat, chat_name, 'group_join', owner);
+            }
         }
-        const msg = {
-            chatId: chat.id,
-            type: constants_1.default.message_types.group_join,
-            sender: (theSender && theSender.id) || 0,
-            messageContent: '',
-            remoteMessageContent: '',
-            status: constants_1.default.statuses.confirmed,
-            date: date,
-            createdAt: date,
-            updatedAt: date,
-            network_type,
-            tenant,
-        };
-        if (isTribe) {
-            msg.senderAlias = sender_alias;
-            msg.senderPic = sender_photo_url;
-        }
-        const message = yield models_1.models.Message.create(msg);
-        const theChat = yield (0, chatTribes_1.addPendingContactIdsToChat)(chat, tenant);
-        socket.sendJson({
-            type: 'group_join',
-            response: {
-                contact: jsonUtils.contactToJson(theSender || {}),
-                chat: jsonUtils.chatToJson(theChat),
-                message: jsonUtils.messageToJson(message),
-            },
-        }, tenant);
-        if (isTribeOwner) {
-            (0, hub_1.sendNotification)(chat, chat_name, 'group_join', owner);
+        catch (e) {
+            return logger_1.sphinxLogger.error(`no sender`);
         }
     });
 }
@@ -521,9 +602,9 @@ function receiveGroupLeave(payload) {
         let sender;
         // EITHER private chat OR tribeOwner
         if (!isTribe || isTribeOwner) {
-            const sender = yield models_1.models.Contact.findOne({
+            const sender = (yield models_1.models.Contact.findOne({
                 where: { publicKey: sender_pub_key, tenant },
-            });
+            }));
             if (!sender)
                 return logger_1.sphinxLogger.error(`=> receiveGroupLeave cant find sender`);
             const oldContactIds = JSON.parse(chat.contactIds || '[]');
@@ -570,7 +651,7 @@ function receiveGroupLeave(payload) {
             msg.senderAlias = sender_alias;
             msg.senderPic = sender_photo_url;
         }
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'group_leave',
             response: {
@@ -609,9 +690,9 @@ function receiveGroupCreateOrInvite(payload) {
         const contacts = [];
         const newContacts = [];
         for (const [pubkey, member] of Object.entries(chat_members)) {
-            const contact = yield models_1.models.Contact.findOne({
+            const contact = (yield models_1.models.Contact.findOne({
                 where: { publicKey: pubkey, tenant },
-            });
+            }));
             let addContact = false;
             if (chat_type === constants_1.default.chat_types.group && member && member.key) {
                 addContact = true;
@@ -625,14 +706,14 @@ function receiveGroupCreateOrInvite(payload) {
             }
             if (addContact) {
                 if (!contact) {
-                    const createdContact = yield models_1.models.Contact.create({
+                    const createdContact = (yield models_1.models.Contact.create({
                         publicKey: pubkey,
                         contactKey: member.key,
                         alias: member.alias || 'Unknown',
                         status: 1,
                         fromGroup: true,
                         tenant,
-                    });
+                    }));
                     contacts.push(Object.assign(Object.assign({}, createdContact.dataValues), { role: member.role }));
                     newContacts.push(createdContact.dataValues);
                 }
@@ -647,7 +728,7 @@ function receiveGroupCreateOrInvite(payload) {
         // make chat
         const date = new Date();
         date.setMilliseconds(0);
-        const chat = yield models_1.models.Chat.create(Object.assign(Object.assign(Object.assign({ uuid: chat_uuid, contactIds: JSON.stringify(contactIds), createdAt: date, updatedAt: date, name: chat_name, type: chat_type || constants_1.default.chat_types.group }, (chat_host && { host: chat_host })), (chat_key && { groupKey: chat_key })), { tenant }));
+        const chat = (yield models_1.models.Chat.create(Object.assign(Object.assign(Object.assign({ uuid: chat_uuid, contactIds: JSON.stringify(contactIds), createdAt: date, updatedAt: date, name: chat_name, type: chat_type || constants_1.default.chat_types.group }, (chat_host && { host: chat_host })), (chat_key && { groupKey: chat_key })), { tenant })));
         if (isTribe) {
             // IF TRIBE, ADD TO XREF
             contacts.forEach((c) => {

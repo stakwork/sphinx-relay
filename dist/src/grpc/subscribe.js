@@ -38,7 +38,7 @@ function subscribeInvoices(parseKeysendInvoice) {
         const call = lightning[cmd]();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log("=> INVOICE RAW", response);
+                // console.log("=> INVOICE RAW", response)
                 const inv = interfaces.subscribeResponse(response);
                 // console.log("INVOICE RECEIVED", inv)
                 // loginvoice(inv)
@@ -130,13 +130,11 @@ function subscribeCLN(cmd, lightning) {
             // wait a second and do it again with new lastpay_index
             lightning['ListInvoices']({}, function (err, response) {
                 let lastpay_index = 1;
-                lastpay_index = response.invoices.length;
+                lastpay_index = response.invoices.length + 1;
                 if (err == null) {
                     lightning[cmd]({ lastpay_index }, function (err, response) {
-                        console.log('Response ==', lastpay_index, response);
                         if (err == null) {
-                            const inv = interfaces.subscribeResponse(response);
-                            // resolve(inv)
+                            // const inv = interfaces.subscribeResponse(response)
                         }
                         else {
                             console.log(err);

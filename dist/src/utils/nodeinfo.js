@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isClean = exports.nodeinfo = exports.proxynodeinfo = exports.NodeType = void 0;
 const Lightning = require("../grpc/lightning");
 const publicIp = require("public-ip");
-const gitinfo_1 = require("./gitinfo");
+const gitinfo = require("./gitinfo");
 const models_1 = require("../models");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
@@ -102,8 +102,6 @@ function nodeinfo() {
         catch (e) {
             //do nothing here
         }
-        const commitHash = yield (0, gitinfo_1.checkCommitHash)();
-        const tag = yield (0, gitinfo_1.checkTag)();
         const clean = yield isClean();
         const latest_message = yield latestMessage();
         try {
@@ -123,7 +121,7 @@ function nodeinfo() {
                 node_alias: process.env.NODE_ALIAS || '',
                 ip: process.env.NODE_IP || '',
                 lnd_port: process.env.NODE_LND_PORT || '',
-                relay_commit: commitHash || '',
+                relay_commit: gitinfo.commitHash,
                 public_ip: public_ip,
                 pubkey: owner.publicKey,
                 route_hint: owner.routeHint,
@@ -135,7 +133,7 @@ function nodeinfo() {
                 largest_remote_balance: largestRemoteBalance,
                 total_local_balance: totalLocalBalance,
                 lnd_version: info.version,
-                relay_version: tag || '',
+                relay_version: gitinfo.tag,
                 payment_channel: '',
                 hosting_provider: '',
                 open_channel_data: channels,
@@ -179,10 +177,10 @@ function isClean() {
 exports.isClean = isClean;
 function latestMessage() {
     return __awaiter(this, void 0, void 0, function* () {
-        const lasts = yield models_1.models.Message.findAll({
+        const lasts = (yield models_1.models.Message.findAll({
             limit: 1,
             order: [['createdAt', 'DESC']],
-        });
+        }));
         const last = lasts && lasts[0];
         if (last) {
             return last.createdAt;

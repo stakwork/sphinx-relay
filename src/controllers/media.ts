@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, Message, MediaKey } from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as resUtils from '../utils/res'
@@ -18,6 +18,7 @@ import { loadConfig } from '../utils/config'
 import { failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
+import { ChatPlusMembers } from '../network/send'
 
 const config = loadConfig()
 
@@ -120,7 +121,7 @@ export const sendAttachmentMessage = async (req: Req, res) => {
   }
   if (reply_uuid) mm.replyUuid = reply_uuid
   if (parent_id) mm.parentId = parent_id
-  const message = await models.Message.create(mm)
+  const message: Message = (await models.Message.create(mm)) as Message
 
   sphinxLogger.info(['saved attachment msg from me', message.id])
 
@@ -143,7 +144,7 @@ export const sendAttachmentMessage = async (req: Req, res) => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   network.sendMessage({
-    chat: chat,
+    chat: chat as Partial<ChatPlusMembers>,
     sender: owner,
     type: constants.message_types.attachment,
     amount: amount || 0,
@@ -208,7 +209,7 @@ export const purchase = async (req: Req, res) => {
   })
   if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
-  const message = await models.Message.create({
+  const message: Message = (await models.Message.create({
     chatId: chat.id,
     uuid: short.generate(),
     sender: owner.id,
@@ -221,7 +222,7 @@ export const purchase = async (req: Req, res) => {
     updatedAt: date,
     network_type: constants.network_types.lightning,
     tenant,
-  })
+  })) as Message
 
   const msg = {
     mediaToken: media_token,
@@ -230,7 +231,7 @@ export const purchase = async (req: Req, res) => {
     purchaser: owner.id, // for tribe, knows who sent
   }
   network.sendMessage({
-    chat: { ...chat.dataValues, contactIds: [contact_id] },
+    chat: { ...chat.dataValues, contactIds: JSON.stringify([contact_id]) },
     sender: owner,
     type: constants.message_types.purchase,
     realSatsContactId: contact_id, // ALWAYS will be keysend, so doesnt matter if tribe owner or not
@@ -269,7 +270,7 @@ export const receivePurchase = async (payload) => {
   }
   const tenant: number = owner.id
 
-  const message = await models.Message.create({
+  const message: Message = (await models.Message.create({
     chatId: chat.id,
     uuid: msg_uuid,
     sender: sender.id,
@@ -282,7 +283,7 @@ export const receivePurchase = async (payload) => {
     updatedAt: date,
     network_type,
     tenant,
-  })
+  })) as Message
   socket.sendJson(
     {
       type: 'purchase',
@@ -305,21 +306,21 @@ export const receivePurchase = async (payload) => {
     return sphinxLogger.error('no muid')
   }
 
-  const ogMessage = await models.Message.findOne({
+  const ogMessage: Message = (await models.Message.findOne({
     where: { mediaToken, tenant },
-  })
+  })) as Message
   if (!ogMessage) {
     return sphinxLogger.error('no original message')
   }
 
   // find mediaKey for who sent
-  const mediaKey = await models.MediaKey.findOne({
+  const mediaKey: MediaKey = (await models.MediaKey.findOne({
     where: {
       muid,
       receiver: isTribe ? 0 : sender.id,
       tenant,
     },
-  })
+  })) as MediaKey
   // console.log('mediaKey found!',mediaKey.dataValues)
   if (!mediaKey) return // this is from another person (admin is forwarding)
 
@@ -532,6 +533,7 @@ export const receiveAttachment = async (payload) => {
     parent_id,
     network_type,
     sender_photo_url,
+    force_push,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error('=> no group chat!')
@@ -574,7 +576,14 @@ export const receiveAttachment = async (payload) => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    msg.senderAlias || sender.alias,
+    'message',
+    owner,
+    undefined,
+    force_push
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }

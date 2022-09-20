@@ -15,6 +15,16 @@ const models_1 = require("../models");
 const logger_1 = require("../utils/logger");
 const res_1 = require("../utils/res");
 const Lightning = require("../grpc/lightning");
+/*
+interface LsatResponse {
+  paymentRequest: string
+  macaroon: string
+  issuer: string
+  paths: string
+  preimage: string
+  metadata: string
+}
+*/
 const lsatResponseAttributes = [
     'macaroon',
     'paymentRequest',
@@ -27,10 +37,10 @@ const lsatResponseAttributes = [
 function lsatAlreadyExists(lsat) {
     return __awaiter(this, void 0, void 0, function* () {
         const identifier = lsat.id;
-        const model = yield models_1.models.Lsat.findOne({
+        const model = (yield models_1.models.Lsat.findOne({
             where: { identifier },
             attributes: lsatResponseAttributes,
-        });
+        }));
         if (model)
             return true;
         return false;
@@ -110,10 +120,10 @@ function getLsat(req, res) {
         const identifier = req.params.identifier;
         logger_1.sphinxLogger.info(`=> getLsat`, logger_1.logging.Express);
         try {
-            const lsat = yield models_1.models.Lsat.findOne({
+            const lsat = (yield models_1.models.Lsat.findOne({
                 where: { tenant, identifier },
                 attributes: lsatResponseAttributes,
-            });
+            }));
             if (!lsat)
                 return res.status(404).json({
                     success: false,
@@ -132,10 +142,10 @@ function listLsats(req, res) {
         const tenant = req.owner.id;
         logger_1.sphinxLogger.info(`=> listLsats`, logger_1.logging.Express);
         try {
-            const lsats = yield models_1.models.Lsat.findAll({
+            const lsats = (yield models_1.models.Lsat.findAll({
                 where: { tenant },
                 attributes: lsatResponseAttributes,
-            });
+            }));
             return (0, res_1.success)(res, { lsats });
         }
         catch (e) {

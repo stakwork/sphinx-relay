@@ -76,11 +76,11 @@ function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_
 exports.declare_bot = declare_bot;
 function makeBotsJSON(tribeID) {
     return __awaiter(this, void 0, void 0, function* () {
-        const bots = yield models_1.models.ChatBot.findAll({
+        const bots = (yield models_1.models.ChatBot.findAll({
             where: {
                 chatId: tribeID,
             },
-        });
+        }));
         if (!bots)
             return [];
         if (!bots.length)

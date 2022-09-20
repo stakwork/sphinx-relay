@@ -28,6 +28,7 @@ export function subscribeInvoices(
 
     const lightning = await loadLightning(false, ownerPubkey) // try proxy
 
+
     const cmd = interfaces.subscribeCommand()
 
     if (IS_CLN) {

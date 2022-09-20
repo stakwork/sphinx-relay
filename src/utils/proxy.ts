@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as grpc from 'grpc'
 import { loadConfig } from './config'
 import * as Lightning from '../grpc/lightning'
-import { models } from '../models'
+import { models, ContactRecord } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
@@ -93,7 +93,9 @@ export async function generateNewUser(rootpk: string) {
       isOwner: true,
       authToken: null,
     }
-    const created = await models.Contact.create(contact)
+    const created: ContactRecord = (await models.Contact.create(
+      contact
+    )) as ContactRecord
     // set tenant to self!
     created.update({ tenant: created.id })
     sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)

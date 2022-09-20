@@ -33,7 +33,9 @@ const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     try {
-        const bots = yield models_1.models.Bot.findAll({ where: { tenant } });
+        const bots = (yield models_1.models.Bot.findAll({
+            where: { tenant },
+        }));
         (0, res_1.success)(res, {
             bots: bots.map((b) => jsonUtils.botToJson(b)),
         });
@@ -59,7 +61,7 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         tenant,
     };
     try {
-        const theBot = yield models_1.models.Bot.create(newBot);
+        const theBot = (yield models_1.models.Bot.create(newBot));
         // post to tribes.sphinx.chat
         tribes.declare_bot({
             uuid,
@@ -90,7 +92,9 @@ const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!id || owner_pubkey)
         return;
     try {
-        const bot = yield models_1.models.Bot.findOne({ where: { id, tenant } });
+        const bot = (yield models_1.models.Bot.findOne({
+            where: { id, tenant },
+        }));
         yield tribes.delete_bot({
             uuid: bot.uuid,
             owner_pubkey,
@@ -112,7 +116,9 @@ function installBotAsTribeAdmin(chat, bot_json) {
         if (!chatId || !chat_uuid || !tenant)
             return logger_1.sphinxLogger.error('no chat id in installBot');
         logger_1.sphinxLogger.info(['=> chat to install bot into', chat.name]);
-        const owner = yield models_1.models.Contact.findOne({ where: { id: tenant } });
+        const owner = (yield models_1.models.Contact.findOne({
+            where: { id: tenant },
+        }));
         if (!owner)
             return logger_1.sphinxLogger.error('cant find owner in installBotAsTribeAdmin');
         const isTribeOwner = (owner && owner.publicKey) === (chat && chat.ownerPubkey);
@@ -137,12 +143,12 @@ function installBotAsTribeAdmin(chat, bot_json) {
         };
         if (isLocal) {
             // "install" my local bot and send "INSTALL" event
-            const myBot = yield models_1.models.Bot.findOne({
+            const myBot = (yield models_1.models.Bot.findOne({
                 where: {
                     uuid: bot_json.uuid,
                     tenant,
                 },
-            });
+            }));
             if (myBot) {
                 const success = yield postToBotServer({
                     type: constants_1.default.message_types.bot_install,
@@ -252,12 +258,12 @@ function receiveBotInstall(dat) {
         const tenant = owner.id;
         if (!chat_uuid || !sender_pub_key || !bot_uuid)
             return logger_1.sphinxLogger.info('=> no chat uuid or sender pub key or bot_uuid');
-        const bot = yield models_1.models.Bot.findOne({
+        const bot = (yield models_1.models.Bot.findOne({
             where: {
                 uuid: bot_uuid,
                 tenant,
             },
-        });
+        }));
         if (!bot)
             return;
         const verifiedOwnerPubkey = yield tribes.verifySignedTimestamp(bot_uuid);
@@ -272,12 +278,12 @@ function receiveBotInstall(dat) {
             logger_1.sphinxLogger.info(['CREATE bot MEMBER', botMember]);
             yield models_1.models.BotMember.create(botMember);
         }
-        const contact = yield models_1.models.Contact.findOne({
+        const contact = (yield models_1.models.Contact.findOne({
             where: {
                 tenant,
                 publicKey: sender_pub_key,
             },
-        });
+        }));
         if (!contact) {
             return logger_1.sphinxLogger.error('=> receiveBotInstall no contact');
         }
@@ -300,30 +306,30 @@ function receiveBotCmd(dat) {
         if (!chat_uuid || !bot_uuid)
             return logger_1.sphinxLogger.error('no chat uuid');
         // const amount = dat.message.amount - check price_per_use
-        const bot = yield models_1.models.Bot.findOne({
+        const bot = (yield models_1.models.Bot.findOne({
             where: {
                 uuid: bot_uuid,
                 tenant,
             },
-        });
+        }));
         if (!bot)
             return;
-        const botMember = yield models_1.models.BotMember.findOne({
+        const botMember = (yield models_1.models.BotMember.findOne({
             where: {
                 botId: bot.id,
                 tribeUuid: chat_uuid,
                 tenant,
             },
-        });
+        }));
         if (!botMember)
             return;
-        botMember.update({ msgCount: (botMember || 0) + 1 });
-        const contact = yield models_1.models.Contact.findOne({
+        botMember.update({ msgCount: (botMember.msgCount || 0) + 1 });
+        const contact = (yield models_1.models.Contact.findOne({
             where: {
                 tenant,
                 publicKey: sender_pub_key,
             },
-        });
+        }));
         if (!contact) {
             return logger_1.sphinxLogger.error('=> receiveBotInstall no contact');
         }
@@ -424,9 +430,9 @@ function receiveBotRes(dat) {
         const tenant = owner.id;
         if (!chat_uuid)
             return logger_1.sphinxLogger.error('=> receiveBotRes Error no chat_uuid');
-        const chat = yield models_1.models.Chat.findOne({
+        const chat = (yield models_1.models.Chat.findOne({
             where: { uuid: chat_uuid, tenant },
-        });
+        }));
         if (!chat)
             return logger_1.sphinxLogger.error('=> receiveBotRes Error no chat');
         const tribeOwnerPubKey = chat && chat.ownerPubkey;
@@ -451,21 +457,21 @@ function receiveBotRes(dat) {
             });
         }
         else {
-            const theChat = yield models_1.models.Chat.findOne({
+            const theChat = (yield models_1.models.Chat.findOne({
                 where: {
                     uuid: chat_uuid,
                     tenant,
                 },
-            });
+            }));
             if (!chat)
                 return logger_1.sphinxLogger.error('=> receiveBotRes as sub error no chat');
             let date = new Date();
             date.setMilliseconds(0);
             if (date_string)
                 date = new Date(date_string);
-            const sender = yield models_1.models.Contact.findOne({
+            const sender = (yield models_1.models.Contact.findOne({
                 where: { publicKey: sender_pub_key, tenant },
-            });
+            }));
             const msg = {
                 chatId: chat.id,
                 uuid: msg_uuid,
@@ -485,7 +491,7 @@ function receiveBotRes(dat) {
             };
             if (parent_id)
                 msg.parentId = parent_id;
-            const message = yield models_1.models.Message.create(msg);
+            const message = (yield models_1.models.Message.create(msg));
             socket.sendJson({
                 type: 'message',
                 response: jsonUtils.messageToJson(message, theChat, owner),

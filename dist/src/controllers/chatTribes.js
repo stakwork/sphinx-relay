@@ -32,7 +32,9 @@ function joinTribe(req, res) {
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url, } = req.body;
         logger_1.sphinxLogger.info(['received owner route hint', owner_route_hint], logger_1.logging.Express);
         const is_private = req.body.private ? true : false;
-        const existing = yield models_1.models.Chat.findOne({ where: { uuid, tenant } });
+        const existing = (yield models_1.models.Chat.findOne({
+            where: { uuid, tenant },
+        }));
         if (existing) {
             logger_1.sphinxLogger.error('You are already in this tribe', logger_1.logging.Tribes);
             return (0, res_1.failure)(res, 'cant find tribe');
@@ -43,9 +45,9 @@ function joinTribe(req, res) {
         }
         const ownerPubKey = owner_pubkey;
         // verify signature here?
-        const tribeOwner = yield models_1.models.Contact.findOne({
+        const tribeOwner = (yield models_1.models.Contact.findOne({
             where: { publicKey: ownerPubKey, tenant },
-        });
+        }));
         let theTribeOwner;
         const owner = req.owner;
         const contactIds = [owner.id];
@@ -58,7 +60,7 @@ function joinTribe(req, res) {
                 contactIds.push(tribeOwner.id);
         }
         else {
-            const createdContact = yield models_1.models.Contact.create({
+            const createdContact = (yield models_1.models.Contact.create({
                 publicKey: ownerPubKey,
                 contactKey: '',
                 alias: owner_alias || 'Unknown',
@@ -66,7 +68,7 @@ function joinTribe(req, res) {
                 fromGroup: true,
                 tenant,
                 routeHint: owner_route_hint || '',
-            });
+            }));
             theTribeOwner = createdContact;
             // console.log("CREATE TRIBE OWNER", createdContact);
             contactIds.push(createdContact.id);
@@ -126,7 +128,7 @@ function joinTribe(req, res) {
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {
                     // console.log("=> joinTribe: CREATE CHAT RECORD NOW");
-                    const chat = yield models_1.models.Chat.create(chatParams);
+                    const chat = (yield models_1.models.Chat.create(chatParams));
                     models_1.models.ChatMember.create({
                         contactId: theTribeOwner.id,
                         chatId: chat.id,
@@ -191,15 +193,15 @@ function receiveMemberRequest(payload) {
         let theSender = null;
         const member = chat_members[sender_pub_key];
         const senderAlias = (member && member.alias) || sender_alias || 'Unknown';
-        const sender = yield models_1.models.Contact.findOne({
+        const sender = (yield models_1.models.Contact.findOne({
             where: { publicKey: sender_pub_key, tenant },
-        });
+        }));
         if (sender) {
             theSender = sender; // might already include??
         }
         else {
             if (member && member.key) {
-                const createdContact = yield models_1.models.Contact.create({
+                const createdContact = (yield models_1.models.Contact.create({
                     publicKey: sender_pub_key,
                     contactKey: member.key,
                     alias: sender_alias || senderAlias,
@@ -208,7 +210,7 @@ function receiveMemberRequest(payload) {
                     photoUrl: sender_photo_url,
                     tenant,
                     routeHint: sender_route_hint || '',
-                });
+                }));
                 theSender = createdContact;
             }
         }
@@ -237,7 +239,9 @@ function receiveMemberRequest(payload) {
                 tenant,
             });
             // also update the chat
-            const theChat = yield models_1.models.Chat.findOne({ where: { id: chat.id } });
+            const theChat = (yield models_1.models.Chat.findOne({
+                where: { id: chat.id },
+            }));
             if (theChat) {
                 yield theChat.update({ updatedAt: date });
             }
@@ -262,7 +266,7 @@ function receiveMemberRequest(payload) {
             msg.senderAlias = senderAlias;
             msg.senderPic = sender_photo_url;
         }
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         const theChat = yield addPendingContactIdsToChat(chat, tenant);
         socket.sendJson({
             type: 'member_request',
@@ -284,7 +288,9 @@ function pinToTribe(req, res) {
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
-        const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
+        const chat = (yield models_1.models.Chat.findOne({
+            where: { id, tenant },
+        }));
         if (!chat) {
             return (0, res_1.failure)(res, 'cant find chat');
         }
@@ -315,7 +321,9 @@ function editTribe(req, res) {
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
-        const chat = yield models_1.models.Chat.findOne({ where: { id, tenant } });
+        const chat = (yield models_1.models.Chat.findOne({
+            where: { id, tenant },
+        }));
         if (!chat) {
             return (0, res_1.failure)(res, 'cant find chat');
         }
@@ -394,11 +402,15 @@ function approveOrRejectMember(req, res) {
         const msgId = parseInt(req.params['messageId']);
         const contactId = parseInt(req.params['contactId']);
         const status = req.params['status'];
-        const msg = yield models_1.models.Message.findOne({ where: { id: msgId, tenant } });
+        const msg = (yield models_1.models.Message.findOne({
+            where: { id: msgId, tenant },
+        }));
         if (!msg)
             return (0, res_1.failure)(res, 'no message');
         const chatId = msg.chatId;
-        const chat = yield models_1.models.Chat.findOne({ where: { id: chatId, tenant } });
+        const chat = (yield models_1.models.Chat.findOne({
+            where: { id: chatId, tenant },
+        }));
         if (!chat)
             return (0, res_1.failure)(res, 'no chat');
         if (!msgId ||
@@ -417,9 +429,9 @@ function approveOrRejectMember(req, res) {
             yield chat.update({ contactIds: JSON.stringify(contactIds) });
         }
         yield msg.update({ type: msgType });
-        const member = yield models_1.models.ChatMember.findOne({
+        const member = (yield models_1.models.ChatMember.findOne({
             where: { contactId, chatId },
-        });
+        }));
         if (!member) {
             return (0, res_1.failure)(res, 'cant find chat member');
         }
@@ -435,7 +447,7 @@ function approveOrRejectMember(req, res) {
         const chatToSend = chat.dataValues || chat;
         network.sendMessage({
             // send to the requester
-            chat: Object.assign(Object.assign({}, chatToSend), { contactIds: [member.contactId] }),
+            chat: Object.assign(Object.assign({}, chatToSend), { contactIds: JSON.stringify([member.contactId]) }),
             amount: 0,
             sender: owner,
             message: {},
@@ -472,7 +484,7 @@ function receiveMemberApprove(payload) {
             network_type,
             tenant,
         };
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'member_approve',
             response: {
@@ -526,7 +538,7 @@ function receiveMemberReject(payload) {
             network_type,
             tenant,
         };
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'member_reject',
             response: {
@@ -562,7 +574,7 @@ function receiveTribeDelete(payload) {
             network_type,
             tenant,
         };
-        const message = yield models_1.models.Message.create(msg);
+        const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'tribe_delete',
             response: {
@@ -582,7 +594,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
             return logger_1.sphinxLogger.info('cant replay history', logger_1.logging.Tribes);
         }
         try {
-            const msgs = yield models_1.models.Message.findAll({
+            const msgs = (yield models_1.models.Message.findAll({
                 where: {
                     tenant,
                     chatId: chat.id,
@@ -590,21 +602,21 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 },
                 order: [['id', 'desc']],
                 limit: 40,
-            });
+            }));
             msgs.reverse();
             // if theres a pinned msg in this chat
             if (chat.pin) {
                 const pinned = msgs.find((m) => m.uuid === chat.pin);
                 // if the pinned msg is not already included
                 if (!pinned) {
-                    const pinnedMsg = yield models_1.models.Message.findOne({
+                    const pinnedMsg = (yield models_1.models.Message.findOne({
                         where: {
                             tenant,
                             chatId: chat.id,
                             type: { [sequelize_1.Op.in]: network.typesToReplay },
                             uuid: chat.pin,
                         },
-                    });
+                    }));
                     // add it
                     if (pinnedMsg) {
                         msgs.push(pinnedMsg);
@@ -637,13 +649,13 @@ function replayChatHistory(chat, contact, ownerRecord) {
                     if (m.mediaKey && m.mediaToken) {
                         const muid = m.mediaToken.split('.').length && m.mediaToken.split('.')[1];
                         if (muid) {
-                            const mediaKey = yield models_1.models.MediaKey.findOne({
+                            const mediaKey = (yield models_1.models.MediaKey.findOne({
                                 where: {
                                     muid,
                                     chatId: chat.id,
                                     tenant,
                                 },
-                            });
+                            }));
                             // console.log("FOUND MEDIA KEY!!",mediaKey.dataValues)
                             mediaKeyMap = { chat: mediaKey.key };
                             newMediaTerms = { muid: mediaKey.muid };
@@ -652,7 +664,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 }
                 const isForwarded = m.sender !== tenant;
                 const includeStatus = true;
-                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, parentId: m.parentId || 0, status: m.status, amount: m.amount }, (mediaKeyMap && { mediaKey: mediaKeyMap })), (newMediaTerms && { mediaToken: newMediaTerms })), (m.mediaType && { mediaType: m.mediaType })), (dateString && { date: dateString })), isForwarded, includeStatus);
+                let msg = network.newmsg(m.type, chat, sender, Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ content, uuid: m.uuid, replyUuid: m.replyUuid, parentId: m.parentId || 0, status: m.status, amount: m.amount }, (mediaKeyMap && { mediaKey: mediaKeyMap })), (newMediaTerms && { mediaToken: newMediaTerms })), (m.mediaType && { mediaType: m.mediaType })), (dateString && { date: dateString })), (m.recipientAlias && { recipientAlias: m.recipientAlias })), (m.recipientPic && { recipientPic: m.recipientPic })), isForwarded, includeStatus);
                 msg = yield (0, msg_1.decryptMessage)(msg, chat);
                 const data = yield (0, msg_1.personalizeMessage)(msg, contact, true);
                 const mqttTopic = `${contact.publicKey}/${chat.uuid}`;
@@ -713,13 +725,13 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
 exports.createTribeChatParams = createTribeChatParams;
 function addPendingContactIdsToChat(achat, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const members = yield models_1.models.ChatMember.findAll({
+        const members = (yield models_1.models.ChatMember.findAll({
             where: {
                 chatId: achat.id,
                 status: constants_1.default.chat_statuses.pending,
                 tenant,
             },
-        });
+        }));
         if (!members)
             return achat;
         const pendingContactIds = members.map((m) => m.contactId);

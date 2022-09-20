@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, ChatBotRecord } from '../models'
 import { getHost } from './tribes'
 import fetch from 'node-fetch'
 import { loadConfig } from './config'
@@ -69,11 +69,11 @@ export async function declare_bot({
 }
 
 export async function makeBotsJSON(tribeID) {
-  const bots = await models.ChatBot.findAll({
+  const bots: ChatBotRecord[] = (await models.ChatBot.findAll({
     where: {
       chatId: tribeID,
     },
-  })
+  })) as ChatBotRecord[]
   if (!bots) return []
   if (!bots.length) return []
   return bots.map((b) => {

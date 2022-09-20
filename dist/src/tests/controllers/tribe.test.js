@@ -43,7 +43,7 @@ function tribeTest(t, node1, node2) {
         //NODE2 LEAVES THE TRIBE
         let left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left, 'node2 should leave tribe');
-        //NODE2 LEAVES THE TRIBE
+        //NODE1 DELETES THE TRIBE
         let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
@@ -86,9 +86,9 @@ function tribeUniqueAliasTest(t, node1, node2, node3) {
         t.true(!!tribeMessage2, 'node2 should send message to tribe');
         let message1 = yield (0, get_1.getCheckNewMsgs)(t, node3, tribeMessage.uuid);
         let message2 = yield (0, get_1.getCheckNewMsgs)(t, node3, tribeMessage2.uuid);
-        t.true(message1.sender_alias !== message2.sender_alias, "The sender alias in both messages should be different");
+        t.true(message1.sender_alias !== message2.sender_alias, 'The sender alias in both messages should be different');
         //Check that our logic for assigning an alternate alias is working
-        t.true(message2.sender_alias === `${node1.alias}_2`, "The sender alias should be modified according to our unique alias logic");
+        t.true(message2.sender_alias === `${node1.alias}_2`, 'The sender alias should be modified according to our unique alias logic');
         //NODE3 LEAVES THE TRIBE
         let left1 = yield (0, del_1.leaveTribe)(t, node3, tribe);
         t.true(left1, 'node3 should leave tribe');

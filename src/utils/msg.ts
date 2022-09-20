@@ -60,11 +60,11 @@ async function encryptTribeBroadcast(
   if (isTribeOwner) {
     // has been previously decrypted
     if (message.content) {
-      const encContent = await rsa.encrypt(contact.contactKey, message.content)
+      const encContent = rsa.encrypt(contact.contactKey, message.content.toString())
       obj.content = encContent
     }
     if (message.mediaKey) {
-      const encMediaKey = await rsa.encrypt(
+      const encMediaKey = rsa.encrypt(
         contact.contactKey,
         message.mediaKey
       )
@@ -139,7 +139,7 @@ async function decryptMessage(
         content = m.content['chat']
       }
     }
-    const decContent = rsa.decrypt(chat.groupPrivateKey, content)
+    const decContent = rsa.decrypt(chat.groupPrivateKey, content.toString())
     obj.content = decContent
   }
   if (m.mediaKey) {

@@ -39,7 +39,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
         return;
     }
     //console.log('[hub] checking invites ping')
-    const inviteStrings = yield models_1.models.Invite.findAll({
+    const inviteStrings = (yield models_1.models.Invite.findAll({
         where: {
             status: {
                 [sequelize_1.Op.notIn]: [
@@ -48,7 +48,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                 ],
             },
         },
-    }).map((invite) => invite.inviteString);
+    })).map((invite) => invite.inviteString);
     if (inviteStrings.length === 0) {
         return; // skip if no invites
     }
@@ -66,15 +66,15 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                 const pubkey = object.pubkey;
                 const routeHint = object.route_hint;
                 const price = object.price;
-                const dbInvite = yield models_1.models.Invite.findOne({
+                const dbInvite = (yield models_1.models.Invite.findOne({
                     where: { inviteString: invite.pin },
-                });
-                const contact = yield models_1.models.Contact.findOne({
+                }));
+                const contact = (yield models_1.models.Contact.findOne({
                     where: { id: dbInvite.contactId },
-                });
-                const owner = yield models_1.models.Contact.findOne({
+                }));
+                const owner = (yield models_1.models.Contact.findOne({
                     where: { id: dbInvite.tenant },
-                });
+                }));
                 if (dbInvite.status != invite.invite_status) {
                     const updateObj = {
                         status: invite.invite_status,
@@ -101,7 +101,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     if (routeHint)
                         updateObj.routeHint = routeHint;
                     yield contact.update(updateObj);
-                    var contactJson = jsonUtils.contactToJson(contact);
+                    const contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
                         type: 'contact',

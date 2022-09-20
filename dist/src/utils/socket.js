@@ -98,9 +98,9 @@ function getOwnerFromToken(token) {
         if (!token)
             return null;
         const hashedToken = crypto.createHash('sha256').update(token).digest('base64');
-        const owner = yield models_1.models.Contact.findOne({
+        const owner = (yield models_1.models.Contact.findOne({
             where: { authToken: hashedToken, isOwner: true },
-        });
+        }));
         if (owner && owner.id) {
             return owner.dataValues; // failed
         }

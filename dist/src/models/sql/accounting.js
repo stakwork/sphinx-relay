@@ -81,6 +81,10 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "extraAmount", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Accounting.prototype, "confirmations", void 0);
 Accounting = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_accountings', underscored: true })
 ], Accounting);

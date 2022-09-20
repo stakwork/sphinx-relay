@@ -60,13 +60,15 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // 	newMessagesWhere.chat_id = chatId
     // 	confirmedMessagesWhere.chat_id = chatId
     // }
-    const newMessages = yield models_1.models.Message.findAll({ where: newMessagesWhere });
-    const confirmedMessages = yield models_1.models.Message.findAll({
+    const newMessages = (yield models_1.models.Message.findAll({
+        where: newMessagesWhere,
+    }));
+    const confirmedMessages = (yield models_1.models.Message.findAll({
         where: confirmedMessagesWhere,
-    });
-    const deletedMessages = yield models_1.models.Message.findAll({
+    }));
+    const deletedMessages = (yield models_1.models.Message.findAll({
         where: deletedMessagesWhere,
-    });
+    }));
     const chatIds = [];
     newMessages.forEach((m) => {
         if (!chatIds.includes(m.chatId))
@@ -81,17 +83,17 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             chatIds.push(m.chatId);
     });
     const chats = chatIds.length > 0
-        ? yield models_1.models.Chat.findAll({
+        ? (yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
-        })
+        }))
         : [];
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     res.json({
         success: true,
         response: {
-            new_messages: newMessages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
-            confirmed_messages: confirmedMessages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
-            deleted_messages: deletedMessages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+            new_messages: newMessages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
+            confirmed_messages: confirmedMessages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
+            deleted_messages: deletedMessages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
         },
     });
     res.status(200);
@@ -113,12 +115,12 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         order: [['id', order]],
         where: { tenant },
     };
-    const all_messages_length = yield models_1.models.Message.count(clause);
+    const all_messages_length = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    const messages = yield models_1.models.Message.findAll(clause);
+    const messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chatIds = [];
     messages.forEach((m) => {
@@ -127,15 +129,15 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
     });
     const chats = chatIds.length > 0
-        ? yield models_1.models.Chat.findAll({
+        ? (yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
-        })
+        }))
         : [];
     // console.log("=> found all chats", chats && chats.length);
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     // console.log("=> indexed chats");
     (0, res_1.success)(res, {
-        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
         new_messages_total: all_messages_length,
         confirmed_messages: [],
     });
@@ -163,12 +165,12 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             tenant,
         },
     };
-    const numberOfNewMessages = yield models_1.models.Message.count(clause);
+    const numberOfNewMessages = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    const messages = yield models_1.models.Message.findAll(clause);
+    const messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chatIds = [];
     messages.forEach((m) => {
@@ -177,13 +179,13 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
     });
     const chats = chatIds.length > 0
-        ? yield models_1.models.Chat.findAll({
+        ? (yield models_1.models.Chat.findAll({
             where: { deleted: false, id: chatIds, tenant },
-        })
+        }))
         : [];
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     (0, res_1.success)(res, {
-        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])),
+        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
         new_messages_total: numberOfNewMessages,
     });
 });
@@ -194,7 +196,9 @@ function deleteMessage(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const id = parseInt(req.params.id);
-        const message = yield models_1.models.Message.findOne({ where: { id, tenant } });
+        const message = (yield models_1.models.Message.findOne({
+            where: { id, tenant },
+        }));
         const uuid = message.uuid;
         yield message.update({ status: constants_1.default.statuses.deleted });
         const chat_id = message.chatId;
@@ -259,12 +263,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const isTribe = chat.type === constants_1.default.chat_types.tribe;
     const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
     if (reply_uuid && boostOrPay && amount) {
-        const ogMsg = yield models_1.models.Message.findOne({
+        const ogMsg = (yield models_1.models.Message.findOne({
             where: {
                 uuid: reply_uuid,
                 tenant,
             },
-        });
+        }));
         if (ogMsg && ogMsg.sender) {
             realSatsContactId = ogMsg.sender;
             if (pay) {
@@ -313,7 +317,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (recipientPic)
         msg.recipientPic = recipientPic;
     // console.log(msg)
-    const message = yield models_1.models.Message.create(msg);
+    const message = (yield models_1.models.Message.create(msg));
     (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
     const msgToSend = {
         id: message.id,
@@ -355,7 +359,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendMessage = sendMessage;
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
@@ -391,17 +395,17 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
-    const message = yield models_1.models.Message.create(msg);
+    const message = (yield models_1.models.Message.create(msg));
     socket.sendJson({
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner, undefined, force_push);
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveMessage = receiveMessage;
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
@@ -438,18 +442,18 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
-    const message = yield models_1.models.Message.create(msg);
+    const message = (yield models_1.models.Message.create(msg));
     socket.sendJson({
         type: 'boost',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
     if (msg.replyUuid) {
-        const ogMsg = yield models_1.models.Message.findOne({
+        const ogMsg = (yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid, tenant },
-        });
+        }));
         if (ogMsg && ogMsg.sender === tenant) {
-            (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'boost', owner);
+            (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'boost', owner, undefined, force_push);
         }
     }
 });
@@ -465,7 +469,7 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
-    const message = yield models_1.models.Message.create({
+    const message = (yield models_1.models.Message.create({
         // chatId: chat.id,
         type: constants_1.default.message_types.repayment,
         sender: sender.id,
@@ -476,7 +480,7 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
         status: constants_1.default.statuses.received,
         network_type,
         tenant,
-    });
+    }));
     socket.sendJson({
         type: 'repayment',
         response: jsonUtils.messageToJson(message, null, sender),
@@ -496,7 +500,7 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     if (!isTribe) {
         where.sender = sender.id; // validate sender
     }
-    const message = yield models_1.models.Message.findOne({ where });
+    const message = (yield models_1.models.Message.findOne({ where }));
     if (!message)
         return;
     yield message.update({ status: constants_1.default.statuses.deleted });
@@ -522,7 +526,9 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             tenant,
         },
     });
-    const chat = yield models_1.models.Chat.findOne({ where: { id: chat_id, tenant } });
+    const chat = (yield models_1.models.Chat.findOne({
+        where: { id: chat_id, tenant },
+    }));
     if (chat) {
         (0, hub_1.resetNotifyTribeCount)(parseInt(chat_id));
         yield chat.update({ seen: true });

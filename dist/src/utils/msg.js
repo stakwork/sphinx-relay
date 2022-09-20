@@ -61,11 +61,11 @@ function encryptTribeBroadcast(full, contact, isTribeOwner) {
         if (isTribeOwner) {
             // has been previously decrypted
             if (message.content) {
-                const encContent = yield rsa.encrypt(contact.contactKey, message.content);
+                const encContent = rsa.encrypt(contact.contactKey, message.content.toString());
                 obj.content = encContent;
             }
             if (message.mediaKey) {
-                const encMediaKey = yield rsa.encrypt(contact.contactKey, message.mediaKey);
+                const encMediaKey = rsa.encrypt(contact.contactKey, message.mediaKey);
                 obj.mediaKey = encMediaKey;
             }
         }
@@ -131,7 +131,7 @@ function decryptMessage(full, chat) {
                     content = m.content['chat'];
                 }
             }
-            const decContent = rsa.decrypt(chat.groupPrivateKey, content);
+            const decContent = rsa.decrypt(chat.groupPrivateKey, content.toString());
             obj.content = decContent;
         }
         if (m.mediaKey) {

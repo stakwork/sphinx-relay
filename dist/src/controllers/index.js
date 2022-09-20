@@ -26,7 +26,7 @@ const uploads = require("./uploads");
 const confirmations = require("./confirmations");
 const actions = require("./botapi");
 const queries = require("./queries");
-const gitinfo_1 = require("../utils/gitinfo");
+const gitinfo = require("../utils/gitinfo");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
 const constants_1 = require("../constants");
@@ -48,12 +48,14 @@ function set(app) {
         app.post('/group', chats.createGroupChat);
         app.put('/chats/:id', chats.updateChat);
         app.post('/chats/:chat_id/:mute_unmute', chats.mute);
+        app.put('/notify/:chat_id/:level', chats.setNotifyLevel);
         app.delete('/chat/:id', chats.deleteChat);
         app.put('/chat/:id', chats.addGroupMembers);
         app.put('/kick/:chat_id/:contact_id', chats.kickChatMember);
         app.post('/tribe', chatTribes.joinTribe);
         app.post('/tribe_channel', chatTribes.createChannel);
         app.delete('/tribe_channel', chatTribes.deleteChannel);
+        app.post('/tribe_member', chats.addTribeMember);
         app.put('/member/:contactId/:status/:messageId', chatTribes.approveOrRejectMember);
         app.put('/group/:id', chatTribes.editTribe);
         app.put('/chat_pin/:id', chatTribes.pinToTribe);
@@ -128,8 +130,7 @@ function set(app) {
         app.get('/healthcheck', confirmations.healthcheck);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
-                const version = yield (0, gitinfo_1.checkTag)();
-                res.send({ version });
+                res.send({ version: gitinfo.tag });
             });
         });
         app.get('/latest', function (req, res) {
@@ -137,11 +138,11 @@ function set(app) {
                 if (!req.owner)
                     return (0, res_1.failure)(res, 'no owner');
                 const tenant = req.owner.id;
-                const lasts = yield models_1.models.Message.findAll({
+                const lasts = (yield models_1.models.Message.findAll({
                     limit: 1,
                     order: [['createdAt', 'DESC']],
                     where: { tenant },
-                });
+                }));
                 const last = lasts && lasts[0];
                 if (!last) {
                     res.status(404).send('Not found');

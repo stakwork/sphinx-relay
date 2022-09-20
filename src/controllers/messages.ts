@@ -1,4 +1,4 @@
-import { models } from '../models'
+import { models, Message, Chat } from '../models'
 import { Op, FindOptions } from 'sequelize'
 import { indexBy } from 'underscore'
 import { sendNotification, resetNotifyTribeCount } from '../hub'
@@ -15,6 +15,7 @@ import * as short from 'short-uuid'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
+import { ChatPlusMembers } from '../network/send'
 
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
@@ -60,13 +61,15 @@ export const getMessages = async (req: Req, res: Res): Promise<void> => {
   // 	confirmedMessagesWhere.chat_id = chatId
   // }
 
-  const newMessages = await models.Message.findAll({ where: newMessagesWhere })
-  const confirmedMessages = await models.Message.findAll({
+  const newMessages: Message[] = (await models.Message.findAll({
+    where: newMessagesWhere,
+  })) as Message[]
+  const confirmedMessages: Message[] = (await models.Message.findAll({
     where: confirmedMessagesWhere,
-  })
-  const deletedMessages = await models.Message.findAll({
+  })) as Message[]
+  const deletedMessages: Message[] = (await models.Message.findAll({
     where: deletedMessagesWhere,
-  })
+  })) as Message[]
 
   const chatIds: number[] = []
   newMessages.forEach((m) => {
@@ -79,11 +82,11 @@ export const getMessages = async (req: Req, res: Res): Promise<void> => {
     if (!chatIds.includes(m.chatId)) chatIds.push(m.chatId)
   })
 
-  const chats =
+  const chats: Chat[] =
     chatIds.length > 0
-      ? await models.Chat.findAll({
+      ? ((await models.Chat.findAll({
           where: { deleted: false, id: chatIds, tenant },
-        })
+        })) as Chat[])
       : []
   const chatsById = indexBy(chats, 'id')
 
@@ -91,13 +94,13 @@ export const getMessages = async (req: Req, res: Res): Promise<void> => {
     success: true,
     response: {
       new_messages: newMessages.map((message) =>
-        jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+        jsonUtils.messageToJson(message, chatsById[message.chatId])
       ),
       confirmed_messages: confirmedMessages.map((message) =>
-        jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+        jsonUtils.messageToJson(message, chatsById[message.chatId])
       ),
       deleted_messages: deletedMessages.map((message) =>
-        jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+        jsonUtils.messageToJson(message, chatsById[message.chatId])
       ),
     },
   })
@@ -125,12 +128,16 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
     order: [['id', order]],
     where: { tenant },
   }
-  const all_messages_length = await models.Message.count(clause)
+  const all_messages_length: number = (await models.Message.count(
+    clause
+  )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  const messages = await models.Message.findAll(clause)
+  const messages: Message[] = (await models.Message.findAll(
+    clause
+  )) as Message[]
 
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
@@ -144,18 +151,18 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
     }
   })
 
-  const chats =
+  const chats: Chat[] =
     chatIds.length > 0
-      ? await models.Chat.findAll({
+      ? ((await models.Chat.findAll({
           where: { deleted: false, id: chatIds, tenant },
-        })
+        })) as Chat[])
       : []
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
   // console.log("=> indexed chats");
   success(res, {
     new_messages: messages.map((message) =>
-      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+      jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
     new_messages_total: all_messages_length,
     confirmed_messages: [],
@@ -189,12 +196,16 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
       tenant,
     },
   }
-  const numberOfNewMessages = await models.Message.count(clause)
+  const numberOfNewMessages: number = (await models.Message.count(
+    clause
+  )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  const messages = await models.Message.findAll(clause)
+  const messages: Message[] = (await models.Message.findAll(
+    clause
+  )) as Message[]
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
     logging.Express
@@ -206,16 +217,16 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
     }
   })
 
-  const chats =
+  const chats: Chat[] =
     chatIds.length > 0
-      ? await models.Chat.findAll({
+      ? ((await models.Chat.findAll({
           where: { deleted: false, id: chatIds, tenant },
-        })
+        })) as Chat[])
       : []
   const chatsById = indexBy(chats, 'id')
   success(res, {
     new_messages: messages.map((message) =>
-      jsonUtils.messageToJson(message, chatsById[parseInt(message.chatId)])
+      jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
     new_messages_total: numberOfNewMessages,
   })
@@ -227,7 +238,9 @@ export async function deleteMessage(req: Req, res: Res): Promise<void> {
 
   const id = parseInt(req.params.id)
 
-  const message = await models.Message.findOne({ where: { id, tenant } })
+  const message: Message = (await models.Message.findOne({
+    where: { id, tenant },
+  })) as Message
   const uuid = message.uuid
   await message.update({ status: constants.statuses.deleted })
 
@@ -306,12 +319,12 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   const isTribe = chat.type === constants.chat_types.tribe
   const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey
   if (reply_uuid && boostOrPay && amount) {
-    const ogMsg = await models.Message.findOne({
+    const ogMsg: Message = (await models.Message.findOne({
       where: {
         uuid: reply_uuid,
         tenant,
       },
-    })
+    })) as Message
     if (ogMsg && ogMsg.sender) {
       realSatsContactId = ogMsg.sender
       if (pay) {
@@ -361,7 +374,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   if (recipientAlias) msg.recipientAlias = recipientAlias
   if (recipientPic) msg.recipientPic = recipientPic
   // console.log(msg)
-  const message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   success(res, jsonUtils.messageToJson(message, chat))
 
@@ -383,7 +396,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   if (recipientPic) msgToSend.recipientPic = recipientPic
 
   const sendMessageParams: SendMessageParams = {
-    chat: chat,
+    chat: chat as Partial<ChatPlusMembers>,
     sender: owner,
     amount: amount || 0,
     type: msgtype,
@@ -422,6 +435,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     message_status,
+    force_push,
     hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
@@ -457,7 +471,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
-  const message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   socket.sendJson(
     {
@@ -467,7 +481,14 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    msg.senderAlias || sender.alias,
+    'message',
+    owner,
+    undefined,
+    force_push
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
@@ -489,6 +510,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     msg_id,
+    force_push,
     hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
 
@@ -529,7 +551,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
-  const message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   socket.sendJson(
     {
@@ -542,11 +564,18 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 
   if (msg.replyUuid) {
-    const ogMsg = await models.Message.findOne({
+    const ogMsg: Message = (await models.Message.findOne({
       where: { uuid: msg.replyUuid as string, tenant },
-    })
+    })) as Message
     if (ogMsg && ogMsg.sender === tenant) {
-      sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner)
+      sendNotification(
+        chat,
+        msg.senderAlias || sender.alias,
+        'boost',
+        owner,
+        undefined,
+        force_push
+      )
     }
   }
 }
@@ -565,7 +594,7 @@ export const receiveRepayment = async (payload: Payload): Promise<void> => {
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
-  const message = await models.Message.create({
+  const message: Message = (await models.Message.create({
     // chatId: chat.id,
     type: constants.message_types.repayment,
     sender: sender.id,
@@ -576,7 +605,7 @@ export const receiveRepayment = async (payload: Payload): Promise<void> => {
     status: constants.statuses.received,
     network_type,
     tenant,
-  })
+  })) as Message
 
   socket.sendJson(
     {
@@ -602,7 +631,7 @@ export const receiveDeleteMessage = async (payload: Payload): Promise<void> => {
   if (!isTribe) {
     where.sender = sender.id // validate sender
   }
-  const message = await models.Message.findOne({ where })
+  const message: Message = (await models.Message.findOne({ where })) as Message
   if (!message) return
 
   await message.update({ status: constants.statuses.deleted })
@@ -635,7 +664,9 @@ export const readMessages = async (req: Req, res: Res): Promise<void> => {
       },
     }
   )
-  const chat = await models.Chat.findOne({ where: { id: chat_id, tenant } })
+  const chat: Chat = (await models.Chat.findOne({
+    where: { id: chat_id, tenant },
+  })) as Chat
   if (chat) {
     resetNotifyTribeCount(parseInt(chat_id))
     await chat.update({ seen: true })

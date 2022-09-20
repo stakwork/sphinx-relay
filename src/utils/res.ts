@@ -30,10 +30,9 @@ function failure200(res, e) {
 }
 
 function unauthorized(res) {
-  res.writeHead(401, 'Access invalid for user', {
-    'Content-Type': 'text/plain',
-  })
-  res.end('invalid credentials')
+  res.status(401)
+  res.json({ success: false, error: 'Invalid credentials' })
+  res.end()
 }
 
 export { success, failure, failure200, unauthorized }

@@ -14,7 +14,7 @@ const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
 const QRCode = require("qrcode");
-const gitinfo_1 = require("../utils/gitinfo");
+const gitinfo = require("../utils/gitinfo");
 const fs = require("fs");
 const nodeinfo_1 = require("./nodeinfo");
 const connect_1 = require("./connect");
@@ -69,13 +69,13 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                 else {
                     tenant = 1; // add tenant here
                 }
-                const contact = yield models_1.models.Contact.create({
+                const contact = (yield models_1.models.Contact.create({
                     id: 1,
                     publicKey: info.identity_pubkey,
                     isOwner: true,
                     authToken,
                     tenant,
-                });
+                }));
                 logger_1.sphinxLogger.info(['created node owner contact, id:', contact.id], logger_1.logging.DB);
             }
         }
@@ -110,9 +110,7 @@ function setupDone() {
 exports.setupDone = setupDone;
 function printGitInfo() {
     return __awaiter(this, void 0, void 0, function* () {
-        const commitHash = yield (0, gitinfo_1.checkCommitHash)();
-        const tag = yield (0, gitinfo_1.checkTag)();
-        logger_1.sphinxLogger.info(`=> Relay version: ${tag}, commit: ${commitHash}`);
+        logger_1.sphinxLogger.info(`=> Relay version: ${gitinfo.tag}, commit: ${gitinfo.commitHash}`);
     });
 }
 function printQR() {

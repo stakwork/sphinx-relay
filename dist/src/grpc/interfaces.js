@@ -242,6 +242,7 @@ var InvoiceState;
     InvoiceState["SETTLED"] = "SETTLED";
     InvoiceState["CANCELED"] = "CANCELED";
     InvoiceState["ACCEPTED"] = "ACCEPTED";
+    InvoiceState["PAID"] = "PAID";
 })(InvoiceState = exports.InvoiceState || (exports.InvoiceState = {}));
 var InvoiceHTLCState;
 (function (InvoiceHTLCState) {
@@ -249,6 +250,7 @@ var InvoiceHTLCState;
     InvoiceHTLCState[InvoiceHTLCState["SETTLED"] = 1] = "SETTLED";
     InvoiceHTLCState[InvoiceHTLCState["CANCELED"] = 2] = "CANCELED";
 })(InvoiceHTLCState || (InvoiceHTLCState = {}));
+;
 function subscribeResponse(res) {
     if (IS_LND)
         return res;

@@ -1,6 +1,6 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
-import { models } from '../models'
+import { models, Bot } from '../models'
 import constants from '../constants'
 import { spawn } from 'child_process'
 import { loadConfig } from '../utils/config'
@@ -30,7 +30,7 @@ export function init() {
     if (arr[0] !== '/loopout') return
 
     // check installed
-    const bot = await getBot(message.channel.id)
+    const bot: Bot = (await getBot(message.channel.id)) as Bot
     if (!bot) return
 
     const messageAmount = Number(message.amount) || 0
@@ -69,7 +69,7 @@ export function init() {
 
       //   let chan
       //   const bot = await getBot(message.channel.id)
-      //   if (bot && bot.meta) chan = bot.meta
+      //   if (bot && bot.secret) chan = bot.secret
       //   if (!chan) {
       //     const embed = new Sphinx.MessageEmbed()
       //       .setAuthor('LoopBot')
@@ -110,7 +110,7 @@ export function init() {
       // }
       try {
         let chan
-        if (bot && bot.meta) chan = bot.meta
+        if (bot && bot.secret) chan = bot.secret
         if (!chan) {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('LoopBot')
@@ -171,7 +171,7 @@ export function init() {
         const arr = cmd.split('=')
         if (bot && arr.length > 1) {
           const chan = arr[1]
-          await bot.update({ meta: chan })
+          await bot.update({ secret: chan })
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('LoopBot')
             .setDescription('Channel updated to ' + chan)
