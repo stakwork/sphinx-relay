@@ -5,6 +5,11 @@ import { receiveNonKeysend } from './regular'
 import * as interfaces from './interfaces'
 import { isProxy, getProxyRootPubkey } from '../utils/proxy'
 import { sphinxLogger, logging } from '../utils/logger'
+import { loadConfig } from '../utils/config'
+import { sleep } from '../helpers'
+const config = loadConfig()
+
+const IS_CLN = config.lightning_provider === 'CLN'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
@@ -19,6 +24,10 @@ export function subscribeInvoices(
       ownerPubkey = await getProxyRootPubkey()
     }
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
+
+    if (IS_CLN) {
+      return subscribeCLN(parseKeysendInvoice)
+    }
 
     const cmd = interfaces.subscribeCommand()
     const call = lightning[cmd]()
@@ -105,5 +114,18 @@ export async function reconnectToLightning(
         await reconnectToLightning(innerCtx, callback, noCache)
       }
     }, 5000)
+  }
+}
+
+let lastpay_index = 0
+
+export async function subscribeCLN(
+  parseKeysendInvoice: (i: interfaces.Invoice) => Promise<void>
+): Promise<void | null> {
+  while (true) {
+    // pull the last invoice, and run "parseKeysendInvoice"
+    // increment the lastpay_index (+1)
+    // wait a second and do it again with new lastpay_index
+    await sleep(1000)
   }
 }
