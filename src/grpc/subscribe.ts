@@ -123,6 +123,9 @@ export async function subscribeCLN(
   parseKeysendInvoice: (i: interfaces.Invoice) => Promise<void>
 ): Promise<void | null> {
   while (true) {
+    // const invoice = interfaces.subscribeResponse(response)
+    // parseKeysendInvoice(invoice)
+
     // pull the last invoice, and run "parseKeysendInvoice"
     // increment the lastpay_index (+1)
     // wait a second and do it again with new lastpay_index
