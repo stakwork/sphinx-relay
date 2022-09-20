@@ -94,7 +94,6 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             };
             const uri = config.lnd_ip + ':' + config.lnd_port;
             lightningClient = new cln.Node(uri, credentials, options);
-            // console.log('After Trying to connect', lightningClient);
             return lightningClient;
         }
         // LND
@@ -703,14 +702,12 @@ function verifyAscii(ascii, sig, ownerPubkey) {
 exports.verifyAscii = verifyAscii;
 function getInfo(tryProxy, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('======> getInfo')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache); // try proxy
                 const cmd = interfaces.getInfoCommand();
                 lightning[cmd]({}, function (err, response) {
                     if (err == null) {
-                        console.log(response);
                         resolve(interfaces.getInfoResponse(response));
                     }
                     else {
@@ -725,7 +722,6 @@ function getInfo(tryProxy, noCache) {
         }));
     });
 }
-
 exports.getInfo = getInfo;
 function addInvoice(request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {

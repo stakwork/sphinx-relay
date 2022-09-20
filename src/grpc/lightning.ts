@@ -92,8 +92,10 @@ export async function loadLightning(
     const options = {
       'grpc.ssl_target_name_override': 'localhost',
     }
+    
     const uri = config.lnd_ip + ':' + config.lnd_port
     lightningClient = new cln.Node(uri, credentials, options)
+
     return lightningClient
   }
 
@@ -105,6 +107,7 @@ export async function loadLightning(
     LND_IP + ':' + config.lnd_port,
     credentials
   )
+  
   return lightningClient
 }
 
@@ -724,7 +727,6 @@ export async function getInfo(
   tryProxy?: boolean,
   noCache?: boolean
 ): Promise<interfaces.GetInfoResponse> {
-  // console.log('======> getInfo')
   return new Promise(async (resolve, reject) => {
     try {
       const lightning = await loadLightning(
@@ -732,10 +734,10 @@ export async function getInfo(
         undefined,
         noCache
       ) // try proxy
-      const cmd = interfaces.getInfoCommand()
+      const cmd = interfaces.getInfoCommand();
+      
       lightning[cmd]({}, function (err, response) {
         if (err == null) {
-          console.log(response)
           resolve(interfaces.getInfoResponse(response))
         } else {
           console.log(err)

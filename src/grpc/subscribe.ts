@@ -1,10 +1,16 @@
-import { loadLightning } from './lightning'
+import {loadLightning} from './lightning'
 import * as network from '../network'
-import { tryToUnlockLND } from '../utils/unlock'
-import { receiveNonKeysend } from './regular'
+import {tryToUnlockLND} from '../utils/unlock'
+import {receiveNonKeysend} from './regular'
 import * as interfaces from './interfaces'
-import { isProxy, getProxyRootPubkey } from '../utils/proxy'
-import { sphinxLogger, logging } from '../utils/logger'
+import {isProxy, getProxyRootPubkey} from '../utils/proxy'
+import {sphinxLogger, logging} from '../utils/logger'
+import {loadConfig} from '../utils/config'
+import {sleep} from '../helpers'
+
+const config = loadConfig()
+
+const IS_CLN = config.lightning_provider === 'CLN'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2
@@ -14,14 +20,22 @@ export function subscribeInvoices(
   parseKeysendInvoice: (i: interfaces.Invoice) => Promise<void>
 ): Promise<void | null> {
   return new Promise(async (resolve, reject) => {
-    let ownerPubkey = ''
+    let ownerPubkey = '';
+
     if (isProxy()) {
       ownerPubkey = await getProxyRootPubkey()
     }
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+
+    const lightning = await loadLightning(false, ownerPubkey) // try proxy
 
     const cmd = interfaces.subscribeCommand()
+
+    if (IS_CLN) {
+      return subscribeCLN(cmd, lightning)
+    }
+
     const call = lightning[cmd]()
+
     call.on('data', async function (response) {
       // console.log("=> INVOICE RAW", response)
       const inv = interfaces.subscribeResponse(response)
@@ -37,6 +51,7 @@ export function subscribeInvoices(
         receiveNonKeysend(inv)
       }
     })
+
     call.on('status', function (status) {
       sphinxLogger.info(`Status ${status.code} ${status}`, logging.Lightning)
       // The server is unavailable, trying to reconnect.
@@ -107,3 +122,31 @@ export async function reconnectToLightning(
     }, 5000)
   }
 }
+
+export async function subscribeCLN(cmd: string, lightning: any): Promise<void | null> {
+  while (true) {
+    // pull the last invoice, and run "parseKeysendInvoice"
+    // increment the lastpay_index (+1)
+    // wait a second and do it again with new lastpay_index
+    lightning['ListInvoices']({}, function (err, response) {
+      let lastpay_index = 1;
+      
+      lastpay_index = response.invoices.length + 1;
+      
+      if (err == null) {
+        lightning[cmd]({lastpay_index}, function (err, response) {
+          if (err == null) {
+            // const inv = interfaces.subscribeResponse(response)
+          } else {
+            console.log(err)
+          }
+        })
+      } else {
+        console.log(err)
+      }
+    })
+
+    await sleep(1000)
+  }
+}
+

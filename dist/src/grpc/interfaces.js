@@ -231,6 +231,8 @@ function subscribeCommand() {
         return 'subscribeInvoices';
     if (IS_GREENLIGHT)
         return 'streamIncoming';
+    if (IS_CLN)
+        return 'waitAnyInvoice';
     return 'subscribeInvoices';
 }
 exports.subscribeCommand = subscribeCommand;

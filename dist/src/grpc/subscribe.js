@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reconnectToLightning = exports.subscribeInvoices = void 0;
+exports.subscribeCLN = exports.reconnectToLightning = exports.subscribeInvoices = void 0;
 const lightning_1 = require("./lightning");
 const network = require("../network");
 const unlock_1 = require("../utils/unlock");
@@ -17,6 +17,10 @@ const regular_1 = require("./regular");
 const interfaces = require("./interfaces");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
+const config_1 = require("../utils/config");
+const helpers_1 = require("../helpers");
+const config = (0, config_1.loadConfig)();
+const IS_CLN = config.lightning_provider === 'CLN';
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked
@@ -26,12 +30,15 @@ function subscribeInvoices(parseKeysendInvoice) {
         if ((0, proxy_1.isProxy)()) {
             ownerPubkey = yield (0, proxy_1.getProxyRootPubkey)();
         }
-        const lightning = yield (0, lightning_1.loadLightning)(true, ownerPubkey); // try proxy
+        const lightning = yield (0, lightning_1.loadLightning)(false, ownerPubkey); // try proxy
         const cmd = interfaces.subscribeCommand();
+        if (IS_CLN) {
+            return subscribeCLN(cmd, lightning);
+        }
         const call = lightning[cmd]();
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                // console.log("=> INVOICE RAW", response)
+                console.log("=> INVOICE RAW", response);
                 const inv = interfaces.subscribeResponse(response);
                 // console.log("INVOICE RECEIVED", inv)
                 // loginvoice(inv)
@@ -115,4 +122,34 @@ function reconnectToLightning(innerCtx, callback, noCache) {
     });
 }
 exports.reconnectToLightning = reconnectToLightning;
+function subscribeCLN(cmd, lightning) {
+    return __awaiter(this, void 0, void 0, function* () {
+        while (true) {
+            // pull the last invoice, and run "parseKeysendInvoice"
+            // increment the lastpay_index (+1)
+            // wait a second and do it again with new lastpay_index
+            lightning['ListInvoices']({}, function (err, response) {
+                let lastpay_index = 1;
+                lastpay_index = response.invoices.length;
+                if (err == null) {
+                    lightning[cmd]({ lastpay_index }, function (err, response) {
+                        console.log('Response ==', lastpay_index, response);
+                        if (err == null) {
+                            const inv = interfaces.subscribeResponse(response);
+                            // resolve(inv)
+                        }
+                        else {
+                            console.log(err);
+                        }
+                    });
+                }
+                else {
+                    console.log(err);
+                }
+            });
+            yield (0, helpers_1.sleep)(1000);
+        }
+    });
+}
+exports.subscribeCLN = subscribeCLN;
 //# sourceMappingURL=subscribe.js.map

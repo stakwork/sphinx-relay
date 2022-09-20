@@ -157,11 +157,13 @@ interface GreenlightInvoice {
   payment_hash: Buffer
   payment_preimage: Buffer
 }
+
 export function addInvoiceCommand(): string {
   if (IS_LND) return 'addInvoice'
   if (IS_GREENLIGHT) return 'createInvoice'
   return 'addInvoice'
 }
+
 export function addInvoiceResponse(
   res: AddInvoiceResponse | GreenlightInvoice
 ): AddInvoiceResponse {
@@ -488,6 +490,7 @@ export function keysendResponse(
 export function subscribeCommand(): string {
   if (IS_LND) return 'subscribeInvoices'
   if (IS_GREENLIGHT) return 'streamIncoming'
+  if (IS_CLN) return 'waitAnyInvoice'
   return 'subscribeInvoices'
 }
 export enum InvoiceState {
@@ -495,6 +498,7 @@ export enum InvoiceState {
   SETTLED = 'SETTLED',
   CANCELED = 'CANCELED',
   ACCEPTED = 'ACCEPTED',
+  PAID = 'PAID'
 }
 enum InvoiceHTLCState {
   ACCEPTED = 0,
@@ -538,6 +542,21 @@ export interface Invoice {
   features: { [k: string]: any }
   is_keysend: boolean
 }
+
+export interface CLNInvoice {
+  label: string
+  description: string
+  payment_hash: any
+  status: string,
+  expires_at: string
+  amount_msat: { msat: string },
+  bolt11: string,
+  bolt12: string,
+  pay_index: string,
+  amount_received_msat: { msat: string },
+  paid_at: string,
+  payment_preimage: any
+};
 interface GreenlightOffchainPayment {
   label: string
   preimage: Buf
@@ -550,7 +569,7 @@ interface GreenlightIncomingPayment {
   offchain: GreenlightOffchainPayment
 }
 export function subscribeResponse(
-  res: Invoice | GreenlightIncomingPayment
+  res:  Invoice | GreenlightIncomingPayment
 ): Invoice {
   if (IS_LND) return res as Invoice
   if (IS_GREENLIGHT) {
