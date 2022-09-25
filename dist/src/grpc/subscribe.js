@@ -128,26 +128,34 @@ function subscribeCLN(cmd, lightning) {
             // pull the last invoice, and run "parseKeysendInvoice"
             // increment the lastpay_index (+1)
             // wait a second and do it again with new lastpay_index
-            lightning['ListInvoices']({}, function (err, response) {
-                let lastpay_index = 1;
-                lastpay_index = response.invoices.length + 1;
+            const lastpay_index = yield getInvoicesLength(lightning);
+            console.log('LAST PAY INDEx', lastpay_index);
+            lightning[cmd]({ lastpay_index }, function (err, response) {
                 if (err == null) {
-                    lightning[cmd]({ lastpay_index }, function (err, response) {
-                        if (err == null) {
-                            // const inv = interfaces.subscribeResponse(response)
-                        }
-                        else {
-                            console.log(err);
-                        }
-                    });
+                    if (response.description.includes('keysend')) {
+                        console.log('Invoice Response ===', JSON.stringify(response));
+                        // const inv = interfaces.subscribeResponse(response)
+                        // Increase invoice after receiving invoice
+                    }
                 }
                 else {
                     console.log(err);
                 }
             });
+            console.log('Index after pay ==', lastpay_index);
             yield (0, helpers_1.sleep)(1000);
         }
     });
 }
 exports.subscribeCLN = subscribeCLN;
+const getInvoicesLength = (lightning) => {
+    return new Promise((resolve, reject) => {
+        lightning['ListInvoices']({}, function (err, response) {
+            if (err === null) {
+                resolve(response.invoices.length);
+            }
+            reject(1);
+        });
+    });
+};
 //# sourceMappingURL=subscribe.js.map

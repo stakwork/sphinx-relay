@@ -7,6 +7,8 @@ import {isProxy, getProxyRootPubkey} from '../utils/proxy'
 import {sphinxLogger, logging} from '../utils/logger'
 import {loadConfig} from '../utils/config'
 import {sleep} from '../helpers'
+import {number} from 'yup'
+import {resolve} from 'path'
 
 const config = loadConfig()
 
@@ -129,19 +131,20 @@ export async function subscribeCLN(cmd: string, lightning: any): Promise<void | 
     // pull the last invoice, and run "parseKeysendInvoice"
     // increment the lastpay_index (+1)
     // wait a second and do it again with new lastpay_index
-    lightning['ListInvoices']({}, function (err, response) {
-      let lastpay_index = 1;
-      
-      lastpay_index = response.invoices.length + 1;
-      
+
+    // Get the last invoice length
+    const lastpay_index = await getInvoicesLength(lightning);
+    // console.log('LAST PAY INDEx', lastpay_index);
+
+    lightning[cmd]({lastpay_index}, function (err, response) {
       if (err == null) {
-        lightning[cmd]({lastpay_index}, function (err, response) {
-          if (err == null) {
-            // const inv = interfaces.subscribeResponse(response)
-          } else {
-            console.log(err)
-          }
-        })
+
+        if (response.description.includes('keysend')) {
+          // console.log('Invoice Response ===', JSON.stringify(response));
+
+          // const inv = interfaces.subscribeResponse(response)
+        }
+
       } else {
         console.log(err)
       }
@@ -149,5 +152,16 @@ export async function subscribeCLN(cmd: string, lightning: any): Promise<void | 
 
     await sleep(1000)
   }
+}
+
+const getInvoicesLength = (lightning: any): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    lightning['ListInvoices']({}, function (err, response) {
+      if (err === null) {
+        resolve(response.invoices.length)
+      }
+      reject(1);
+    });
+  })
 }
 
