@@ -4,6 +4,8 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import { Response, Request } from 'express'
+import constants from '../constants'
+import { constant } from 'underscore'
 
 export interface LsatRequestBody {
   paymentRequest: string
@@ -220,9 +222,18 @@ export async function updateLsat(
   const body = req.body
   sphinxLogger.info(`=> updateLsat ${identifier}`, logging.Express)
   try {
-    await models.Lsat.update(body, {
-      where: { tenant, identifier },
-    })
+    if (body.status === 'expired') {
+      await models.Lsat.update(
+        { ...body, status: constants.lsat_statuses.expired },
+        {
+          where: { tenant, identifier },
+        }
+      )
+    } else {
+      await models.Lsat.update(body, {
+        where: { tenant, identifier },
+      })
+    }
     return success(res, 'lsat successfully updated')
   } catch (e) {
     return failure(res, `could not update lsat: ${e.message}`)
