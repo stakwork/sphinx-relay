@@ -138,6 +138,7 @@ export async function saveLsat(
       paths,
       metadata,
       tenant,
+      status: 1, // lsat are by default active
     })
 
     return success(res, { lsat: lsat.toToken() })
