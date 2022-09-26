@@ -170,6 +170,7 @@ export async function set(app) {
   app.post('/lsats', lsats.saveLsat)
   app.put('/lsats/:identifier', lsats.updateLsat)
   app.delete('/lsats/:identifier', lsats.deleteLsat)
+  app.get('/active_lsat', lsats.getActiveLsat)
 }
 
 const msgtypes = constants.message_types

@@ -5,7 +5,6 @@ import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import { Response, Request } from 'express'
 import constants from '../constants'
-import { constant } from 'underscore'
 
 export interface LsatRequestBody {
   paymentRequest: string
@@ -130,7 +129,6 @@ export async function saveLsat(
 
   try {
     lsat.setPreimage(preimage)
-
     await models.Lsat.create({
       macaroon,
       identifier,
