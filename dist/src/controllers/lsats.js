@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteLsat = exports.updateLsat = exports.listLsats = exports.getActiveLsat = exports.getLsat = exports.saveLsat = exports.payForLsat = void 0;
-// import { Lsat as LsatB } from 'lsat-js'
+const lsat_js_1 = require("lsat-js");
 const models_1 = require("../models");
 const logger_1 = require("../utils/logger");
 const res_1 = require("../utils/res");
@@ -35,15 +35,18 @@ const lsatResponseAttributes = [
     'metadata',
     'identifier',
 ];
-// async function lsatAlreadyExists(lsat): Promise<boolean> {
-//   const identifier = lsat.id
-//   const model: Partial<LsatT> = (await models.Lsat.findOne({
-//     where: { identifier },
-//     attributes: lsatResponseAttributes,
-//   })) as Partial<LsatT>
-//   if (model) return true
-//   return false
-// }
+function lsatAlreadyExists(lsat) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const identifier = lsat.id;
+        const model = (yield models_1.models.Lsat.findOne({
+            where: { identifier },
+            attributes: lsatResponseAttributes,
+        }));
+        if (model)
+            return true;
+        return false;
+    });
+}
 function payForLsat(paymentRequest) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!paymentRequest) {
@@ -65,47 +68,38 @@ function saveLsat(req, res) {
         if (!paymentRequest || !macaroon || !issuer) {
             return (0, res_1.failure)(res, 'Missing required LSAT data');
         }
-        // let lsat: LsatB
-        // try {
-        //   lsat = LsatB.fromMacaroon(macaroon, paymentRequest)
-        // } catch (e) {
-        //   sphinxLogger.error(
-        //     ['[save lsat] Problem getting Lsat:', e.message],
-        //     logging.Lsat
-        //   )
-        //   res.status(400)
-        //   return res.json({ success: false, error: 'invalid lsat macaroon' })
-        // }
-        // const identifier = lsat.id
-        // if (await lsatAlreadyExists(lsat)) {
-        //   sphinxLogger.info(
-        //     ['[pay for lsat] Lsat already exists: ', identifier],
-        //     logging.Lsat
-        //   )
-        //   return failure(res, `Could not save lsat. Already exists`)
-        // }
-        // let preimage: string | void
-        // try {
-        //   preimage = await payForLsat(paymentRequest)
-        // } catch (e) {
-        //   sphinxLogger.error(
-        //     ['[pay for lsat] Problem paying for lsat:', e],
-        //     logging.Lsat
-        //   )
-        //   res.status(500)
-        //   return failure(res, 'Could not pay for lsat')
-        // }
-        // if (!preimage) {
-        //   res.status(400)
-        //   return failure(res, 'invoice could not be paid')
-        // }
+        let lsat;
         try {
-            // lsat.setPreimage(preimage)
-            const id = `tobi_${Math.random()}`;
-            const preimage = `preimage_${Math.random()}`;
-            const lsat = yield models_1.models.Lsat.create({
+            lsat = lsat_js_1.Lsat.fromMacaroon(macaroon, paymentRequest);
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error(['[save lsat] Problem getting Lsat:', e.message], logger_1.logging.Lsat);
+            res.status(400);
+            return res.json({ success: false, error: 'invalid lsat macaroon' });
+        }
+        const identifier = lsat.id;
+        if (yield lsatAlreadyExists(lsat)) {
+            logger_1.sphinxLogger.info(['[pay for lsat] Lsat already exists: ', identifier], logger_1.logging.Lsat);
+            return (0, res_1.failure)(res, `Could not save lsat. Already exists`);
+        }
+        let preimage;
+        try {
+            preimage = yield payForLsat(paymentRequest);
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error(['[pay for lsat] Problem paying for lsat:', e], logger_1.logging.Lsat);
+            res.status(500);
+            return (0, res_1.failure)(res, 'Could not pay for lsat');
+        }
+        if (!preimage) {
+            res.status(400);
+            return (0, res_1.failure)(res, 'invoice could not be paid');
+        }
+        try {
+            lsat.setPreimage(preimage);
+            yield models_1.models.Lsat.create({
                 macaroon,
-                identifier: id,
+                identifier,
                 paymentRequest,
                 preimage,
                 issuer,
@@ -114,8 +108,7 @@ function saveLsat(req, res) {
                 tenant,
                 status: 1, // lsat are by default active
             });
-            // return success(res, { lsat: lsat.toToken() })
-            return (0, res_1.success)(res, lsat);
+            return (0, res_1.success)(res, { lsat: lsat.toToken() });
         }
         catch (e) {
             return (0, res_1.failure)(res, `failed to save lsat: ${e.message || e}`);
