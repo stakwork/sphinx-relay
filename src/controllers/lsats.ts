@@ -171,6 +171,28 @@ export async function getLsat(
   }
 }
 
+export async function getActiveLsat(
+  req: RelayRequest,
+  res: Response
+): Promise<void | Response> {
+  const tenant = req.owner.id
+  sphinxLogger.info(`=> getActiveLsat`, logging.Express)
+  try {
+    const lsat: LsatT = (await models.Lsat.findOne({
+      where: { tenant, status: 1 },
+    })) as LsatT
+    if (!lsat) {
+      return res
+        .status(404)
+        .json({ succes: false, error: 'No Active LSAT found' })
+    } else {
+      return success(res, { lsat })
+    }
+  } catch (e) {
+    return failure(res, `could not retrieve active lsat`)
+  }
+}
+
 export async function listLsats(
   req: RelayRequest,
   res: Response
