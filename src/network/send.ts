@@ -371,15 +371,20 @@ async function detectMentions(
 ): Promise<number[]> {
   const content = msg.message.content as string
   if (content) {
-    const words = content.split(' ')
-    if (words.includes('@all') && !isForwarded) return [Infinity]
+    const mentions = parseMentions(content)
+    if (mentions.includes('@all') && !isForwarded) return [Infinity]
     const ret: number[] = []
-    const mentions = words.filter((w) => w.startsWith('@'))
+    const allMembers: ChatMemberModel[] = (await models.ChatMember.findAll({
+      where: { tenant, chatId },
+    })) as ChatMemberModel[]
     await asyncForEach(mentions, async (men) => {
       const lastAlias = men.substring(1)
-      const member: ChatMemberModel = (await models.ChatMember.findOne({
-        where: { lastAlias, tenant, chatId },
-      })) as ChatMemberModel
+      // check chat memberss
+      const member = allMembers.find((m) => {
+        if (m.lastAlias && lastAlias) {
+          return compareAliases(m.lastAlias, lastAlias)
+        }
+      })
       if (member) {
         ret.push(member.contactId)
       }
@@ -388,4 +393,53 @@ async function detectMentions(
   } else {
     return []
   }
+}
+
+function parseMentions(content: string) {
+  const words = content.split(' ')
+  return words.filter((w) => w.startsWith('@'))
+}
+
+export async function detectMentionsForTribeAdminSelf(
+  msg: Msg,
+  mainAlias?: string,
+  aliasInChat?: string
+): Promise<boolean> {
+  const content = msg.message.content as string
+  if (!content) return false
+  const mentions = parseMentions(content)
+  if (mentions.includes('@all')) return true
+  let ret = false
+  await asyncForEach(mentions, async (men) => {
+    const lastAlias = men.substring(1)
+    if (lastAlias) {
+      if (aliasInChat) {
+        // admin's own alias for tribe
+        if (compareAliases(aliasInChat, lastAlias)) {
+          ret = true
+        }
+      } else if (mainAlias) {
+        // or owner's default alias
+        if (compareAliases(mainAlias, lastAlias)) {
+          ret = true
+        }
+      }
+    }
+  })
+  return ret
+}
+
+// alias1 can have spaces, so remove them
+// then comparse to lower case
+function compareAliases(alias1: string, alias2: string): boolean {
+  const pieces = alias1.split(' ')
+  let match = false
+  pieces.forEach((p) => {
+    if (p && alias2) {
+      if (p.toLowerCase() === alias2.toLowerCase()) {
+        match = true
+      }
+    }
+  })
+  return match
 }

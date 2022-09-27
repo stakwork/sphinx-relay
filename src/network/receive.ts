@@ -11,9 +11,10 @@ import {
   Contact,
   Message,
   Chat,
+  ChatRecord,
   ChatMember,
 } from '../models'
-import { sendMessage } from './send'
+import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import {
   modifyPayloadAndSaveMediaKey,
   purchaseFromOriginalSender,
@@ -113,165 +114,169 @@ async function onReceive(payload: Payload, dest: string) {
   const toAddIn: AdminPayload = {}
   let isTribe = false
   let isTribeOwner = false
-  let chat
+  let maybeChat: ChatRecord | undefined
 
   if (payload.chat && payload.chat.uuid) {
     isTribe = payload.chat.type === constants.chat_types.tribe
-    chat = await models.Chat.findOne({
+    maybeChat = (await models.Chat.findOne({
       where: { uuid: payload.chat.uuid, tenant },
-    })
-    if (chat) chat.update({ seen: false })
+    })) as ChatRecord
+    if (maybeChat) maybeChat.update({ seen: false })
   }
   if (isTribe) {
-    const tribeOwnerPubKey = chat && chat.ownerPubkey
+    const tribeOwnerPubKey = maybeChat && maybeChat.ownerPubkey
     isTribeOwner = owner.publicKey === tribeOwnerPubKey
   }
-  if (isTribeOwner) toAddIn.isTribeOwner = true
   let forwardedFromContactId = 0
-  if (isTribeOwner && typesToForward.includes(payload.type)) {
-    const needsPricePerMessage = typesThatNeedPricePerMessage.includes(
-      payload.type
-    )
-    // CHECK THEY ARE IN THE GROUP if message
-    const senderContact: Contact = (await models.Contact.findOne({
-      where: { publicKey: payload.sender.pub_key, tenant },
-    })) as Contact
-    // if (!senderContact) return console.log("=> no sender contact")
-    const senderContactId = senderContact && senderContact.id
-    forwardedFromContactId = senderContactId
-    if (needsPricePerMessage && senderContactId) {
-      const senderMember = await models.ChatMember.findOne({
-        where: { contactId: senderContactId, chatId: chat.id, tenant },
-      })
-      if (!senderMember) doAction = false
-    }
-    // CHECK PRICES
-    if (needsPricePerMessage) {
-      if (payload.message.amount < chat.pricePerMessage) {
-        doAction = false
-      }
-      if (chat.escrowAmount && senderContactId) {
-        timers.addTimer({
-          // pay them back
-          amount: chat.escrowAmount,
-          millis: chat.escrowMillis,
-          receiver: senderContactId,
-          msgId: payload.message.id,
-          chatId: chat.id,
-          tenant,
-        })
-      }
-    }
-    // check price to join AND private chat
-    if (payload.type === msgtypes.group_join) {
-      if (payload.message.amount < chat.priceToJoin) {
-        doAction = false
-      }
-      if (chat.private && senderContactId) {
-        // check if has been approved
-        const senderMember: ChatMember = (await models.ChatMember.findOne({
+  if (isTribeOwner) {
+    toAddIn.isTribeOwner = true
+    const chat = maybeChat as ChatRecord
+    if (typesToForward.includes(payload.type)) {
+      const needsPricePerMessage = typesThatNeedPricePerMessage.includes(
+        payload.type
+      )
+      // CHECK THEY ARE IN THE GROUP if message
+      const senderContact: Contact = (await models.Contact.findOne({
+        where: { publicKey: payload.sender.pub_key, tenant },
+      })) as Contact
+      // if (!senderContact) return console.log("=> no sender contact")
+      const senderContactId = senderContact && senderContact.id
+      forwardedFromContactId = senderContactId
+      if (needsPricePerMessage && senderContactId) {
+        const senderMember = await models.ChatMember.findOne({
           where: { contactId: senderContactId, chatId: chat.id, tenant },
-        })) as ChatMember
-        if (
-          !(
-            senderMember &&
-            senderMember.status === constants.chat_statuses.approved
-          )
-        ) {
-          doAction = false // dont let if private and not approved
+        })
+        if (!senderMember) doAction = false
+      }
+      // CHECK PRICES
+      if (needsPricePerMessage) {
+        if (payload.message.amount < chat.pricePerMessage) {
+          doAction = false
+        }
+        if (chat.escrowAmount && senderContactId) {
+          timers.addTimer({
+            // pay them back
+            amount: chat.escrowAmount,
+            millis: chat.escrowMillis,
+            receiver: senderContactId,
+            msgId: payload.message.id,
+            chatId: chat.id,
+            tenant,
+          })
         }
       }
-    }
-    // check that the sender is the og poster
-    if (payload.type === msgtypes.delete && senderContactId) {
-      doAction = false
-      if (payload.message.uuid) {
-        const ogMsg = await models.Message.findOne({
+      // check price to join AND private chat
+      if (payload.type === msgtypes.group_join) {
+        if (payload.message.amount < chat.priceToJoin) {
+          doAction = false
+        }
+        if (chat.private && senderContactId) {
+          // check if has been approved
+          const senderMember: ChatMember = (await models.ChatMember.findOne({
+            where: { contactId: senderContactId, chatId: chat.id, tenant },
+          })) as ChatMember
+          if (
+            !(
+              senderMember &&
+              senderMember.status === constants.chat_statuses.approved
+            )
+          ) {
+            doAction = false // dont let if private and not approved
+          }
+        }
+      }
+      // check that the sender is the og poster
+      if (payload.type === msgtypes.delete && senderContactId) {
+        doAction = false
+        if (payload.message.uuid) {
+          const ogMsg = await models.Message.findOne({
+            where: {
+              uuid: payload.message.uuid,
+              sender: senderContactId,
+              tenant,
+            },
+          })
+          if (ogMsg) doAction = true
+        }
+      }
+      // forward boost sats to recipient
+      let realSatsContactId: number | undefined = undefined
+      let amtToForward = 0
+      const boostOrPay =
+        payload.type === msgtypes.boost ||
+        payload.type === msgtypes.direct_payment
+      if (boostOrPay && payload.message.replyUuid) {
+        const ogMsg: Message = (await models.Message.findOne({
           where: {
-            uuid: payload.message.uuid,
-            sender: senderContactId,
+            uuid: payload.message.replyUuid,
             tenant,
           },
-        })
-        if (ogMsg) doAction = true
-      }
-    }
-    // forward boost sats to recipient
-    let realSatsContactId: number | undefined = undefined
-    let amtToForward = 0
-    const boostOrPay =
-      payload.type === msgtypes.boost ||
-      payload.type === msgtypes.direct_payment
-    if (boostOrPay && payload.message.replyUuid) {
-      const ogMsg: Message = (await models.Message.findOne({
-        where: {
-          uuid: payload.message.replyUuid,
-          tenant,
-        },
-      })) as Message
-      if (ogMsg && ogMsg.sender) {
-        // even include "me"
-        const theAmtToForward =
-          payload.message.amount -
-          (chat.pricePerMessage || 0) -
-          (chat.escrowAmount || 0)
-        if (theAmtToForward > 0) {
-          realSatsContactId = ogMsg.sender // recipient of sats
-          amtToForward = theAmtToForward
-          toAddIn.hasForwardedSats = ogMsg.sender !== tenant
-          if (amtToForward && payload.message && payload.message.amount) {
-            payload.message.amount = amtToForward // mutate the payload amount
-            if (payload.type === msgtypes.direct_payment) {
-              // remove the reply_uuid since its not actually a reply
-              payload.message.replyUuid = undefined
+        })) as Message
+        if (ogMsg && ogMsg.sender) {
+          // even include "me"
+          const theAmtToForward =
+            payload.message.amount -
+            (chat.pricePerMessage || 0) -
+            (chat.escrowAmount || 0)
+          if (theAmtToForward > 0) {
+            realSatsContactId = ogMsg.sender // recipient of sats
+            amtToForward = theAmtToForward
+            toAddIn.hasForwardedSats = ogMsg.sender !== tenant
+            if (amtToForward && payload.message && payload.message.amount) {
+              payload.message.amount = amtToForward // mutate the payload amount
+              if (payload.type === msgtypes.direct_payment) {
+                // remove the reply_uuid since its not actually a reply
+                payload.message.replyUuid = undefined
+              }
             }
           }
         }
       }
+      // make sure alias is unique among chat members
+      payload = await uniqueifyAlias(payload, senderContact, chat, owner)
+      if (doAction)
+        forwardMessageToTribe(
+          payload,
+          senderContact,
+          realSatsContactId,
+          amtToForward,
+          owner,
+          forwardedFromContactId
+        )
+      else sphinxLogger.error(`=> insufficient payment for this action`)
     }
-    // make sure alias is unique among chat members
-    payload = await uniqueifyAlias(payload, senderContact, chat, owner)
-    if (doAction)
-      forwardMessageToTribe(
-        payload,
-        senderContact,
-        realSatsContactId,
-        amtToForward,
-        owner,
-        forwardedFromContactId
-      )
-    else sphinxLogger.error(`=> insufficient payment for this action`)
-  }
-  if (isTribeOwner && payload.type === msgtypes.purchase) {
-    const mt = payload.message.mediaToken
-    const host = mt && mt.split('.').length && mt.split('.')[0]
-    const muid = mt && mt.split('.').length && mt.split('.')[1]
-    const myAttachmentMessage = await models.Message.findOne({
-      where: {
-        mediaToken: { [Op.like]: `${host}.${muid}%` },
-        type: msgtypes.attachment,
-        sender: tenant,
-        tenant,
-      },
-    })
-    if (!myAttachmentMessage) {
-      // someone else's attachment
-      const senderContact: Contact = (await models.Contact.findOne({
-        where: { publicKey: payload.sender.pub_key, tenant },
-      })) as Contact
-      purchaseFromOriginalSender(payload, chat, senderContact, owner)
-      doAction = false
+    if (payload.type === msgtypes.purchase) {
+      const chat = maybeChat as ChatRecord
+      const mt = payload.message.mediaToken
+      const host = mt && mt.split('.').length && mt.split('.')[0]
+      const muid = mt && mt.split('.').length && mt.split('.')[1]
+      const myAttachmentMessage = await models.Message.findOne({
+        where: {
+          mediaToken: { [Op.like]: `${host}.${muid}%` },
+          type: msgtypes.attachment,
+          sender: tenant,
+          tenant,
+        },
+      })
+      if (!myAttachmentMessage) {
+        // someone else's attachment
+        const senderContact: Contact = (await models.Contact.findOne({
+          where: { publicKey: payload.sender.pub_key, tenant },
+        })) as Contact
+        purchaseFromOriginalSender(payload, chat, senderContact, owner)
+        doAction = false
+      }
     }
-  }
-  if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
-    const purchaserID = payload.message && payload.message.purchaser
-    const iAmPurchaser = purchaserID && purchaserID === tenant
-    if (!iAmPurchaser) {
-      const senderContact: ContactRecord = (await models.Contact.findOne({
-        where: { publicKey: payload.sender.pub_key, tenant },
-      })) as ContactRecord
-      sendFinalMemeIfFirstPurchaser(payload, chat, senderContact, owner)
-      doAction = false // skip this! we dont need it
+    if (payload.type === msgtypes.purchase_accept) {
+      const purchaserID = payload.message && payload.message.purchaser
+      const iAmPurchaser = purchaserID && purchaserID === tenant
+      if (!iAmPurchaser) {
+        const senderContact: ContactRecord = (await models.Contact.findOne({
+          where: { publicKey: payload.sender.pub_key, tenant },
+        })) as ContactRecord
+        sendFinalMemeIfFirstPurchaser(payload, chat, senderContact, owner)
+        doAction = false // skip this! we dont need it
+      }
     }
   }
   if (doAction) doTheAction({ ...payload, ...toAddIn }, ownerDataValues)
@@ -290,7 +295,14 @@ async function doTheAction(data: Payload, owner: Contact) {
       where: { uuid: payload.chat.uuid, tenant: owner.id },
     })) as Chat
     const pld = await decryptMessage(data, chat)
+    const mentioned = await detectMentionsForTribeAdminSelf(
+      pld,
+      owner.alias,
+      chat.myAlias
+    )
+    if (mentioned) pld.message.push = true
     const me = owner
+    // encrypt for myself
     const encrypted = await encryptTribeBroadcast(pld, me, true) // true=isTribeOwner
     payload = encrypted as Payload
     if (ogContent)
@@ -335,17 +347,16 @@ async function uniqueifyAlias(
       final_sender_alias = `${sender_alias}_2`
     }
   })
-  if (sender_alias !== final_sender_alias) {
+
+  const ww = { chatId: chat.id, contactId: senderContactId, tenant: owner.id }
+  const oldMember = (await models.ChatMember.findOne({
+    where: ww,
+  })) as ChatMember
+  if (oldMember.lastAlias !== final_sender_alias) {
     await models.ChatMember.update(
       // this syntax is necessary when no unique ID on the Model
       { lastAlias: final_sender_alias },
-      {
-        where: {
-          chatId: chat.id,
-          contactId: senderContactId,
-          tenant: owner.id,
-        },
-      }
+      { where: ww }
     )
   }
 
