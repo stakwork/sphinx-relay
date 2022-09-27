@@ -1,8 +1,8 @@
 {
   "development": {
     "senza_url": "http://localhost:3000/api/v2",
-    "macaroon_location": "/Users/evanfeenstra/code/lnd-dev/alice/data/chain/bitcoin/simnet/admin.macaroon",
-    "tls_location": "/Users/evanfeenstra/Library/Application Support/Lnd/tls.cert",
+    "macaroon_location": "/Users/apple/Desktop/Sphinx/sphinx-stack/cln/raphlnd/raph/data/chain/bitcoin/regtest/admin.macaroon",
+    "tls_location": "/Users/apple/Desktop/Sphinx/sphinx-stack/cln/raphlnd/raph/tls.cert",
     "node_ip": "127.0.0.1",
     "lnd_ip": "127.0.0.1",
     "lnd_port": "10001",

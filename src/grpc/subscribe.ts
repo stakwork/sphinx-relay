@@ -7,8 +7,6 @@ import {isProxy, getProxyRootPubkey} from '../utils/proxy'
 import {sphinxLogger, logging} from '../utils/logger'
 import {loadConfig} from '../utils/config'
 import {sleep} from '../helpers'
-import {number} from 'yup'
-import {resolve} from 'path'
 
 const config = loadConfig()
 
@@ -127,22 +125,27 @@ export async function reconnectToLightning(
 }
 
 export async function subscribeCLN(cmd: string, lightning: any): Promise<void | null> {
+  let lastpay_index = await getInvoicesLength(lightning);
   while (true) {
-    // pull the last invoice, and run "parseKeysendInvoice"
-    // increment the lastpay_index (+1)
-    // wait a second and do it again with new lastpay_index
+  //   // pull the last invoice, and run "parseKeysendInvoice"
+  //   // increment the lastpay_index (+1)
+  //   // wait a second and do it again with new lastpay_index
 
-    // Get the last invoice length
-    const lastpay_index = await getInvoicesLength(lightning);
-    // console.log('LAST PAY INDEx', lastpay_index);
+  //   // Get the last invoice length
+  //   // console.log('LAST PAY INDEx', lastpay_index);
 
     lightning[cmd]({lastpay_index}, function (err, response) {
       if (err == null) {
 
         if (response.description.includes('keysend')) {
-          // console.log('Invoice Response ===', JSON.stringify(response));
+          
+          
+          const invoice = convertToLndInvoice(response);
 
-          // const inv = interfaces.subscribeResponse(response)
+          // console.log('Invoice Response ===', invoice);
+          
+          // const inv = interfaces.subscribeResponse(invoice)
+          lastpay_index += 1;
         }
 
       } else {
@@ -151,6 +154,35 @@ export async function subscribeCLN(cmd: string, lightning: any): Promise<void | 
     })
 
     await sleep(1000)
+  }
+}
+
+const convertToLndInvoice = (response: {[key: string]: any}): interfaces.Invoice => {
+  return {
+    memo: response.label,
+    r_preimage: response.payment_preimage,
+    r_hash: response.payment_hash,
+    value: response.amount,
+    value_msat: response.amount_msat,
+    settled: response.status === 'paid' ? true : false,
+    creation_date: '',
+    settle_date: response.paid_at,
+    payment_request: response.bolt11,
+    description_hash: Buffer.from(''),
+    expiry: response.expires_at,
+    fallback_addr: '',
+    cltv_expiry: '',
+    route_hints: [],
+    private: false,
+    add_index: '',
+    settle_index: response.pay_index,
+    amt_paid: String(response.amount_received_msat.msat / 1000),
+    amt_paid_sat: String(response.amount_received_msat.msat / 1000),
+    amt_paid_msat: response.amount_received_msat.msat,
+    state: response.status,
+    htlcs: [],
+    features: {},
+    is_keysend: response.description.includes('keysend')
   }
 }
 
