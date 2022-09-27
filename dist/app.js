@@ -39,7 +39,7 @@ process.env.NODE_EXTRA_CA_CERTS = config.tls_location;
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, setup_1.setupDatabase)();
-        mainSetup();
+        yield mainSetup();
         // // IF NOT UNLOCK, go ahead and start this now
         if (config.hub_api_url && !config.unlock) {
             (0, hub_1.pingHubInterval)(30000);

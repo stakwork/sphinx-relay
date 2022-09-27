@@ -85,6 +85,9 @@ export default class Contact extends Model<Contact> {
 
   @Column
   hmacKey: string
+  
+  @Column
+  lastPayIndex: number
 }
 
 export interface ContactRecord extends Contact {

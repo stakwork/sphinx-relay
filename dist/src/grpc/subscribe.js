@@ -19,6 +19,7 @@ const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const helpers_1 = require("../helpers");
+const models_1 = require("../models");
 const config = (0, config_1.loadConfig)();
 const IS_CLN = config.lightning_provider === 'CLN';
 const ERR_CODE_UNAVAILABLE = 14;
@@ -125,24 +126,31 @@ exports.reconnectToLightning = reconnectToLightning;
 function subscribeCLN(cmd, lightning) {
     return __awaiter(this, void 0, void 0, function* () {
         let lastpay_index = yield getInvoicesLength(lightning);
+        yield models_1.Contact.update({ lastPayIndex: lastpay_index }, { where: { id: 1 } });
         while (true) {
             //   // pull the last invoice, and run "parseKeysendInvoice"
             //   // increment the lastpay_index (+1)
             //   // wait a second and do it again with new lastpay_index
-            //   // Get the last invoice length
-            //   // console.log('LAST PAY INDEx', lastpay_index);
             lightning[cmd]({ lastpay_index }, function (err, response) {
-                if (err == null) {
-                    if (response.description.includes('keysend')) {
-                        const invoice = convertToLndInvoice(response);
-                        // console.log('Invoice Response ===', invoice);
-                        // const inv = interfaces.subscribeResponse(invoice)
-                        lastpay_index += 1;
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (err == null) {
+                        if (response.description.includes('keysend')) {
+                            const invoice = convertToLndInvoice(response);
+                            const owner = (yield models_1.Contact.findOne({
+                                where: { id: 1 },
+                            }));
+                            // If the payindex is greater than that in the db update the db and parse the invoice
+                            const payIndex = Number(invoice.settle_index);
+                            if (payIndex > owner.lastPayIndex) {
+                                yield models_1.Contact.update({ lastPayIndex: payIndex }, { where: { id: 1 } });
+                                // const inv = interfaces.subscribeResponse(invoice)
+                            }
+                        }
                     }
-                }
-                else {
-                    console.log(err);
-                }
+                    else {
+                        console.log(err);
+                    }
+                });
             });
             yield (0, helpers_1.sleep)(1000);
         }
@@ -181,7 +189,7 @@ const getInvoicesLength = (lightning) => {
     return new Promise((resolve, reject) => {
         lightning['ListInvoices']({}, function (err, response) {
             if (err === null) {
-                resolve(response.invoices.length);
+                resolve(response.invoices.filter(invoice => invoice.status === 'PAID').length);
             }
             reject(1);
         });

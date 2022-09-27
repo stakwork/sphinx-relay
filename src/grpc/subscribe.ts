@@ -7,6 +7,8 @@ import {isProxy, getProxyRootPubkey} from '../utils/proxy'
 import {sphinxLogger, logging} from '../utils/logger'
 import {loadConfig} from '../utils/config'
 import {sleep} from '../helpers'
+import {Contact} from '../models'
+import {where} from 'sequelize/types'
 
 const config = loadConfig()
 
@@ -126,26 +128,33 @@ export async function reconnectToLightning(
 
 export async function subscribeCLN(cmd: string, lightning: any): Promise<void | null> {
   let lastpay_index = await getInvoicesLength(lightning);
+
+  await Contact.update({lastPayIndex: lastpay_index}, {where: {id: 1}});
+
   while (true) {
-  //   // pull the last invoice, and run "parseKeysendInvoice"
-  //   // increment the lastpay_index (+1)
-  //   // wait a second and do it again with new lastpay_index
-
-  //   // Get the last invoice length
-  //   // console.log('LAST PAY INDEx', lastpay_index);
-
-    lightning[cmd]({lastpay_index}, function (err, response) {
+    //   // pull the last invoice, and run "parseKeysendInvoice"
+    //   // increment the lastpay_index (+1)
+    //   // wait a second and do it again with new lastpay_index
+    lightning[cmd]({lastpay_index}, async function (err, response) {
       if (err == null) {
 
         if (response.description.includes('keysend')) {
-          
-          
+
+
           const invoice = convertToLndInvoice(response);
 
-          // console.log('Invoice Response ===', invoice);
+          const owner: Contact = (await Contact.findOne({
+            where: {id: 1},
+          })) as Contact
+
+          // If the payindex is greater than that in the db update the db and parse the invoice
+          const payIndex = Number(invoice.settle_index);
           
-          // const inv = interfaces.subscribeResponse(invoice)
-          lastpay_index += 1;
+          if (payIndex > owner.lastPayIndex) {
+            await Contact.update({lastPayIndex: payIndex}, {where: {id: 1}});
+            // const inv = interfaces.subscribeResponse(invoice)
+          }
+
         }
 
       } else {
@@ -190,7 +199,7 @@ const getInvoicesLength = (lightning: any): Promise<number> => {
   return new Promise((resolve, reject) => {
     lightning['ListInvoices']({}, function (err, response) {
       if (err === null) {
-        resolve(response.invoices.length)
+        resolve(response.invoices.filter(invoice => invoice.status === 'PAID').length)
       }
       reject(1);
     });
