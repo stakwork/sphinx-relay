@@ -173,8 +173,16 @@ export async function processAction(req: Req, res: Res): Promise<void> {
   const bot: Bot = (await models.Bot.findOne({ where: { id: bot_id } })) as Bot
   if (!bot) return failure(res, 'no bot')
 
-  if (!(bot.secret && bot.secret === bot_secret)) {
-    return failure(res, 'wrong secret')
+  if (bot_secret) {
+    if (!(bot.secret && bot.secret === bot_secret)) {
+      return failure(res, 'wrong secret')
+    }
+  } else {
+    const sig = req.headers['x-hub-signature-256']
+    const valid = hmac.verifyHmac(sig as string, req.rawBody, bot.secret)
+    if (!valid) {
+      return failure(res, 'invalid HMAC')
+    }
   }
   if (!action) {
     return failure(res, 'no action')
@@ -288,22 +296,7 @@ export async function finalAction(a: Action): Promise<void> {
   }
 
   if (action === 'keysend') {
-    return sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`)
-    // if (!(pubkey && pubkey.length === 66 && amount)) {
-    //     throw 'wrong params'
-    // }
-    // const destkey = pubkey
-    // const opts = {
-    //     dest: destkey,
-    //     data: {},
-    //     amt: Math.max((amount || 0), constants.min_sat_amount)
-    // }
-    // try {
-    //     await network.signAndSend(opts, ownerPubkey)
-    //     return ({ success: true })
-    // } catch (e) {
-    //     throw e
-    // }
+    sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`)
   } else if (action === 'pay') {
     pay(a)
   } else if (action === 'broadcast') {
@@ -311,7 +304,7 @@ export async function finalAction(a: Action): Promise<void> {
   } else if (action === 'dm') {
     direct_message(a)
   } else {
-    return sphinxLogger.error(`invalid action`)
+    sphinxLogger.error(`invalid action`)
   }
 }
 

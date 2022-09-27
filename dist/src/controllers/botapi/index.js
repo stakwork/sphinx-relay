@@ -139,8 +139,17 @@ function processAction(req, res) {
         const bot = (yield models_1.models.Bot.findOne({ where: { id: bot_id } }));
         if (!bot)
             return (0, res_1.failure)(res, 'no bot');
-        if (!(bot.secret && bot.secret === bot_secret)) {
-            return (0, res_1.failure)(res, 'wrong secret');
+        if (bot_secret) {
+            if (!(bot.secret && bot.secret === bot_secret)) {
+                return (0, res_1.failure)(res, 'wrong secret');
+            }
+        }
+        else {
+            const sig = req.headers['x-hub-signature-256'];
+            const valid = hmac.verifyHmac(sig, req.rawBody, bot.secret);
+            if (!valid) {
+                return (0, res_1.failure)(res, 'invalid HMAC');
+            }
         }
         if (!action) {
             return (0, res_1.failure)(res, 'no action');
@@ -242,22 +251,7 @@ function finalAction(a) {
             return; // done
         }
         if (action === 'keysend') {
-            return logger_1.sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`);
-            // if (!(pubkey && pubkey.length === 66 && amount)) {
-            //     throw 'wrong params'
-            // }
-            // const destkey = pubkey
-            // const opts = {
-            //     dest: destkey,
-            //     data: {},
-            //     amt: Math.max((amount || 0), constants.min_sat_amount)
-            // }
-            // try {
-            //     await network.signAndSend(opts, ownerPubkey)
-            //     return ({ success: true })
-            // } catch (e) {
-            //     throw e
-            // }
+            logger_1.sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`);
         }
         else if (action === 'pay') {
             (0, pay_1.default)(a);
@@ -269,7 +263,7 @@ function finalAction(a) {
             (0, dm_1.default)(a);
         }
         else {
-            return logger_1.sphinxLogger.error(`invalid action`);
+            logger_1.sphinxLogger.error(`invalid action`);
         }
     });
 }
