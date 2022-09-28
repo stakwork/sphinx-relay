@@ -26,9 +26,23 @@ export default async function dm(a: Action): Promise<void> {
 
   const uuid = md5([owner.publicKey, pubkey].sort().join('-'))
 
-  const chat: ChatRecord = (await models.Chat.findOne({
+  let chat: ChatRecord = (await models.Chat.findOne({
     where: { uuid },
   })) as ChatRecord
+  if (!chat) {
+    // no chat! create new
+    const date = new Date()
+    date.setMilliseconds(0)
+    sphinxLogger.info(`=> no chat! create new`)
+    chat = (await models.Chat.create({
+      uuid: uuid,
+      contactIds: JSON.stringify([tenant, contact.id]),
+      createdAt: date,
+      updatedAt: date,
+      type: constants.chat_types.conversation,
+      tenant,
+    })) as ChatRecord
+  }
 
   const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '')
   const encryptedForThemText = rsa.encrypt(contact.contactKey, content || '')

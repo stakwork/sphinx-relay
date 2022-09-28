@@ -37,9 +37,23 @@ function dm(a) {
         if (!contact)
             return logger_1.sphinxLogger.error('bot DM no contact');
         const uuid = md5([owner.publicKey, pubkey].sort().join('-'));
-        const chat = (yield models_1.models.Chat.findOne({
+        let chat = (yield models_1.models.Chat.findOne({
             where: { uuid },
         }));
+        if (!chat) {
+            // no chat! create new
+            const date = new Date();
+            date.setMilliseconds(0);
+            logger_1.sphinxLogger.info(`=> no chat! create new`);
+            chat = (yield models_1.models.Chat.create({
+                uuid: uuid,
+                contactIds: JSON.stringify([tenant, contact.id]),
+                createdAt: date,
+                updatedAt: date,
+                type: constants_1.default.chat_types.conversation,
+                tenant,
+            }));
+        }
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '');
         const encryptedForThemText = rsa.encrypt(contact.contactKey, content || '');
         const date = new Date();
