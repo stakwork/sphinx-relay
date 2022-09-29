@@ -185,9 +185,9 @@ export async function getActiveLsat(
     if (!lsat) {
       return res
         .status(404)
-        .json({ succes: false, error: 'No Active LSAT found' })
+        .json({ success: false, error: 'No Active LSAT found' })
     } else {
-      return success(res, { lsat })
+      return success(res, lsat)
     }
   } catch (e) {
     return failure(res, `could not retrieve active lsat`)
