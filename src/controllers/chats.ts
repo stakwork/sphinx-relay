@@ -241,6 +241,24 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
     feed_type,
     pin,
   } = req.body
+  console.log(
+    JSON.stringify({
+      name,
+      is_tribe,
+      price_per_message,
+      price_to_join,
+      escrow_amount,
+      escrow_millis,
+      img,
+      description,
+      tags,
+      unlisted,
+      app_url,
+      feed_url,
+      feed_type,
+      pin,
+    })
+  )
   const contact_ids: number[] = req.body.contact_ids || []
 
   const members: { [k: string]: ChatMemberNetwork } = {} //{pubkey:{key,alias}, ...}
