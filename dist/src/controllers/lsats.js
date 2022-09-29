@@ -150,10 +150,10 @@ function getActiveLsat(req, res) {
             if (!lsat) {
                 return res
                     .status(404)
-                    .json({ succes: false, error: 'No Active LSAT found' });
+                    .json({ success: false, error: 'No Active LSAT found' });
             }
             else {
-                return (0, res_1.success)(res, { lsat });
+                return (0, res_1.success)(res, lsat);
             }
         }
         catch (e) {
