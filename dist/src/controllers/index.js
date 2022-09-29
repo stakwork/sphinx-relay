@@ -35,6 +35,7 @@ const res_1 = require("../utils/res");
 const auth = require("./auth");
 const personal = require("./api/personal");
 const lsats = require("./lsats");
+const taggers = require("./taggers");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -157,6 +158,7 @@ function set(app) {
         app.post('/lsats', lsats.saveLsat);
         app.put('/lsats/:identifier', lsats.updateLsat);
         app.delete('/lsats/:identifier', lsats.deleteLsat);
+        app.post('/pay_taggers', taggers.payTagger);
     });
 }
 exports.set = set;

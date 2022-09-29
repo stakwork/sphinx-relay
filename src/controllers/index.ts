@@ -23,6 +23,7 @@ import { failure } from '../utils/res'
 import * as auth from './auth'
 import * as personal from './api/personal'
 import * as lsats from './lsats'
+import * as taggers from './taggers'
 import { Req } from '../types'
 
 export async function set(app) {
@@ -170,6 +171,8 @@ export async function set(app) {
   app.post('/lsats', lsats.saveLsat)
   app.put('/lsats/:identifier', lsats.updateLsat)
   app.delete('/lsats/:identifier', lsats.deleteLsat)
+
+  app.post('/pay_taggers', taggers.payTagger)
 }
 
 const msgtypes = constants.message_types
