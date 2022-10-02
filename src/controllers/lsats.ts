@@ -228,12 +228,13 @@ export async function updateLsat(
           where: { tenant, identifier },
         }
       )
+      return success(res, { message: 'lsat successfully updated as expired' })
     } else {
       await models.Lsat.update(body, {
         where: { tenant, identifier },
       })
+      return success(res, 'lsat successfully updated')
     }
-    return success(res, 'lsat successfully updated')
   } catch (e) {
     return failure(res, `could not update lsat: ${e.message}`)
   }
