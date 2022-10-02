@@ -17,10 +17,10 @@ jobs:
           path: lnd
       - name: update proto files
         run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           find lnd/lnrpc -name '*.proto' -exec bash -c 'test -e proto/`basename {}` && cp {} proto' \;
           sed -i 's/^import.*\//import "/' proto/*
-          git config user.name 'Github Actions'
-          git config user.email github-actions@github.com
           git add proto
           git commit -m "Update proto files" || echo -n
           git push
