@@ -6,6 +6,7 @@ import {
   BotRecord,
   ChatBotRecord,
   ChatRecord,
+  ContactRecord,
   models,
 } from '../../models'
 import { success, failure, unauthorized } from '../../utils/res'
@@ -13,6 +14,7 @@ import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import broadcast from './broadcast'
 import pay from './pay'
+import direct_message from './dm'
 import { sphinxLogger, logging } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
@@ -26,7 +28,7 @@ hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 
-export type ActionType = 'broadcast' | 'pay' | 'keysend'
+export type ActionType = 'broadcast' | 'pay' | 'keysend' | 'dm'
 
 export interface Action {
   action: ActionType
@@ -171,8 +173,16 @@ export async function processAction(req: Req, res: Res): Promise<void> {
   const bot: Bot = (await models.Bot.findOne({ where: { id: bot_id } })) as Bot
   if (!bot) return failure(res, 'no bot')
 
-  if (!(bot.secret && bot.secret === bot_secret)) {
-    return failure(res, 'wrong secret')
+  if (bot_secret) {
+    if (!(bot.secret && bot.secret === bot_secret)) {
+      return failure(res, 'wrong secret')
+    }
+  } else {
+    const sig = req.headers['x-hub-signature-256']
+    const valid = hmac.verifyHmac(sig as string, req.rawBody, bot.secret)
+    if (!valid) {
+      return failure(res, 'invalid HMAC')
+    }
   }
   if (!action) {
     return failure(res, 'no action')
@@ -286,27 +296,31 @@ export async function finalAction(a: Action): Promise<void> {
   }
 
   if (action === 'keysend') {
-    return sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`)
-    // if (!(pubkey && pubkey.length === 66 && amount)) {
-    //     throw 'wrong params'
-    // }
-    // const destkey = pubkey
-    // const opts = {
-    //     dest: destkey,
-    //     data: {},
-    //     amt: Math.max((amount || 0), constants.min_sat_amount)
-    // }
-    // try {
-    //     await network.signAndSend(opts, ownerPubkey)
-    //     return ({ success: true })
-    // } catch (e) {
-    //     throw e
-    // }
+    sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`)
   } else if (action === 'pay') {
     pay(a)
   } else if (action === 'broadcast') {
     broadcast(a)
+  } else if (action === 'dm') {
+    direct_message(a)
   } else {
-    return sphinxLogger.error(`invalid action`)
+    sphinxLogger.error(`invalid action`)
   }
+}
+
+interface ChatAndOwner {
+  chat: ChatRecord
+  owner: ContactRecord
+}
+export async function validateAction(a: Action): Promise<ChatAndOwner | void> {
+  sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
+  if (!a.chat_uuid) return sphinxLogger.error(`no chat_uuid`)
+  const theChat = await getTribeOwnersChatByUUID(a.chat_uuid)
+  if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
+  if (theChat.type !== constants.chat_types.tribe)
+    return sphinxLogger.error(`not a tribe`)
+  const owner: ContactRecord = (await models.Contact.findOne({
+    where: { id: theChat.tenant },
+  })) as ContactRecord
+  return { chat: theChat, owner }
 }
