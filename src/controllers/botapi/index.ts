@@ -313,7 +313,6 @@ interface ChatAndOwner {
   owner: ContactRecord
 }
 export async function validateAction(a: Action): Promise<ChatAndOwner | void> {
-  sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
   if (!a.chat_uuid) return sphinxLogger.error(`no chat_uuid`)
   const theChat = await getTribeOwnersChatByUUID(a.chat_uuid)
   if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)

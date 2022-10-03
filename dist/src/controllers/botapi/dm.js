@@ -19,14 +19,14 @@ const network = require("../../network");
 const rsa = require("../../crypto/rsa");
 function dm(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, content, bot_name, pubkey } = a;
+        const { amount, content, pubkey } = a;
         logger_1.sphinxLogger.info(`=> BOT DM ${JSON.stringify(a, null, 2)}`);
         const ret = yield (0, index_1.validateAction)(a);
         if (!ret)
             return;
         const owner = ret.owner;
         const tenant = owner.id;
-        const alias = bot_name || owner.alias;
+        // const alias = bot_name || owner.alias
         if (!pubkey)
             return logger_1.sphinxLogger.error('bot DM no pubkey');
         if (pubkey.length !== 66)
@@ -54,33 +54,14 @@ function dm(a) {
                 tenant,
             }));
         }
-        const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '');
-        const encryptedForThemText = rsa.encrypt(contact.contactKey, content || '');
-        const date = new Date();
-        date.setMilliseconds(0);
-        const msg = {
-            chatId: chat.id,
-            uuid: short.generate(),
-            type: constants_1.default.message_types.message,
-            sender: owner.id,
-            amount: amount || 0,
-            date: date,
-            messageContent: encryptedForMeText,
-            status: constants_1.default.statuses.confirmed,
-            createdAt: date,
-            updatedAt: date,
-            senderAlias: alias,
-            tenant,
-        };
-        const message = (yield models_1.models.Message.create(msg));
+        const encryptedContent = rsa.encrypt(contact.contactKey, content || '');
         yield network.sendMessage({
             chat: chat,
             sender: owner.dataValues,
             message: {
-                content: encryptedForThemText,
-                amount: message.amount,
-                id: message.id,
-                uuid: message.uuid,
+                content: encryptedContent,
+                amount: amount || 0,
+                uuid: short.generate(),
             },
             type: constants_1.default.message_types.message,
             success: () => ({ success: true }),

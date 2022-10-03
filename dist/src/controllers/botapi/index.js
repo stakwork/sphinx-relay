@@ -270,7 +270,6 @@ function finalAction(a) {
 exports.finalAction = finalAction;
 function validateAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
         if (!a.chat_uuid)
             return logger_1.sphinxLogger.error(`no chat_uuid`);
         const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(a.chat_uuid);
