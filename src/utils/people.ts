@@ -17,6 +17,7 @@ export async function createOrEditPerson(
     tags,
     price_to_meet,
     extras,
+    new_ticket_time,
   },
   id?: number
 ) {
@@ -37,6 +38,7 @@ export async function createOrEditPerson(
         tags: tags || [],
         price_to_meet: price_to_meet || 0,
         extras: extras || {},
+        new_ticket_time: new_ticket_time || 0,
       }),
       headers: { 'Content-Type': 'application/json' },
     })

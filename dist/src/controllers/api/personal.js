@@ -32,9 +32,7 @@ function createPeopleProfile(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { id, host, 
-            // pubkey,
-            owner_alias, description, img, tags, extras, } = req.body;
+            const { id, host, owner_alias, description, img, tags, extras, new_ticket_time, } = req.body;
             // if (pubkey !== owner.publicKey) {
             //   failure(res, 'mismatched pubkey')
             //   return
@@ -50,6 +48,7 @@ function createPeopleProfile(req, res) {
                 owner_route_hint: owner.routeHint,
                 owner_contact_key: owner.contactKey,
                 extras: extras || {},
+                new_ticket_time: new_ticket_time || 0,
             }, id || null);
             yield owner.update({ priceToMeet: priceToMeet || 0 });
             (0, res_1.success)(res, person);

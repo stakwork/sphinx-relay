@@ -24,12 +24,12 @@ export async function createPeopleProfile(req, res) {
     const {
       id,
       host,
-      // pubkey,
       owner_alias,
       description,
       img,
       tags,
       extras,
+      new_ticket_time,
     } = req.body
 
     // if (pubkey !== owner.publicKey) {
@@ -49,6 +49,7 @@ export async function createPeopleProfile(req, res) {
         owner_route_hint: owner.routeHint,
         owner_contact_key: owner.contactKey,
         extras: extras || {},
+        new_ticket_time: new_ticket_time || 0,
       },
       id || null
     )
