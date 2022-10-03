@@ -190,14 +190,13 @@ function updateLsat(req, res) {
                 yield models_1.models.Lsat.update(Object.assign(Object.assign({}, body), { status: constants_1.default.lsat_statuses.expired }), {
                     where: { tenant, identifier },
                 });
-                return (0, res_1.success)(res, { message: 'lsat successfully updated as expired' });
             }
             else {
                 yield models_1.models.Lsat.update(body, {
                     where: { tenant, identifier },
                 });
-                return (0, res_1.success)(res, 'lsat successfully updated');
             }
+            return (0, res_1.success)(res, 'lsat successfully updated');
         }
         catch (e) {
             return (0, res_1.failure)(res, `could not update lsat: ${e.message}`);
