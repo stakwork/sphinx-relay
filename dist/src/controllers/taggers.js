@@ -12,22 +12,44 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.payTagger = void 0;
 const res_1 = require("../utils/res");
 const Lightning = require("../grpc/lightning");
+const models_1 = require("../models");
 const payTagger = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
-    const { amount, destination } = req.body;
-    if (typeof amount !== 'number' && typeof destination !== 'string')
+    const { amount, destination, ref_id, timestamp } = req.body;
+    if (typeof amount !== 'number' &&
+        typeof destination !== 'string' &&
+        typeof ref_id !== 'string' &&
+        typeof timestamp !== 'string')
         return (0, res_1.failure)(res, 'Invalid data provided');
+    const tenant = req.owner.id;
     try {
-        const keysendPayment = yield Lightning.keysend({
-            amt: 5,
+        yield Lightning.keysend({
+            amt: amount,
             dest: destination,
         });
-        console.log(keysendPayment);
-        return (0, res_1.success)(res, keysendPayment);
+        yield models_1.models.Tagger.create({
+            tenant,
+            amount,
+            pubkey: destination,
+            type: 'stream',
+            refId: ref_id,
+            timestamp,
+            status: 1,
+        });
+        return (0, res_1.success)(res, 'Payment Successful');
     }
     catch (e) {
         console.log(e);
+        yield models_1.models.Tagger.create({
+            tenant,
+            amount,
+            pubkey: destination,
+            type: 'stream',
+            refId: ref_id,
+            timestamp,
+            status: 0,
+        });
         return (0, res_1.failure)(res, 'An error occured');
     }
 });
