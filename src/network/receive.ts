@@ -352,12 +352,16 @@ async function uniqueifyAlias(
   const oldMember = (await models.ChatMember.findOne({
     where: ww,
   })) as ChatMember
-  if (oldMember.lastAlias !== final_sender_alias) {
-    await models.ChatMember.update(
-      // this syntax is necessary when no unique ID on the Model
-      { lastAlias: final_sender_alias },
-      { where: ww }
-    )
+  if (oldMember) {
+    if (oldMember.lastAlias !== final_sender_alias) {
+      await models.ChatMember.update(
+        // this syntax is necessary when no unique ID on the Model
+        { lastAlias: final_sender_alias },
+        { where: ww }
+      )
+    }
+  } else {
+    sphinxLogger.warning('member not found in uniquifyAlias')
   }
 
   payload.sender.alias = final_sender_alias

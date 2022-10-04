@@ -329,10 +329,15 @@ function uniqueifyAlias(payload, sender, chat, owner) {
         const oldMember = (yield models_1.models.ChatMember.findOne({
             where: ww,
         }));
-        if (oldMember.lastAlias !== final_sender_alias) {
-            yield models_1.models.ChatMember.update(
-            // this syntax is necessary when no unique ID on the Model
-            { lastAlias: final_sender_alias }, { where: ww });
+        if (oldMember) {
+            if (oldMember.lastAlias !== final_sender_alias) {
+                yield models_1.models.ChatMember.update(
+                // this syntax is necessary when no unique ID on the Model
+                { lastAlias: final_sender_alias }, { where: ww });
+            }
+        }
+        else {
+            logger_1.sphinxLogger.warning('member not found in uniquifyAlias');
         }
         payload.sender.alias = final_sender_alias;
         return payload;
