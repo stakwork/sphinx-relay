@@ -85,6 +85,33 @@ export async function deletePersonProfile(req, res) {
   }
 }
 
+export async function deleteTicketByAdmin(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+
+  try {
+    const owner: Contact = (await models.Contact.findOne({
+      where: { tenant, isOwner: true },
+    })) as Contact
+    const {
+      host,
+      pubkey,
+      created
+    } = req.body
+
+    const person = await people.deleteTicketByAdmin(
+        host || config.tribes_host,
+        pubkey,
+        created,
+        owner.publicKey
+    )
+
+    success(res, person)
+  } catch (e) {
+    failure(res, e)
+  }
+}
+
 export async function uploadPublicPic(req, res) {
   if (!req.owner) return failure(res, 'no owner')
 
