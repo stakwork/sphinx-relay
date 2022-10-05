@@ -4,6 +4,13 @@ import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import { models } from '../models'
 
+interface BoostTagger {
+  amount: number
+  pubkey: string
+  ref_id: string
+  tenant: number
+}
+
 export const payTagger = async (
   req: Req,
   res: Response
@@ -45,5 +52,39 @@ export const payTagger = async (
       status: 0,
     })
     return failure(res, 'An error occured')
+  }
+}
+
+export const boostTagger = async ({
+  ref_id,
+  pubkey,
+  amount,
+  tenant,
+}: BoostTagger): Promise<boolean> => {
+  try {
+    await Lightning.keysend({
+      amt: amount,
+      dest: pubkey,
+    })
+    await models.Tagger.create({
+      tenant,
+      amount,
+      pubkey,
+      type: 'boost',
+      refId: ref_id,
+      status: 1,
+    })
+    return true
+  } catch (error) {
+    console.log(error)
+    await models.Tagger.create({
+      tenant,
+      amount,
+      pubkey: pubkey,
+      type: 'boost',
+      refId: ref_id,
+      status: 0,
+    })
+    return false
   }
 }
