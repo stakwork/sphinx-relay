@@ -23,7 +23,7 @@ export default class Tagger extends Model<Tagger> {
   amount: number
 
   @Column
-  redId: string
+  refId: string
 
   @Column
   status: number

@@ -40,7 +40,7 @@ __decorate([
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
-], Tagger.prototype, "redId", void 0);
+], Tagger.prototype, "refId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
