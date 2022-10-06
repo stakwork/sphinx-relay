@@ -78,6 +78,7 @@ function set(app) {
         app.get('/hmac_key', contacts.getHmacKey);
         app.post('/profile', personal.createPeopleProfile);
         app.delete('/profile', personal.deletePersonProfile);
+        app.post('/delete_ticket', personal.deleteTicketByAdmin);
         app.post('/public_pic', personal.uploadPublicPic);
         app.get('/refresh_jwt', personal.refreshJWT);
         app.post('/claim_on_liquid', personal.claimOnLiquid);

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -83,6 +83,21 @@ function deletePersonProfile(req, res) {
     });
 }
 exports.deletePersonProfile = deletePersonProfile;
+function deleteTicketByAdmin(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        try {
+            const { host, pubkey, created } = req.body;
+            const person = yield people.deleteTicketByAdmin(host || config.tribes_host, pubkey, created, req.owner.publicKey);
+            (0, res_1.success)(res, person);
+        }
+        catch (e) {
+            (0, res_1.failure)(res, e);
+        }
+    });
+}
+exports.deleteTicketByAdmin = deleteTicketByAdmin;
 function uploadPublicPic(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
