@@ -16,23 +16,30 @@ const models_1 = require("../models");
 const payTagger = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
-    const { amount, destination, ref_id, timestamp } = req.body;
-    if (typeof amount !== 'number' &&
-        typeof destination !== 'string' &&
-        typeof ref_id !== 'string' &&
-        typeof timestamp !== 'string')
+    const { amount, pubkey, ref_id, timestamp, type } = req.body;
+    if (!amount && !pubkey && !ref_id && !type) {
         return (0, res_1.failure)(res, 'Invalid data provided');
+    }
+    if (typeof amount !== 'number' &&
+        typeof pubkey !== 'string' &&
+        typeof ref_id !== 'string' &&
+        typeof timestamp !== 'string' &&
+        typeof type != 'string')
+        return (0, res_1.failure)(res, 'Invalid data provided');
+    if (pubkey.length !== 66) {
+        return (0, res_1.failure)(res, 'Invalid Public Key');
+    }
     const tenant = req.owner.id;
     try {
         yield Lightning.keysend({
             amt: amount,
-            dest: destination,
+            dest: pubkey,
         });
         yield models_1.models.Tagger.create({
             tenant,
             amount,
-            pubkey: destination,
-            type: 'stream',
+            pubkey,
+            type,
             refId: ref_id,
             timestamp,
             status: 1,
@@ -44,8 +51,8 @@ const payTagger = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         yield models_1.models.Tagger.create({
             tenant,
             amount,
-            pubkey: destination,
-            type: 'stream',
+            pubkey,
+            type,
             refId: ref_id,
             timestamp,
             status: 0,
