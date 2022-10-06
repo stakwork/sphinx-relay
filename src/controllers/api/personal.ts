@@ -87,12 +87,8 @@ export async function deletePersonProfile(req, res) {
 
 export async function deleteTicketByAdmin(req, res) {
   if (!req.owner) return failure(res, 'no owner')
-  const tenant: number = req.owner.id
 
   try {
-    const owner: Contact = (await models.Contact.findOne({
-      where: { tenant, isOwner: true },
-    })) as Contact
     const {
       host,
       pubkey,
@@ -103,7 +99,7 @@ export async function deleteTicketByAdmin(req, res) {
         host || config.tribes_host,
         pubkey,
         created,
-        owner.publicKey
+        req.owner.publicKey
     )
 
     success(res, person)
