@@ -71,6 +71,24 @@ export async function deletePerson(host, id, owner_pubkey) {
   }
 }
 
+export async function deleteTicketByAdmin(host, pubkey, created,owner_pubkey) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(`${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`, {
+      method: 'DELETE'
+    })
+    if (!r.ok) {
+      throw 'failed to delete ticket by admin' + r.status
+    }
+  }
+  catch (e) {
+    sphinxLogger.error(`unauthorized to delete ticket by admin`,logging.Tribes)
+    throw e
+  }
+}
+
 export async function claimOnLiquid({
   host,
   asset,

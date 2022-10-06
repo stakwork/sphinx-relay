@@ -85,6 +85,29 @@ export async function deletePersonProfile(req, res) {
   }
 }
 
+export async function deleteTicketByAdmin(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+
+  try {
+    const {
+      host,
+      pubkey,
+      created
+    } = req.body
+
+    const person = await people.deleteTicketByAdmin(
+        host || config.tribes_host,
+        pubkey,
+        created,
+        req.owner.publicKey
+    )
+
+    success(res, person)
+  } catch (e) {
+    failure(res, e)
+  }
+}
+
 export async function uploadPublicPic(req, res) {
   if (!req.owner) return failure(res, 'no owner')
 
