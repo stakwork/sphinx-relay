@@ -143,7 +143,9 @@ function subscribeCLN(cmd, lightning) {
                             const payIndex = Number(invoice.settle_index);
                             if (payIndex > owner.lastPayIndex) {
                                 yield models_1.Contact.update({ lastPayIndex: payIndex }, { where: { id: 1 } });
-                                // const inv = interfaces.subscribeResponse(invoice)
+                                lastpay_index += 1;
+                                const inv = interfaces.subscribeResponse(invoice);
+                                console.log('INV ===', inv);
                             }
                         }
                     }
@@ -162,9 +164,9 @@ const convertToLndInvoice = (response) => {
         memo: response.label,
         r_preimage: response.payment_preimage,
         r_hash: response.payment_hash,
-        value: response.amount,
-        value_msat: response.amount_msat,
-        settled: response.status === 'paid' ? true : false,
+        value: convertMsatToSat(response.amount_received_msat),
+        value_msat: response.msatoshi_received,
+        settled: response.status === 'PAID' ? true : false,
         creation_date: '',
         settle_date: response.paid_at,
         payment_request: response.bolt11,
@@ -176,14 +178,17 @@ const convertToLndInvoice = (response) => {
         private: false,
         add_index: '',
         settle_index: response.pay_index,
-        amt_paid: String(response.amount_received_msat.msat / 1000),
-        amt_paid_sat: String(response.amount_received_msat.msat / 1000),
+        amt_paid: convertMsatToSat(response.amount_received_msat),
+        amt_paid_sat: convertMsatToSat(response.amount_received_msat),
         amt_paid_msat: response.amount_received_msat.msat,
         state: response.status,
         htlcs: [],
         features: {},
         is_keysend: response.description.includes('keysend')
     };
+};
+const convertMsatToSat = (value) => {
+    return String(Number(value.msat) / 1000);
 };
 const getInvoicesLength = (lightning) => {
     return new Promise((resolve, reject) => {
