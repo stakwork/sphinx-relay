@@ -182,7 +182,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
         const timestamp = parseInt(invoice.timestamp + '000')
         const expiry = parseInt(invoice.timeExpireDate + '000')
 
-        const message: MessageRecord = (await models.Message.create({
+        let msg: any = {
           chatId: chat.id,
           uuid: short.generate(),
           sender: owner.id,
@@ -192,14 +192,20 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
           paymentHash: paymentHash,
           paymentRequest: payment_request,
           date: new Date(timestamp),
-          expirationDate: new Date(expiry),
           messageContent: memo,
           remoteMessageContent: remote_memo,
           status: constants.statuses.pending,
           createdAt: new Date(timestamp),
           updatedAt: new Date(timestamp),
           tenant,
-        })) as MessageRecord
+        }
+        if (invoice.timeExpireDate) {
+          msg.expirationDate = new Date(expiry)
+        }
+        const message: MessageRecord = (await models.Message.create(
+          msg
+        )) as MessageRecord
+
         success(res, jsonUtils.messageToJson(message, chat))
 
         network.sendMessage({
