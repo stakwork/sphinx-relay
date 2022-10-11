@@ -136,7 +136,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const chan_id = arr[1];
         request.route_hints = [
             {
-                hop_hints: [{ node_id, chan_id }],
+                hop_hints: [{ node_id, chan_id, cltv_expiry_delta: 10 }],
             },
         ];
     }

@@ -144,7 +144,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
     const chan_id = arr[1]
     request.route_hints = [
       {
-        hop_hints: [{ node_id, chan_id }],
+        hop_hints: [{ node_id, chan_id, cltv_expiry_delta: 10 }],
       },
     ]
   }
