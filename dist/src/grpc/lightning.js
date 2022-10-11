@@ -695,7 +695,9 @@ function addInvoice(request, ownerPubkey) {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             const cmd = interfaces.addInvoiceCommand();
             const req = interfaces.addInvoiceRequest(request);
+            console.log('INVOICE REQ', req);
             lightning[cmd](req, function (err, response) {
+                console.log('INVOICE RES', response);
                 if (err == null) {
                     resolve(interfaces.addInvoiceResponse(response));
                 }
@@ -818,7 +820,8 @@ function complexBalances(ownerPubkey) {
         }
         else {
             const reserve = channels.reduce((a, chan) => a + parseInt(chan.local_chan_reserve_sat), 0);
-            const spendableBalance = channels.reduce((a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)), 0);
+            const spendableBalance = channels.reduce((a, chan) => a +
+                Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)), 0);
             const response = yield channelBalance(ownerPubkey);
             return {
                 reserve,
