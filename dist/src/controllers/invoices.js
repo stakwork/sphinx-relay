@@ -168,6 +168,8 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
                 const timestamp = parseInt(invoice.timestamp + '000');
                 const expiry = parseInt(invoice.timeExpireDate + '000');
+                console.log('timestamp', invoice.timestamp, timestamp, new Date(timestamp));
+                console.log('expiry', invoice.timeExpireDate, expiry, new Date(expiry));
                 const message = (yield models_1.models.Message.create({
                     chatId: chat.id,
                     uuid: short.generate(),
