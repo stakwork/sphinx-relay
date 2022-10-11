@@ -123,9 +123,12 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body;
+    // FIXME hardcoded expiries?
     const request = {
         value: amount,
         memo: remote_memo || memo,
+        cltv_expiry: 40,
+        expiry: 86400,
     };
     if (req.owner && req.owner.routeHint && req.owner.routeHint.includes(':')) {
         const arr = req.owner.routeHint.split(':');

@@ -98,6 +98,7 @@ export interface AddInvoiceRequest {
   memo?: string
   route_hints?: RouteHint[]
   expiry?: number
+  cltv_expiry?: number
 }
 type GreenlightAmountUnit = 'millisatoshi' | 'satoshi' | 'bitcoin'
 interface GreenlightAmount {

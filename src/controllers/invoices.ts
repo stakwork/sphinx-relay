@@ -131,9 +131,12 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
 
   const { amount, memo, remote_memo, chat_id, contact_id, expiry } = req.body
 
+  // FIXME hardcoded expiries?
   const request: interfaces.AddInvoiceRequest = {
     value: amount,
     memo: remote_memo || memo,
+    cltv_expiry: 40,
+    expiry: 86400,
   }
   if (req.owner && req.owner.routeHint && req.owner.routeHint.includes(':')) {
     const arr = req.owner.routeHint.split(':')
