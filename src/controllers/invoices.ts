@@ -182,6 +182,14 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
         const timestamp = parseInt(invoice.timestamp + '000')
         const expiry = parseInt(invoice.timeExpireDate + '000')
 
+        console.log(
+          'timestamp',
+          invoice.timestamp,
+          timestamp,
+          new Date(timestamp)
+        )
+        console.log('expiry', invoice.timeExpireDate, expiry, new Date(expiry))
+
         const message: MessageRecord = (await models.Message.create({
           chatId: chat.id,
           uuid: short.generate(),
