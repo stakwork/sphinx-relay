@@ -26,7 +26,7 @@ function pay(a) {
         const ret = yield (0, index_1.validateAction)(a);
         if (!ret)
             return;
-        let { chat, owner } = ret;
+        const { chat, owner } = ret;
         const tenant = owner.id;
         const alias = bot_name || owner.alias;
         const botContactId = -1;
