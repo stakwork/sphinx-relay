@@ -121,13 +121,16 @@ function finalNotification(ownerID, params, push) {
         const mutedAtLeast = push
             ? constants_1.default.notify_levels.mute
             : constants_1.default.notify_levels.mentions;
+        console.log('mutedAtLeast', mutedAtLeast);
         const mutedChats = yield models_1.models.Chat.findAll({
             where: {
                 tenant: ownerID,
                 notify: { [sequelize_1.Op.gte]: mutedAtLeast },
             },
         });
+        console.log('muted chats len', mutedChats.length);
         const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || [];
+        console.log('mutedChatIds', mutedChatIds);
         mutedChatIds.push(0); // no msgs in non chat (anon keysends)
         const where = {
             sender: { [sequelize_1.Op.ne]: ownerID },
@@ -135,12 +138,14 @@ function finalNotification(ownerID, params, push) {
             chatId: { [sequelize_1.Op.notIn]: mutedChatIds },
             tenant: ownerID,
         };
+        console.log('where', where);
         // if (!isTribeOwner) {
         //   where.type = { [Op.notIn]: typesToNotNotify };
         // }
         const unseenMessages = yield models_1.models.Message.count({
             where,
         });
+        console.log('unseen count', unseenMessages);
         // if(!unseenMessages) return
         if (!unseenMessages) {
             params.notification.message = '';

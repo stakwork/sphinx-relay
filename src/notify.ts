@@ -138,13 +138,16 @@ async function finalNotification(
   const mutedAtLeast = push
     ? constants.notify_levels.mute
     : constants.notify_levels.mentions
+  console.log('mutedAtLeast', mutedAtLeast)
   const mutedChats = await models.Chat.findAll({
     where: {
       tenant: ownerID,
       notify: { [Op.gte]: mutedAtLeast },
     },
   })
+  console.log('muted chats len', mutedChats.length)
   const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
+  console.log('mutedChatIds', mutedChatIds)
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)
   const where: { [k: string]: any } = {
     sender: { [Op.ne]: ownerID },
@@ -152,12 +155,14 @@ async function finalNotification(
     chatId: { [Op.notIn]: mutedChatIds },
     tenant: ownerID,
   }
+  console.log('where', where)
   // if (!isTribeOwner) {
   //   where.type = { [Op.notIn]: typesToNotNotify };
   // }
   const unseenMessages = await models.Message.count({
     where,
   })
+  console.log('unseen count', unseenMessages)
   // if(!unseenMessages) return
   if (!unseenMessages) {
     params.notification.message = ''
