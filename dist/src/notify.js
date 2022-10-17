@@ -129,9 +129,6 @@ function finalNotification(ownerID, params, push) {
             },
         });
         console.log('muted chats len', mutedChats.length);
-        mutedChats.forEach((mc) => {
-            console.log('MUTED CHAT NAME', mc.name);
-        });
         const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || [];
         console.log('mutedChatIds', mutedChatIds);
         mutedChatIds.push(0); // no msgs in non chat (anon keysends)
@@ -140,9 +137,6 @@ function finalNotification(ownerID, params, push) {
                 tenant: ownerID,
                 id: { [sequelize_1.Op.notIn]: mutedChatIds },
             },
-        });
-        unmutedChats.forEach((mc) => {
-            console.log('UNMUTED CHAT NAME', mc.name);
         });
         const where = {
             sender: { [sequelize_1.Op.ne]: ownerID },
@@ -154,6 +148,18 @@ function finalNotification(ownerID, params, push) {
         // if (!isTribeOwner) {
         //   where.type = { [Op.notIn]: typesToNotNotify };
         // }
+        const unseenMessagesALL = yield models_1.models.Message.findAll({
+            where,
+        });
+        unseenMessagesALL.forEach((um) => {
+            const theUnmutedChat = unmutedChats.find((c) => c.id == um.chatId);
+            if (theUnmutedChat) {
+                console.log('AN UNSEEN MSG FROM:', theUnmutedChat.name);
+            }
+            else {
+                console.log('AN UNSEEN MSG FROM NOWEHERRE>....');
+            }
+        });
         const unseenMessages = yield models_1.models.Message.count({
             where,
         });

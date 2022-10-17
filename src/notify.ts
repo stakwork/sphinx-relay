@@ -146,9 +146,7 @@ async function finalNotification(
     },
   })
   console.log('muted chats len', mutedChats.length)
-  mutedChats.forEach((mc) => {
-    console.log('MUTED CHAT NAME', mc.name)
-  })
+
   const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
   console.log('mutedChatIds', mutedChatIds)
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)
@@ -159,10 +157,6 @@ async function finalNotification(
       id: { [Op.notIn]: mutedChatIds },
     },
   })
-  unmutedChats.forEach((mc) => {
-    console.log('UNMUTED CHAT NAME', mc.name)
-  })
-
   const where: { [k: string]: any } = {
     sender: { [Op.ne]: ownerID },
     seen: false,
@@ -173,6 +167,19 @@ async function finalNotification(
   // if (!isTribeOwner) {
   //   where.type = { [Op.notIn]: typesToNotNotify };
   // }
+
+  const unseenMessagesALL = await models.Message.findAll({
+    where,
+  })
+  unseenMessagesALL.forEach((um) => {
+    const theUnmutedChat = unmutedChats.find((c) => c.id == um.chatId)
+    if (theUnmutedChat) {
+      console.log('AN UNSEEN MSG FROM:', theUnmutedChat.name)
+    } else {
+      console.log('AN UNSEEN MSG FROM NOWEHERRE>....')
+    }
+  })
+
   const unseenMessages = await models.Message.count({
     where,
   })
