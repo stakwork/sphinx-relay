@@ -146,9 +146,23 @@ async function finalNotification(
     },
   })
   console.log('muted chats len', mutedChats.length)
+  mutedChats.forEach((mc) => {
+    console.log('MUTED CHAT NAME', mc.name)
+  })
   const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
   console.log('mutedChatIds', mutedChatIds)
   mutedChatIds.push(0) // no msgs in non chat (anon keysends)
+
+  const unmutedChats = await models.Chat.findAll({
+    where: {
+      tenant: ownerID,
+      id: { [Op.notIn]: mutedChatIds },
+    },
+  })
+  unmutedChats.forEach((mc) => {
+    console.log('UNMUTED CHAT NAME', mc.name)
+  })
+
   const where: { [k: string]: any } = {
     sender: { [Op.ne]: ownerID },
     seen: false,

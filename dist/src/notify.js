@@ -129,9 +129,21 @@ function finalNotification(ownerID, params, push) {
             },
         });
         console.log('muted chats len', mutedChats.length);
+        mutedChats.forEach((mc) => {
+            console.log('MUTED CHAT NAME', mc.name);
+        });
         const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || [];
         console.log('mutedChatIds', mutedChatIds);
         mutedChatIds.push(0); // no msgs in non chat (anon keysends)
+        const unmutedChats = yield models_1.models.Chat.findAll({
+            where: {
+                tenant: ownerID,
+                id: { [sequelize_1.Op.notIn]: mutedChatIds },
+            },
+        });
+        unmutedChats.forEach((mc) => {
+            console.log('UNMUTED CHAT NAME', mc.name);
+        });
         const where = {
             sender: { [sequelize_1.Op.ne]: ownerID },
             seen: false,
