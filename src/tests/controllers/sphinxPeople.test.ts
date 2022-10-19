@@ -9,22 +9,25 @@ import { config } from '../config'
 import nodes from '../nodes'
 
 /*
-npx ava test-42-sphinxPeople.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/sphinxPeople.test.ts --verbose --serial --timeout=2m
 */
 
 interface Context {}
 
 test.serial(
-  'test-42-sphinxPeople: Sphinx People testing',
+  'sphinxPeople: Sphinx People testing',
   async (t: ExecutionContext<Context>) => {
     await sphinxPeople(t, nodes[0])
   }
 )
 
-const internalTribeHost = config.tribeHostInternal
-
 async function sphinxPeople(t, node1) {
   //TESTING FOR SPHINX PEOPLE PAGE ===>
+
+  // if running "no-alice" version with local relay
+  const internalTribeHost = node1.ip.includes('host.docker.internal')
+    ? config.tribeHost
+    : config.tribeHostInternal
 
   console.log(node1.alias)
 
@@ -157,20 +160,20 @@ async function sphinxPeople(t, node1) {
   )
 
   //TRY TO UPDATE AND RESET PRICE_TO_MEET WITH RANDOM ID
-  try {
-    await http.post(
-      node1.external_ip + `/profile`,
-      makeJwtArgs(poll.jwt, {
-        id: 321,
-        host: internalTribeHost,
-        owner_alias: node1.alias,
-        description: 'this description',
-        img: poll.photo_url,
-        tags: [],
-        price_to_meet: newPriceToMeet,
-      })
-    )
-  } catch (e) {}
+  // try {
+  //   await http.post(
+  //     node1.external_ip + `/profile`,
+  //     makeJwtArgs(poll.jwt, {
+  //       id: 321,
+  //       host: internalTribeHost,
+  //       owner_alias: node1.alias,
+  //       description: 'this description',
+  //       img: poll.photo_url,
+  //       tags: [],
+  //       price_to_meet: newPriceToMeet,
+  //     })
+  //   )
+  // } catch (e) {}
 
   //DELETE PERSON PROFILE AT END OF TEST
   const del = await http.del(
