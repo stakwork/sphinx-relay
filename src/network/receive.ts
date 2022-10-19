@@ -598,7 +598,7 @@ export async function parseKeysendInvoice(
   }
   if (isKeysendType) {
     if (!memo) {
-      sendNotification({}, '', 'keysend', owner, value || 0)
+      sendNotification(new Chat(), '', 'keysend', owner, value || 0)
     }
     saveAnonymousKeysend(i, memo, sender_pubkey, owner.id)
     return

@@ -15,10 +15,9 @@ const helpers_1 = require("../utils/helpers");
 const config_1 = require("../config");
 const nodes_1 = require("../nodes");
 ava_1.default.serial('test-42-sphinxPeople: Sphinx People testing', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
-        yield sphinxPeople(t, node1);
-    }));
+    yield sphinxPeople(t, nodes_1.default[0]);
 }));
+const internalTribeHost = config_1.config.tribeHostInternal;
 function sphinxPeople(t, node1) {
     return __awaiter(this, void 0, void 0, function* () {
         //TESTING FOR SPHINX PEOPLE PAGE ===>
@@ -49,7 +48,7 @@ function sphinxPeople(t, node1) {
         const priceToMeet = 13;
         const postProfile = yield http.post(node1.external_ip + '/profile', (0, helpers_1.makeJwtArgs)(poll.jwt, {
             pubkey: node1.pubkey,
-            host: config_1.config.tribeHostInternal,
+            host: internalTribeHost,
             id: persontest.id,
             owner_alias: node1.alias,
             description: 'this description',
@@ -75,7 +74,7 @@ function sphinxPeople(t, node1) {
         const postProfile2 = yield http.post(node1.external_ip + `/profile`, (0, helpers_1.makeJwtArgs)(poll.jwt, {
             pubkey: node1.pubkey,
             id: person.id,
-            host: config_1.config.tribeHostInternal,
+            host: internalTribeHost,
             owner_alias: node1.alias,
             description: 'this description',
             img: poll.photo_url,
@@ -97,7 +96,7 @@ function sphinxPeople(t, node1) {
         try {
             yield http.post(node1.external_ip + `/profile`, (0, helpers_1.makeJwtArgs)(poll.jwt, {
                 id: 321,
-                host: config_1.config.tribeHostInternal,
+                host: internalTribeHost,
                 owner_alias: node1.alias,
                 description: 'this description',
                 img: poll.photo_url,
@@ -107,7 +106,7 @@ function sphinxPeople(t, node1) {
         }
         catch (e) { }
         //DELETE PERSON PROFILE AT END OF TEST
-        const del = yield http.del(node1.external_ip + '/profile', (0, helpers_1.makeArgs)(node1, { id: person2.id, host: config_1.config.tribeHostInternal }));
+        const del = yield http.del(node1.external_ip + '/profile', (0, helpers_1.makeArgs)(node1, { id: person2.id, host: internalTribeHost }));
         t.true(del.success, 'profile should be deleted');
     });
 }

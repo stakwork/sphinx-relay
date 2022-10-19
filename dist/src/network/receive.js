@@ -566,7 +566,7 @@ function parseKeysendInvoice(i) {
         }
         if (isKeysendType) {
             if (!memo) {
-                (0, hub_1.sendNotification)({}, '', 'keysend', owner, value || 0);
+                (0, hub_1.sendNotification)(new models_1.Chat(), '', 'keysend', owner, value || 0);
             }
             saveAnonymousKeysend(i, memo, sender_pubkey, owner.id);
             return;

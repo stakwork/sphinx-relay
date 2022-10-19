@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { logging } from './utils/logger'
-import { models } from './models'
+import { models, Contact, Chat } from './models'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
 import constants from './constants'
@@ -16,11 +15,21 @@ type NotificationType =
   | 'keysend'
   | 'boost'
 
+interface Notification {
+  message?: string
+  sound?: string
+  badge?: number
+}
+interface Params {
+  device_id: string
+  notification: Notification
+}
+
 const sendNotification = async (
-  chat,
-  name,
+  chat: Chat,
+  name: string,
   type: NotificationType,
-  owner,
+  owner: Contact,
   amount?: number,
   push?: boolean
 ): Promise<void> => {
@@ -73,8 +82,8 @@ const sendNotification = async (
   const isIOS = device_id.length === 64
   const isAndroid = !isIOS
 
-  const params: { [k: string]: any } = { device_id }
-  const notification: { [k: string]: any } = {
+  const params: Params = { device_id, notification: {} }
+  const notification: { [k: string]: string | number } = {
     chat_id: chat.id || 0,
     sound: '',
   }
@@ -98,7 +107,7 @@ const sendNotification = async (
         params.notification.message = chatIsMuted
           ? ''
           : `You have ${count}new messages in ${chat.name}`
-        finalNotification(owner.id, params, push)
+        finalNotification(owner.id, params)
       },
       chat.id,
       30000
@@ -107,16 +116,16 @@ const sendNotification = async (
     try {
       const cids = JSON.parse(chat.contactIds || '[]')
       const notme = cids.find((id) => id !== 1)
-      const other: Contact = models.Contact.findOne({
+      const other: Contact = (await models.Contact.findOne({
         where: { id: notme },
-      }) as Contact
+      })) as Contact
       if (other.blocked) return
-      finalNotification(owner.id, params, push)
+      finalNotification(owner.id, params)
     } catch (e) {
       sphinxLogger.error(`=> notify conversation err ${e}`)
     }
   } else {
-    finalNotification(owner.id, params, push)
+    finalNotification(owner.id, params)
   }
 }
 
@@ -126,48 +135,59 @@ const sendNotification = async (
 //   constants.message_types.boost,
 // ];
 
-async function finalNotification(
-  ownerID: number,
-  params: { [k: string]: any },
-  push?: boolean
-) {
+async function finalNotification(ownerID: number, params: Params) {
   if (params.notification.message) {
     if (logging.Notification)
       sphinxLogger.info(`[send notification] ${params.notification}`)
   }
-  const mutedAtLeast = push
-    ? constants.notify_levels.mute
-    : constants.notify_levels.mentions
-  const mutedChats = await models.Chat.findAll({
-    where: {
-      tenant: ownerID,
-      notify: { [Op.gte]: mutedAtLeast },
-    },
-  })
-  const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || []
-  mutedChatIds.push(0) // no msgs in non chat (anon keysends)
-  const where: { [k: string]: any } = {
-    sender: { [Op.ne]: ownerID },
-    seen: false,
-    chatId: { [Op.notIn]: mutedChatIds },
-    tenant: ownerID,
-  }
-  // if (!isTribeOwner) {
-  //   where.type = { [Op.notIn]: typesToNotNotify };
-  // }
-  const unseenMessages = await models.Message.count({
-    where,
-  })
+  const unseen = await countUnseen(ownerID)
   // if(!unseenMessages) return
-  if (!unseenMessages) {
+  if (!unseen) {
     params.notification.message = ''
     params.notification.sound = ''
   }
-  params.notification.badge = unseenMessages
+  params.notification.badge = unseen
   triggerNotification(params)
 }
 
-function triggerNotification(params: { [k: string]: any }) {
+async function countUnseen(ownerID: number): Promise<number> {
+  const unmutedChats = (await models.Chat.findAll({
+    where: {
+      tenant: ownerID,
+      notify: constants.notify_levels.all,
+    },
+  })) as Chat[]
+  const unmutedChatIds = (unmutedChats && unmutedChats.map((mc) => mc.id)) || []
+  unmutedChatIds.push(0) // no msgs in non chat (anon keysends)
+  const unseenMessages = await models.Message.count({
+    where: {
+      sender: { [Op.ne]: ownerID },
+      seen: false,
+      chatId: unmutedChatIds,
+      tenant: ownerID,
+    },
+  })
+
+  const mentionChats = (await models.Chat.findAll({
+    where: {
+      tenant: ownerID,
+      notify: constants.notify_levels.mentions,
+    },
+  })) as Chat[]
+  const mentionChatIds = (mentionChats && mentionChats.map((mc) => mc.id)) || []
+  const unseenMentions = await models.Message.count({
+    where: {
+      sender: { [Op.ne]: ownerID },
+      seen: false,
+      chatId: mentionChatIds,
+      tenant: ownerID,
+    },
+  })
+
+  return unseenMessages + unseenMentions
+}
+
+function triggerNotification(params: Params) {
   fetch('https://hub.sphinx.chat/api/v1/nodes/notify', {
     method: 'POST',
     body: JSON.stringify(params),
@@ -194,6 +214,6 @@ function debounce(func, id, delay) {
   }, delay)
 }
 
-export function resetNotifyTribeCount(chatID: number) {
+export function resetNotifyTribeCount(chatID: number): void {
   tribeCounts[chatID] = 0
 }
