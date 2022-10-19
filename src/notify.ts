@@ -158,7 +158,6 @@ async function countUnseen(ownerID: number): Promise<number> {
     },
   })) as Chat[]
   const unmutedChatIds = (unmutedChats && unmutedChats.map((mc) => mc.id)) || []
-  unmutedChatIds.push(0) // no msgs in non chat (anon keysends)
   const unseenMessages = await models.Message.count({
     where: {
       sender: { [Op.ne]: ownerID },
@@ -179,6 +178,7 @@ async function countUnseen(ownerID: number): Promise<number> {
     where: {
       sender: { [Op.ne]: ownerID },
       seen: false,
+      push: true,
       chatId: mentionChatIds,
       tenant: ownerID,
     },

@@ -136,7 +136,6 @@ function countUnseen(ownerID) {
             },
         }));
         const unmutedChatIds = (unmutedChats && unmutedChats.map((mc) => mc.id)) || [];
-        unmutedChatIds.push(0); // no msgs in non chat (anon keysends)
         const unseenMessages = yield models_1.models.Message.count({
             where: {
                 sender: { [sequelize_1.Op.ne]: ownerID },
@@ -156,6 +155,7 @@ function countUnseen(ownerID) {
             where: {
                 sender: { [sequelize_1.Op.ne]: ownerID },
                 seen: false,
+                push: true,
                 chatId: mentionChatIds,
                 tenant: ownerID,
             },
