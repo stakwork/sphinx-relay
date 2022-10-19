@@ -18,6 +18,10 @@ test('test-10-tribe3Msgs: create tribe, two nodes join tribe, send messages, 2 n
 })
 
 export async function tribe3Msgs(t, node1, node2, node3) {
+  // if running "no-alice" version with local relay
+  const internalTribeHost = node1.ip.includes('host.docker.internal')
+    ? config.tribeHost
+    : config.tribeHostInternal
   //THREE NODES SEND TEXT MESSAGES WITHIN A TRIBE ===>
 
   t.truthy(node3, 'this test requires three nodes')
@@ -111,13 +115,13 @@ export async function tribe3Msgs(t, node1, node2, node3) {
 
   const createChannelBody = {
     tribe_uuid: tribe.uuid,
-    host: config.tribeHostInternal,
+    host: internalTribeHost,
     name: 'testChannel',
   }
 
   const createChannelBody2 = {
     tribe_uuid: tribe.uuid,
-    host: config.tribeHostInternal,
+    host: internalTribeHost,
     name: 'testChannel2',
   }
 
@@ -203,11 +207,11 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   //delete channel
   const deleteChannel1Body = {
     id: channelTribe.channels[0].id,
-    host: config.tribeHostInternal,
+    host: internalTribeHost,
   }
   const deleteChannel2Body = {
     id: channelTribe.channels[1].id,
-    host: config.tribeHostInternal,
+    host: internalTribeHost,
   }
   await http.del(
     node1.external_ip + '/tribe_channel',
