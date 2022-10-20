@@ -14,7 +14,11 @@ import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
-import { loadConfig } from './config'
+import * as people from "../utils/people";
+import { loadConfig } from '../utils/config'
+
+
+const config = loadConfig()
 
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
