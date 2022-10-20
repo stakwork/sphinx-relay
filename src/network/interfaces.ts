@@ -51,6 +51,7 @@ export interface SenderContent {
   route_hint?: string
   photo_url?: string
   contact_key?: string
+  person?: string
 }
 
 export interface Msg {
