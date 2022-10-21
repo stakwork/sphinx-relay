@@ -17,6 +17,7 @@ export async function createOrEditPerson(
     tags,
     price_to_meet,
     extras,
+    new_ticket_time,
   },
   id?: number
 ) {
@@ -37,6 +38,7 @@ export async function createOrEditPerson(
         tags: tags || [],
         price_to_meet: price_to_meet || 0,
         extras: extras || {},
+        new_ticket_time: new_ticket_time || 0,
       }),
       headers: { 'Content-Type': 'application/json' },
     })
@@ -65,6 +67,24 @@ export async function deletePerson(host, id, owner_pubkey) {
     // const j = await r.json()
   } catch (e) {
     sphinxLogger.error(`unauthorized to delete person`, logging.Tribes)
+    throw e
+  }
+}
+
+export async function deleteTicketByAdmin(host, pubkey, created,owner_pubkey) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(`${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`, {
+      method: 'DELETE'
+    })
+    if (!r.ok) {
+      throw 'failed to delete ticket by admin' + r.status
+    }
+  }
+  catch (e) {
+    sphinxLogger.error(`unauthorized to delete ticket by admin`,logging.Tribes)
     throw e
   }
 }

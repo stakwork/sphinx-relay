@@ -10,3 +10,4 @@ src/utils/config.ts
 !src/utils/msg.ts
 !src/grpc
 
+*.js

@@ -30,9 +30,9 @@ async function migrateMuted() {
 }
 
 export default async function migrate(): Promise<void> {
-  await migrateMuted()
-
   addTableColumn('sphinx_chats', 'notify', 'BIGINT')
+
+  await migrateMuted()
 
   addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN')
 

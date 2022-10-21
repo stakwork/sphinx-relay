@@ -27,6 +27,10 @@ npx ava test-10-tribe3Msgs.js --verbose --serial --timeout=2m
 }));
 function tribe3Msgs(t, node1, node2, node3) {
     return __awaiter(this, void 0, void 0, function* () {
+        // if running "no-alice" version with local relay
+        const internalTribeHost = node1.ip.includes('host.docker.internal')
+            ? config_1.config.tribeHost
+            : config_1.config.tribeHostInternal;
         //THREE NODES SEND TEXT MESSAGES WITHIN A TRIBE ===>
         t.truthy(node3, 'this test requires three nodes');
         console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`);
@@ -76,12 +80,12 @@ function tribe3Msgs(t, node1, node2, node3) {
         //Here we are going to try and add a new channel to the tribe in tribe server
         const createChannelBody = {
             tribe_uuid: tribe.uuid,
-            host: config_1.config.tribeHostInternal,
+            host: internalTribeHost,
             name: 'testChannel',
         };
         const createChannelBody2 = {
             tribe_uuid: tribe.uuid,
-            host: config_1.config.tribeHostInternal,
+            host: internalTribeHost,
             name: 'testChannel2',
         };
         const tribeSeverAddChannelResponse = yield http.post(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, createChannelBody));
@@ -116,11 +120,11 @@ function tribe3Msgs(t, node1, node2, node3) {
         //delete channel
         const deleteChannel1Body = {
             id: channelTribe.channels[0].id,
-            host: config_1.config.tribeHostInternal,
+            host: internalTribeHost,
         };
         const deleteChannel2Body = {
             id: channelTribe.channels[1].id,
-            host: config_1.config.tribeHostInternal,
+            host: internalTribeHost,
         };
         yield http.del(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, deleteChannel1Body));
         yield http.del(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, deleteChannel2Body));

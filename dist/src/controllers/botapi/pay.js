@@ -15,31 +15,25 @@ const short = require("short-uuid");
 const jsonUtils = require("../../utils/json");
 const socket = require("../../utils/socket");
 const constants_1 = require("../../constants");
-const tribes_1 = require("../../utils/tribes");
 const logger_1 = require("../../utils/logger");
+const index_1 = require("./index");
 function pay(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, bot_name, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id, } = a;
+        const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a;
         logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
-        if (!recipient_id)
+        if (!a.recipient_id)
             return logger_1.sphinxLogger.error(`no recipient_id`);
-        if (!chat_uuid)
-            return logger_1.sphinxLogger.error(`no chat_uuid`);
-        const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
-        if (!(theChat && theChat.id))
-            return logger_1.sphinxLogger.error(`no chat`);
-        if (theChat.type !== constants_1.default.chat_types.tribe)
-            return logger_1.sphinxLogger.error(`not a tribe`);
-        const owner = (yield models_1.models.Contact.findOne({
-            where: { id: theChat.tenant },
-        }));
+        const ret = yield (0, index_1.validateAction)(a);
+        if (!ret)
+            return;
+        const { chat, owner } = ret;
         const tenant = owner.id;
         const alias = bot_name || owner.alias;
         const botContactId = -1;
         const date = new Date();
         date.setMilliseconds(0);
         const msg = {
-            chatId: theChat.id,
+            chatId: chat.id,
             uuid: msg_uuid || short.generate(),
             type: constants_1.default.message_types.boost,
             sender: botContactId,
@@ -57,10 +51,10 @@ function pay(a) {
         const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'boost',
-            response: jsonUtils.messageToJson(message, theChat, owner),
+            response: jsonUtils.messageToJson(message, chat, owner),
         }, tenant);
         yield network.sendMessage({
-            chat: theChat,
+            chat: chat,
             sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.owner }),
             message: {
                 content: '',

@@ -107,154 +107,157 @@ function onReceive(payload, dest) {
         const toAddIn = {};
         let isTribe = false;
         let isTribeOwner = false;
-        let chat;
+        let maybeChat;
         if (payload.chat && payload.chat.uuid) {
             isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
-            chat = yield models_1.models.Chat.findOne({
+            maybeChat = (yield models_1.models.Chat.findOne({
                 where: { uuid: payload.chat.uuid, tenant },
-            });
-            if (chat)
-                chat.update({ seen: false });
+            }));
+            if (maybeChat)
+                maybeChat.update({ seen: false });
         }
         if (isTribe) {
-            const tribeOwnerPubKey = chat && chat.ownerPubkey;
+            const tribeOwnerPubKey = maybeChat && maybeChat.ownerPubkey;
             isTribeOwner = owner.publicKey === tribeOwnerPubKey;
         }
-        if (isTribeOwner)
-            toAddIn.isTribeOwner = true;
         let forwardedFromContactId = 0;
-        if (isTribeOwner && exports.typesToForward.includes(payload.type)) {
-            const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
-            // CHECK THEY ARE IN THE GROUP if message
-            const senderContact = (yield models_1.models.Contact.findOne({
-                where: { publicKey: payload.sender.pub_key, tenant },
-            }));
-            // if (!senderContact) return console.log("=> no sender contact")
-            const senderContactId = senderContact && senderContact.id;
-            forwardedFromContactId = senderContactId;
-            if (needsPricePerMessage && senderContactId) {
-                const senderMember = yield models_1.models.ChatMember.findOne({
-                    where: { contactId: senderContactId, chatId: chat.id, tenant },
-                });
-                if (!senderMember)
-                    doAction = false;
-            }
-            // CHECK PRICES
-            if (needsPricePerMessage) {
-                if (payload.message.amount < chat.pricePerMessage) {
-                    doAction = false;
-                }
-                if (chat.escrowAmount && senderContactId) {
-                    timers.addTimer({
-                        // pay them back
-                        amount: chat.escrowAmount,
-                        millis: chat.escrowMillis,
-                        receiver: senderContactId,
-                        msgId: payload.message.id,
-                        chatId: chat.id,
-                        tenant,
-                    });
-                }
-            }
-            // check price to join AND private chat
-            if (payload.type === msgtypes.group_join) {
-                if (payload.message.amount < chat.priceToJoin) {
-                    doAction = false;
-                }
-                if (chat.private && senderContactId) {
-                    // check if has been approved
-                    const senderMember = (yield models_1.models.ChatMember.findOne({
+        if (isTribeOwner) {
+            toAddIn.isTribeOwner = true;
+            const chat = maybeChat;
+            if (exports.typesToForward.includes(payload.type)) {
+                const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
+                // CHECK THEY ARE IN THE GROUP if message
+                const senderContact = (yield models_1.models.Contact.findOne({
+                    where: { publicKey: payload.sender.pub_key, tenant },
+                }));
+                // if (!senderContact) return console.log("=> no sender contact")
+                const senderContactId = senderContact && senderContact.id;
+                forwardedFromContactId = senderContactId;
+                if (needsPricePerMessage && senderContactId) {
+                    const senderMember = yield models_1.models.ChatMember.findOne({
                         where: { contactId: senderContactId, chatId: chat.id, tenant },
-                    }));
-                    if (!(senderMember &&
-                        senderMember.status === constants_1.default.chat_statuses.approved)) {
-                        doAction = false; // dont let if private and not approved
+                    });
+                    if (!senderMember)
+                        doAction = false;
+                }
+                // CHECK PRICES
+                if (needsPricePerMessage) {
+                    if (payload.message.amount < chat.pricePerMessage) {
+                        doAction = false;
+                    }
+                    if (chat.escrowAmount && senderContactId) {
+                        timers.addTimer({
+                            // pay them back
+                            amount: chat.escrowAmount,
+                            millis: chat.escrowMillis,
+                            receiver: senderContactId,
+                            msgId: payload.message.id,
+                            chatId: chat.id,
+                            tenant,
+                        });
                     }
                 }
-            }
-            // check that the sender is the og poster
-            if (payload.type === msgtypes.delete && senderContactId) {
-                doAction = false;
-                if (payload.message.uuid) {
-                    const ogMsg = yield models_1.models.Message.findOne({
+                // check price to join AND private chat
+                if (payload.type === msgtypes.group_join) {
+                    if (payload.message.amount < chat.priceToJoin) {
+                        doAction = false;
+                    }
+                    if (chat.private && senderContactId) {
+                        // check if has been approved
+                        const senderMember = (yield models_1.models.ChatMember.findOne({
+                            where: { contactId: senderContactId, chatId: chat.id, tenant },
+                        }));
+                        if (!(senderMember &&
+                            senderMember.status === constants_1.default.chat_statuses.approved)) {
+                            doAction = false; // dont let if private and not approved
+                        }
+                    }
+                }
+                // check that the sender is the og poster
+                if (payload.type === msgtypes.delete && senderContactId) {
+                    doAction = false;
+                    if (payload.message.uuid) {
+                        const ogMsg = yield models_1.models.Message.findOne({
+                            where: {
+                                uuid: payload.message.uuid,
+                                sender: senderContactId,
+                                tenant,
+                            },
+                        });
+                        if (ogMsg)
+                            doAction = true;
+                    }
+                }
+                // forward boost sats to recipient
+                let realSatsContactId = undefined;
+                let amtToForward = 0;
+                const boostOrPay = payload.type === msgtypes.boost ||
+                    payload.type === msgtypes.direct_payment;
+                if (boostOrPay && payload.message.replyUuid) {
+                    const ogMsg = (yield models_1.models.Message.findOne({
                         where: {
-                            uuid: payload.message.uuid,
-                            sender: senderContactId,
+                            uuid: payload.message.replyUuid,
                             tenant,
                         },
-                    });
-                    if (ogMsg)
-                        doAction = true;
-                }
-            }
-            // forward boost sats to recipient
-            let realSatsContactId = undefined;
-            let amtToForward = 0;
-            const boostOrPay = payload.type === msgtypes.boost ||
-                payload.type === msgtypes.direct_payment;
-            if (boostOrPay && payload.message.replyUuid) {
-                const ogMsg = (yield models_1.models.Message.findOne({
-                    where: {
-                        uuid: payload.message.replyUuid,
-                        tenant,
-                    },
-                }));
-                if (ogMsg && ogMsg.sender) {
-                    // even include "me"
-                    const theAmtToForward = payload.message.amount -
-                        (chat.pricePerMessage || 0) -
-                        (chat.escrowAmount || 0);
-                    if (theAmtToForward > 0) {
-                        realSatsContactId = ogMsg.sender; // recipient of sats
-                        amtToForward = theAmtToForward;
-                        toAddIn.hasForwardedSats = ogMsg.sender !== tenant;
-                        if (amtToForward && payload.message && payload.message.amount) {
-                            payload.message.amount = amtToForward; // mutate the payload amount
-                            if (payload.type === msgtypes.direct_payment) {
-                                // remove the reply_uuid since its not actually a reply
-                                payload.message.replyUuid = undefined;
+                    }));
+                    if (ogMsg && ogMsg.sender) {
+                        // even include "me"
+                        const theAmtToForward = payload.message.amount -
+                            (chat.pricePerMessage || 0) -
+                            (chat.escrowAmount || 0);
+                        if (theAmtToForward > 0) {
+                            realSatsContactId = ogMsg.sender; // recipient of sats
+                            amtToForward = theAmtToForward;
+                            toAddIn.hasForwardedSats = ogMsg.sender !== tenant;
+                            if (amtToForward && payload.message && payload.message.amount) {
+                                payload.message.amount = amtToForward; // mutate the payload amount
+                                if (payload.type === msgtypes.direct_payment) {
+                                    // remove the reply_uuid since its not actually a reply
+                                    payload.message.replyUuid = undefined;
+                                }
                             }
                         }
                     }
                 }
+                // make sure alias is unique among chat members
+                payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
+                if (doAction)
+                    forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner, forwardedFromContactId);
+                else
+                    logger_1.sphinxLogger.error(`=> insufficient payment for this action`);
             }
-            // make sure alias is unique among chat members
-            payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
-            if (doAction)
-                forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner, forwardedFromContactId);
-            else
-                logger_1.sphinxLogger.error(`=> insufficient payment for this action`);
-        }
-        if (isTribeOwner && payload.type === msgtypes.purchase) {
-            const mt = payload.message.mediaToken;
-            const host = mt && mt.split('.').length && mt.split('.')[0];
-            const muid = mt && mt.split('.').length && mt.split('.')[1];
-            const myAttachmentMessage = yield models_1.models.Message.findOne({
-                where: {
-                    mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
-                    type: msgtypes.attachment,
-                    sender: tenant,
-                    tenant,
-                },
-            });
-            if (!myAttachmentMessage) {
-                // someone else's attachment
-                const senderContact = (yield models_1.models.Contact.findOne({
-                    where: { publicKey: payload.sender.pub_key, tenant },
-                }));
-                (0, modify_1.purchaseFromOriginalSender)(payload, chat, senderContact, owner);
-                doAction = false;
+            if (payload.type === msgtypes.purchase) {
+                const chat = maybeChat;
+                const mt = payload.message.mediaToken;
+                const host = mt && mt.split('.').length && mt.split('.')[0];
+                const muid = mt && mt.split('.').length && mt.split('.')[1];
+                const myAttachmentMessage = yield models_1.models.Message.findOne({
+                    where: {
+                        mediaToken: { [sequelize_1.Op.like]: `${host}.${muid}%` },
+                        type: msgtypes.attachment,
+                        sender: tenant,
+                        tenant,
+                    },
+                });
+                if (!myAttachmentMessage) {
+                    // someone else's attachment
+                    const senderContact = (yield models_1.models.Contact.findOne({
+                        where: { publicKey: payload.sender.pub_key, tenant },
+                    }));
+                    (0, modify_1.purchaseFromOriginalSender)(payload, chat, senderContact, owner);
+                    doAction = false;
+                }
             }
-        }
-        if (isTribeOwner && payload.type === msgtypes.purchase_accept) {
-            const purchaserID = payload.message && payload.message.purchaser;
-            const iAmPurchaser = purchaserID && purchaserID === tenant;
-            if (!iAmPurchaser) {
-                const senderContact = (yield models_1.models.Contact.findOne({
-                    where: { publicKey: payload.sender.pub_key, tenant },
-                }));
-                (0, modify_1.sendFinalMemeIfFirstPurchaser)(payload, chat, senderContact, owner);
-                doAction = false; // skip this! we dont need it
+            if (payload.type === msgtypes.purchase_accept) {
+                const purchaserID = payload.message && payload.message.purchaser;
+                const iAmPurchaser = purchaserID && purchaserID === tenant;
+                if (!iAmPurchaser) {
+                    const senderContact = (yield models_1.models.Contact.findOne({
+                        where: { publicKey: payload.sender.pub_key, tenant },
+                    }));
+                    (0, modify_1.sendFinalMemeIfFirstPurchaser)(payload, chat, senderContact, owner);
+                    doAction = false; // skip this! we dont need it
+                }
             }
         }
         if (doAction)
@@ -275,7 +278,11 @@ function doTheAction(data, owner) {
                 where: { uuid: payload.chat.uuid, tenant: owner.id },
             }));
             const pld = yield (0, msg_1.decryptMessage)(data, chat);
+            const mentioned = yield (0, send_1.detectMentionsForTribeAdminSelf)(pld, owner.alias, chat.myAlias);
+            if (mentioned)
+                pld.message.push = true;
             const me = owner;
+            // encrypt for myself
             const encrypted = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
             payload = encrypted;
             if (ogContent)
@@ -318,16 +325,19 @@ function uniqueifyAlias(payload, sender, chat, owner) {
                 final_sender_alias = `${sender_alias}_2`;
             }
         });
-        if (sender_alias !== final_sender_alias) {
-            yield models_1.models.ChatMember.update(
-            // this syntax is necessary when no unique ID on the Model
-            { lastAlias: final_sender_alias }, {
-                where: {
-                    chatId: chat.id,
-                    contactId: senderContactId,
-                    tenant: owner.id,
-                },
-            });
+        const ww = { chatId: chat.id, contactId: senderContactId, tenant: owner.id };
+        const oldMember = (yield models_1.models.ChatMember.findOne({
+            where: ww,
+        }));
+        if (oldMember) {
+            if (oldMember.lastAlias !== final_sender_alias) {
+                yield models_1.models.ChatMember.update(
+                // this syntax is necessary when no unique ID on the Model
+                { lastAlias: final_sender_alias }, { where: ww });
+            }
+        }
+        else {
+            logger_1.sphinxLogger.warning('member not found in uniquifyAlias');
         }
         payload.sender.alias = final_sender_alias;
         return payload;

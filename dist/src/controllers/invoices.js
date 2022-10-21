@@ -168,7 +168,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
                 const timestamp = parseInt(invoice.timestamp + '000');
                 const expiry = parseInt(invoice.timeExpireDate + '000');
-                const message = (yield models_1.models.Message.create({
+                const msg = {
                     chatId: chat.id,
                     uuid: short.generate(),
                     sender: owner.id,
@@ -178,14 +178,17 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     paymentHash: paymentHash,
                     paymentRequest: payment_request,
                     date: new Date(timestamp),
-                    expirationDate: new Date(expiry),
                     messageContent: memo,
                     remoteMessageContent: remote_memo,
                     status: constants_1.default.statuses.pending,
                     createdAt: new Date(timestamp),
                     updatedAt: new Date(timestamp),
                     tenant,
-                }));
+                };
+                if (invoice.timeExpireDate) {
+                    msg.expirationDate = new Date(expiry);
+                }
+                const message = (yield models_1.models.Message.create(msg));
                 (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
                 network.sendMessage({
                     chat: chat,

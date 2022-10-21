@@ -104,7 +104,7 @@ function hmacMiddleware(req, res, next) {
         }
         const message = `${req.method}|${req.originalUrl}|${req.rawBody || ''}`;
         const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey);
-        console.log('valid sig!', valid);
+        // console.log('valid sig!', valid)
         if (!valid) {
             return (0, res_1.unauthorized)(res);
         }

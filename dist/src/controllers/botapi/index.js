@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.finalAction = exports.processAction = exports.processWebhook = void 0;
+exports.validateAction = exports.finalAction = exports.processAction = exports.processWebhook = void 0;
 const network = require("../../network");
 const models_1 = require("../../models");
 const res_1 = require("../../utils/res");
@@ -17,6 +17,7 @@ const constants_1 = require("../../constants");
 const tribes_1 = require("../../utils/tribes");
 const broadcast_1 = require("./broadcast");
 const pay_1 = require("./pay");
+const dm_1 = require("./dm");
 const logger_1 = require("../../utils/logger");
 const hmac = require("../../crypto/hmac");
 const git_1 = require("../../builtin/git");
@@ -138,8 +139,17 @@ function processAction(req, res) {
         const bot = (yield models_1.models.Bot.findOne({ where: { id: bot_id } }));
         if (!bot)
             return (0, res_1.failure)(res, 'no bot');
-        if (!(bot.secret && bot.secret === bot_secret)) {
-            return (0, res_1.failure)(res, 'wrong secret');
+        if (bot_secret) {
+            if (!(bot.secret && bot.secret === bot_secret)) {
+                return (0, res_1.failure)(res, 'wrong secret');
+            }
+        }
+        else {
+            const sig = req.headers['x-hub-signature-256'];
+            const valid = hmac.verifyHmac(sig, req.rawBody, bot.secret);
+            if (!valid) {
+                return (0, res_1.failure)(res, 'invalid HMAC');
+            }
         }
         if (!action) {
             return (0, res_1.failure)(res, 'no action');
@@ -241,22 +251,7 @@ function finalAction(a) {
             return; // done
         }
         if (action === 'keysend') {
-            return logger_1.sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`);
-            // if (!(pubkey && pubkey.length === 66 && amount)) {
-            //     throw 'wrong params'
-            // }
-            // const destkey = pubkey
-            // const opts = {
-            //     dest: destkey,
-            //     data: {},
-            //     amt: Math.max((amount || 0), constants.min_sat_amount)
-            // }
-            // try {
-            //     await network.signAndSend(opts, ownerPubkey)
-            //     return ({ success: true })
-            // } catch (e) {
-            //     throw e
-            // }
+            logger_1.sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`);
         }
         else if (action === 'pay') {
             (0, pay_1.default)(a);
@@ -264,10 +259,29 @@ function finalAction(a) {
         else if (action === 'broadcast') {
             (0, broadcast_1.default)(a);
         }
+        else if (action === 'dm') {
+            (0, dm_1.default)(a);
+        }
         else {
-            return logger_1.sphinxLogger.error(`invalid action`);
+            logger_1.sphinxLogger.error(`invalid action`);
         }
     });
 }
 exports.finalAction = finalAction;
+function validateAction(a) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!a.chat_uuid)
+            return logger_1.sphinxLogger.error(`no chat_uuid`);
+        const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(a.chat_uuid);
+        if (!(theChat && theChat.id))
+            return logger_1.sphinxLogger.error(`no chat`);
+        if (theChat.type !== constants_1.default.chat_types.tribe)
+            return logger_1.sphinxLogger.error(`not a tribe`);
+        const owner = (yield models_1.models.Contact.findOne({
+            where: { id: theChat.tenant },
+        }));
+        return { chat: theChat, owner };
+    });
+}
+exports.validateAction = validateAction;
 //# sourceMappingURL=index.js.map

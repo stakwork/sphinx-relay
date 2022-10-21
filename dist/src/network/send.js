@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.newmsg = exports.signAndSend = exports.sendMessage = void 0;
+exports.detectMentionsForTribeAdminSelf = exports.newmsg = exports.signAndSend = exports.sendMessage = void 0;
 const models_1 = require("../models");
 const LND = require("../grpc/lightning");
 const msg_1 = require("../utils/msg");
@@ -282,16 +282,21 @@ function detectMentions(msg, isForwarded, chatId, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         const content = msg.message.content;
         if (content) {
-            const words = content.split(' ');
-            if (words.includes('@all') && !isForwarded)
+            const mentions = parseMentions(content);
+            if (mentions.includes('@all') && !isForwarded)
                 return [Infinity];
             const ret = [];
-            const mentions = words.filter((w) => w.startsWith('@'));
+            const allMembers = (yield models_1.models.ChatMember.findAll({
+                where: { tenant, chatId },
+            }));
             yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
                 const lastAlias = men.substring(1);
-                const member = (yield models_1.models.ChatMember.findOne({
-                    where: { lastAlias, tenant, chatId },
-                }));
+                // check chat memberss
+                const member = allMembers.find((m) => {
+                    if (m.lastAlias && lastAlias) {
+                        return compareAliases(m.lastAlias, lastAlias);
+                    }
+                });
                 if (member) {
                     ret.push(member.contactId);
                 }
@@ -302,5 +307,53 @@ function detectMentions(msg, isForwarded, chatId, tenant) {
             return [];
         }
     });
+}
+function parseMentions(content) {
+    const words = content.split(' ');
+    return words.filter((w) => w.startsWith('@'));
+}
+function detectMentionsForTribeAdminSelf(msg, mainAlias, aliasInChat) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const content = msg.message.content;
+        if (!content)
+            return false;
+        const mentions = parseMentions(content);
+        if (mentions.includes('@all'))
+            return true;
+        let ret = false;
+        yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
+            const lastAlias = men.substring(1);
+            if (lastAlias) {
+                if (aliasInChat) {
+                    // admin's own alias for tribe
+                    if (compareAliases(aliasInChat, lastAlias)) {
+                        ret = true;
+                    }
+                }
+                else if (mainAlias) {
+                    // or owner's default alias
+                    if (compareAliases(mainAlias, lastAlias)) {
+                        ret = true;
+                    }
+                }
+            }
+        }));
+        return ret;
+    });
+}
+exports.detectMentionsForTribeAdminSelf = detectMentionsForTribeAdminSelf;
+// alias1 can have spaces, so remove them
+// then comparse to lower case
+function compareAliases(alias1, alias2) {
+    const pieces = alias1.split(' ');
+    let match = false;
+    pieces.forEach((p) => {
+        if (p && alias2) {
+            if (p.toLowerCase() === alias2.toLowerCase()) {
+                match = true;
+            }
+        }
+    });
+    return match;
 }
 //# sourceMappingURL=send.js.map
