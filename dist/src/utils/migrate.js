@@ -206,6 +206,8 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
         }
+        // Add status column to sphinx_lsats
+        addTableColumn('sphinx_lsats', 'status', 'INT');
         // add RequestTransportToken table
         try {
             logger_1.sphinxLogger.info('adding requestsTransportTokens table', logger_1.logging.DB);

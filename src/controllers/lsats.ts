@@ -4,6 +4,7 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import { Response, Request } from 'express'
+import constants from '../constants'
 
 export interface LsatRequestBody {
   paymentRequest: string
@@ -128,7 +129,6 @@ export async function saveLsat(
 
   try {
     lsat.setPreimage(preimage)
-
     await models.Lsat.create({
       macaroon,
       identifier,
@@ -138,6 +138,7 @@ export async function saveLsat(
       paths,
       metadata,
       tenant,
+      status: 1, // lsat are by default active
     })
 
     return success(res, { lsat: lsat.toToken() })
@@ -171,6 +172,28 @@ export async function getLsat(
   }
 }
 
+export async function getActiveLsat(
+  req: RelayRequest,
+  res: Response
+): Promise<void | Response> {
+  const tenant = req.owner.id
+  sphinxLogger.info(`=> getActiveLsat`, logging.Express)
+  try {
+    const lsat: LsatT = (await models.Lsat.findOne({
+      where: { tenant, status: 1 },
+    })) as LsatT
+    if (!lsat) {
+      return res
+        .status(404)
+        .json({ success: false, error: 'No Active LSAT found' })
+    } else {
+      return success(res, lsat)
+    }
+  } catch (e) {
+    return failure(res, `could not retrieve active lsat`)
+  }
+}
+
 export async function listLsats(
   req: RelayRequest,
   res: Response
@@ -198,9 +221,18 @@ export async function updateLsat(
   const body = req.body
   sphinxLogger.info(`=> updateLsat ${identifier}`, logging.Express)
   try {
-    await models.Lsat.update(body, {
-      where: { tenant, identifier },
-    })
+    if (body.status === 'expired') {
+      await models.Lsat.update(
+        { ...body, status: constants.lsat_statuses.expired },
+        {
+          where: { tenant, identifier },
+        }
+      )
+    } else {
+      await models.Lsat.update(body, {
+        where: { tenant, identifier },
+      })
+    }
     return success(res, 'lsat successfully updated')
   } catch (e) {
     return failure(res, `could not update lsat: ${e.message}`)
