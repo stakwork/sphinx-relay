@@ -43,5 +43,5 @@ hsm_secret
 
 src/tests/configs/*
 src/tests/configs/nodes.json
-.idea
-coverage
+.idea/
+coverage/
