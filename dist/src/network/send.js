@@ -263,7 +263,7 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
     };
     const personId = people.getPersonId();
     if (personId) {
-        result.sender.person = config.people_host + ':' + personId;
+        result.sender.person = config.people_host + '/' + personId;
         console.log("[+] person host full url ", result.sender.person);
         return result;
     }
