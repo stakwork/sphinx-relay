@@ -3,12 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.decodePaymentRequest = void 0;
 const decodeUtils = require("./decode");
 function decodePaymentRequest(paymentRequest) {
-    var decodedPaymentRequest = decodeUtils.decode(paymentRequest);
-    var expirationSeconds = 3600;
-    var paymentHash = '';
-    var memo = '';
-    for (var i = 0; i < decodedPaymentRequest.data.tags.length; i++) {
-        let tag = decodedPaymentRequest.data.tags[i];
+    const decodedPaymentRequest = decodeUtils.decode(paymentRequest);
+    let expirationSeconds = 3600;
+    let paymentHash = '';
+    let memo = '';
+    for (let i = 0; i < decodedPaymentRequest.data.tags.length; i++) {
+        const tag = decodedPaymentRequest.data.tags[i];
         if (tag) {
             if (tag.description == 'payment_hash') {
                 paymentHash = tag.value;
@@ -22,10 +22,10 @@ function decodePaymentRequest(paymentRequest) {
         }
     }
     expirationSeconds = parseInt(expirationSeconds.toString() + '000');
-    let invoiceDate = parseInt(decodedPaymentRequest.data.time_stamp.toString() + '000');
-    let amount = decodedPaymentRequest['human_readable_part']['amount'];
-    var msat = 0;
-    var sat = 0;
+    const invoiceDate = parseInt(decodedPaymentRequest.data.time_stamp.toString() + '000');
+    const amount = decodedPaymentRequest['human_readable_part']['amount'];
+    let msat = 0;
+    let sat = 0;
     if (Number.isInteger(amount)) {
         msat = amount;
         sat = amount / 1000;

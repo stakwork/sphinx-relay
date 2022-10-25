@@ -14,7 +14,7 @@ export default async function pay(a: Action): Promise<void> {
   if (!a.recipient_id) return sphinxLogger.error(`no recipient_id`)
   const ret = await validateAction(a)
   if (!ret) return
-  let { chat, owner } = ret
+  const { chat, owner } = ret
   const tenant: number = owner.id
   const alias = bot_name || owner.alias
   const botContactId = -1
