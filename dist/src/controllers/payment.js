@@ -182,7 +182,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner);
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receivePayment = receivePayment;

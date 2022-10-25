@@ -18,6 +18,9 @@ import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
 
+// force UTC time
+process.env.TZ = 'UTC'
+
 const env = process.env.NODE_ENV || 'development'
 const config = loadConfig()
 const port = process.env.PORT || config.node_http_port || 3001
