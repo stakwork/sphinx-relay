@@ -774,7 +774,8 @@ export async function createTribeChatParams(
   feed_url,
   feed_type,
   tenant,
-  pin
+  pin,
+  profile_filters
 ): Promise<{ [k: string]: any }> {
   const date = new Date()
   date.setMilliseconds(0)
@@ -811,6 +812,7 @@ export async function createTribeChatParams(
     feedType: feed_type || 0,
     tenant,
     pin: pin || '',
+    profileFilters: profile_filters,
   }
 }
 

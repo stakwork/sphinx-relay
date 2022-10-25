@@ -316,6 +316,7 @@ export interface TribeInterface {
   deleted?: boolean
   owner_route_hint: string
   pin: string
+  profile_filters?: string
 }
 
 export async function declare({
@@ -339,6 +340,7 @@ export async function declare({
   feed_type,
   owner_route_hint,
   pin,
+  profile_filters
 }: TribeInterface): Promise<void> {
   try {
     let protocol = 'https'
@@ -365,6 +367,7 @@ export async function declare({
         feed_type: feed_type || 0,
         owner_route_hint: owner_route_hint || '',
         pin: pin || '',
+        profile_filters
       }),
       headers: { 'Content-Type': 'application/json' },
     })

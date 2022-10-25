@@ -683,7 +683,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin, profile_filters) {
     return __awaiter(this, void 0, void 0, function* () {
         const date = new Date();
         date.setMilliseconds(0);
@@ -719,6 +719,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             feedType: feed_type || 0,
             tenant,
             pin: pin || '',
+            profileFilters: profile_filters,
         };
     });
 }

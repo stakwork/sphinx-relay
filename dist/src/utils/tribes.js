@@ -300,7 +300,7 @@ function publish(topic, msg, ownerPubkey, cb) {
     });
 }
 exports.publish = publish;
-function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin, }) {
+function declare({ uuid, name, description, tags, img, group_key, host, price_per_message, price_to_join, owner_alias, owner_pubkey, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, owner_route_hint, pin, profile_filters }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let protocol = 'https';
@@ -328,6 +328,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
                     feed_type: feed_type || 0,
                     owner_route_hint: owner_route_hint || '',
                     pin: pin || '',
+                    profile_filters
                 }),
                 headers: { 'Content-Type': 'application/json' },
             });

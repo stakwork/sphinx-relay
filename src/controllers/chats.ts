@@ -241,6 +241,13 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
     feed_type,
     pin,
   } = req.body
+
+  let { profile_filters } = req.body
+  if (!Array.isArray(profile_filters)) {
+    return failure(res, 'invalid profile filters')
+  }
+
+  profile_filters = profile_filters.join(',')
   const contact_ids: number[] = req.body.contact_ids || []
 
   const members: { [k: string]: ChatMemberNetwork } = {} //{pubkey:{key,alias}, ...}
@@ -278,7 +285,8 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
       feed_url,
       feed_type,
       tenant,
-      pin
+      pin,
+      profile_filters
     )) as Chat
     if (chatParams.uuid) {
       // publish to tribe server
@@ -304,6 +312,7 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
           feed_type,
           owner_route_hint: owner.routeHint || '',
           pin: pin || '',
+          profile_filters,
         })
       } catch (e) {
         sphinxLogger.error(`=> couldnt create tribe ${e}`)
