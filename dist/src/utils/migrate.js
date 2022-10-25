@@ -46,6 +46,7 @@ function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
         addTableColumn('sphinx_chats', 'notify', 'BIGINT');
         yield migrateMuted();
+        addTableColumn('sphinx_messages', 'push', 'BOOLEAN');
         addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN');
         addTableColumn('sphinx_messages', 'recipient_alias');
         addTableColumn('sphinx_messages', 'recipient_pic');

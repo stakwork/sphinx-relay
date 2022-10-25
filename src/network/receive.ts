@@ -97,7 +97,21 @@ async function onReceive(payload: Payload, dest: string) {
   if (!owner) return sphinxLogger.error(`=> RECEIVE: owner not found`)
   const tenant: number = owner.id
 
+  // if tribe, owner must forward to MQTT
+  let doAction = true
+  const toAddIn: AdminPayload = {}
+  let isTribe = false
+  let isTribeOwner = false
   const ownerDataValues: Contact = owner.dataValues || owner
+
+  let maybeChat: ChatRecord | undefined
+  if (payload.chat && payload.chat.uuid) {
+    isTribe = payload.chat.type === constants.chat_types.tribe
+    maybeChat = (await models.Chat.findOne({
+      where: { uuid: payload.chat.uuid, tenant },
+    })) as ChatRecord
+    if (maybeChat) maybeChat.update({ seen: false })
+  }
 
   if (botTypes.includes(payload.type)) {
     // if is admin on tribe? or is bot maker?
@@ -109,20 +123,7 @@ async function onReceive(payload: Payload, dest: string) {
     payload.owner = ownerDataValues
     return ACTIONS[payload.type](payload)
   }
-  // if tribe, owner must forward to MQTT
-  let doAction = true
-  const toAddIn: AdminPayload = {}
-  let isTribe = false
-  let isTribeOwner = false
-  let maybeChat: ChatRecord | undefined
 
-  if (payload.chat && payload.chat.uuid) {
-    isTribe = payload.chat.type === constants.chat_types.tribe
-    maybeChat = (await models.Chat.findOne({
-      where: { uuid: payload.chat.uuid, tenant },
-    })) as ChatRecord
-    if (maybeChat) maybeChat.update({ seen: false })
-  }
   if (isTribe) {
     const tribeOwnerPubKey = maybeChat && maybeChat.ownerPubkey
     isTribeOwner = owner.publicKey === tribeOwnerPubKey
@@ -597,7 +598,7 @@ export async function parseKeysendInvoice(
   }
   if (isKeysendType) {
     if (!memo) {
-      sendNotification({}, '', 'keysend', owner, value || 0)
+      sendNotification(new Chat(), '', 'keysend', owner, value || 0)
     }
     saveAnonymousKeysend(i, memo, sender_pubkey, owner.id)
     return
