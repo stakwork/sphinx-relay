@@ -37,15 +37,19 @@ export async function saveActionBulk(req: Req, res: Response) {
   if (data.length === 0)
     return failure(res, 'Please provide an array with contents')
   const insertAction = async (value: ReqBody) => {
-    try {
-      await models.ActionHistory.create({
-        tenant,
-        metaData: JSON.stringify(value.meta_data),
-        type: value.type,
-      })
-    } catch (error) {
-      console.log(error)
-      throw error
+    if (value.type && value.meta_data) {
+      try {
+        await models.ActionHistory.create({
+          tenant,
+          metaData: JSON.stringify(value.meta_data),
+          type: value.type,
+        })
+      } catch (error) {
+        console.log(error)
+        throw error
+      }
+    } else {
+      throw 'Please provide valid data'
     }
   }
   try {
@@ -53,6 +57,6 @@ export async function saveActionBulk(req: Req, res: Response) {
     return success(res, 'Data saved successfully')
   } catch (error) {
     console.log(error)
-    return failure(res, 'An error occured')
+    return failure(res, error)
   }
 }

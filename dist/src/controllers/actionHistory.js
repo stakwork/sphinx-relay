@@ -49,16 +49,21 @@ function saveActionBulk(req, res) {
         if (data.length === 0)
             return (0, res_1.failure)(res, 'Please provide an array with contents');
         const insertAction = (value) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield models_1.models.ActionHistory.create({
-                    tenant,
-                    metaData: JSON.stringify(value.meta_data),
-                    type: value.type,
-                });
+            if (value.type && value.meta_data) {
+                try {
+                    yield models_1.models.ActionHistory.create({
+                        tenant,
+                        metaData: JSON.stringify(value.meta_data),
+                        type: value.type,
+                    });
+                }
+                catch (error) {
+                    console.log(error);
+                    throw error;
+                }
             }
-            catch (error) {
-                console.log(error);
-                throw error;
+            else {
+                throw 'Please provide valid data';
             }
         });
         try {
@@ -67,7 +72,7 @@ function saveActionBulk(req, res) {
         }
         catch (error) {
             console.log(error);
-            return (0, res_1.failure)(res, 'An error occured');
+            return (0, res_1.failure)(res, error);
         }
     });
 }
