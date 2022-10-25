@@ -33,7 +33,7 @@ function saveAction(req, res) {
         }
         catch (error) {
             console.log(error);
-            return;
+            return (0, res_1.failure)(res, 'sorry an error occured');
         }
     });
 }
