@@ -14,13 +14,16 @@ const http = require("ava-http");
 const helpers_1 = require("../utils/helpers");
 const config_1 = require("../config");
 const nodes_1 = require("../nodes");
-ava_1.default.serial('test-42-sphinxPeople: Sphinx People testing', (t) => __awaiter(void 0, void 0, void 0, function* () {
+ava_1.default.serial('sphinxPeople: Sphinx People testing', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield sphinxPeople(t, nodes_1.default[0]);
 }));
-const internalTribeHost = config_1.config.tribeHostInternal;
 function sphinxPeople(t, node1) {
     return __awaiter(this, void 0, void 0, function* () {
         //TESTING FOR SPHINX PEOPLE PAGE ===>
+        // if running "no-alice" version with local relay
+        const internalTribeHost = node1.ip.includes('host.docker.internal')
+            ? config_1.config.tribeHost
+            : config_1.config.tribeHostInternal;
         console.log(node1.alias);
         //GET CHALLENGE FROM PEOPLE PAGE
         const ask = yield http.get('http://' + config_1.config.tribeHost + '/ask');
@@ -93,18 +96,20 @@ function sphinxPeople(t, node1) {
         t.true(person2.price_to_meet === newPriceToMeet, 'tribes server should reset price to meet to newPriceToMeet');
         t.true(person2.price_to_meet === self2.price_to_meet, 'Relay server should reset price to meet to newPriceToMeet');
         //TRY TO UPDATE AND RESET PRICE_TO_MEET WITH RANDOM ID
-        try {
-            yield http.post(node1.external_ip + `/profile`, (0, helpers_1.makeJwtArgs)(poll.jwt, {
-                id: 321,
-                host: internalTribeHost,
-                owner_alias: node1.alias,
-                description: 'this description',
-                img: poll.photo_url,
-                tags: [],
-                price_to_meet: newPriceToMeet,
-            }));
-        }
-        catch (e) { }
+        // try {
+        //   await http.post(
+        //     node1.external_ip + `/profile`,
+        //     makeJwtArgs(poll.jwt, {
+        //       id: 321,
+        //       host: internalTribeHost,
+        //       owner_alias: node1.alias,
+        //       description: 'this description',
+        //       img: poll.photo_url,
+        //       tags: [],
+        //       price_to_meet: newPriceToMeet,
+        //     })
+        //   )
+        // } catch (e) {}
         //DELETE PERSON PROFILE AT END OF TEST
         const del = yield http.del(node1.external_ip + '/profile', (0, helpers_1.makeArgs)(node1, { id: person2.id, host: internalTribeHost }));
         t.true(del.success, 'profile should be deleted');

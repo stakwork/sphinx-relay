@@ -66,6 +66,9 @@ export default class Lsat extends Model<Lsat> {
   })
   metadata: string
 
+  @Column({ type: DataType.INTEGER })
+  status: number
+
   @Column
   tenant: number
 }

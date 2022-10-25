@@ -230,6 +230,9 @@ export default async function migrate(): Promise<void> {
     // sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
   }
 
+  // Add status column to sphinx_lsats
+  addTableColumn('sphinx_lsats', 'status', 'INT')
+
   // add RequestTransportToken table
   try {
     sphinxLogger.info('adding requestsTransportTokens table', logging.DB)

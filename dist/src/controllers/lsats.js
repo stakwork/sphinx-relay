@@ -9,12 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteLsat = exports.updateLsat = exports.listLsats = exports.getLsat = exports.saveLsat = exports.payForLsat = void 0;
+exports.deleteLsat = exports.updateLsat = exports.listLsats = exports.getActiveLsat = exports.getLsat = exports.saveLsat = exports.payForLsat = void 0;
 const lsat_js_1 = require("lsat-js");
 const models_1 = require("../models");
 const logger_1 = require("../utils/logger");
 const res_1 = require("../utils/res");
 const Lightning = require("../grpc/lightning");
+const constants_1 = require("../constants");
 /*
 interface LsatResponse {
   paymentRequest: string
@@ -105,6 +106,7 @@ function saveLsat(req, res) {
                 paths,
                 metadata,
                 tenant,
+                status: 1, // lsat are by default active
             });
             return (0, res_1.success)(res, { lsat: lsat.toToken() });
         }
@@ -137,6 +139,29 @@ function getLsat(req, res) {
     });
 }
 exports.getLsat = getLsat;
+function getActiveLsat(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tenant = req.owner.id;
+        logger_1.sphinxLogger.info(`=> getActiveLsat`, logger_1.logging.Express);
+        try {
+            const lsat = (yield models_1.models.Lsat.findOne({
+                where: { tenant, status: 1 },
+            }));
+            if (!lsat) {
+                return res
+                    .status(404)
+                    .json({ success: false, error: 'No Active LSAT found' });
+            }
+            else {
+                return (0, res_1.success)(res, lsat);
+            }
+        }
+        catch (e) {
+            return (0, res_1.failure)(res, `could not retrieve active lsat`);
+        }
+    });
+}
+exports.getActiveLsat = getActiveLsat;
 function listLsats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = req.owner.id;
@@ -161,9 +186,16 @@ function updateLsat(req, res) {
         const body = req.body;
         logger_1.sphinxLogger.info(`=> updateLsat ${identifier}`, logger_1.logging.Express);
         try {
-            yield models_1.models.Lsat.update(body, {
-                where: { tenant, identifier },
-            });
+            if (body.status === 'expired') {
+                yield models_1.models.Lsat.update(Object.assign(Object.assign({}, body), { status: constants_1.default.lsat_statuses.expired }), {
+                    where: { tenant, identifier },
+                });
+            }
+            else {
+                yield models_1.models.Lsat.update(body, {
+                    where: { tenant, identifier },
+                });
+            }
             return (0, res_1.success)(res, 'lsat successfully updated');
         }
         catch (e) {
