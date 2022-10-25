@@ -219,10 +219,14 @@ function createGroupChat(req, res) {
         const tenant = req.owner.id;
         const { name, is_tribe, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, } = req.body;
         let { profile_filters } = req.body;
-        if (!Array.isArray(profile_filters)) {
-            return (0, res_1.failure)(res, 'invalid profile filters');
+        if (profile_filters) {
+            if (!Array.isArray(profile_filters)) {
+                return (0, res_1.failure)(res, 'invalid profile filters');
+            }
+            else {
+                profile_filters = profile_filters.join(',');
+            }
         }
-        profile_filters = profile_filters.join(',');
         const contact_ids = req.body.contact_ids || [];
         const members = {}; //{pubkey:{key,alias}, ...}
         const owner = req.owner;
@@ -242,7 +246,7 @@ function createGroupChat(req, res) {
         let chatParams;
         let okToCreate = true;
         if (is_tribe) {
-            chatParams = (yield (0, chatTribes_1.createTribeChatParams)(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url, feed_type, tenant, pin, profile_filters));
+            chatParams = (yield (0, chatTribes_1.createTribeChatParams)(owner, contact_ids, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, req.body.private, app_url, feed_url, feed_type, tenant, pin, profile_filters || ''));
             if (chatParams.uuid) {
                 // publish to tribe server
                 try {
@@ -267,7 +271,7 @@ function createGroupChat(req, res) {
                         feed_type,
                         owner_route_hint: owner.routeHint || '',
                         pin: pin || '',
-                        profile_filters,
+                        profile_filters: profile_filters || '',
                     });
                 }
                 catch (e) {
