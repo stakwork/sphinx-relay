@@ -25,7 +25,7 @@ export async function saveAction(req: Req, res: Response) {
     return success(res, 'Action saved successfully')
   } catch (error) {
     console.log(error)
-    return
+    return failure(res, 'sorry an error occured')
   }
 }
 
