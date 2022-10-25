@@ -9,10 +9,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const helpers_1 = require("../helpers");
 const models_1 = require("../models");
 const logger_1 = require("./logger");
+const constants_1 = require("../constants");
+function migrateMuted() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const chats = (yield models_1.models.Chat.findAll());
+            let mig = false;
+            chats.forEach((c) => {
+                if (c.notify === null) {
+                    mig = true;
+                }
+            });
+            if (!mig)
+                return;
+            console.log('===========> migrate is_muted to notify!');
+            yield (0, helpers_1.asyncForEach)(chats, (c) => __awaiter(this, void 0, void 0, function* () {
+                if (c.notify === null) {
+                    yield c.update({
+                        notify: c.isMuted
+                            ? constants_1.default.notify_levels.mute
+                            : constants_1.default.notify_levels.all,
+                    });
+                }
+            }));
+            console.log('===========> finished migrating is_muted to notify!');
+        }
+        catch (e) {
+            console.log('error migrating muted,', e);
+        }
+    });
+}
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_chats', 'notify', 'BIGINT');
+        yield migrateMuted();
+        addTableColumn('sphinx_messages', 'push', 'BOOLEAN');
         addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN');
         addTableColumn('sphinx_messages', 'recipient_alias');
         addTableColumn('sphinx_messages', 'recipient_pic');
@@ -173,6 +207,8 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
         }
+        // Add status column to sphinx_lsats
+        addTableColumn('sphinx_lsats', 'status', 'INT');
         // add RequestTransportToken table
         try {
             logger_1.sphinxLogger.info('adding requestsTransportTokens table', logger_1.logging.DB);

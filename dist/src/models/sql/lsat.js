@@ -71,6 +71,10 @@ __decorate([
     __metadata("design:type", String)
 ], Lsat.prototype, "metadata", void 0);
 __decorate([
+    (0, sequelize_typescript_1.Column)({ type: sequelize_typescript_1.DataType.INTEGER }),
+    __metadata("design:type", Number)
+], Lsat.prototype, "status", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
 ], Lsat.prototype, "tenant", void 0);

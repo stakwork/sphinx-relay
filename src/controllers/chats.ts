@@ -167,6 +167,28 @@ export async function getChats(req: Req, res: Response): Promise<void> {
   success(res, c)
 }
 
+export async function setNotifyLevel(req: Req, res: Response): Promise<void> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const chatId = req.params['chat_id']
+  const levelString = req.params['level']
+  const level = parseInt(levelString)
+  if (!chatId) {
+    return failure(res, 'setNotifyLevel no chatId')
+  }
+  if (!Object.values(constants.notify_levels).includes(level)) {
+    return failure(res, 'invalid notify level')
+  }
+  const chat = await models.Chat.findOne({ where: { id: chatId, tenant } })
+  if (!chat) {
+    return failure(res, 'chat not found')
+  }
+  const isMuted: boolean = level === constants.notify_levels.mute
+  await chat.update({ notify: level, isMuted })
+
+  success(res, jsonUtils.chatToJson(chat))
+}
+
 export async function mute(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -186,7 +208,13 @@ export async function mute(req: Req, res: Response): Promise<void> {
     return failure(res, 'chat not found')
   }
 
-  chat.update({ isMuted: mute == 'mute' })
+  const isMuted = mute == 'mute'
+  await chat.update({
+    isMuted,
+    notify: isMuted
+      ? constants.notify_levels.mute
+      : constants.notify_levels.all,
+  })
 
   success(res, jsonUtils.chatToJson(chat))
 }

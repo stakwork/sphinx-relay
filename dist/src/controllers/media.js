@@ -447,7 +447,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     // console.log('received attachment', { payload })
     const date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, sender_photo_url, force_push, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
     }
@@ -463,6 +463,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         updatedAt: date,
         network_type,
         tenant,
+        push: force_push ? true : false,
     };
     if (content)
         msg.messageContent = content;
@@ -487,7 +488,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         type: 'attachment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner, undefined, force_push);
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveAttachment = receiveAttachment;

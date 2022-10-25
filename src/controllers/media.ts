@@ -533,6 +533,7 @@ export const receiveAttachment = async (payload) => {
     parent_id,
     network_type,
     sender_photo_url,
+    force_push,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error('=> no group chat!')
@@ -550,6 +551,7 @@ export const receiveAttachment = async (payload) => {
     updatedAt: date,
     network_type,
     tenant,
+    push: force_push ? true : false,
   }
   if (content) msg.messageContent = content
   if (mediaToken) msg.mediaToken = mediaToken
@@ -575,7 +577,14 @@ export const receiveAttachment = async (payload) => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    msg.senderAlias || sender.alias,
+    'message',
+    owner,
+    undefined,
+    force_push
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }

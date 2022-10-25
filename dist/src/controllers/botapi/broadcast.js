@@ -16,34 +16,26 @@ const rsa = require("../../crypto/rsa");
 const jsonUtils = require("../../utils/json");
 const socket = require("../../utils/socket");
 const constants_1 = require("../../constants");
-const tribes_1 = require("../../utils/tribes");
 const logger_1 = require("../../utils/logger");
+const index_1 = require("./index");
 function broadcast(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, content, bot_name, chat_uuid, msg_uuid, reply_uuid, parent_id, bot_pic, } = a;
+        const { amount, content, bot_name, msg_uuid, reply_uuid, parent_id, bot_pic, } = a;
         logger_1.sphinxLogger.info(`=> BOT BROADCAST`);
-        if (!content)
-            return logger_1.sphinxLogger.error(`no content`);
-        if (!chat_uuid)
-            return logger_1.sphinxLogger.error(`no chat_uuid`);
-        const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
-        if (!(theChat && theChat.id))
-            return logger_1.sphinxLogger.error(`no chat`);
-        if (theChat.type !== constants_1.default.chat_types.tribe)
-            return logger_1.sphinxLogger.error(`not a tribe`);
-        const owner = (yield models_1.models.Contact.findOne({
-            where: { id: theChat.tenant },
-        }));
+        const ret = yield (0, index_1.validateAction)(a);
+        if (!ret)
+            return;
+        const { chat, owner } = ret;
         const tenant = owner.id;
-        const encryptedForMeText = rsa.encrypt(owner.contactKey, content);
-        const encryptedText = rsa.encrypt(theChat.groupKey, content);
+        const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '');
+        const encryptedText = rsa.encrypt(chat.groupKey, content || '');
         const textMap = { chat: encryptedText };
         const date = new Date();
         date.setMilliseconds(0);
         const alias = bot_name || 'Bot';
         const botContactId = -1;
         const msg = {
-            chatId: theChat.id,
+            chatId: chat.id,
             uuid: msg_uuid || short.generate(),
             type: constants_1.default.message_types.bot_res,
             sender: botContactId,
@@ -65,12 +57,12 @@ function broadcast(a) {
         const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'message',
-            response: jsonUtils.messageToJson(message, theChat, owner),
+            response: jsonUtils.messageToJson(message, chat, owner),
         }, tenant);
         // console.log("BOT BROADCASE MSG", owner.dataValues)
         // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
         yield network.sendMessage({
-            chat: theChat,
+            chat: chat,
             sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }), (bot_pic && { photoUrl: bot_pic })),
             message: {
                 content: textMap,

@@ -10,14 +10,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetNotifyTribeCount = exports.sendNotification = void 0;
-// @ts-nocheck
 const logger_1 = require("./utils/logger");
 const models_1 = require("./models");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("./constants");
 const logger_2 = require("./utils/logger");
-const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, void 0, void 0, function* () {
+const sendNotification = (chat, name, type, owner, amount, push) => __awaiter(void 0, void 0, void 0, function* () {
     if (!owner)
         return logger_2.sphinxLogger.error(`=> sendNotification error: no owner`);
     let message = `You have a new message from ${name}`;
@@ -59,12 +58,16 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
     const device_id = owner.deviceId;
     const isIOS = device_id.length === 64;
     const isAndroid = !isIOS;
-    const params = { device_id };
+    const params = { device_id, notification: {} };
     const notification = {
         chat_id: chat.id || 0,
         sound: '',
     };
-    if (type !== 'badge' && !chat.isMuted) {
+    let chatIsMuted = chat.notify === constants_1.default.notify_levels.mute;
+    if (chat.notify === constants_1.default.notify_levels.mentions && !push) {
+        chatIsMuted = true;
+    }
+    if (type !== 'badge' && !chatIsMuted) {
         notification.message = message;
         notification.sound = owner.notificationSound || 'default';
     }
@@ -73,33 +76,33 @@ const sendNotification = (chat, name, type, owner, amount) => __awaiter(void 0, 
             return; // skip on Android if no actual message
     }
     params.notification = notification;
-    const isTribeOwner = chat.ownerPubkey === owner.publicKey;
+    // const isTribeOwner = chat.ownerPubkey === owner.publicKey
     if (type === 'message' && chat.type == constants_1.default.chat_types.tribe) {
         debounce(() => {
             const count = tribeCounts[chat.id] ? tribeCounts[chat.id] + ' ' : '';
-            params.notification.message = chat.isMuted
+            params.notification.message = chatIsMuted
                 ? ''
                 : `You have ${count}new messages in ${chat.name}`;
-            finalNotification(owner.id, params, isTribeOwner);
+            finalNotification(owner.id, params);
         }, chat.id, 30000);
     }
     else if (chat.type == constants_1.default.chat_types.conversation) {
         try {
             const cids = JSON.parse(chat.contactIds || '[]');
             const notme = cids.find((id) => id !== 1);
-            const other = models_1.models.Contact.findOne({
+            const other = (yield models_1.models.Contact.findOne({
                 where: { id: notme },
-            });
+            }));
             if (other.blocked)
                 return;
-            finalNotification(owner.id, params, isTribeOwner);
+            finalNotification(owner.id, params);
         }
         catch (e) {
             logger_2.sphinxLogger.error(`=> notify conversation err ${e}`);
         }
     }
     else {
-        finalNotification(owner.id, params, isTribeOwner);
+        finalNotification(owner.id, params);
     }
 });
 exports.sendNotification = sendNotification;
@@ -108,36 +111,56 @@ exports.sendNotification = sendNotification;
 //   constants.message_types.group_leave,
 //   constants.message_types.boost,
 // ];
-function finalNotification(ownerID, params, isTribeOwner) {
+function finalNotification(ownerID, params) {
     return __awaiter(this, void 0, void 0, function* () {
         if (params.notification.message) {
             if (logger_1.logging.Notification)
                 logger_2.sphinxLogger.info(`[send notification] ${params.notification}`);
         }
-        const mutedChats = yield models_1.models.Chat.findAll({
-            where: { isMuted: true },
-        });
-        const mutedChatIds = (mutedChats && mutedChats.map((mc) => mc.id)) || [];
-        mutedChatIds.push(0); // no msgs in non chat (anon keysends)
-        const where = {
-            sender: { [sequelize_1.Op.ne]: ownerID },
-            seen: false,
-            chatId: { [sequelize_1.Op.notIn]: mutedChatIds },
-            tenant: ownerID,
-        };
-        // if (!isTribeOwner) {
-        //   where.type = { [Op.notIn]: typesToNotNotify };
-        // }
-        let unseenMessages = yield models_1.models.Message.count({
-            where,
-        });
+        const unseen = yield countUnseen(ownerID);
         // if(!unseenMessages) return
-        if (!unseenMessages) {
+        if (!unseen) {
             params.notification.message = '';
             params.notification.sound = '';
         }
-        params.notification.badge = unseenMessages;
+        params.notification.badge = unseen;
         triggerNotification(params);
+    });
+}
+function countUnseen(ownerID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const unmutedChats = (yield models_1.models.Chat.findAll({
+            where: {
+                tenant: ownerID,
+                notify: constants_1.default.notify_levels.all,
+            },
+        }));
+        const unmutedChatIds = (unmutedChats && unmutedChats.map((mc) => mc.id)) || [];
+        const unseenMessages = yield models_1.models.Message.count({
+            where: {
+                sender: { [sequelize_1.Op.ne]: ownerID },
+                seen: false,
+                chatId: unmutedChatIds,
+                tenant: ownerID,
+            },
+        });
+        const mentionChats = (yield models_1.models.Chat.findAll({
+            where: {
+                tenant: ownerID,
+                notify: constants_1.default.notify_levels.mentions,
+            },
+        }));
+        const mentionChatIds = (mentionChats && mentionChats.map((mc) => mc.id)) || [];
+        const unseenMentions = yield models_1.models.Message.count({
+            where: {
+                sender: { [sequelize_1.Op.ne]: ownerID },
+                seen: false,
+                push: true,
+                chatId: mentionChatIds,
+                tenant: ownerID,
+            },
+        });
+        return unseenMessages + unseenMentions;
     });
 }
 function triggerNotification(params) {

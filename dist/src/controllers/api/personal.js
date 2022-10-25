@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -32,9 +32,7 @@ function createPeopleProfile(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { id, host, 
-            // pubkey,
-            owner_alias, description, img, tags, extras, } = req.body;
+            const { id, host, owner_alias, description, img, tags, extras, new_ticket_time, } = req.body;
             // if (pubkey !== owner.publicKey) {
             //   failure(res, 'mismatched pubkey')
             //   return
@@ -50,6 +48,7 @@ function createPeopleProfile(req, res) {
                 owner_route_hint: owner.routeHint,
                 owner_contact_key: owner.contactKey,
                 extras: extras || {},
+                new_ticket_time: new_ticket_time || 0,
             }, id || null);
             yield owner.update({ priceToMeet: priceToMeet || 0 });
             (0, res_1.success)(res, person);
@@ -84,6 +83,21 @@ function deletePersonProfile(req, res) {
     });
 }
 exports.deletePersonProfile = deletePersonProfile;
+function deleteTicketByAdmin(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        try {
+            const { host, pubkey, created } = req.body;
+            const person = yield people.deleteTicketByAdmin(host || config.tribes_host, pubkey, created, req.owner.publicKey);
+            (0, res_1.success)(res, person);
+        }
+        catch (e) {
+            (0, res_1.failure)(res, e);
+        }
+    });
+}
+exports.deleteTicketByAdmin = deleteTicketByAdmin;
 function uploadPublicPic(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)

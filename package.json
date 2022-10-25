@@ -18,15 +18,22 @@
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
     "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
     "start-ecs": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js",
-    "lint": "eslint ./src/*.ts ./src/**/*.ts --fix --max-warnings 466"
+    "lint": "eslint src --fix --max-warnings 480"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "ava": {
-    "files": ["!src/tests/utils/**", "!src/tests/types"],
-    "extensions": ["ts"],
-    "require": ["ts-node/register"]
+    "files": [
+      "!src/tests/utils/**",
+      "!src/tests/types"
+    ],
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
@@ -108,7 +115,7 @@
     "@types/cron": "^2.0.0",
     "@types/crypto-js": "^4.1.1",
     "@types/ip": "^1.1.0",
-    "@types/jest": "^28.1.7",
+    "@types/jest": "^28.1.8",
     "@types/md5": "^2.3.2",
     "@types/minimist": "^1.2.2",
     "@types/multer": "^1.4.7",
@@ -130,7 +137,10 @@
     "socket.io-client-legacy": "npm:socket.io-client@^2.4.0"
   },
   "pkg": {
-    "assets": ["config/*", "dist/config/*"]
+    "assets": [
+      "config/*",
+      "dist/config/*"
+    ]
   },
   "husky": {
     "hooks": {

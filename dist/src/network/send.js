@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.newmsg = exports.signAndSend = exports.sendMessage = void 0;
+exports.detectMentionsForTribeAdminSelf = exports.newmsg = exports.signAndSend = exports.sendMessage = void 0;
 const models_1 = require("../models");
 const LND = require("../grpc/lightning");
 const msg_1 = require("../utils/msg");
@@ -58,6 +58,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         }
         let networkType = undefined;
         const chatUUID = chat.uuid;
+        let mentionContactIds = [];
         if (isTribe) {
             if (type === constants_1.default.message_types.confirmation) {
                 // if u are owner, go ahead!
@@ -75,6 +76,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
+                mentionContactIds = yield detectMentions(msg, isForwarded ? true : false, chat.id, tenant);
             }
             // stop here if just me
             if (justMe) {
@@ -150,6 +152,11 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
             const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
+            // send a "push", the user was mentioned
+            if (mentionContactIds.includes(contact.id) ||
+                mentionContactIds.includes(Infinity)) {
+                m.message.push = true;
+            }
             // console.log('-> personalized msg', m)
             const opts = {
                 dest: destkey,
@@ -271,4 +278,82 @@ function sleep(ms) {
 // function urlBase64FromBytes(buf){
 //     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }
+function detectMentions(msg, isForwarded, chatId, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const content = msg.message.content;
+        if (content) {
+            const mentions = parseMentions(content);
+            if (mentions.includes('@all') && !isForwarded)
+                return [Infinity];
+            const ret = [];
+            const allMembers = (yield models_1.models.ChatMember.findAll({
+                where: { tenant, chatId },
+            }));
+            yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
+                const lastAlias = men.substring(1);
+                // check chat memberss
+                const member = allMembers.find((m) => {
+                    if (m.lastAlias && lastAlias) {
+                        return compareAliases(m.lastAlias, lastAlias);
+                    }
+                });
+                if (member) {
+                    ret.push(member.contactId);
+                }
+            }));
+            return ret;
+        }
+        else {
+            return [];
+        }
+    });
+}
+function parseMentions(content) {
+    const words = content.split(' ');
+    return words.filter((w) => w.startsWith('@'));
+}
+function detectMentionsForTribeAdminSelf(msg, mainAlias, aliasInChat) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const content = msg.message.content;
+        if (!content)
+            return false;
+        const mentions = parseMentions(content);
+        if (mentions.includes('@all'))
+            return true;
+        let ret = false;
+        yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
+            const lastAlias = men.substring(1);
+            if (lastAlias) {
+                if (aliasInChat) {
+                    // admin's own alias for tribe
+                    if (compareAliases(aliasInChat, lastAlias)) {
+                        ret = true;
+                    }
+                }
+                else if (mainAlias) {
+                    // or owner's default alias
+                    if (compareAliases(mainAlias, lastAlias)) {
+                        ret = true;
+                    }
+                }
+            }
+        }));
+        return ret;
+    });
+}
+exports.detectMentionsForTribeAdminSelf = detectMentionsForTribeAdminSelf;
+// alias1 can have spaces, so remove them
+// then comparse to lower case
+function compareAliases(alias1, alias2) {
+    const pieces = alias1.split(' ');
+    let match = false;
+    pieces.forEach((p) => {
+        if (p && alias2) {
+            if (p.toLowerCase() === alias2.toLowerCase()) {
+                match = true;
+            }
+        }
+    });
+    return match;
+}
 //# sourceMappingURL=send.js.map

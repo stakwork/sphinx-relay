@@ -6,6 +6,7 @@ import {
   BotRecord,
   ChatBotRecord,
   ChatRecord,
+  ContactRecord,
   models,
 } from '../../models'
 import { success, failure, unauthorized } from '../../utils/res'
@@ -13,7 +14,8 @@ import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
 import broadcast from './broadcast'
 import pay from './pay'
-import { sphinxLogger } from '../../utils/logger'
+import direct_message from './dm'
+import { sphinxLogger, logging } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
@@ -26,7 +28,7 @@ hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
 hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random
 */
 
-export type ActionType = 'broadcast' | 'pay' | 'keysend'
+export type ActionType = 'broadcast' | 'pay' | 'keysend' | 'dm'
 
 export interface Action {
   action: ActionType
@@ -48,12 +50,14 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
   sphinxLogger.info(`=> processWebhook ${req.body}`)
   const sig = req.headers['x-hub-signature-256']
   if (!sig) {
+    sphinxLogger.error('invalid signature', logging.Bots)
     return unauthorized(res)
   }
 
   const event_type =
     req.headers['x-github-event'] || req.headers['X-GitHub-Event']
   if (!event_type) {
+    sphinxLogger.error('no github event type', logging.Bots)
     return unauthorized(res)
   }
 
@@ -63,6 +67,7 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
     repo = event.repository?.full_name.toLowerCase() || ''
   }
   if (!repo) {
+    sphinxLogger.error('repo not configured', logging.Bots)
     return unauthorized(res)
   }
 
@@ -110,28 +115,31 @@ export async function processWebhook(req: Req, res: Res): Promise<void> {
                   }
                   await broadcast(a)
                 } else {
-                  sphinxLogger.debug('no content!!! (gitbot)')
+                  sphinxLogger.info('==> no content!!! (gitbot)')
                 }
               } else {
-                sphinxLogger.debug('no chat (gitbot)')
+                sphinxLogger.info('==> no chat (gitbot)')
               }
             } else {
-              sphinxLogger.debug('HMAC nOt VALID (gitbot)')
+              sphinxLogger.info('==> HMAC nOt VALID (gitbot)')
             }
           } else {
-            sphinxLogger.debug('no matching gitbot (gitbot)')
+            sphinxLogger.info('==> no matching gitbot (gitbot)')
           }
         } else {
-          sphinxLogger.debug('no repo match (gitbot)')
+          sphinxLogger.info('==> no repo match (gitbot)')
         }
       })
     })
   } catch (e) {
-    sphinxLogger.error('failed to process webhook', e)
+    sphinxLogger.error(['failed to process webhook', e], logging.Bots)
     unauthorized(res)
   }
   if (ok) success(res, { ok: true })
-  else unauthorized(res)
+  else {
+    sphinxLogger.error('invalid HMAC', logging.Bots)
+    unauthorized(res)
+  }
 }
 
 export async function processAction(req: Req, res: Res): Promise<void> {
@@ -165,8 +173,16 @@ export async function processAction(req: Req, res: Res): Promise<void> {
   const bot: Bot = (await models.Bot.findOne({ where: { id: bot_id } })) as Bot
   if (!bot) return failure(res, 'no bot')
 
-  if (!(bot.secret && bot.secret === bot_secret)) {
-    return failure(res, 'wrong secret')
+  if (bot_secret) {
+    if (!(bot.secret && bot.secret === bot_secret)) {
+      return failure(res, 'wrong secret')
+    }
+  } else {
+    const sig = req.headers['x-hub-signature-256']
+    const valid = hmac.verifyHmac(sig as string, req.rawBody, bot.secret)
+    if (!valid) {
+      return failure(res, 'invalid HMAC')
+    }
   }
   if (!action) {
     return failure(res, 'no action')
@@ -280,27 +296,30 @@ export async function finalAction(a: Action): Promise<void> {
   }
 
   if (action === 'keysend') {
-    return sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`)
-    // if (!(pubkey && pubkey.length === 66 && amount)) {
-    //     throw 'wrong params'
-    // }
-    // const destkey = pubkey
-    // const opts = {
-    //     dest: destkey,
-    //     data: {},
-    //     amt: Math.max((amount || 0), constants.min_sat_amount)
-    // }
-    // try {
-    //     await network.signAndSend(opts, ownerPubkey)
-    //     return ({ success: true })
-    // } catch (e) {
-    //     throw e
-    // }
+    sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`)
   } else if (action === 'pay') {
     pay(a)
   } else if (action === 'broadcast') {
     broadcast(a)
+  } else if (action === 'dm') {
+    direct_message(a)
   } else {
-    return sphinxLogger.error(`invalid action`)
+    sphinxLogger.error(`invalid action`)
   }
+}
+
+interface ChatAndOwner {
+  chat: ChatRecord
+  owner: ContactRecord
+}
+export async function validateAction(a: Action): Promise<ChatAndOwner | void> {
+  if (!a.chat_uuid) return sphinxLogger.error(`no chat_uuid`)
+  const theChat = await getTribeOwnersChatByUUID(a.chat_uuid)
+  if (!(theChat && theChat.id)) return sphinxLogger.error(`no chat`)
+  if (theChat.type !== constants.chat_types.tribe)
+    return sphinxLogger.error(`not a tribe`)
+  const owner: ContactRecord = (await models.Contact.findOne({
+    where: { id: theChat.tenant },
+  })) as ContactRecord
+  return { chat: theChat, owner }
 }

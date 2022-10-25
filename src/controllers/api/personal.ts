@@ -24,12 +24,12 @@ export async function createPeopleProfile(req, res) {
     const {
       id,
       host,
-      // pubkey,
       owner_alias,
       description,
       img,
       tags,
       extras,
+      new_ticket_time,
     } = req.body
 
     // if (pubkey !== owner.publicKey) {
@@ -49,6 +49,7 @@ export async function createPeopleProfile(req, res) {
         owner_route_hint: owner.routeHint,
         owner_contact_key: owner.contactKey,
         extras: extras || {},
+        new_ticket_time: new_ticket_time || 0,
       },
       id || null
     )
@@ -79,6 +80,29 @@ export async function deletePersonProfile(req, res) {
     await owner.update({ priceToMeet: 0 })
 
     success(res, jsonUtils.contactToJson(owner))
+  } catch (e) {
+    failure(res, e)
+  }
+}
+
+export async function deleteTicketByAdmin(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+
+  try {
+    const {
+      host,
+      pubkey,
+      created
+    } = req.body
+
+    const person = await people.deleteTicketByAdmin(
+        host || config.tribes_host,
+        pubkey,
+        created,
+        req.owner.publicKey
+    )
+
+    success(res, person)
   } catch (e) {
     failure(res, e)
   }

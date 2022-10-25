@@ -43,6 +43,7 @@ export async function set(app) {
   app.post('/group', chats.createGroupChat)
   app.put('/chats/:id', chats.updateChat)
   app.post('/chats/:chat_id/:mute_unmute', chats.mute)
+  app.put('/notify/:chat_id/:level', chats.setNotifyLevel)
   app.delete('/chat/:id', chats.deleteChat)
   app.put('/chat/:id', chats.addGroupMembers)
   app.put('/kick/:chat_id/:contact_id', chats.kickChatMember)
@@ -79,6 +80,7 @@ export async function set(app) {
 
   app.post('/profile', personal.createPeopleProfile)
   app.delete('/profile', personal.deletePersonProfile)
+  app.post('/delete_ticket',personal.deleteTicketByAdmin)
   app.post('/public_pic', personal.uploadPublicPic)
   app.get('/refresh_jwt', personal.refreshJWT)
   app.post('/claim_on_liquid', personal.claimOnLiquid)
@@ -173,6 +175,7 @@ export async function set(app) {
   app.post('/lsats', lsats.saveLsat)
   app.put('/lsats/:identifier', lsats.updateLsat)
   app.delete('/lsats/:identifier', lsats.deleteLsat)
+  app.get('/active_lsat', lsats.getActiveLsat)
 }
 
 const msgtypes = constants.message_types

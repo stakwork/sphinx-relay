@@ -1,6 +1,6 @@
 import test, { ExecutionContext } from 'ava'
 import * as http from 'ava-http'
-import { iterate, sleep, makeArgs, makeJwtArgs } from '../utils/helpers'
+import { sleep, makeArgs, makeJwtArgs } from '../utils/helpers'
 import {} from '../utils/save'
 import {} from '../utils/msg'
 import {} from '../utils/del'
@@ -9,22 +9,25 @@ import { config } from '../config'
 import nodes from '../nodes'
 
 /*
-npx ava test-42-sphinxPeople.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/sphinxPeople.test.ts --verbose --serial --timeout=2m
 */
 
 interface Context {}
 
 test.serial(
-  'test-42-sphinxPeople: Sphinx People testing',
+  'sphinxPeople: Sphinx People testing',
   async (t: ExecutionContext<Context>) => {
-    await iterate(nodes, async (node1, node2) => {
-      await sphinxPeople(t, node1)
-    })
+    await sphinxPeople(t, nodes[0])
   }
 )
 
 async function sphinxPeople(t, node1) {
   //TESTING FOR SPHINX PEOPLE PAGE ===>
+
+  // if running "no-alice" version with local relay
+  const internalTribeHost = node1.ip.includes('host.docker.internal')
+    ? config.tribeHost
+    : config.tribeHostInternal
 
   console.log(node1.alias)
 
@@ -78,7 +81,7 @@ async function sphinxPeople(t, node1) {
     node1.external_ip + '/profile',
     makeJwtArgs(poll.jwt, {
       pubkey: node1.pubkey,
-      host: config.tribeHostInternal,
+      host: internalTribeHost,
       id: persontest.id,
       owner_alias: node1.alias,
       description: 'this description',
@@ -122,7 +125,7 @@ async function sphinxPeople(t, node1) {
     makeJwtArgs(poll.jwt, {
       pubkey: node1.pubkey,
       id: person.id,
-      host: config.tribeHostInternal,
+      host: internalTribeHost,
       owner_alias: node1.alias,
       description: 'this description',
       img: poll.photo_url,
@@ -157,25 +160,25 @@ async function sphinxPeople(t, node1) {
   )
 
   //TRY TO UPDATE AND RESET PRICE_TO_MEET WITH RANDOM ID
-  try {
-    await http.post(
-      node1.external_ip + `/profile`,
-      makeJwtArgs(poll.jwt, {
-        id: 321,
-        host: config.tribeHostInternal,
-        owner_alias: node1.alias,
-        description: 'this description',
-        img: poll.photo_url,
-        tags: [],
-        price_to_meet: newPriceToMeet,
-      })
-    )
-  } catch (e) {}
+  // try {
+  //   await http.post(
+  //     node1.external_ip + `/profile`,
+  //     makeJwtArgs(poll.jwt, {
+  //       id: 321,
+  //       host: internalTribeHost,
+  //       owner_alias: node1.alias,
+  //       description: 'this description',
+  //       img: poll.photo_url,
+  //       tags: [],
+  //       price_to_meet: newPriceToMeet,
+  //     })
+  //   )
+  // } catch (e) {}
 
   //DELETE PERSON PROFILE AT END OF TEST
   const del = await http.del(
     node1.external_ip + '/profile',
-    makeArgs(node1, { id: person2.id, host: config.tribeHostInternal })
+    makeArgs(node1, { id: person2.id, host: internalTribeHost })
   )
   t.true(del.success, 'profile should be deleted')
 }

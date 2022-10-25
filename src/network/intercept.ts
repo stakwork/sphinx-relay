@@ -1,5 +1,6 @@
-import { Msg } from './interfaces'
+import { BotMsg } from './interfaces'
 import { models, Bot, Chat, ChatRecord, Message } from '../models'
+
 import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
 import * as SphinxBot from 'sphinx-bot'
@@ -13,7 +14,7 @@ restrictions (be able to toggle, or dont show chat)
 
 // return bool whether to skip forwarding to tribe
 export async function isBotMsg(
-  m: Msg,
+  m: BotMsg,
   sentByMe: boolean,
   sender,
   forwardedFromContactId?: number

@@ -22,6 +22,11 @@ RUN chown -R 1000:1000 /relay
 
 FROM node:16-buster-slim
 
+USER root
+
+RUN apt-get update
+RUN apt-get -y install git
+
 USER 1000
 
 WORKDIR /relay

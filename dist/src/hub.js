@@ -88,7 +88,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                         response: jsonUtils.inviteToJson(dbInvite),
                     }, owner.id);
                     if (dbInvite.status == constants_1.default.invite_statuses.ready && contact) {
-                        (0, notify_1.sendNotification)(-1, contact.alias, 'invite', owner);
+                        (0, notify_1.sendNotification)(new models_1.Chat(), contact.alias, 'invite', owner);
                     }
                 }
                 if (pubkey &&
@@ -101,7 +101,7 @@ const checkInviteHub = (params = {}) => __awaiter(void 0, void 0, void 0, functi
                     if (routeHint)
                         updateObj.routeHint = routeHint;
                     yield contact.update(updateObj);
-                    var contactJson = jsonUtils.contactToJson(contact);
+                    const contactJson = jsonUtils.contactToJson(contact);
                     contactJson.invite = jsonUtils.inviteToJson(dbInvite);
                     socket.sendJson({
                         type: 'contact',

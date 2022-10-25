@@ -9,13 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.claimOnLiquid = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
-function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, }, id) {
+function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, new_ticket_time, }, id) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
@@ -30,7 +30,7 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
                     owner_route_hint,
                     owner_contact_key,
                     description,
-                    img, tags: tags || [], price_to_meet: price_to_meet || 0, extras: extras || {} })),
+                    img, tags: tags || [], price_to_meet: price_to_meet || 0, extras: extras || {}, new_ticket_time: new_ticket_time || 0 })),
                 headers: { 'Content-Type': 'application/json' },
             });
             if (!r.ok) {
@@ -68,6 +68,27 @@ function deletePerson(host, id, owner_pubkey) {
     });
 }
 exports.deletePerson = deletePerson;
+function deleteTicketByAdmin(host, pubkey, created, owner_pubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`, {
+                method: 'DELETE'
+            });
+            if (!r.ok) {
+                throw 'failed to delete ticket by admin' + r.status;
+            }
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error(`unauthorized to delete ticket by admin`, logger_1.logging.Tribes);
+            throw e;
+        }
+    });
+}
+exports.deleteTicketByAdmin = deleteTicketByAdmin;
 function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

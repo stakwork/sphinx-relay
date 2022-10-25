@@ -435,6 +435,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     message_status,
+    force_push,
     hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
@@ -447,7 +448,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
-  const msg: { [k: string]: string | number | Date } = {
+  const msg: { [k: string]: string | number | Date | boolean } = {
     chatId: chat.id,
     uuid: msg_uuid,
     type: constants.message_types.message,
@@ -461,6 +462,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     network_type: network_type,
     tenant,
     forwardedSats: hasForwardedSats,
+    push: force_push ? true : false,
   }
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {
@@ -480,7 +482,14 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    (msg.senderAlias || sender.alias) as string,
+    'message',
+    owner,
+    undefined,
+    force_push
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
@@ -502,6 +511,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     network_type,
     sender_photo_url,
     msg_id,
+    force_push,
     hasForwardedSats,
   } = await helpers.parseReceiveParams(payload)
 
@@ -559,7 +569,14 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
       where: { uuid: msg.replyUuid as string, tenant },
     })) as Message
     if (ogMsg && ogMsg.sender === tenant) {
-      sendNotification(chat, msg.senderAlias || sender.alias, 'boost', owner)
+      sendNotification(
+        chat,
+        (msg.senderAlias || sender.alias) as string,
+        'boost',
+        owner,
+        undefined,
+        force_push
+      )
     }
   }
 }

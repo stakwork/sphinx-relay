@@ -1,4 +1,10 @@
-import { models, Chat, ContactRecord, Contact } from '../models'
+import {
+  models,
+  Chat,
+  ContactRecord,
+  Contact,
+  ChatMember as ChatMemberModel,
+} from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
 import * as tribes from '../utils/tribes'
@@ -84,6 +90,7 @@ export async function sendMessage({
 
   let networkType: NetworkType = undefined
   const chatUUID = chat.uuid
+  let mentionContactIds: number[] = []
   if (isTribe) {
     if (type === constants.message_types.confirmation) {
       // if u are owner, go ahead!
@@ -108,6 +115,12 @@ export async function sendMessage({
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
+      mentionContactIds = await detectMentions(
+        msg,
+        isForwarded ? true : false,
+        chat.id as number,
+        tenant
+      )
     }
 
     // stop here if just me
@@ -190,6 +203,14 @@ export async function sendMessage({
     }
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
+
+    // send a "push", the user was mentioned
+    if (
+      mentionContactIds.includes(contact.id) ||
+      mentionContactIds.includes(Infinity)
+    ) {
+      m.message.push = true
+    }
     // console.log('-> personalized msg', m)
     const opts = {
       dest: destkey,
@@ -341,3 +362,84 @@ async function sleep(ms) {
 // function urlBase64FromBytes(buf){
 //     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 // }
+
+async function detectMentions(
+  msg: Msg,
+  isForwarded: boolean,
+  chatId: number,
+  tenant: number
+): Promise<number[]> {
+  const content = msg.message.content as string
+  if (content) {
+    const mentions = parseMentions(content)
+    if (mentions.includes('@all') && !isForwarded) return [Infinity]
+    const ret: number[] = []
+    const allMembers: ChatMemberModel[] = (await models.ChatMember.findAll({
+      where: { tenant, chatId },
+    })) as ChatMemberModel[]
+    await asyncForEach(mentions, async (men) => {
+      const lastAlias = men.substring(1)
+      // check chat memberss
+      const member = allMembers.find((m) => {
+        if (m.lastAlias && lastAlias) {
+          return compareAliases(m.lastAlias, lastAlias)
+        }
+      })
+      if (member) {
+        ret.push(member.contactId)
+      }
+    })
+    return ret
+  } else {
+    return []
+  }
+}
+
+function parseMentions(content: string) {
+  const words = content.split(' ')
+  return words.filter((w) => w.startsWith('@'))
+}
+
+export async function detectMentionsForTribeAdminSelf(
+  msg: Msg,
+  mainAlias?: string,
+  aliasInChat?: string
+): Promise<boolean> {
+  const content = msg.message.content as string
+  if (!content) return false
+  const mentions = parseMentions(content)
+  if (mentions.includes('@all')) return true
+  let ret = false
+  await asyncForEach(mentions, async (men) => {
+    const lastAlias = men.substring(1)
+    if (lastAlias) {
+      if (aliasInChat) {
+        // admin's own alias for tribe
+        if (compareAliases(aliasInChat, lastAlias)) {
+          ret = true
+        }
+      } else if (mainAlias) {
+        // or owner's default alias
+        if (compareAliases(mainAlias, lastAlias)) {
+          ret = true
+        }
+      }
+    }
+  })
+  return ret
+}
+
+// alias1 can have spaces, so remove them
+// then comparse to lower case
+function compareAliases(alias1: string, alias2: string): boolean {
+  const pieces = alias1.split(' ')
+  let match = false
+  pieces.forEach((p) => {
+    if (p && alias2) {
+      if (p.toLowerCase() === alias2.toLowerCase()) {
+        match = true
+      }
+    }
+  })
+  return match
+}

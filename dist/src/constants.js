@@ -91,6 +91,15 @@ const constants = {
         writer: 4,
         reader: 5,
     },
+    notify_levels: {
+        all: 0,
+        mentions: 1,
+        mute: 2,
+    },
+    lsat_statuses: {
+        expired: 0,
+        active: 1,
+    },
 };
 exports.default = constants;
 //# sourceMappingURL=constants.js.map
