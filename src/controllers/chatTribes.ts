@@ -356,6 +356,12 @@ export async function editTribe(req: Req, res) {
   const { id } = req.params
 
   if (!id) return failure(res, 'group id is required')
+  let { profile_filters } = req.body
+  if (!Array.isArray(profile_filters)) {
+    return failure(res, 'invalid profile filters')
+  }
+
+  profile_filters = profile_filters.join(',')
 
   const chat: Chat = (await models.Chat.findOne({
     where: { id, tenant },
@@ -390,6 +396,7 @@ export async function editTribe(req: Req, res) {
         owner_route_hint: owner.routeHint || '',
         owner_pubkey: owner.publicKey,
         pin: pin || '',
+        profile_filters,
       })
     } catch (e) {
       okToUpdate = false
@@ -411,6 +418,7 @@ export async function editTribe(req: Req, res) {
     if (feed_type) obj.feedType = feed_type
     if (req.body.private || req.body.private === false)
       obj.private = req.body.private
+    obj.profileFilters = profile_filters
     if (Object.keys(obj).length > 0) {
       await chat.update(obj)
     }

@@ -340,7 +340,7 @@ export async function declare({
   feed_type,
   owner_route_hint,
   pin,
-  profile_filters
+  profile_filters,
 }: TribeInterface): Promise<void> {
   try {
     let protocol = 'https'
@@ -367,7 +367,7 @@ export async function declare({
         feed_type: feed_type || 0,
         owner_route_hint: owner_route_hint || '',
         pin: pin || '',
-        profile_filters
+        profile_filters,
       }),
       headers: { 'Content-Type': 'application/json' },
     })
@@ -402,6 +402,7 @@ export async function edit({
   owner_route_hint,
   owner_pubkey,
   pin,
+  profile_filters,
 }: TribeInterface): Promise<void> {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
@@ -428,6 +429,7 @@ export async function edit({
         feed_type: feed_type || 0,
         owner_route_hint: owner_route_hint || '',
         pin: pin || '',
+        profile_filters,
       }),
       headers: { 'Content-Type': 'application/json' },
     })

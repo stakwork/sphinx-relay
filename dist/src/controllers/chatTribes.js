@@ -321,6 +321,11 @@ function editTribe(req, res) {
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
+        let { profile_filters } = req.body;
+        if (!Array.isArray(profile_filters)) {
+            return (0, res_1.failure)(res, 'invalid profile filters');
+        }
+        profile_filters = profile_filters.join(',');
         const chat = (yield models_1.models.Chat.findOne({
             where: { id, tenant },
         }));
@@ -352,6 +357,7 @@ function editTribe(req, res) {
                     owner_route_hint: owner.routeHint || '',
                     owner_pubkey: owner.publicKey,
                     pin: pin || '',
+                    profile_filters,
                 });
             }
             catch (e) {
@@ -382,6 +388,7 @@ function editTribe(req, res) {
                 obj.feedType = feed_type;
             if (req.body.private || req.body.private === false)
                 obj.private = req.body.private;
+            obj.profileFilters = profile_filters;
             if (Object.keys(obj).length > 0) {
                 yield chat.update(obj);
             }
