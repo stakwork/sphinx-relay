@@ -21,6 +21,7 @@ export interface MessageContent {
   skipPaymentProcessing?: boolean
   recipientAlias?: string
   recipientPic?: string
+  person?: string
 }
 
 export type ChatMembers = { [k: string]: ChatMember }
