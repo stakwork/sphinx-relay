@@ -21,6 +21,7 @@ import * as minimist from 'minimist'
 import { loadConfig } from '../utils/config'
 import { isProxy } from '../utils/proxy'
 import { readFileSync } from 'fs'
+import ActionHistory, { ActionHistoryRecord } from './sql/actionHistory'
 
 const argv = minimist(process.argv.slice(2))
 
@@ -51,6 +52,7 @@ const opts = {
     Accounting,
     Lsat,
     RequestsTransportTokens,
+    ActionHistory,
   ],
 }
 if (isProxy()) {
@@ -92,4 +94,6 @@ export {
   Lsat,
   BotMember,
   RequestsTransportTokens,
+  ActionHistory,
+  ActionHistoryRecord,
 }
