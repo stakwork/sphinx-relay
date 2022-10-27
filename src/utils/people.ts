@@ -2,8 +2,7 @@ import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
 import { sphinxLogger, logging } from './logger'
-import {ContactRecord, models} from "../models";
-
+import { ContactRecord, models } from '../models'
 
 const config = loadConfig()
 
@@ -73,20 +72,22 @@ export async function deletePerson(host, id, owner_pubkey) {
   }
 }
 
-export async function deleteTicketByAdmin(host, pubkey, created,owner_pubkey) {
+export async function deleteTicketByAdmin(host, pubkey, created, owner_pubkey) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
     if (config.tribes_insecure) protocol = 'http'
-    const r = await fetch(`${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`, {
-      method: 'DELETE'
-    })
+    const r = await fetch(
+      `${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`,
+      {
+        method: 'DELETE',
+      }
+    )
     if (!r.ok) {
       throw 'failed to delete ticket by admin' + r.status
     }
-  }
-  catch (e) {
-    sphinxLogger.error(`unauthorized to delete ticket by admin`,logging.Tribes)
+  } catch (e) {
+    sphinxLogger.error(`unauthorized to delete ticket by admin`, logging.Tribes)
     throw e
   }
 }
@@ -135,21 +136,29 @@ export async function setupPersonInfo() {
 
   let protocol = 'https'
   if (config.tribes_insecure) protocol = 'http'
-  const url = protocol + '://' + config.people_host + '/person/' + owner.publicKey;
+  const url =
+    protocol + '://' + config.people_host + '/person/' + owner.publicKey
   console.log(`[+] Person url is : ${url}`)
   try {
-    const arg = await fetch(
-        url,
-    )
+    const arg = await fetch(url)
     const json = await arg.json()
-    const stringifyJsonResponse = JSON.stringify(json);
-    console.log(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`)
-    person_id = json.uuid;
+    const stringifyJsonResponse = JSON.stringify(json)
+    console.log(
+      `[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`
+    )
+    person_id = json.uuid
   } catch (e) {
-    console.log(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`)
+    console.log(
+      `[-] Error happened while getting person details for publicKey: ${owner.publicKey}`
+    )
   }
 }
 
-export function getPersonId(): string | undefined{
-  return person_id;
+export function getPersonId(): string | undefined {
+  return person_id
+}
+
+export function setPersonId(uuid: string): string {
+  person_id = uuid
+  return person_id
 }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPersonId = exports.setupPersonInfo = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.setPersonId = exports.getPersonId = exports.setupPersonInfo = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
@@ -77,7 +77,7 @@ function deleteTicketByAdmin(host, pubkey, created, owner_pubkey) {
             if (config.tribes_insecure)
                 protocol = 'http';
             const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`, {
-                method: 'DELETE'
+                method: 'DELETE',
             });
             if (!r.ok) {
                 throw 'failed to delete ticket by admin' + r.status;
@@ -148,4 +148,9 @@ function getPersonId() {
     return person_id;
 }
 exports.getPersonId = getPersonId;
+function setPersonId(uuid) {
+    person_id = uuid;
+    return person_id;
+}
+exports.setPersonId = setPersonId;
 //# sourceMappingURL=people.js.map
