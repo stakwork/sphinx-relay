@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
+exports.setupPersonUuid = exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
 const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
@@ -22,6 +22,7 @@ const config_1 = require("./config");
 const migrate_1 = require("./migrate");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
+const node_fetch_1 = require("node-fetch");
 const USER_VERSION = 7;
 const config = (0, config_1.loadConfig)();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -85,6 +86,30 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.setupOwnerContact = setupOwnerContact;
+const setupPersonUuid = () => __awaiter(void 0, void 0, void 0, function* () {
+    let protocol = 'https';
+    if (config.tribes_insecure)
+        protocol = 'http';
+    try {
+        const contacts = (yield models_1.models.Contact.findAll({
+            where: { isOwner: true, personUuid: null },
+        }));
+        for (let i = 0; i < contacts.length; i++) {
+            let tenant = contacts[i];
+            const url = protocol + '://' + config.people_host + '/person/' + tenant.publicKey;
+            const res = yield (0, node_fetch_1.default)(url);
+            const person = yield res.json();
+            if (person.uuid) {
+                yield models_1.models.Contact.update({ personUuid: person.uuid }, { where: { id: tenant.id } });
+            }
+        }
+    }
+    catch (error) {
+        console.log(error);
+        logger_1.sphinxLogger.info(['error trying to set person uuid', error], logger_1.logging.DB);
+    }
+});
+exports.setupPersonUuid = setupPersonUuid;
 const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     yield new Promise((resolve, reject) => {
         const migration = (0, child_process_1.exec)('node_modules/.bin/sequelize db:migrate', { env: process.env }, (err, stdout, stderr) => {

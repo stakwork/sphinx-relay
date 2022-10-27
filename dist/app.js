@@ -64,6 +64,7 @@ function mainSetup() {
 function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, setup_1.setupOwnerContact)();
+        yield (0, setup_1.setupPersonUuid)();
         yield people.setupPersonInfo();
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {

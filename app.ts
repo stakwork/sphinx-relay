@@ -7,7 +7,12 @@ import * as http from 'http'
 import logger, { logging, sphinxLogger } from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
-import { setupDatabase, setupDone, setupOwnerContact } from './src/utils/setup'
+import {
+  setupDatabase,
+  setupDone,
+  setupOwnerContact,
+  setupPersonUuid,
+} from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
@@ -53,6 +58,7 @@ async function mainSetup() {
 
 async function finishSetup() {
   await setupOwnerContact()
+  await setupPersonUuid()
   await people.setupPersonInfo()
   await network.initTribesSubscriptions()
   if (config.hub_api_url) {
