@@ -14,12 +14,10 @@ import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
-import * as people from "../utils/people";
+import * as people from '../utils/people'
 import { loadConfig } from '../utils/config'
 
-
 const config = loadConfig()
-
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
@@ -345,16 +343,19 @@ export function newmsg(
     sender: {
       pub_key: sender.publicKey,
       ...(sender.routeHint && { route_hint: sender.routeHint }),
+      ...(sender.personUuid && {
+        person: `${config.people_host}/${sender.personUuid}`,
+      }),
       alias: includeAlias ? aliasToInclude : '',
       role: sender.role || constants.chat_roles.reader,
       ...(includePhotoUrl && { photo_url: photoUrlToInclude }),
       // ...sender.contactKey && {contact_key: sender.contactKey}
     },
-  };
-  const personId = people.getPersonId();
-  if(personId){
-    result.sender.person = config.people_host + '/' + personId;
-    console.log("[+] person host full url ",  result.sender.person)
+  }
+  const personId = people.getPersonId()
+  if (personId) {
+    result.sender.person = config.people_host + '/' + personId
+    console.log('[+] person host full url ', result.sender.person)
     return result
   }
   return result

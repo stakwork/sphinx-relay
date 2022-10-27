@@ -259,12 +259,14 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, (chat.name && { name: chat.name })), ((chat.type || chat.type === 0) && { type: chat.type })), (chat.members && { members: chat.members })), (includeGroupKey && chat.groupKey && { groupKey: chat.groupKey })), (includeGroupKey && chat.host && { host: chat.host })),
         message: message,
-        sender: Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
+        sender: Object.assign(Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), (sender.personUuid && {
+            person: `${config.people_host}/${sender.personUuid}`,
+        })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
     };
     const personId = people.getPersonId();
     if (personId) {
         result.sender.person = config.people_host + '/' + personId;
-        console.log("[+] person host full url ", result.sender.person);
+        console.log('[+] person host full url ', result.sender.person);
         return result;
     }
     return result;
