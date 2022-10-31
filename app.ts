@@ -17,6 +17,7 @@ import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
+import * as people from './src/utils/people'
 
 // force UTC time
 process.env.TZ = 'UTC'
@@ -55,6 +56,7 @@ async function mainSetup() {
 
 async function finishSetup() {
   await setupOwnerContact()
+  await people.setupPersonInfo()
   await network.initTribesSubscriptions()
   if (config.hub_api_url) {
     checkInvitesHubInterval(5000)
