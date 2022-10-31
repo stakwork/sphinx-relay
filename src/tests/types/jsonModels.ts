@@ -47,6 +47,7 @@ export interface Message {
   parent_id: number
   recipient_alias: string
   recipient_pic: string
+  person?: string
 }
 
 export interface Chat {

@@ -11,6 +11,7 @@ import migrate from './migrate'
 import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
 import fetch from 'node-fetch'
+import { Op } from 'sequelize'
 
 const USER_VERSION = 7
 const config = loadConfig()
@@ -83,7 +84,10 @@ const setupPersonUuid = async () => {
 
   try {
     const contacts = (await models.Contact.findAll({
-      where: { isOwner: true, personUuid: null },
+      where: {
+        isOwner: true,
+        [Op.or]: [{ personUuid: null }, { personUuid: '' }],
+      },
     })) as ContactRecord[]
 
     for (let i = 0; i < contacts.length; i++) {

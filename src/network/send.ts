@@ -14,7 +14,6 @@ import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
-import * as people from '../utils/people'
 import { loadConfig } from '../utils/config'
 
 const config = loadConfig()
@@ -351,12 +350,6 @@ export function newmsg(
       ...(includePhotoUrl && { photo_url: photoUrlToInclude }),
       // ...sender.contactKey && {contact_key: sender.contactKey}
     },
-  }
-  const personId = people.getPersonId()
-  if (personId) {
-    result.sender.person = config.people_host + '/' + personId
-    console.log('[+] person host full url ', result.sender.person)
-    return result
   }
   return result
 }

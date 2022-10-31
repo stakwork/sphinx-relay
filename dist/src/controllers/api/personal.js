@@ -50,6 +50,7 @@ function createPeopleProfile(req, res) {
                 owner_contact_key: owner.contactKey,
                 extras: extras || {},
                 new_ticket_time: new_ticket_time || 0,
+                uuid: owner.personUuid || '',
             }, id || null);
             yield owner.update({
                 priceToMeet: priceToMeet || 0,

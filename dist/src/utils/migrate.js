@@ -47,6 +47,7 @@ function migrate() {
         addTableColumn('sphinx_chats', 'notify', 'BIGINT');
         yield migrateMuted();
         addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN');
+        addTableColumn('sphinx_messages', 'person', 'TEXT');
         addTableColumn('sphinx_messages', 'recipient_alias');
         addTableColumn('sphinx_messages', 'recipient_pic');
         addTableColumn('sphinx_contacts', 'hmac_key');

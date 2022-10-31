@@ -417,7 +417,6 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
 
 export const receiveMessage = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received message ${payload}`)
-
   const {
     owner,
     sender,
@@ -437,6 +436,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     message_status,
     force_push,
     hasForwardedSats,
+    person,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
@@ -467,6 +467,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
+    msg.person = person
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid

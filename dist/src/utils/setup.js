@@ -23,6 +23,7 @@ const migrate_1 = require("./migrate");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const node_fetch_1 = require("node-fetch");
+const sequelize_1 = require("sequelize");
 const USER_VERSION = 7;
 const config = (0, config_1.loadConfig)();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -92,7 +93,10 @@ const setupPersonUuid = () => __awaiter(void 0, void 0, void 0, function* () {
         protocol = 'http';
     try {
         const contacts = (yield models_1.models.Contact.findAll({
-            where: { isOwner: true, personUuid: null },
+            where: {
+                isOwner: true,
+                [sequelize_1.Op.or]: [{ personUuid: null }, { personUuid: '' }],
+            },
         }));
         for (let i = 0; i < contacts.length; i++) {
             let tenant = contacts[i];

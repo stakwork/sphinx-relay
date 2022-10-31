@@ -35,6 +35,7 @@ export default async function migrate(): Promise<void> {
   await migrateMuted()
 
   addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN')
+  addTableColumn('sphinx_messages', 'person', 'TEXT')
 
   addTableColumn('sphinx_messages', 'recipient_alias')
   addTableColumn('sphinx_messages', 'recipient_pic')
