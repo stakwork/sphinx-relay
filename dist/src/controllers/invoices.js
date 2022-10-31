@@ -232,7 +232,7 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
     const network_type = dat.network_type || 0;
     const date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid, sender_photo_url, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, msg_id, chat_type, sender_alias, msg_uuid, sender_photo_url, person, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
@@ -257,6 +257,8 @@ const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* 
         network_type: network_type,
         tenant,
     };
+    if (person)
+        msg.person = person;
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;

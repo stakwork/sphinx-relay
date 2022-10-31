@@ -369,8 +369,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         (0, send_1.sendMessage)({
             type,
             message,
-            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, person: (payload.sender && payload.sender.person && payload.sender.person) ||
-                    '' }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, person: (payload.sender && payload.sender.person) || '' }),
             amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,
