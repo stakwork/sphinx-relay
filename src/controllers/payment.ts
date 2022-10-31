@@ -168,6 +168,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
     recipient_alias,
     recipient_pic,
     hasForwardedSats,
+    person,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error(`=> no group chat!`)
@@ -196,6 +197,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
   if (content) msg.messageContent = content
   if (mediaType) msg.mediaType = mediaType
   if (mediaToken) msg.mediaToken = mediaToken
+  if (person) msg.person = person
   if (chat_type === constants.chat_types.tribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url

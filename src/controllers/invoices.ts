@@ -260,6 +260,7 @@ export const receiveInvoice = async (payload: Payload): Promise<void> => {
     sender_alias,
     msg_uuid,
     sender_photo_url,
+    person,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error(`=> no group chat!`)
@@ -288,6 +289,7 @@ export const receiveInvoice = async (payload: Payload): Promise<void> => {
     network_type: network_type,
     tenant,
   }
+  if (person) msg.person = person
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {
     msg.senderAlias = sender_alias

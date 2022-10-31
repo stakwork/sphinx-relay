@@ -407,9 +407,7 @@ async function forwardMessageToTribe(
       alias: (payload.sender && payload.sender.alias) || '',
       photoUrl: (payload.sender && payload.sender.photo_url) || '',
       role: constants.chat_roles.reader,
-      person:
-        (payload.sender && payload.sender.person && payload.sender.person) ||
-        '',
+      person: (payload.sender && payload.sender.person) || '',
     },
     amount: amtToForwardToRealSatsContactId || 0,
     chat: chat,
