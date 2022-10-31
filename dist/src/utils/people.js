@@ -136,7 +136,7 @@ function setupPersonInfo() {
             const json = yield arg.json();
             const stringifyJsonResponse = JSON.stringify(json);
             console.log(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`);
-            person_id = json.id;
+            person_id = json.uuid;
         }
         catch (e) {
             console.log(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`);

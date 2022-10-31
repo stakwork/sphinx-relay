@@ -127,7 +127,7 @@ export async function claimOnLiquid({
   }
 }
 
-let person_id: number | undefined
+let person_id: string | undefined
 export async function setupPersonInfo() {
   const owner: ContactRecord = (await models.Contact.findOne({
     where: { id: 1 },
@@ -144,12 +144,12 @@ export async function setupPersonInfo() {
     const json = await arg.json()
     const stringifyJsonResponse = JSON.stringify(json);
     console.log(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`)
-    person_id = json.id;
+    person_id = json.uuid;
   } catch (e) {
     console.log(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`)
   }
 }
 
-export function getPersonId(): number | undefined{
+export function getPersonId(): string | undefined{
   return person_id;
 }
