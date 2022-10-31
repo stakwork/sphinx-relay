@@ -1,7 +1,9 @@
 import { MessageRecord } from '../../../models'
-export async function getSpecificMsg(messages: MessageRecord[], uuid: string) {
-  messages.forEach((message) => {
-    if (message.uuid === uuid) {
+
+export function getSpecificMsg(messages: MessageRecord[], uuid: string) {
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].uuid === uuid) {
+      return messages[i]
     }
-  })
+  }
 }

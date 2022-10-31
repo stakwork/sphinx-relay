@@ -11,6 +11,7 @@ import { randomText } from '../utils/helpers'
 import {
   sendTribeMessageAndCheckDecryption,
   getAllMessages,
+  getSpecificMsg,
 } from '../utils/msg'
 
 /*
@@ -111,10 +112,13 @@ async function personProfile(t, node1, node2) {
     text,
     tribe
   )
-  console.log(tribeMessage)
+  t.true(!!tribeMessage, 'node1 should send message to tribe')
 
   // Get All message that belongs to Node 2
   const allMessages = await getAllMessages(node2)
-  console.log(allMessages)
-  t.true(!!tribeMessage, 'node1 should send message to tribe')
+  const newMessage = getSpecificMsg(allMessages, tribeMessage.uuid)
+  t.true(
+    newMessage?.person === `${config.tribeHost}/${postProfile.response.uuid}`,
+    'Tribe message person value should be equal to tribe host and person profile from tribe server'
+  )
 }

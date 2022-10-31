@@ -72,11 +72,11 @@ function personProfile(t, node1, node2) {
         //NODE1 SENDS A TEXT MESSAGE IN TRIBE
         const text = (0, helpers_2.randomText)();
         let tribeMessage = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node2, text, tribe);
-        console.log(tribeMessage);
+        t.true(!!tribeMessage, 'node1 should send message to tribe');
         // Get All message that belongs to Node 2
         const allMessages = yield (0, msg_1.getAllMessages)(node2);
-        console.log(allMessages);
-        t.true(!!tribeMessage, 'node1 should send message to tribe');
+        const newMessage = (0, msg_1.getSpecificMsg)(allMessages, tribeMessage.uuid);
+        t.true((newMessage === null || newMessage === void 0 ? void 0 : newMessage.person) === `${config_1.config.tribeHost}/${postProfile.response.uuid}`, 'Tribe message person value should be equal to tribe host and person profile from tribe server');
     });
 }
 //# sourceMappingURL=personProfile.test.js.map
