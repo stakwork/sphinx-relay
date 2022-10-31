@@ -1,6 +1,6 @@
 {
   "development": {
     "dialect": "sqlite",
-    "storage": "/Users/omoniyiilesanmi/Documents/Projects/LevelUp/BlockChain/Contributions/sphinx-stack/relay/db/alice.db"
+    "storage": "/Users/evanfeenstra/code/sphinx/sphinx-stack/relay/db/alice.db"
   }
 }

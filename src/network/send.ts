@@ -354,8 +354,8 @@ export function newmsg(
   const personId = people.getPersonId();
   if(personId){
     result.sender.person = config.people_host + '/' + personId;
-    console.log("[+] person host full url ",  result.sender.person)
-    return result
+    sphinxLogger.info(`[+] person host full URL  ${result.sender.person}`, logging.Network)
+        return result
   }
   return result
 }
