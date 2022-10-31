@@ -233,6 +233,7 @@ function parseReceiveParams(payload) {
         const dest = dat.dest;
         const recipient_alias = dat.message.recipientAlias;
         const recipient_pic = dat.message.recipientPic;
+        const person = dat.sender.person;
         const isConversation = !chat_type || (chat_type && chat_type == constants_1.default.chat_types.conversation);
         let sender;
         let chat;
@@ -303,6 +304,7 @@ function parseReceiveParams(payload) {
             force_push,
             recipient_alias,
             recipient_pic,
+            person,
         };
     });
 }

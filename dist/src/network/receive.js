@@ -91,7 +91,21 @@ function onReceive(payload, dest) {
         if (!owner)
             return logger_1.sphinxLogger.error(`=> RECEIVE: owner not found`);
         const tenant = owner.id;
+        // if tribe, owner must forward to MQTT
+        let doAction = true;
+        const toAddIn = {};
+        let isTribe = false;
+        let isTribeOwner = false;
         const ownerDataValues = owner.dataValues || owner;
+        let maybeChat;
+        if (payload.chat && payload.chat.uuid) {
+            isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
+            maybeChat = (yield models_1.models.Chat.findOne({
+                where: { uuid: payload.chat.uuid, tenant },
+            }));
+            if (maybeChat)
+                maybeChat.update({ seen: false });
+        }
         if (botTypes.includes(payload.type)) {
             // if is admin on tribe? or is bot maker?
             logger_1.sphinxLogger.info(`=> got bot msg type!`);
@@ -101,20 +115,6 @@ function onReceive(payload, dest) {
             }
             payload.owner = ownerDataValues;
             return controllers_1.ACTIONS[payload.type](payload);
-        }
-        // if tribe, owner must forward to MQTT
-        let doAction = true;
-        const toAddIn = {};
-        let isTribe = false;
-        let isTribeOwner = false;
-        let maybeChat;
-        if (payload.chat && payload.chat.uuid) {
-            isTribe = payload.chat.type === constants_1.default.chat_types.tribe;
-            maybeChat = (yield models_1.models.Chat.findOne({
-                where: { uuid: payload.chat.uuid, tenant },
-            }));
-            if (maybeChat)
-                maybeChat.update({ seen: false });
         }
         if (isTribe) {
             const tribeOwnerPubKey = maybeChat && maybeChat.ownerPubkey;
@@ -369,7 +369,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         (0, send_1.sendMessage)({
             type,
             message,
-            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, person: (payload.sender && payload.sender.person) || '' }),
             amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,
@@ -566,7 +566,7 @@ function parseKeysendInvoice(i) {
         }
         if (isKeysendType) {
             if (!memo) {
-                (0, hub_1.sendNotification)({}, '', 'keysend', owner, value || 0);
+                (0, hub_1.sendNotification)(new models_1.Chat(), '', 'keysend', owner, value || 0);
             }
             saveAnonymousKeysend(i, memo, sender_pubkey, owner.id);
             return;

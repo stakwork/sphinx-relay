@@ -1,4 +1,4 @@
-import { models, Contact, Invite } from './models'
+import { models, Contact, Invite, Chat } from './models'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
 import * as socket from './utils/socket'
@@ -88,7 +88,7 @@ const checkInviteHub = async (params = {}) => {
             )
 
             if (dbInvite.status == constants.invite_statuses.ready && contact) {
-              sendNotification(-1, contact.alias, 'invite', owner)
+              sendNotification(new Chat(), contact.alias, 'invite', owner)
             }
           }
 

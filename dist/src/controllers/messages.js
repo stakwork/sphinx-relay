@@ -359,7 +359,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendMessage = sendMessage;
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
@@ -383,11 +383,13 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         network_type: network_type,
         tenant,
         forwardedSats: hasForwardedSats,
+        push: force_push ? true : false,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
     if (isTribe) {
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
+        msg.person = person;
         if (remote_content)
             msg.remoteMessageContent = remote_content;
     }
@@ -400,7 +402,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'message',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner, undefined, force_push);
+    (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner, undefined, force_push);
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveMessage = receiveMessage;
@@ -453,7 +455,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             where: { uuid: msg.replyUuid, tenant },
         }));
         if (ogMsg && ogMsg.sender === tenant) {
-            (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'boost', owner, undefined, force_push);
+            (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'boost', owner, undefined, force_push);
         }
     }
 });

@@ -2,8 +2,7 @@ import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
 import { sphinxLogger, logging } from './logger'
-import {ContactRecord, models} from "../models";
-
+import { ContactRecord, models } from '../models'
 
 const config = loadConfig()
 
@@ -20,6 +19,7 @@ export async function createOrEditPerson(
     price_to_meet,
     extras,
     new_ticket_time,
+    uuid,
   },
   id?: number
 ) {
@@ -41,6 +41,7 @@ export async function createOrEditPerson(
         price_to_meet: price_to_meet || 0,
         extras: extras || {},
         new_ticket_time: new_ticket_time || 0,
+        uuid,
       }),
       headers: { 'Content-Type': 'application/json' },
     })
@@ -73,20 +74,22 @@ export async function deletePerson(host, id, owner_pubkey) {
   }
 }
 
-export async function deleteTicketByAdmin(host, pubkey, created,owner_pubkey) {
+export async function deleteTicketByAdmin(host, pubkey, created, owner_pubkey) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
     if (config.tribes_insecure) protocol = 'http'
-    const r = await fetch(`${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`, {
-      method: 'DELETE'
-    })
+    const r = await fetch(
+      `${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`,
+      {
+        method: 'DELETE',
+      }
+    )
     if (!r.ok) {
       throw 'failed to delete ticket by admin' + r.status
     }
-  }
-  catch (e) {
-    sphinxLogger.error(`unauthorized to delete ticket by admin`,logging.Tribes)
+  } catch (e) {
+    sphinxLogger.error(`unauthorized to delete ticket by admin`, logging.Tribes)
     throw e
   }
 }
@@ -138,9 +141,7 @@ export async function setupPersonInfo() {
   const url = protocol + '://' + config.people_host + '/person/' + owner.publicKey;
   sphinxLogger.info(`[+] Person url is : ${url}`, logging.Tribes)
   try {
-    const arg = await fetch(
-        url,
-    )
+    const arg = await fetch(url)
     const json = await arg.json()
     const stringifyJsonResponse = JSON.stringify(json);
     sphinxLogger.info(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`, logging.Tribes)
@@ -150,6 +151,11 @@ export async function setupPersonInfo() {
   }
 }
 
-export function getPersonId(): string | undefined{
-  return person_id;
+export function getPersonId(): string | undefined {
+  return person_id
+}
+
+export function setPersonId(uuid: string): string {
+  person_id = uuid
+  return person_id
 }

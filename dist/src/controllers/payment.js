@@ -132,7 +132,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.sendPayment = sendPayment;
 const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received payment ${{ payload }}`);
-    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, msg_id, parent_id, network_type, remote_content, sender_photo_url, date_string, recipient_alias, recipient_pic, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, amount, content, mediaType, mediaToken, chat_type, sender_alias, msg_uuid, msg_id, parent_id, network_type, remote_content, sender_photo_url, date_string, recipient_alias, recipient_pic, hasForwardedSats, person, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error(`=> no group chat!`);
     }
@@ -162,6 +162,8 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.mediaType = mediaType;
     if (mediaToken)
         msg.mediaToken = mediaToken;
+    if (person)
+        msg.person = person;
     if (chat_type === constants_1.default.chat_types.tribe) {
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
@@ -182,7 +184,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    (0, hub_1.sendNotification)(chat, msg.senderAlias || sender.alias, 'message', owner);
+    (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner);
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receivePayment = receivePayment;

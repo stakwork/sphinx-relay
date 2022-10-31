@@ -34,7 +34,10 @@ export default async function migrate(): Promise<void> {
 
   await migrateMuted()
 
+  addTableColumn('sphinx_messages', 'push', 'BOOLEAN')
+
   addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN')
+  addTableColumn('sphinx_messages', 'person', 'TEXT')
 
   addTableColumn('sphinx_messages', 'recipient_alias')
   addTableColumn('sphinx_messages', 'recipient_pic')
@@ -47,10 +50,12 @@ export default async function migrate(): Promise<void> {
 
   addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT')
   addTableColumn('sphinx_contacts', 'unmet', 'BOOLEAN')
+  addTableColumn('sphinx_contacts', 'person_uuid', 'TEXT')
 
   addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN')
 
   addTableColumn('sphinx_chats', 'pin')
+  addTableColumn('sphinx_chats', 'profile_filters', 'TEXT')
 
   addTenant('sphinx_chat_members')
   addTenant('sphinx_chats')
@@ -238,6 +243,21 @@ export default async function migrate(): Promise<void> {
     CREATE TABLE sphinx_requests_transport_tokens (
       id INTEGER NOT NULL PRIMARY KEY,
       transport_token TEXT,
+			created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch (e) {
+    //Do nothing here
+  }
+
+  // add actionHistory table
+  try {
+    await sequelize.query(`
+    CREATE TABLE sphinx_action_history (
+      id BIGINT NOT NULL PRIMARY KEY,
+      type TEXT,
+      meta_data TEXT,
+      tenant INTEGER,
 			created_at DATETIME,
       updated_at DATETIME
     )`)

@@ -24,6 +24,7 @@ import * as auth from './auth'
 import * as personal from './api/personal'
 import * as lsats from './lsats'
 import { Req } from '../types'
+import * as action from './actionHistory'
 
 export async function set(app) {
   builtInBots.init()
@@ -149,6 +150,9 @@ export async function set(app) {
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })
   })
+
+  app.post('/action_history', action.saveAction)
+  app.post('/action_history_bulk', action.saveActionBulk)
 
   app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')

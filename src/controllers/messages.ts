@@ -417,7 +417,6 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
 
 export const receiveMessage = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received message ${payload}`)
-
   const {
     owner,
     sender,
@@ -437,6 +436,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     message_status,
     force_push,
     hasForwardedSats,
+    person,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
@@ -448,7 +448,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   date.setMilliseconds(0)
   if (date_string) date = new Date(date_string)
 
-  const msg: { [k: string]: string | number | Date } = {
+  const msg: { [k: string]: string | number | Date | boolean } = {
     chatId: chat.id,
     uuid: msg_uuid,
     type: constants.message_types.message,
@@ -462,11 +462,13 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     network_type: network_type,
     tenant,
     forwardedSats: hasForwardedSats,
+    push: force_push ? true : false,
   }
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
+    msg.person = person
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
@@ -483,7 +485,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
 
   sendNotification(
     chat,
-    msg.senderAlias || sender.alias,
+    (msg.senderAlias || sender.alias) as string,
     'message',
     owner,
     undefined,
@@ -570,7 +572,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     if (ogMsg && ogMsg.sender === tenant) {
       sendNotification(
         chat,
-        msg.senderAlias || sender.alias,
+        (msg.senderAlias || sender.alias) as string,
         'boost',
         owner,
         undefined,

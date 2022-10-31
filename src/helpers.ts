@@ -277,6 +277,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
   const dest = dat.dest
   const recipient_alias = dat.message.recipientAlias
   const recipient_pic = dat.message.recipientPic
+  const person = dat.sender.person
 
   const isConversation =
     !chat_type || (chat_type && chat_type == constants.chat_types.conversation)
@@ -358,6 +359,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
     force_push,
     recipient_alias,
     recipient_pic,
+    person,
   }
 }
 

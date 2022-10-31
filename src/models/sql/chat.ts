@@ -119,6 +119,9 @@ export default class Chat extends Model<Chat> {
 
   @Column(DataType.BIGINT)
   notify: number
+
+  @Column(DataType.TEXT)
+  profileFilters: string
 }
 
 export interface ChatRecord extends Chat {

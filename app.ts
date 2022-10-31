@@ -7,7 +7,12 @@ import * as http from 'http'
 import logger, { logging, sphinxLogger } from './src/utils/logger'
 import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
-import { setupDatabase, setupDone, setupOwnerContact } from './src/utils/setup'
+import {
+  setupDatabase,
+  setupDone,
+  setupOwnerContact,
+  setupPersonUuid,
+} from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
 import * as socket from './src/utils/socket'
@@ -18,6 +23,9 @@ import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
 import * as people from './src/utils/people'
+
+// force UTC time
+process.env.TZ = 'UTC'
 
 const env = process.env.NODE_ENV || 'development'
 const config = loadConfig()
@@ -53,6 +61,7 @@ async function mainSetup() {
 
 async function finishSetup() {
   await setupOwnerContact()
+  await setupPersonUuid()
   await people.setupPersonInfo()
   await network.initTribesSubscriptions()
   if (config.hub_api_url) {

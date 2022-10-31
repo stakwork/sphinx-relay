@@ -14,12 +14,9 @@ import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
-import * as people from "../utils/people";
 import { loadConfig } from '../utils/config'
 
-
 const config = loadConfig()
-
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
@@ -345,6 +342,9 @@ export function newmsg(
     sender: {
       pub_key: sender.publicKey,
       ...(sender.routeHint && { route_hint: sender.routeHint }),
+      ...(sender.personUuid && {
+        person: `${config.people_host}/${sender.personUuid}`,
+      }),
       alias: includeAlias ? aliasToInclude : '',
       role: sender.role || constants.chat_roles.reader,
       ...(includePhotoUrl && { photo_url: photoUrlToInclude }),

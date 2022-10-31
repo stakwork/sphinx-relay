@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
+exports.getSpecificMsg = exports.getAllMessages = exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
 var sendMessageAndCheckDecryption_1 = require("./sendMessageAndCheckDecryption");
 Object.defineProperty(exports, "sendMessageAndCheckDecryption", { enumerable: true, get: function () { return sendMessageAndCheckDecryption_1.sendMessageAndCheckDecryption; } });
 var sendTribeMessageAndCheckDecryption_1 = require("./sendTribeMessageAndCheckDecryption");
@@ -27,4 +27,8 @@ var payStream_1 = require("./payStream");
 Object.defineProperty(exports, "payStream", { enumerable: true, get: function () { return payStream_1.payStream; } });
 var sendMessage_1 = require("./sendMessage");
 Object.defineProperty(exports, "sendMessage", { enumerable: true, get: function () { return sendMessage_1.sendMessage; } });
+var getAllMessages_1 = require("./getAllMessages");
+Object.defineProperty(exports, "getAllMessages", { enumerable: true, get: function () { return getAllMessages_1.getAllMessages; } });
+var getSpecifiMessage_1 = require("./getSpecifiMessage");
+Object.defineProperty(exports, "getSpecificMsg", { enumerable: true, get: function () { return getSpecifiMessage_1.getSpecificMsg; } });
 //# sourceMappingURL=index.js.map

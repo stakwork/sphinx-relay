@@ -321,6 +321,15 @@ function editTribe(req, res) {
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
+        let { profile_filters } = req.body;
+        if (profile_filters) {
+            if (!Array.isArray(profile_filters)) {
+                return (0, res_1.failure)(res, 'invalid profile filters');
+            }
+            else {
+                profile_filters = profile_filters.join(',');
+            }
+        }
         const chat = (yield models_1.models.Chat.findOne({
             where: { id, tenant },
         }));
@@ -352,6 +361,7 @@ function editTribe(req, res) {
                     owner_route_hint: owner.routeHint || '',
                     owner_pubkey: owner.publicKey,
                     pin: pin || '',
+                    profile_filters: profile_filters || '',
                 });
             }
             catch (e) {
@@ -382,6 +392,7 @@ function editTribe(req, res) {
                 obj.feedType = feed_type;
             if (req.body.private || req.body.private === false)
                 obj.private = req.body.private;
+            obj.profileFilters = profile_filters || '';
             if (Object.keys(obj).length > 0) {
                 yield chat.update(obj);
             }
@@ -683,7 +694,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
     });
 }
 exports.replayChatHistory = replayChatHistory;
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin, profile_filters) {
     return __awaiter(this, void 0, void 0, function* () {
         const date = new Date();
         date.setMilliseconds(0);
@@ -719,6 +730,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             feedType: feed_type || 0,
             tenant,
             pin: pin || '',
+            profileFilters: profile_filters,
         };
     });
 }
