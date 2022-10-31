@@ -9,13 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.setPersonId = exports.getPersonId = exports.setupPersonInfo = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
+const models_1 = require("../models");
 const config = (0, config_1.loadConfig)();
-function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, new_ticket_time, }, id) {
+function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, new_ticket_time, uuid, }, id) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
@@ -30,7 +31,7 @@ function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint,
                     owner_route_hint,
                     owner_contact_key,
                     description,
-                    img, tags: tags || [], price_to_meet: price_to_meet || 0, extras: extras || {}, new_ticket_time: new_ticket_time || 0 })),
+                    img, tags: tags || [], price_to_meet: price_to_meet || 0, extras: extras || {}, new_ticket_time: new_ticket_time || 0, uuid })),
                 headers: { 'Content-Type': 'application/json' },
             });
             if (!r.ok) {
@@ -76,7 +77,7 @@ function deleteTicketByAdmin(host, pubkey, created, owner_pubkey) {
             if (config.tribes_insecure)
                 protocol = 'http';
             const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/ticket/${pubkey}/${created}?token=${token}`, {
-                method: 'DELETE'
+                method: 'DELETE',
             });
             if (!r.ok) {
                 throw 'failed to delete ticket by admin' + r.status;
@@ -119,4 +120,37 @@ function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
     });
 }
 exports.claimOnLiquid = claimOnLiquid;
+let person_id;
+function setupPersonInfo() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const owner = (yield models_1.models.Contact.findOne({
+            where: { id: 1 },
+        }));
+        let protocol = 'https';
+        if (config.tribes_insecure)
+            protocol = 'http';
+        const url = protocol + '://' + config.people_host + '/person/' + owner.publicKey;
+        console.log(`[+] Person url is : ${url}`);
+        try {
+            const arg = yield (0, node_fetch_1.default)(url);
+            const json = yield arg.json();
+            const stringifyJsonResponse = JSON.stringify(json);
+            console.log(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`);
+            person_id = json.uuid;
+        }
+        catch (e) {
+            console.log(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`);
+        }
+    });
+}
+exports.setupPersonInfo = setupPersonInfo;
+function getPersonId() {
+    return person_id;
+}
+exports.getPersonId = getPersonId;
+function setPersonId(uuid) {
+    person_id = uuid;
+    return person_id;
+}
+exports.setPersonId = setPersonId;
 //# sourceMappingURL=people.js.map

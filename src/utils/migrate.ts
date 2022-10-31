@@ -37,6 +37,7 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_messages', 'push', 'BOOLEAN')
 
   addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN')
+  addTableColumn('sphinx_messages', 'person', 'TEXT')
 
   addTableColumn('sphinx_messages', 'recipient_alias')
   addTableColumn('sphinx_messages', 'recipient_pic')
@@ -49,6 +50,7 @@ export default async function migrate(): Promise<void> {
 
   addTableColumn('sphinx_contacts', 'price_to_meet', 'BIGINT')
   addTableColumn('sphinx_contacts', 'unmet', 'BOOLEAN')
+  addTableColumn('sphinx_contacts', 'person_uuid', 'TEXT')
 
   addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN')
 

@@ -1,5 +1,5 @@
 import * as Lightning from '../grpc/lightning'
-import { sequelize, models, Contact } from '../models'
+import { sequelize, models, Contact, ContactRecord } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as gitinfo from '../utils/gitinfo'
@@ -10,6 +10,8 @@ import { loadConfig } from './config'
 import migrate from './migrate'
 import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
+import fetch from 'node-fetch'
+import { Op } from 'sequelize'
 
 const USER_VERSION = 7
 const config = loadConfig()
@@ -76,6 +78,37 @@ const setupOwnerContact = async () => {
   }
 }
 
+const setupPersonUuid = async () => {
+  let protocol = 'https'
+  if (config.tribes_insecure) protocol = 'http'
+
+  try {
+    const contacts = (await models.Contact.findAll({
+      where: {
+        isOwner: true,
+        [Op.or]: [{ personUuid: null }, { personUuid: '' }],
+      },
+    })) as ContactRecord[]
+
+    for (let i = 0; i < contacts.length; i++) {
+      let tenant = contacts[i]
+      const url =
+        protocol + '://' + config.people_host + '/person/' + tenant.publicKey
+      const res = await fetch(url)
+      const person = await res.json()
+      if (person.uuid) {
+        await models.Contact.update(
+          { personUuid: person.uuid },
+          { where: { id: tenant.id } }
+        )
+      }
+    }
+  } catch (error) {
+    console.log(error)
+    sphinxLogger.info(['error trying to set person uuid', error], logging.DB)
+  }
+}
+
 const runMigrations = async () => {
   await new Promise((resolve, reject) => {
     const migration: any = exec(
@@ -96,7 +129,13 @@ const runMigrations = async () => {
   })
 }
 
-export { setupDatabase, setupOwnerContact, runMigrations, setupDone }
+export {
+  setupDatabase,
+  setupOwnerContact,
+  runMigrations,
+  setupDone,
+  setupPersonUuid,
+}
 
 async function setupDone() {
   await printGitInfo()

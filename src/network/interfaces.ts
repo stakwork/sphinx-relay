@@ -21,6 +21,7 @@ export interface MessageContent {
   skipPaymentProcessing?: boolean
   recipientAlias?: string
   recipientPic?: string
+  person?: string
 }
 
 export type ChatMembers = { [k: string]: ChatMember }
@@ -51,6 +52,7 @@ export interface SenderContent {
   route_hint?: string
   photo_url?: string
   contact_key?: string
+  person?: string
 }
 
 export interface Msg {

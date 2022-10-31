@@ -7,6 +7,7 @@ import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
 import { createJWT, scopes } from '../../utils/jwt'
+import { setPersonId } from '../../utils/people'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -50,12 +51,16 @@ export async function createPeopleProfile(req, res) {
         owner_contact_key: owner.contactKey,
         extras: extras || {},
         new_ticket_time: new_ticket_time || 0,
+        uuid: owner.personUuid || '',
       },
       id || null
     )
 
-    await owner.update({ priceToMeet: priceToMeet || 0 })
-
+    await owner.update({
+      priceToMeet: priceToMeet || 0,
+      personUuid: person.uuid,
+    })
+    setPersonId(person.uuid)
     success(res, person)
   } catch (e) {
     failure(res, e)
@@ -89,17 +94,13 @@ export async function deleteTicketByAdmin(req, res) {
   if (!req.owner) return failure(res, 'no owner')
 
   try {
-    const {
-      host,
-      pubkey,
-      created
-    } = req.body
+    const { host, pubkey, created } = req.body
 
     const person = await people.deleteTicketByAdmin(
-        host || config.tribes_host,
-        pubkey,
-        created,
-        req.owner.publicKey
+      host || config.tribes_host,
+      pubkey,
+      created,
+      req.owner.publicKey
     )
 
     success(res, person)

@@ -534,6 +534,7 @@ export const receiveAttachment = async (payload) => {
     network_type,
     sender_photo_url,
     force_push,
+    person,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.error('=> no group chat!')
@@ -559,6 +560,7 @@ export const receiveAttachment = async (payload) => {
   if (mediaType) msg.mediaType = mediaType
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
+  if (person) msg.person = person
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {
     msg.senderAlias = sender_alias

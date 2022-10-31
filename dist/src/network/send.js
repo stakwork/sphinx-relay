@@ -19,6 +19,8 @@ const receive_1 = require("./receive");
 const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const config_1 = require("../utils/config");
+const config = (0, config_1.loadConfig)();
 function sendMessage({ type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, forwardedFromContactId, realSatsContactId, }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!chat || !sender)
@@ -252,12 +254,15 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
     if (!includeStatus && message.status) {
         delete message.status;
     }
-    return {
+    const result = {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, (chat.name && { name: chat.name })), ((chat.type || chat.type === 0) && { type: chat.type })), (chat.members && { members: chat.members })), (includeGroupKey && chat.groupKey && { groupKey: chat.groupKey })), (includeGroupKey && chat.host && { host: chat.host })),
         message: message,
-        sender: Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
+        sender: Object.assign(Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), (sender.personUuid && {
+            person: `${config.people_host}/${sender.personUuid}`,
+        })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
     };
+    return result;
 }
 exports.newmsg = newmsg;
 function asyncForEach(array, callback) {

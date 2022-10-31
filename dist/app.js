@@ -27,6 +27,7 @@ const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
+const people = require("./src/utils/people");
 // force UTC time
 process.env.TZ = 'UTC';
 const env = process.env.NODE_ENV || 'development';
@@ -65,6 +66,8 @@ function mainSetup() {
 function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, setup_1.setupOwnerContact)();
+        yield (0, setup_1.setupPersonUuid)();
+        yield people.setupPersonInfo();
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             (0, hub_1.checkInvitesHubInterval)(5000);
