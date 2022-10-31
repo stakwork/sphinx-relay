@@ -157,6 +157,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Boolean)
 ], Message.prototype, "forwardedSats", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Boolean)
+], Message.prototype, "push", void 0);
 Message = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_messages', underscored: true })
 ], Message);

@@ -28,6 +28,8 @@ const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
 const people = require("./src/utils/people");
+// force UTC time
+process.env.TZ = 'UTC';
 const env = process.env.NODE_ENV || 'development';
 const config = (0, config_1.loadConfig)();
 const port = process.env.PORT || config.node_http_port || 3001;

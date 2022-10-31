@@ -112,6 +112,9 @@ export default class Message extends Model<Message> {
 
   @Column
   forwardedSats: boolean
+
+  @Column
+  push: boolean
 }
 
 /*

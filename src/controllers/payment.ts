@@ -221,7 +221,12 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
     tenant
   )
 
-  sendNotification(chat, msg.senderAlias || sender.alias, 'message', owner)
+  sendNotification(
+    chat,
+    (msg.senderAlias || sender.alias) as string,
+    'message',
+    owner
+  )
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }

@@ -463,6 +463,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         updatedAt: date,
         network_type,
         tenant,
+        push: force_push ? true : false,
     };
     if (content)
         msg.messageContent = content;

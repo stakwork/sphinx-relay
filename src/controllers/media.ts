@@ -552,6 +552,7 @@ export const receiveAttachment = async (payload) => {
     updatedAt: date,
     network_type,
     tenant,
+    push: force_push ? true : false,
   }
   if (content) msg.messageContent = content
   if (mediaToken) msg.mediaToken = mediaToken

@@ -24,6 +24,9 @@ import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
 import * as people from './src/utils/people'
 
+// force UTC time
+process.env.TZ = 'UTC'
+
 const env = process.env.NODE_ENV || 'development'
 const config = loadConfig()
 const port = process.env.PORT || config.node_http_port || 3001
