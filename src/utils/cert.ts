@@ -125,7 +125,7 @@ async function downloadCert(id, apiKey) {
   return res.data
 }
 
-async function getCertificate(domain, port, save_ssl) {
+async function getCertificate(domain: string, port: number, save_ssl: boolean) {
   if (
     existsSync(__dirname + '/zerossl/tls.cert') &&
     existsSync(__dirname + '/zerossl/tls.key')
