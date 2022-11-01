@@ -40,7 +40,7 @@ export interface UTXO {
 }
 
 export async function listUnspent(): Promise<UTXO[]> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const walletkit = await loadWalletKit()
     try {
       const opts = { min_confs: 0, max_confs: 10000 }
