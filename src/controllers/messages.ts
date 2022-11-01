@@ -189,7 +189,7 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   if (req.query.order && req.query.order === 'desc') {
     order = 'desc'
   }
-  const clause: { [k: string]: any } = {
+  const clause: FindOptions = {
     order: [['id', order]],
     where: {
       updated_at: { [Op.gte]: dateToReturn },
