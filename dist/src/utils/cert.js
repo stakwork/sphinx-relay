@@ -20,7 +20,7 @@ const axios_1 = require("axios");
 const forge = require("node-forge");
 const apiUrl = 'https://api.zerossl.com';
 const config_1 = require("../utils/config");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -43,7 +43,7 @@ function generateCsr(keys, endpoint) {
 }
 function requestCert(endpoint, csr, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const res = yield (0, axios_1.default)({
+        const res = yield axios_1.default({
             method: 'post',
             url: `${apiUrl}/certificates?access_key=${apiKey}`,
             data: qs.stringify({
@@ -90,7 +90,7 @@ function validateCert(port, data, endpoint, apiKey) {
 }
 function requestValidation(id, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const res = yield (0, axios_1.default)({
+        const res = yield axios_1.default({
             method: 'post',
             url: `${apiUrl}/certificates/${id}/challenges?access_key=${apiKey}`,
             data: qs.stringify({
@@ -110,7 +110,7 @@ function requestValidation(id, apiKey) {
 }
 function getCert(id, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const res = yield (0, axios_1.default)({
+        const res = yield axios_1.default({
             method: 'get',
             url: `${apiUrl}/certificates/${id}?access_key=${apiKey}`,
             headers: {
@@ -122,7 +122,7 @@ function getCert(id, apiKey) {
 }
 function downloadCert(id, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const res = yield (0, axios_1.default)({
+        const res = yield axios_1.default({
             method: 'get',
             url: `${apiUrl}/certificates/${id}/download/return?access_key=${apiKey}`,
             headers: {
@@ -134,11 +134,11 @@ function downloadCert(id, apiKey) {
 }
 function getCertificate(domain, port, save_ssl) {
     return __awaiter(this, void 0, void 0, function* () {
-        if ((0, fs_1.existsSync)(__dirname + '/zerossl/tls.cert') &&
-            (0, fs_1.existsSync)(__dirname + '/zerossl/tls.key')) {
-            const certificate = (0, fs_1.readFileSync)(__dirname + '/zerossl/tls.cert', 'utf-8').toString();
-            const caBundle = (0, fs_1.readFileSync)(__dirname + '/zerossl/ca.cert', 'utf-8').toString();
-            const privateKey = (0, fs_1.readFileSync)(__dirname + '/zerossl/tls.key', 'utf-8').toString();
+        if (fs_1.existsSync(__dirname + '/zerossl/tls.cert') &&
+            fs_1.existsSync(__dirname + '/zerossl/tls.key')) {
+            const certificate = fs_1.readFileSync(__dirname + '/zerossl/tls.cert', 'utf-8').toString();
+            const caBundle = fs_1.readFileSync(__dirname + '/zerossl/ca.cert', 'utf-8').toString();
+            const privateKey = fs_1.readFileSync(__dirname + '/zerossl/tls.key', 'utf-8').toString();
             return {
                 privateKey: privateKey,
                 certificate: certificate,
@@ -160,22 +160,22 @@ function getCertificate(domain, port, save_ssl) {
         yield validateCert(port, res, endpoint, apiKey);
         const certData = yield downloadCert(res.id, apiKey);
         if (save_ssl === true) {
-            if (!(0, fs_1.existsSync)(__dirname + '/zerossl')) {
-                yield (0, fs_1.mkdirSync)(__dirname + '/zerossl');
+            if (!fs_1.existsSync(__dirname + '/zerossl')) {
+                yield fs_1.mkdirSync(__dirname + '/zerossl');
             }
-            yield (0, fs_1.writeFile)(__dirname + '/zerossl/tls.cert', certData['certificate.crt'], function (err) {
+            yield fs_1.writeFile(__dirname + '/zerossl/tls.cert', certData['certificate.crt'], function (err) {
                 if (err) {
                     return logger_1.sphinxLogger.error(err);
                 }
                 logger_1.sphinxLogger.info(`wrote tls certificate`, logger_1.logging.SSL);
             });
-            yield (0, fs_1.writeFile)(__dirname + '/zerossl/ca.cert', certData['ca_bundle.crt'], function (err) {
+            yield fs_1.writeFile(__dirname + '/zerossl/ca.cert', certData['ca_bundle.crt'], function (err) {
                 if (err) {
                     return logger_1.sphinxLogger.error(err);
                 }
                 logger_1.sphinxLogger.info(`wrote tls ca bundle`, logger_1.logging.SSL);
             });
-            yield (0, fs_1.writeFile)(__dirname + '/zerossl/tls.key', forge.pki.privateKeyToPem(keys.privateKey), function (err) {
+            yield fs_1.writeFile(__dirname + '/zerossl/tls.key', forge.pki.privateKeyToPem(keys.privateKey), function (err) {
                 if (err) {
                     return logger_1.sphinxLogger.error(err);
                 }

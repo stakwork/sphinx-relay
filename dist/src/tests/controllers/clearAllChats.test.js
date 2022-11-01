@@ -17,25 +17,25 @@ const nodes_1 = require("../nodes");
 /*
 npx ava test-99-clearAllChats.js --verbose --serial --timeout=2m
 */
-(0, ava_1.default)('test-99-clearAllChats: clear all chats from nodes', (t) => __awaiter(void 0, void 0, void 0, function* () {
+ava_1.default('test-99-clearAllChats: clear all chats from nodes', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield clearAllChats(t);
 }));
 function clearAllChats(t) {
     return __awaiter(this, void 0, void 0, function* () {
         //DELETE ALL CHATS ===>
-        yield (0, helpers_1.asyncForEach)(nodes_1.default, (node) => __awaiter(this, void 0, void 0, function* () {
+        yield helpers_1.asyncForEach(nodes_1.default, (node) => __awaiter(this, void 0, void 0, function* () {
             if (!node)
                 return;
             //get all chats from node
-            const chats = yield (0, get_1.getChats)(t, node);
+            const chats = yield get_1.getChats(t, node);
             t.truthy(chats, 'should have fetched chats');
             if (chats.length === 0) {
                 console.log(`${node.alias} had no chats`);
                 return;
             }
             //delete any chat that node is a part of
-            yield (0, helpers_1.asyncForEach)(chats, (c) => __awaiter(this, void 0, void 0, function* () {
-                const deletion = yield (0, del_1.deleteChat)(t, node, c);
+            yield helpers_1.asyncForEach(chats, (c) => __awaiter(this, void 0, void 0, function* () {
+                const deletion = yield del_1.deleteChat(t, node, c);
                 t.true(deletion, 'node should delete chat');
             }));
             console.log(`${node.alias} deleted all chats`);

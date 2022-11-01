@@ -138,21 +138,16 @@ export async function setupPersonInfo() {
 
   let protocol = 'https'
   if (config.tribes_insecure) protocol = 'http'
-  const url =
-    protocol + '://' + config.people_host + '/person/' + owner.publicKey
-  console.log(`[+] Person url is : ${url}`)
+  const url = protocol + '://' + config.people_host + '/person/' + owner.publicKey;
+  sphinxLogger.info(`[+] Person url is : ${url}`, logging.Tribes)
   try {
     const arg = await fetch(url)
     const json = await arg.json()
-    const stringifyJsonResponse = JSON.stringify(json)
-    console.log(
-      `[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`
-    )
-    person_id = json.uuid
+    const stringifyJsonResponse = JSON.stringify(json);
+    sphinxLogger.info(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`, logging.Tribes)
+    person_id = json.uuid;
   } catch (e) {
-    console.log(
-      `[-] Error happened while getting person details for publicKey: ${owner.publicKey}`
-    )
+    sphinxLogger.error(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`, logging.Tribes)
   }
 }
 

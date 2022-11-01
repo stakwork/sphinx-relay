@@ -16,7 +16,7 @@ function getTribeId(t, node, tribe) {
     return __awaiter(this, void 0, void 0, function* () {
         //GET TRIBE ID FROM PERSPECTIVE OF NODE ===>
         //get list of contacts as node
-        let con = yield http.get(node.external_ip + '/contacts', (0, helpers_1.makeArgs)(node));
+        let con = yield http.get(node.external_ip + '/contacts', helpers_1.makeArgs(node));
         //get test tribe id as node
         let findTribe = con.response.chats.find((chat) => chat.uuid === tribe.uuid);
         t.true(typeof findTribe === 'object', 'tribe object should exist');

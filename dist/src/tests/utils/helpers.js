@@ -38,7 +38,7 @@ const makeRelayRequest = (method, path, node, body
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) => __awaiter(void 0, void 0, void 0, function* () {
     const reqFunc = http[method];
-    const { response } = yield reqFunc(node.external_ip + path, (0, exports.makeArgs)(node, body));
+    const { response } = yield reqFunc(node.external_ip + path, exports.makeArgs(node, body));
     return response;
 });
 exports.makeRelayRequest = makeRelayRequest;
@@ -105,7 +105,7 @@ function getToken(t, node) {
         t.truthy(r, 'r should exist');
         t.truthy(r.challenge, 'r.challenge should exist');
         //call relay server with challenge
-        const r2 = yield http.get(node.external_ip + `/signer/${r.challenge}`, (0, exports.makeArgs)(node));
+        const r2 = yield http.get(node.external_ip + `/signer/${r.challenge}`, exports.makeArgs(node));
         t.true(r2.success, 'r2 should exist');
         t.truthy(r2.response.sig, 'r2.sig should exist');
         //get server token

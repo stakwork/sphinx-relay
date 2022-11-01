@@ -52,7 +52,7 @@ function receiveNonKeysend(response) {
             const payReq = response['payment_request'];
             const amount = response['amt_paid_sat'];
             if (process.env.HOSTING_PROVIDER === 'true') {
-                (0, hub_1.sendInvoice)(payReq, amount);
+                hub_1.sendInvoice(payReq, amount);
             }
             socket.sendJson({
                 type: 'invoice_payment',
@@ -108,7 +108,7 @@ function receiveNonKeysend(response) {
             type: 'payment',
             response: jsonUtils.messageToJson(message, chat, sender),
         }, tenant);
-        (0, hub_1.sendNotification)(chat, sender.alias, 'message', owner);
+        hub_1.sendNotification(chat, sender.alias, 'message', owner);
     });
 }
 exports.receiveNonKeysend = receiveNonKeysend;

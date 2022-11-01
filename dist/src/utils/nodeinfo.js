@@ -16,7 +16,7 @@ const gitinfo = require("./gitinfo");
 const models_1 = require("../models");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 var NodeType;
 (function (NodeType) {

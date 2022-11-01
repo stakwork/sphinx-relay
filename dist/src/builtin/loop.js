@@ -18,7 +18,7 @@ const child_process_1 = require("child_process");
 const config_1 = require("../utils/config");
 const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const validate = require('bitcoin-address-validation');
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
@@ -136,7 +136,7 @@ function init() {
                     `--addr=${addy}`,
                 ];
                 logger_1.sphinxLogger.info(`=> SPAWN ${cmd} ${args}`);
-                const childProcess = (0, child_process_1.spawn)(cmd, args);
+                const childProcess = child_process_1.spawn(cmd, args);
                 childProcess.stdout.on('data', function (data) {
                     const stdout = data.toString();
                     logger_1.sphinxLogger.info(`LOOPBOT stdout: ${stdout}`);
@@ -215,7 +215,7 @@ function init() {
 exports.init = init;
 function getBot(tribeUUID) {
     return __awaiter(this, void 0, void 0, function* () {
-        const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(tribeUUID);
+        const chat = yield tribes_1.getTribeOwnersChatByUUID(tribeUUID);
         if (!chat)
             return;
         return yield models_1.models.ChatBot.findOne({

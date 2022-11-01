@@ -14,7 +14,7 @@ const zbase32 = require("./zbase32");
 const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 /*
 Lightning Data Access Token
 Base64 strings separated by dots:

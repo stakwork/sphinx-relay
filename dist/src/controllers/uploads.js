@@ -14,7 +14,7 @@ const models_1 = require("../models");
 const path = require("path");
 const config_1 = require("../utils/config");
 const multer = require("multer");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 // setup disk storage
 const avatarStorage = multer.diskStorage({
     destination: (req, file, cb) => {

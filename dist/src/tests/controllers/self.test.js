@@ -15,11 +15,11 @@ const nodes_1 = require("../nodes");
 const get_1 = require("../utils/get");
 ava_1.default.serial('checkSelf', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield (0, helpers_1.asyncForEach)(nodes_1.default, (node) => __awaiter(void 0, void 0, void 0, function* () {
+    yield helpers_1.asyncForEach(nodes_1.default, (node) => __awaiter(void 0, void 0, void 0, function* () {
         if (!node)
             return;
         //get list of contacts as node
-        var me = yield (0, get_1.getSelf)(t, node);
+        var me = yield get_1.getSelf(t, node);
         //check that the structure object
         t.true(typeof me === 'object'); // json object by default
         //check that first contact public_key === node pubkey

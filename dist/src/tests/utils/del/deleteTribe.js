@@ -15,10 +15,10 @@ const helpers_1 = require("../helpers");
 const get_1 = require("../get");
 function deleteTribe(t, node, tribe) {
     return __awaiter(this, void 0, void 0, function* () {
-        const tribeId = yield (0, get_1.getTribeIdFromUUID)(t, node, tribe);
+        const tribeId = yield get_1.getTribeIdFromUUID(t, node, tribe);
         t.truthy(tribeId, 'node should get tribe id');
         //node deletes the tribe
-        let del = yield http.del(node.external_ip + '/chat/' + tribeId, (0, helpers_1.makeArgs)(node));
+        let del = yield http.del(node.external_ip + '/chat/' + tribeId, helpers_1.makeArgs(node));
         t.true(del.success, 'node1 should delete the tribe');
         return true;
     });

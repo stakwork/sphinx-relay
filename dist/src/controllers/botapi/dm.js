@@ -21,7 +21,7 @@ function dm(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount, content, pubkey } = a;
         logger_1.sphinxLogger.info(`=> BOT DM ${JSON.stringify(a, null, 2)}`);
-        const ret = yield (0, index_1.validateAction)(a);
+        const ret = yield index_1.validateAction(a);
         if (!ret)
             return;
         const owner = ret.owner;

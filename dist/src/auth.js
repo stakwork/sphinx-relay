@@ -25,7 +25,7 @@ const hmac = require("./crypto/hmac");
 const fs = require("fs");
 const moment = require("moment");
 const cert_1 = require("./utils/cert");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 /*
 "unlock": true,
 "encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
@@ -34,45 +34,45 @@ function unlocker(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { password } = req.body;
         if (!password) {
-            (0, res_1.failure)(res, 'no password');
+            res_1.failure(res, 'no password');
             return false;
         }
         const encMacPath = config.encrypted_macaroon_path;
         if (!encMacPath) {
-            (0, res_1.failure)(res, 'no macaroon path');
+            res_1.failure(res, 'no macaroon path');
             return false;
         }
         let hexMac;
         try {
             const encMac = fs.readFileSync(config.encrypted_macaroon_path, 'utf8');
             if (!encMac) {
-                (0, res_1.failure)(res, 'no macaroon');
+                res_1.failure(res, 'no macaroon');
                 return false;
             }
             const decMac = decryptMacaroon(password, encMac);
             if (!decMac) {
-                (0, res_1.failure)(res, 'failed to decrypt macaroon');
+                res_1.failure(res, 'failed to decrypt macaroon');
                 return false;
             }
             const isBase64 = b64regex.test(decMac);
             if (!isBase64) {
-                (0, res_1.failure)(res, 'failed to decode macaroon');
+                res_1.failure(res, 'failed to decode macaroon');
                 return false;
             }
             hexMac = base64ToHex(decMac);
         }
         catch (e) {
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
             return false;
         }
         if (hexMac) {
-            (0, macaroon_1.setInMemoryMacaroon)(hexMac);
-            (0, res_1.success)(res, 'success!');
+            macaroon_1.setInMemoryMacaroon(hexMac);
+            res_1.success(res, 'success!');
             yield sleep(100);
             return true;
         }
         else {
-            (0, res_1.failure)(res, 'failed to set macaroon in memory');
+            res_1.failure(res, 'failed to set macaroon in memory');
             return false;
         }
     });
@@ -106,7 +106,7 @@ function hmacMiddleware(req, res, next) {
         const valid = hmac.verifyHmac(sig, message, req.owner.hmacKey);
         // console.log('valid sig!', valid)
         if (!valid) {
-            return (0, res_1.unauthorized)(res);
+            return res_1.unauthorized(res);
         }
         next();
     });
@@ -155,7 +155,7 @@ function ownerMiddleware(req, res, next) {
             });
             // Read the transport private key since we will need to decrypt with this
             if (!fs.existsSync(config.transportPrivateKeyLocation)) {
-                yield (0, cert_1.generateTransportTokenKeys)();
+                yield cert_1.generateTransportTokenKeys();
             }
             const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
             // Decrypt the token and split by space not sure what
@@ -195,7 +195,7 @@ function ownerMiddleware(req, res, next) {
                     req.owner = owner.dataValues;
                 }
             }
-            else if (!(0, proxy_1.isProxy)()) {
+            else if (!proxy_1.isProxy()) {
                 const owner2 = (yield models_1.models.Contact.findOne({
                     where: { isOwner: true },
                 }));
@@ -231,7 +231,7 @@ function ownerMiddleware(req, res, next) {
             const parsed = jwtUtils.verifyJWT(jwt);
             if (parsed) {
                 const publicKey = parsed.body.pubkey;
-                const allowed = (0, scopes_1.allowedJwtRoutes)(parsed.body, req.path);
+                const allowed = scopes_1.allowedJwtRoutes(parsed.body, req.path);
                 if (allowed && publicKey) {
                     owner = yield models_1.models.Contact.findOne({
                         where: { publicKey, isOwner: true },

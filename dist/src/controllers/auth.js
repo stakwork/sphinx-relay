@@ -16,14 +16,14 @@ const config_1 = require("../utils/config");
 const tribes = require("../utils/tribes");
 const cert_1 = require("../utils/cert");
 const fs = require("fs");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 function verifyAuthRequest(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return (0, res_1.failure)(res, 'no owner');
+            return res_1.failure(res, 'no owner');
         try {
             const sc = [jwt_1.scopes.PERSONAL, jwt_1.scopes.BOTS];
-            const jot = (0, jwt_1.createJWT)(req.owner.publicKey, sc, 10080); // one week
+            const jot = jwt_1.createJWT(req.owner.publicKey, sc, 10080); // one week
             const bod = {
                 pubkey: req.owner.publicKey,
                 alias: req.owner.alias,
@@ -34,7 +34,7 @@ function verifyAuthRequest(req, res) {
                 jwt: jot,
             };
             const token = yield tribes.genSignedTimestamp(req.owner.publicKey);
-            (0, res_1.success)(res, {
+            res_1.success(res, {
                 info: bod,
                 token,
             });
@@ -49,7 +49,7 @@ function verifyAuthRequest(req, res) {
             // success(res, 'ok')
         }
         catch (e) {
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
         }
     });
 }
@@ -57,7 +57,7 @@ exports.verifyAuthRequest = verifyAuthRequest;
 function requestExternalTokens(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return (0, res_1.failure)(res, 'no owner');
+            return res_1.failure(res, 'no owner');
         try {
             const result = {
                 pubkey: req.owner.publicKey,
@@ -68,10 +68,10 @@ function requestExternalTokens(req, res) {
                 price_to_meet: req.owner.priceToMeet,
                 jwt: '',
             };
-            (0, res_1.success)(res, result);
+            res_1.success(res, result);
         }
         catch (e) {
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
         }
     });
 }
@@ -86,11 +86,11 @@ function requestTransportKey(req, res) {
             //We want to do nothing here
         }
         if (transportPublicKey != null) {
-            (0, res_1.success)(res, { transport_key: transportPublicKey });
+            res_1.success(res, { transport_key: transportPublicKey });
             return;
         }
-        const transportTokenKeys = yield (0, cert_1.generateTransportTokenKeys)();
-        (0, res_1.success)(res, { transport_key: transportTokenKeys });
+        const transportTokenKeys = yield cert_1.generateTransportTokenKeys();
+        res_1.success(res, { transport_key: transportTokenKeys });
     });
 }
 exports.requestTransportKey = requestTransportKey;

@@ -21,7 +21,7 @@ const res_1 = require("./res");
 const logger_1 = require("./logger");
 const fs = require("fs");
 const net = require("net");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 function getIP() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -70,7 +70,7 @@ function getQR() {
 exports.getQR = getQR;
 function makeVarScript() {
     return __awaiter(this, void 0, void 0, function* () {
-        const clean = yield (0, nodeinfo_1.isClean)();
+        const clean = yield nodeinfo_1.isClean();
         const isSignedUp = clean ? false : true;
         const channelList = yield Lightning.listChannels({});
         const { channels } = channelList;
@@ -129,11 +129,11 @@ function checkPeered(req, res) {
                     channel_point = ch.channel_point;
                 }
             });
-            (0, res_1.success)(res, { peered, active, channel_point });
+            res_1.success(res, { peered, active, channel_point });
         }
         catch (e) {
             logger_1.sphinxLogger.error(`=> checkPeered failed ${e}`);
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
         }
     });
 }
@@ -147,11 +147,11 @@ function connectPeer(req, res) {
                     host: '54.159.193.149:9735',
                 },
             });
-            (0, res_1.success)(res, 'ok');
+            res_1.success(res, 'ok');
         }
         catch (e) {
             logger_1.sphinxLogger.error(`=> connect peer failed ${e}`);
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
         }
     });
 }
@@ -160,7 +160,7 @@ function genChannel(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount } = req.body;
         if (!amount)
-            return (0, res_1.failure)(res, 'no amount');
+            return res_1.failure(res, 'no amount');
         try {
             yield Lightning.connectPeer({
                 addr: {
@@ -168,14 +168,14 @@ function genChannel(req, res) {
                     host: '54.159.193.149:9735',
                 },
             });
-            const sat_per_byte = yield (0, queries_1.getSuggestedSatPerByte)();
+            const sat_per_byte = yield queries_1.getSuggestedSatPerByte();
             yield Lightning.openChannel({
                 node_pubkey: '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f',
                 local_funding_amount: amount,
                 push_sat: Math.round(amount * 0.02),
                 sat_per_byte,
             });
-            (0, res_1.success)(res, 'ok');
+            res_1.success(res, 'ok');
         }
         catch (e) {
             logger_1.sphinxLogger.error(`=> connect failed ${e}`);
@@ -214,7 +214,7 @@ function connect(req, res) {
                 }
                 else {
                     const newScript = yield makeVarScript();
-                    const hub_pubkey = yield (0, queries_1.get_hub_pubkey)();
+                    const hub_pubkey = yield queries_1.get_hub_pubkey();
                     const htmlString = Buffer.from(pgResp).toString();
                     const qr = yield getQR();
                     const rep = htmlString.replace(/CONNECTION_STRING/g, qr);

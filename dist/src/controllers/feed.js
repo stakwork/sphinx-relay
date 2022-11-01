@@ -17,11 +17,11 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { destinations, amount, chat_id, text, update_meta, } = req.body;
     if (!(destinations && destinations.length)) {
-        return (0, res_1.failure)(res, 'no destinations');
+        return res_1.failure(res, 'no destinations');
     }
     if (update_meta) {
         let meta;
@@ -32,7 +32,7 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             //we want to do nothing here
         }
         if (!meta) {
-            return (0, res_1.failure)(res, 'no meta');
+            return res_1.failure(res, 'no meta');
         }
         if (meta && meta.itemID) {
             const cm = {
@@ -45,7 +45,7 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 where: { id: chat_id, tenant },
             });
             if (!chat) {
-                return (0, res_1.failure)(res, 'no chat');
+                return res_1.failure(res, 'no chat');
             }
             yield chat.update({ meta: JSON.stringify(cm) });
         }
@@ -69,7 +69,7 @@ const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
         }));
     }
-    (0, res_1.success)(res, {});
+    res_1.success(res, {});
 });
 exports.streamFeed = streamFeed;
 function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSuccess, onFailure, extra_tlv) {

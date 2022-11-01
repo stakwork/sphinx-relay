@@ -16,11 +16,11 @@ const get_1 = require("../get");
 function updateProfile(t, node, profileUpdate) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE UPDATES ITS PROFILE
-        const self = yield (0, get_1.getSelf)(t, node);
+        const self = yield get_1.getSelf(t, node);
         t.truthy(self, 'own contact should be fetched');
         const nodeId = self.id;
         t.truthy(nodeId, 'node should have found id for itself');
-        const add = yield http.put(node.external_ip + `/contacts/${nodeId}`, (0, helpers_1.makeArgs)(node, profileUpdate));
+        const add = yield http.put(node.external_ip + `/contacts/${nodeId}`, helpers_1.makeArgs(node, profileUpdate));
         t.truthy(add, 'node should have updated its profile');
         return true;
     });

@@ -14,7 +14,7 @@ const http = require("ava-http");
 const helpers_1 = require("../helpers");
 function deleteChat(t, node, chatID) {
     return __awaiter(this, void 0, void 0, function* () {
-        let deletion = yield http.del(node.external_ip + '/chat/' + chatID, (0, helpers_1.makeArgs)(node));
+        let deletion = yield http.del(node.external_ip + '/chat/' + chatID, helpers_1.makeArgs(node));
         t.true(deletion.success, 'node should delete the chat');
         return true;
     });

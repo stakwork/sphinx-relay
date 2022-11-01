@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Timer = class Timer extends sequelize_typescript_1.Model {
 };
 __decorate([
-    (0, sequelize_typescript_1.Column)({
+    sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -22,23 +22,23 @@ __decorate([
     __metadata("design:type", Number)
 ], Timer.prototype, "id", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Timer.prototype, "chatId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Timer.prototype, "msgId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Timer.prototype, "millis", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Timer.prototype, "receiver", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
 ], Timer.prototype, "amount", void 0);
 __decorate([
@@ -46,7 +46,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Timer.prototype, "tenant", void 0);
 Timer = __decorate([
-    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_timers', underscored: true })
+    sequelize_typescript_1.Table({ tableName: 'sphinx_timers', underscored: true })
 ], Timer);
 exports.default = Timer;
 //# sourceMappingURL=timer.js.map

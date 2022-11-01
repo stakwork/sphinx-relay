@@ -62,7 +62,7 @@ function loadConfig() {
         hub_check_invite_url: ENV.HUB_CHECK_INVITE_URL || config.hub_check_invite_url,
         media_host: ENV.MEDIA_HOST || config.media_host,
         tribes_host: ENV.TRIBES_HOST || config.tribes_host,
-        people_host: ENV.PEOPLE_HOST || config.people_host || "localhost:13000",
+        people_host: ENV.PEOPLE_HOST || config.people_host || "people.sphinx.chat",
         tribes_mqtt_port: ENV.TRIBES_MQTT_PORT || config.tribes_mqtt_port,
         mqtt_host: ENV.MQTT_HOST || config.mqtt_host,
         tribes_insecure: ENV.TRIBES_INSECURE || config.tribes_insecure,

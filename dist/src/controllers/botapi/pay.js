@@ -23,7 +23,7 @@ function pay(a) {
         logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
         if (!a.recipient_id)
             return logger_1.sphinxLogger.error(`no recipient_id`);
-        const ret = yield (0, index_1.validateAction)(a);
+        const ret = yield index_1.validateAction(a);
         if (!ret)
             return;
         const { chat, owner } = ret;

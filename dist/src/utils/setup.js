@@ -25,7 +25,7 @@ const logger_1 = require("../utils/logger");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const USER_VERSION = 7;
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info('starting setup', logger_1.logging.DB);
     yield setVersion();
@@ -37,7 +37,7 @@ const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     catch (e) {
         logger_1.sphinxLogger.info(['sync failed', e], logger_1.logging.DB);
     }
-    yield (0, migrate_1.default)();
+    yield migrate_1.default();
     logger_1.sphinxLogger.info('setup done', logger_1.logging.DB);
 });
 exports.setupDatabase = setupDatabase;
@@ -65,7 +65,7 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                 let authToken = null;
                 let tenant = null;
                 // dont allow "signup" on root contact of proxy node
-                if ((0, proxy_1.isProxy)()) {
+                if (proxy_1.isProxy()) {
                     authToken = '_';
                 }
                 else {
@@ -101,7 +101,7 @@ const setupPersonUuid = () => __awaiter(void 0, void 0, void 0, function* () {
         for (let i = 0; i < contacts.length; i++) {
             const tenant = contacts[i];
             const url = protocol + '://' + config.people_host + '/person/' + tenant.publicKey;
-            const res = yield (0, node_fetch_1.default)(url);
+            const res = yield node_fetch_1.default(url);
             const person = yield res.json();
             if (person.uuid) {
                 yield models_1.models.Contact.update({ personUuid: person.uuid }, { where: { id: tenant.id } });
@@ -116,7 +116,7 @@ const setupPersonUuid = () => __awaiter(void 0, void 0, void 0, function* () {
 exports.setupPersonUuid = setupPersonUuid;
 const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     yield new Promise((resolve, reject) => {
-        const migration = (0, child_process_1.exec)('node_modules/.bin/sequelize db:migrate', { env: process.env }, (err, stdout, stderr) => {
+        const migration = child_process_1.exec('node_modules/.bin/sequelize db:migrate', { env: process.env }, (err, stdout, stderr) => {
             if (err) {
                 reject(err);
             }
@@ -144,14 +144,14 @@ function printGitInfo() {
 }
 function printQR() {
     return __awaiter(this, void 0, void 0, function* () {
-        const b64 = yield (0, connect_1.getQR)();
+        const b64 = yield connect_1.getQR();
         if (!b64) {
             logger_1.sphinxLogger.info('=> no public IP provided');
             return '';
         }
         logger_1.sphinxLogger.info(['>>', b64]);
         connectionStringFile(b64);
-        const clean = yield (0, nodeinfo_1.isClean)();
+        const clean = yield nodeinfo_1.isClean();
         if (!clean)
             return; // skip it if already setup!
         logger_1.sphinxLogger.info('Scan this QR in Sphinx app:');

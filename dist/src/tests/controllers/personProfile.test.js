@@ -30,7 +30,7 @@ function personProfile(t, node1, node2) {
         const challenge = ask.challenge;
         t.true(typeof challenge === 'string', 'should return challenge string');
         //VERIFY EXTERNAL FROM RELAY
-        const relayVerify = yield http.post(node1.external_ip + '/verify_external', (0, helpers_1.makeArgs)(node1));
+        const relayVerify = yield http.post(node1.external_ip + '/verify_external', helpers_1.makeArgs(node1));
         const info = relayVerify.response.info;
         t.true(typeof info === 'object', 'relay verification should return info object');
         const token = relayVerify.response.token;
@@ -42,14 +42,14 @@ function personProfile(t, node1, node2) {
         //TRIBE VERIFY
         const tribesVerify = yield http.post('http://' + config_1.config.tribeHost + `/verify/${challenge}?token=${token}`, { body: info });
         t.truthy(tribesVerify, 'tribe should verify');
-        yield (0, helpers_1.sleep)(1000);
+        yield helpers_1.sleep(1000);
         //TRIBE POLL
         const poll = yield http.get('http://' + config_1.config.tribeHost + `/poll/${challenge}`);
-        yield (0, helpers_1.sleep)(1000);
+        yield helpers_1.sleep(1000);
         const persontest = yield http.get('http://' + config_1.config.tribeHost + '/person/' + poll.pubkey);
         //POST PROFILE TO RELAY
         const priceToMeet = 13;
-        const postProfile = yield http.post(node1.external_ip + '/profile', (0, helpers_1.makeJwtArgs)(poll.jwt, {
+        const postProfile = yield http.post(node1.external_ip + '/profile', helpers_1.makeJwtArgs(poll.jwt, {
             pubkey: node1.pubkey,
             host: internalTribeHost,
             id: persontest.id,
@@ -62,20 +62,20 @@ function personProfile(t, node1, node2) {
         }));
         t.true(postProfile.success, 'post to profile should succeed');
         //NODE2 CREATES A TRIBE
-        let tribe = yield (0, save_1.createTribe)(t, node2);
+        let tribe = yield save_1.createTribe(t, node2);
         t.truthy(tribe, 'tribe should have been created by node2');
         //NODE1 JOINS TRIBE CREATED BY NODE2
         if (node2.routeHint)
             tribe.owner_route_hint = node2.routeHint;
-        let join = yield (0, save_1.joinTribe)(t, node1, tribe);
+        let join = yield save_1.joinTribe(t, node1, tribe);
         t.true(join, 'node1 should join tribe');
         //NODE1 SENDS A TEXT MESSAGE IN TRIBE
-        const text = (0, helpers_2.randomText)();
-        let tribeMessage = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node2, text, tribe);
+        const text = helpers_2.randomText();
+        let tribeMessage = yield msg_1.sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe);
         t.true(!!tribeMessage, 'node1 should send message to tribe');
         // Get All message that belongs to Node 2
-        const allMessages = yield (0, msg_1.getAllMessages)(node2);
-        const newMessage = (0, msg_1.getSpecificMsg)(allMessages, tribeMessage.uuid);
+        const allMessages = yield msg_1.getAllMessages(node2);
+        const newMessage = msg_1.getSpecificMsg(allMessages, tribeMessage.uuid);
         t.true((newMessage === null || newMessage === void 0 ? void 0 : newMessage.person) === `${config_1.config.tribeHost}/${postProfile.response.uuid}`, 'Tribe message person value should be equal to tribe host and person profile from tribe server');
     });
 }

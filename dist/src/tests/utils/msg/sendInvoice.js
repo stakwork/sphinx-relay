@@ -17,11 +17,11 @@ const get_1 = require("../get");
 function sendInvoice(t, node1, node2, amount, text) {
     return __awaiter(this, void 0, void 0, function* () {
         //SEND INVOICE FROM NODE1 TO NODE2 ===>
-        let [node1contact, node2contact] = yield (0, get_1.getCheckContacts)(t, node1, node2);
+        let [node1contact, node2contact] = yield get_1.getCheckContacts(t, node1, node2);
         //encrypt random string with node1 contact_key
-        const encryptedText = (0, rsa_1.encrypt)(node1contact.contact_key, text);
+        const encryptedText = rsa_1.encrypt(node1contact.contact_key, text);
         //encrypt random string with node2 contact_key
-        const remoteText = (0, rsa_1.encrypt)(node2contact.contact_key, text);
+        const remoteText = rsa_1.encrypt(node2contact.contact_key, text);
         //create node2 contact id
         let contact_id = node2contact.id;
         let destination_key = '';
@@ -35,7 +35,7 @@ function sendInvoice(t, node1, node2, amount, text) {
             remote_text: remoteText,
         };
         //post payment from node1 to node2
-        const r = yield http.post(node1.external_ip + '/invoices', (0, helpers_1.makeArgs)(node1, v));
+        const r = yield http.post(node1.external_ip + '/invoices', helpers_1.makeArgs(node1, v));
         t.true(r.success, 'invoice should have been posted');
         return r;
     });
