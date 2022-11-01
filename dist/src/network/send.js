@@ -314,7 +314,8 @@ function detectMentions(msg, isForwarded, chatId, tenant) {
     });
 }
 function parseMentions(content) {
-    const words = content.split(' ');
+    // split on space or newline
+    const words = content.split(/\n| /);
     return words.filter((w) => w.startsWith('@'));
 }
 function detectMentionsForTribeAdminSelf(msg, mainAlias, aliasInChat) {
