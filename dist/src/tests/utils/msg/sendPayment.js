@@ -19,24 +19,24 @@ function sendPayment(t, node1, node2, amount, text) {
     return __awaiter(this, void 0, void 0, function* () {
         //SEND PAYMENT FROM NODE1 TO NODE2 ===>
         //get node1 balance before payment
-        var node1bal = yield http.get(node1.external_ip + '/balance', helpers_1.makeArgs(node1));
+        var node1bal = yield http.get(node1.external_ip + '/balance', (0, helpers_1.makeArgs)(node1));
         t.true(node1bal.success, 'should get node1 balance');
         const node1beforeBalance = node1bal.response.balance;
         //get node2 balance before payment
-        var node2bal = yield http.get(node2.external_ip + '/balance', helpers_1.makeArgs(node2));
+        var node2bal = yield http.get(node2.external_ip + '/balance', (0, helpers_1.makeArgs)(node2));
         t.true(node2bal.success, 'should get node2 balance');
         const node2beforeBalance = node2bal.response.balance;
         //get contacts from node1 perspective
-        const [node1contact, node2contact] = yield get_1.getContacts(t, node1, node2);
+        const [node1contact, node2contact] = yield (0, get_1.getContacts)(t, node1, node2);
         //encrypt random string with node1 contact_key
-        const encryptedText = rsa_1.encrypt(node1contact.contact_key, text);
+        const encryptedText = (0, rsa_1.encrypt)(node1contact.contact_key, text);
         //encrypt random string with node2 contact_key
-        const remoteText = rsa_1.encrypt(node2contact.contact_key, text);
+        const remoteText = (0, rsa_1.encrypt)(node2contact.contact_key, text);
         //find chat id of shared chat
-        const chats = yield get_1.getChats(t, node1);
-        const selfie = yield get_1.getSelf(t, node1);
+        const chats = yield (0, get_1.getChats)(t, node1);
+        const selfie = yield (0, get_1.getSelf)(t, node1);
         const selfId = selfie.id;
-        const sharedChat = chats.find((c) => helpers_1.arraysEqual(c.contact_ids, [selfId, node2contact.id]));
+        const sharedChat = chats.find((c) => (0, helpers_1.arraysEqual)(c.contact_ids, [selfId, node2contact.id]));
         const chat_id = sharedChat === null || sharedChat === void 0 ? void 0 : sharedChat.id;
         //create node2 contact id
         const contact_id = node2contact.id;
@@ -52,15 +52,15 @@ function sendPayment(t, node1, node2, amount, text) {
             remote_text: remoteText,
         };
         //post payment from node1 to node2
-        const pmnt = yield http.post(node1.external_ip + '/payment', helpers_1.makeArgs(node1, v));
+        const pmnt = yield http.post(node1.external_ip + '/payment', (0, helpers_1.makeArgs)(node1, v));
         t.true(pmnt.success, 'payment should have been posted');
         yield new Promise((resolve) => setTimeout(resolve, 1000));
         //get node1 balance after payment
-        node1bal = yield http.get(node1.external_ip + '/balance', helpers_1.makeArgs(node1));
+        node1bal = yield http.get(node1.external_ip + '/balance', (0, helpers_1.makeArgs)(node1));
         t.true(node1bal.success, 'should get node1 balance');
         const node1afterBalance = node1bal.response.balance;
         //get node2 balance after payment
-        node2bal = yield http.get(node2.external_ip + '/balance', helpers_1.makeArgs(node2));
+        node2bal = yield http.get(node2.external_ip + '/balance', (0, helpers_1.makeArgs)(node2));
         t.true(node2bal.success, 'should get node2 balance');
         const node2afterBalance = node2bal.response.balance;
         // console.log("NODE1 BEFORE BALANCE === ", node1beforeBalance)

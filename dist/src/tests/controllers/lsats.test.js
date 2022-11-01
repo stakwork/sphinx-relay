@@ -31,7 +31,7 @@ ava_1.default.after.always('cleanup lsats', (t) => __awaiter(void 0, void 0, voi
     const { identifiers } = t.context;
     for (const i of identifiers) {
         try {
-            yield helpers_1.makeRelayRequest('del', `/lsats/${i}`, alice);
+            yield (0, helpers_1.makeRelayRequest)('del', `/lsats/${i}`, alice);
         }
         catch (e) {
             console.error(`Could not cleanup lsat ${i}, ${e.message}`);
@@ -39,52 +39,52 @@ ava_1.default.after.always('cleanup lsats', (t) => __awaiter(void 0, void 0, voi
     }
 }));
 ava_1.default.serial('saveLsat', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    const token = yield save_1.saveLsat(t, nodes_1.default[0], nodes_1.default[1]);
+    const token = yield (0, save_1.saveLsat)(t, nodes_1.default[0], nodes_1.default[1]);
     t.assert(token.length, 'expected an lsat token in response');
     addLsatToContext(t, token);
 }));
 ava_1.default.serial('getLsat', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    const token = yield save_1.saveLsat(t, alice, bob);
+    const token = yield (0, save_1.saveLsat)(t, alice, bob);
     const identifier = addLsatToContext(t, token);
-    const { lsat } = yield helpers_1.makeRelayRequest('get', `/lsats/${identifier}`, alice);
+    const { lsat } = yield (0, helpers_1.makeRelayRequest)('get', `/lsats/${identifier}`, alice);
     t.assert(lsat, 'expected to get the lsat back');
     t.truthy(lsat.preimage, 'LSAT should have preimage as proof of payment');
 }));
 ava_1.default.serial('listLsats', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    let { lsats } = yield helpers_1.makeRelayRequest('get', '/lsats', alice);
+    let { lsats } = yield (0, helpers_1.makeRelayRequest)('get', '/lsats', alice);
     const initialCount = lsats.length;
     t.assert(initialCount || initialCount === 0, 'expected to get list of lsats');
     const lsatCount = 3;
     let counter = 0;
     while (counter < lsatCount) {
         counter++;
-        const token = yield save_1.saveLsat(t, alice, bob);
+        const token = yield (0, save_1.saveLsat)(t, alice, bob);
         addLsatToContext(t, token);
     }
-    lsats = (yield helpers_1.makeRelayRequest('get', '/lsats', alice)).lsats;
+    lsats = (yield (0, helpers_1.makeRelayRequest)('get', '/lsats', alice)).lsats;
     t.assert(lsats.length === initialCount + lsatCount);
 }));
 ava_1.default.serial('updateLsat', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    const token = yield save_1.saveLsat(t, alice, bob);
+    const token = yield (0, save_1.saveLsat)(t, alice, bob);
     const identifier = addLsatToContext(t, token);
-    let lsat = yield get_1.getLsat(t, alice, identifier);
+    let lsat = yield (0, get_1.getLsat)(t, alice, identifier);
     t.assert(lsat.metadata === null, 'expected lsat metadata to be null');
     const metadata = {
         foo: 'bar',
     };
-    yield helpers_1.makeRelayRequest('put', `/lsats/${identifier}`, alice, {
+    yield (0, helpers_1.makeRelayRequest)('put', `/lsats/${identifier}`, alice, {
         metadata: JSON.stringify(metadata),
     });
-    lsat = yield get_1.getLsat(t, alice, identifier);
+    lsat = yield (0, get_1.getLsat)(t, alice, identifier);
     const updated = JSON.parse(lsat.metadata);
     t.deepEqual(updated, metadata);
 }));
 ava_1.default.serial('deleteLsats', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    const token = yield save_1.saveLsat(t, alice, bob);
+    const token = yield (0, save_1.saveLsat)(t, alice, bob);
     const identifier = getIdentifierFromToken(token);
-    yield helpers_1.makeRelayRequest('del', `/lsats/${identifier}`, alice);
+    yield (0, helpers_1.makeRelayRequest)('del', `/lsats/${identifier}`, alice);
     try {
-        yield helpers_1.makeRelayRequest('get', `/lsats/${identifier}`, alice);
+        yield (0, helpers_1.makeRelayRequest)('get', `/lsats/${identifier}`, alice);
         t.fail('expected GET request to fail');
     }
     catch (e) {

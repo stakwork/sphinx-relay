@@ -21,7 +21,7 @@ function getCheckContacts(t, node1, node2) {
 exports.getCheckContacts = getCheckContacts;
 function timeout(i, t, node1, node2, resolve, reject) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [node1contact, node2contact] = yield get_1.getContacts(t, node1, node2);
+        const [node1contact, node2contact] = yield (0, get_1.getContacts)(t, node1, node2);
         if (node1contact.contact_key && node2contact.contact_key) {
             return resolve([node1contact, node2contact]);
         }

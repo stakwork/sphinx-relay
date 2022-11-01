@@ -16,16 +16,16 @@ const node_fetch_1 = require("node-fetch");
 const config_1 = require("./config");
 const tribes_2 = require("./tribes");
 const logger_1 = require("./logger");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 function delete_bot({ uuid, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const host = tribes_1.getHost();
-        const token = yield tribes_2.genSignedTimestamp(owner_pubkey);
+        const host = (0, tribes_1.getHost)();
+        const token = yield (0, tribes_2.genSignedTimestamp)(owner_pubkey);
         try {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(`${protocol}://${host}/bots/${uuid}?token=${token}`, {
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/bots/${uuid}?token=${token}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -42,12 +42,12 @@ function delete_bot({ uuid, owner_pubkey }) {
 exports.delete_bot = delete_bot;
 function declare_bot({ uuid, name, description, tags, img, price_per_use, owner_pubkey, unlisted, deleted, owner_route_hint, owner_alias, }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const host = tribes_1.getHost();
+        const host = (0, tribes_1.getHost)();
         try {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(protocol + '://' + host + '/bots', {
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/bots', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid,

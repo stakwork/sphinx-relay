@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Lsat = class Lsat extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         autoIncrement: true,
@@ -21,7 +21,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Lsat.prototype, "id", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
@@ -35,43 +35,43 @@ __decorate([
     __metadata("design:type", Date)
 ], Lsat.prototype, "updatedAt", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
 ], Lsat.prototype, "macaroon", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
 ], Lsat.prototype, "paymentRequest", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
 ], Lsat.prototype, "preimage", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
 ], Lsat.prototype, "issuer", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
 ], Lsat.prototype, "paths", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
     }),
     __metadata("design:type", String)
 ], Lsat.prototype, "metadata", void 0);
 __decorate([
-    sequelize_typescript_1.Column({ type: sequelize_typescript_1.DataType.INTEGER }),
+    (0, sequelize_typescript_1.Column)({ type: sequelize_typescript_1.DataType.INTEGER }),
     __metadata("design:type", Number)
 ], Lsat.prototype, "status", void 0);
 __decorate([
@@ -79,7 +79,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Lsat.prototype, "tenant", void 0);
 Lsat = __decorate([
-    sequelize_typescript_1.Table({
+    (0, sequelize_typescript_1.Table)({
         tableName: 'sphinx_lsats',
         underscored: true,
         indexes: [{ unique: true, fields: ['id', 'identifier'] }],

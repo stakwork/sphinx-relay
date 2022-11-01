@@ -15,9 +15,9 @@ const get_1 = require("../get");
 function botDecrypt(t, node, text, msg) {
     return __awaiter(this, void 0, void 0, function* () {
         //CHECK THAT THE MESSAGE SENT BY BOT INCLUDES DESIRED TEXT ===>
-        const lastMsg = yield get_1.getCheckNewMsgs(t, node, msg.uuid);
+        const lastMsg = yield (0, get_1.getCheckNewMsgs)(t, node, msg.uuid);
         //decrypt the last message sent to node using node private key and lastMsg content
-        const decryptValue = rsa_1.decrypt(node.privkey, lastMsg.message_content);
+        const decryptValue = (0, rsa_1.decrypt)(node.privkey, lastMsg.message_content);
         //the decrypted message should equal the random string input before encryption
         // console.log("TEXT === ", text)
         t.true(decryptValue.includes(text), 'decrypted bot text should include pre-encryption text');

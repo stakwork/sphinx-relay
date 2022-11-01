@@ -21,7 +21,7 @@ const nodes_1 = require("../nodes");
 /*
 npx ava test-30-botCreation.js --verbose --serial --timeout=2m
 */
-ava_1.default('test-30-botCreation: create tribe, create bot, add bot to tribe, delete bot, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
+(0, ava_1.default)('test-30-botCreation: create tribe, create bot, add bot to tribe, delete bot, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield botCreation(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);
 }));
 function botCreation(t, node1, node2, node3) {
@@ -29,51 +29,51 @@ function botCreation(t, node1, node2, node3) {
         //CHECK BOT CREATION WITHIN A TRIBE ===>
         console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`);
         //NODE1 CREATES A TRIBE
-        let tribe = yield save_1.createTribe(t, node1);
+        let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
         //NODE2 JOINS TRIBE CREATED BY NODE1
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
-        let join = yield save_1.joinTribe(t, node2, tribe);
+        let join = yield (0, save_1.joinTribe)(t, node2, tribe);
         t.true(join, 'node2 should join tribe');
         //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
         const text = '/bot help';
-        yield msg_1.sendTribeMessage(t, node1, tribe, text);
+        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
         //NODE1 AWAIT REPLY FROM BOT
         var botAlias = 'MotherBot';
-        const botReply = yield get_1.getCheckBotMsg(t, node1, botAlias);
+        const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
         t.truthy(botReply, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply))
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
         const text2 = '/bot install welcome';
-        yield msg_1.sendTribeMessage(t, node1, tribe, text2);
+        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'MotherBot';
-        const botReply2 = yield get_1.getCheckBotMsg(t, node1, botAlias);
+        const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
         t.truthy(botReply2, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply2))
         //NODE1 SENDS A BOT SET WELCOME MESSAGE IN TRIBE
         const setMessage = '/welcome setmessage ';
         const newWelcomeMessage = "You're in my test tribe now";
         const text3 = setMessage + newWelcomeMessage;
-        yield msg_1.sendTribeMessage(t, node1, tribe, text3);
+        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text3);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'WelcomeBot';
-        const botReply3 = yield get_1.getCheckBotMsg(t, node1, botAlias);
+        const botReply3 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
         t.truthy(botReply3, 'WelcomeBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply3))
         //NODE3 JOINS TRIBE CREATED BY NODE1
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
-        let join2 = yield save_1.joinTribe(t, node3, tribe);
+        let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join2, 'node3 should join tribe');
         //NODE3 AWAIT REPLY FROM BOT
         botAlias = 'WelcomeBot';
-        const botReply4 = yield get_1.getCheckBotMsg(t, node3, botAlias);
+        const botReply4 = yield (0, get_1.getCheckBotMsg)(t, node3, botAlias);
         t.truthy(botReply4, 'WelcomeBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply3))
         //CHECK THAT BOT'S DECRYPTED MESSAGE IS SAME AS INPUT
-        const n3check = yield bots_1.botDecrypt(t, node3, newWelcomeMessage, botReply4);
+        const n3check = yield (0, bots_1.botDecrypt)(t, node3, newWelcomeMessage, botReply4);
         t.true(n3check, "node3 should have read and decrypted bot's message");
         // //CREATE NEW BOT
         // const newBot = await f.botCreate(t, node1, "TestBot", "https://sphinx-random.herokuapp.com/")
@@ -105,13 +105,13 @@ function botCreation(t, node1, node2, node3) {
         // await h.sleep(5000)
         // return
         //NODE2 LEAVES THE TRIBE
-        let left = yield del_1.leaveTribe(t, node2, tribe);
+        let left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left, 'node2 should leave tribe');
         //NODE3 LEAVES THE TRIBE
-        let left2 = yield del_1.leaveTribe(t, node3, tribe);
+        let left2 = yield (0, del_1.leaveTribe)(t, node3, tribe);
         t.true(left2, 'node3 should leave tribe');
         //NODE1 DELETES THE TRIBE
-        let delTribe = yield del_1.deleteTribe(t, node1, tribe);
+        let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
 }

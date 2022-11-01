@@ -14,7 +14,7 @@ const grpc = require("grpc");
 const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 let walletClient;
 const loadWalletKit = () => {
@@ -39,7 +39,7 @@ exports.loadWalletKit = loadWalletKit;
 function listUnspent() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const walletkit = yield exports.loadWalletKit();
+            const walletkit = yield (0, exports.loadWalletKit)();
             try {
                 const opts = { min_confs: 0, max_confs: 10000 };
                 walletkit.listUnspent(opts, function (err, res) {

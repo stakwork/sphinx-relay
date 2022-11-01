@@ -19,7 +19,7 @@ const nodes_1 = require("../nodes");
 /*
  npx ava src/tests/controllers/latestTest.test.ts --verbose --serial --timeout=2m
 */
-ava_1.default('test-40-latestTest: create timestamp, add contact and chat, get latest, delete contacts', (t) => __awaiter(void 0, void 0, void 0, function* () {
+(0, ava_1.default)('test-40-latestTest: create timestamp, add contact and chat, get latest, delete contacts', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield latestTest(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);
 }));
 function latestTest(t, node1, node2, node3 = null) {
@@ -30,40 +30,40 @@ function latestTest(t, node1, node2, node3 = null) {
             aliases = aliases + ` and ${node3 === null || node3 === void 0 ? void 0 : node3.alias}`;
         console.log(aliases);
         //CREATE TIMESTAMP
-        const dateq1 = helpers_1.getTimestamp();
+        const dateq1 = (0, helpers_1.getTimestamp)();
         t.truthy(dateq1, 'timestamp should exist');
-        yield helpers_1.sleep(1000);
+        yield (0, helpers_1.sleep)(1000);
         //NODE1 GETS LATEST
-        let latest = yield get_1.getLatest(t, node1, dateq1);
+        let latest = yield (0, get_1.getLatest)(t, node1, dateq1);
         t.true(latest.success, 'node1 should get latest');
         t.true(latest.response.contacts.length === 0, 'there should be no contacts');
         t.true(latest.response.chats.length === 0, 'there should be no chats');
         //NODE1 ADDS NODE2 AS A CONTACT
-        let added = yield save_1.addContact(t, node1, node2);
+        let added = yield (0, save_1.addContact)(t, node1, node2);
         t.true(added, 'node1 should add node2 as contact');
         //NODE1 GETS LATEST
-        let latest2 = yield get_1.getLatest(t, node1, dateq1);
+        let latest2 = yield (0, get_1.getLatest)(t, node1, dateq1);
         t.true(latest2.success, 'node1 should get latest');
         t.true(latest2.response.contacts.length >= 1, 'there should be one contacts');
         t.true(latest2.response.contacts[0].public_key === node2.pubkey, 'node2 should be the latest contact');
         //NODE1 SENDS A TEXT MESSAGE TO NODE2
-        const text = helpers_1.randomText();
-        let messageSent = yield msg_1.sendMessageAndCheckDecryption(t, node1, node2, text);
+        const text = (0, helpers_1.randomText)();
+        let messageSent = yield (0, msg_1.sendMessageAndCheckDecryption)(t, node1, node2, text);
         //CHECK THAT NODE1'S DECRYPTED MESSAGE IS SAME AS INPUT
-        const check = yield msg_1.checkMessageDecryption(t, node2, messageSent.uuid, text);
+        const check = yield (0, msg_1.checkMessageDecryption)(t, node2, messageSent.uuid, text);
         t.true(check, 'node2 should have read and decrypted node1 message');
-        yield helpers_1.sleep(1000);
+        yield (0, helpers_1.sleep)(1000);
         //NODE1 GETS LATEST
-        let latest3 = yield get_1.getLatest(t, node2, dateq1);
+        let latest3 = yield (0, get_1.getLatest)(t, node2, dateq1);
         t.true(latest3.success, 'node2 should get latest');
         t.true(latest3.response.contacts.length === 1, 'there should be no contacts');
         t.true(latest3.response.chats.length === 1, 'there should be no chats');
         //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
-        const allContacts = yield get_1.getContacts(t, node1);
+        const allContacts = yield (0, get_1.getContacts)(t, node1);
         let deletion;
         for (const contact of allContacts) {
             if (contact.public_key == node2.pubkey) {
-                deletion = yield del_1.deleteContact(t, node1, contact.id);
+                deletion = yield (0, del_1.deleteContact)(t, node1, contact.id);
                 t.true(deletion, 'contacts should be deleted');
             }
         }

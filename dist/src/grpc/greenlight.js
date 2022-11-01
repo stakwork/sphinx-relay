@@ -21,7 +21,7 @@ const lightning_1 = require("./lightning");
 const Lightning = require("./lightning");
 const logger_1 = require("../utils/logger");
 let GID;
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 function initGreenlight() {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('=> initGreenlight');
@@ -258,7 +258,7 @@ function streamHsmRequests() {
     return __awaiter(this, void 0, void 0, function* () {
         const capabilities_bitset = 1087; // 1 + 2 + 4 + 8 + 16 + 32 + 1024
         try {
-            const lightning = yield lightning_1.loadLightning(true); // try proxy
+            const lightning = yield (0, lightning_1.loadLightning)(true); // try proxy
             const call = lightning.streamHsmRequests({});
             call.on('data', function (response) {
                 return __awaiter(this, void 0, void 0, function* () {

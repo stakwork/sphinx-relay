@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let ActionHistory = class ActionHistory extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -26,7 +26,7 @@ __decorate([
     __metadata("design:type", String)
 ], ActionHistory.prototype, "type", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], ActionHistory.prototype, "metaData", void 0);
 __decorate([
@@ -34,7 +34,7 @@ __decorate([
     __metadata("design:type", Number)
 ], ActionHistory.prototype, "tenant", void 0);
 ActionHistory = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_action_history', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_action_history', underscored: true })
 ], ActionHistory);
 exports.default = ActionHistory;
 //# sourceMappingURL=actionHistory.js.map

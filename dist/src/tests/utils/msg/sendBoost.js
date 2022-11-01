@@ -20,13 +20,13 @@ function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
         //get balances of both nodes before boost
         const [boosterBalBefore, boosteeBalBefore] = yield boostBalances(t, node1, node2);
         //make sure that node2's message exists from node1 perspective
-        const msgExists = yield get_1.getCheckNewMsgs(t, node1, replyMessage.uuid);
+        const msgExists = yield (0, get_1.getCheckNewMsgs)(t, node1, replyMessage.uuid);
         t.truthy(msgExists, 'message being replied to should exist');
         //get uuid from node2's message
         const replyUuid = replyMessage.uuid;
         t.truthy(replyUuid, 'replyUuid should exist');
         //get tribeId from node1 perspective
-        const tribeId = yield get_1.getTribeIdFromUUID(t, node1, tribe);
+        const tribeId = yield (0, get_1.getTribeIdFromUUID)(t, node1, tribe);
         t.truthy(tribeId, 'tribeId should exist');
         //create boost message object for node2's message which is represented by replyUuid
         const v = {
@@ -39,12 +39,12 @@ function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
             message_price: 0,
         };
         //node1 sends a boost on node2's message
-        const msg = yield http.post(node1.external_ip + '/messages', helpers_1.makeArgs(node1, v));
+        const msg = yield http.post(node1.external_ip + '/messages', (0, helpers_1.makeArgs)(node1, v));
         t.true(msg.success, 'msg should exist');
         //wait for boost message to process
         const msgUuid = msg.response.uuid;
         t.truthy(msgUuid, 'msg uuid should exist');
-        const lastMessage = yield get_1.getCheckNewMsgs(t, node2, msgUuid);
+        const lastMessage = yield (0, get_1.getCheckNewMsgs)(t, node2, msgUuid);
         t.truthy(lastMessage, 'await message post');
         //get balances of both nodes before boost
         const [boosterBalAfter, boosteeBalAfter] = yield boostBalances(t, node1, node2);
@@ -57,9 +57,9 @@ function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
 exports.sendBoost = sendBoost;
 function boostBalances(t, booster, boostee) {
     return __awaiter(this, void 0, void 0, function* () {
-        const boosterBal = yield get_1.getBalance(t, booster);
+        const boosterBal = yield (0, get_1.getBalance)(t, booster);
         t.true(typeof boosterBal === 'number');
-        const boosteeBal = yield get_1.getBalance(t, boostee);
+        const boosteeBal = yield (0, get_1.getBalance)(t, boostee);
         t.true(typeof boosteeBal === 'number');
         return [boosterBal, boosteeBal];
     });

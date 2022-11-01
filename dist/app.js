@@ -31,7 +31,7 @@ const people = require("./src/utils/people");
 // force UTC time
 process.env.TZ = 'UTC';
 const env = process.env.NODE_ENV || 'development';
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const port = process.env.PORT || config.node_http_port || 3001;
 logger_1.sphinxLogger.info(['=> env', env]);
 //sphinxLogger.info(['=> config', config])
@@ -41,12 +41,12 @@ process.env.NODE_EXTRA_CA_CERTS = config.tls_location;
 // START SETUP!
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield setup_1.setupDatabase();
+        yield (0, setup_1.setupDatabase)();
         mainSetup();
         // // IF NOT UNLOCK, go ahead and start this now
         if (config.hub_api_url && !config.unlock) {
-            hub_1.pingHubInterval(30000);
-            proxy_1.genUsersInterval(15000);
+            (0, hub_1.pingHubInterval)(30000);
+            (0, proxy_1.genUsersInterval)(15000);
         }
     });
 }
@@ -65,18 +65,18 @@ function mainSetup() {
 }
 function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield setup_1.setupOwnerContact();
-        yield setup_1.setupPersonUuid();
+        yield (0, setup_1.setupOwnerContact)();
+        yield (0, setup_1.setupPersonUuid)();
         yield people.setupPersonInfo();
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
-            hub_1.checkInvitesHubInterval(5000);
+            (0, hub_1.checkInvitesHubInterval)(5000);
         }
         if (config.unlock) {
             // IF UNLOCK, start this only after unlocked!
-            hub_1.pingHubInterval(15000);
+            (0, hub_1.pingHubInterval)(15000);
         }
-        setup_1.setupDone();
+        (0, setup_1.setupDone)();
     });
 }
 function setupApp() {
@@ -161,7 +161,7 @@ function setupApp() {
         else {
             app.post('/unlock', function (req, res) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    const ok = yield auth_1.unlocker(req, res);
+                    const ok = yield (0, auth_1.unlocker)(req, res);
                     if (ok) {
                         logger_1.sphinxLogger.info('=> relay unlocked!');
                         controllers.set(app);

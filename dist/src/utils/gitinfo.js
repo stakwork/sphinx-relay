@@ -5,7 +5,7 @@ const child_process_1 = require("child_process");
 const logger_1 = require("./logger");
 function git(command) {
     try {
-        return child_process_1.execSync(`git ${command}`).toString().trim();
+        return (0, child_process_1.execSync)(`git ${command}`).toString().trim();
     }
     catch (e) {
         logger_1.sphinxLogger.error('Error running a git command, probably not running in a git repository');

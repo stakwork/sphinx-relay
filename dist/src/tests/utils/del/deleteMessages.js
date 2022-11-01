@@ -14,7 +14,7 @@ const http = require("ava-http");
 const helpers_1 = require("../helpers");
 function deleteMessages(t, node) {
     return __awaiter(this, void 0, void 0, function* () {
-        let deletion = yield http.post(node.external_ip + '/messages/clear', helpers_1.makeArgs(node));
+        let deletion = yield http.post(node.external_ip + '/messages/clear', (0, helpers_1.makeArgs)(node));
         t.true(deletion.success, 'node should delete the messages');
         return true;
     });

@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Message = class Message extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -26,27 +26,27 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "uuid", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "chatId", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "type", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "sender", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "receiver", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
 ], Message.prototype, "amount", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
 ], Message.prototype, "amountMsat", void 0);
 __decorate([
@@ -54,7 +54,7 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "paymentHash", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "paymentRequest", void 0);
 __decorate([
@@ -66,31 +66,31 @@ __decorate([
     __metadata("design:type", Date)
 ], Message.prototype, "expirationDate", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "messageContent", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "remoteMessageContent", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "status", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "statusMap", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "parentId", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Message.prototype, "subscriptionId", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "mediaKey", void 0);
 __decorate([
@@ -98,11 +98,11 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "mediaType", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "mediaToken", void 0);
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BOOLEAN,
         defaultValue: false,
         allowNull: false,
@@ -122,7 +122,7 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "senderAlias", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "senderPic", void 0);
 __decorate([
@@ -134,7 +134,7 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "replyUuid", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.INTEGER),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.INTEGER),
     __metadata("design:type", Number)
 ], Message.prototype, "network_type", void 0);
 __decorate([
@@ -146,7 +146,7 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "recipientAlias", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "recipientPic", void 0);
 __decorate([
@@ -162,7 +162,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Message.prototype, "push", void 0);
 Message = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_messages', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_messages', underscored: true })
 ], Message);
 exports.default = Message;
 //# sourceMappingURL=message.js.map

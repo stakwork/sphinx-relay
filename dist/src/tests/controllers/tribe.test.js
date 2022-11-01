@@ -18,33 +18,33 @@ const msg_1 = require("../utils/msg");
 const get_1 = require("../utils/get");
 ava_1.default.serial('tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield helpers_1.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
         yield tribeTest(t, node1, node2);
     }));
 }));
 function tribeTest(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 CREATES A TRIBE
-        let tribe = yield save_1.createTribe(t, node1);
+        let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
         //NODE2 JOINS TRIBE CREATED BY NODE1
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
-        let join = yield save_1.joinTribe(t, node2, tribe);
+        let join = yield (0, save_1.joinTribe)(t, node2, tribe);
         t.true(join, 'node2 should join tribe');
         //NODE1 SENDS A TEXT MESSAGE IN TRIBE
-        const text = helpers_1.randomText();
-        let tribeMessage = yield msg_1.sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe);
+        const text = (0, helpers_1.randomText)();
+        let tribeMessage = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node2, text, tribe);
         t.true(!!tribeMessage, 'node1 should send message to tribe');
         //NODE2 SENDS A TEXT MESSAGE IN TRIBE
-        const text2 = helpers_1.randomText();
-        let tribeMessage2 = yield msg_1.sendTribeMessageAndCheckDecryption(t, node2, node1, text2, tribe);
+        const text2 = (0, helpers_1.randomText)();
+        let tribeMessage2 = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node2, node1, text2, tribe);
         t.true(!!tribeMessage2, 'node1 should send message to tribe');
         //NODE2 LEAVES THE TRIBE
-        let left = yield del_1.leaveTribe(t, node2, tribe);
+        let left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left, 'node2 should leave tribe');
         //NODE1 DELETES THE TRIBE
-        let delTribe = yield del_1.deleteTribe(t, node1, tribe);
+        let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
 }
@@ -56,47 +56,47 @@ ava_1.default.serial('Tribe test for seeing that if 2 nodes have the same alias,
 function tribeUniqueAliasTest(t, node1, node2, node3) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 creates a tribe
-        let tribe = yield save_1.createTribe(t, node1);
+        let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
         //Set the alias of NODE2 to be the same as NODE1
         let old_alias = node2.alias;
         let newAlias = { alias: node1.alias };
-        const change = yield save_1.updateProfile(t, node2, newAlias);
+        const change = yield (0, save_1.updateProfile)(t, node2, newAlias);
         t.true(change, 'node2 should have updated its profile');
-        const newNode2 = yield get_1.getSelf(t, node2);
+        const newNode2 = yield (0, get_1.getSelf)(t, node2);
         t.true(newNode2.alias !== old_alias, 'node2 alias should not be equal to old alias');
         t.true(newNode2.alias === node1.alias, 'node2 alias should be equal node1 alias');
         //NODE2 JOINS TRIBE CREATED BY NODE1
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
-        let join = yield save_1.joinTribe(t, node2, tribe);
+        let join = yield (0, save_1.joinTribe)(t, node2, tribe);
         t.true(join, 'node2 should join tribe');
         //NODE3 JOINS TRIBE
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
-        let join2 = yield save_1.joinTribe(t, node3, tribe);
+        let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join2, 'node3 should join tribe');
         //First node1 sends a message in tribe
-        let text = helpers_1.randomText();
-        let tribeMessage = yield msg_1.sendTribeMessageAndCheckDecryption(t, node1, node3, text, tribe);
+        let text = (0, helpers_1.randomText)();
+        let tribeMessage = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node3, text, tribe);
         t.true(!!tribeMessage, 'node1 should send message to tribe');
         //Then node2 sends a message in tribe
-        let text2 = helpers_1.randomText();
-        let tribeMessage2 = yield msg_1.sendTribeMessageAndCheckDecryption(t, node2, node3, text2, tribe);
+        let text2 = (0, helpers_1.randomText)();
+        let tribeMessage2 = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node2, node3, text2, tribe);
         t.true(!!tribeMessage2, 'node2 should send message to tribe');
-        let message1 = yield get_1.getCheckNewMsgs(t, node3, tribeMessage.uuid);
-        let message2 = yield get_1.getCheckNewMsgs(t, node3, tribeMessage2.uuid);
+        let message1 = yield (0, get_1.getCheckNewMsgs)(t, node3, tribeMessage.uuid);
+        let message2 = yield (0, get_1.getCheckNewMsgs)(t, node3, tribeMessage2.uuid);
         t.true(message1.sender_alias !== message2.sender_alias, 'The sender alias in both messages should be different');
         //Check that our logic for assigning an alternate alias is working
         t.true(message2.sender_alias === `${node1.alias}_2`, 'The sender alias should be modified according to our unique alias logic');
         //NODE3 LEAVES THE TRIBE
-        let left1 = yield del_1.leaveTribe(t, node3, tribe);
+        let left1 = yield (0, del_1.leaveTribe)(t, node3, tribe);
         t.true(left1, 'node3 should leave tribe');
         //NODE2 LEAVES THE TRIBE
-        let left2 = yield del_1.leaveTribe(t, node2, tribe);
+        let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');
         //NODE1 LEAVES THE TRIBE
-        let delTribe = yield del_1.deleteTribe(t, node1, tribe);
+        let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
 }

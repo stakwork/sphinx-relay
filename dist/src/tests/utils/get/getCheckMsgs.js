@@ -22,7 +22,7 @@ function getCheckMsgs(_t, node, date, limit, offset, order = 'asc') {
 exports.getCheckMsgs = getCheckMsgs;
 function timeout(i, node, date, limit, offset, order, resolve, reject) {
     return __awaiter(this, void 0, void 0, function* () {
-        const msgRes = yield http.get(`${node.external_ip}/msgs?date=${date}&limit=${limit}&offset=${offset}&order=${order}`, helpers_1.makeArgs(node));
+        const msgRes = yield http.get(`${node.external_ip}/msgs?date=${date}&limit=${limit}&offset=${offset}&order=${order}`, (0, helpers_1.makeArgs)(node));
         if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
             // console.log('===>', msgRes.response.new_messages )
             return resolve(msgRes.response);

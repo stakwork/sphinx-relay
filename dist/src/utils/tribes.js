@@ -24,7 +24,7 @@ const proxy_1 = require("./proxy");
 const sequelize_1 = require("sequelize");
 const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 // {pubkey: {host: Client} }
 const clients = {};
 const optz = { qos: 0 };
@@ -37,7 +37,7 @@ function connect(onMessage) {
 exports.connect = connect;
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        const isOwner = proxy_1.isProxy() ? "'t'" : '1';
+        const isOwner = (0, proxy_1.isProxy)() ? "'t'" : '1';
         try {
             const r = (yield models_1.sequelize.query(`
       SELECT sphinx_chats.* FROM sphinx_chats
@@ -125,7 +125,7 @@ function initializeClient(pubkey, host, onMessage) {
                 if (!connected) {
                     reconnect();
                 }
-                yield helpers_1.sleep(5000 + Math.round(Math.random() * 8000));
+                yield (0, helpers_1.sleep)(5000 + Math.round(Math.random() * 8000));
             }
         }));
     });
@@ -145,13 +145,13 @@ function initAndSubscribeTopics(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = getHost();
         try {
-            if (proxy_1.isProxy()) {
+            if ((0, proxy_1.isProxy)()) {
                 const allOwners = (yield models_1.models.Contact.findAll({
                     where: { isOwner: true },
                 }));
                 if (!(allOwners && allOwners.length))
                     return;
-                helpers_1.asyncForEach(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+                (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
                     if (c.id === 1)
                         return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
@@ -241,7 +241,7 @@ function mqttURL(h) {
 // for proxy, need to get all isOwner contacts and their owned chats
 function updateTribeStats(myPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (proxy_1.isProxy())
+        if ((0, proxy_1.isProxy)())
             return; // skip on proxy for now?
         const myTribes = (yield models_1.models.Chat.findAll({
             where: {
@@ -249,7 +249,7 @@ function updateTribeStats(myPubkey) {
                 deleted: false,
             },
         }));
-        yield helpers_1.asyncForEach(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
+        yield (0, helpers_1.asyncForEach)(myTribes, (tribe) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const contactIds = JSON.parse(tribe.contactIds);
                 const member_count = (contactIds && contactIds.length) || 0;
@@ -306,7 +306,7 @@ function declare({ uuid, name, description, tags, img, group_key, host, price_pe
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(protocol + '://' + host + '/tribes', {
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/tribes', {
                 method: 'POST',
                 body: JSON.stringify({
                     uuid,
@@ -351,7 +351,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(protocol + '://' + host + '/tribe?token=' + token, {
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/tribe?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid,
@@ -396,7 +396,7 @@ function delete_tribe(uuid, owner_pubkey) {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/tribe/${uuid}?token=${token}`, {
                 method: 'DELETE',
             });
             if (!r.ok) {
@@ -418,7 +418,7 @@ function get_tribe_data(uuid) {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(`${protocol}://${host}/tribes/${uuid}`);
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${host}/tribes/${uuid}`);
             if (!r.ok) {
                 throw 'failed to get tribe ' + r.status;
             }
@@ -439,7 +439,7 @@ function putActivity(uuid, host, owner_pubkey) {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            yield node_fetch_1.default(`${protocol}://${host}/tribeactivity/${uuid}?token=` + token, {
+            yield (0, node_fetch_1.default)(`${protocol}://${host}/tribeactivity/${uuid}?token=` + token, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -455,13 +455,13 @@ function putstats({ uuid, host, member_count, chatId, owner_pubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!uuid)
             return;
-        const bots = yield tribeBots_1.makeBotsJSON(chatId);
+        const bots = yield (0, tribeBots_1.makeBotsJSON)(chatId);
         try {
             const token = yield genSignedTimestamp(owner_pubkey);
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            yield node_fetch_1.default(protocol + '://' + host + '/tribestats?token=' + token, {
+            yield (0, node_fetch_1.default)(protocol + '://' + host + '/tribestats?token=' + token, {
                 method: 'PUT',
                 body: JSON.stringify({
                     uuid,
@@ -489,7 +489,7 @@ function createChannel({ tribe_uuid, host, name, owner_pubkey, }) {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(protocol + '://' + host + '/channel?token=' + token, {
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/channel?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify({
                     tribe_uuid,
@@ -519,7 +519,7 @@ function deleteChannel({ id, host, owner_pubkey, }) {
             let protocol = 'https';
             if (config.tribes_insecure)
                 protocol = 'http';
-            const r = yield node_fetch_1.default(protocol + '://' + host + '/channel/' + id + '?token=' + token, {
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/channel/' + id + '?token=' + token, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
             });

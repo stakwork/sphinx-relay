@@ -14,7 +14,7 @@ const helpers_1 = require("../helpers");
 const http = require("ava-http");
 function getAllMessages(node) {
     return __awaiter(this, void 0, void 0, function* () {
-        const msg = yield http.get(node.external_ip + '/allmessages', helpers_1.makeArgs(node));
+        const msg = yield http.get(node.external_ip + '/allmessages', (0, helpers_1.makeArgs)(node));
         return msg.response.new_messages;
     });
 }

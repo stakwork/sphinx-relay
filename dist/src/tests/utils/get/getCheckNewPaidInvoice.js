@@ -22,7 +22,7 @@ const getCheckNewPaidInvoice = (_t, node, paymentHash) => __awaiter(void 0, void
 exports.getCheckNewPaidInvoice = getCheckNewPaidInvoice;
 function timeout(i, node, paymentHash, resolve, reject) {
     return __awaiter(this, void 0, void 0, function* () {
-        const msgRes = yield http.get(node.external_ip + '/messages', helpers_1.makeArgs(node));
+        const msgRes = yield http.get(node.external_ip + '/messages', (0, helpers_1.makeArgs)(node));
         if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
             const paidInvoice = msgRes.response.new_messages.find((msg) => msg.type === 3 && msg.payment_hash === paymentHash);
             if (paidInvoice) {

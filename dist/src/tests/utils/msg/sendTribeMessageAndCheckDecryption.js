@@ -17,9 +17,9 @@ const msg_1 = require("../msg");
 function sendTribeMessageAndCheckDecryption(t, node1, node2, text, tribe, options) {
     return __awaiter(this, void 0, void 0, function* () {
         //send message from node1 to node2
-        const msg = yield msg_1.sendTribeMessage(t, node1, tribe, text);
+        const msg = yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
         const msgUuid = msg.uuid;
-        yield msg_1.checkMessageDecryption(t, node2, msgUuid, text);
+        yield (0, msg_1.checkMessageDecryption)(t, node2, msgUuid, text);
         return msg;
     });
 }

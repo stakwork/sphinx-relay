@@ -36,13 +36,13 @@ function createTribe(t, node, escrowAmount, escrowMillis, ppm, privacy) {
             pin: 'A pinned message',
         };
         //node1 creates new tribe
-        let c = yield http.post(node.external_ip + '/group', helpers_1.makeArgs(node, newTribe));
+        let c = yield http.post(node.external_ip + '/group', (0, helpers_1.makeArgs)(node, newTribe));
         //check that new tribe was created successfully
         t.true(c.success, 'create tribe should be successful');
         //save id of test tribe
         const newTribeId = c.response.id;
         //get new tribe by Id
-        const r = yield get_1.getCheckTribe(t, node, newTribeId);
+        const r = yield (0, get_1.getCheckTribe)(t, node, newTribeId);
         //check that the chat was found
         t.true(typeof r === 'object', 'the newly created chat should be found');
         return r;

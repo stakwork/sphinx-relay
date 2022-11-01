@@ -20,11 +20,11 @@ describe('tests for src/utils/case', () => {
         next_value_here: 'words',
     };
     test('toSnake', () => __awaiter(void 0, void 0, void 0, function* () {
-        const snaked_string = case_1.toSnake(notSnakeObj);
+        const snaked_string = (0, case_1.toSnake)(notSnakeObj);
         expect(snaked_string).toStrictEqual(correct_snaked_string);
     }));
     test('toCamel', () => __awaiter(void 0, void 0, void 0, function* () {
-        const camel_string = case_1.toCamel(correct_snaked_string);
+        const camel_string = (0, case_1.toCamel)(correct_snaked_string);
         expect(camel_string).toStrictEqual(notSnakeObj);
     }));
 });

@@ -16,7 +16,7 @@ const http = require("ava-http");
 const helpers_2 = require("../utils/helpers");
 ava_1.default.serial('checkContacts', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield helpers_1.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
         yield queryRoutes(t, node1, node2);
     }));
 }));
@@ -27,7 +27,7 @@ function queryRoutes(t, node1, node2) {
         if (node2.routeHint) {
             q += `&route_hint=${node2.routeHint}`;
         }
-        var route = yield http.get(node1.external_ip + `/route?${q}`, helpers_2.makeArgs(node1));
+        var route = yield http.get(node1.external_ip + `/route?${q}`, (0, helpers_2.makeArgs)(node1));
         t.truthy(route.response.success_prob, 'route response success prob should exist');
         t.true(typeof route.response.success_prob === 'number', 'route response success prob should be a number');
         t.true(route.response.success_prob > 0, 'route response should be greater than 0');

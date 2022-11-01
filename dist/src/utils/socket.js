@@ -17,7 +17,7 @@ const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
 const cert_1 = require("../utils/cert");
 const rsa = require("../crypto/rsa");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 // import * as WebSocket from 'ws'
 //The newer version of socket.io when imported has a
 //different format than when we import it so we can ignore
@@ -48,7 +48,7 @@ function connect(server) {
         const x_transport_token = client.handshake.headers['x-transport-token'];
         if (x_transport_token) {
             if (!fs.existsSync(config.transportPrivateKeyLocation)) {
-                yield cert_1.generateTransportTokenKeys();
+                yield (0, cert_1.generateTransportTokenKeys)();
             }
             const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
             const userTokenFromTransportToken = rsa
@@ -117,7 +117,7 @@ const send = (body, tenant) => {
 };
 exports.send = send;
 const sendJson = (object, tenant) => {
-    exports.send(JSON.stringify(object), tenant);
+    (0, exports.send)(JSON.stringify(object), tenant);
 };
 exports.sendJson = sendJson;
 //# sourceMappingURL=socket.js.map

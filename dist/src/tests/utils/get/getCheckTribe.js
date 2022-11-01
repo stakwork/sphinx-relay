@@ -22,7 +22,7 @@ function getCheckTribe(_t, node, tribeId) {
 exports.getCheckTribe = getCheckTribe;
 function timeout(i, node, tribeId, resolve, reject) {
     return __awaiter(this, void 0, void 0, function* () {
-        let res = yield http.get(node.external_ip + '/contacts', helpers_1.makeArgs(node));
+        let res = yield http.get(node.external_ip + '/contacts', (0, helpers_1.makeArgs)(node));
         if (res) {
             let r = res.response.chats.find((chat) => chat.id === tribeId);
             if (r) {

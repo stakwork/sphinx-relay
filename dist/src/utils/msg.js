@@ -101,7 +101,7 @@ function finishTermsAndReceipt(full, destkey, senderPubkey) {
         const meta = t.meta || {};
         t.ttl = t.ttl || 31536000;
         meta.ttl = t.ttl;
-        const mediaToken = yield ldat_1.tokenFromTerms({
+        const mediaToken = yield (0, ldat_1.tokenFromTerms)({
             host: t.host || '',
             muid: t.muid,
             ttl: t.skipSigning ? 0 : t.ttl,

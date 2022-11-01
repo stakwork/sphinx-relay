@@ -16,24 +16,24 @@ const helpers_1 = require("../helpers");
 function saveAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { type, meta_data } = req.body;
         if (!type)
-            return res_1.failure(res, 'invalid type');
+            return (0, res_1.failure)(res, 'invalid type');
         if (!meta_data)
-            return res_1.failure(res, 'invalid meta_data');
+            return (0, res_1.failure)(res, 'invalid meta_data');
         try {
             yield models_1.models.ActionHistory.create({
                 tenant,
                 metaData: JSON.stringify(meta_data),
                 type,
             });
-            return res_1.success(res, 'Action saved successfully');
+            return (0, res_1.success)(res, 'Action saved successfully');
         }
         catch (error) {
             console.log(error);
-            return res_1.failure(res, 'sorry an error occured');
+            return (0, res_1.failure)(res, 'sorry an error occured');
         }
     });
 }
@@ -41,13 +41,13 @@ exports.saveAction = saveAction;
 function saveActionBulk(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return res_1.failure(res, 'no owner');
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { data } = req.body;
         if (!Array.isArray(data))
-            return res_1.failure(res, 'invalid data');
+            return (0, res_1.failure)(res, 'invalid data');
         if (data.length === 0)
-            return res_1.failure(res, 'Please provide an array with contents');
+            return (0, res_1.failure)(res, 'Please provide an array with contents');
         const insertAction = (value) => __awaiter(this, void 0, void 0, function* () {
             if (value.type && value.meta_data) {
                 try {
@@ -67,12 +67,12 @@ function saveActionBulk(req, res) {
             }
         });
         try {
-            yield helpers_1.asyncForEach(data, insertAction);
-            return res_1.success(res, 'Data saved successfully');
+            yield (0, helpers_1.asyncForEach)(data, insertAction);
+            return (0, res_1.success)(res, 'Data saved successfully');
         }
         catch (error) {
             console.log(error);
-            return res_1.failure(res, error);
+            return (0, res_1.failure)(res, error);
         }
     });
 }

@@ -19,11 +19,11 @@ ava_1.default.serial('tribe pinned msg', (t) => __awaiter(void 0, void 0, void 0
 }));
 function tribeTest(t, node1) {
     return __awaiter(this, void 0, void 0, function* () {
-        let tribe = yield save_1.createTribe(t, node1);
+        let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
-        const pin = yield save_1.pinMsgToTribe(t, node1, tribe.id, 'PIN');
+        const pin = yield (0, save_1.pinMsgToTribe)(t, node1, tribe.id, 'PIN');
         t.true(pin === 'PIN', 'pin should equal');
-        let delTribe = yield del_1.deleteTribe(t, node1, tribe);
+        let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
 }

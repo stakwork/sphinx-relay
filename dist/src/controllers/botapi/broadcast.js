@@ -22,7 +22,7 @@ function broadcast(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount, content, bot_name, msg_uuid, reply_uuid, parent_id, bot_pic, } = a;
         logger_1.sphinxLogger.info(`=> BOT BROADCAST`);
-        const ret = yield index_1.validateAction(a);
+        const ret = yield (0, index_1.validateAction)(a);
         if (!ret)
             return;
         const { chat, owner } = ret;

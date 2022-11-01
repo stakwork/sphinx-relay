@@ -164,7 +164,7 @@ function countUnseen(ownerID) {
     });
 }
 function triggerNotification(params) {
-    node_fetch_1.default('https://hub.sphinx.chat/api/v1/nodes/notify', {
+    (0, node_fetch_1.default)('https://hub.sphinx.chat/api/v1/nodes/notify', {
         method: 'POST',
         body: JSON.stringify(params),
         headers: { 'Content-Type': 'application/json' },

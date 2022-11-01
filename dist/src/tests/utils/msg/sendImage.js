@@ -22,35 +22,35 @@ const config_1 = require("../../config");
 function sendImage(t, node1, node2, image, tribe, price) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS AN IMAGE TO NODE2
-        var token = yield helpers_2.getToken(t, node1);
+        var token = yield (0, helpers_2.getToken)(t, node1);
         let host = config_1.config.memeHost;
         let fileBase64 = 'data:image/jpg;base64,' + image;
         let typ = 'image/jpg';
         let filename = 'Image.jpg';
         let isPublic = false;
-        const upload = yield meme_1.uploadMeme(fileBase64, typ, host, token, filename, isPublic);
+        const upload = yield (0, meme_1.uploadMeme)(fileBase64, typ, host, token, filename, isPublic);
         t.true(typeof upload === 'object', 'meme should have been uploaded');
         t.true(typeof upload.media_key === 'string', 'upload should have media key');
         t.true(typeof upload.muid === 'string', 'upload should have muid');
         let n1contactP1 = {};
         let n2contactP1 = {};
         if (tribe) {
-            n1contactP1 = yield get_1.getSelf(t, node1);
+            n1contactP1 = yield (0, get_1.getSelf)(t, node1);
         }
         else {
             ;
-            [n1contactP1, n2contactP1] = yield get_1.getContacts(t, node1, node2);
+            [n1contactP1, n2contactP1] = yield (0, get_1.getContacts)(t, node1, node2);
         }
         //encrypt media_key with node1 contact_key, node1 perspective
-        let encrypted_media_key = rsa_1.encrypt(n1contactP1.contact_key, upload.media_key);
+        let encrypted_media_key = (0, rsa_1.encrypt)(n1contactP1.contact_key, upload.media_key);
         let encrypted_media_key2;
         let contactIdP1 = null;
         let tribeIdP1 = null;
         let mediaKeyMap = null;
         if (tribe) {
             //encrypt media_key with tribe group_key
-            encrypted_media_key2 = rsa_1.encrypt(tribe.group_key, upload.media_key);
-            tribeIdP1 = yield get_1.getTribeIdFromUUID(t, node1, tribe);
+            encrypted_media_key2 = (0, rsa_1.encrypt)(tribe.group_key, upload.media_key);
+            tribeIdP1 = yield (0, get_1.getTribeIdFromUUID)(t, node1, tribe);
             mediaKeyMap = {
                 ['chat']: encrypted_media_key2,
                 [n1contactP1.id]: encrypted_media_key,
@@ -58,7 +58,7 @@ function sendImage(t, node1, node2, image, tribe, price) {
         }
         else {
             //encrypt media_key with node2 contact_key, node1 perspective
-            encrypted_media_key2 = rsa_1.encrypt(n2contactP1.contact_key, upload.media_key);
+            encrypted_media_key2 = (0, rsa_1.encrypt)(n2contactP1.contact_key, upload.media_key);
             contactIdP1 = n2contactP1.id;
             mediaKeyMap = {
                 [n2contactP1.id]: encrypted_media_key2,
@@ -80,7 +80,7 @@ function sendImage(t, node1, node2, image, tribe, price) {
             price: 0 || price,
         };
         //send message from node1 to node2
-        const img = yield http.post(node1.external_ip + '/attachment', helpers_2.makeArgs(node1, i));
+        const img = yield http.post(node1.external_ip + '/attachment', (0, helpers_2.makeArgs)(node1, i));
         //make sure msg exists
         t.true(img.success, 'sent image should exist');
         const imgMsg = img.response;
@@ -90,21 +90,21 @@ function sendImage(t, node1, node2, image, tribe, price) {
         let decryptMediaKey = '';
         if (price) {
             //IF IMAGE HAS A PRICE ===>
-            const lastPrePurchMsg = yield get_1.getCheckNewMsgs(t, node2, imgUuid);
+            const lastPrePurchMsg = yield (0, get_1.getCheckNewMsgs)(t, node2, imgUuid);
             //create contact_id for purchase message
             let n1contactP2 = {};
-            [, n1contactP2] = yield get_1.getContacts(t, node2, node1);
+            [, n1contactP2] = yield (0, get_1.getContacts)(t, node2, node1);
             let purchContact = n1contactP2.id;
             //create chat_id for purchase message (in tribe and outside tribe)
             let purchChat = null;
             if (tribe) {
-                purchChat = yield get_1.getTribeIdFromUUID(t, node2, tribe);
+                purchChat = yield (0, get_1.getTribeIdFromUUID)(t, node2, tribe);
             }
             else {
-                const chats = yield get_1.getChats(t, node2);
-                const selfie = yield get_1.getSelf(t, node2);
+                const chats = yield (0, get_1.getChats)(t, node2);
+                const selfie = yield (0, get_1.getSelf)(t, node2);
                 const selfId = selfie.id;
-                const sharedChat = chats.find((chat) => helpers_2.arraysEqual(chat.contact_ids, [selfId, n1contactP2.id]));
+                const sharedChat = chats.find((chat) => (0, helpers_2.arraysEqual)(chat.contact_ids, [selfId, n1contactP2.id]));
                 t.truthy(sharedChat, 'there should be a chat with node1 and node2');
                 purchChat = sharedChat === null || sharedChat === void 0 ? void 0 : sharedChat.id;
             }
@@ -118,36 +118,36 @@ function sendImage(t, node1, node2, image, tribe, price) {
                 media_token: mediaToken,
             };
             //send purchase message from node2 purchasing node1 image
-            const purchased = yield http.post(node2.external_ip + '/purchase', helpers_2.makeArgs(node2, p));
+            const purchased = yield http.post(node2.external_ip + '/purchase', (0, helpers_2.makeArgs)(node2, p));
             t.true(purchased.success, 'purchase message should be posted ' + purchased.error);
             //get payment accepted message
-            let paymentMsg = yield get_1.getCheckNewPaidMsgs(t, node2, imgMsg);
+            let paymentMsg = yield (0, get_1.getCheckNewPaidMsgs)(t, node2, imgMsg);
             //get media key from payment accepted message
             //(Last message by token.media_key, type 8, purchase message)
             node2MediaKey = paymentMsg.media_key;
             t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist');
             //create url with media_token
-            const protocol = helpers_2.memeProtocol(config_1.config.memeHost);
+            const protocol = (0, helpers_2.memeProtocol)(config_1.config.memeHost);
             url = `${protocol}://${config_1.config.memeHost}/file/${paymentMsg.media_token}`;
         }
         else {
             //RECEIVE UNPAID IMAGE ===>
             //Check that image message was received
-            yield helpers_1.sleep(20000);
-            const lastMessage2 = yield get_1.getCheckNewMsgs(t, node2, imgUuid);
+            yield (0, helpers_1.sleep)(20000);
+            const lastMessage2 = yield (0, get_1.getCheckNewMsgs)(t, node2, imgUuid);
             //get media_key from received image message
             node2MediaKey = lastMessage2.media_key;
             t.true(typeof node2MediaKey === 'string', 'node2MediaKey should exist');
             //create url with media_token
-            const protocol = helpers_2.memeProtocol(config_1.config.memeHost);
+            const protocol = (0, helpers_2.memeProtocol)(config_1.config.memeHost);
             url = `${protocol}://${config_1.config.memeHost}/file/${lastMessage2.media_token}`;
         }
         //DECRYPT IMAGE
-        decryptMediaKey = rsa_1.decrypt(node2.privkey, node2MediaKey);
+        decryptMediaKey = (0, rsa_1.decrypt)(node2.privkey, node2MediaKey);
         t.true(typeof decryptMediaKey === 'string', 'decryptMediaKey should exist');
-        var token = yield helpers_2.getToken(t, node2);
+        var token = yield (0, helpers_2.getToken)(t, node2);
         t.true(typeof token === 'string', 'should get media token');
-        const res2 = yield node_fetch_1.default(url, {
+        const res2 = yield (0, node_fetch_1.default)(url, {
             headers: { Authorization: `Bearer ${token}` },
             method: 'GET',
         });

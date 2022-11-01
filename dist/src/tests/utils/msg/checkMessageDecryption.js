@@ -15,7 +15,7 @@ const get_1 = require("../get");
 function checkMessageDecryption(t, node, msgUuid, text) {
     return __awaiter(this, void 0, void 0, function* () {
         // //wait for message to process
-        const lastMessage = yield get_1.getCheckNewMsgs(t, node, msgUuid);
+        const lastMessage = yield (0, get_1.getCheckNewMsgs)(t, node, msgUuid);
         t.truthy(lastMessage, 'await message post');
         //decrypt the last message sent to node using node private key and lastMessage content
         const decrypt = rsa.decrypt(node.privkey, lastMessage.message_content);

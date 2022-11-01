@@ -18,7 +18,7 @@ function editTribe(t, node, tribeId, body) {
         console.log('inside edit');
         console.log('body === ', body);
         try {
-            const res = yield http.put(node.external_ip + `/group/${tribeId}`, helpers_1.makeArgs(node, body));
+            const res = yield http.put(node.external_ip + `/group/${tribeId}`, (0, helpers_1.makeArgs)(node, body));
             t.true(res.success, 'node should have edited tribe');
             return { success: res.success, tribe: res.response };
         }

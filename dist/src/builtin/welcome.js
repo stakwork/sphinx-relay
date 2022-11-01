@@ -37,7 +37,7 @@ function init() {
         const cmd = arr[1];
         if (isGroupJoin) {
             try {
-                const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                 // console.log("=> WelcomeBot chat", chat);
                 if (!(chat && chat.id))
                     return logger_1.sphinxLogger.error(`=> welcomebot no chat`);
@@ -76,7 +76,7 @@ function init() {
                 if (arr.length < 3)
                     return;
                 logger_1.sphinxLogger.info(`setmsg ${arr[2]}`);
-                const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
+                const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                 if (!(chat && chat.id))
                     return logger_1.sphinxLogger.error(`=> welcomebot no chat`);
                 const chatBot = yield models_1.models.ChatBot.findOne({

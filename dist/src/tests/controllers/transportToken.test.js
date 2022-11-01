@@ -19,7 +19,7 @@ const rsa = require("../../crypto/rsa");
 const helpers_2 = require("../utils/helpers");
 ava_1.default.serial('checkContactsWithTransportToken', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield helpers_1.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
         yield checkContactsWithTransportToken(t, node1, node2);
         yield check1MinuteOldRequest(t, node1, node2);
         yield checkDuplicateTransportTokens(t, node1, node2);
@@ -94,7 +94,7 @@ function checkContactsWithTransportToken(t, node1, node2) {
         let added = yield addContact(t, node1, node2);
         t.true(added, 'node1 should add node2 as contact');
         console.log('added contact!');
-        const text = helpers_1.randomText();
+        const text = (0, helpers_1.randomText)();
         let messageSent = yield sendMessageAndCheckDecryption(t, node1, node2, text);
         t.truthy(messageSent, 'node1 should send text message to node2');
         console.log('sent message!');
@@ -110,14 +110,14 @@ function addContact(t, node1, node2) {
             route_hint: node2.routeHint || '',
         };
         //node1 adds node2 as contact
-        const add = yield http.post(node1.external_ip + '/contacts', helpers_2.makeArgs(node1, body, { useTransportToken: true }));
+        const add = yield http.post(node1.external_ip + '/contacts', (0, helpers_2.makeArgs)(node1, body, { useTransportToken: true }));
         t.true(typeof add.response === 'object', 'add contact should return object');
         //create node2 id based on the post response
         var node2id = add && add.response && add.response.id;
         //check that node2id is a number and therefore exists (contact was posted)
         t.true(typeof node2id === 'number', 'node1id should be a number');
         //await contact_key
-        const [n1contactP1, n2contactP1] = yield get_1.getContactAndCheckKeyExchange(t, node1, node2);
+        const [n1contactP1, n2contactP1] = yield (0, get_1.getContactAndCheckKeyExchange)(t, node1, node2);
         //make sure node 2 has the contact_key
         t.true(typeof n2contactP1.contact_key === 'string', 'node2 should have a contact key');
         t.true(typeof n1contactP1 === 'object', 'node1 should be its own first contact');
@@ -127,7 +127,7 @@ function addContact(t, node1, node2) {
 function sendMessageAndCheckDecryption(t, node1, node2, text, options) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS TEXT MESSAGE TO NODE2
-        const [node1contact, node2contact] = yield get_1.getContactAndCheckKeyExchange(t, node1, node2);
+        const [node1contact, node2contact] = yield (0, get_1.getContactAndCheckKeyExchange)(t, node1, node2);
         //encrypt random string with node1 contact_key
         const encryptedText = rsa.encrypt(node1contact.contact_key, text);
         //encrypt random string with node2 contact_key
@@ -143,7 +143,7 @@ function sendMessageAndCheckDecryption(t, node1, node2, text, options) {
             boost: false,
         };
         //send message from node1 to node2
-        const msg = yield http.post(node1.external_ip + '/messages', helpers_2.makeArgs(node1, v, { useTransportToken: true }));
+        const msg = yield http.post(node1.external_ip + '/messages', (0, helpers_2.makeArgs)(node1, v, { useTransportToken: true }));
         //make sure msg exists
         t.true(msg.success, 'msg should exist');
         const msgUuid = msg.response.uuid;
@@ -167,7 +167,7 @@ function getCheckNewMsgs(_t, node, msgUuid) {
 }
 function timeout(i, node, msgUuid, resolve, reject) {
     return __awaiter(this, void 0, void 0, function* () {
-        const msgRes = yield http.get(node.external_ip + '/messages', helpers_2.makeArgs(node, {}, { useTransportToken: true }));
+        const msgRes = yield http.get(node.external_ip + '/messages', (0, helpers_2.makeArgs)(node, {}, { useTransportToken: true }));
         if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
             // console.log('===>', msgRes.response.new_messages, msgUuid)
             const lastMessage = msgRes.response.new_messages.find((msg) => msg.uuid === msgUuid);

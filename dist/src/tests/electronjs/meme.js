@@ -25,8 +25,8 @@ function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
                 finalImgBuffer = Buffer.from(imgBuf);
             }
             else {
-                newKey = crypto_1.randomBytes(20).toString('hex');
-                const encImgBase64 = jscryptor_2_1.Encrypt(imgBuf, newKey);
+                newKey = (0, crypto_1.randomBytes)(20).toString('hex');
+                const encImgBase64 = (0, jscryptor_2_1.Encrypt)(imgBuf, newKey);
                 finalImgBuffer = Buffer.from(encImgBase64, 'base64');
             }
             const form = new FormData();
@@ -39,7 +39,7 @@ function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
             let protocol = 'https';
             if (host.includes('localhost'))
                 protocol = 'http';
-            const resp = yield node_fetch_1.default(`${protocol}://${host}/${isPublic ? 'public' : 'file'}`, {
+            const resp = yield (0, node_fetch_1.default)(`${protocol}://${host}/${isPublic ? 'public' : 'file'}`, {
                 method: 'POST',
                 headers: Object.assign(Object.assign({}, formHeaders), { Authorization: `Bearer ${token}` }),
                 body: form,
@@ -61,7 +61,7 @@ exports.uploadMeme = uploadMeme;
 function dataURLtoBuf(dataurl) {
     let arr = dataurl.split(','), 
     //mime = arr[0].match(/:(.*?);/)[1],
-    bstr = base_64_1.decode(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    bstr = (0, base_64_1.decode)(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
     while (n--) {
         u8arr[n] = bstr.charCodeAt(n);
     }

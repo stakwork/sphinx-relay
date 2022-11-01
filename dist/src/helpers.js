@@ -63,7 +63,7 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
     const msg = newkeyexchangemsg(type, sender, dontActuallySendContactKey || false);
     if (contactPubKey) {
         // dont use ids here
-        exports.performKeysendMessage({
+        (0, exports.performKeysendMessage)({
             sender,
             destination_key: contactPubKey,
             amount: 3,
@@ -90,7 +90,7 @@ const sendContactKeys = ({ type, contactIds, sender, success, failure, dontActua
         const route_hint = contact.routeHint;
         // console.log("=> KEY EXCHANGE", msg)
         // console.log("=> TO", destination_key, route_hint)
-        yield exports.performKeysendMessage({
+        yield (0, exports.performKeysendMessage)({
             sender,
             destination_key,
             amount: 3,
@@ -122,7 +122,7 @@ const performKeysendMessage = ({ destination_key, route_hint, amount, msg, succe
         extra_tlv,
     };
     try {
-        const r = yield network_1.signAndSend(opts, sender);
+        const r = yield (0, network_1.signAndSend)(opts, sender);
         // console.log("=> keysend to new contact")
         if (success)
             success(r);
@@ -153,7 +153,7 @@ function findOrCreateContactByPubkeyAndRouteHint(senderPubKey, senderRouteHint, 
                 tenant: owner.id,
                 unmet,
             }));
-            exports.sendContactKeys({
+            (0, exports.sendContactKeys)({
                 contactIds: [sender.id],
                 sender: owner,
                 type: constants_1.default.message_types.contact_key,

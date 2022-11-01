@@ -15,7 +15,7 @@ const winston = require("winston");
 const moment = require("moment");
 const config_1 = require("./config");
 const blgr = require("blgr");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const blgrLogger = new blgr(config.logging_level);
 const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim();
 const logger = expressWinston.logger({

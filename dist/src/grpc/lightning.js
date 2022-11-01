@@ -27,7 +27,7 @@ const secp256k1 = require("secp256k1");
 const libhsmd_1 = require("./libhsmd");
 const greenlight_1 = require("./greenlight");
 // var protoLoader = require('@grpc/proto-loader')
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 // const IS_LND = config.lightning_provider === "LND";
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
@@ -41,7 +41,7 @@ function loadCredentials(macName) {
     try {
         const lndCert = fs.readFileSync(config.tls_location);
         const sslCreds = grpc.credentials.createSsl(lndCert);
-        const macaroon = macaroon_1.getMacaroon(macName);
+        const macaroon = (0, macaroon_1.getMacaroon)(macName);
         const metadata = new grpc.Metadata();
         metadata.add('macaroon', macaroon);
         const macaroonCreds = grpc.credentials.createFromMetadataGenerator((_args, callback) => {
@@ -64,8 +64,8 @@ const loadGreenlightCredentials = () => {
 function loadLightning(tryProxy, ownerPubkey, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         // only if specified AND available
-        if (tryProxy && proxy_1.isProxy() && ownerPubkey) {
-            const pl = yield proxy_1.loadProxyLightning(ownerPubkey);
+        if (tryProxy && (0, proxy_1.isProxy)() && ownerPubkey) {
+            const pl = yield (0, proxy_1.loadProxyLightning)(ownerPubkey);
             return pl;
         }
         if (lightningClient && !noCache) {
@@ -78,7 +78,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             const options = {
                 'grpc.ssl_target_name_override': 'localhost',
             };
-            const uri = greenlight_1.get_greenlight_grpc_uri().split('//');
+            const uri = (0, greenlight_1.get_greenlight_grpc_uri)().split('//');
             if (!uri[1])
                 return;
             lightningClient = new greenlight.Node(uri[1], credentials, options);
@@ -213,7 +213,7 @@ function sendPayment(payment_request, ownerPubkey) {
         logger_1.sphinxLogger.info('sendPayment', logger_1.logging.Lightning);
         const lightning = yield loadLightning(true, ownerPubkey); // try proxy
         return new Promise((resolve, reject) => {
-            if (proxy_1.isProxy()) {
+            if ((0, proxy_1.isProxy)()) {
                 const opts = {
                     payment_request,
                     fee_limit: { fixed: FEE_LIMIT_SAT },
@@ -304,7 +304,7 @@ function keysend(opts, ownerPubkey) {
                     ];
                 }
                 // sphinx-proxy sendPaymentSync
-                if (proxy_1.isProxy()) {
+                if ((0, proxy_1.isProxy)()) {
                     // console.log("SEND sendPaymentSync", options)
                     options.fee_limit = { fixed: FEE_LIMIT_SAT };
                     const lightning = yield loadLightning(true, ownerPubkey); // try proxy
@@ -424,7 +424,7 @@ function keysendMessage(opts, ownerPubkey) {
                     try {
                         res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
                         success = true;
-                        yield helpers_1.sleep(432);
+                        yield (0, helpers_1.sleep)(432);
                     }
                     catch (e) {
                         logger_1.sphinxLogger.error(e);

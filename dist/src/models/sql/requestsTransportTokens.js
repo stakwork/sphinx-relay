@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let RequestsTransportTokens = class RequestsTransportTokens extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.INTEGER,
         primaryKey: true,
         unique: true,
@@ -22,7 +22,7 @@ __decorate([
     __metadata("design:type", Number)
 ], RequestsTransportTokens.prototype, "id", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], RequestsTransportTokens.prototype, "transportToken", void 0);
 __decorate([
@@ -34,7 +34,7 @@ __decorate([
     __metadata("design:type", Date)
 ], RequestsTransportTokens.prototype, "updatedAt", void 0);
 RequestsTransportTokens = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_requests_transport_tokens', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_requests_transport_tokens', underscored: true })
 ], RequestsTransportTokens);
 exports.default = RequestsTransportTokens;
 //# sourceMappingURL=requestsTransportTokens.js.map

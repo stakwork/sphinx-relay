@@ -16,7 +16,7 @@ BOT CREATOR - this handles the webhook and external API
 let Bot = class Bot extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.TEXT,
         primaryKey: true,
         unique: true,
@@ -56,7 +56,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Bot.prototype, "tenant", void 0);
 Bot = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_bots', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_bots', underscored: true })
 ], Bot);
 exports.default = Bot;
 //# sourceMappingURL=bot.js.map

@@ -17,7 +17,7 @@ const get_1 = require("../utils/get");
 const nodes_1 = require("../nodes");
 ava_1.default.serial('tribeEdit', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield helpers_1.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
         yield tribeEdit(t, node1, node2);
     }));
 }));
@@ -27,17 +27,17 @@ function tribeEdit(t, node1, node2) {
         console.log(`${node1.alias} and ${node2.alias}`);
         //NODE1 CREATES A TRIBE
         console.log('create tribe');
-        let tribe = yield save_1.createTribe(t, node1);
+        let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
         //NODE2 JOINS TRIBE CREATED BY NODE1
         console.log('join tribe');
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
-        let join = yield save_1.joinTribe(t, node2, tribe);
+        let join = yield (0, save_1.joinTribe)(t, node2, tribe);
         t.true(join, 'node2 should join tribe');
         //GET TRIBE ID FROM NODE1 PERSPECTIVE
         console.log('get id');
-        const tribeId = yield get_1.getTribeId(t, node1, tribe);
+        const tribeId = yield (0, get_1.getTribeId)(t, node1, tribe);
         t.true(typeof tribeId === 'number');
         //CREATE TRIBE BODY WITH EDITED PRICE_TO_JOIN
         const newPriceToJoin = 12;
@@ -57,28 +57,28 @@ function tribeEdit(t, node1, node2) {
         };
         //USE TRIBE ID AND EDITED BODY TO EDIT THE TRIBE
         console.log('edit tribe');
-        const edit = yield save_1.editTribe(t, node1, tribeId, body);
+        const edit = yield (0, save_1.editTribe)(t, node1, tribeId, body);
         t.true(edit.success, 'edit should have succeeded');
         t.true(edit.tribe.price_to_join === newPriceToJoin, 'new price to join should be included in edit');
         //GET ALL CHATS FROM NODE1 PERSPECTIVE
         console.log('get chats');
-        const node1Chats = yield get_1.getChats(t, node1);
+        const node1Chats = yield (0, get_1.getChats)(t, node1);
         const editedTribe = yield node1Chats.find((c) => c.id === tribeId);
         t.truthy(editedTribe, 'tribe should be listed in node1 chats');
         t.true((editedTribe === null || editedTribe === void 0 ? void 0 : editedTribe.price_to_join) === newPriceToJoin, 'fetched chat should show edit');
         //FETCH TRIBE FROM TRIBE SERVER TO CHECK EDITS
         console.log('fetch tribe');
-        const tribeFetch = yield get_1.getTribeByUuid(t, tribe);
+        const tribeFetch = yield (0, get_1.getTribeByUuid)(t, tribe);
         t.true(typeof tribeFetch === 'object', 'fetched tribe object should exist');
         t.true(tribeFetch.price_to_join === newPriceToJoin, 'tribe server should show new price');
         t.true(tribeFetch.description === newDescription, 'tribe server should show new description');
         //NODE2 LEAVES THE TRIBE
         console.log('leave tribe');
-        let left = yield del_1.leaveTribe(t, node2, tribe);
+        let left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left, 'node2 should leave tribe');
         //NODE1 DELETES THE TRIBE
         console.log('delete tribe');
-        let delTribe = yield del_1.deleteTribe(t, node1, tribe);
+        let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
 }

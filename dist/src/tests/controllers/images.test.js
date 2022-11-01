@@ -19,7 +19,7 @@ const deleteContact_1 = require("../utils/del/deleteContact");
 const sendImage_1 = require("../utils/msg/sendImage");
 ava_1.default.serial('checkImages', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield helpers_1.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
         yield imageTest(t, node1, node2);
     }));
 }));
@@ -28,30 +28,30 @@ function imageTest(t, node1, node2) {
         //TWO NODES SEND EACH OTHER IMAGES ===>
         console.log(`Testing Sending Image for ${node1.alias} and ${node2.alias}`);
         //NODE1 ADDS NODE2 AS A CONTACT
-        const added = yield addContact_1.addContact(t, node1, node2);
+        const added = yield (0, addContact_1.addContact)(t, node1, node2);
         t.true(added, 'n1 should add n2 as contact');
         //NODE1 SEND IMAGE TO NODE2
         const image = base64images_1.greenSquare;
-        const imageSent = yield sendImage_1.sendImage(t, node1, node2, image);
+        const imageSent = yield (0, sendImage_1.sendImage)(t, node1, node2, image);
         t.true(imageSent, 'image should have been sent');
         //NODE2 SENDS AN IMAGE TO NODE1
         const image2 = base64images_1.pinkSquare;
-        const imageSent2 = yield sendImage_1.sendImage(t, node2, node1, image2);
+        const imageSent2 = yield (0, sendImage_1.sendImage)(t, node2, node1, image2);
         t.true(imageSent2, 'image should have been sent');
         //NODE1 SEND IMAGE TO NODE2
         const price = 11;
-        const paidImageSent = yield sendImage_1.sendImage(t, node1, node2, image, null, price);
+        const paidImageSent = yield (0, sendImage_1.sendImage)(t, node1, node2, image, null, price);
         t.true(paidImageSent, 'paid image should have been sent');
         //NODE2 SENDS AN IMAGE TO NODE1
         const price2 = 12;
-        const paidImageSent2 = yield sendImage_1.sendImage(t, node2, node1, image2, null, price2);
+        const paidImageSent2 = yield (0, sendImage_1.sendImage)(t, node2, node1, image2, null, price2);
         t.true(paidImageSent2, 'paid image should have been sent');
         //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
-        const allContacts = yield get_1.getContacts(t, node1);
+        const allContacts = yield (0, get_1.getContacts)(t, node1);
         let deletion;
         for (const contact of allContacts) {
             if (contact.public_key == node2.pubkey) {
-                deletion = yield deleteContact_1.deleteContact(t, node1, contact.id);
+                deletion = yield (0, deleteContact_1.deleteContact)(t, node1, contact.id);
                 t.true(deletion, 'contacts should be deleted');
             }
         }

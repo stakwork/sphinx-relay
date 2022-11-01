@@ -30,7 +30,7 @@ const proxy_1 = require("../utils/proxy");
 const bolt11 = require("@boltz/bolt11");
 const config_1 = require("../utils/config");
 const logger_1 = require("../utils/logger");
-const config = config_1.loadConfig();
+const config = (0, config_1.loadConfig)();
 /*
 delete type:
 owner needs to check that the delete is the one who made the msg
@@ -244,7 +244,7 @@ function onReceive(payload, dest) {
                     const senderContact = (yield models_1.models.Contact.findOne({
                         where: { publicKey: payload.sender.pub_key, tenant },
                     }));
-                    modify_1.purchaseFromOriginalSender(payload, chat, senderContact, owner);
+                    (0, modify_1.purchaseFromOriginalSender)(payload, chat, senderContact, owner);
                     doAction = false;
                 }
             }
@@ -255,7 +255,7 @@ function onReceive(payload, dest) {
                     const senderContact = (yield models_1.models.Contact.findOne({
                         where: { publicKey: payload.sender.pub_key, tenant },
                     }));
-                    modify_1.sendFinalMemeIfFirstPurchaser(payload, chat, senderContact, owner);
+                    (0, modify_1.sendFinalMemeIfFirstPurchaser)(payload, chat, senderContact, owner);
                     doAction = false; // skip this! we dont need it
                 }
             }
@@ -277,13 +277,13 @@ function doTheAction(data, owner) {
             const chat = (yield models_1.models.Chat.findOne({
                 where: { uuid: payload.chat.uuid, tenant: owner.id },
             }));
-            const pld = yield msg_1.decryptMessage(data, chat);
-            const mentioned = yield send_1.detectMentionsForTribeAdminSelf(pld, owner.alias, chat.myAlias);
+            const pld = yield (0, msg_1.decryptMessage)(data, chat);
+            const mentioned = yield (0, send_1.detectMentionsForTribeAdminSelf)(pld, owner.alias, chat.myAlias);
             if (mentioned)
                 pld.message.push = true;
             const me = owner;
             // encrypt for myself
-            const encrypted = yield msg_1.encryptTribeBroadcast(pld, me, true); // true=isTribeOwner
+            const encrypted = yield (0, msg_1.encryptTribeBroadcast)(pld, me, true); // true=isTribeOwner
             payload = encrypted;
             if (ogContent)
                 payload.message.remoteContent = JSON.stringify({ chat: ogContent }); // this is the key
@@ -359,14 +359,14 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         }
         let payload;
         if (sender && typesToModify.includes(ogpayload.type)) {
-            payload = yield modify_1.modifyPayloadAndSaveMediaKey(ogpayload, chat, sender, owner);
+            payload = yield (0, modify_1.modifyPayloadAndSaveMediaKey)(ogpayload, chat, sender, owner);
         }
         else {
             payload = ogpayload;
         }
         const type = payload.type;
         const message = payload.message;
-        send_1.sendMessage({
+        (0, send_1.sendMessage)({
             type,
             message,
             sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, person: (payload.sender && payload.sender.person) || '' }),
@@ -514,7 +514,7 @@ function parseKeysendInvoice(i) {
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
         let dest = '';
         let owner;
-        if (proxy_1.isProxy()) {
+        if ((0, proxy_1.isProxy)()) {
             try {
                 const invoice = bolt11.decode(i.payment_request);
                 if (!invoice.payeeNodeKey)
@@ -566,7 +566,7 @@ function parseKeysendInvoice(i) {
         }
         if (isKeysendType) {
             if (!memo) {
-                hub_1.sendNotification(new models_1.Chat(), '', 'keysend', owner, value || 0);
+                (0, hub_1.sendNotification)(new models_1.Chat(), '', 'keysend', owner, value || 0);
             }
             saveAnonymousKeysend(i, memo, sender_pubkey, owner.id);
             return;

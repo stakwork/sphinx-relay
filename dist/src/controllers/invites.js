@@ -34,12 +34,12 @@ const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res.json({ success: false });
         res.end();
     }
-    hub_1.finishInviteInHub(params, onSuccess, onFailure);
+    (0, hub_1.finishInviteInHub)(params, onSuccess, onFailure);
 });
 exports.finishInvite = finishInvite;
 const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const invite_string = req.params['invite_string'];
     const dbInvite = (yield models_1.models.Invite.findOne({
@@ -73,12 +73,12 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.end();
     };
     // payInviteInHub(invite_string, params, onSuccess, onFailure)
-    hub_1.payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure);
+    (0, hub_1.payInviteInvoice)(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure);
 });
 exports.payInvite = payInvite;
 const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return res_1.failure(res, 'no owner');
+        return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const { nickname, welcome_message } = req.body;
     const owner = req.owner;
@@ -121,7 +121,7 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res.json(response);
         res.end();
     };
-    hub_1.createInviteInHub(params, onSuccess, onFailure);
+    (0, hub_1.createInviteInHub)(params, onSuccess, onFailure);
 });
 exports.createInvite = createInvite;
 //# sourceMappingURL=invites.js.map

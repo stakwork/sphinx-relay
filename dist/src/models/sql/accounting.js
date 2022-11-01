@@ -13,7 +13,7 @@ const sequelize_typescript_1 = require("sequelize-typescript");
 let Accounting = class Accounting extends sequelize_typescript_1.Model {
 };
 __decorate([
-    sequelize_typescript_1.Column({
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -38,7 +38,7 @@ __decorate([
     __metadata("design:type", String)
 ], Accounting.prototype, "onchainAddress", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.DECIMAL),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.DECIMAL),
     __metadata("design:type", Number)
 ], Accounting.prototype, "amount", void 0);
 __decorate([
@@ -46,7 +46,7 @@ __decorate([
     __metadata("design:type", String)
 ], Accounting.prototype, "sourceApp", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "status", void 0);
 __decorate([
@@ -54,7 +54,7 @@ __decorate([
     __metadata("design:type", String)
 ], Accounting.prototype, "error", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "chanId", void 0);
 __decorate([
@@ -66,27 +66,27 @@ __decorate([
     __metadata("design:type", String)
 ], Accounting.prototype, "onchainTxid", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "commitFee", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "localReserve", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "remoteReserve", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "extraAmount", void 0);
 __decorate([
-    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], Accounting.prototype, "confirmations", void 0);
 Accounting = __decorate([
-    sequelize_typescript_1.Table({ tableName: 'sphinx_accountings', underscored: true })
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_accountings', underscored: true })
 ], Accounting);
 exports.default = Accounting;
 //# sourceMappingURL=accounting.js.map
