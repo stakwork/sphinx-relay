@@ -315,6 +315,9 @@ function detectMentions(msg, isForwarded, chatId, tenant) {
 }
 function parseMentions(content) {
     // split on space or newline
+    console.log('=====>', content);
+    console.log(content.includes('\n'));
+    console.log(content.includes('\\n'));
     const words = content.split(/\n| /);
     console.log('WORDS', words);
     return words.filter((w) => w.startsWith('@'));
