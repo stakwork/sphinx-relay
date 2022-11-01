@@ -377,38 +377,32 @@ async function detectMentions(
   tenant: number
 ): Promise<number[]> {
   const content = msg.message.content as string
-  if (content) {
-    const mentions = parseMentions(content)
-    if (mentions.includes('@all') && !isForwarded) return [Infinity]
-    const ret: number[] = []
-    const allMembers: ChatMemberModel[] = (await models.ChatMember.findAll({
-      where: { tenant, chatId },
-    })) as ChatMemberModel[]
-    await asyncForEach(mentions, async (men) => {
-      const lastAlias = men.substring(1)
-      // check chat memberss
-      const member = allMembers.find((m) => {
-        if (m.lastAlias && lastAlias) {
-          return compareAliases(m.lastAlias, lastAlias)
-        }
-      })
-      if (member) {
-        ret.push(member.contactId)
+  if (!content) return []
+  if (!content.includes('@')) return []
+  const mentions = parseMentions(content)
+  if (mentions.includes('@all') && !isForwarded) return [Infinity]
+  const ret: number[] = []
+  const allMembers: ChatMemberModel[] = (await models.ChatMember.findAll({
+    where: { tenant, chatId },
+  })) as ChatMemberModel[]
+  await asyncForEach(mentions, async (men) => {
+    const lastAlias = men.substring(1)
+    // check chat memberss
+    const member = allMembers.find((m) => {
+      if (m.lastAlias && lastAlias) {
+        return compareAliases(m.lastAlias, lastAlias)
       }
     })
-    return ret
-  } else {
-    return []
-  }
+    if (member) {
+      ret.push(member.contactId)
+    }
+  })
+  return ret
 }
 
 function parseMentions(content: string) {
   // split on space or newline
-  console.log('=====>', content)
-  console.log(content.includes('\n'))
-  console.log(content.includes('\\n'))
   const words = content.split(/\n| /)
-  console.log('WORDS', words)
   return words.filter((w) => w.startsWith('@'))
 }
 
