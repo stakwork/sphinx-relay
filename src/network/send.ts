@@ -405,6 +405,7 @@ async function detectMentions(
 function parseMentions(content: string) {
   // split on space or newline
   const words = content.split(/\n| /)
+  console.log('WORDS', words)
   return words.filter((w) => w.startsWith('@'))
 }
 
