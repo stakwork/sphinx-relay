@@ -20,50 +20,50 @@ const config_1 = require("../utils/config");
 const hub_1 = require("../hub");
 const sequelize_1 = require("sequelize");
 const logger_1 = require("../utils/logger");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const VERSION = 2;
 function getRelayVersion(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        (0, res_1.success)(res, { version: VERSION });
+        res_1.success(res, { version: VERSION });
     });
 }
 exports.getRelayVersion = getRelayVersion;
 function getAppVersions(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const vs = yield (0, hub_1.getAppVersionsFromHub)();
+        const vs = yield hub_1.getAppVersionsFromHub();
         if (vs) {
-            (0, res_1.success)(res, vs);
+            res_1.success(res, vs);
         }
         else {
-            (0, res_1.failure)(res, 'Could not load app versions');
+            res_1.failure(res, 'Could not load app versions');
         }
     });
 }
 exports.getAppVersions = getAppVersions;
 const checkRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const { pubkey, amount, route_hint } = req.query;
     if (!(pubkey && pubkey.length === 66))
-        return (0, res_1.failure)(res, 'wrong pubkey');
+        return res_1.failure(res, 'wrong pubkey');
     const owner = req.owner;
     try {
         const amt = parseInt(amount) || constants_1.default.min_sat_amount;
         const r = yield Lightning.queryRoute(pubkey, amt, route_hint || '', owner.publicKey);
-        (0, res_1.success)(res, r);
+        res_1.success(res, r);
     }
     catch (e) {
-        (0, res_1.failure)(res, e);
+        res_1.failure(res, e);
     }
 });
 exports.checkRoute = checkRoute;
 const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const chatID = req.query.chat_id;
     const contactID = req.query.contact_id;
     if (!chatID && !contactID)
-        return (0, res_1.failure)(res, 'no chat_id or contact_id');
+        return res_1.failure(res, 'no chat_id or contact_id');
     let pubkey = '';
     let routeHint = '';
     if (contactID) {
@@ -72,7 +72,7 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
             where: { id: contactId },
         }));
         if (!contact)
-            return (0, res_1.failure)(res, 'cant find contact');
+            return res_1.failure(res, 'cant find contact');
         pubkey = contact.publicKey;
         routeHint = contact.routeHint;
     }
@@ -82,29 +82,29 @@ const checkRouteByContactOrChat = (req, res) => __awaiter(void 0, void 0, void 0
             where: { id: chatId },
         }));
         if (!chat)
-            return (0, res_1.failure)(res, 'cant find chat');
+            return res_1.failure(res, 'cant find chat');
         if (!chat.ownerPubkey)
-            return (0, res_1.failure)(res, 'cant find owern_pubkey');
+            return res_1.failure(res, 'cant find owern_pubkey');
         pubkey = chat.ownerPubkey;
         const chatowner = (yield models_1.models.Contact.findOne({
             where: { publicKey: chat.ownerPubkey },
         }));
         if (!chatowner)
-            return (0, res_1.failure)(res, 'cant find chat owner');
+            return res_1.failure(res, 'cant find chat owner');
         if (chatowner.routeHint)
             routeHint = chatowner.routeHint;
     }
     if (!(pubkey && pubkey.length === 66))
-        return (0, res_1.failure)(res, 'wrong pubkey');
+        return res_1.failure(res, 'wrong pubkey');
     const amount = req.query.amount;
     const owner = req.owner;
     try {
         const amt = parseInt(amount) || constants_1.default.min_sat_amount;
         const r = yield Lightning.queryRoute(pubkey, amt, routeHint || '', owner.publicKey);
-        (0, res_1.success)(res, r);
+        res_1.success(res, r);
     }
     catch (e) {
-        (0, res_1.failure)(res, e);
+        res_1.failure(res, e);
     }
 });
 exports.checkRouteByContactOrChat = checkRouteByContactOrChat;
@@ -134,15 +134,15 @@ function getLogsSince(req, res) {
             }
         }));
         if (txt)
-            (0, res_1.success)(res, txt);
+            res_1.success(res, txt);
         else
-            (0, res_1.failure)(res, err);
+            res_1.failure(res, err);
     });
 }
 exports.getLogsSince = getLogsSince;
 const getLightningInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     res.status(200);
     try {
         const response = yield Lightning.getInfo();
@@ -156,7 +156,7 @@ const getLightningInfo = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getLightningInfo = getLightningInfo;
 const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     res.status(200);
     try {
         const response = yield Lightning.listChannels({});
@@ -170,7 +170,7 @@ const getChannels = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getChannels = getChannels;
 const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const date = new Date();
     date.setMilliseconds(0);
@@ -195,7 +195,7 @@ const getBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getBalance = getBalance;
 const getLocalRemoteBalance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     res.status(200);
     try {
         const channelList = yield Lightning.listChannels({}, req.owner.publicKey);
@@ -225,7 +225,7 @@ const getNodeInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.end();
         return;
     }
-    const node = yield (0, nodeinfo_1.nodeinfo)();
+    const node = yield nodeinfo_1.nodeinfo();
     res.status(200);
     res.json(node);
     res.end();
@@ -241,13 +241,13 @@ function asyncForEach(array, callback) {
 function clearForTesting(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return (0, res_1.failure)(res, 'no owner');
+            return res_1.failure(res, 'no owner');
         const tenant = req.owner.id;
         if (!config.allow_test_clearing) {
-            return (0, res_1.failure)(res, 'nope');
+            return res_1.failure(res, 'nope');
         }
         if (config.allow_test_clearing !== 'true') {
-            return (0, res_1.failure)(res, 'nope');
+            return res_1.failure(res, 'nope');
         }
         try {
             yield models_1.models.Chat.destroy({ truncate: true, where: { tenant } });
@@ -276,10 +276,10 @@ function clearForTesting(req, res) {
                 alias: '',
                 deviceId: '',
             });
-            (0, res_1.success)(res, { clean: true });
+            res_1.success(res, { clean: true });
         }
         catch (e) {
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
         }
     });
 }

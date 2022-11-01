@@ -17,17 +17,17 @@ const nodes_1 = require("../nodes");
 /*
 npx ava test-98-clearAllContacts.js --verbose --serial --timeout=2m
 */
-(0, ava_1.default)('test-98-clearAllContacts: clear all contacts from nodes', (t) => __awaiter(void 0, void 0, void 0, function* () {
+ava_1.default('test-98-clearAllContacts: clear all contacts from nodes', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield clearAllContacts(t);
 }));
 function clearAllContacts(t) {
     return __awaiter(this, void 0, void 0, function* () {
         //DELETE ALL CONTACTS ===>
-        yield (0, helpers_1.asyncForEach)(nodes_1.default, (node) => __awaiter(this, void 0, void 0, function* () {
+        yield helpers_1.asyncForEach(nodes_1.default, (node) => __awaiter(this, void 0, void 0, function* () {
             if (!node)
                 return;
             //get all contacts from node
-            var res = yield http.get(node.external_ip + '/contacts?unmet=include', (0, helpers_1.makeArgs)(node));
+            var res = yield http.get(node.external_ip + '/contacts?unmet=include', helpers_1.makeArgs(node));
             var contacts = res.response.contacts;
             t.truthy(contacts, 'should have at least one contact');
             if (contacts.length === 1) {
@@ -35,9 +35,9 @@ function clearAllContacts(t) {
                 return;
             }
             //delete any contact basides itself
-            yield (0, helpers_1.asyncForEach)(contacts, (c) => __awaiter(this, void 0, void 0, function* () {
+            yield helpers_1.asyncForEach(contacts, (c) => __awaiter(this, void 0, void 0, function* () {
                 if (c.public_key !== node.pubkey) {
-                    let deletion = yield http.del(node.external_ip + '/contacts/' + c.id, (0, helpers_1.makeArgs)(node));
+                    let deletion = yield http.del(node.external_ip + '/contacts/' + c.id, helpers_1.makeArgs(node));
                     t.true(deletion.success, 'node should delete the contact');
                 }
             }));

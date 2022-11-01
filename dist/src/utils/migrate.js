@@ -26,7 +26,7 @@ function migrateMuted() {
             if (!mig)
                 return;
             console.log('===========> migrate is_muted to notify!');
-            yield (0, helpers_1.asyncForEach)(chats, (c) => __awaiter(this, void 0, void 0, function* () {
+            yield helpers_1.asyncForEach(chats, (c) => __awaiter(this, void 0, void 0, function* () {
                 if (c.notify === null) {
                     yield c.update({
                         notify: c.isMuted

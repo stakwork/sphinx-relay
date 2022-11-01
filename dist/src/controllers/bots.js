@@ -27,27 +27,27 @@ const git_1 = require("../builtin/git");
 const fs = require("fs");
 const rsa = require("../crypto/rsa");
 const config_1 = require("../utils/config");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const bots = (yield models_1.models.Bot.findAll({
             where: { tenant },
         }));
-        (0, res_1.success)(res, {
+        res_1.success(res, {
             bots: bots.map((b) => jsonUtils.botToJson(b)),
         });
     }
     catch (e) {
-        (0, res_1.failure)(res, 'no bots');
+        res_1.failure(res, 'no bots');
     }
 });
 exports.getBots = getBots;
 const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { name, webhook, price_per_use, img, description, tags } = req.body;
     const uuid = yield tribes.genSignedTimestamp(req.owner.publicKey);
@@ -76,16 +76,16 @@ const createBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             owner_route_hint: req.owner.routeHint || '',
             owner_alias: req.owner.alias || '',
         });
-        (0, res_1.success)(res, jsonUtils.botToJson(theBot));
+        res_1.success(res, jsonUtils.botToJson(theBot));
     }
     catch (e) {
-        (0, res_1.failure)(res, 'bot creation failed');
+        res_1.failure(res, 'bot creation failed');
     }
 });
 exports.createBot = createBot;
 const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const id = req.params.id;
     const owner_pubkey = req.owner.publicKey;
@@ -100,11 +100,11 @@ const deleteBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             owner_pubkey,
         });
         yield models_1.models.Bot.destroy({ where: { id, tenant } });
-        (0, res_1.success)(res, true);
+        res_1.success(res, true);
     }
     catch (e) {
         logger_1.sphinxLogger.error(['ERROR deleteBot', e]);
-        (0, res_1.failure)(res, e);
+        res_1.failure(res, e);
     }
 });
 exports.deleteBot = deleteBot;
@@ -359,7 +359,7 @@ function postToBotServer(msg, bot, route) {
             url += '/' + route;
         }
         try {
-            const r = yield (0, node_fetch_1.default)(url, {
+            const r = yield node_fetch_1.default(url, {
                 method: 'POST',
                 body: JSON.stringify(buildBotPayload(msg)),
                 headers: {
@@ -443,7 +443,7 @@ function receiveBotRes(dat) {
             // received the entire action?
             const bot_id = dat.bot_id;
             const recipient_id = dat.recipient_id;
-            (0, botapi_1.finalAction)({
+            botapi_1.finalAction({
                 bot_id,
                 action,
                 bot_name,
@@ -502,20 +502,20 @@ function receiveBotRes(dat) {
 exports.receiveBotRes = receiveBotRes;
 const addPatToGitBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     if (!req.body.encrypted_pat)
-        return (0, res_1.failure)(res, 'no pat');
+        return res_1.failure(res, 'no pat');
     const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
     const pat = rsa.decrypt(transportTokenKey, req.body.encrypted_pat);
     if (!pat)
-        return (0, res_1.failure)(res, 'failed to decrypt pat');
+        return res_1.failure(res, 'failed to decrypt pat');
     try {
-        yield (0, git_1.updateGitBotPat)(tenant, pat);
-        (0, res_1.success)(res, { updated: true });
+        yield git_1.updateGitBotPat(tenant, pat);
+        res_1.success(res, { updated: true });
     }
     catch (e) {
-        (0, res_1.failure)(res, 'no bots');
+        res_1.failure(res, 'no bots');
     }
 });
 exports.addPatToGitBot = addPatToGitBot;

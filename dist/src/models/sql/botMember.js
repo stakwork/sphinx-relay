@@ -16,7 +16,7 @@ BOT CREATOR - store the installers of your bot
 let BotMember = class BotMember extends sequelize_typescript_1.Model {
 };
 __decorate([
-    (0, sequelize_typescript_1.Column)({
+    sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -53,7 +53,7 @@ __decorate([
     __metadata("design:type", Number)
 ], BotMember.prototype, "tenant", void 0);
 BotMember = __decorate([
-    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_bot_members', underscored: true })
+    sequelize_typescript_1.Table({ tableName: 'sphinx_bot_members', underscored: true })
 ], BotMember);
 exports.default = BotMember;
 //# sourceMappingURL=botMember.js.map

@@ -16,7 +16,7 @@ function getLatest(t, node, timestamp) {
     return __awaiter(this, void 0, void 0, function* () {
         //GET LATEST FROM A NODE PERSPECTIVE
         //get latest from node perspective
-        const res = yield http.get(node.external_ip + `/latest_contacts?date=${timestamp}`, (0, helpers_1.makeArgs)(node));
+        const res = yield http.get(node.external_ip + `/latest_contacts?date=${timestamp}`, helpers_1.makeArgs(node));
         t.true(res.success, 'get latest should exist');
         return res;
     });

@@ -27,10 +27,10 @@ const moment = require("moment");
 const rsa = require("../crypto/rsa");
 const fs = require("fs");
 const config_1 = require("../utils/config");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const dontIncludeFromGroup = req.query.from_group && req.query.from_group === 'false';
     const includeUnmet = req.query.unmet && req.query.unmet === 'include';
@@ -81,7 +81,7 @@ const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const pendingContactIds = membs.map((m) => m.contactId);
         return jsonUtils.chatToJson(Object.assign(Object.assign({}, theChat), { pendingContactIds }));
     });
-    (0, res_1.success)(res, {
+    res_1.success(res, {
         contacts: contactsResponse,
         chats: chatsResponse,
         subscriptions: subsResponse,
@@ -91,21 +91,21 @@ exports.getContacts = getContacts;
 const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const chat_id = parseInt(req.params.chat_id);
     if (!chat_id)
-        return (0, res_1.failure)(res, 'no chat id');
+        return res_1.failure(res, 'no chat id');
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const chat = (yield models_1.models.Chat.findOne({
         where: { id: chat_id, tenant },
     }));
     if (!chat)
-        return (0, res_1.failure)(res, 'chat not found');
+        return res_1.failure(res, 'chat not found');
     let contactIDs;
     try {
         contactIDs = JSON.parse(chat.contactIds || '[]');
     }
     catch (e) {
-        return (0, res_1.failure)(res, 'no contact ids');
+        return res_1.failure(res, 'no contact ids');
     }
     const pendingMembers = (yield models_1.models.ChatMember.findAll({
         where: {
@@ -115,7 +115,7 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         },
     }));
     if (!contactIDs || !contactIDs.length)
-        return (0, res_1.failure)(res, 'no contact ids length');
+        return res_1.failure(res, 'no contact ids length');
     const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
     const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
     const contacts = (yield models_1.models.Contact.findAll({
@@ -125,7 +125,7 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
         order: [['alias', 'asc']],
     }));
     if (!contacts)
-        return (0, res_1.failure)(res, 'no contacts found');
+        return res_1.failure(res, 'no contacts found');
     const contactsRet = contacts.map((c) => jsonUtils.contactToJson(c));
     let finalContacts = contactsRet;
     if (offset === 0) {
@@ -144,13 +144,13 @@ const getContactsForChat = (req, res) => __awaiter(void 0, void 0, void 0, funct
             finalContacts = pendingContactsRet.concat(contactsRet);
         }
     }
-    (0, res_1.success)(res, { contacts: finalContacts });
+    res_1.success(res, { contacts: finalContacts });
 });
 exports.getContactsForChat = getContactsForChat;
 function generateOwnerWithExternalSigner(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!(0, proxy_1.isProxy)()) {
-            return (0, res_1.failure)(res, 'only proxy');
+        if (!proxy_1.isProxy()) {
+            return res_1.failure(res, 'only proxy');
         }
         const { pubkey, sig } = req.body;
         const where = {
@@ -161,11 +161,11 @@ function generateOwnerWithExternalSigner(req, res) {
             where,
         }));
         if (owner) {
-            return (0, res_1.failure)(res, 'owner already exists');
+            return res_1.failure(res, 'owner already exists');
         }
-        const generated = yield (0, proxy_1.generateNewExternalUser)(pubkey, sig);
+        const generated = yield proxy_1.generateNewExternalUser(pubkey, sig);
         if (!generated) {
-            return (0, res_1.failure)(res, 'generate failed');
+            return res_1.failure(res, 'generate failed');
         }
         const contact = {
             publicKey: generated.publicKey,
@@ -176,7 +176,7 @@ function generateOwnerWithExternalSigner(req, res) {
         const created = (yield models_1.models.Contact.create(contact));
         // set tenant to self!
         created.update({ tenant: created.id });
-        (0, res_1.success)(res, { id: (created && created.id) || 0 });
+        res_1.success(res, { id: (created && created.id) || 0 });
     });
 }
 exports.generateOwnerWithExternalSigner = generateOwnerWithExternalSigner;
@@ -191,9 +191,9 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     ]);
     const where = { isOwner: true };
     const pubkey = req.body['pubkey'];
-    if ((0, proxy_1.isProxy)()) {
+    if (proxy_1.isProxy()) {
         if (!pubkey) {
-            return (0, res_1.failure)(res, 'no pubkey');
+            return res_1.failure(res, 'no pubkey');
         }
         where.publicKey = pubkey;
     }
@@ -201,12 +201,12 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         where,
     }));
     if (!owner) {
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     }
     const pwd = password_1.default;
     if (process.env.USE_PASSWORD === 'true') {
         if (pwd !== req.query.pwd) {
-            (0, res_1.failure)(res, 'Wrong Password');
+            res_1.failure(res, 'Wrong Password');
             return;
         }
         else {
@@ -226,62 +226,62 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         token = tokenAndTimestamp[0];
     }
     if (!token) {
-        return (0, res_1.failure)(res, 'no token in body');
+        return res_1.failure(res, 'no token in body');
     }
     const hash = crypto.createHash('sha256').update(token).digest('base64');
     if (owner.authToken) {
         if (owner.authToken !== hash) {
-            return (0, res_1.failure)(res, 'invalid token');
+            return res_1.failure(res, 'invalid token');
         }
     }
     else {
         // done!
-        if ((0, proxy_1.isProxy)()) {
+        if (proxy_1.isProxy()) {
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
         owner.update({ authToken: hash });
     }
-    (0, res_1.success)(res, {
+    res_1.success(res, {
         id: (owner && owner.id) || 0,
     });
 });
 exports.generateToken = generateToken;
 const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body.encrypted_key) {
-        return (0, res_1.failure)(res, 'no encrypted_key found');
+        return res_1.failure(res, 'no encrypted_key found');
     }
     const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
     const hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
     if (!hmacKey) {
-        return (0, res_1.failure)(res, 'no decrypted hmac key');
+        return res_1.failure(res, 'no decrypted hmac key');
     }
     const tenant = req.owner.id;
     yield models_1.models.Contact.update({ hmacKey }, { where: { tenant, isOwner: true } });
-    (0, res_1.success)(res, {
+    res_1.success(res, {
         registered: true,
     });
 });
 exports.registerHmacKey = registerHmacKey;
 const getHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const hmac = req.owner.hmacKey;
     if (!hmac)
-        return (0, res_1.failure)(res, 'no hmac set');
+        return res_1.failure(res, 'no hmac set');
     const contact_key = req.owner.contactKey;
     if (!contact_key)
-        return (0, res_1.failure)(res, 'no contact_key');
+        return res_1.failure(res, 'no contact_key');
     const encrypted_key = rsa.encrypt(contact_key, hmac);
     if (!encrypted_key)
-        return (0, res_1.failure)(res, 'failed to encrypt hmac key');
-    (0, res_1.success)(res, {
+        return res_1.failure(res, 'failed to encrypt hmac key');
+    res_1.success(res, {
         encrypted_key,
     });
 });
 exports.getHmacKey = getHmacKey;
 const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     logger_1.sphinxLogger.info([
         '=> updateContact called',
@@ -296,14 +296,14 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         where: { id: req.params.id, tenant },
     }));
     if (!contact) {
-        return (0, res_1.failure)(res, 'no contact found');
+        return res_1.failure(res, 'no contact found');
     }
     const contactKeyChanged = attrs['contact_key'] && contact.contactKey !== attrs['contact_key'];
     const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias'];
     const photoChanged = attrs['photo_url'] && contact.photoUrl !== attrs['photo_url'];
     // update contact
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
-    (0, res_1.success)(res, jsonUtils.contactToJson(owner));
+    res_1.success(res, jsonUtils.contactToJson(owner));
     if (!contact.isOwner)
         return;
     if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
@@ -331,7 +331,7 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.updateContact = updateContact;
 const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     logger_1.sphinxLogger.info([
         '=> exchangeKeys called',
@@ -345,7 +345,7 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         where: { id: req.params.id, tenant },
     }));
     const owner = req.owner;
-    (0, res_1.success)(res, jsonUtils.contactToJson(contact));
+    res_1.success(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
         contactIds: [contact.id],
         sender: owner,
@@ -355,7 +355,7 @@ const exchangeKeys = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.exchangeKeys = exchangeKeys;
 const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     logger_1.sphinxLogger.info([
         '=> createContact called',
@@ -388,14 +388,14 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 type: constants_1.default.message_types.contact_key,
             });
         }
-        return (0, res_1.success)(res, jsonUtils.contactToJson(existing));
+        return res_1.success(res, jsonUtils.contactToJson(existing));
     }
     if (attrs['public_key'] && attrs['public_key'].length > 66)
         attrs['public_key'] = attrs['public_key'].substring(0, 66);
     attrs.tenant = tenant;
     const createdContact = (yield models_1.models.Contact.create(attrs));
     const contact = yield createdContact.update(jsonUtils.jsonToContact(attrs));
-    (0, res_1.success)(res, jsonUtils.contactToJson(contact));
+    res_1.success(res, jsonUtils.contactToJson(contact));
     helpers.sendContactKeys({
         contactIds: [contact.id],
         sender: owner,
@@ -405,11 +405,11 @@ const createContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createContact = createContact;
 const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const id = parseInt(req.params.id || '0');
     if (!id || id === tenant) {
-        (0, res_1.failure)(res, 'Cannot delete self');
+        res_1.failure(res, 'Cannot delete self');
         return;
     }
     const contact = (yield models_1.models.Contact.findOne({
@@ -473,7 +473,7 @@ const deleteContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }));
     yield models_1.models.Invite.destroy({ where: { contactId: id, tenant } });
     yield models_1.models.Subscription.destroy({ where: { contactId: id, tenant } });
-    (0, res_1.success)(res, {});
+    res_1.success(res, {});
 });
 exports.deleteContact = deleteContact;
 const receiveContactKey = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -594,7 +594,7 @@ function extractAttrs(body) {
 }
 const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     try {
         const dateToReturn = decodeURI(req.query.date);
@@ -635,7 +635,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             const pendingContactIds = membs.map((m) => m.contactId);
             return jsonUtils.chatToJson(Object.assign(Object.assign({}, theChat), { pendingContactIds }));
         });
-        (0, res_1.success)(res, {
+        res_1.success(res, {
             contacts: contactsResponse,
             invites: invitesResponse,
             chats: chatsResponse,
@@ -643,7 +643,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
     }
     catch (e) {
-        (0, res_1.failure)(res, e);
+        res_1.failure(res, e);
     }
 });
 exports.getLatestContacts = getLatestContacts;
@@ -653,23 +653,23 @@ function switchBlock(res, tenant, id, blocked) {
             where: { id, tenant },
         }));
         if (!contact) {
-            return (0, res_1.failure)(res, 'no contact found');
+            return res_1.failure(res, 'no contact found');
         }
         // update contact
         const updated = yield contact.update({ blocked });
-        (0, res_1.success)(res, jsonUtils.contactToJson(updated));
+        res_1.success(res, jsonUtils.contactToJson(updated));
     });
 }
 const blockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const contactId = parseInt(req.params.contact_id);
     switchBlock(res, req.owner.id, contactId, true);
 });
 exports.blockContact = blockContact;
 const unblockContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const contactId = parseInt(req.params.contact_id);
     switchBlock(res, req.owner.id, contactId, false);
 });

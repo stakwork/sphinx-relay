@@ -18,13 +18,13 @@ const get_2 = require("../get");
 function sendTribeMessage(t, node1, tribe, text, options) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS TEXT MESSAGE TO NODE2
-        const node1contact = yield (0, get_1.getSelf)(t, node1);
+        const node1contact = yield get_1.getSelf(t, node1);
         //encrypt random string with node1 contact_key
         const encryptedText = rsa.encrypt(node1contact.contact_key, text);
         //encrypt random string with node2 contact_key
         const remoteText = rsa.encrypt(tribe.group_key, text);
         //create message object with encrypted texts
-        const tribeId = yield (0, get_2.getTribeIdFromUUID)(t, node1, tribe);
+        const tribeId = yield get_2.getTribeIdFromUUID(t, node1, tribe);
         t.true(typeof tribeId === 'number', 'node should get tribe id');
         const v = {
             contact_id: null,
@@ -37,7 +37,7 @@ function sendTribeMessage(t, node1, tribe, text, options) {
             boost: false,
         };
         //send message from node1 to node2
-        const msg = yield http.post(node1.external_ip + '/messages', (0, helpers_1.makeArgs)(node1, v));
+        const msg = yield http.post(node1.external_ip + '/messages', helpers_1.makeArgs(node1, v));
         t.true(msg.success, 'node should send message to tribe');
         return msg.response;
     });

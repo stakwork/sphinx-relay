@@ -76,7 +76,7 @@ describe('tests for src/utils/json.ts', () => {
         uuid: '0',
     };
     test('sendContactKeys', () => {
-        const messageInJson = (0, json_1.messageToJson)(message);
+        const messageInJson = json_1.messageToJson(message);
         expect(messageInJson).toStrictEqual(messageConvertedToJson);
     });
 });

@@ -20,7 +20,7 @@ When they buy the file, they can retrieve the key from here.
 let MediaKey = class MediaKey extends sequelize_typescript_1.Model {
 };
 __decorate([
-    (0, sequelize_typescript_1.Column)({
+    sequelize_typescript_1.Column({
         type: sequelize_typescript_1.DataType.BIGINT,
         primaryKey: true,
         unique: true,
@@ -33,19 +33,19 @@ __decorate([
     __metadata("design:type", String)
 ], MediaKey.prototype, "muid", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], MediaKey.prototype, "chatId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], MediaKey.prototype, "receiver", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], MediaKey.prototype, "key", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], MediaKey.prototype, "messageId", void 0);
 __decorate([
@@ -57,7 +57,7 @@ __decorate([
     __metadata("design:type", String)
 ], MediaKey.prototype, "mediaType", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    sequelize_typescript_1.Column(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
 ], MediaKey.prototype, "sender", void 0);
 __decorate([
@@ -69,7 +69,7 @@ __decorate([
     __metadata("design:type", Number)
 ], MediaKey.prototype, "tenant", void 0);
 MediaKey = __decorate([
-    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_media_keys', underscored: true })
+    sequelize_typescript_1.Table({ tableName: 'sphinx_media_keys', underscored: true })
 ], MediaKey);
 exports.default = MediaKey;
 //# sourceMappingURL=mediaKey.js.map

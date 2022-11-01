@@ -15,7 +15,7 @@ const config_1 = require("./config");
 const fs = require("fs");
 const readline = require("readline");
 const logger_1 = require("./logger");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 /*
 "lnd_pwd_path": "/relay/.lnd/.lndpwd"
 */

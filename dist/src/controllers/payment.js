@@ -26,14 +26,14 @@ const logger_1 = require("../utils/logger");
 const confirmations_1 = require("./confirmations");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const { amount, chat_id, contact_id, destination_key, route_hint, media_type, muid, text, remote_text, dimensions, remote_text_map, contact_ids, reply_uuid, parent_id, } = req.body;
     logger_1.sphinxLogger.info(`[send payment] ${req.body}`);
     const owner = req.owner;
     if (destination_key && !contact_id && !chat_id) {
-        (0, feed_1.anonymousKeysend)(owner, destination_key, route_hint, amount || '', text || '', function (body) {
-            (0, res_1.success)(res, body);
+        feed_1.anonymousKeysend(owner, destination_key, route_hint, amount || '', text || '', function (body) {
+            res_1.success(res, body);
         }, function (error) {
             res.status(200);
             res.json({ success: false, error });
@@ -47,7 +47,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         recipient_id: contact_id,
     });
     if (!chat)
-        return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
+        return res_1.failure(res, 'counldnt findOrCreateChat');
     const date = new Date();
     date.setMilliseconds(0);
     const msg = {
@@ -73,7 +73,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (parent_id)
         msg.parentId = parent_id;
     if (muid) {
-        const myMediaToken = yield (0, ldat_1.tokenFromTerms)({
+        const myMediaToken = yield ldat_1.tokenFromTerms({
             meta: { dim: dimensions },
             host: '',
             muid,
@@ -116,7 +116,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         amount: amount,
         success: () => __awaiter(void 0, void 0, void 0, function* () {
             // console.log('payment sent', { data })
-            (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
+            res_1.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: () => __awaiter(void 0, void 0, void 0, function* () {
             yield message.update({ status: constants_1.default.statuses.failed });
@@ -184,13 +184,13 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
         type: 'direct_payment',
         response: jsonUtils.messageToJson(message, chat, sender),
     }, tenant);
-    (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner);
-    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    hub_1.sendNotification(chat, (msg.senderAlias || sender.alias), 'message', owner);
+    confirmations_1.sendConfirmation({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
-        return (0, res_1.failure)(res, 'no owner');
+        return res_1.failure(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
@@ -233,10 +233,10 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             offset,
         }));
         const ret = msgs || [];
-        (0, res_1.success)(res, ret.map((message) => jsonUtils.messageToJson(message)));
+        res_1.success(res, ret.map((message) => jsonUtils.messageToJson(message)));
     }
     catch (e) {
-        (0, res_1.failure)(res, 'cant find payments');
+        res_1.failure(res, 'cant find payments');
     }
 });
 exports.listPayments = listPayments;

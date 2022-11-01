@@ -30,7 +30,7 @@ const hub_url = 'https://hub.sphinx.chat/api/v1/';
 function get_hub_pubkey() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield (0, node_fetch_1.default)(hub_url + '/routingnode');
+            const r = yield node_fetch_1.default(hub_url + '/routingnode');
             const j = yield r.json();
             if (j && j.pubkey) {
                 // console.log("=> GOT HUB PUBKEY", j.pubkey)
@@ -73,7 +73,7 @@ function getReceivedAccountings() {
 function getPendingAccountings() {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('[WATCH] getPendingAccountings')
-        const utxos = yield (0, wallet_1.listUnspent)();
+        const utxos = yield wallet_1.listUnspent();
         const accountings = (yield models_1.models.Accounting.findAll({
             where: {
                 onchain_address: {
@@ -108,10 +108,10 @@ function listUTXOs(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const ret = yield getPendingAccountings();
-            (0, res_1.success)(res, ret.map((acc) => jsonUtils.accountingToJson(acc)));
+            res_1.success(res, ret.map((acc) => jsonUtils.accountingToJson(acc)));
         }
         catch (e) {
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
         }
     });
 }
@@ -120,7 +120,7 @@ function getSuggestedSatPerByte() {
     return __awaiter(this, void 0, void 0, function* () {
         const MAX_AMT = 250;
         try {
-            const r = yield (0, node_fetch_1.default)('https://mempool.space/api/v1/fees/recommended');
+            const r = yield node_fetch_1.default('https://mempool.space/api/v1/fees/recommended');
             const j = yield r.json();
             return Math.min(MAX_AMT, j.halfHourFee);
         }
@@ -173,7 +173,7 @@ function genChannelAndConfirmAccounting(acc) {
 }
 function pollUTXOs() {
     return __awaiter(this, void 0, void 0, function* () {
-        if ((0, proxy_1.isProxy)())
+        if (proxy_1.isProxy())
             return; // not on proxy for now???
         // console.log("[WATCH]=> pollUTXOs")
         const accs = yield getPendingAccountings();
@@ -264,7 +264,7 @@ exports.startWatchingUTXOs = startWatchingUTXOs;
 function queryOnchainAddress(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
-            return (0, res_1.failure)(res, 'no owner');
+            return res_1.failure(res, 'no owner');
         // const tenant:number = req.owner.id
         logger_1.sphinxLogger.info(`=> queryOnchainAddress`);
         if (!hub_pubkey)
@@ -292,7 +292,7 @@ function queryOnchainAddress(req, res) {
             yield network.signAndSend(opts, owner);
         }
         catch (e) {
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
             return;
         }
         let i = 0;
@@ -300,11 +300,11 @@ function queryOnchainAddress(req, res) {
             if (i >= 15) {
                 clearInterval(interval);
                 delete queries[uuid];
-                (0, res_1.failure)(res, 'no response received');
+                res_1.failure(res, 'no response received');
                 return;
             }
             if (queries[uuid]) {
-                (0, res_1.success)(res, queries[uuid].result);
+                res_1.success(res, queries[uuid].result);
                 clearInterval(interval);
                 delete queries[uuid];
                 return;

@@ -14,7 +14,7 @@ const http = require("ava-http");
 const helpers_1 = require("../helpers");
 const getBalance = (t, node) => __awaiter(void 0, void 0, void 0, function* () {
     //GET BALANCE OF NODE ===>
-    const r = yield http.get(node.external_ip + '/balance', (0, helpers_1.makeArgs)(node));
+    const r = yield http.get(node.external_ip + '/balance', helpers_1.makeArgs(node));
     t.true(r.success, 'should get node balance');
     const nodeBalance = r.response.balance;
     return nodeBalance;

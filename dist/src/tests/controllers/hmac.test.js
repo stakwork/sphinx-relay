@@ -41,7 +41,7 @@ function addHmacKey(t, node1, key) {
         const body = {
             encrypted_key: rsa.encrypt(node1.transportToken, key),
         };
-        const added = yield http.post(node1.external_ip + '/hmac_key', (0, helpers_1.makeArgs)(node1, body));
+        const added = yield http.post(node1.external_ip + '/hmac_key', helpers_1.makeArgs(node1, body));
         t.true(typeof added.response === 'object', 'add hmac key should return object');
         console.log('ADDED HMAC KEY!');
         return added.response;
@@ -57,7 +57,7 @@ function addContact(t, node1, node2, key) {
             route_hint: node2.routeHint || '',
         };
         //node1 adds node2 as contact
-        const add = yield http.post(node1.external_ip + '/contacts', (0, helpers_1.makeArgs)(node1, body, {
+        const add = yield http.post(node1.external_ip + '/contacts', helpers_1.makeArgs(node1, body, {
             hmacOptions: {
                 method: 'POST',
                 path: '/contacts',
@@ -73,7 +73,7 @@ function addContact(t, node1, node2, key) {
         let failed = false;
         try {
             // should fail!!!
-            const add = yield http.post(node1.external_ip + '/contacts', (0, helpers_1.makeArgs)(node1, body, {
+            const add = yield http.post(node1.external_ip + '/contacts', helpers_1.makeArgs(node1, body, {
                 hmacOptions: {
                     method: 'NOT_REAL',
                     path: '/contacts',

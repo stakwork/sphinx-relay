@@ -20,7 +20,8 @@ const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
-const config = (0, config_1.loadConfig)();
+const people = require("../utils/people");
+const config = config_1.loadConfig();
 function sendMessage({ type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, forwardedFromContactId, realSatsContactId, }) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!chat || !sender)
@@ -70,7 +71,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             if (isTribeOwner) {
                 networkType = 'mqtt'; // broadcast to all
                 // decrypt message.content and message.mediaKey w groupKey
-                msg = yield (0, msg_1.decryptMessage)(msg, chat);
+                msg = yield msg_1.decryptMessage(msg, chat);
                 // console.log("SEND.TS isBotMsg")
                 logger_1.sphinxLogger.info(`[Network] => isTribeAdmin msg sending... ${msg}`, logger_1.logging.Network);
                 const isBotMsg = yield intercept.isBotMsg(msg, true, sender, forwardedFromContactId);
@@ -153,7 +154,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             if (isTribeOwner && amount && realSatsContactId === contactId) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
             }
-            const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
+            const m = yield msg_1.personalizeMessage(msg, contact, isTribeOwner);
             // send a "push", the user was mentioned
             if (mentionContactIds.includes(contact.id) ||
                 mentionContactIds.includes(Infinity)) {
@@ -232,7 +233,7 @@ function checkIfAutoConfirm(data, tenant) {
         if (data.type === constants_1.default.message_types.delete) {
             return; // dont auto confirm delete msg
         }
-        (0, confirmations_1.tribeOwnerAutoConfirmation)(data.message.id, data.chat.uuid, tenant);
+        confirmations_1.tribeOwnerAutoConfirmation(data.message.id, data.chat.uuid, tenant);
     }
 }
 function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
@@ -262,6 +263,12 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
             person: `${config.people_host}/${sender.personUuid}`,
         })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
     };
+    const personId = people.getPersonId();
+    if (personId) {
+        result.sender.person = config.people_host + '/' + personId;
+        logger_1.sphinxLogger.info(`[+] person host full URL  ${result.sender.person}`, logger_1.logging.Network);
+        return result;
+    }
     return result;
 }
 exports.newmsg = newmsg;

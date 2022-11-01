@@ -30,12 +30,12 @@ function processWebhook(req, res) {
         const sig = req.headers['x-hub-signature-256'];
         if (!sig) {
             logger_1.sphinxLogger.error('invalid signature', logger_1.logging.Bots);
-            return (0, res_1.unauthorized)(res);
+            return res_1.unauthorized(res);
         }
         const event_type = req.headers['x-github-event'] || req.headers['X-GitHub-Event'];
         if (!event_type) {
             logger_1.sphinxLogger.error('no github event type', logger_1.logging.Bots);
-            return (0, res_1.unauthorized)(res);
+            return res_1.unauthorized(res);
         }
         const event = req.body;
         let repo = '';
@@ -44,7 +44,7 @@ function processWebhook(req, res) {
         }
         if (!repo) {
             logger_1.sphinxLogger.error('repo not configured', logger_1.logging.Bots);
-            return (0, res_1.unauthorized)(res);
+            return res_1.unauthorized(res);
         }
         let ok = false;
         try {
@@ -55,9 +55,9 @@ function processWebhook(req, res) {
             const allGitBots = (yield models_1.models.Bot.findAll({
                 where: { uuid: git_1.GITBOT_UUID },
             }));
-            yield (0, helpers_1.asyncForEach)(allChatBots, (cb) => __awaiter(this, void 0, void 0, function* () {
+            yield helpers_1.asyncForEach(allChatBots, (cb) => __awaiter(this, void 0, void 0, function* () {
                 const meta = cb.meta ? JSON.parse(cb.meta) : { repos: [] };
-                yield (0, helpers_1.asyncForEach)(meta.repos, (r) => __awaiter(this, void 0, void 0, function* () {
+                yield helpers_1.asyncForEach(meta.repos, (r) => __awaiter(this, void 0, void 0, function* () {
                     if (r.path.toLowerCase() === repo.toLowerCase()) {
                         const gitbot = allGitBots.find((gb) => gb.tenant === cb.tenant);
                         if (gitbot) {
@@ -69,7 +69,7 @@ function processWebhook(req, res) {
                                     where: { id: cb.chatId },
                                 }));
                                 if (chat) {
-                                    const content = (0, githook_1.processGithook)(req.body, event_type);
+                                    const content = githook_1.processGithook(req.body, event_type);
                                     if (content) {
                                         const a = {
                                             action: 'broadcast',
@@ -80,7 +80,7 @@ function processWebhook(req, res) {
                                             content,
                                             bot_pic: git_1.GITBOT_PIC,
                                         };
-                                        yield (0, broadcast_1.default)(a);
+                                        yield broadcast_1.default(a);
                                     }
                                     else {
                                         logger_1.sphinxLogger.info('==> no content!!! (gitbot)');
@@ -106,13 +106,13 @@ function processWebhook(req, res) {
         }
         catch (e) {
             logger_1.sphinxLogger.error(['failed to process webhook', e], logger_1.logging.Bots);
-            (0, res_1.unauthorized)(res);
+            res_1.unauthorized(res);
         }
         if (ok)
-            (0, res_1.success)(res, { ok: true });
+            res_1.success(res, { ok: true });
         else {
             logger_1.sphinxLogger.error('invalid HMAC', logger_1.logging.Bots);
-            (0, res_1.unauthorized)(res);
+            res_1.unauthorized(res);
         }
     });
 }
@@ -130,29 +130,29 @@ function processAction(req, res) {
             }
             catch (e) {
                 logger_1.sphinxLogger.error(e);
-                return (0, res_1.failure)(res, 'failed to parse webhook body json');
+                return res_1.failure(res, 'failed to parse webhook body json');
             }
         }
         const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id, } = body;
         if (!bot_id)
-            return (0, res_1.failure)(res, 'no bot_id');
+            return res_1.failure(res, 'no bot_id');
         const bot = (yield models_1.models.Bot.findOne({ where: { id: bot_id } }));
         if (!bot)
-            return (0, res_1.failure)(res, 'no bot');
+            return res_1.failure(res, 'no bot');
         if (bot_secret) {
             if (!(bot.secret && bot.secret === bot_secret)) {
-                return (0, res_1.failure)(res, 'wrong secret');
+                return res_1.failure(res, 'wrong secret');
             }
         }
         else {
             const sig = req.headers['x-hub-signature-256'];
             const valid = hmac.verifyHmac(sig, req.rawBody, bot.secret);
             if (!valid) {
-                return (0, res_1.failure)(res, 'invalid HMAC');
+                return res_1.failure(res, 'invalid HMAC');
             }
         }
         if (!action) {
-            return (0, res_1.failure)(res, 'no action');
+            return res_1.failure(res, 'no action');
         }
         const a = {
             bot_id,
@@ -169,10 +169,10 @@ function processAction(req, res) {
         };
         try {
             const r = yield finalAction(a);
-            (0, res_1.success)(res, r);
+            res_1.success(res, r);
         }
         catch (e) {
-            (0, res_1.failure)(res, e);
+            res_1.failure(res, e);
         }
     });
 }
@@ -189,7 +189,7 @@ function finalAction(a) {
                 },
             }));
             if (chat_uuid) {
-                const myChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(chat_uuid);
+                const myChat = yield tribes_1.getTribeOwnersChatByUUID(chat_uuid);
                 // ACTUALLY ITS A LOCAL (FOR MY TRIBE) message! kill myBot
                 if (myChat)
                     myBot = null;
@@ -254,13 +254,13 @@ function finalAction(a) {
             logger_1.sphinxLogger.info(`=> BOT KEYSEND to ${pubkey}`);
         }
         else if (action === 'pay') {
-            (0, pay_1.default)(a);
+            pay_1.default(a);
         }
         else if (action === 'broadcast') {
-            (0, broadcast_1.default)(a);
+            broadcast_1.default(a);
         }
         else if (action === 'dm') {
-            (0, dm_1.default)(a);
+            dm_1.default(a);
         }
         else {
             logger_1.sphinxLogger.error(`invalid action`);
@@ -272,7 +272,7 @@ function validateAction(a) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!a.chat_uuid)
             return logger_1.sphinxLogger.error(`no chat_uuid`);
-        const theChat = yield (0, tribes_1.getTribeOwnersChatByUUID)(a.chat_uuid);
+        const theChat = yield tribes_1.getTribeOwnersChatByUUID(a.chat_uuid);
         if (!(theChat && theChat.id))
             return logger_1.sphinxLogger.error(`no chat`);
         if (theChat.type !== constants_1.default.chat_types.tribe)

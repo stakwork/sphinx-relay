@@ -18,7 +18,7 @@ function appRejMember(t, admin, contactID, msgId, status) {
         //status === "approved" or "rejected"
         //contactID === member awaiting approval
         //msgId === join message id
-        const appRej = yield http.put(admin.external_ip + `/member/${contactID}/${status}/${msgId}`, (0, helpers_1.makeArgs)(admin));
+        const appRej = yield http.put(admin.external_ip + `/member/${contactID}/${status}/${msgId}`, helpers_1.makeArgs(admin));
         t.truthy(appRej);
         // console.log("APPREJ === ", JSON.stringify(appRej))
         return true;

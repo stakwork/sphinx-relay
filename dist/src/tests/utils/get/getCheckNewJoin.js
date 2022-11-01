@@ -17,7 +17,7 @@ function getCheckNewJoin(t, admin, joinerId, tribeId) {
         let i = 0;
         const interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
             i++;
-            const msgRes = yield http.get(admin.external_ip + '/messages', (0, helpers_1.makeArgs)(admin));
+            const msgRes = yield http.get(admin.external_ip + '/messages', helpers_1.makeArgs(admin));
             if (msgRes.response.new_messages && msgRes.response.new_messages.length) {
                 const lastMessage = msgRes.response.new_messages.find((msg) => msg.type === 19 &&
                     msg.chat_id === tribeId &&

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setInMemoryMacaroon = exports.getMacaroon = void 0;
 const fs = require("fs");
 const config_1 = require("./config");
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 let inMemoryMacaroon = ''; // hex encoded
 function getMacaroon(macName) {
     if (config.unlock) {

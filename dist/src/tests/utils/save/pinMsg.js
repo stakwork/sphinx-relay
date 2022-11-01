@@ -16,16 +16,16 @@ const get_1 = require("../get");
 function pinMsgToTribe(t, node, id, pin) {
     return __awaiter(this, void 0, void 0, function* () {
         //node1 creates new tribe
-        let c = yield http.put(node.external_ip + '/chat_pin/' + id, (0, helpers_1.makeArgs)(node, { pin }));
+        let c = yield http.put(node.external_ip + '/chat_pin/' + id, helpers_1.makeArgs(node, { pin }));
         //check that new tribe was created successfully
         t.true(c.success, 'edit tribe pin should be successful');
         //get new tribe by Id
-        const r = yield (0, get_1.getCheckTribe)(t, node, id);
+        const r = yield get_1.getCheckTribe(t, node, id);
         //check that the chat was found
         t.true(typeof r === 'object', 'the newly created chat should be found');
         // pin updated on relay
         t.true(r.pin === pin, 'chat pin does not equal');
-        const tribe = yield (0, get_1.getTribeByUuid)(t, r);
+        const tribe = yield get_1.getTribeByUuid(t, r);
         // pin updated on tribes server
         t.true(tribe.pin === pin, 'pin does not equal');
         return tribe.pin;

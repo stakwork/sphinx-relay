@@ -16,7 +16,7 @@ const ByteBuffer = require("bytebuffer");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
 // var protoLoader = require('@grpc/proto-loader')
-const config = (0, config_1.loadConfig)();
+const config = config_1.loadConfig();
 const LND_IP = config.lnd_ip || 'localhost';
 let signerClient = null;
 const loadSigner = () => {
@@ -41,7 +41,7 @@ const loadSigner = () => {
 exports.loadSigner = loadSigner;
 const signMessage = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        const signer = yield (0, exports.loadSigner)();
+        const signer = yield exports.loadSigner();
         try {
             const options = {
                 msg: ByteBuffer.fromHex(msg),
@@ -65,7 +65,7 @@ const signMessage = (msg) => {
 exports.signMessage = signMessage;
 const signBuffer = (msg) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        const signer = yield (0, exports.loadSigner)();
+        const signer = yield exports.loadSigner();
         try {
             const options = { msg };
             signer.signMessage(options, function (err, sig) {
@@ -86,7 +86,7 @@ const signBuffer = (msg) => {
 exports.signBuffer = signBuffer;
 function verifyMessage(msg, sig, pubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        const signer = yield (0, exports.loadSigner)();
+        const signer = yield exports.loadSigner();
         if (msg.length === 0) {
             return reject('invalid msg');
         }
@@ -119,7 +119,7 @@ function verifyMessage(msg, sig, pubkey) {
 function signAscii(ascii) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const sig = yield (0, exports.signMessage)(ascii_to_hexa(ascii));
+            const sig = yield exports.signMessage(ascii_to_hexa(ascii));
             return sig;
         }
         catch (e) {

@@ -34,7 +34,7 @@ function octokit(pat) {
 function getStuff(message) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
+            const chat = yield tribes_1.getTribeOwnersChatByUUID(message.channel.id);
             // console.log("=> WelcomeBot chat", chat);
             if (!(chat && chat.id))
                 throw new Error('chat not found');
@@ -214,7 +214,7 @@ function addWebhookToRepo(pat, repoAndOwner, bot_secret) {
 }
 function tor2webUrl() {
     return __awaiter(this, void 0, void 0, function* () {
-        const u = yield (0, connect_1.getIP)();
+        const u = yield connect_1.getIP();
         if (u.includes('.onion')) {
             return stripPort(u) + '.ws'; // tor2web
         }

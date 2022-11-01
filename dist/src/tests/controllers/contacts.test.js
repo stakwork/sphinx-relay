@@ -16,7 +16,7 @@ const helpers_1 = require("../utils/helpers");
 const msg_1 = require("../utils/msg");
 ava_1.default.serial('checkContacts', (t) => __awaiter(void 0, void 0, void 0, function* () {
     t.true(Array.isArray(nodes_1.default));
-    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+    yield helpers_1.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
         yield checkContact(t, node1, node2);
     }));
 }));
@@ -25,11 +25,11 @@ function checkContact(t, node1, node2) {
         console.log(`=> checkContact ${node1.alias} -> ${node2.alias}`);
         // NODE1 ADDS NODE2 AS A CONTACT
         // contact_key should be populated via key exchange in a few seconds
-        let added = yield (0, save_1.addContact)(t, node1, node2);
+        let added = yield save_1.addContact(t, node1, node2);
         t.true(added, 'node1 should add node2 as contact');
         console.log('added contact!');
-        const text = (0, helpers_1.randomText)();
-        let messageSent = yield (0, msg_1.sendMessageAndCheckDecryption)(t, node1, node2, text);
+        const text = helpers_1.randomText();
+        let messageSent = yield msg_1.sendMessageAndCheckDecryption(t, node1, node2, text);
         t.truthy(messageSent, 'node1 should send text message to node2');
         console.log('sent message!');
     });

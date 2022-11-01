@@ -23,7 +23,7 @@ ava_1.default.serial('tribeMember', (t) => __awaiter(void 0, void 0, void 0, fun
 function tribeMemberTest(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 CREATES A TRIBE
-        let tribe = yield (0, save_1.createTribe)(t, node1);
+        let tribe = yield save_1.createTribe(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
         console.log('tribe created');
         let body = Object.assign(Object.assign({}, man), { chat_id: tribe.id });
@@ -36,14 +36,14 @@ function tribeMemberTest(t, node1, node2) {
         //   contact_key: node2.contact_key,
         // }
         //node1 creates new tribe
-        let member = yield http.post(node1.external_ip + '/tribe_member', (0, helpers_1.makeArgs)(node1, body));
+        let member = yield http.post(node1.external_ip + '/tribe_member', helpers_1.makeArgs(node1, body));
         console.log('member', member);
         //check that new tribe was created successfully
         t.true(member.success, 'member should be successful');
-        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, 'hello');
+        yield msg_1.sendTribeMessage(t, node1, tribe, 'hello');
         console.log('msg sent');
         //NODE1 DELETES THE TRIBE
-        let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
+        let delTribe = yield del_1.deleteTribe(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
     });
 }
