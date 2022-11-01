@@ -30,18 +30,8 @@ function removeRecipientFromChatMembers(
   return fillchatmsg(full, { members })
 }
 
-function removeAllNonAdminMembersIfTribe(
-  full: Partial<Msg>,
-  destkey: string
-): Msg {
+function removeAllNonAdminMembersIfTribe(full: Partial<Msg>): Msg {
   return full as Msg
-  // const c = full && full.chat
-  // if (!(c && c.members)) return full
-  // if (!(typeof c.members==='object')) return full
-
-  // const members = {...c.members}
-  // if(members[destkey]) delete members[destkey]
-  // return fillchatmsg(full, {members})
 }
 
 // THIS IS ONLY FOR TRIBE OWNER
@@ -60,14 +50,14 @@ async function encryptTribeBroadcast(
   if (isTribeOwner) {
     // has been previously decrypted
     if (message.content) {
-      const encContent = rsa.encrypt(contact.contactKey, message.content.toString())
+      const encContent = rsa.encrypt(
+        contact.contactKey,
+        message.content.toString()
+      )
       obj.content = encContent
     }
     if (message.mediaKey) {
-      const encMediaKey = rsa.encrypt(
-        contact.contactKey,
-        message.mediaKey
-      )
+      const encMediaKey = rsa.encrypt(contact.contactKey, message.mediaKey)
       obj.mediaKey = encMediaKey
     }
   }
@@ -174,7 +164,7 @@ async function personalizeMessage(
 
   const msgWithRemoteTxt = addInRemoteText(cloned, contactId, isTribe)
   const cleanMsg = removeRecipientFromChatMembers(msgWithRemoteTxt, destkey)
-  const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg, destkey)
+  const cleanerMsg = removeAllNonAdminMembersIfTribe(cleanMsg)
   const msgWithMediaKey = addInMediaKey(cleanerMsg, contactId, isTribe)
   const msgWithMediaToken = await finishTermsAndReceipt(
     msgWithMediaKey,
