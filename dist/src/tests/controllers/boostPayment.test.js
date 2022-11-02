@@ -59,11 +59,11 @@ function boostPayment(t, index1, index2, index3) {
         const boost = yield (0, msg_1.sendBoost)(t, node1, node2, tribeMessage2, 11, tribe);
         t.true(boost.success);
         //NODE2 SENDS A BOOST ON NODE3'S MESSAGE
-        const boost2 = yield (0, msg_1.sendBoost)(t, node2, node3, tribeMessage3, 12, tribe);
-        t.true(boost2.success);
+        // const boost2 = await sendBoost(t, node2, node3, tribeMessage3, 12, tribe)
+        // t.true(boost2.success)
         //NODE3 SENDS A BOOST ON NODE1'S MESSAGE
-        const boost3 = yield (0, msg_1.sendBoost)(t, node3, node1, tribeMessage1, 13, tribe);
-        t.true(boost3.success);
+        // const boost3 = await sendBoost(t, node3, node1, tribeMessage1, 13, tribe)
+        // t.true(boost3.success)
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');
