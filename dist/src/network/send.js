@@ -166,7 +166,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     }));
                 }
                 catch (error) {
-                    logger_1.sphinxLogger.error(`=> Could not update the totalEarned column on the ChatMember table for Leadership board record`, error);
+                    logger_1.sphinxLogger.error(`=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`, logger_1.logging.Network);
                 }
             }
             const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
