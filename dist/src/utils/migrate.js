@@ -61,6 +61,7 @@ function migrate() {
         addTableColumn('sphinx_chats', 'pin');
         addTableColumn('sphinx_chats', 'profile_filters', 'TEXT');
         addTableColumn('sphinx_chat_members', 'total_earned', 'BIGINT');
+        addTableColumn('sphinx_action_history', 'action_type', 'INT');
         addTenant('sphinx_chat_members');
         addTenant('sphinx_chats');
         addTenant('sphinx_bots');

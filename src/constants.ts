@@ -98,6 +98,13 @@ const constants = {
     expired: 0,
     active: 1,
   },
+  action_types: {
+    message: 0,
+    search: 1,
+    boost: 2,
+    podcast_clip_comment: 3,
+    content_consumed: 4,
+  },
 }
 
 export default constants
