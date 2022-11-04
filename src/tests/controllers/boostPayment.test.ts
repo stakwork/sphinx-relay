@@ -76,12 +76,12 @@ export async function boostPayment(t, index1, index2, index3) {
   t.true(boost.success)
 
   //NODE2 SENDS A BOOST ON NODE3'S MESSAGE
-  // const boost2 = await sendBoost(t, node2, node3, tribeMessage3, 12, tribe)
-  // t.true(boost2.success)
+  const boost2 = await sendBoost(t, node2, node3, tribeMessage3, 12, tribe)
+  t.true(boost2.success)
 
   //NODE3 SENDS A BOOST ON NODE1'S MESSAGE
-  // const boost3 = await sendBoost(t, node3, node1, tribeMessage1, 13, tribe)
-  // t.true(boost3.success)
+  const boost3 = await sendBoost(t, node3, node1, tribeMessage1, 13, tribe)
+  t.true(boost3.success)
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)

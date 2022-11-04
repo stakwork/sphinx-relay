@@ -13,6 +13,7 @@ import {
   Chat,
   ChatRecord,
   ChatMember,
+  ChatMemberRecord,
 } from '../models'
 import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import {
@@ -235,7 +236,24 @@ async function onReceive(payload: Payload, dest: string) {
       }
       // make sure alias is unique among chat members
       payload = await uniqueifyAlias(payload, senderContact, chat, owner)
-      if (doAction)
+      if (doAction) {
+        try {
+          const sender = (await models.ChatMember.findOne({
+            where: {
+              contactId: senderContactId,
+              tenant,
+              chatId: chat.id,
+            },
+          })) as ChatMemberRecord
+          await sender.update({
+            totalSpent: sender.totalSpent + payload.message.amount,
+          })
+        } catch (error) {
+          sphinxLogger.error(
+            `=> Could not update ChatMember table for Leadership board`,
+            error
+          )
+        }
         forwardMessageToTribe(
           payload,
           senderContact,
@@ -244,7 +262,7 @@ async function onReceive(payload: Payload, dest: string) {
           owner,
           forwardedFromContactId
         )
-      else sphinxLogger.error(`=> insufficient payment for this action`)
+      } else sphinxLogger.error(`=> insufficient payment for this action`)
     }
     if (payload.type === msgtypes.purchase) {
       const chat = maybeChat as ChatRecord

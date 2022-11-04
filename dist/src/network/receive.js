@@ -221,8 +221,24 @@ function onReceive(payload, dest) {
                 }
                 // make sure alias is unique among chat members
                 payload = yield uniqueifyAlias(payload, senderContact, chat, owner);
-                if (doAction)
+                if (doAction) {
+                    try {
+                        const sender = (yield models_1.models.ChatMember.findOne({
+                            where: {
+                                contactId: senderContactId,
+                                tenant,
+                                chatId: chat.id,
+                            },
+                        }));
+                        yield sender.update({
+                            totalSpent: sender.totalSpent + payload.message.amount,
+                        });
+                    }
+                    catch (error) {
+                        logger_1.sphinxLogger.error(`=> Could not update ChatMember table for Leadership board`, error);
+                    }
                     forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner, forwardedFromContactId);
+                }
                 else
                     logger_1.sphinxLogger.error(`=> insufficient payment for this action`);
             }

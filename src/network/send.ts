@@ -4,6 +4,7 @@ import {
   ContactRecord,
   Contact,
   ChatMember as ChatMemberModel,
+  ChatMemberRecord,
 } from '../models'
 import * as LND from '../grpc/lightning'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
@@ -203,6 +204,23 @@ export async function sendMessage({
     // console.log("=> realSatsContactId", realSatsContactId, contactId)
     if (isTribeOwner && amount && realSatsContactId === contactId) {
       mqttTopic = '' // FORCE KEYSEND!!!
+      try {
+        const receiver = (await models.ChatMember.findOne({
+          where: {
+            contactId: contactId,
+            tenant,
+            chatId: chat.id!,
+          },
+        })) as ChatMemberRecord
+        await receiver?.update({
+          totalEarned: receiver.totalEarned + amount,
+        })
+      } catch (error) {
+        sphinxLogger.error(
+          `=> Could not update ChatMember table for Leadership board`,
+          error
+        )
+      }
     }
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
