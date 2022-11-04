@@ -250,8 +250,8 @@ async function onReceive(payload: Payload, dest: string) {
           })
         } catch (error) {
           sphinxLogger.error(
-            `=> Could not update the totalSpent column on the ChatMember table for Leadership board record`,
-            error
+            `=> Could not update the totalSpent column on the ChatMember table for Leadership board record ${error}`,
+            logging.Network
           )
         }
         forwardMessageToTribe(
@@ -262,7 +262,11 @@ async function onReceive(payload: Payload, dest: string) {
           owner,
           forwardedFromContactId
         )
-      } else sphinxLogger.error(`=> insufficient payment for this action`)
+      } else
+        sphinxLogger.error(
+          `=> insufficient payment for this action`,
+          logging.Network
+        )
     }
     if (payload.type === msgtypes.purchase) {
       const chat = maybeChat as ChatRecord

@@ -218,8 +218,8 @@ export async function sendMessage({
         })
       } catch (error) {
         sphinxLogger.error(
-          `=> Could not update the totalEarned column on the ChatMember table for Leadership board record`,
-          error
+          `=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`,
+          logging.Network
         )
       }
     }
