@@ -60,14 +60,14 @@ async function encryptTribeBroadcast(
   if (isTribeOwner) {
     // has been previously decrypted
     if (message.content) {
-      const encContent = rsa.encrypt(contact.contactKey, message.content.toString())
+      const encContent = rsa.encrypt(
+        contact.contactKey,
+        message.content.toString()
+      )
       obj.content = encContent
     }
     if (message.mediaKey) {
-      const encMediaKey = rsa.encrypt(
-        contact.contactKey,
-        message.mediaKey
-      )
+      const encMediaKey = rsa.encrypt(contact.contactKey, message.mediaKey)
       obj.mediaKey = encMediaKey
     }
   }

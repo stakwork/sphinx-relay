@@ -4,7 +4,7 @@ const BLOCK_SIZE = 256
 const MAX_CHUNK_SIZE = BLOCK_SIZE - 11 // 11 is the PCKS1 padding
 
 export interface KeyPair {
-  public: string,
+  public: string
   private: string
 }
 
@@ -22,7 +22,7 @@ export function encrypt(key: string, txt: string): string {
         },
         buf.subarray(i * MAX_CHUNK_SIZE, i * MAX_CHUNK_SIZE + MAX_CHUNK_SIZE)
       )
-      finalBuf = Buffer.concat([ finalBuf, f ])
+      finalBuf = Buffer.concat([finalBuf, f])
     }
     return finalBuf.toString('base64')
   } catch (e) {
@@ -53,7 +53,7 @@ export function decrypt(privateKey: string | Buffer, enc: string): string {
 }
 
 export function genKeys(): Promise<KeyPair> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     crypto.generateKeyPair(
       'rsa',
       {
@@ -117,8 +117,11 @@ const beginPriv = '-----BEGIN RSA PRIVATE KEY-----'
 const endPriv = '-----END RSA PRIVATE KEY-----'
 
 const cert = {
-  unpub:  (key: string): string => key.replace(beginPub,  '').replace(endPub,  '').trim(),
-  unpriv: (key: string): string => key.replace(beginPriv, '').replace(endPriv, '').trim(),
-  pub:    (key: string | Buffer): string => beginPub  + '\n' + key + '\n' + endPub,
-  priv:   (key: string | Buffer): string => beginPriv + '\n' + key + '\n' + endPriv
+  unpub: (key: string): string =>
+    key.replace(beginPub, '').replace(endPub, '').trim(),
+  unpriv: (key: string): string =>
+    key.replace(beginPriv, '').replace(endPriv, '').trim(),
+  pub: (key: string | Buffer): string => beginPub + '\n' + key + '\n' + endPub,
+  priv: (key: string | Buffer): string =>
+    beginPriv + '\n' + key + '\n' + endPriv,
 }

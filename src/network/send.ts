@@ -15,7 +15,7 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
-import * as people from "../utils/people";
+import * as people from '../utils/people'
 
 const config = loadConfig()
 
@@ -351,12 +351,15 @@ export function newmsg(
       ...(includePhotoUrl && { photo_url: photoUrlToInclude }),
       // ...sender.contactKey && {contact_key: sender.contactKey}
     },
-  };
-  const personId = people.getPersonId();
-  if(personId){
-    result.sender.person = config.people_host + '/' + personId;
-    sphinxLogger.info(`[+] person host full URL  ${result.sender.person}`, logging.Network)
-        return result
+  }
+  const personId = people.getPersonId()
+  if (personId) {
+    result.sender.person = config.people_host + '/' + personId
+    sphinxLogger.info(
+      `[+] person host full URL  ${result.sender.person}`,
+      logging.Network
+    )
+    return result
   }
   return result
 }

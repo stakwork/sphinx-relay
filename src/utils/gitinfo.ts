@@ -4,9 +4,10 @@ import { sphinxLogger } from './logger'
 function git(command: string): string | void {
   try {
     return execSync(`git ${command}`).toString().trim()
-  }
-  catch (e) {
-    sphinxLogger.error('Error running a git command, probably not running in a git repository')
+  } catch (e) {
+    sphinxLogger.error(
+      'Error running a git command, probably not running in a git repository'
+    )
     sphinxLogger.error(e)
   }
 }
