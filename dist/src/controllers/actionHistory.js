@@ -19,7 +19,7 @@ function saveAction(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { type, meta_data } = req.body;
-        if (!type)
+        if (!type || typeof type !== 'number')
             return (0, res_1.failure)(res, 'invalid type');
         if (!meta_data)
             return (0, res_1.failure)(res, 'invalid meta_data');
@@ -27,7 +27,7 @@ function saveAction(req, res) {
             yield models_1.models.ActionHistory.create({
                 tenant,
                 metaData: JSON.stringify(meta_data),
-                type,
+                actionType: type,
             });
             return (0, res_1.success)(res, 'Action saved successfully');
         }
@@ -50,16 +50,21 @@ function saveActionBulk(req, res) {
             return (0, res_1.failure)(res, 'Please provide an array with contents');
         const insertAction = (value) => __awaiter(this, void 0, void 0, function* () {
             if (value.type && value.meta_data) {
-                try {
-                    yield models_1.models.ActionHistory.create({
-                        tenant,
-                        metaData: JSON.stringify(value.meta_data),
-                        type: value.type,
-                    });
+                if (typeof value.type === 'number') {
+                    try {
+                        yield models_1.models.ActionHistory.create({
+                            tenant,
+                            metaData: JSON.stringify(value.meta_data),
+                            actionType: value.type,
+                        });
+                    }
+                    catch (error) {
+                        console.log(error);
+                        throw error;
+                    }
                 }
-                catch (error) {
-                    console.log(error);
-                    throw error;
+                else {
+                    throw 'Please provide valid action type';
                 }
             }
             else {
