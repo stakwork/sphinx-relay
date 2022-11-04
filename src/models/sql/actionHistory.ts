@@ -13,6 +13,9 @@ export default class ActionHistory extends Model<ActionHistory> {
   @Column
   type: string
 
+  @Column
+  actionType: number
+
   @Column(DataType.TEXT)
   metaData: string
 
