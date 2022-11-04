@@ -99,7 +99,7 @@ const setupPersonUuid = () => __awaiter(void 0, void 0, void 0, function* () {
             },
         }));
         for (let i = 0; i < contacts.length; i++) {
-            let tenant = contacts[i];
+            const tenant = contacts[i];
             const url = protocol + '://' + config.people_host + '/person/' + tenant.publicKey;
             const res = yield (0, node_fetch_1.default)(url);
             const person = yield res.json();

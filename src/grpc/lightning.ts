@@ -488,7 +488,10 @@ export async function listAllInvoices(): Promise<interfaces.Invoice[]> {
   return paginateInvoices(40)
 }
 
-async function paginateInvoices(limit: number, i = 0): Promise<interfaces.Invoice[]> {
+async function paginateInvoices(
+  limit: number,
+  i = 0
+): Promise<interfaces.Invoice[]> {
   try {
     const r = await listInvoicesPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset)
@@ -501,7 +504,10 @@ async function paginateInvoices(limit: number, i = 0): Promise<interfaces.Invoic
   }
 }
 
-function listInvoicesPaginated(limit: number, offset: number): Promise<{ first_index_offset: string, invoices: interfaces.Invoice[] }> {
+function listInvoicesPaginated(
+  limit: number,
+  offset: number
+): Promise<{ first_index_offset: string; invoices: interfaces.Invoice[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listInvoices(
@@ -526,7 +532,10 @@ export async function listAllPayments(): Promise<interfaces.Payment[]> {
   return pays
 }
 
-async function paginatePayments(limit: number, i = 0): Promise<interfaces.Payment[]> {
+async function paginatePayments(
+  limit: number,
+  i = 0
+): Promise<interfaces.Payment[]> {
   try {
     const r = await listPaymentsPaginated(limit, i)
     const lastOffset = parseInt(r.first_index_offset) // this is "first" cuz its in reverse (lowest index)
@@ -539,7 +548,10 @@ async function paginatePayments(limit: number, i = 0): Promise<interfaces.Paymen
   }
 }
 
-export function listPaymentsPaginated(limit: number, offset: number): Promise<{ first_index_offset: string, payments: interfaces.Payment[] }> {
+export function listPaymentsPaginated(
+  limit: number,
+  offset: number
+): Promise<{ first_index_offset: string; payments: interfaces.Payment[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
     lightning.listPayments(
@@ -556,7 +568,9 @@ export function listPaymentsPaginated(limit: number, offset: number): Promise<{ 
   })
 }
 
-export function listAllPaymentsFull(): Promise<{ payments: interfaces.Payment[] }> {
+export function listAllPaymentsFull(): Promise<{
+  payments: interfaces.Payment[]
+}> {
   sphinxLogger.info('=> list all payments')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
@@ -571,7 +585,10 @@ export function listAllPaymentsFull(): Promise<{ payments: interfaces.Payment[] 
 }
 
 // msg is hex
-export async function signMessage(msg: string, ownerPubkey?: string): Promise<string> {
+export async function signMessage(
+  msg: string,
+  ownerPubkey?: string
+): Promise<string> {
   return signBuffer(Buffer.from(msg, 'hex'), ownerPubkey)
 }
 
@@ -859,7 +876,12 @@ export async function complexBalances(
       0
     )
     const spendableBalance = channels.reduce(
-      (a, chan) => a + Math.max(0, parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)),
+      (a, chan) =>
+        a +
+        Math.max(
+          0,
+          parseInt(chan.local_balance) - parseInt(chan.local_chan_reserve_sat)
+        ),
       0
     )
     const response = await channelBalance(ownerPubkey)

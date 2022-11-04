@@ -45,7 +45,7 @@ function decrypt(privateKey, enc) {
 }
 exports.decrypt = decrypt;
 function genKeys() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         crypto.generateKeyPair('rsa', {
             modulusLength: 2048,
         }, (err, publicKey, privKey) => {
@@ -101,6 +101,6 @@ const cert = {
     unpub: (key) => key.replace(beginPub, '').replace(endPub, '').trim(),
     unpriv: (key) => key.replace(beginPriv, '').replace(endPriv, '').trim(),
     pub: (key) => beginPub + '\n' + key + '\n' + endPub,
-    priv: (key) => beginPriv + '\n' + key + '\n' + endPriv
+    priv: (key) => beginPriv + '\n' + key + '\n' + endPriv,
 };
 //# sourceMappingURL=rsa.js.map

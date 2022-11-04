@@ -16,6 +16,7 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
+import * as people from '../utils/people'
 
 const config = loadConfig()
 
@@ -369,6 +370,15 @@ export function newmsg(
       // ...sender.contactKey && {contact_key: sender.contactKey}
     },
   }
+  const personId = people.getPersonId()
+  if (personId) {
+    result.sender.person = config.people_host + '/' + personId
+    sphinxLogger.info(
+      `[+] person host full URL  ${result.sender.person}`,
+      logging.Network
+    )
+    return result
+  }
   return result
 }
 
@@ -395,33 +405,32 @@ async function detectMentions(
   tenant: number
 ): Promise<number[]> {
   const content = msg.message.content as string
-  if (content) {
-    const mentions = parseMentions(content)
-    if (mentions.includes('@all') && !isForwarded) return [Infinity]
-    const ret: number[] = []
-    const allMembers: ChatMemberModel[] = (await models.ChatMember.findAll({
-      where: { tenant, chatId },
-    })) as ChatMemberModel[]
-    await asyncForEach(mentions, async (men) => {
-      const lastAlias = men.substring(1)
-      // check chat memberss
-      const member = allMembers.find((m) => {
-        if (m.lastAlias && lastAlias) {
-          return compareAliases(m.lastAlias, lastAlias)
-        }
-      })
-      if (member) {
-        ret.push(member.contactId)
+  if (!content) return []
+  if (!content.includes('@')) return []
+  const mentions = parseMentions(content)
+  if (mentions.includes('@all') && !isForwarded) return [Infinity]
+  const ret: number[] = []
+  const allMembers: ChatMemberModel[] = (await models.ChatMember.findAll({
+    where: { tenant, chatId },
+  })) as ChatMemberModel[]
+  await asyncForEach(mentions, async (men) => {
+    const lastAlias = men.substring(1)
+    // check chat memberss
+    const member = allMembers.find((m) => {
+      if (m.lastAlias && lastAlias) {
+        return compareAliases(m.lastAlias, lastAlias)
       }
     })
-    return ret
-  } else {
-    return []
-  }
+    if (member) {
+      ret.push(member.contactId)
+    }
+  })
+  return ret
 }
 
 function parseMentions(content: string) {
-  const words = content.split(' ')
+  // split on space or newline
+  const words = content.split(/\n| /)
   return words.filter((w) => w.startsWith('@'))
 }
 

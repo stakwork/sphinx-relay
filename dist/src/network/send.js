@@ -20,6 +20,7 @@ const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
+const people = require("../utils/people");
 const config = (0, config_1.loadConfig)();
 function sendMessage({ type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, forwardedFromContactId, realSatsContactId, }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -277,6 +278,12 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
             person: `${config.people_host}/${sender.personUuid}`,
         })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
     };
+    const personId = people.getPersonId();
+    if (personId) {
+        result.sender.person = config.people_host + '/' + personId;
+        logger_1.sphinxLogger.info(`[+] person host full URL  ${result.sender.person}`, logger_1.logging.Network);
+        return result;
+    }
     return result;
 }
 exports.newmsg = newmsg;
@@ -301,35 +308,35 @@ function sleep(ms) {
 function detectMentions(msg, isForwarded, chatId, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         const content = msg.message.content;
-        if (content) {
-            const mentions = parseMentions(content);
-            if (mentions.includes('@all') && !isForwarded)
-                return [Infinity];
-            const ret = [];
-            const allMembers = (yield models_1.models.ChatMember.findAll({
-                where: { tenant, chatId },
-            }));
-            yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
-                const lastAlias = men.substring(1);
-                // check chat memberss
-                const member = allMembers.find((m) => {
-                    if (m.lastAlias && lastAlias) {
-                        return compareAliases(m.lastAlias, lastAlias);
-                    }
-                });
-                if (member) {
-                    ret.push(member.contactId);
-                }
-            }));
-            return ret;
-        }
-        else {
+        if (!content)
             return [];
-        }
+        if (!content.includes('@'))
+            return [];
+        const mentions = parseMentions(content);
+        if (mentions.includes('@all') && !isForwarded)
+            return [Infinity];
+        const ret = [];
+        const allMembers = (yield models_1.models.ChatMember.findAll({
+            where: { tenant, chatId },
+        }));
+        yield asyncForEach(mentions, (men) => __awaiter(this, void 0, void 0, function* () {
+            const lastAlias = men.substring(1);
+            // check chat memberss
+            const member = allMembers.find((m) => {
+                if (m.lastAlias && lastAlias) {
+                    return compareAliases(m.lastAlias, lastAlias);
+                }
+            });
+            if (member) {
+                ret.push(member.contactId);
+            }
+        }));
+        return ret;
     });
 }
 function parseMentions(content) {
-    const words = content.split(' ');
+    // split on space or newline
+    const words = content.split(/\n| /);
     return words.filter((w) => w.startsWith('@'));
 }
 function detectMentionsForTribeAdminSelf(msg, mainAlias, aliasInChat) {
