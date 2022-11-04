@@ -250,7 +250,7 @@ async function onReceive(payload: Payload, dest: string) {
           })
         } catch (error) {
           sphinxLogger.error(
-            `=> Could not update ChatMember table for Leadership board`,
+            `=> Could not update the totalSpent column on the ChatMember table for Leadership board record`,
             error
           )
         }

@@ -235,7 +235,7 @@ function onReceive(payload, dest) {
                         });
                     }
                     catch (error) {
-                        logger_1.sphinxLogger.error(`=> Could not update ChatMember table for Leadership board`, error);
+                        logger_1.sphinxLogger.error(`=> Could not update the totalSpent column on the ChatMember table for Leadership board record`, error);
                     }
                     forwardMessageToTribe(payload, senderContact, realSatsContactId, amtToForward, owner, forwardedFromContactId);
                 }
