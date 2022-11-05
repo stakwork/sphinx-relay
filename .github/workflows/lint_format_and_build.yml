@@ -21,7 +21,7 @@ jobs:
           shopt -s globstar
           npm run lint || echo -n
           npx prettier --config .prettierrc --ignore-path .prettierignore -w *.ts src/**/*.ts .github/**/*.yml
-          git add *.ts src .github
+          git add *.ts src
           git commit -m 'Lint and format code' || echo -n
           git push
           npm run build
