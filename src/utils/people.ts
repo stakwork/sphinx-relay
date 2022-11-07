@@ -144,9 +144,8 @@ export async function setupPersonInfo() {
   try {
     const arg = await fetch(url)
     const json = await arg.json()
-    const stringifyJsonResponse = JSON.stringify(json)
     sphinxLogger.info(
-      `[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`,
+      `[+] Getting person details on url: ${url}`,
       logging.Tribes
     )
     person_id = json.uuid
