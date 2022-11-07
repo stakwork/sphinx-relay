@@ -130,16 +130,16 @@ function setupPersonInfo() {
         if (config.tribes_insecure)
             protocol = 'http';
         const url = protocol + '://' + config.people_host + '/person/' + owner.publicKey;
-        console.log(`[+] Person url is : ${url}`);
+        logger_1.sphinxLogger.info(`[+] Person url is : ${url}`, logger_1.logging.Tribes);
         try {
             const arg = yield (0, node_fetch_1.default)(url);
             const json = yield arg.json();
             const stringifyJsonResponse = JSON.stringify(json);
-            console.log(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`);
+            logger_1.sphinxLogger.info(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`, logger_1.logging.Tribes);
             person_id = json.uuid;
         }
         catch (e) {
-            console.log(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`);
+            logger_1.sphinxLogger.error(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`, logger_1.logging.Tribes);
         }
     });
 }

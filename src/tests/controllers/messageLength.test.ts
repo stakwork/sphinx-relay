@@ -13,130 +13,131 @@ import nodes from '../nodes'
   npx ava src/tests/controllers/messageLength.test.ts --verbose --serial --timeout=2m
 */
 
-interface Context { }
+interface Context {}
 
 test.serial(
-    'test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact',
-    async (t: ExecutionContext<Context>) => {
-        await iterate(nodes, async (node1, node2) => {
-            await messageLengthTest(t, node1, node2)
-            await longMessage(t, node1, node2)
-        })
-    }
+  'test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact',
+  async (t: ExecutionContext<Context>) => {
+    await iterate(nodes, async (node1, node2) => {
+      await messageLengthTest(t, node1, node2)
+      await longMessage(t, node1, node2)
+    })
+  }
 )
 
 export async function messageLengthTest(t, node1, node2) {
-    //TWO NODES SEND PAYMENTS TO EACH OTHER IN A CHAT ===>
+  //TWO NODES SEND PAYMENTS TO EACH OTHER IN A CHAT ===>
 
-    await deleteMessages(t, node2)
-    console.log(`${node1.alias} and ${node2.alias}`)
+  await deleteMessages(t, node2)
+  console.log(`${node1.alias} and ${node2.alias}`)
 
-    //NODE1 ADDS NODE2 AS A CONTACT
-    const added = await addContact(t, node1, node2)
-    t.true(added, 'n1 should add n2 as contact')
+  //NODE1 ADDS NODE2 AS A CONTACT
+  const added = await addContact(t, node1, node2)
+  t.true(added, 'n1 should add n2 as contact')
 
-    const date = new Date(Date.now())
-    const limit = 2
-    const offset = 0
-    await sleep(2000)
-    //NODE1 SENDS A TEXT MESSAGE TO NODE2
-    const text = randomText()
-    await sendMessage(t, node1, node2, text)
-    await sleep(1000)
-    const text2 = randomText()
-    await sendMessage(t, node1, node2, text2)
-    await sleep(1000)
-    const text3 = randomText()
-    await sendMessage(t, node1, node2, text3)
-    await sleep(1000)
-    const text4 = randomText()
-    await sendMessage(t, node1, node2, text4)
-    await sleep(1000)
-   //t.true(messageSent.success, 'node1 should send text message to node2')
+  const date = new Date(Date.now())
+  const limit = 2
+  const offset = 0
+  await sleep(2000)
+  //NODE1 SENDS A TEXT MESSAGE TO NODE2
+  const text = randomText()
+  await sendMessage(t, node1, node2, text)
+  await sleep(1000)
+  const text2 = randomText()
+  await sendMessage(t, node1, node2, text2)
+  await sleep(1000)
+  const text3 = randomText()
+  await sendMessage(t, node1, node2, text3)
+  await sleep(1000)
+  const text4 = randomText()
+  await sendMessage(t, node1, node2, text4)
+  await sleep(1000)
+  //t.true(messageSent.success, 'node1 should send text message to node2')
 
-    const newMessagesResponse = await getCheckMsgs(
-        t,
-        node2,
-        date,
-        limit,
-        offset,
-        'desc'
-    )
-    t.true(
-        newMessagesResponse.new_messages_total == 4,
-        'node2 should have 4 new message'
-    )
-    t.true(
-        decrypt(newMessagesResponse.new_messages[0], node2) == text4,
-        'first message should be the newest message'
-    )
-    t.true(
-        decrypt(newMessagesResponse.new_messages[1], node2) == text3,
-        'first message should be the newest message'
-    )
+  const newMessagesResponse = await getCheckMsgs(
+    t,
+    node2,
+    date,
+    limit,
+    offset,
+    'desc'
+  )
+  t.true(
+    newMessagesResponse.new_messages_total == 4,
+    'node2 should have 4 new message'
+  )
+  t.true(
+    decrypt(newMessagesResponse.new_messages[0], node2) == text4,
+    'first message should be the newest message'
+  )
+  t.true(
+    decrypt(newMessagesResponse.new_messages[1], node2) == text3,
+    'first message should be the newest message'
+  )
 
-    const newMessagesResponse2 = await getCheckAllMessages(
-        t,
-        node2,
-        limit,
-        offset,
-        'desc'
-    )
-    t.true(
-        newMessagesResponse2.new_messages_total == 4,
-        `node2 should have 4 new messages`
-    )
-    t.true(
-        decrypt(newMessagesResponse2.new_messages[0], node2) == text4,
-        'first message should be the newest message'
-    )
-    t.true(
-        decrypt(newMessagesResponse2.new_messages[1], node2) == text3,
-        'first message should be the newest message'
-    )
+  const newMessagesResponse2 = await getCheckAllMessages(
+    t,
+    node2,
+    limit,
+    offset,
+    'desc'
+  )
+  t.true(
+    newMessagesResponse2.new_messages_total == 4,
+    `node2 should have 4 new messages`
+  )
+  t.true(
+    decrypt(newMessagesResponse2.new_messages[0], node2) == text4,
+    'first message should be the newest message'
+  )
+  t.true(
+    decrypt(newMessagesResponse2.new_messages[1], node2) == text3,
+    'first message should be the newest message'
+  )
 
-    //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
-    const allContacts = await getContacts(t, node1)
-    let deletion
-    for (const contact of allContacts) {
-        if (contact.public_key == node2.pubkey) {
-            deletion = await deleteContact(t, node1, contact.id)
-            t.true(deletion, 'contacts should be deleted')
-        }
+  //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
+  const allContacts = await getContacts(t, node1)
+  let deletion
+  for (const contact of allContacts) {
+    if (contact.public_key == node2.pubkey) {
+      deletion = await deleteContact(t, node1, contact.id)
+      t.true(deletion, 'contacts should be deleted')
     }
+  }
 }
 
 function decrypt(message: Message, node: NodeConfig) {
-    return rsa.decrypt(node.privkey, message.message_content)
+  return rsa.decrypt(node.privkey, message.message_content)
 }
 
 export async function longMessage(t, node1, node2) {
-    const limit = 1
-    const offset = 0
-    const added = await addContact(t, node1, node2)
-    t.true(added, 'n1 should add n2 as contact')
+  const limit = 1
+  const offset = 0
+  const added = await addContact(t, node1, node2)
+  t.true(added, 'n1 should add n2 as contact')
 
-    //Send the message
-    const longText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Risus feugiat in ante metus dictum at tempor. Ut enim blandit volutpat maecenas volutpat. Velit dignissim sodales ut eu. Eget nunc scelerisque viverra mauris in aliquam sem. Dictum varius duis at consectetur lorem. Maecenas volutpat blandit aliquam etiam erat velit scelerisque. Id velit ut tortor pretium viverra suspendisse potenti. Placerat vestibulum lectus mauris ultrices eros in cursus turpis. Integer vitae justo eget magna. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi nullam. Vitae congue mauris rhoncus aenean vel elit scelerisque mauris. Vitae sapien pellentesque habitant morbi tristique. Varius vel pharetra vel turpis nunc eget lorem dolor. Pellentesque massa placerat duis ultricies lacus sed turpis. Augue neque gravida in fermentum et sollicitudin. Adipiscing elit pellentesque habitant morbi tristique."
-    console.log("sending long message to", node2.alias)
-    await sendMessage(t, node1, node2, longText)
-    await sleep(1000)
+  //Send the message
+  const longText =
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Risus feugiat in ante metus dictum at tempor. Ut enim blandit volutpat maecenas volutpat. Velit dignissim sodales ut eu. Eget nunc scelerisque viverra mauris in aliquam sem. Dictum varius duis at consectetur lorem. Maecenas volutpat blandit aliquam etiam erat velit scelerisque. Id velit ut tortor pretium viverra suspendisse potenti. Placerat vestibulum lectus mauris ultrices eros in cursus turpis. Integer vitae justo eget magna. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi nullam. Vitae congue mauris rhoncus aenean vel elit scelerisque mauris. Vitae sapien pellentesque habitant morbi tristique. Varius vel pharetra vel turpis nunc eget lorem dolor. Pellentesque massa placerat duis ultricies lacus sed turpis. Augue neque gravida in fermentum et sollicitudin. Adipiscing elit pellentesque habitant morbi tristique.'
+  console.log('sending long message to', node2.alias)
+  await sendMessage(t, node1, node2, longText)
+  await sleep(1000)
 
-    //Checking for the new long message
-    const onlyMessage = await getCheckAllMessages(t, node2, limit, offset, 'desc')
-    t.true(
-        decrypt(onlyMessage.new_messages[0], node2) == longText,
-        'reciever should get long message'
-    )
+  //Checking for the new long message
+  const onlyMessage = await getCheckAllMessages(t, node2, limit, offset, 'desc')
+  t.true(
+    decrypt(onlyMessage.new_messages[0], node2) == longText,
+    'reciever should get long message'
+  )
 
-    // clean up
-    //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
-    const allContacts = await getContacts(t, node1)
-    let deletion
-    for (const contact of allContacts) {
-        if (contact.public_key == node2.pubkey) {
-            deletion = await deleteContact(t, node1, contact.id)
-            t.true(deletion, 'contacts should be deleted')
-        }
+  // clean up
+  //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
+  const allContacts = await getContacts(t, node1)
+  let deletion
+  for (const contact of allContacts) {
+    if (contact.public_key == node2.pubkey) {
+      deletion = await deleteContact(t, node1, contact.id)
+      t.true(deletion, 'contacts should be deleted')
     }
+  }
 }

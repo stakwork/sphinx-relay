@@ -91,7 +91,7 @@ const setupPersonUuid = async () => {
     })) as ContactRecord[]
 
     for (let i = 0; i < contacts.length; i++) {
-      let tenant = contacts[i]
+      const tenant = contacts[i]
       const url =
         protocol + '://' + config.people_host + '/person/' + tenant.publicKey
       const res = await fetch(url)
