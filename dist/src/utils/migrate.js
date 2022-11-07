@@ -227,7 +227,8 @@ function migrate() {
         catch (e) {
             //Do nothing here
         }
-        // add actionHistory table
+
+    // add actionHistory table
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_action_history (
