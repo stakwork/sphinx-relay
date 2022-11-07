@@ -134,8 +134,7 @@ function setupPersonInfo() {
         try {
             const arg = yield (0, node_fetch_1.default)(url);
             const json = yield arg.json();
-            const stringifyJsonResponse = JSON.stringify(json);
-            logger_1.sphinxLogger.info(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`, logger_1.logging.Tribes);
+            logger_1.sphinxLogger.info(`[+] Getting person details on url: ${url}`, logger_1.logging.Tribes);
             person_id = json.uuid;
         }
         catch (e) {
