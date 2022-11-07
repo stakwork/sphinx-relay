@@ -25,6 +25,7 @@ import * as personal from './api/personal'
 import * as lsats from './lsats'
 import { Req } from '../types'
 import * as action from './actionHistory'
+import * as feeds from './getFeeds'
 
 export async function set(app) {
   builtInBots.init()
@@ -176,6 +177,9 @@ export async function set(app) {
   app.put('/lsats/:identifier', lsats.updateLsat)
   app.delete('/lsats/:identifier', lsats.deleteLsat)
   app.get('/active_lsat', lsats.getActiveLsat)
+
+  // Get feeds
+  app.get('/feeds', feeds.getFeeds)
 }
 
 const msgtypes = constants.message_types
