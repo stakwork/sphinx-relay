@@ -13,17 +13,26 @@ exports.getFeeds = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const feedsHelper = require("../utils/feeds");
+const config_1 = require("../utils/config");
+const node_fetch_1 = require("node-fetch");
 function getFeeds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
+        const config = (0, config_1.loadConfig)();
         try {
             const actions = (yield models_1.models.ActionHistory.findAll({
                 where: { tenant },
             }));
             const parsedActions = feedsHelper.parseActionHistory(actions);
-            (0, res_1.success)(res, parsedActions);
+            const recommendations = yield (0, node_fetch_1.default)(`${config.boltwall_server}/feeds`, {
+                method: 'POST',
+                body: JSON.stringify(parsedActions),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const parsedRecommendation = yield recommendations.json();
+            (0, res_1.success)(res, parsedRecommendation);
         }
         catch (error) {
             (0, res_1.failure)(res, error);
