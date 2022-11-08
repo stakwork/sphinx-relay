@@ -28,6 +28,7 @@ const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
 const people = require("./src/utils/people");
+const leadershipboard_1 = require("./src/leadershipboard");
 // force UTC time
 process.env.TZ = 'UTC';
 const env = process.env.NODE_ENV || 'development';
@@ -76,6 +77,7 @@ function finishSetup() {
             // IF UNLOCK, start this only after unlocked!
             (0, hub_1.pingHubInterval)(15000);
         }
+        (0, leadershipboard_1.leadershipBoardInterval)(1800000);
         (0, setup_1.setupDone)();
     });
 }
