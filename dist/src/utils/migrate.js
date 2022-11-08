@@ -61,7 +61,6 @@ function migrate() {
         addTableColumn('sphinx_chats', 'pin');
         addTableColumn('sphinx_chats', 'profile_filters', 'TEXT');
         addTableColumn('sphinx_chat_members', 'total_earned', 'BIGINT');
-        addTableColumn('sphinx_action_history', 'action_type', 'INT');
         addTenant('sphinx_chat_members');
         addTenant('sphinx_chats');
         addTenant('sphinx_bots');
@@ -228,6 +227,23 @@ function migrate() {
         catch (e) {
             //Do nothing here
         }
+
+    // add actionHistory table
+        try {
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_action_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT,
+      meta_data TEXT,
+      tenant INTEGER,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    )`);
+        }
+        catch (e) {
+            //Do nothing here
+        }
+        addTableColumn('sphinx_action_history', 'action_type', 'INT');
     });
 }
 exports.default = migrate;
