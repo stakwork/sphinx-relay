@@ -30,7 +30,18 @@ const configFile = argv.db
   : path.join(__dirname, '../../config/config.json')
 
 const env = process.env.NODE_ENV || 'development'
-const config = JSON.parse(readFileSync(configFile).toString())[env]
+
+let config: any
+const dialect = process.env.DB_DIALECT
+const storage = process.env.DB_STORAGE
+if (dialect && storage) {
+  config = {
+    dialect,
+    storage,
+  }
+} else {
+  config = JSON.parse(readFileSync(configFile).toString())[env]
+}
 
 const appConfig = loadConfig()
 
