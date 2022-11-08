@@ -23,6 +23,7 @@ import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
 import * as people from './src/utils/people'
+import { leadershipBoardInterval } from './src/leadershipboard'
 
 // force UTC time
 process.env.TZ = 'UTC'
@@ -71,6 +72,7 @@ async function finishSetup() {
     // IF UNLOCK, start this only after unlocked!
     pingHubInterval(15000)
   }
+  leadershipBoardInterval(1800000)
   setupDone()
 }
 
