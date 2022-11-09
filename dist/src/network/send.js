@@ -161,9 +161,17 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                             chatId: chat.id,
                         },
                     }));
-                    yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
-                        totalEarned: receiver.totalEarned + amount,
-                    }));
+                    if (type === constants_1.default.message_types.boost) {
+                        yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
+                            totalEarned: receiver.totalEarned + amount,
+                            reputation: receiver.reputation + 3,
+                        }));
+                    }
+                    else {
+                        yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
+                            totalEarned: receiver.totalEarned + amount,
+                        }));
+                    }
                 }
                 catch (error) {
                     logger_1.sphinxLogger.error(`=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`, logger_1.logging.Network);

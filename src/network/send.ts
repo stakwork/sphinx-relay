@@ -213,9 +213,17 @@ export async function sendMessage({
             chatId: chat.id!,
           },
         })) as ChatMemberRecord
-        await receiver?.update({
-          totalEarned: receiver.totalEarned + amount,
-        })
+
+        if (type === constants.message_types.boost) {
+          await receiver?.update({
+            totalEarned: receiver.totalEarned + amount,
+            reputation: receiver.reputation + 3,
+          })
+        } else {
+          await receiver?.update({
+            totalEarned: receiver.totalEarned + amount,
+          })
+        }
       } catch (error) {
         sphinxLogger.error(
           `=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`,

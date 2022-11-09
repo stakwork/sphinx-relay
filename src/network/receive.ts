@@ -14,6 +14,7 @@ import {
   ChatRecord,
   ChatMember,
   ChatMemberRecord,
+  MessageRecord,
 } from '../models'
 import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import {
@@ -245,9 +246,37 @@ async function onReceive(payload: Payload, dest: string) {
               chatId: chat.id,
             },
           })) as ChatMemberRecord
-          await sender.update({
-            totalSpent: sender.totalSpent + payload.message.amount,
-          })
+          if (payload.type === msgtypes.message) {
+            const currentTribe = (await models.Chat.findOne({
+              where: { uuid: payload.chat.uuid },
+            })) as ChatMemberRecord
+            const allMsg = (await models.Message.findAll({
+              limit: 1,
+              order: [['createdAt', 'DESC']],
+              where: {
+                chatId: currentTribe.id,
+                type: { [Op.ne]: msgtypes.confirmation },
+              },
+            })) as MessageRecord[]
+            const contact = (await models.Contact.findOne({
+              where: { publicKey: payload.sender.pub_key },
+            })) as ContactRecord
+            if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
+              await sender.update({
+                totalSpent: sender.totalSpent + payload.message.amount,
+                reputation: sender.reputation + 1,
+              })
+            }
+          } else if (payload.type === msgtypes.boost) {
+            await sender.update({
+              totalSpent: sender.totalSpent + payload.message.amount,
+              reputation: sender.reputation + 2,
+            })
+          } else {
+            await sender.update({
+              totalSpent: sender.totalSpent + payload.message.amount,
+            })
+          }
         } catch (error) {
           sphinxLogger.error(
             `=> Could not update the totalSpent column on the ChatMember table for Leadership board record ${error}`,

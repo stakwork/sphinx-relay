@@ -57,6 +57,7 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_chats', 'pin')
   addTableColumn('sphinx_chats', 'profile_filters', 'TEXT')
   addTableColumn('sphinx_chat_members', 'total_earned', 'BIGINT')
+  addTableColumn('sphinx_chat_members', 'reputation', 'BIGINT')
 
   addTenant('sphinx_chat_members')
   addTenant('sphinx_chats')
