@@ -13,7 +13,7 @@ export function parseActionHistory(actions: ActionHistoryRecord[]) {
         topics: JSON.parse(action.metaData).keywords,
       }
       if (!newMetaObject.current_timestamp) {
-        newMetaObject.current_timestamp = 1620878400
+        newMetaObject.current_timestamp = 1620878400 //This is temporal would be removed soon
       }
       parsedActions[actionTypes[action.actionType]].push({
         type: actionTypes[action.actionType],
