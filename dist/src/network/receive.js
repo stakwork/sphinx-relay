@@ -384,10 +384,17 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         const message = payload.message;
         console.log('PERSON in forwardMessage ToTribe', payload.sender && payload.sender.person);
         console.log('payload sender alias', payload.sender && payload.sender.alias);
+        let personUuid = '';
+        if (payload.sender && payload.sender.person) {
+            const person_arr = payload.sender.person.split('/');
+            if (person_arr.length > 1) {
+                personUuid = person_arr[person_arr.length - 1];
+            }
+        }
         (0, send_1.sendMessage)({
             type,
             message,
-            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, person: (payload.sender && payload.sender.person) || '' }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, personUuid }),
             amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,

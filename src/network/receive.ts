@@ -426,6 +426,13 @@ async function forwardMessageToTribe(
     payload.sender && payload.sender.person
   )
   console.log('payload sender alias', payload.sender && payload.sender.alias)
+  let personUuid = ''
+  if (payload.sender && payload.sender.person) {
+    const person_arr = payload.sender.person.split('/')
+    if (person_arr.length > 1) {
+      personUuid = person_arr[person_arr.length - 1]
+    }
+  }
   sendMessage({
     type,
     message,
@@ -435,7 +442,7 @@ async function forwardMessageToTribe(
       alias: (payload.sender && payload.sender.alias) || '',
       photoUrl: (payload.sender && payload.sender.photo_url) || '',
       role: constants.chat_roles.reader,
-      person: (payload.sender && payload.sender.person) || '',
+      personUuid,
     },
     amount: amtToForwardToRealSatsContactId || 0,
     chat: chat,
