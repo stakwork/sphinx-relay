@@ -7,7 +7,6 @@ import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
 import { createJWT, scopes } from '../../utils/jwt'
-import { setPersonId } from '../../utils/people'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -60,7 +59,6 @@ export async function createPeopleProfile(req, res) {
       priceToMeet: priceToMeet || 0,
       personUuid: person.uuid,
     })
-    setPersonId(person.uuid)
     success(res, person)
   } catch (e) {
     failure(res, e)

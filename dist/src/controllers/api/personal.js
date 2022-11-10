@@ -19,7 +19,6 @@ const jsonUtils = require("../../utils/json");
 const res_1 = require("../../utils/res");
 const config_1 = require("../../utils/config");
 const jwt_1 = require("../../utils/jwt");
-const people_1 = require("../../utils/people");
 const config = (0, config_1.loadConfig)();
 // accessed from people.sphinx.chat website
 // U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
@@ -56,7 +55,6 @@ function createPeopleProfile(req, res) {
                 priceToMeet: priceToMeet || 0,
                 personUuid: person.uuid,
             });
-            (0, people_1.setPersonId)(person.uuid);
             (0, res_1.success)(res, person);
         }
         catch (e) {

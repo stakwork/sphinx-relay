@@ -2,7 +2,6 @@ import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
 import { sphinxLogger, logging } from './logger'
-import { ContactRecord, models } from '../models'
 
 const config = loadConfig()
 
@@ -128,40 +127,4 @@ export async function claimOnLiquid({
     sphinxLogger.error('[liquid] unauthorized to move asset', e)
     throw e
   }
-}
-
-let person_id: string | undefined
-export async function setupPersonInfo() {
-  const owner: ContactRecord = (await models.Contact.findOne({
-    where: { id: 1 },
-  })) as ContactRecord
-
-  let protocol = 'https'
-  if (config.tribes_insecure) protocol = 'http'
-  const url =
-    protocol + '://' + config.people_host + '/person/' + owner.publicKey
-  sphinxLogger.info(`[+] Person url is : ${url}`, logging.Tribes)
-  try {
-    const arg = await fetch(url)
-    const json = await arg.json()
-    sphinxLogger.info(
-      `[+] Getting person details on url: ${url}`,
-      logging.Tribes
-    )
-    person_id = json.uuid
-  } catch (e) {
-    sphinxLogger.error(
-      `[-] Error happened while getting person details for publicKey: ${owner.publicKey}`,
-      logging.Tribes
-    )
-  }
-}
-
-export function getPersonId(): string | undefined {
-  return person_id
-}
-
-export function setPersonId(uuid: string): string {
-  person_id = uuid
-  return person_id
 }
