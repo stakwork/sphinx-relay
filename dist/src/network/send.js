@@ -41,7 +41,6 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         if (isTribeOwner && !isForwarded) {
             theSender.role = constants_1.default.chat_roles.owner;
         }
-        console.log('THE SENDER ', theSender);
         let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false);
         // console.log("=> MSG TO SEND",msg)
         // console.log(type,message)

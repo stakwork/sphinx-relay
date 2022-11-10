@@ -70,7 +70,6 @@ export async function sendMessage({
   if (isTribeOwner && !isForwarded) {
     theSender.role = constants.chat_roles.owner
   }
-  console.log('THE SENDER ', theSender)
   let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false)
 
   // console.log("=> MSG TO SEND",msg)
