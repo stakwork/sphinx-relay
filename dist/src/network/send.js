@@ -270,6 +270,7 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
     if (!includeStatus && message.status) {
         delete message.status;
     }
+    console.log('PERSONUUID in newmsg', sender.personUuid);
     const result = {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, (chat.name && { name: chat.name })), ((chat.type || chat.type === 0) && { type: chat.type })), (chat.members && { members: chat.members })), (includeGroupKey && chat.groupKey && { groupKey: chat.groupKey })), (includeGroupKey && chat.host && { host: chat.host })),

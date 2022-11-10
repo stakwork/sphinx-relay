@@ -382,6 +382,8 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         }
         const type = payload.type;
         const message = payload.message;
+        console.log('PERSON in forwardMessage ToTribe', payload.sender && payload.sender.person);
+        console.log('payload sender alias', payload.sender && payload.sender.alias);
         (0, send_1.sendMessage)({
             type,
             message,

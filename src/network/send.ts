@@ -347,6 +347,7 @@ export function newmsg(
   if (!includeStatus && message.status) {
     delete message.status
   }
+  console.log('PERSONUUID in newmsg', sender.personUuid)
   const result: Msg = {
     type: type,
     chat: {

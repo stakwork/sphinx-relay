@@ -421,6 +421,11 @@ async function forwardMessageToTribe(
 
   const type = payload.type
   const message = payload.message
+  console.log(
+    'PERSON in forwardMessage ToTribe',
+    payload.sender && payload.sender.person
+  )
+  console.log('payload sender alias', payload.sender && payload.sender.alias)
   sendMessage({
     type,
     message,
