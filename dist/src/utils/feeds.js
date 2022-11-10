@@ -10,12 +10,11 @@ function parseActionHistory(actions) {
     });
     actions.reverse().forEach((action) => {
         if (action.actionType === 0) {
+            const meta_data = JSON.parse(action.metaData);
             const newMetaObject = {
-                topics: JSON.parse(action.metaData).keywords,
+                topics: meta_data.keywords,
+                current_timestamp: meta_data.current_timestamp,
             };
-            if (!newMetaObject.current_timestamp) {
-                newMetaObject.current_timestamp = 1620878400; //This is temporal would be removed soon
-            }
             parsedActions[actionTypes[action.actionType]].push({
                 type: actionTypes[action.actionType],
                 meta_data: newMetaObject,
