@@ -251,6 +251,10 @@ export async function sendMessage({
 
     // console.log("==> SENDER",sender)
     // console.log("==> OK SIGN AND SEND", opts);
+    sphinxLogger.error(
+      `SIGN MESSAGE ${JSON.stringify(sender)}`,
+      logging.Network
+    )
     try {
       const r = await signAndSend(opts, sender, mqttTopic)
       yes = r

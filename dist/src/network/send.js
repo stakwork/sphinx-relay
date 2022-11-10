@@ -192,6 +192,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             };
             // console.log("==> SENDER",sender)
             // console.log("==> OK SIGN AND SEND", opts);
+            logger_1.sphinxLogger.error(`SIGN MESSAGE ${JSON.stringify(sender)}`, logger_1.logging.Network);
             try {
                 const r = yield signAndSend(opts, sender, mqttTopic);
                 yes = r;
