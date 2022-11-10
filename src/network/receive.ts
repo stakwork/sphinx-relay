@@ -399,7 +399,7 @@ async function forwardMessageToTribe(
   owner,
   forwardedFromContactId
 ) {
-  // console.log('forwardMessageToTribe')
+  console.log('forwardMessageToTribe', ogpayload.sender.person)
   const tenant = owner.id
   const chat: Chat = (await models.Chat.findOne({
     where: { uuid: ogpayload.chat.uuid, tenant },

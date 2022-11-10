@@ -361,7 +361,7 @@ function uniqueifyAlias(payload, sender, chat, owner) {
 }
 function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId, owner, forwardedFromContactId) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('forwardMessageToTribe')
+        console.log('forwardMessageToTribe', ogpayload.sender.person);
         const tenant = owner.id;
         const chat = (yield models_1.models.Chat.findOne({
             where: { uuid: ogpayload.chat.uuid, tenant },
