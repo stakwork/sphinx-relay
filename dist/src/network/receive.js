@@ -230,39 +230,9 @@ function onReceive(payload, dest) {
                                 chatId: chat.id,
                             },
                         }));
-                        if (payload.type === msgtypes.message) {
-                            const currentTribe = (yield models_1.models.Chat.findOne({
-                                where: { uuid: payload.chat.uuid },
-                            }));
-                            const allMsg = (yield models_1.models.Message.findAll({
-                                limit: 1,
-                                order: [['createdAt', 'DESC']],
-                                where: {
-                                    chatId: currentTribe.id,
-                                    type: { [sequelize_1.Op.ne]: msgtypes.confirmation },
-                                },
-                            }));
-                            const contact = (yield models_1.models.Contact.findOne({
-                                where: { publicKey: payload.sender.pub_key },
-                            }));
-                            if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
-                                yield sender.update({
-                                    totalSpent: sender.totalSpent + payload.message.amount,
-                                    reputation: sender.reputation + 1,
-                                });
-                            }
-                        }
-                        else if (payload.type === msgtypes.boost) {
-                            yield sender.update({
-                                totalSpent: sender.totalSpent + payload.message.amount,
-                                reputation: sender.reputation + 2,
-                            });
-                        }
-                        else {
-                            yield sender.update({
-                                totalSpent: sender.totalSpent + payload.message.amount,
-                            });
-                        }
+                        yield sender.update({
+                            totalSpent: sender.totalSpent + payload.message.amount,
+                        });
                     }
                     catch (error) {
                         logger_1.sphinxLogger.error(`=> Could not update the totalSpent column on the ChatMember table for Leadership board record ${error}`, logger_1.logging.Network);
@@ -410,6 +380,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         else {
             payload = ogpayload;
         }
+        logger_1.sphinxLogger.error(JSON.stringify(payload.sender.person), logger_1.logging.Network);
         const type = payload.type;
         const message = payload.message;
         (0, send_1.sendMessage)({
