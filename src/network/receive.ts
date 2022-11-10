@@ -88,6 +88,11 @@ async function onReceive(payload: Payload, dest: string) {
   }
   payload.dest = dest // add "dest" into payload
 
+  sphinxLogger.error(
+    `PERSON uuid onReceive ${JSON.stringify(payload.sender)}`,
+    logging.Network
+  )
+
   // console.log("===> onReceive", JSON.stringify(payload, null, 2));
   if (!(payload.type || payload.type === 0))
     return sphinxLogger.error(`no payload.type`)
@@ -419,7 +424,10 @@ async function forwardMessageToTribe(
     payload = ogpayload
   }
 
-  sphinxLogger.error(JSON.stringify(payload.sender.person), logging.Network)
+  sphinxLogger.error(
+    `LOGGING FOR PERSON ${JSON.stringify(payload.sender.person)}`,
+    logging.Network
+  )
   const type = payload.type
   const message = payload.message
   sendMessage({

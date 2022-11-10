@@ -82,6 +82,7 @@ function onReceive(payload, dest) {
                 return logger_1.sphinxLogger.error(`INVALID DEST ${dest}`);
         }
         payload.dest = dest; // add "dest" into payload
+        logger_1.sphinxLogger.error(`PERSON uuid onReceive ${JSON.stringify(payload.sender)}`, logger_1.logging.Network);
         // console.log("===> onReceive", JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return logger_1.sphinxLogger.error(`no payload.type`);
@@ -380,7 +381,7 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         else {
             payload = ogpayload;
         }
-        logger_1.sphinxLogger.error(JSON.stringify(payload.sender.person), logger_1.logging.Network);
+        logger_1.sphinxLogger.error(`LOGGING FOR PERSON ${JSON.stringify(payload.sender.person)}`, logger_1.logging.Network);
         const type = payload.type;
         const message = payload.message;
         (0, send_1.sendMessage)({
