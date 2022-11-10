@@ -9,7 +9,12 @@ export function parseActionHistory(actions: ActionHistoryRecord[]) {
   })
   actions.reverse().forEach((action) => {
     if (action.actionType === 0) {
-      const newMetaObject = { topics: JSON.parse(action.metaData).keywords }
+      const newMetaObject: any = {
+        topics: JSON.parse(action.metaData).keywords,
+      }
+      if (!newMetaObject.current_timestamp) {
+        newMetaObject.current_timestamp = 1620878400
+      }
       parsedActions[actionTypes[action.actionType]].push({
         type: actionTypes[action.actionType],
         meta_data: newMetaObject,

@@ -32,7 +32,12 @@ function getFeeds(req, res) {
                 headers: { 'Content-Type': 'application/json' },
             });
             const parsedRecommendation = yield recommendations.json();
-            (0, res_1.success)(res, parsedRecommendation);
+            if (parsedRecommendation.success) {
+                (0, res_1.success)(res, parsedRecommendation.data);
+            }
+            else {
+                (0, res_1.failure)(res, 'An error occured');
+            }
         }
         catch (error) {
             (0, res_1.failure)(res, error);
