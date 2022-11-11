@@ -8,6 +8,7 @@ interface LeadershipProps {
   alias: string
   spent: number
   earned: number
+  reputation: number
 }
 
 const tribeAgent = new https.Agent({
@@ -63,6 +64,7 @@ function parseLeaderRecord(members: ChatMemberRecord[]) {
         alias: member.lastAlias,
         spent: member.totalSpent,
         earned: member.totalEarned,
+        reputation: member.reputation,
       })
     }
   })

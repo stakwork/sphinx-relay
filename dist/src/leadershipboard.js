@@ -64,6 +64,7 @@ function parseLeaderRecord(members) {
                 alias: member.lastAlias,
                 spent: member.totalSpent,
                 earned: member.totalEarned,
+                reputation: member.reputation,
             });
         }
     });
