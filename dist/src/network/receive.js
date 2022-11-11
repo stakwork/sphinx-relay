@@ -231,19 +231,16 @@ function onReceive(payload, dest) {
                             },
                         }));
                         if (payload.type === msgtypes.message) {
-                            const currentTribe = (yield models_1.models.Chat.findOne({
-                                where: { uuid: payload.chat.uuid },
-                            }));
                             const allMsg = (yield models_1.models.Message.findAll({
                                 limit: 1,
                                 order: [['createdAt', 'DESC']],
                                 where: {
-                                    chatId: currentTribe.id,
+                                    chatId: chat.id,
                                     type: { [sequelize_1.Op.ne]: msgtypes.confirmation },
                                 },
                             }));
                             const contact = (yield models_1.models.Contact.findOne({
-                                where: { publicKey: payload.sender.pub_key },
+                                where: { publicKey: payload.sender.pub_key, tenant },
                             }));
                             if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
                                 yield sender.update({

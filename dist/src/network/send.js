@@ -153,29 +153,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             // console.log("=> realSatsContactId", realSatsContactId, contactId)
             if (isTribeOwner && amount && realSatsContactId === contactId) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
-                try {
-                    const receiver = (yield models_1.models.ChatMember.findOne({
-                        where: {
-                            contactId: contactId,
-                            tenant,
-                            chatId: chat.id,
-                        },
-                    }));
-                    if (type === constants_1.default.message_types.boost) {
-                        yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
-                            totalEarned: receiver.totalEarned + amount,
-                            reputation: receiver.reputation + 3,
-                        }));
-                    }
-                    else {
-                        yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
-                            totalEarned: receiver.totalEarned + amount,
-                        }));
-                    }
-                }
-                catch (error) {
-                    logger_1.sphinxLogger.error(`=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`, logger_1.logging.Network);
-                }
+                yield (0, msg_1.recordLeadershipScore)(tenant, amount, chat.id, contactId, type);
             }
             const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
             // send a "push", the user was mentioned

@@ -4,10 +4,13 @@ import {
   ContactRecord,
   Contact,
   ChatMember as ChatMemberModel,
-  ChatMemberRecord,
 } from '../models'
 import * as LND from '../grpc/lightning'
-import { personalizeMessage, decryptMessage } from '../utils/msg'
+import {
+  personalizeMessage,
+  decryptMessage,
+  recordLeadershipScore,
+} from '../utils/msg'
 import * as tribes from '../utils/tribes'
 import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
 import { typesToForward } from './receive'
@@ -205,31 +208,7 @@ export async function sendMessage({
     // console.log("=> realSatsContactId", realSatsContactId, contactId)
     if (isTribeOwner && amount && realSatsContactId === contactId) {
       mqttTopic = '' // FORCE KEYSEND!!!
-      try {
-        const receiver = (await models.ChatMember.findOne({
-          where: {
-            contactId: contactId,
-            tenant,
-            chatId: chat.id!,
-          },
-        })) as ChatMemberRecord
-
-        if (type === constants.message_types.boost) {
-          await receiver?.update({
-            totalEarned: receiver.totalEarned + amount,
-            reputation: receiver.reputation + 3,
-          })
-        } else {
-          await receiver?.update({
-            totalEarned: receiver.totalEarned + amount,
-          })
-        }
-      } catch (error) {
-        sphinxLogger.error(
-          `=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`,
-          logging.Network
-        )
-      }
+      await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
     }
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
