@@ -128,3 +128,28 @@ export async function claimOnLiquid({
     throw e
   }
 }
+
+export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(protocol + '://' + host + '/issue?token=' + token, {
+      method: 'POST',
+      body: JSON.stringify({
+        icon,
+        name,
+        amount,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!r.ok) {
+      throw 'failed to create badge ' + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    sphinxLogger.error('[liquid] Badge was not created', error)
+    throw error
+  }
+}

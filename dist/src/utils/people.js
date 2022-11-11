@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
@@ -119,4 +119,33 @@ function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
     });
 }
 exports.claimOnLiquid = claimOnLiquid;
+function createBadge({ host, icon, amount, name, owner_pubkey }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/issue?token=' + token, {
+                method: 'POST',
+                body: JSON.stringify({
+                    icon,
+                    name,
+                    amount,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to create badge ' + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error('[liquid] Badge was not created', error);
+            throw error;
+        }
+    });
+}
+exports.createBadge = createBadge;
 //# sourceMappingURL=people.js.map

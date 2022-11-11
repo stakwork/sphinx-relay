@@ -189,3 +189,26 @@ export async function claimOnLiquid(req, res) {
     failure(res, e)
   }
 }
+
+export async function createBadge(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+
+  try {
+    const owner: Contact = (await models.Contact.findOne({
+      where: { tenant, isOwner: true },
+    })) as Contact
+
+    const { name, icon, amount } = req.body
+    const response = await people.createBadge({
+      host: 'liquid.sphinx.chat',
+      icon,
+      amount,
+      name,
+      owner_pubkey: owner.publicKey,
+    })
+    return success(res, response)
+  } catch (error) {
+    return failure(res, error)
+  }
+}
