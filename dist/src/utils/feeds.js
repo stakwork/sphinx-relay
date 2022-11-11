@@ -9,10 +9,38 @@ function parseActionHistory(actions) {
         parsedActions[action] = [];
     });
     actions.reverse().forEach((action) => {
-        parsedActions[actionTypes[action.actionType]].push({
-            type: actionTypes[action.actionType],
-            meta_data: JSON.parse(action.metaData),
-        });
+        if (action.actionType === 0) {
+            const meta_data = JSON.parse(action.metaData);
+            const newMetaObject = {
+                topics: meta_data.keywords,
+                current_timestamp: meta_data.current_timestamp,
+            };
+            parsedActions[actionTypes[action.actionType]].push({
+                type: actionTypes[action.actionType],
+                meta_data: newMetaObject,
+            });
+        }
+        else if (action.actionType === 2) {
+            const newMetaObject = Object.assign({}, JSON.parse(action.metaData));
+            if (!newMetaObject.topics) {
+                newMetaObject.topics = [];
+            }
+            if (!newMetaObject.current_timestamp) {
+                newMetaObject.current_timestamp = newMetaObject.date
+                    ? newMetaObject.date
+                    : 0;
+            }
+            parsedActions[actionTypes[action.actionType]].push({
+                type: actionTypes[action.actionType],
+                meta_data: newMetaObject,
+            });
+        }
+        else {
+            parsedActions[actionTypes[action.actionType]].push({
+                type: actionTypes[action.actionType],
+                meta_data: JSON.parse(action.metaData),
+            });
+        }
     });
     return parsedActions;
 }
