@@ -133,7 +133,7 @@ export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
-    if (config.tribes_insecure) protocol = 'http'
+    // if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(protocol + '://' + host + '/issue?token=' + token, {
       method: 'POST',
       body: JSON.stringify({
@@ -150,6 +150,42 @@ export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
     return res
   } catch (error) {
     sphinxLogger.error('[liquid] Badge was not created', error)
+    throw error
+  }
+}
+
+export async function transferBadge({
+  to,
+  asset,
+  amount,
+  memo,
+  owner_pubkey,
+  host,
+}) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(
+      protocol + '://' + host + '/transfer?token=' + token,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          to,
+          asset,
+          amount,
+          memo,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      throw 'failed to create badge ' + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    sphinxLogger.error('[liquid] Badge was not transfered', error)
     throw error
   }
 }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
@@ -124,8 +124,7 @@ function createBadge({ host, icon, amount, name, owner_pubkey }) {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
             let protocol = 'https';
-            if (config.tribes_insecure)
-                protocol = 'http';
+            // if (config.tribes_insecure) protocol = 'http'
             const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/issue?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -148,4 +147,34 @@ function createBadge({ host, icon, amount, name, owner_pubkey }) {
     });
 }
 exports.createBadge = createBadge;
+function transferBadge({ to, asset, amount, memo, owner_pubkey, host, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/transfer?token=' + token, {
+                method: 'POST',
+                body: JSON.stringify({
+                    to,
+                    asset,
+                    amount,
+                    memo,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to create badge ' + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error('[liquid] Badge was not transfered', error);
+            throw error;
+        }
+    });
+}
+exports.transferBadge = transferBadge;
 //# sourceMappingURL=people.js.map
