@@ -13,6 +13,7 @@ import {
   getAllMessages,
   getSpecificMsg,
 } from '../utils/msg'
+import { deleteTribe, leaveTribe } from '../utils/del'
 
 /*
 npx ava src/tests/controllers/personProfile.test.ts --verbose --serial --timeout=2m
@@ -23,11 +24,11 @@ interface Context {}
 test.serial(
   'personProfile: Sphinx Person Profile',
   async (t: ExecutionContext<Context>) => {
-    await personProfile(t, nodes[0], nodes[1])
+    await personProfile(t, nodes[0], nodes[1], nodes[2])
   }
 )
 
-async function personProfile(t, node1, node2) {
+async function personProfile(t, node1, node2, node3) {
   const internalTribeHost = node1.ip.includes('host.docker.internal')
     ? config.tribeHost
     : config.tribeHostInternal
@@ -103,6 +104,11 @@ async function personProfile(t, node1, node2) {
   let join = await joinTribe(t, node1, tribe)
   t.true(join, 'node1 should join tribe')
 
+  //NODE2 JOINS TRIBE CREATED BY NODE2
+  if (node2.routeHint) tribe.owner_route_hint = node2.routeHint
+  let join2 = await joinTribe(t, node3, tribe)
+  t.true(join2, 'node1 should join tribe')
+
   //NODE1 SENDS A TEXT MESSAGE IN TRIBE
   const text = randomText()
   let tribeMessage = await sendTribeMessageAndCheckDecryption(
@@ -117,8 +123,39 @@ async function personProfile(t, node1, node2) {
   // Get All message that belongs to Node 2
   const allMessages = await getAllMessages(node2)
   const newMessage = getSpecificMsg(allMessages, tribeMessage.uuid)
-  t.true(
-    newMessage?.person === `${config.tribeHost}/${postProfile.response.uuid}`,
-    'Tribe message person value should be equal to tribe host and person profile from tribe server'
-  )
+  const personUuid = newMessage?.person.split('/')
+  if (personUuid) {
+    const uuid = personUuid[personUuid.length - 1]
+    t.true(
+      uuid === postProfile.response.uuid,
+      'Tribe message person value should be equal to person uuid the user who sent the tribe message'
+    )
+  }
+
+  // Get All message that belongs to Node 3
+  const node3Messages = await getAllMessages(node3)
+  const node1TribeMsg = getSpecificMsg(node3Messages, tribeMessage.uuid)
+  // console.log(node1TribeMsg)
+  const msgSenderUuid = node1TribeMsg?.person.split('/')
+  if (msgSenderUuid) {
+    const uuid = msgSenderUuid[msgSenderUuid.length - 1]
+    t.true(
+      uuid === postProfile.response.uuid,
+      'Tribe message person value should be equal to person uuid the user who sent the tribe message'
+    )
+  }
+
+  //NODE1 LEAVES TRIBE
+  let left2 = await leaveTribe(t, node1, tribe)
+  t.true(left2, 'node2 should leave tribe')
+
+  //NODE3 LEAVES TRIBE
+  let left3 = await leaveTribe(t, node3, tribe)
+  t.true(left3, 'node3 should leave tribe')
+
+  await sleep(1000)
+
+  //NODE2 DELETES TRIBE
+  let delTribe2 = await deleteTribe(t, node2, tribe)
+  t.true(delTribe2, 'node1 should delete tribe')
 }
