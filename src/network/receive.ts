@@ -247,14 +247,11 @@ async function onReceive(payload: Payload, dest: string) {
             },
           })) as ChatMemberRecord
           if (payload.type === msgtypes.message) {
-            const currentTribe = (await models.Chat.findOne({
-              where: { uuid: payload.chat.uuid },
-            })) as ChatMemberRecord
             const allMsg = (await models.Message.findAll({
               limit: 1,
               order: [['createdAt', 'DESC']],
               where: {
-                chatId: currentTribe.id,
+                chatId: chat.id,
                 type: { [Op.ne]: msgtypes.confirmation },
               },
             })) as MessageRecord[]
