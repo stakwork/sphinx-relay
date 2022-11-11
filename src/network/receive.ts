@@ -259,7 +259,7 @@ async function onReceive(payload: Payload, dest: string) {
               },
             })) as MessageRecord[]
             const contact = (await models.Contact.findOne({
-              where: { publicKey: payload.sender.pub_key },
+              where: { publicKey: payload.sender.pub_key, tenant },
             })) as ContactRecord
             if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
               await sender.update({
