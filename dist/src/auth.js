@@ -173,7 +173,7 @@ function ownerMiddleware(req, res, next) {
         const jwt = req.headers['x-jwt'] || req.cookies['x-jwt'];
         if (!token && !jwt) {
             res.status(401);
-            res.end('Invalid credentials');
+            res.end('Invalid credentials - no token or jwt');
             return;
         }
         let owner;
@@ -181,7 +181,7 @@ function ownerMiddleware(req, res, next) {
         if (token) {
             if (!timestamp) {
                 res.status(401);
-                res.end('Invalid credentials');
+                res.end('Invalid credentials - no ts');
                 return;
             }
             const hashedToken = crypto
@@ -207,7 +207,7 @@ function ownerMiddleware(req, res, next) {
         }
         if (!owner) {
             res.status(401);
-            res.end('Invalid credentials');
+            res.end('Invalid credentials - no owner');
             return;
         }
         if (x_admin_token || x_transport_token) {
@@ -215,14 +215,14 @@ function ownerMiddleware(req, res, next) {
                 // FIXME does this need to be <= ?
                 if (timestamp < owner.lastTimestamp) {
                     res.status(401);
-                    res.end('Invalid credentials');
+                    res.end('Invalid credentials - timestamp too soon');
                     return;
                 }
             }
             if (x_admin_token) {
                 if (!owner.isAdmin) {
                     res.status(401);
-                    res.end('Invalid credentials');
+                    res.end('Invalid credentials - not admin');
                     return;
                 }
             }
@@ -286,10 +286,13 @@ function authModule(req, res, next) {
                 return;
             }
         }
-        const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
+        const token = req.headers['x-user-token'] ||
+            req.cookies['x-user-token'] ||
+            req.headers['x-admin-token'] ||
+            req.cookies['x-admin-token'];
         if (token == null) {
             res.status(401);
-            res.end('Invalid credentials');
+            res.end('Invalid credentials - token is null');
         }
         else {
             const user = (yield models_1.models.Contact.findOne({
@@ -301,7 +304,7 @@ function authModule(req, res, next) {
                 .digest('base64');
             if (user.authToken == null || user.authToken != hashedToken) {
                 res.status(401);
-                res.end('Invalid credentials');
+                res.end('Invalid credentials - token doesnt match');
             }
             else {
                 next();
