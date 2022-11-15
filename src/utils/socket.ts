@@ -1,12 +1,8 @@
 import { models, ContactRecord } from '../models'
 import * as crypto from 'crypto'
 import { sphinxLogger } from '../utils/logger'
-import { generateTransportTokenKeys } from '../utils/cert'
+import { getTransportKey } from '../utils/cert'
 import * as rsa from '../crypto/rsa'
-import * as fs from 'fs'
-import { loadConfig } from './config'
-
-const config = loadConfig()
 
 // import * as WebSocket from 'ws'
 
@@ -44,15 +40,11 @@ export function connect(server) {
 
     const x_transport_token = client.handshake.headers['x-transport-token']
     if (x_transport_token) {
-      if (!fs.existsSync(config.transportPrivateKeyLocation)) {
-        await generateTransportTokenKeys()
-      }
-      const transportPrivateKey = fs.readFileSync(
-        config.transportPrivateKeyLocation
-      )
+      const transportPrivateKey = await getTransportKey()
       const userTokenFromTransportToken = rsa
         .decrypt(transportPrivateKey, x_transport_token)
         .split('|')[0]
+
       userToken = userTokenFromTransportToken
     }
 
