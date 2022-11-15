@@ -157,6 +157,9 @@ export async function set(app) {
   app.post('/action_history', action.saveAction)
   app.post('/action_history_bulk', action.saveActionBulk)
 
+  app.get('/feeds_bot', feeds.chatBots)
+  app.post('/encryt', feeds.encrypt)
+
   app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')
     const tenant: number = req.owner.id

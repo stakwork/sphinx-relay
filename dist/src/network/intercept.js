@@ -88,6 +88,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                     try {
                         const msgTypes = JSON.parse(botInTribe.msgTypes);
                         if (msgTypes.includes(msgType)) {
+                            console.log('Joy');
                             const isMsgAndHasText = msgType === constants_1.default.message_types.message &&
                                 txt &&
                                 txt.startsWith(`${botInTribe.botPrefix} `);

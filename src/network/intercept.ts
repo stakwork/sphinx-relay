@@ -90,6 +90,7 @@ export async function isBotMsg(
         try {
           const msgTypes = JSON.parse(botInTribe.msgTypes)
           if (msgTypes.includes(msgType)) {
+            console.log('Joy')
             const isMsgAndHasText =
               msgType === constants.message_types.message &&
               txt &&

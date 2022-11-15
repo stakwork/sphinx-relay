@@ -3,6 +3,7 @@ import * as SphinxBot from 'sphinx-bot'
 import * as MotherBot from './mother'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
+import * as BadgeBot from './badge'
 import { BotMsg } from '../network/interfaces'
 import * as GitBot from './git'
 import { buildBotPayload } from '../controllers/bots'
@@ -12,6 +13,7 @@ async function init() {
   WelcomeBot.init()
   LoopBot.init()
   GitBot.init()
+  BadgeBot.init()
 }
 
 function builtinBotEmit(msg: BotMsg) {

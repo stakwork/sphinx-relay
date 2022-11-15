@@ -5,6 +5,7 @@ import { success, failure } from '../utils/res'
 import * as feedsHelper from '../utils/feeds'
 import { loadConfig } from '../utils/config'
 import fetch from 'node-fetch'
+import * as rsa from '../crypto/rsa'
 
 export async function getFeeds(req: Req, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
@@ -25,4 +26,26 @@ export async function getFeeds(req: Req, res: Response) {
   } catch (error) {
     failure(res, error)
   }
+}
+
+// This are helper endpoints I am using for getting all Chatbots and message encryption
+export async function chatBots(req: Req, res: Response) {
+  if (!req.owner) return failure(res, 'no owner')
+  // const tenant: number = req.owner.id
+  try {
+    const chatBots = await models.ChatBot.findAll()
+    success(res, chatBots)
+  } catch (error) {
+    failure(res, error)
+  }
+}
+
+export async function encrypt(req: Req, res: Response) {
+  if (!req.owner) return failure(res, 'no owner')
+  const message = rsa.encrypt(req.owner.contactKey, req.body.message)
+  const remote_text = rsa.encrypt(
+    'MIIBCgKCAQEAuhTjCQuoy9vyJddK03eAxxpYzd9Yu6Tgtj2vp7dFvo9TubNgejqI\nqYH0c1aur30gNuCushJ7TzZFrdXLd77vJ6kVcwOQXI1xNERAG8PvBcSPjv7LZWuz\nYwdM3x7HQ+mBqmib7RjxvEyHNlmoVfrPL5R+LA7lXEJcZqGFO5IBQUK8aWhcvK9L\n5KDcJRend9HmMm6eZOVTijwXOkeB27puZJmW32daJxmabNVbct0ut8WrIjIl+B4s\nthbDZblW5zNdmC8x/5708R0+KTnSjR80/y7Y+j5E3+4w/fS9vMc2VMyDhbkc2vYt\nXD7thfQUtRL2C8BE5fIzF4F9/WWpg9hmpwIDAQAB',
+    req.body.message
+  )
+  success(res, { message, remote_text })
 }
