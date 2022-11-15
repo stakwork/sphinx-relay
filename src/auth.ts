@@ -183,11 +183,6 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
 
   // find by auth token
   if (token) {
-    if (!timestamp) {
-      res.status(401)
-      res.end('Invalid credentials - no ts')
-      return
-    }
     const hashedToken = crypto
       .createHash('sha256')
       .update(token)
@@ -218,6 +213,11 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
   }
 
   if (x_admin_token || x_transport_token) {
+    if (!timestamp) {
+      res.status(401)
+      res.end('Invalid credentials - no ts')
+      return
+    }
     if (owner.lastTimestamp) {
       // FIXME does this need to be <= ?
       if (timestamp < owner.lastTimestamp) {

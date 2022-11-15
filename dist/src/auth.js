@@ -179,11 +179,6 @@ function ownerMiddleware(req, res, next) {
         let owner;
         // find by auth token
         if (token) {
-            if (!timestamp) {
-                res.status(401);
-                res.end('Invalid credentials - no ts');
-                return;
-            }
             const hashedToken = crypto
                 .createHash('sha256')
                 .update(token)
@@ -211,6 +206,11 @@ function ownerMiddleware(req, res, next) {
             return;
         }
         if (x_admin_token || x_transport_token) {
+            if (!timestamp) {
+                res.status(401);
+                res.end('Invalid credentials - no ts');
+                return;
+            }
             if (owner.lastTimestamp) {
                 // FIXME does this need to be <= ?
                 if (timestamp < owner.lastTimestamp) {
