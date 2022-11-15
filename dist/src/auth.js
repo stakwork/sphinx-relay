@@ -236,6 +236,7 @@ function ownerMiddleware(req, res, next) {
     });
 }
 exports.ownerMiddleware = ownerMiddleware;
+// support either 10-digit timestamp (unix) or 13-digit (js-style)
 function momentFromTimestamp(ts) {
     if ((ts + '').length === 10) {
         return moment.unix(ts);
