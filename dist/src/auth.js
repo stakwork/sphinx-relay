@@ -22,6 +22,7 @@ const scopes_1 = require("./scopes");
 const hmac = require("./crypto/hmac");
 const fs = require("fs");
 const cert_1 = require("./utils/cert");
+const moment = require("moment");
 const config = (0, config_1.loadConfig)();
 /*
 "unlock": true,
@@ -213,7 +214,9 @@ function ownerMiddleware(req, res, next) {
             }
             if (owner.lastTimestamp) {
                 // FIXME does this need to be <= ?
-                if (timestamp < owner.lastTimestamp) {
+                let thisTimestamp = momentFromTimestamp(timestamp);
+                const lastTimestamp = momentFromTimestamp(owner.lastTimestamp);
+                if (thisTimestamp.isBefore(lastTimestamp)) {
                     res.status(401);
                     res.end('Invalid credentials - timestamp too soon');
                     return;
@@ -233,6 +236,14 @@ function ownerMiddleware(req, res, next) {
     });
 }
 exports.ownerMiddleware = ownerMiddleware;
+function momentFromTimestamp(ts) {
+    if ((ts + '').length === 10) {
+        return moment.unix(ts);
+    }
+    else {
+        return moment(ts);
+    }
+}
 function decryptMacaroon(password, macaroon) {
     try {
         const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);

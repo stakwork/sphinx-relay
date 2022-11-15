@@ -11,6 +11,7 @@ import * as hmac from './crypto/hmac'
 import { Req, Res } from './types'
 import * as fs from 'fs'
 import { getAndDecryptTransportToken } from './utils/cert'
+import moment = require('moment')
 
 const config = loadConfig()
 
@@ -220,7 +221,9 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
     }
     if (owner.lastTimestamp) {
       // FIXME does this need to be <= ?
-      if (timestamp < owner.lastTimestamp) {
+      let thisTimestamp = momentFromTimestamp(timestamp)
+      const lastTimestamp = momentFromTimestamp(owner.lastTimestamp)
+      if (thisTimestamp.isBefore(lastTimestamp)) {
         res.status(401)
         res.end('Invalid credentials - timestamp too soon')
         return
@@ -237,6 +240,15 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
   }
   req.owner = owner.dataValues
   next()
+}
+
+// support either 10-digit timestamp (unix) or 13-digit (js-style)
+function momentFromTimestamp(ts: number) {
+  if ((ts + '').length === 10) {
+    return moment.unix(ts)
+  } else {
+    return moment(ts)
+  }
 }
 
 function decryptMacaroon(password: string, macaroon: string) {
