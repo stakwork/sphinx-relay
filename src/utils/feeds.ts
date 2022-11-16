@@ -7,9 +7,12 @@ export function parseActionHistory(actions: ActionHistoryRecord[]) {
   actionTypes.forEach((action) => {
     parsedActions[action] = []
   })
+  console.log(actions.reverse())
   actions.reverse().forEach((action) => {
     if (action.actionType === 0) {
+      console.log(action.metaData)
       const meta_data = JSON.parse(action.metaData)
+      console.log(meta_data)
       const newMetaObject: any = {
         topics: meta_data.keywords,
         current_timestamp: meta_data.current_timestamp,
