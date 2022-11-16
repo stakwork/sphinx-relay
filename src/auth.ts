@@ -223,7 +223,7 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
       // FIXME does this need to be <= ?
       let thisTimestamp = momentFromTimestamp(timestamp)
       const lastTimestamp = momentFromTimestamp(owner.lastTimestamp)
-      if (thisTimestamp.isBefore(lastTimestamp)) {
+      if (!thisTimestamp.isAfter(lastTimestamp)) {
         res.status(401)
         res.end('Invalid credentials - timestamp too soon')
         return
