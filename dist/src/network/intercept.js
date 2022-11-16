@@ -88,12 +88,14 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                     try {
                         const msgTypes = JSON.parse(botInTribe.msgTypes);
                         if (msgTypes.includes(msgType)) {
-                            console.log('Joy');
                             const isMsgAndHasText = msgType === constants_1.default.message_types.message &&
                                 txt &&
                                 txt.startsWith(`${botInTribe.botPrefix} `);
                             const isNotMsg = msgType !== constants_1.default.message_types.message;
-                            if (isMsgAndHasText || isNotMsg) {
+                            if (isMsgAndHasText ||
+                                isNotMsg ||
+                                botInTribe.botPrefix === '/badge') {
+                                console.log('Tobi found out');
                                 didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                             }
                         }

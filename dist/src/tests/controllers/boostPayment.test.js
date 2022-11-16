@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.boostPayment = void 0;
 const ava_1 = require("ava");
 const helpers_1 = require("../utils/helpers");
-// import { deleteTribe, leaveTribe } from '../utils/del'
+const del_1 = require("../utils/del");
 const save_1 = require("../utils/save");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
@@ -44,8 +44,7 @@ function boostPayment(t, index1, index2, index3) {
         let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join2, 'node3 should join tribe');
         //NODE1 SENDS A MESSAGE IN THE TRIBE AND NODE2 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
-        // const text = randomText()
-        const text = '/bot install git';
+        const text = (0, helpers_1.randomText)();
         let tribeMessage1 = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node2, text, tribe);
         t.truthy(tribeMessage1, 'node1 should send message to tribe');
         //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
@@ -63,17 +62,17 @@ function boostPayment(t, index1, index2, index3) {
         const boost2 = yield (0, msg_1.sendBoost)(t, node2, node3, tribeMessage3, 12, tribe);
         t.true(boost2.success);
         //NODE3 SENDS A BOOST ON NODE1'S MESSAGE
-        // const boost3 = await sendBoost(t, node3, node1, tribeMessage1, 13, tribe)
-        // t.true(boost3.success)
+        const boost3 = yield (0, msg_1.sendBoost)(t, node3, node1, tribeMessage1, 13, tribe);
+        t.true(boost3.success);
         //NODE2 LEAVES TRIBE
-        // let left2 = await leaveTribe(t, node2, tribe)
-        // t.true(left2, 'node2 should leave tribe')
+        let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
+        t.true(left2, 'node2 should leave tribe');
         //NODE3 LEAVES TRIBE
-        // let left3 = await leaveTribe(t, node3, tribe)
-        // t.true(left3, 'node3 should leave tribe')
+        let left3 = yield (0, del_1.leaveTribe)(t, node3, tribe);
+        t.true(left3, 'node3 should leave tribe');
         //NODE1 DELETES TRIBE
-        // let delTribe2 = await deleteTribe(t, node1, tribe)
-        // t.true(delTribe2, 'node1 should delete tribe')
+        let delTribe2 = yield (0, del_1.deleteTribe)(t, node1, tribe);
+        t.true(delTribe2, 'node1 should delete tribe');
     });
 }
 exports.boostPayment = boostPayment;

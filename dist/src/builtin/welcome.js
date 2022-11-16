@@ -26,7 +26,6 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        console.log('Message passed through here');
         const arr = (message.content && message.content.split(' ')) || [];
         // console.log("message.type", message.type);
         const isGroupJoin = message.type === constants_1.default.message_types.group_join;
