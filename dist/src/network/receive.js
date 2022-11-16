@@ -230,9 +230,36 @@ function onReceive(payload, dest) {
                                 chatId: chat.id,
                             },
                         }));
-                        yield sender.update({
-                            totalSpent: sender.totalSpent + payload.message.amount,
-                        });
+                        if (payload.type === msgtypes.message) {
+                            const allMsg = (yield models_1.models.Message.findAll({
+                                limit: 1,
+                                order: [['createdAt', 'DESC']],
+                                where: {
+                                    chatId: chat.id,
+                                    type: { [sequelize_1.Op.ne]: msgtypes.confirmation },
+                                },
+                            }));
+                            const contact = (yield models_1.models.Contact.findOne({
+                                where: { publicKey: payload.sender.pub_key, tenant },
+                            }));
+                            if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
+                                yield sender.update({
+                                    totalSpent: sender.totalSpent + payload.message.amount,
+                                    reputation: sender.reputation + 1,
+                                });
+                            }
+                        }
+                        else if (payload.type === msgtypes.boost) {
+                            yield sender.update({
+                                totalSpent: sender.totalSpent + payload.message.amount,
+                                reputation: sender.reputation + 2,
+                            });
+                        }
+                        else {
+                            yield sender.update({
+                                totalSpent: sender.totalSpent + payload.message.amount,
+                            });
+                        }
                     }
                     catch (error) {
                         logger_1.sphinxLogger.error(`=> Could not update the totalSpent column on the ChatMember table for Leadership board record ${error}`, logger_1.logging.Network);
@@ -361,7 +388,7 @@ function uniqueifyAlias(payload, sender, chat, owner) {
 }
 function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwardToRealSatsContactId, owner, forwardedFromContactId) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('forwardMessageToTribe')
+        // console.log('forwardMessageToTribe', ogpayload.sender.person)
         const tenant = owner.id;
         const chat = (yield models_1.models.Chat.findOne({
             where: { uuid: ogpayload.chat.uuid, tenant },
@@ -382,10 +409,17 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         }
         const type = payload.type;
         const message = payload.message;
+        let personUuid = '';
+        if (payload.sender && payload.sender.person) {
+            const person_arr = payload.sender.person.split('/');
+            if (person_arr.length > 1) {
+                personUuid = person_arr[person_arr.length - 1];
+            }
+        }
         (0, send_1.sendMessage)({
             type,
             message,
-            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, person: (payload.sender && payload.sender.person) || '' }),
+            sender: Object.assign(Object.assign({}, owner.dataValues), { alias: (payload.sender && payload.sender.alias) || '', photoUrl: (payload.sender && payload.sender.photo_url) || '', role: constants_1.default.chat_roles.reader, personUuid }),
             amount: amtToForwardToRealSatsContactId || 0,
             chat: chat,
             skipPubKey: payload.sender.pub_key,

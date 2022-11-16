@@ -20,7 +20,6 @@ const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
-const people = require("../utils/people");
 const config = (0, config_1.loadConfig)();
 function sendMessage({ type, chat, message, sender, amount, success, failure, skipPubKey, isForwarded, forwardedFromContactId, realSatsContactId, }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -153,21 +152,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
             // console.log("=> realSatsContactId", realSatsContactId, contactId)
             if (isTribeOwner && amount && realSatsContactId === contactId) {
                 mqttTopic = ''; // FORCE KEYSEND!!!
-                try {
-                    const receiver = (yield models_1.models.ChatMember.findOne({
-                        where: {
-                            contactId: contactId,
-                            tenant,
-                            chatId: chat.id,
-                        },
-                    }));
-                    yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
-                        totalEarned: receiver.totalEarned + amount,
-                    }));
-                }
-                catch (error) {
-                    logger_1.sphinxLogger.error(`=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`, logger_1.logging.Network);
-                }
+                yield (0, msg_1.recordLeadershipScore)(tenant, amount, chat.id, contactId, type);
             }
             const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
             // send a "push", the user was mentioned
@@ -270,6 +255,7 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
     if (!includeStatus && message.status) {
         delete message.status;
     }
+    console.log('PERSONUUID in newmsg', sender.personUuid);
     const result = {
         type: type,
         chat: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ uuid: chat.uuid }, (chat.name && { name: chat.name })), ((chat.type || chat.type === 0) && { type: chat.type })), (chat.members && { members: chat.members })), (includeGroupKey && chat.groupKey && { groupKey: chat.groupKey })), (includeGroupKey && chat.host && { host: chat.host })),
@@ -278,12 +264,6 @@ function newmsg(type, chat, sender, message, isForwarded, includeStatus) {
             person: `${config.people_host}/${sender.personUuid}`,
         })), { alias: includeAlias ? aliasToInclude : '', role: sender.role || constants_1.default.chat_roles.reader }), (includePhotoUrl && { photo_url: photoUrlToInclude })),
     };
-    const personId = people.getPersonId();
-    if (personId) {
-        result.sender.person = config.people_host + '/' + personId;
-        logger_1.sphinxLogger.info(`[+] person host full URL  ${result.sender.person}`, logger_1.logging.Network);
-        return result;
-    }
     return result;
 }
 exports.newmsg = newmsg;

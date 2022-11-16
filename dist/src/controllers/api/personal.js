@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -19,7 +19,6 @@ const jsonUtils = require("../../utils/json");
 const res_1 = require("../../utils/res");
 const config_1 = require("../../utils/config");
 const jwt_1 = require("../../utils/jwt");
-const people_1 = require("../../utils/people");
 const config = (0, config_1.loadConfig)();
 // accessed from people.sphinx.chat website
 // U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
@@ -56,7 +55,6 @@ function createPeopleProfile(req, res) {
                 priceToMeet: priceToMeet || 0,
                 personUuid: person.uuid,
             });
-            (0, people_1.setPersonId)(person.uuid);
             (0, res_1.success)(res, person);
         }
         catch (e) {
@@ -189,4 +187,55 @@ function claimOnLiquid(req, res) {
     });
 }
 exports.claimOnLiquid = claimOnLiquid;
+function createBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        try {
+            const owner = (yield models_1.models.Contact.findOne({
+                where: { tenant, isOwner: true },
+            }));
+            const { name, icon, amount } = req.body;
+            const response = yield people.createBadge({
+                host: 'liquid.sphinx.chat',
+                icon,
+                amount,
+                name,
+                owner_pubkey: owner.publicKey,
+            });
+            return (0, res_1.success)(res, response);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.createBadge = createBadge;
+function transferBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        try {
+            const owner = (yield models_1.models.Contact.findOne({
+                where: { tenant, isOwner: true },
+            }));
+            const { amount, asset, to, memo } = req.body;
+            const response = yield people.transferBadge({
+                host: 'liquid.sphinx.chat',
+                amount,
+                memo,
+                asset,
+                to,
+                owner_pubkey: owner.publicKey,
+            });
+            return (0, res_1.success)(res, response);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.transferBadge = transferBadge;
 //# sourceMappingURL=personal.js.map
