@@ -100,7 +100,6 @@ export async function isBotMsg(
               isNotMsg ||
               botInTribe.botPrefix === '/badge'
             ) {
-              console.log('Tobi found out')
               didEmit = await emitMessageToBot(
                 msg,
                 botInTribe.dataValues,

@@ -13,6 +13,7 @@ exports.init = void 0;
 const Sphinx = require("sphinx-bot");
 // import { sphinxLogger } from '../utils/logger'
 const botapi_1 = require("../controllers/botapi");
+const models_1 = require("../models");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 function init() {
@@ -23,6 +24,18 @@ function init() {
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         console.log(message);
+        const tribe = yield models_1.models.Chat.findOne({
+            where: { uuid: message.channel.id },
+        });
+        console.log(tribe);
+        // check who the message came from
+        // check their Member table to see if it cross the amount
+        // reward the badge (by calling "/transfer" on element server)
+        // create a text message that says "X badge was awarded to ALIAS for spending!"
+        // auto-create BadgeBot in a tribe on any message (if it doesn't exist)
+        // reward data can go in "meta" column of ChatBot
+        // reward types: earned, spent, posted
+        // json array like [{badgeId: 1, rewardType: 1, amount: 100000}]
     }));
 }
 exports.init = init;

@@ -95,7 +95,6 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                             if (isMsgAndHasText ||
                                 isNotMsg ||
                                 botInTribe.botPrefix === '/badge') {
-                                console.log('Tobi found out');
                                 didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                             }
                         }
