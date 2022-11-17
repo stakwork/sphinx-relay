@@ -32,7 +32,6 @@ function getFeeds(req, res) {
                 headers: { 'Content-Type': 'application/json' },
             });
             const parsedRecommendation = yield recommendations.json();
-            console.log(parsedRecommendation);
             if (parsedRecommendation.success) {
                 (0, res_1.success)(res, parsedRecommendation.data);
             }

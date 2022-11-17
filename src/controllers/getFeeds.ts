@@ -21,7 +21,6 @@ export async function getFeeds(req: Req, res: Response) {
       headers: { 'Content-Type': 'application/json' },
     })
     const parsedRecommendation = await recommendations.json()
-    console.log(parsedRecommendation)
     if (parsedRecommendation.success) {
       success(res, parsedRecommendation.data)
     } else {

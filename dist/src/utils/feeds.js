@@ -11,14 +11,12 @@ function parseActionHistory(actions) {
     actions.reverse().forEach((action) => {
         if (action.actionType === 0) {
             const meta_data = JSON.parse(action.metaData);
-            const newMetaObject = {
-                topics: meta_data.keywords,
-                current_timestamp: meta_data.current_timestamp,
-            };
-            console.log(newMetaObject);
             parsedActions[actionTypes[action.actionType]].push({
                 type: actionTypes[action.actionType],
-                meta_data: newMetaObject,
+                meta_data: {
+                    topics: meta_data.keywords,
+                    current_timestamp: meta_data.current_timestamp,
+                },
             });
         }
         else if (action.actionType === 2) {
@@ -33,7 +31,7 @@ function parseActionHistory(actions) {
             }
             parsedActions[actionTypes[action.actionType]].push({
                 type: actionTypes[action.actionType],
-                meta_data: newMetaObject,
+                meta_data: Object.assign({}, newMetaObject),
             });
         }
         else {
