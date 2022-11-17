@@ -29,9 +29,10 @@ async function tribeTest(
 
   let join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
-  let tribes2 = await getChats(t, node1)
-  //let tribes = await getChats(t, node2)
-  console.log(tribes2)
+  let node1Tribes = await getChats(t, node1)
+  let node2Tribes = await getChats(t, node2)
+  t.true(node1Tribes[node1Tribes.length - 1].pin === 'PIN')
+  t.true(node2Tribes[node2Tribes.length - 1].pin === 'PIN')
 
   let delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')
