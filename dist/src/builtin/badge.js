@@ -14,6 +14,7 @@ const Sphinx = require("sphinx-bot");
 // import { sphinxLogger } from '../utils/logger'
 const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
+const constants_1 = require("../constants");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 function init() {
@@ -23,11 +24,35 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        console.log(message);
-        const tribe = yield models_1.models.Chat.findOne({
+        const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
+        if (isAdmin)
+            return;
+        const tribe = (yield models_1.models.Chat.findOne({
             where: { uuid: message.channel.id },
-        });
-        console.log(tribe);
+        }));
+        const bot = (yield models_1.models.ChatBot.findOne({
+            where: { botPrefix: '/badge' },
+        }));
+        const chatMember = (yield models_1.models.ChatMember.findOne({
+            where: { contactId: parseInt(message.member.id), tenant: tribe.tenant },
+        }));
+        // https://liquid.sphinx.chat/balances?pubkey=0305b986cd1a586fa89f08dd24d6c2b81d1146d8e31233ff66851aec9806af163f
+        if (typeof bot.meta === 'string') {
+            const rewards = JSON.parse(bot.meta);
+            for (let i = 0; i < rewards.length; i++) {
+                const reward = rewards[i];
+                if (reward.rewardType === constants_1.default.reward_types.earned) {
+                    if (chatMember.totalEarned === reward.amount ||
+                        chatMember.totalEarned > reward.amount) {
+                    }
+                }
+                else if (reward.rewardType === constants_1.default.reward_types.spent) {
+                    if (chatMember.totalSpent === reward.amount ||
+                        chatMember.totalSpent > reward.amount) {
+                    }
+                }
+            }
+        }
         // check who the message came from
         // check their Member table to see if it cross the amount
         // reward the badge (by calling "/transfer" on element server)

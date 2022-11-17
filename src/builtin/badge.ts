@@ -1,7 +1,14 @@
 import * as Sphinx from 'sphinx-bot'
 // import { sphinxLogger } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
-import { ChatRecord, models } from '../models'
+import { ChatBotRecord, ChatMemberRecord, ChatRecord, models } from '../models'
+import constants from '../constants'
+
+interface BadgeRewards {
+  badgeId: number
+  rewardType: number
+  amount: number
+}
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -14,11 +21,40 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    console.log(message)
+    const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
+    if (isAdmin) return
+
     const tribe = (await models.Chat.findOne({
       where: { uuid: message.channel.id },
     })) as ChatRecord
-    console.log(tribe)
+
+    const bot = (await models.ChatBot.findOne({
+      where: { botPrefix: '/badge' },
+    })) as ChatBotRecord
+    const chatMember = (await models.ChatMember.findOne({
+      where: { contactId: parseInt(message.member.id!), tenant: tribe.tenant },
+    })) as ChatMemberRecord
+
+    // https://liquid.sphinx.chat/balances?pubkey=0305b986cd1a586fa89f08dd24d6c2b81d1146d8e31233ff66851aec9806af163f
+    if (typeof bot.meta === 'string') {
+      const rewards: BadgeRewards[] = JSON.parse(bot.meta)
+      for (let i = 0; i < rewards.length; i++) {
+        const reward = rewards[i]
+        if (reward.rewardType === constants.reward_types.earned) {
+          if (
+            chatMember.totalEarned === reward.amount ||
+            chatMember.totalEarned > reward.amount
+          ) {
+          }
+        } else if (reward.rewardType === constants.reward_types.spent) {
+          if (
+            chatMember.totalSpent === reward.amount ||
+            chatMember.totalSpent > reward.amount
+          ) {
+          }
+        }
+      }
+    }
     // check who the message came from
     // check their Member table to see if it cross the amount
     // reward the badge (by calling "/transfer" on element server)

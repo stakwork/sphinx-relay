@@ -105,6 +105,11 @@ const constants = {
     podcast_clip_comment: 3,
     content_consumed: 4,
   },
+  reward_types: {
+    earned: 1,
+    spent: 2,
+    post: 3,
+  },
 }
 
 export default constants
