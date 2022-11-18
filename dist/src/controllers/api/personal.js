@@ -215,7 +215,6 @@ function createBadge(req, res) {
                     type: 2,
                 },
             });
-            console.log(tribe);
             if (!tribe)
                 return (0, res_1.failure)(res, 'invalid tribe');
             let validRewardType = false;

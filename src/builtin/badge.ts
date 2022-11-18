@@ -23,6 +23,16 @@ interface BadgeRewards {
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
+
+// check who the message came from
+// check their Member table to see if it cross the amount
+// reward the badge (by calling "/transfer" on element server)
+// create a text message that says "X badge was awarded to ALIAS for spending!"
+// auto-create BadgeBot in a tribe on any message (if it doesn't exist)
+// reward data can go in "meta" column of ChatBot
+// reward types: earned, spent, posted
+// json array like [{badgeId: 1, rewardType: 1, amount: 100000, name: Badge name}]
+
 export function init() {
   if (initted) return
   initted = true
@@ -45,7 +55,6 @@ export function init() {
       where: { contactId: parseInt(message.member.id!), tenant: tribe.tenant },
     })) as ChatMemberRecord
 
-    // https://liquid.sphinx.chat/balances?pubkey=0305b986cd1a586fa89f08dd24d6c2b81d1146d8e31233ff66851aec9806af163f
     if (typeof bot.meta === 'string') {
       const rewards: BadgeRewards[] = JSON.parse(bot.meta)
       for (let i = 0; i < rewards.length; i++) {
@@ -93,14 +102,6 @@ export function init() {
         }
       }
     }
-    // check who the message came from
-    // check their Member table to see if it cross the amount
-    // reward the badge (by calling "/transfer" on element server)
-    // create a text message that says "X badge was awarded to ALIAS for spending!"
-    // auto-create BadgeBot in a tribe on any message (if it doesn't exist)
-    // reward data can go in "meta" column of ChatBot
-    // reward types: earned, spent, posted
-    // json array like [{badgeId: 1, rewardType: 1, amount: 100000, name: Badge name}]
   })
 }
 
@@ -110,8 +111,7 @@ async function getReward(pubkey: string) {
     { method: 'GET', headers: { 'Content-Type': 'application/json' } }
   )
   const results = await res.json()
-  console.log(results)
-  return results
+  return results.balances
 }
 
 async function checkReward(

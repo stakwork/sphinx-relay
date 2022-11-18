@@ -222,7 +222,6 @@ export async function createBadge(req, res) {
         type: 2,
       },
     })
-    console.log(tribe)
     if (!tribe) return failure(res, 'invalid tribe')
     let validRewardType: boolean = false
     for (let key in constants.reward_types) {

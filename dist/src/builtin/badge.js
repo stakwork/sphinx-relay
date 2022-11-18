@@ -19,6 +19,14 @@ const node_fetch_1 = require("node-fetch");
 const people_1 = require("../utils/people");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
+// check who the message came from
+// check their Member table to see if it cross the amount
+// reward the badge (by calling "/transfer" on element server)
+// create a text message that says "X badge was awarded to ALIAS for spending!"
+// auto-create BadgeBot in a tribe on any message (if it doesn't exist)
+// reward data can go in "meta" column of ChatBot
+// reward types: earned, spent, posted
+// json array like [{badgeId: 1, rewardType: 1, amount: 100000, name: Badge name}]
 function init() {
     if (initted)
         return;
@@ -38,7 +46,6 @@ function init() {
         const chatMember = (yield models_1.models.ChatMember.findOne({
             where: { contactId: parseInt(message.member.id), tenant: tribe.tenant },
         }));
-        // https://liquid.sphinx.chat/balances?pubkey=0305b986cd1a586fa89f08dd24d6c2b81d1146d8e31233ff66851aec9806af163f
         if (typeof bot.meta === 'string') {
             const rewards = JSON.parse(bot.meta);
             for (let i = 0; i < rewards.length; i++) {
@@ -77,14 +84,6 @@ function init() {
                 }
             }
         }
-        // check who the message came from
-        // check their Member table to see if it cross the amount
-        // reward the badge (by calling "/transfer" on element server)
-        // create a text message that says "X badge was awarded to ALIAS for spending!"
-        // auto-create BadgeBot in a tribe on any message (if it doesn't exist)
-        // reward data can go in "meta" column of ChatBot
-        // reward types: earned, spent, posted
-        // json array like [{badgeId: 1, rewardType: 1, amount: 100000, name: Badge name}]
     }));
 }
 exports.init = init;
@@ -92,8 +91,7 @@ function getReward(pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = yield (0, node_fetch_1.default)(`https://liquid.sphinx.chat/balances?pubkey=${pubkey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
         const results = yield res.json();
-        console.log(results);
-        return results;
+        return results.balances;
     });
 }
 function checkReward(contactId, rewardId, tenant) {
