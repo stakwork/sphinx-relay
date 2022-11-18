@@ -19,6 +19,8 @@ const jsonUtils = require("../../utils/json");
 const res_1 = require("../../utils/res");
 const config_1 = require("../../utils/config");
 const jwt_1 = require("../../utils/jwt");
+const badge_1 = require("../../builtin/badge");
+const constants_1 = require("../../constants");
 const config = (0, config_1.loadConfig)();
 // accessed from people.sphinx.chat website
 // U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
@@ -196,7 +198,34 @@ function createBadge(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { name, icon, amount } = req.body;
+            const { name, icon, amount, chat_id, claim_amount, reward_type } = req.body;
+            if (typeof name !== 'string' ||
+                typeof icon !== 'string' ||
+                typeof amount !== 'number' ||
+                typeof chat_id !== 'number' ||
+                typeof claim_amount !== 'number' ||
+                typeof reward_type !== 'number')
+                return (0, res_1.failure)(res, 'invalid data passed');
+            const tribe = yield models_1.models.Chat.findOne({
+                where: {
+                    id: chat_id,
+                    ownerPubkey: owner.publicKey,
+                    tenant,
+                    deleted: false,
+                    type: 2,
+                },
+            });
+            console.log(tribe);
+            if (!tribe)
+                return (0, res_1.failure)(res, 'invalid tribe');
+            let validRewardType = false;
+            for (let key in constants_1.default.reward_types) {
+                if (constants_1.default.reward_types[key] === reward_type) {
+                    validRewardType = true;
+                }
+            }
+            if (!validRewardType)
+                return (0, res_1.failure)(res, 'invalid reward type');
             const response = yield people.createBadge({
                 host: 'liquid.sphinx.chat',
                 icon,
@@ -204,6 +233,7 @@ function createBadge(req, res) {
                 name,
                 owner_pubkey: owner.publicKey,
             });
+            yield (0, badge_1.createOrEditBadgeBot)(chat_id, tenant, response, claim_amount, reward_type);
             return (0, res_1.success)(res, response);
         }
         catch (error) {

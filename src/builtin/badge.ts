@@ -1,5 +1,5 @@
 import * as Sphinx from 'sphinx-bot'
-// import { sphinxLogger } from '../utils/logger'
+import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import {
   ChatBotRecord,
@@ -11,6 +11,7 @@ import {
 import constants from '../constants'
 import fetch from 'node-fetch'
 import { transferBadge } from '../utils/people'
+import { Badge } from '../types'
 
 interface BadgeRewards {
   badgeId: number
@@ -129,4 +130,68 @@ async function checkReward(
     }
   }
   return { pubkey: contact.publicKey, status: false }
+}
+
+export async function createOrEditBadgeBot(
+  chatId: number,
+  tenant: number,
+  badge: Badge,
+  amount: number,
+  rewardType: number
+): Promise<boolean> {
+  try {
+    const botExist = (await models.ChatBot.findOne({
+      where: { botPrefix: '/badge', chatId },
+    })) as ChatBotRecord
+
+    if (botExist) {
+      let meta: string = ''
+      if (typeof botExist.meta === 'string') {
+        let temMeta: BadgeRewards[] = JSON.parse(botExist.meta)
+        if (Array.isArray(temMeta)) {
+          temMeta.push({
+            name: badge.name,
+            amount,
+            badgeId: badge.id,
+            rewardType: rewardType,
+          })
+          meta = JSON.stringify(temMeta)
+        }
+      } else {
+        let temMeta: BadgeRewards[] = []
+        temMeta.push({
+          name: badge.name,
+          amount,
+          badgeId: badge.id,
+          rewardType: rewardType,
+        })
+        meta = JSON.stringify(temMeta)
+      }
+      await botExist.update({ meta })
+      return true
+    } else {
+      let temMeta: BadgeRewards[] = []
+      temMeta.push({
+        name: badge.name,
+        amount,
+        badgeId: badge.id,
+        rewardType: rewardType,
+      })
+
+      const chatBot: { [k: string]: any } = {
+        chatId,
+        botPrefix: '/badge',
+        botType: constants.bot_types.builtin,
+        msgTypes: JSON.stringify([0]),
+        pricePerUse: 0,
+        tenant,
+        meta: JSON.stringify(temMeta),
+      }
+      await models.ChatBot.create(chatBot)
+      return true
+    }
+  } catch (error) {
+    sphinxLogger.error(`BADGE BOT ERROR ${error}`, logging.Bots)
+    return false
+  }
 }

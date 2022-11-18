@@ -9,9 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.init = void 0;
+exports.createOrEditBadgeBot = exports.init = void 0;
 const Sphinx = require("sphinx-bot");
-// import { sphinxLogger } from '../utils/logger'
+const logger_1 = require("../utils/logger");
 const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
@@ -111,4 +111,65 @@ function checkReward(contactId, rewardId, tenant) {
         return { pubkey: contact.publicKey, status: false };
     });
 }
+function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const botExist = (yield models_1.models.ChatBot.findOne({
+                where: { botPrefix: '/badge', chatId },
+            }));
+            if (botExist) {
+                let meta = '';
+                if (typeof botExist.meta === 'string') {
+                    let temMeta = JSON.parse(botExist.meta);
+                    if (Array.isArray(temMeta)) {
+                        temMeta.push({
+                            name: badge.name,
+                            amount,
+                            badgeId: badge.id,
+                            rewardType: rewardType,
+                        });
+                        meta = JSON.stringify(temMeta);
+                    }
+                }
+                else {
+                    let temMeta = [];
+                    temMeta.push({
+                        name: badge.name,
+                        amount,
+                        badgeId: badge.id,
+                        rewardType: rewardType,
+                    });
+                    meta = JSON.stringify(temMeta);
+                }
+                yield botExist.update({ meta });
+                return true;
+            }
+            else {
+                let temMeta = [];
+                temMeta.push({
+                    name: badge.name,
+                    amount,
+                    badgeId: badge.id,
+                    rewardType: rewardType,
+                });
+                const chatBot = {
+                    chatId,
+                    botPrefix: '/badge',
+                    botType: constants_1.default.bot_types.builtin,
+                    msgTypes: JSON.stringify([0]),
+                    pricePerUse: 0,
+                    tenant,
+                    meta: JSON.stringify(temMeta),
+                };
+                yield models_1.models.ChatBot.create(chatBot);
+                return true;
+            }
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`BADGE BOT ERROR ${error}`, logger_1.logging.Bots);
+            return false;
+        }
+    });
+}
+exports.createOrEditBadgeBot = createOrEditBadgeBot;
 //# sourceMappingURL=badge.js.map
