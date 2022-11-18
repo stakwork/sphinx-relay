@@ -17,10 +17,11 @@ const config_1 = require("../config");
 const nodes_1 = require("../nodes");
 const helpers_2 = require("../utils/helpers");
 const msg_1 = require("../utils/msg");
+const del_1 = require("../utils/del");
 ava_1.default.serial('personProfile: Sphinx Person Profile', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield personProfile(t, nodes_1.default[0], nodes_1.default[1]);
+    yield personProfile(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);
 }));
-function personProfile(t, node1, node2) {
+function personProfile(t, node1, node2, node3) {
     return __awaiter(this, void 0, void 0, function* () {
         const internalTribeHost = node1.ip.includes('host.docker.internal')
             ? config_1.config.tribeHost
@@ -69,6 +70,11 @@ function personProfile(t, node1, node2) {
             tribe.owner_route_hint = node2.routeHint;
         let join = yield (0, save_1.joinTribe)(t, node1, tribe);
         t.true(join, 'node1 should join tribe');
+        //NODE2 JOINS TRIBE CREATED BY NODE2
+        if (node2.routeHint)
+            tribe.owner_route_hint = node2.routeHint;
+        let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
+        t.true(join2, 'node1 should join tribe');
         //NODE1 SENDS A TEXT MESSAGE IN TRIBE
         const text = (0, helpers_2.randomText)();
         let tribeMessage = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node2, text, tribe);
@@ -76,7 +82,30 @@ function personProfile(t, node1, node2) {
         // Get All message that belongs to Node 2
         const allMessages = yield (0, msg_1.getAllMessages)(node2);
         const newMessage = (0, msg_1.getSpecificMsg)(allMessages, tribeMessage.uuid);
-        t.true((newMessage === null || newMessage === void 0 ? void 0 : newMessage.person) === `${config_1.config.tribeHost}/${postProfile.response.uuid}`, 'Tribe message person value should be equal to tribe host and person profile from tribe server');
+        const personUuid = newMessage === null || newMessage === void 0 ? void 0 : newMessage.person.split('/');
+        if (personUuid) {
+            const uuid = personUuid[personUuid.length - 1];
+            t.true(uuid === postProfile.response.uuid, 'Tribe message person value should be equal to person uuid the user who sent the tribe message');
+        }
+        // Get All message that belongs to Node 3
+        const node3Messages = yield (0, msg_1.getAllMessages)(node3);
+        const node1TribeMsg = (0, msg_1.getSpecificMsg)(node3Messages, tribeMessage.uuid);
+        // console.log(node1TribeMsg)
+        const msgSenderUuid = node1TribeMsg === null || node1TribeMsg === void 0 ? void 0 : node1TribeMsg.person.split('/');
+        if (msgSenderUuid) {
+            const uuid = msgSenderUuid[msgSenderUuid.length - 1];
+            t.true(uuid === postProfile.response.uuid, 'Tribe message person value should be equal to person uuid the user who sent the tribe message');
+        }
+        //NODE1 LEAVES TRIBE
+        let left2 = yield (0, del_1.leaveTribe)(t, node1, tribe);
+        t.true(left2, 'node2 should leave tribe');
+        //NODE3 LEAVES TRIBE
+        let left3 = yield (0, del_1.leaveTribe)(t, node3, tribe);
+        t.true(left3, 'node3 should leave tribe');
+        yield (0, helpers_1.sleep)(1000);
+        //NODE2 DELETES TRIBE
+        let delTribe2 = yield (0, del_1.deleteTribe)(t, node2, tribe);
+        t.true(delTribe2, 'node1 should delete tribe');
     });
 }
 //# sourceMappingURL=personProfile.test.js.map

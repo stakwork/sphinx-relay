@@ -35,6 +35,9 @@ export default class ChatMember extends Model<ChatMember> {
 
   @Column
   totalEarned: number
+
+  @Column
+  reputation: number
 }
 
 export interface ChatMemberRecord extends ChatMember {
