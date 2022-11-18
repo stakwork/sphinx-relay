@@ -15,6 +15,8 @@ const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
+const node_fetch_1 = require("node-fetch");
+const people_1 = require("../utils/people");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 function init() {
@@ -41,14 +43,36 @@ function init() {
             const rewards = JSON.parse(bot.meta);
             for (let i = 0; i < rewards.length; i++) {
                 const reward = rewards[i];
+                let doReward = false;
                 if (reward.rewardType === constants_1.default.reward_types.earned) {
                     if (chatMember.totalEarned === reward.amount ||
                         chatMember.totalEarned > reward.amount) {
+                        doReward = true;
                     }
                 }
                 else if (reward.rewardType === constants_1.default.reward_types.spent) {
                     if (chatMember.totalSpent === reward.amount ||
                         chatMember.totalSpent > reward.amount) {
+                        doReward = true;
+                    }
+                }
+                if (doReward) {
+                    const hasReward = yield checkReward(parseInt(message.member.id), reward.badgeId, tribe.tenant);
+                    if (!hasReward.status) {
+                        const badge = yield (0, people_1.transferBadge)({
+                            to: hasReward.pubkey,
+                            asset: reward.badgeId,
+                            amount: 1,
+                            memo: '',
+                            owner_pubkey: tribe.ownerPubkey,
+                            host: 'liquid.sphinx.chat',
+                        });
+                        if (badge.tx) {
+                            const resEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('BagdeBot')
+                                .setDescription(`${message.member.nickname} just earned the ${reward.name} badge`);
+                            message.channel.send({ embed: resEmbed });
+                        }
                     }
                 }
             }
@@ -60,8 +84,31 @@ function init() {
         // auto-create BadgeBot in a tribe on any message (if it doesn't exist)
         // reward data can go in "meta" column of ChatBot
         // reward types: earned, spent, posted
-        // json array like [{badgeId: 1, rewardType: 1, amount: 100000}]
+        // json array like [{badgeId: 1, rewardType: 1, amount: 100000, name: Badge name}]
     }));
 }
 exports.init = init;
+function getReward(pubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const res = yield (0, node_fetch_1.default)(`https://liquid.sphinx.chat/balances?pubkey=${pubkey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const results = yield res.json();
+        console.log(results);
+        return results;
+    });
+}
+function checkReward(contactId, rewardId, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const contact = (yield models_1.models.Contact.findOne({
+            where: { tenant, id: contactId },
+        }));
+        const rewards = yield getReward(contact.publicKey);
+        for (let i = 0; i < rewards.length; i++) {
+            const reward = rewards[i];
+            if (reward.asset_id === rewardId) {
+                return { status: true };
+            }
+        }
+        return { pubkey: contact.publicKey, status: false };
+    });
+}
 //# sourceMappingURL=badge.js.map

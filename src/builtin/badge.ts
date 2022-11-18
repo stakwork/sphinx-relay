@@ -1,13 +1,22 @@
 import * as Sphinx from 'sphinx-bot'
 // import { sphinxLogger } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
-import { ChatBotRecord, ChatMemberRecord, ChatRecord, models } from '../models'
+import {
+  ChatBotRecord,
+  ChatMemberRecord,
+  ChatRecord,
+  ContactRecord,
+  models,
+} from '../models'
 import constants from '../constants'
+import fetch from 'node-fetch'
+import { transferBadge } from '../utils/people'
 
 interface BadgeRewards {
   badgeId: number
   rewardType: number
   amount: number
+  name: string
 }
 
 const msg_types = Sphinx.MSG_TYPE
@@ -40,17 +49,45 @@ export function init() {
       const rewards: BadgeRewards[] = JSON.parse(bot.meta)
       for (let i = 0; i < rewards.length; i++) {
         const reward = rewards[i]
+        let doReward = false
         if (reward.rewardType === constants.reward_types.earned) {
           if (
             chatMember.totalEarned === reward.amount ||
             chatMember.totalEarned > reward.amount
           ) {
+            doReward = true
           }
         } else if (reward.rewardType === constants.reward_types.spent) {
           if (
             chatMember.totalSpent === reward.amount ||
             chatMember.totalSpent > reward.amount
           ) {
+            doReward = true
+          }
+        }
+        if (doReward) {
+          const hasReward = await checkReward(
+            parseInt(message.member.id!),
+            reward.badgeId,
+            tribe.tenant
+          )
+          if (!hasReward.status) {
+            const badge = await transferBadge({
+              to: hasReward.pubkey,
+              asset: reward.badgeId,
+              amount: 1,
+              memo: '',
+              owner_pubkey: tribe.ownerPubkey,
+              host: 'liquid.sphinx.chat',
+            })
+            if (badge.tx) {
+              const resEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('BagdeBot')
+                .setDescription(
+                  `${message.member.nickname} just earned the ${reward.name} badge`
+                )
+              message.channel.send({ embed: resEmbed })
+            }
           }
         }
       }
@@ -62,6 +99,34 @@ export function init() {
     // auto-create BadgeBot in a tribe on any message (if it doesn't exist)
     // reward data can go in "meta" column of ChatBot
     // reward types: earned, spent, posted
-    // json array like [{badgeId: 1, rewardType: 1, amount: 100000}]
+    // json array like [{badgeId: 1, rewardType: 1, amount: 100000, name: Badge name}]
   })
+}
+
+async function getReward(pubkey: string) {
+  const res = await fetch(
+    `https://liquid.sphinx.chat/balances?pubkey=${pubkey}`,
+    { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+  )
+  const results = await res.json()
+  console.log(results)
+  return results
+}
+
+async function checkReward(
+  contactId: number,
+  rewardId: number,
+  tenant: number
+): Promise<{ pubkey?: string; status: boolean }> {
+  const contact = (await models.Contact.findOne({
+    where: { tenant, id: contactId },
+  })) as ContactRecord
+  const rewards = await getReward(contact.publicKey)
+  for (let i = 0; i < rewards.length; i++) {
+    const reward = rewards[i]
+    if (reward.asset_id === rewardId) {
+      return { status: true }
+    }
+  }
+  return { pubkey: contact.publicKey, status: false }
 }
