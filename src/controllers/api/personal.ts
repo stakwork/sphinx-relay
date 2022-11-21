@@ -244,6 +244,6 @@ export async function getPersonData(req: Req, res: Response) {
   return success(res, {
     alias: owner.alias,
     photoUrl: owner.photoUrl,
-    public_key: owner.publicKey,
+    publicKey: owner.publicKey,
   })
 }

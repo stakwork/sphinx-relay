@@ -247,7 +247,7 @@ function getPersonData(req, res) {
         return (0, res_1.success)(res, {
             alias: owner.alias,
             photoUrl: owner.photoUrl,
-            public_key: owner.publicKey,
+            publicKey: owner.publicKey,
         });
     });
 }
