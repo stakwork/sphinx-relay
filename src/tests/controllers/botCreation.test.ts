@@ -35,6 +35,7 @@ async function botCreation(t, node1, node2, node3) {
   //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
   const text = '/bot help'
   await sendTribeMessage(t, node1, tribe, text)
+  await sleep(1000)
 
   //NODE1 AWAIT REPLY FROM BOT
   let botAlias = 'MotherBot'
@@ -47,6 +48,7 @@ async function botCreation(t, node1, node2, node3) {
   //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
   const text2 = '/bot install welcome'
   await sendTribeMessage(t, node1, tribe, text2)
+  await sleep(1000)
 
   //NODE1 AWAIT REPLY FROM BOT
   botAlias = 'MotherBot'
@@ -61,6 +63,7 @@ async function botCreation(t, node1, node2, node3) {
   const newWelcomeMessage = "You're in my test tribe now"
   const text3 = setMessage + newWelcomeMessage
   await sendTribeMessage(t, node1, tribe, text3)
+  await sleep(1000)
 
   //NODE1 AWAIT REPLY FROM BOT
   botAlias = 'WelcomeBot'

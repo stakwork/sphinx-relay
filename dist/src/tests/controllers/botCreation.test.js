@@ -40,6 +40,7 @@ function botCreation(t, node1, node2, node3) {
         //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
         const text = '/bot help';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
+        yield (0, helpers_1.sleep)(1000);
         //NODE1 AWAIT REPLY FROM BOT
         let botAlias = 'MotherBot';
         console.log('about to check 1 bot msg');
@@ -50,6 +51,7 @@ function botCreation(t, node1, node2, node3) {
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
         const text2 = '/bot install welcome';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
+        yield (0, helpers_1.sleep)(1000);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'MotherBot';
         console.log('about to check 2 bot msg');
@@ -62,6 +64,7 @@ function botCreation(t, node1, node2, node3) {
         const newWelcomeMessage = "You're in my test tribe now";
         const text3 = setMessage + newWelcomeMessage;
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text3);
+        yield (0, helpers_1.sleep)(1000);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'WelcomeBot';
         console.log('about to check 3 bot msg');

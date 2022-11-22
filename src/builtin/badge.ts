@@ -55,7 +55,7 @@ export function init() {
       where: { contactId: parseInt(message.member.id!), tenant: tribe.tenant },
     })) as ChatMemberRecord
 
-    if (typeof bot.meta === 'string') {
+    if (bot && typeof bot.meta === 'string') {
       const rewards: BadgeRewards[] = JSON.parse(bot.meta)
       for (let i = 0; i < rewards.length; i++) {
         const reward = rewards[i]

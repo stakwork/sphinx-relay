@@ -46,7 +46,7 @@ function init() {
         const chatMember = (yield models_1.models.ChatMember.findOne({
             where: { contactId: parseInt(message.member.id), tenant: tribe.tenant },
         }));
-        if (typeof bot.meta === 'string') {
+        if (bot && typeof bot.meta === 'string') {
             const rewards = JSON.parse(bot.meta);
             for (let i = 0; i < rewards.length; i++) {
                 const reward = rewards[i];
