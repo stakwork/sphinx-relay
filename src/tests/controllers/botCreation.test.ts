@@ -36,8 +36,10 @@ async function botCreation(t, node1, node2, node3) {
   await sendTribeMessage(t, node1, tribe, text)
 
   //NODE1 AWAIT REPLY FROM BOT
-  var botAlias = 'MotherBot'
+  let botAlias = 'MotherBot'
+  console.log('about to check 1 bot msg')
   const botReply = await getCheckBotMsg(t, node1, botAlias)
+  console.log('checked 1 bot msg')
   t.truthy(botReply, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply))
 
@@ -47,7 +49,9 @@ async function botCreation(t, node1, node2, node3) {
 
   //NODE1 AWAIT REPLY FROM BOT
   botAlias = 'MotherBot'
+  console.log('about to check 2 bot msg')
   const botReply2 = await getCheckBotMsg(t, node1, botAlias)
+  console.log('checked 2 bot msg')
   t.truthy(botReply2, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply2))
 
@@ -59,7 +63,9 @@ async function botCreation(t, node1, node2, node3) {
 
   //NODE1 AWAIT REPLY FROM BOT
   botAlias = 'WelcomeBot'
+  console.log('about to check 3 bot msg')
   const botReply3 = await getCheckBotMsg(t, node1, botAlias)
+  console.log('checked 3 bot msg')
   t.truthy(botReply3, 'WelcomeBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply3))
 
@@ -70,7 +76,9 @@ async function botCreation(t, node1, node2, node3) {
 
   //NODE3 AWAIT REPLY FROM BOT
   botAlias = 'WelcomeBot'
+  console.log('about to check 4 bot msg')
   const botReply4 = await getCheckBotMsg(t, node3, botAlias)
+  console.log('checked 4 bot msg')
   t.truthy(botReply4, 'WelcomeBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply3))
 

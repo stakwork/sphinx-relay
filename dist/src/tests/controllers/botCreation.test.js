@@ -40,8 +40,10 @@ function botCreation(t, node1, node2, node3) {
         const text = '/bot help';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
         //NODE1 AWAIT REPLY FROM BOT
-        var botAlias = 'MotherBot';
+        let botAlias = 'MotherBot';
+        console.log('about to check 1 bot msg');
         const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        console.log('checked 1 bot msg');
         t.truthy(botReply, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply))
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
@@ -49,7 +51,9 @@ function botCreation(t, node1, node2, node3) {
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'MotherBot';
+        console.log('about to check 2 bot msg');
         const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        console.log('checked 2 bot msg');
         t.truthy(botReply2, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply2))
         //NODE1 SENDS A BOT SET WELCOME MESSAGE IN TRIBE
@@ -59,7 +63,9 @@ function botCreation(t, node1, node2, node3) {
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text3);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'WelcomeBot';
+        console.log('about to check 3 bot msg');
         const botReply3 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        console.log('checked 3 bot msg');
         t.truthy(botReply3, 'WelcomeBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply3))
         //NODE3 JOINS TRIBE CREATED BY NODE1
@@ -69,7 +75,9 @@ function botCreation(t, node1, node2, node3) {
         t.true(join2, 'node3 should join tribe');
         //NODE3 AWAIT REPLY FROM BOT
         botAlias = 'WelcomeBot';
+        console.log('about to check 4 bot msg');
         const botReply4 = yield (0, get_1.getCheckBotMsg)(t, node3, botAlias);
+        console.log('checked 4 bot msg');
         t.truthy(botReply4, 'WelcomeBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply3))
         //CHECK THAT BOT'S DECRYPTED MESSAGE IS SAME AS INPUT
