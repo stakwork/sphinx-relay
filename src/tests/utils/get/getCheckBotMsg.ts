@@ -25,7 +25,7 @@ export function getCheckBotMsg(t, node, botAlias) {
           }
         }
       }
-      if (i > 20) {
+      if (i > 10) {
         clearInterval(interval)
         reject(['failed to getCheckBotMsgs'])
       }
