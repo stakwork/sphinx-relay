@@ -5,7 +5,7 @@ import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
-import { sleep } from '../../helpers'
+import { sleep } from '../utils/helpers'
 
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
