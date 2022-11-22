@@ -16,7 +16,6 @@ const save_1 = require("../utils/save");
 const get_1 = require("../utils/get");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
-const helpers_1 = require("../utils/helpers");
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
 /*
@@ -40,23 +39,17 @@ function botCreation(t, node1, node2, node3) {
         //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
         const text = '/bot help';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
-        yield (0, helpers_1.sleep)(1000);
         //NODE1 AWAIT REPLY FROM BOT
         let botAlias = 'MotherBot';
-        console.log('about to check 1 bot msg');
         const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
-        console.log('checked 1 bot msg');
         t.truthy(botReply, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply))
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
         const text2 = '/bot install welcome';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
-        yield (0, helpers_1.sleep)(1000);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'MotherBot';
-        console.log('about to check 2 bot msg');
         const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
-        console.log('checked 2 bot msg');
         t.truthy(botReply2, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply2))
         //NODE1 SENDS A BOT SET WELCOME MESSAGE IN TRIBE
@@ -64,12 +57,9 @@ function botCreation(t, node1, node2, node3) {
         const newWelcomeMessage = "You're in my test tribe now";
         const text3 = setMessage + newWelcomeMessage;
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text3);
-        yield (0, helpers_1.sleep)(1000);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'WelcomeBot';
-        console.log('about to check 3 bot msg');
         const botReply3 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
-        console.log('checked 3 bot msg');
         t.truthy(botReply3, 'WelcomeBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply3))
         //NODE3 JOINS TRIBE CREATED BY NODE1
@@ -78,11 +68,8 @@ function botCreation(t, node1, node2, node3) {
         let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join2, 'node3 should join tribe');
         //NODE3 AWAIT REPLY FROM BOT
-        yield (0, helpers_1.sleep)(1000);
         botAlias = 'WelcomeBot';
-        console.log('about to check 4 bot msg');
         const botReply4 = yield (0, get_1.getCheckBotMsg)(t, node3, botAlias);
-        console.log('checked 4 bot msg');
         t.truthy(botReply4, 'WelcomeBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply3))
         //CHECK THAT BOT'S DECRYPTED MESSAGE IS SAME AS INPUT

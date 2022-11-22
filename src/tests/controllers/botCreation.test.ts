@@ -5,7 +5,6 @@ import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
-import { sleep } from '../utils/helpers'
 
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
@@ -35,26 +34,20 @@ async function botCreation(t, node1, node2, node3) {
   //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
   const text = '/bot help'
   await sendTribeMessage(t, node1, tribe, text)
-  await sleep(1000)
 
   //NODE1 AWAIT REPLY FROM BOT
   let botAlias = 'MotherBot'
-  console.log('about to check 1 bot msg')
   const botReply = await getCheckBotMsg(t, node1, botAlias)
-  console.log('checked 1 bot msg')
   t.truthy(botReply, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply))
 
   //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
   const text2 = '/bot install welcome'
   await sendTribeMessage(t, node1, tribe, text2)
-  await sleep(1000)
 
   //NODE1 AWAIT REPLY FROM BOT
   botAlias = 'MotherBot'
-  console.log('about to check 2 bot msg')
   const botReply2 = await getCheckBotMsg(t, node1, botAlias)
-  console.log('checked 2 bot msg')
   t.truthy(botReply2, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply2))
 
@@ -63,13 +56,10 @@ async function botCreation(t, node1, node2, node3) {
   const newWelcomeMessage = "You're in my test tribe now"
   const text3 = setMessage + newWelcomeMessage
   await sendTribeMessage(t, node1, tribe, text3)
-  await sleep(1000)
 
   //NODE1 AWAIT REPLY FROM BOT
   botAlias = 'WelcomeBot'
-  console.log('about to check 3 bot msg')
   const botReply3 = await getCheckBotMsg(t, node1, botAlias)
-  console.log('checked 3 bot msg')
   t.truthy(botReply3, 'WelcomeBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply3))
 
@@ -79,11 +69,8 @@ async function botCreation(t, node1, node2, node3) {
   t.true(join2, 'node3 should join tribe')
 
   //NODE3 AWAIT REPLY FROM BOT
-  await sleep(1000)
   botAlias = 'WelcomeBot'
-  console.log('about to check 4 bot msg')
   const botReply4 = await getCheckBotMsg(t, node3, botAlias)
-  console.log('checked 4 bot msg')
   t.truthy(botReply4, 'WelcomeBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply3))
 
