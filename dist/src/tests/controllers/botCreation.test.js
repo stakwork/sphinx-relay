@@ -16,6 +16,7 @@ const save_1 = require("../utils/save");
 const get_1 = require("../utils/get");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
+const helpers_1 = require("../../helpers");
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
 /*
@@ -74,6 +75,7 @@ function botCreation(t, node1, node2, node3) {
         let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join2, 'node3 should join tribe');
         //NODE3 AWAIT REPLY FROM BOT
+        yield (0, helpers_1.sleep)(1000);
         botAlias = 'WelcomeBot';
         console.log('about to check 4 bot msg');
         const botReply4 = yield (0, get_1.getCheckBotMsg)(t, node3, botAlias);

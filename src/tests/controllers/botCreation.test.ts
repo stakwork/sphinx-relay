@@ -5,6 +5,7 @@ import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
+import { sleep } from '../../helpers'
 
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
@@ -75,6 +76,7 @@ async function botCreation(t, node1, node2, node3) {
   t.true(join2, 'node3 should join tribe')
 
   //NODE3 AWAIT REPLY FROM BOT
+  await sleep(1000)
   botAlias = 'WelcomeBot'
   console.log('about to check 4 bot msg')
   const botReply4 = await getCheckBotMsg(t, node3, botAlias)
