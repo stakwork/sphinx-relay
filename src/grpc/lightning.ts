@@ -300,7 +300,7 @@ export function keysend(
       }
       const options: interfaces.KeysendRequest = {
         amt: Math.max(opts.amt, constants.min_sat_amount || 3),
-        final_cltv_delta: 10,
+        final_cltv_delta: 40,
         dest: ByteBuffer.fromHex(opts.dest),
         dest_custom_records,
         payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
