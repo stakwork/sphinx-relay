@@ -220,7 +220,7 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
       return
     }
     if (owner.lastTimestamp) {
-      console.log('=> received timestamp', timestamp)
+      // console.log('=> received timestamp', timestamp)
       let thisTimestamp = momentFromTimestamp(timestamp)
       const lastTimestamp = momentFromTimestamp(owner.lastTimestamp)
       if (thisTimestamp.isBefore(lastTimestamp)) {
