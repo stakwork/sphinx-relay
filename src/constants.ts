@@ -1,5 +1,6 @@
 const constants = {
   min_sat_amount: 3,
+  final_cltv_delta: 40,
   invite_statuses: {
     pending: 0,
     ready: 1,
