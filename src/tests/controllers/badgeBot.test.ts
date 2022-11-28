@@ -6,7 +6,11 @@ import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import { createBadge } from '../utils/bots'
 import { randomText } from '../utils/helpers'
-import { sendTribeMessageAndCheckDecryption, sendBoost } from '../utils/msg'
+import {
+  sendTribeMessageAndCheckDecryption,
+  // sendBoost,
+  sendTribeDirectPayment,
+} from '../utils/msg'
 
 /*
 npx ava src/tests/controllers/badgeBot.test.ts --verbose --serial --timeout=2m
@@ -72,8 +76,18 @@ export async function badgeBotTest(t, index1, index2, index3) {
   t.truthy(tribeMessage1, 'node2 should send message to tribe')
 
   //NODE3 SENDS A BOOST ON NODE2'S MESSAGE
-  const boost3 = await sendBoost(t, node3, node2, tribeMessage1, 13, tribe)
-  t.true(boost3.success)
+  // const boost3 = await sendBoost(t, node3, node2, tribeMessage1, 15, tribe)
+  // t.true(boost3.success)
+
+  const payment = await sendTribeDirectPayment(
+    t,
+    node3,
+    node2,
+    tribeMessage1,
+    15,
+    tribe
+  )
+  t.true(payment.success)
 
   //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   //   const text4 = randomText()
