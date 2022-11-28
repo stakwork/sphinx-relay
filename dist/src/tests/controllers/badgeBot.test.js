@@ -67,8 +67,10 @@ function badgeBotTest(t, index1, index2, index3) {
         let tribeMessage1 = yield (0, msg_2.sendTribeMessageAndCheckDecryption)(t, node2, node3, text3, tribe);
         t.truthy(tribeMessage1, 'node2 should send message to tribe');
         //NODE3 SENDS A BOOST ON NODE2'S MESSAGE
-        const boost3 = yield (0, msg_2.sendBoost)(t, node3, node2, tribeMessage1, 15, tribe);
-        t.true(boost3.success);
+        // const boost3 = await sendBoost(t, node3, node2, tribeMessage1, 15, tribe)
+        // t.true(boost3.success)
+        const payment = yield (0, msg_2.sendTribeDirectPayment)(t, node3, node2, tribeMessage1, 15, tribe);
+        t.true(payment.success);
         //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
         //   const text4 = randomText()
         //   let tribeMessage2 = await sendTribeMessageAndCheckDecryption(

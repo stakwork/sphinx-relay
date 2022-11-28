@@ -65,6 +65,19 @@ function init() {
             }));
             chatMembers.push(tribeMember);
         }
+        if (message.type === constants_1.default.message_types.direct_payment) {
+            const ogMsg = (yield models_1.models.Message.findOne({
+                where: { uuid: message.id },
+            }));
+            const tribeMember = (yield models_1.models.ChatMember.findOne({
+                where: {
+                    lastAlias: ogMsg.recipientAlias,
+                    tenant: ogMsg.tenant,
+                    chatId: ogMsg.chatId,
+                },
+            }));
+            chatMembers.push(tribeMember);
+        }
         if (bot && typeof bot.meta === 'string') {
             for (let j = 0; j < chatMembers.length; j++) {
                 const chatMember = chatMembers[j];

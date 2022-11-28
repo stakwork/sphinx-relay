@@ -78,6 +78,20 @@ export function init() {
       chatMembers.push(tribeMember)
     }
 
+    if (message.type === constants.message_types.direct_payment) {
+      const ogMsg = (await models.Message.findOne({
+        where: { uuid: message.id! },
+      })) as MessageRecord
+      const tribeMember = (await models.ChatMember.findOne({
+        where: {
+          lastAlias: ogMsg.recipientAlias,
+          tenant: ogMsg.tenant,
+          chatId: ogMsg.chatId,
+        },
+      })) as ChatMemberRecord
+      chatMembers.push(tribeMember)
+    }
+
     if (bot && typeof bot.meta === 'string') {
       for (let j = 0; j < chatMembers.length; j++) {
         const chatMember: ChatMemberRecord = chatMembers[j]
