@@ -41,11 +41,16 @@ function init() {
             where: { uuid: message.channel.id },
         }));
         const bot = (yield models_1.models.ChatBot.findOne({
-            where: { botPrefix: '/badge' },
+            where: { botPrefix: '/badge', chatId: tribe.id, tenant: tribe.tenant },
         }));
         const chatMember = (yield models_1.models.ChatMember.findOne({
-            where: { contactId: parseInt(message.member.id), tenant: tribe.tenant },
+            where: {
+                contactId: parseInt(message.member.id),
+                tenant: tribe.tenant,
+                chatId: tribe.id,
+            },
         }));
+        console.log(chatMember);
         if (bot && typeof bot.meta === 'string') {
             const rewards = JSON.parse(bot.meta);
             for (let i = 0; i < rewards.length; i++) {

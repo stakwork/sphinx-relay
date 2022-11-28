@@ -133,7 +133,7 @@ export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
-    if (config.tribes_insecure) protocol = 'http'
+    // if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(protocol + '://' + host + '/issue?token=' + token, {
       method: 'POST',
       body: JSON.stringify({
@@ -165,7 +165,7 @@ export async function transferBadge({
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     let protocol = 'https'
-    if (config.tribes_insecure) protocol = 'http'
+    // if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(
       protocol + '://' + host + '/transfer?token=' + token,
       {

@@ -49,10 +49,14 @@ export function init() {
     })) as ChatRecord
 
     const bot = (await models.ChatBot.findOne({
-      where: { botPrefix: '/badge' },
+      where: { botPrefix: '/badge', chatId: tribe.id, tenant: tribe.tenant },
     })) as ChatBotRecord
     const chatMember = (await models.ChatMember.findOne({
-      where: { contactId: parseInt(message.member.id!), tenant: tribe.tenant },
+      where: {
+        contactId: parseInt(message.member.id!),
+        tenant: tribe.tenant,
+        chatId: tribe.id,
+      },
     })) as ChatMemberRecord
 
     if (bot && typeof bot.meta === 'string') {

@@ -124,8 +124,7 @@ function createBadge({ host, icon, amount, name, owner_pubkey }) {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
             let protocol = 'https';
-            if (config.tribes_insecure)
-                protocol = 'http';
+            // if (config.tribes_insecure) protocol = 'http'
             const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/issue?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -153,8 +152,7 @@ function transferBadge({ to, asset, amount, memo, owner_pubkey, host, }) {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
             let protocol = 'https';
-            if (config.tribes_insecure)
-                protocol = 'http';
+            // if (config.tribes_insecure) protocol = 'http'
             const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/transfer?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify({
