@@ -99,3 +99,15 @@ Finally, while still standing in the `config` directory, run
 4. Manually resolve the conflicts
 5. `git add` the two files
 6. `npm install` on the root sphinx-relay directory
+
+### New release checklist
+
+- Update `/home/pi/sphinx-relay` - follow section above for updates to the `package*.json` files
+- Double check log rotation settings in `/etc/logrotate.d/rsyslog` and `/etc/cron.hourly/logrotate`
+- Make sure `sphinx-relay.service` and `sphinx-hsmd.path` are stopped and enabled
+- Make sure `sphinx-hsmd.service` is stopped and disabled (so that only `sphinx-hsmd.path` launches it, and not the usual boot process)
+- Rotate the logs: `sudo rm /var/log/*` and `sudo journalctl --rotate && sudo journalctl --vacuum-time=1s`
+- Remove the old wifi settings: `sudo rm /etc/wpa_supplicant/wpa_supplicant.conf`
+- Remove the old greenlight sphinx-relay files: `rm /home/pi/sphinx.db && rm /home/pi/sphinx-relay/creds/*` (do not remove `scheduler-creds` folder in `creds` folder)
+- Clear history: `history -c`
+- Follow the instructions here to produce the image (make sure to do the part that enables filesystem expansion): https://blog.dhampir.no/content/shrinking-a-raspbian-installation-and-re-enabling-auto-expanding-for-distribution-of-customized-images
