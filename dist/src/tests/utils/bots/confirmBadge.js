@@ -9,23 +9,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createBadge = void 0;
-const http = require("ava-http");
-const helpers_1 = require("../../utils/helpers");
-function createBadge(t, node1, tribe, rewardType, claim_amount, name) {
+exports.confirmBadge = void 0;
+const node_fetch_1 = require("node-fetch");
+function confirmBadge(node, badgeId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const v = {
-            icon: 'test-asset-icon',
-            name,
-            amount: 10,
-            chat_id: tribe.id,
-            claim_amount,
-            reward_type: rewardType,
-        };
-        const r = yield http.post(node1.external_ip + '/create_badge', (0, helpers_1.makeArgs)(node1, v));
-        t.true(r.success, 'Badge bot created.');
-        return r;
+        const res = yield (0, node_fetch_1.default)(`https://liquid.sphinx.chat/balances?pubkey=${node.pubkey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const results = yield res.json();
+        for (let i = 0; i < results.balances.length; i++) {
+            const balance = results.balances[i];
+            if (balance.asset_id === badgeId) {
+                return true;
+            }
+        }
+        return false;
     });
 }
-exports.createBadge = createBadge;
-//# sourceMappingURL=createBadge.js.map
+exports.confirmBadge = confirmBadge;
+//# sourceMappingURL=confirmBadge.js.map
