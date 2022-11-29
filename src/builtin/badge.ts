@@ -47,100 +47,104 @@ export function init() {
 
     const chatMembers: ChatMemberRecord[] = []
 
-    const tribe = (await models.Chat.findOne({
-      where: { uuid: message.channel.id },
-    })) as ChatRecord
+    try {
+      const tribe = (await models.Chat.findOne({
+        where: { uuid: message.channel.id },
+      })) as ChatRecord
 
-    const bot = (await models.ChatBot.findOne({
-      where: { botPrefix: '/badge', chatId: tribe.id, tenant: tribe.tenant },
-    })) as ChatBotRecord
-    const chatMember = (await models.ChatMember.findOne({
-      where: {
-        contactId: parseInt(message.member.id!),
-        tenant: tribe.tenant,
-        chatId: tribe.id,
-      },
-    })) as ChatMemberRecord
-
-    chatMembers.push(chatMember)
-
-    if (message.type === constants.message_types.boost) {
-      const ogMsg = (await models.Message.findOne({
-        where: { uuid: message.reply_id! },
-      })) as MessageRecord
-      const tribeMember = (await models.ChatMember.findOne({
+      const bot = (await models.ChatBot.findOne({
+        where: { botPrefix: '/badge', chatId: tribe.id, tenant: tribe.tenant },
+      })) as ChatBotRecord
+      const chatMember = (await models.ChatMember.findOne({
         where: {
-          contactId: ogMsg.sender,
+          contactId: parseInt(message.member.id!),
           tenant: tribe.tenant,
           chatId: tribe.id,
         },
       })) as ChatMemberRecord
-      chatMembers.push(tribeMember)
-    }
 
-    if (message.type === constants.message_types.direct_payment) {
-      const ogMsg = (await models.Message.findOne({
-        where: { uuid: message.id! },
-      })) as MessageRecord
-      const tribeMember = (await models.ChatMember.findOne({
-        where: {
-          lastAlias: ogMsg.recipientAlias,
-          tenant: ogMsg.tenant,
-          chatId: ogMsg.chatId,
-        },
-      })) as ChatMemberRecord
-      chatMembers.push(tribeMember)
-    }
+      chatMembers.push(chatMember)
 
-    if (bot && typeof bot.meta === 'string') {
-      for (let j = 0; j < chatMembers.length; j++) {
-        const chatMember: ChatMemberRecord = chatMembers[j]
-        const rewards: BadgeRewards[] = JSON.parse(bot.meta)
-        for (let i = 0; i < rewards.length; i++) {
-          const reward = rewards[i]
-          let doReward = false
-          if (reward.rewardType === constants.reward_types.earned) {
-            if (
-              chatMember.totalEarned === reward.amount ||
-              chatMember.totalEarned > reward.amount
-            ) {
-              doReward = true
+      if (message.type === constants.message_types.boost) {
+        const ogMsg = (await models.Message.findOne({
+          where: { uuid: message.reply_id! },
+        })) as MessageRecord
+        const tribeMember = (await models.ChatMember.findOne({
+          where: {
+            contactId: ogMsg.sender,
+            tenant: tribe.tenant,
+            chatId: tribe.id,
+          },
+        })) as ChatMemberRecord
+        chatMembers.push(tribeMember)
+      }
+
+      if (message.type === constants.message_types.direct_payment) {
+        const ogMsg = (await models.Message.findOne({
+          where: { uuid: message.id! },
+        })) as MessageRecord
+        const tribeMember = (await models.ChatMember.findOne({
+          where: {
+            lastAlias: ogMsg.recipientAlias,
+            tenant: ogMsg.tenant,
+            chatId: ogMsg.chatId,
+          },
+        })) as ChatMemberRecord
+        chatMembers.push(tribeMember)
+      }
+
+      if (bot && typeof bot.meta === 'string') {
+        for (let j = 0; j < chatMembers.length; j++) {
+          const chatMember: ChatMemberRecord = chatMembers[j]
+          const rewards: BadgeRewards[] = JSON.parse(bot.meta)
+          for (let i = 0; i < rewards.length; i++) {
+            const reward = rewards[i]
+            let doReward = false
+            if (reward.rewardType === constants.reward_types.earned) {
+              if (
+                chatMember.totalEarned === reward.amount ||
+                chatMember.totalEarned > reward.amount
+              ) {
+                doReward = true
+              }
+            } else if (reward.rewardType === constants.reward_types.spent) {
+              if (
+                chatMember.totalSpent === reward.amount ||
+                chatMember.totalSpent > reward.amount
+              ) {
+                doReward = true
+              }
             }
-          } else if (reward.rewardType === constants.reward_types.spent) {
-            if (
-              chatMember.totalSpent === reward.amount ||
-              chatMember.totalSpent > reward.amount
-            ) {
-              doReward = true
-            }
-          }
-          if (doReward) {
-            const hasReward = await checkReward(
-              chatMember.contactId,
-              reward.badgeId,
-              tribe.tenant
-            )
-            if (!hasReward.status) {
-              const badge = await transferBadge({
-                to: hasReward.pubkey,
-                asset: reward.badgeId,
-                amount: 1,
-                memo: '',
-                owner_pubkey: tribe.ownerPubkey,
-                host: 'liquid.sphinx.chat',
-              })
-              if (badge.tx) {
-                const resEmbed = new Sphinx.MessageEmbed()
-                  .setAuthor('BagdeBot')
-                  .setDescription(
-                    `${chatMember.lastAlias} just earned the ${reward.name} badge`
-                  )
-                message.channel.send({ embed: resEmbed })
+            if (doReward) {
+              const hasReward = await checkReward(
+                chatMember.contactId,
+                reward.badgeId,
+                tribe.tenant
+              )
+              if (!hasReward.status) {
+                const badge = await transferBadge({
+                  to: hasReward.pubkey,
+                  asset: reward.badgeId,
+                  amount: 1,
+                  memo: '',
+                  owner_pubkey: tribe.ownerPubkey,
+                  host: 'liquid.sphinx.chat',
+                })
+                if (badge.tx) {
+                  const resEmbed = new Sphinx.MessageEmbed()
+                    .setAuthor('BagdeBot')
+                    .setDescription(
+                      `${chatMember.lastAlias} just earned the ${reward.name} badge`
+                    )
+                  message.channel.send({ embed: resEmbed })
+                }
               }
             }
           }
         }
       }
+    } catch (error) {
+      sphinxLogger.error(`BADGE BOT ERROR ${error}`, logging.Bots)
     }
   })
 }

@@ -38,86 +38,91 @@ function init() {
         if (isAdmin)
             return;
         const chatMembers = [];
-        const tribe = (yield models_1.models.Chat.findOne({
-            where: { uuid: message.channel.id },
-        }));
-        const bot = (yield models_1.models.ChatBot.findOne({
-            where: { botPrefix: '/badge', chatId: tribe.id, tenant: tribe.tenant },
-        }));
-        const chatMember = (yield models_1.models.ChatMember.findOne({
-            where: {
-                contactId: parseInt(message.member.id),
-                tenant: tribe.tenant,
-                chatId: tribe.id,
-            },
-        }));
-        chatMembers.push(chatMember);
-        if (message.type === constants_1.default.message_types.boost) {
-            const ogMsg = (yield models_1.models.Message.findOne({
-                where: { uuid: message.reply_id },
+        try {
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: { uuid: message.channel.id },
             }));
-            const tribeMember = (yield models_1.models.ChatMember.findOne({
+            const bot = (yield models_1.models.ChatBot.findOne({
+                where: { botPrefix: '/badge', chatId: tribe.id, tenant: tribe.tenant },
+            }));
+            const chatMember = (yield models_1.models.ChatMember.findOne({
                 where: {
-                    contactId: ogMsg.sender,
+                    contactId: parseInt(message.member.id),
                     tenant: tribe.tenant,
                     chatId: tribe.id,
                 },
             }));
-            chatMembers.push(tribeMember);
-        }
-        if (message.type === constants_1.default.message_types.direct_payment) {
-            const ogMsg = (yield models_1.models.Message.findOne({
-                where: { uuid: message.id },
-            }));
-            const tribeMember = (yield models_1.models.ChatMember.findOne({
-                where: {
-                    lastAlias: ogMsg.recipientAlias,
-                    tenant: ogMsg.tenant,
-                    chatId: ogMsg.chatId,
-                },
-            }));
-            chatMembers.push(tribeMember);
-        }
-        if (bot && typeof bot.meta === 'string') {
-            for (let j = 0; j < chatMembers.length; j++) {
-                const chatMember = chatMembers[j];
-                const rewards = JSON.parse(bot.meta);
-                for (let i = 0; i < rewards.length; i++) {
-                    const reward = rewards[i];
-                    let doReward = false;
-                    if (reward.rewardType === constants_1.default.reward_types.earned) {
-                        if (chatMember.totalEarned === reward.amount ||
-                            chatMember.totalEarned > reward.amount) {
-                            doReward = true;
+            chatMembers.push(chatMember);
+            if (message.type === constants_1.default.message_types.boost) {
+                const ogMsg = (yield models_1.models.Message.findOne({
+                    where: { uuid: message.reply_id },
+                }));
+                const tribeMember = (yield models_1.models.ChatMember.findOne({
+                    where: {
+                        contactId: ogMsg.sender,
+                        tenant: tribe.tenant,
+                        chatId: tribe.id,
+                    },
+                }));
+                chatMembers.push(tribeMember);
+            }
+            if (message.type === constants_1.default.message_types.direct_payment) {
+                const ogMsg = (yield models_1.models.Message.findOne({
+                    where: { uuid: message.id },
+                }));
+                const tribeMember = (yield models_1.models.ChatMember.findOne({
+                    where: {
+                        lastAlias: ogMsg.recipientAlias,
+                        tenant: ogMsg.tenant,
+                        chatId: ogMsg.chatId,
+                    },
+                }));
+                chatMembers.push(tribeMember);
+            }
+            if (bot && typeof bot.meta === 'string') {
+                for (let j = 0; j < chatMembers.length; j++) {
+                    const chatMember = chatMembers[j];
+                    const rewards = JSON.parse(bot.meta);
+                    for (let i = 0; i < rewards.length; i++) {
+                        const reward = rewards[i];
+                        let doReward = false;
+                        if (reward.rewardType === constants_1.default.reward_types.earned) {
+                            if (chatMember.totalEarned === reward.amount ||
+                                chatMember.totalEarned > reward.amount) {
+                                doReward = true;
+                            }
                         }
-                    }
-                    else if (reward.rewardType === constants_1.default.reward_types.spent) {
-                        if (chatMember.totalSpent === reward.amount ||
-                            chatMember.totalSpent > reward.amount) {
-                            doReward = true;
+                        else if (reward.rewardType === constants_1.default.reward_types.spent) {
+                            if (chatMember.totalSpent === reward.amount ||
+                                chatMember.totalSpent > reward.amount) {
+                                doReward = true;
+                            }
                         }
-                    }
-                    if (doReward) {
-                        const hasReward = yield checkReward(chatMember.contactId, reward.badgeId, tribe.tenant);
-                        if (!hasReward.status) {
-                            const badge = yield (0, people_1.transferBadge)({
-                                to: hasReward.pubkey,
-                                asset: reward.badgeId,
-                                amount: 1,
-                                memo: '',
-                                owner_pubkey: tribe.ownerPubkey,
-                                host: 'liquid.sphinx.chat',
-                            });
-                            if (badge.tx) {
-                                const resEmbed = new Sphinx.MessageEmbed()
-                                    .setAuthor('BagdeBot')
-                                    .setDescription(`${chatMember.lastAlias} just earned the ${reward.name} badge`);
-                                message.channel.send({ embed: resEmbed });
+                        if (doReward) {
+                            const hasReward = yield checkReward(chatMember.contactId, reward.badgeId, tribe.tenant);
+                            if (!hasReward.status) {
+                                const badge = yield (0, people_1.transferBadge)({
+                                    to: hasReward.pubkey,
+                                    asset: reward.badgeId,
+                                    amount: 1,
+                                    memo: '',
+                                    owner_pubkey: tribe.ownerPubkey,
+                                    host: 'liquid.sphinx.chat',
+                                });
+                                if (badge.tx) {
+                                    const resEmbed = new Sphinx.MessageEmbed()
+                                        .setAuthor('BagdeBot')
+                                        .setDescription(`${chatMember.lastAlias} just earned the ${reward.name} badge`);
+                                    message.channel.send({ embed: resEmbed });
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`BADGE BOT ERROR ${error}`, logger_1.logging.Bots);
         }
     }));
 }
