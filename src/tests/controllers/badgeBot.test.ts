@@ -4,11 +4,11 @@ import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
-import { createBadge } from '../utils/bots'
-import { randomText } from '../utils/helpers'
+import { createBadge, confirmBadge } from '../utils/bots'
+import { randomText, sleep } from '../utils/helpers'
 import {
   sendTribeMessageAndCheckDecryption,
-  // sendBoost,
+  sendBoost,
   sendTribeDirectPayment,
 } from '../utils/msg'
 
@@ -55,14 +55,18 @@ export async function badgeBotTest(t, index1, index2, index3) {
   t.truthy(botReply2, 'MotherBot should reply')
 
   // NODE1 CREATES A BADGE
-  const earnBadge = await createBadge(t, node1, tribe)
+  const earnBadge = await createBadge(t, node1, tribe, 1, 10, 'Earn')
   t.truthy(earnBadge, 'Badge should be created by Node1')
-  console.log(earnBadge)
+
+  const spendBadge = await createBadge(t, node1, tribe, 2, 20, 'Spend')
+  t.truthy(spendBadge, 'Badge should be created by Node1')
 
   //NODE3 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
   let join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
+
+  // await sleep(1000)
 
   //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text3 = randomText()
@@ -76,8 +80,8 @@ export async function badgeBotTest(t, index1, index2, index3) {
   t.truthy(tribeMessage1, 'node2 should send message to tribe')
 
   //NODE3 SENDS A BOOST ON NODE2'S MESSAGE
-  // const boost3 = await sendBoost(t, node3, node2, tribeMessage1, 15, tribe)
-  // t.true(boost3.success)
+  const boost3 = await sendBoost(t, node3, node2, tribeMessage1, 15, tribe)
+  t.true(boost3.success)
 
   const payment = await sendTribeDirectPayment(
     t,
@@ -87,18 +91,17 @@ export async function badgeBotTest(t, index1, index2, index3) {
     15,
     tribe
   )
-  t.true(payment.success)
+  t.true(payment.success, 'DIrect Payment in tribe should be successful')
 
-  //NODE2 SENDS A MESSAGE IN THE TRIBE AND NODE3 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
-  //   const text4 = randomText()
-  //   let tribeMessage2 = await sendTribeMessageAndCheckDecryption(
-  //     t,
-  //     node2,
-  //     node3,
-  //     text4,
-  //     tribe
-  //   )
-  //   t.truthy(tribeMessage2, 'node2 should send message to tribe')
+  // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
+  const confirm = await confirmBadge(node2, earnBadge.response.id)
+  t.true(confirm, 'Node 2 should recieve the earner badge')
+
+  await sleep(1000)
+
+  // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
+  const confirm1 = await confirmBadge(node3, spendBadge.response.id)
+  t.true(confirm1, 'Node 3 should recieve the spender badge')
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)

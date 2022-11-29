@@ -1,14 +1,21 @@
 import * as http from 'ava-http'
 import { makeArgs } from '../../utils/helpers'
 
-export async function createBadge(t, node1, tribe) {
+export async function createBadge(
+  t,
+  node1,
+  tribe,
+  rewardType,
+  claim_amount,
+  name
+) {
   const v = {
     icon: 'test-asset-icon',
-    name: 'test badge',
+    name,
     amount: 10,
     chat_id: tribe.id,
-    claim_amount: 10,
-    reward_type: 1,
+    claim_amount,
+    reward_type: rewardType,
   }
   const r = await http.post(
     node1.external_ip + '/create_badge',
