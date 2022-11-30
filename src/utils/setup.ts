@@ -116,10 +116,15 @@ const updateLsat = async () => {
     const lsats = await models.Lsat.findAll({
       where: { createdAt: { [Op.lt]: timestamp }, status: 1 },
     })
+    console.log(lsats)
     for (let i = 0; i < lsats.length; i++) {
       let lsat = lsats[i]
       lsat.update({ status: constants.lsat_statuses.expired })
     }
+    const newLsats = await models.Lsat.findAll({
+      where: { createdAt: { [Op.lt]: timestamp }, status: 1 },
+    })
+    console.log(newLsats)
   } catch (error) {
     sphinxLogger.info(
       ['error trying to update lsat status', error],
