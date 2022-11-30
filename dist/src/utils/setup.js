@@ -118,18 +118,13 @@ exports.setupPersonUuid = setupPersonUuid;
 const updateLsat = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const timestamp = new Date(1669658385 * 1000);
-        const lsats = yield models_1.models.Lsat.findAll({
+        const lsats = (yield models_1.models.Lsat.findAll({
             where: { createdAt: { [sequelize_1.Op.lt]: timestamp }, status: 1 },
-        });
-        console.log(lsats);
+        }));
         for (let i = 0; i < lsats.length; i++) {
             let lsat = lsats[i];
             lsat.update({ status: constants_1.default.lsat_statuses.expired });
         }
-        const newLsats = yield models_1.models.Lsat.findAll({
-            where: { createdAt: { [sequelize_1.Op.lt]: timestamp }, status: 1 },
-        });
-        console.log(newLsats);
     }
     catch (error) {
         logger_1.sphinxLogger.info(['error trying to update lsat status', error], logger_1.logging.Lsat);

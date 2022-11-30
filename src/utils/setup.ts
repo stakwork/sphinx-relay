@@ -1,5 +1,5 @@
 import * as Lightning from '../grpc/lightning'
-import { sequelize, models, Contact, ContactRecord } from '../models'
+import { sequelize, models, Contact, ContactRecord, Lsat } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as gitinfo from '../utils/gitinfo'
@@ -110,21 +110,16 @@ const setupPersonUuid = async () => {
   }
 }
 
-const updateLsat = async () => {
+const updateLsat = async (): Promise<void> => {
   try {
     const timestamp = new Date(1669658385 * 1000)
-    const lsats = await models.Lsat.findAll({
+    const lsats = (await models.Lsat.findAll({
       where: { createdAt: { [Op.lt]: timestamp }, status: 1 },
-    })
-    console.log(lsats)
+    })) as Lsat[]
     for (let i = 0; i < lsats.length; i++) {
       let lsat = lsats[i]
       lsat.update({ status: constants.lsat_statuses.expired })
     }
-    const newLsats = await models.Lsat.findAll({
-      where: { createdAt: { [Op.lt]: timestamp }, status: 1 },
-    })
-    console.log(newLsats)
   } catch (error) {
     sphinxLogger.info(
       ['error trying to update lsat status', error],
