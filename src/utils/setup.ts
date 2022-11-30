@@ -12,6 +12,7 @@ import { isProxy } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
+import constants from '../constants'
 
 const USER_VERSION = 7
 const config = loadConfig()
@@ -109,6 +110,24 @@ const setupPersonUuid = async () => {
   }
 }
 
+const updateLsat = async () => {
+  try {
+    const timestamp = new Date(1669658385 * 1000)
+    const lsats = await models.Lsat.findAll({
+      where: { createdAt: { [Op.lt]: timestamp }, status: 1 },
+    })
+    for (let i = 0; i < lsats.length; i++) {
+      let lsat = lsats[i]
+      lsat.update({ status: constants.lsat_statuses.expired })
+    }
+  } catch (error) {
+    sphinxLogger.info(
+      ['error trying to update lsat status', error],
+      logging.Lsat
+    )
+  }
+}
+
 const runMigrations = async () => {
   await new Promise((resolve, reject) => {
     const migration: any = exec(
@@ -135,6 +154,7 @@ export {
   runMigrations,
   setupDone,
   setupPersonUuid,
+  updateLsat,
 }
 
 async function setupDone() {

@@ -12,6 +12,7 @@ import {
   setupDone,
   setupOwnerContact,
   setupPersonUuid,
+  updateLsat,
 } from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
@@ -62,6 +63,7 @@ async function mainSetup() {
 async function finishSetup() {
   await setupOwnerContact()
   await setupPersonUuid()
+  await updateLsat()
   await network.initTribesSubscriptions()
   if (config.hub_api_url) {
     checkInvitesHubInterval(5000)
