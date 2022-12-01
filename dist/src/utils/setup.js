@@ -122,7 +122,7 @@ const updateLsat = () => __awaiter(void 0, void 0, void 0, function* () {
             where: { createdAt: { [sequelize_1.Op.lt]: timestamp }, status: 1 },
         }));
         for (let i = 0; i < lsats.length; i++) {
-            let lsat = lsats[i];
+            const lsat = lsats[i];
             lsat.update({ status: constants_1.default.lsat_statuses.expired });
         }
     }
