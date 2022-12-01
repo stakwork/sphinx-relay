@@ -117,7 +117,7 @@ const updateLsat = async (): Promise<void> => {
       where: { createdAt: { [Op.lt]: timestamp }, status: 1 },
     })) as Lsat[]
     for (let i = 0; i < lsats.length; i++) {
-      let lsat = lsats[i]
+      const lsat = lsats[i]
       lsat.update({ status: constants.lsat_statuses.expired })
     }
   } catch (error) {
