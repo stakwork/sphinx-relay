@@ -20,6 +20,13 @@ import { loadConfig } from '../utils/config'
 
 const config = loadConfig()
 
+/**
+
+    getBots retrieves all the bots of a user
+    @param req - Express request object
+    @param res - Express response object
+    @returns void
+    */
 export const getBots = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -35,6 +42,18 @@ export const getBots = async (req: Req, res: Res): Promise<void> => {
   }
 }
 
+/**
+
+    This function creates a bot and posts it to the tribes.sphinx.chat site.
+    @param req.owner - The user creating the bot
+    @param req.body.name - The name of the bot
+    @param req.body.webhook - The webhook for the bot
+    @param req.body.price_per_use - The price per use for the bot
+    @param req.body.img - The image of the bot
+    @param req.body.description - The description of the bot
+    @param req.body.tags - The tags for the bot
+    @param res - The response object
+    */
 export const createBot = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -72,6 +91,13 @@ export const createBot = async (req: Req, res: Res): Promise<void> => {
   }
 }
 
+/**
+
+    Deletes a bot with the given ID.
+    @param {Req} req - Express request object.
+    @param {Res} res - Express response object.
+    @returns {Promise<void>}
+    */
 export const deleteBot = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -94,6 +120,13 @@ export const deleteBot = async (req: Req, res: Res): Promise<void> => {
   }
 }
 
+/**
+
+    Installs a bot into a chat.
+    @param {Object} chat - The chat object where the bot will be installed.
+    @param {Object} bot_json - The bot information, including the bot's UUID, owner public key, unique name, price per use, and owner route hint.
+    @returns {Promise<void>} - Returns a promise that resolves when the bot is successfully installed.
+    */
 export async function installBotAsTribeAdmin(chat, bot_json): Promise<void> {
   const chatId = chat && chat.id
   const chat_uuid = chat && chat.uuid
@@ -172,6 +205,14 @@ export async function installBotAsTribeAdmin(chat, bot_json): Promise<void> {
   }
 }
 
+/**
+ * Sends a keysend to the bot maker to install the bot in a chat.
+ *
+ * @param {Object} b - The ChatBot object containing information about the bot to be installed.
+ * @param {string} chat_uuid - The UUID of the chat where the bot will be installed.
+ * @param {Object} owner - The Contact object for the owner of the chat where the bot will be installed.
+ * @returns {boolean} - True if the keysend was successful, false otherwise.
+ */
 export async function keysendBotInstall(
   b,
   chat_uuid: string,
@@ -188,6 +229,18 @@ export async function keysendBotInstall(
   )
 }
 
+/**
+ * Sends a keysend to a bot maker.
+ * @param {string} msgType The type of message being sent to the bot maker.
+ * @param {string} botUuid The UUID of the bot.
+ * @param {string} botMakerPubkey The public key of the bot maker.
+ * @param {number} amount The amount to keysend to the bot maker.
+ * @param {string} chatUuid The UUID of the chat the bot is being used in.
+ * @param {Object} sender The sender of the message.
+ * @param {string} botMakerRouteHint The route hint of the bot maker.
+ * @param {Object} [msg] The original message being sent to the bot.
+ * @returns {Promise<boolean>} Whether the keysend was successful.
+ */
 export async function keysendBotCmd(msg, b, sender): Promise<boolean> {
   const amount = msg.message.amount || 0
   const amt = Math.max(amount, b.pricePerUse)
@@ -203,6 +256,19 @@ export async function keysendBotCmd(msg, b, sender): Promise<boolean> {
   )
 }
 
+/**
+
+    Sends a keysend message to the bot maker with the given parameters.
+    @param {string} msg_type - The type of the message to be sent.
+    @param {string} bot_uuid - The UUID of the bot.
+    @param {string} botmaker_pubkey - The public key of the bot maker.
+    @param {number} amount - The amount of the keysend message.
+    @param {string} chat_uuid - The UUID of the chat.
+    @param {Object} sender - The sender of the keysend message.
+    @param {string} botmaker_route_hint - The route hint of the bot maker.
+    @param {Object} msg - The message to be sent.
+    @return {Promise<boolean>} - Returns a promise that resolves to a boolean indicating whether the keysend message was sent successfully.
+    */
 export async function botKeysend(
   msg_type,
   bot_uuid,
@@ -264,6 +330,18 @@ export async function botKeysend(
   }
 }
 
+/**
+ * Receive and process an installation request for a bot.
+ *
+ * @param {Object} dat - The payload data of the installation request.
+ * @param {Object} dat.sender - The sender of the installation request.
+ * @param {string} dat.sender.pub_key - The public key of the sender.
+ * @param {string} dat.bot_uuid - The UUID of the bot being installed.
+ * @param {Object} dat.chat - The chat where the bot is being installed.
+ * @param {string} dat.chat.uuid - The UUID of the chat.
+ * @param {Object} dat.owner - The owner of the bot.
+ * @param {number} dat.owner.id - The ID of the owner.
+ */
 export async function receiveBotInstall(dat: Payload): Promise<void> {
   sphinxLogger.info(['=> receiveBotInstall', dat], logging.Network)
 
@@ -312,6 +390,16 @@ export async function receiveBotInstall(dat: Payload): Promise<void> {
   postToBotServer(dat, bot, SphinxBot.MSG_TYPE.INSTALL)
 }
 
+/**
+ * Handle a request to install a bot in a chat.
+ *
+ * @param {Object} dat - Payload object containing details of the bot and chat to be installed.
+ * @param {string} dat.bot_uuid - UUID of the bot to be installed.
+ * @param {string} dat.chat.uuid - UUID of the chat in which to install the bot.
+ * @param {Object} dat.owner - Object containing details of the owner of the bot.
+ * @param {number} dat.owner.id - ID of the owner of the bot.
+ * @param {string} dat.sender.pub_key - Public key of the sender of the installation request.
+ */
 // ONLY FOR BOT MAKER
 export async function receiveBotCmd(dat: Payload): Promise<void> {
   sphinxLogger.info('=> receiveBotCmd', logging.Network)
@@ -361,6 +449,14 @@ export async function receiveBotCmd(dat: Payload): Promise<void> {
   // forward to the entire Action back over MQTT
 }
 
+/**
+ * Sends a request to the bot's webhook with a given message.
+ *
+ * @param {object} msg - The message to send to the bot.
+ * @param {object} bot - The bot to which the message will be sent.
+ * @param {string} route - The route to the bot's webhook.
+ * @return {boolean} - Whether the request was successful.
+ */
 export async function postToBotServer(
   msg,
   bot,
@@ -398,6 +494,12 @@ export async function postToBotServer(
   }
 }
 
+/**
+ * Creates a SphinxBot message from the given `BotMsg`.
+ *
+ * @param {BotMsg} msg The BotMsg to convert to a SphinxBot message.
+ * @returns {SphinxBot.Message} The created SphinxBot message.
+ */
 export function buildBotPayload(msg: BotMsg): SphinxBot.Message {
   const chat_uuid = msg.chat && msg.chat.uuid
   const m = <SphinxBot.Message>{
@@ -428,6 +530,12 @@ export function buildBotPayload(msg: BotMsg): SphinxBot.Message {
   return m
 }
 
+/**
+ * Processes a payload containing data about a bot response message.
+ *
+ * @param {Payload} dat - The payload object containing the data for the message.
+ * @returns {Promise<void>}
+ */
 export async function receiveBotRes(dat: Payload): Promise<void> {
   sphinxLogger.info('=> receiveBotRes', logging.Network) //, payload)
 
@@ -525,6 +633,13 @@ export async function receiveBotRes(dat: Payload): Promise<void> {
   }
 }
 
+/**
+ * Adds a Personal Access Token (PAT) to the Git Bot for the owner of the request.
+ *
+ * @param {Req} req - The request object containing the owner and the encrypted PAT.
+ * @param {Res} res - The response object used to send the result of the operation.
+ * @returns {Promise<void>} - An empty promise.
+ */
 export const addPatToGitBot = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
