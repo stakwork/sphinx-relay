@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addPatToGitBot = exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
+exports.getBagdeChatBot = exports.addPatToGitBot = exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
 const tribes = require("../utils/tribes");
 const crypto = require("crypto");
 const models_1 = require("../models");
@@ -519,4 +519,23 @@ const addPatToGitBot = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.addPatToGitBot = addPatToGitBot;
+const getBagdeChatBot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const chatId = req.params.chatId;
+    if (!chatId)
+        return;
+    const tenant = req.owner.id;
+    try {
+        const badgeChatBot = yield models_1.models.ChatBot.findOne({
+            where: { chatId, tenant, botPrefix: '/badge' },
+        });
+        return (0, res_1.success)(res, badgeChatBot);
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(['=> could bot get badge chat Bot', error], logger_1.logging.Bots);
+        (0, res_1.failure)(res, 'could bot get badge chat Bot');
+    }
+});
+exports.getBagdeChatBot = getBagdeChatBot;
 //# sourceMappingURL=bots.js.map

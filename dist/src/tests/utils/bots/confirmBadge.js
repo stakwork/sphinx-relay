@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.confirmBadge = void 0;
+exports.confirmBadgeCreatedThroughMessage = exports.confirmBadge = void 0;
 const node_fetch_1 = require("node-fetch");
 function confirmBadge(node, badgeId) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -25,4 +25,18 @@ function confirmBadge(node, badgeId) {
     });
 }
 exports.confirmBadge = confirmBadge;
+function confirmBadgeCreatedThroughMessage(node, chatId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const res = yield (0, node_fetch_1.default)(`https://liquid.sphinx.chat/balances?pubkey=${node.pubkey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const results = yield res.json();
+        console.log(results);
+        // const chatMember = await models.ChatBot.findOne({
+        //   where: {
+        //     chatId,
+        //   },
+        // })
+        // console.log(chatMember)
+    });
+}
+exports.confirmBadgeCreatedThroughMessage = confirmBadgeCreatedThroughMessage;
 //# sourceMappingURL=confirmBadge.js.map
