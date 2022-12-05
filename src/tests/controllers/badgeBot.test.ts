@@ -109,7 +109,6 @@ export async function badgeBotTest(t, index1, index2, index3) {
   await sleep(1000)
 
   // CHECK IF NODE3 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-
   const confirm1 = await confirmBadgeCreatedThroughMessage(
     node1,
     node3,

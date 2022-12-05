@@ -76,16 +76,14 @@ function badgeBotTest(t, index1, index2, index3) {
         t.true(boost3.success);
         const payment = yield (0, msg_2.sendTribeDirectPayment)(t, node3, node2, tribeMessage1, 15, tribe);
         t.true(payment.success, 'DIrect Payment in tribe should be successful');
-        yield (0, helpers_1.sleep)(5000);
+        yield (0, helpers_1.sleep)(10000);
         // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
         const confirm = yield (0, bots_1.confirmBadge)(node2, earnBadge.response.id);
         t.true(confirm, 'Node 2 should recieve the earner badge');
         yield (0, helpers_1.sleep)(1000);
         // CHECK IF NODE3 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-        // const confirm1 = await confirmBadgeCreatedThroughMessage(node3, tribe.id)
-        // console.log(confirm1)
-        // const confirm1 = await confirmBadge(node3, spendBadge.response.id)
-        // t.true(confirm1, 'Node 3 should recieve the spender badge')
+        const confirm1 = yield (0, bots_1.confirmBadgeCreatedThroughMessage)(node1, node3, tribe.id, 2);
+        t.true(confirm1, 'Node 3 should recieve the spender badge');
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');
