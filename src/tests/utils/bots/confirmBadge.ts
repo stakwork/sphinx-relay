@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
-// import { models } from '../../../models'
 import { NodeConfig } from '../../types'
+import * as http from 'ava-http'
+import { makeArgs } from '../../utils/helpers'
 
 export async function confirmBadge(node: NodeConfig, badgeId: number) {
   const res = await fetch(
@@ -19,19 +20,32 @@ export async function confirmBadge(node: NodeConfig, badgeId: number) {
 }
 
 export async function confirmBadgeCreatedThroughMessage(
-  node: NodeConfig,
-  chatId: number
+  tribeOwner: NodeConfig,
+  nodeBeingChecked: NodeConfig,
+  chatId: number,
+  reward_type: number
 ) {
   const res = await fetch(
-    `https://liquid.sphinx.chat/balances?pubkey=${node.pubkey}`,
+    `https://liquid.sphinx.chat/balances?pubkey=${nodeBeingChecked.pubkey}`,
     { method: 'GET', headers: { 'Content-Type': 'application/json' } }
   )
   const results = await res.json()
-  console.log(results)
-  // const chatMember = await models.ChatBot.findOne({
-  //   where: {
-  //     chatId,
-  //   },
-  // })
-  // console.log(chatMember)
+  const bot = await http.get(
+    `${tribeOwner.external_ip}/badge_bot/${chatId}`,
+    makeArgs(tribeOwner)
+  )
+  const badges = JSON.parse(bot.response.meta)
+  for (let i = 0; i < badges.length; i++) {
+    const badge = badges[i]
+    for (let j = 0; j < results.balances.length; j++) {
+      const balance = results.balances[j]
+      if (
+        badge.rewardType === Number(reward_type) &&
+        badge.badgeId === balance.asset_id
+      ) {
+        return true
+      }
+    }
+  }
+  return false
 }

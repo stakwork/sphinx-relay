@@ -7,7 +7,7 @@ import { sendTribeMessage } from '../utils/msg'
 import {
   createBadge,
   confirmBadge,
-  // confirmBadgeCreatedThroughMessage,
+  confirmBadgeCreatedThroughMessage,
 } from '../utils/bots'
 import { randomText, sleep } from '../utils/helpers'
 import {
@@ -100,7 +100,7 @@ export async function badgeBotTest(t, index1, index2, index3) {
   )
   t.true(payment.success, 'DIrect Payment in tribe should be successful')
 
-  await sleep(5000)
+  await sleep(10000)
 
   // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
   const confirm = await confirmBadge(node2, earnBadge.response.id)
@@ -110,10 +110,13 @@ export async function badgeBotTest(t, index1, index2, index3) {
 
   // CHECK IF NODE3 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
 
-  // const confirm1 = await confirmBadgeCreatedThroughMessage(node3, tribe.id)
-  // console.log(confirm1)
-  // const confirm1 = await confirmBadge(node3, spendBadge.response.id)
-  // t.true(confirm1, 'Node 3 should recieve the spender badge')
+  const confirm1 = await confirmBadgeCreatedThroughMessage(
+    node1,
+    node3,
+    tribe.id,
+    2
+  )
+  t.true(confirm1, 'Node 3 should recieve the spender badge')
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)
