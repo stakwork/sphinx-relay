@@ -1,6 +1,5 @@
 import * as crypto from 'crypto'
 import { models, Contact, ContactRecord } from './models'
-import { Op } from 'sequelize'
 import * as cryptoJS from 'crypto-js'
 import { success, failure, unauthorized } from './utils/res'
 import { setInMemoryMacaroon } from './utils/macaroon'
@@ -8,12 +7,11 @@ import { loadConfig } from './utils/config'
 import { isProxy } from './utils/proxy'
 import * as jwtUtils from './utils/jwt'
 import { allowedJwtRoutes } from './scopes'
-import * as rsa from './crypto/rsa'
 import * as hmac from './crypto/hmac'
 import { Req, Res } from './types'
 import * as fs from 'fs'
-import * as moment from 'moment'
-import { generateTransportTokenKeys } from './utils/cert'
+import { getAndDecryptTransportToken } from './utils/cert'
+import moment = require('moment')
 
 const config = loadConfig()
 
@@ -125,7 +123,7 @@ function no_auth(path) {
   )
 }
 
-export async function ownerMiddleware(req, res, next) {
+export async function ownerMiddleware(req: Req, res: Res, next) {
   if (no_auth(req.path)) {
     next()
     return
@@ -136,60 +134,17 @@ export async function ownerMiddleware(req, res, next) {
     req.headers['x-user-token'] || req.cookies['x-user-token']
   const x_transport_token =
     req.headers['x-transport-token'] || req.cookies['x-transport-token']
+  const x_admin_token =
+    req.headers['x-admin-token'] || req.cookies['x-admin-token']
 
   // default assign token to x-user-token
   let token = x_user_token
+  let timestamp = 0
 
-  // If we see the user using the new x_transport_token
-  // we will enter this if block and execute this logic
-  if (x_transport_token) {
-    // Deleting any transport tokens that are older than a minute long
-    // since they will fail the date test futhrer along the auth process
-    await models.RequestsTransportTokens.destroy({
-      where: {
-        createdAt: {
-          [Op.lt]:
-            moment().unix() -
-            config.length_of_time_for_transport_token_clear * 60,
-        },
-      },
-    })
-
-    // Read the transport private key since we will need to decrypt with this
-    if (!fs.existsSync(config.transportPrivateKeyLocation)) {
-      await generateTransportTokenKeys()
-    }
-    const transportPrivateKey = fs.readFileSync(
-      config.transportPrivateKeyLocation,
-      'utf8'
-    )
-    // Decrypt the token and split by space not sure what
-    // the correct way to do the delimiting so I just put
-    // a space for now
-    const splitTransportToken = rsa
-      .decrypt(transportPrivateKey, x_transport_token)
-      .split('|')
-
-    // The token will be the first item
-    token = splitTransportToken[0]
-
-    // The second item will be the timestamp
-    const splitTransportTokenTimestamp = parseInt(splitTransportToken[1])
-
-    // Check if the timestamp is within the timeframe we
-    // choose (1 minute here) to clear out the db of saved recent requests
-    if (
-      splitTransportTokenTimestamp <
-        moment().unix() -
-          config.length_of_time_for_transport_token_clear * 60 ||
-      !splitTransportTokenTimestamp
-    ) {
-      res.writeHead(401, 'Access invalid for user', {
-        'Content-Type': 'text/plain',
-      })
-      res.end('invalid credentials')
-      return
-    }
+  if (x_admin_token || x_transport_token) {
+    const decrypted = await getAndDecryptTransportToken(x_transport_token)
+    token = decrypted.token
+    timestamp = decrypted.timestamp
   }
 
   if (process.env.HOSTING_PROVIDER === 'true') {
@@ -220,14 +175,12 @@ export async function ownerMiddleware(req, res, next) {
   const jwt = req.headers['x-jwt'] || req.cookies['x-jwt']
 
   if (!token && !jwt) {
-    res.writeHead(401, 'Access invalid for user', {
-      'Content-Type': 'text/plain',
-    })
-    res.end('Invalid credentials')
+    res.status(401)
+    res.end('Invalid credentials - no token or jwt')
     return
   }
 
-  let owner
+  let owner: ContactRecord | undefined
 
   // find by auth token
   if (token) {
@@ -235,9 +188,9 @@ export async function ownerMiddleware(req, res, next) {
       .createHash('sha256')
       .update(token)
       .digest('base64')
-    owner = await models.Contact.findOne({
+    owner = (await models.Contact.findOne({
       where: { authToken: hashedToken, isOwner: true },
-    })
+    })) as ContactRecord
   }
 
   // find by JWT
@@ -247,44 +200,56 @@ export async function ownerMiddleware(req, res, next) {
       const publicKey = (parsed.body as any).pubkey
       const allowed = allowedJwtRoutes(parsed.body, req.path)
       if (allowed && publicKey) {
-        owner = await models.Contact.findOne({
+        owner = (await models.Contact.findOne({
           where: { publicKey, isOwner: true },
-        })
+        })) as ContactRecord
       }
     }
   }
 
   if (!owner) {
-    res.writeHead(401, 'Access invalid for user', {
-      'Content-Type': 'text/plain',
-    })
-    res.end('Invalid credentials')
-  } else {
-    if (x_transport_token) {
-      // Checking the db for a dupe
-      const duplicate = await models.RequestsTransportTokens.findOne({
-        where: { transportToken: x_transport_token },
-      })
-      if (duplicate) {
-        res.writeHead(401, 'Access invalid for user', {
-          'Content-Type': 'text/plain',
-        })
-        res.end('invalid credentials')
+    res.status(401)
+    res.end('Invalid credentials - no owner')
+    return
+  }
+
+  if (x_admin_token || x_transport_token) {
+    if (!timestamp) {
+      res.status(401)
+      res.end('Invalid credentials - no ts')
+      return
+    }
+    if (owner.lastTimestamp) {
+      // console.log('=> received timestamp', timestamp)
+      let thisTimestamp = momentFromTimestamp(timestamp)
+      const lastTimestamp = momentFromTimestamp(owner.lastTimestamp)
+      if (thisTimestamp.isBefore(lastTimestamp)) {
+        // FIXME this needs to be:
+        // if (!thisTimestamp.isAfter(lastTimestamp)) {
+        res.status(401)
+        res.end('Invalid credentials - timestamp too soon')
         return
       }
-
-      // Here we are saving the x_transport_token that we just
-      // used into the db to be checked against later
-      const transportTokenDBValues = { transportToken: x_transport_token }
-      try {
-        await models.RequestsTransportTokens.create(transportTokenDBValues)
-      } catch (e) {
-        console.log('Error when creating transport token', e)
+    }
+    if (x_admin_token) {
+      if (!owner.isAdmin) {
+        res.status(401)
+        res.end('Invalid credentials - not admin')
+        return
       }
     }
+    await owner.update({ lastTimestamp: timestamp })
+  }
+  req.owner = owner.dataValues
+  next()
+}
 
-    req.owner = owner.dataValues
-    next()
+// support either 10-digit timestamp (unix) or 13-digit (js-style)
+function momentFromTimestamp(ts: number) {
+  if ((ts + '').length === 10) {
+    return moment.unix(ts)
+  } else {
+    return moment(ts)
   }
 }
 
@@ -347,12 +312,14 @@ export async function authModule(req, res, next) {
     }
   }
 
-  const token = req.headers['x-user-token'] || req.cookies['x-user-token']
+  const token =
+    req.headers['x-user-token'] ||
+    req.cookies['x-user-token'] ||
+    req.headers['x-admin-token'] ||
+    req.cookies['x-admin-token']
   if (token == null) {
-    res.writeHead(401, 'Access invalid for user', {
-      'Content-Type': 'text/plain',
-    })
-    res.end('Invalid credentials')
+    res.status(401)
+    res.end('Invalid credentials - token is null')
   } else {
     const user: Contact = (await models.Contact.findOne({
       where: { isOwner: true },
@@ -362,10 +329,8 @@ export async function authModule(req, res, next) {
       .update(token)
       .digest('base64')
     if (user.authToken == null || user.authToken != hashedToken) {
-      res.writeHead(401, 'Access invalid for user', {
-        'Content-Type': 'text/plain',
-      })
-      res.end('Invalid credentials')
+      res.status(401)
+      res.end('Invalid credentials - token doesnt match')
     } else {
       next()
     }

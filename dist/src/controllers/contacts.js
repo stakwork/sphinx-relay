@@ -25,9 +25,7 @@ const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const moment = require("moment");
 const rsa = require("../crypto/rsa");
-const fs = require("fs");
-const config_1 = require("../utils/config");
-const config = (0, config_1.loadConfig)();
+const cert_1 = require("../utils/cert");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -219,11 +217,8 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         token = req.body['token'];
     }
     else {
-        const transportTokenKeys = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
-        const tokenAndTimestamp = rsa
-            .decrypt(transportTokenKeys, xTransportToken)
-            .split('|');
-        token = tokenAndTimestamp[0];
+        const decrypted = yield (0, cert_1.getAndDecryptTransportToken)(xTransportToken);
+        token = decrypted.token;
     }
     if (!token) {
         return (0, res_1.failure)(res, 'no token in body');
@@ -236,10 +231,20 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     else {
         // done!
+        let isAdmin = true;
         if ((0, proxy_1.isProxy)()) {
+            const adminCount = yield models_1.models.Contact.count({
+                where: { isAdmin: true },
+            });
+            // there can be only 1 admin
+            if (adminCount !== 0)
+                isAdmin = false;
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
-        owner.update({ authToken: hash });
+        if (isAdmin) {
+            logger_1.sphinxLogger.info('Admin signing up!!!');
+        }
+        yield owner.update({ authToken: hash, isAdmin });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,
@@ -250,7 +255,7 @@ const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!req.body.encrypted_key) {
         return (0, res_1.failure)(res, 'no encrypted_key found');
     }
-    const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+    const transportTokenKey = yield (0, cert_1.getTransportKey)();
     const hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key);
     if (!hmacKey) {
         return (0, res_1.failure)(res, 'no decrypted hmac key');
