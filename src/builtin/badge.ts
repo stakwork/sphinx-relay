@@ -19,6 +19,7 @@ interface BadgeRewards {
   rewardType: number
   amount: number
   name: string
+  asset: string
 }
 
 const msg_types = Sphinx.MSG_TYPE
@@ -189,7 +190,7 @@ export function init() {
                     const resEmbed = new Sphinx.MessageEmbed()
                       .setAuthor('BagdeBot')
                       .setDescription(
-                        `${chatMember.lastAlias} just earned the ${reward.name} badge`
+                        `${chatMember.lastAlias} just earned the ${reward.name} badge!, https://blockstream.info/liquid/asset/${reward.asset} redeem on people.sphinx.chat`
                       )
                     message.channel.send({ embed: resEmbed })
                   }
@@ -254,6 +255,7 @@ export async function createOrEditBadgeBot(
             amount,
             badgeId: badge.id,
             rewardType: rewardType,
+            asset: badge.asset,
           })
           meta = JSON.stringify(temMeta)
         }
@@ -264,6 +266,7 @@ export async function createOrEditBadgeBot(
           amount,
           badgeId: badge.id,
           rewardType: rewardType,
+          asset: badge.asset,
         })
         meta = JSON.stringify(temMeta)
       }
@@ -276,6 +279,7 @@ export async function createOrEditBadgeBot(
         amount,
         badgeId: badge.id,
         rewardType: rewardType,
+        asset: badge.asset,
       })
 
       const chatBot: { [k: string]: any } = {

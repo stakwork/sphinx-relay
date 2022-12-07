@@ -163,7 +163,7 @@ function init() {
                                     if (badge.tx) {
                                         const resEmbed = new Sphinx.MessageEmbed()
                                             .setAuthor('BagdeBot')
-                                            .setDescription(`${chatMember.lastAlias} just earned the ${reward.name} badge`);
+                                            .setDescription(`${chatMember.lastAlias} just earned the ${reward.name} badge!, https://blockstream.info/liquid/asset/${reward.asset} redeem on people.sphinx.chat`);
                                         message.channel.send({ embed: resEmbed });
                                     }
                                 }
@@ -217,6 +217,7 @@ function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
                             amount,
                             badgeId: badge.id,
                             rewardType: rewardType,
+                            asset: badge.asset,
                         });
                         meta = JSON.stringify(temMeta);
                     }
@@ -228,6 +229,7 @@ function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
                         amount,
                         badgeId: badge.id,
                         rewardType: rewardType,
+                        asset: badge.asset,
                     });
                     meta = JSON.stringify(temMeta);
                 }
@@ -241,6 +243,7 @@ function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
                     amount,
                     badgeId: badge.id,
                     rewardType: rewardType,
+                    asset: badge.asset,
                 });
                 const chatBot = {
                     chatId,
