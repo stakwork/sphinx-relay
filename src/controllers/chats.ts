@@ -28,6 +28,13 @@ import { Req } from '../types'
 import { Response } from 'express'
 import { asyncForEach } from '../helpers'
 
+/**
+ * Updates a chat.
+ *
+ * @param {Req} req - The request object containing the owner, id, and body of the chat to update.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 export async function updateChat(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -64,6 +71,13 @@ export async function updateChat(req: Req, res: Response): Promise<void> {
   success(res, jsonUtils.chatToJson(chat))
 }
 
+/**
+ * Kicks a member from a chat.
+ *
+ * @param {Req} req - The request object containing the owner, chat_id, and contact_id of the chat and contact to kick.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 export async function kickChatMember(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -106,6 +120,12 @@ export async function kickChatMember(req: Req, res: Response): Promise<void> {
   success(res, jsonUtils.chatToJson(chat))
 }
 
+/**
+ * Receives a group kick message and processes it.
+ *
+ * @param {Payload} payload - The payload containing the chat, owner, sender, date_string, and network_type of the group kick message.
+ * @returns {Promise<void>}
+ */
 export async function receiveGroupKick(payload: Payload): Promise<void> {
   sphinxLogger.info(`=> receiveGroupKick`, logging.Network)
   const { owner, chat, sender, date_string, network_type } =
@@ -156,6 +176,13 @@ export async function receiveGroupKick(payload: Payload): Promise<void> {
   )
 }
 
+/**
+ * Gets a list of chats.
+ *
+ * @param {Req} req - The request object containing the owner.
+ * @param {Response} res - The response object used to send the list of chats.
+ * @returns {Promise<void>}
+ */
 export async function getChats(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -167,6 +194,13 @@ export async function getChats(req: Req, res: Response): Promise<void> {
   success(res, c)
 }
 
+/**
+ * Sets the notification level for a chat.
+ *
+ * @param {Req} req - The request object containing the owner, chat_id, and level of the chat to update.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 export async function setNotifyLevel(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -189,6 +223,13 @@ export async function setNotifyLevel(req: Req, res: Response): Promise<void> {
   success(res, jsonUtils.chatToJson(chat))
 }
 
+/**
+ * Mutes or unmutes a chat.
+ *
+ * @param {Req} req - The request object containing the owner, chat_id, and mute_unmute of the chat to mute or unmute.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 export async function mute(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
