@@ -84,6 +84,23 @@ export function init() {
           } else {
             return
           }
+        case 'types':
+          const resEmbed = new Sphinx.MessageEmbed()
+            .setAuthor('BadgeBot')
+            .setTitle('Badge Types:')
+            .addFields([
+              {
+                name: 'Earn Badge',
+                value: '{EARN_BADGE_TYPE} value should be {1}',
+              },
+              {
+                name: 'Spend Badge',
+                value: '{SPEND_BADGE_TYPE} value should be {2}',
+              },
+            ])
+            .setThumbnail(botSVG)
+          message.channel.send({ embed: resEmbed })
+          return
         default:
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('BadgeBot')
