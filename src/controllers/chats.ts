@@ -24,11 +24,10 @@ import {
 } from './chatTribes'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { Req } from '../types'
-import { Response } from 'express'
+import { Req, Res } from '../types'
 import { asyncForEach } from '../helpers'
 
-export async function updateChat(req: Req, res: Response): Promise<void> {
+export async function updateChat(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   sphinxLogger.info(`=> updateChat`)
@@ -64,7 +63,7 @@ export async function updateChat(req: Req, res: Response): Promise<void> {
   success(res, jsonUtils.chatToJson(chat))
 }
 
-export async function kickChatMember(req: Req, res: Response): Promise<void> {
+export async function kickChatMember(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 

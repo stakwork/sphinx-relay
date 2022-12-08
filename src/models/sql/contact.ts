@@ -88,6 +88,12 @@ export default class Contact extends Model<Contact> {
 
   @Column
   personUuid: string
+
+  @Column(DataType.BIGINT)
+  lastTimestamp: number
+
+  @Column
+  isAdmin: boolean
 }
 
 export interface ContactRecord extends Contact {
