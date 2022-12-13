@@ -180,7 +180,7 @@ export async function transferBadge({
       }
     )
     if (!r.ok) {
-      throw 'failed to create badge ' + r.status
+      throw 'failed to transfer badge ' + r.status
     }
     const res = await r.json()
     return res

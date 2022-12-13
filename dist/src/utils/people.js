@@ -164,7 +164,7 @@ function transferBadge({ to, asset, amount, memo, owner_pubkey, host, }) {
                 headers: { 'Content-Type': 'application/json' },
             });
             if (!r.ok) {
-                throw 'failed to create badge ' + r.status;
+                throw 'failed to transfer badge ' + r.status;
             }
             const res = yield r.json();
             return res;
