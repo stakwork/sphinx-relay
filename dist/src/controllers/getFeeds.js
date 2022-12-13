@@ -24,6 +24,8 @@ function getFeeds(req, res) {
         try {
             const actions = (yield models_1.models.ActionHistory.findAll({
                 where: { tenant },
+                limit: 500,
+                order: [['updatedAt', 'DESC']],
             }));
             const parsedActions = feedsHelper.parseActionHistory(actions);
             const recommendations = yield (0, node_fetch_1.default)(`${config.boltwall_server}/feeds`, {
