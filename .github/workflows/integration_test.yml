@@ -52,7 +52,7 @@ jobs:
           path: relay
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.18.0
+          node-version: 16
       - name: Build Relay
         working-directory: ./relay
         run: |
