@@ -1,59 +1,90 @@
-name: Integration Test 
-on: 
+name: Integration Test
+on:
   pull_request:
     branches:
       - master
-    
+
 jobs:
   build:
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        test-name: ['boostPayment', 'botCreation', 'chatPayment', 'cleanup', 'clearAllChats', 'clearAllContacts', 'contacts', 'images', 'latestTest', 'lsats', 'paidMeet', 'paidTribeImages', 'queryRoutes', 'self', 'sphinxPeople', 'streamPayment', 'tribe', 'tribe3Escrow', 'tribe3Messages', 'tribe3Private', 'tribe3Profile', 'tribeEdit', 'tribeImages', 'messageLength', 'transportToken', 'pinnedMsg', 'hmac', 'socketIO', 'tribeMember']
+        test-name:
+          [
+            'boostPayment',
+            'botCreation',
+            'chatPayment',
+            'cleanup',
+            'clearAllChats',
+            'clearAllContacts',
+            'contacts',
+            'images',
+            'latestTest',
+            'lsats',
+            'paidMeet',
+            'paidTribeImages',
+            'queryRoutes',
+            'self',
+            'sphinxPeople',
+            'streamPayment',
+            'tribe',
+            'tribe3Escrow',
+            'tribe3Messages',
+            'tribe3Private',
+            'tribe3Profile',
+            'tribeEdit',
+            'tribeImages',
+            'messageLength',
+            'transportToken',
+            'pinnedMsg',
+            'hmac',
+            'socketIO',
+            'tribeMember',
+          ]
     steps:
-    - name: Enable docker.host.internal for Ubuntu
-      run: |
-        pwd && sudo bash -c 'echo "172.17.0.1 host.docker.internal" >> /etc/hosts'
-    - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.pull_request.head.sha }}
-        path: relay
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 16
-    - name: Build Relay
-      working-directory: ./relay
-      run: |
-        npm install && npm run build && docker build -t sphinxlightning/sphinx-relay . 
-    - name: Checkout stack
-      run: |
-        git clone https://github.com/stakwork/sphinx-stack.git stack
-    - name: give permissions 
-      working-directory: ./stack
-      run: |
-        chmod 777 ./bitcoind;    
-        chmod 777 -R ./relay;
-        chmod 777 -R ./lnd;
-        chmod 777 -R ./proxy;
-    - name: Turn on Stack 
-      working-directory: ./stack
-      run: |
-        GITACTION_ENV=gitactionenv docker-compose -f alts/proxy.yml --project-dir . up -d 
-    - name: Check for NODES.json
-      working-directory: ./stack
-      run: |
-         sleep 240;
-         docker-compose ps
-         docker logs meme.sphinx
-         docker logs dave.sphinx
-         docker wait stack_relaysetup_1;
-    - name: copy file
-      uses: canastro/copy-file-action@master
-      with:
-        source: "stack/relay/NODES.json"
-        target: "relay/src/tests/configs/nodes.json"     
-    - name: Run tests
-      working-directory: ./relay
-      run: |
-        npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
+      - name: Enable docker.host.internal for Ubuntu
+        run: |
+          pwd && sudo bash -c 'echo "172.17.0.1 host.docker.internal" >> /etc/hosts'
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: relay
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Build Relay
+        working-directory: ./relay
+        run: |
+          npm install -g npm@latest && npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
+      - name: Checkout stack
+        run: |
+          git clone https://github.com/stakwork/sphinx-stack.git stack
+      - name: give permissions
+        working-directory: ./stack
+        run: |
+          chmod 777 ./bitcoind;    
+          chmod 777 -R ./relay;
+          chmod 777 -R ./lnd;
+          chmod 777 -R ./proxy;
+      - name: Turn on Stack
+        working-directory: ./stack
+        run: |
+          GITACTION_ENV=gitactionenv docker-compose -f alts/proxy.yml --project-dir . up -d
+      - name: Check for NODES.json
+        working-directory: ./stack
+        run: |
+          sleep 240;
+          docker-compose ps
+          docker logs meme.sphinx
+          docker logs dave.sphinx
+          docker wait stack_relaysetup_1;
+      - name: copy file
+        uses: canastro/copy-file-action@master
+        with:
+          source: 'stack/relay/NODES.json'
+          target: 'relay/src/tests/configs/nodes.json'
+      - name: Run tests
+        working-directory: ./relay
+        run: |
+          npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
