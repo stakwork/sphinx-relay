@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authModule = exports.base64ToHex = exports.ownerMiddleware = exports.hmacMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
-const sequelize_1 = require("sequelize");
 const cryptoJS = require("crypto-js");
 const res_1 = require("./utils/res");
 const macaroon_1 = require("./utils/macaroon");
@@ -20,11 +19,10 @@ const config_1 = require("./utils/config");
 const proxy_1 = require("./utils/proxy");
 const jwtUtils = require("./utils/jwt");
 const scopes_1 = require("./scopes");
-const rsa = require("./crypto/rsa");
 const hmac = require("./crypto/hmac");
 const fs = require("fs");
-const moment = require("moment");
 const cert_1 = require("./utils/cert");
+const moment = require("moment");
 const config = (0, config_1.loadConfig)();
 /*
 "unlock": true,
@@ -138,48 +136,14 @@ function ownerMiddleware(req, res, next) {
         // Here we are grabing both the x-user-token and x-transport-token
         const x_user_token = req.headers['x-user-token'] || req.cookies['x-user-token'];
         const x_transport_token = req.headers['x-transport-token'] || req.cookies['x-transport-token'];
+        const x_admin_token = req.headers['x-admin-token'] || req.cookies['x-admin-token'];
         // default assign token to x-user-token
         let token = x_user_token;
-        // If we see the user using the new x_transport_token
-        // we will enter this if block and execute this logic
-        if (x_transport_token) {
-            // Deleting any transport tokens that are older than a minute long
-            // since they will fail the date test futhrer along the auth process
-            yield models_1.models.RequestsTransportTokens.destroy({
-                where: {
-                    createdAt: {
-                        [sequelize_1.Op.lt]: moment().unix() -
-                            config.length_of_time_for_transport_token_clear * 60,
-                    },
-                },
-            });
-            // Read the transport private key since we will need to decrypt with this
-            if (!fs.existsSync(config.transportPrivateKeyLocation)) {
-                yield (0, cert_1.generateTransportTokenKeys)();
-            }
-            const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
-            // Decrypt the token and split by space not sure what
-            // the correct way to do the delimiting so I just put
-            // a space for now
-            const splitTransportToken = rsa
-                .decrypt(transportPrivateKey, x_transport_token)
-                .split('|');
-            // The token will be the first item
-            token = splitTransportToken[0];
-            // The second item will be the timestamp
-            const splitTransportTokenTimestamp = parseInt(splitTransportToken[1]);
-            // Check if the timestamp is within the timeframe we
-            // choose (1 minute here) to clear out the db of saved recent requests
-            if (splitTransportTokenTimestamp <
-                moment().unix() -
-                    config.length_of_time_for_transport_token_clear * 60 ||
-                !splitTransportTokenTimestamp) {
-                res.writeHead(401, 'Access invalid for user', {
-                    'Content-Type': 'text/plain',
-                });
-                res.end('invalid credentials');
-                return;
-            }
+        let timestamp = 0;
+        if (x_admin_token || x_transport_token) {
+            const decrypted = yield (0, cert_1.getAndDecryptTransportToken)(x_transport_token);
+            token = decrypted.token;
+            timestamp = decrypted.timestamp;
         }
         if (process.env.HOSTING_PROVIDER === 'true') {
             if (token) {
@@ -209,10 +173,8 @@ function ownerMiddleware(req, res, next) {
         }
         const jwt = req.headers['x-jwt'] || req.cookies['x-jwt'];
         if (!token && !jwt) {
-            res.writeHead(401, 'Access invalid for user', {
-                'Content-Type': 'text/plain',
-            });
-            res.end('Invalid credentials');
+            res.status(401);
+            res.end('Invalid credentials - no token or jwt');
             return;
         }
         let owner;
@@ -222,9 +184,9 @@ function ownerMiddleware(req, res, next) {
                 .createHash('sha256')
                 .update(token)
                 .digest('base64');
-            owner = yield models_1.models.Contact.findOne({
+            owner = (yield models_1.models.Contact.findOne({
                 where: { authToken: hashedToken, isOwner: true },
-            });
+            }));
         }
         // find by JWT
         if (jwt) {
@@ -233,47 +195,58 @@ function ownerMiddleware(req, res, next) {
                 const publicKey = parsed.body.pubkey;
                 const allowed = (0, scopes_1.allowedJwtRoutes)(parsed.body, req.path);
                 if (allowed && publicKey) {
-                    owner = yield models_1.models.Contact.findOne({
+                    owner = (yield models_1.models.Contact.findOne({
                         where: { publicKey, isOwner: true },
-                    });
+                    }));
                 }
             }
         }
         if (!owner) {
-            res.writeHead(401, 'Access invalid for user', {
-                'Content-Type': 'text/plain',
-            });
-            res.end('Invalid credentials');
+            res.status(401);
+            res.end('Invalid credentials - no owner');
+            return;
         }
-        else {
-            if (x_transport_token) {
-                // Checking the db for a dupe
-                const duplicate = yield models_1.models.RequestsTransportTokens.findOne({
-                    where: { transportToken: x_transport_token },
-                });
-                if (duplicate) {
-                    res.writeHead(401, 'Access invalid for user', {
-                        'Content-Type': 'text/plain',
-                    });
-                    res.end('invalid credentials');
+        if (x_admin_token || x_transport_token) {
+            if (!timestamp) {
+                res.status(401);
+                res.end('Invalid credentials - no ts');
+                return;
+            }
+            if (owner.lastTimestamp) {
+                // console.log('=> received timestamp', timestamp)
+                let thisTimestamp = momentFromTimestamp(timestamp);
+                const lastTimestamp = momentFromTimestamp(owner.lastTimestamp);
+                if (thisTimestamp.isBefore(lastTimestamp)) {
+                    // FIXME this needs to be:
+                    // if (!thisTimestamp.isAfter(lastTimestamp)) {
+                    res.status(401);
+                    res.end('Invalid credentials - timestamp too soon');
                     return;
                 }
-                // Here we are saving the x_transport_token that we just
-                // used into the db to be checked against later
-                const transportTokenDBValues = { transportToken: x_transport_token };
-                try {
-                    yield models_1.models.RequestsTransportTokens.create(transportTokenDBValues);
-                }
-                catch (e) {
-                    console.log('Error when creating transport token', e);
+            }
+            if (x_admin_token) {
+                if (!owner.isAdmin) {
+                    res.status(401);
+                    res.end('Invalid credentials - not admin');
+                    return;
                 }
             }
-            req.owner = owner.dataValues;
-            next();
+            yield owner.update({ lastTimestamp: timestamp });
         }
+        req.owner = owner.dataValues;
+        next();
     });
 }
 exports.ownerMiddleware = ownerMiddleware;
+// support either 10-digit timestamp (unix) or 13-digit (js-style)
+function momentFromTimestamp(ts) {
+    if ((ts + '').length === 10) {
+        return moment.unix(ts);
+    }
+    else {
+        return moment(ts);
+    }
+}
 function decryptMacaroon(password, macaroon) {
     try {
         const decrypted = cryptoJS.AES.decrypt(macaroon || '', password).toString(cryptoJS.enc.Base64);
@@ -327,12 +300,13 @@ function authModule(req, res, next) {
                 return;
             }
         }
-        const token = req.headers['x-user-token'] || req.cookies['x-user-token'];
+        const token = req.headers['x-user-token'] ||
+            req.cookies['x-user-token'] ||
+            req.headers['x-admin-token'] ||
+            req.cookies['x-admin-token'];
         if (token == null) {
-            res.writeHead(401, 'Access invalid for user', {
-                'Content-Type': 'text/plain',
-            });
-            res.end('Invalid credentials');
+            res.status(401);
+            res.end('Invalid credentials - token is null');
         }
         else {
             const user = (yield models_1.models.Contact.findOne({
@@ -343,10 +317,8 @@ function authModule(req, res, next) {
                 .update(token)
                 .digest('base64');
             if (user.authToken == null || user.authToken != hashedToken) {
-                res.writeHead(401, 'Access invalid for user', {
-                    'Content-Type': 'text/plain',
-                });
-                res.end('Invalid credentials');
+                res.status(401);
+                res.end('Invalid credentials - token doesnt match');
             }
             else {
                 next();

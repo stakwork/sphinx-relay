@@ -17,6 +17,7 @@ import * as queries from './queries'
 import * as gitinfo from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
+import * as admin from './admin'
 import constants from '../constants'
 import * as feed from './feed'
 import { failure } from '../utils/res'
@@ -149,6 +150,8 @@ export async function set(app) {
   app.post('/bot/git', bots.addPatToGitBot)
 
   app.get('/healthcheck', confirmations.healthcheck)
+
+  app.get('/add_user', admin.addProxyUser)
 
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateTransportTokenKeys = exports.getCertificate = void 0;
+exports.getAndDecryptTransportToken = exports.getTransportKey = exports.generateTransportTokenKeys = exports.getCertificate = void 0;
 const fs_1 = require("fs");
 const express = require("express");
 const rsa = require("../crypto/rsa");
@@ -190,6 +190,25 @@ function getCertificate(domain, port, save_ssl) {
     });
 }
 exports.getCertificate = getCertificate;
+function getAndDecryptTransportToken(t) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const transportPrivateKey = yield getTransportKey();
+        const splitTransportToken = rsa.decrypt(transportPrivateKey, t).split('|');
+        const token = splitTransportToken[0];
+        const timestamp = parseInt(splitTransportToken[1]);
+        return { token, timestamp };
+    });
+}
+exports.getAndDecryptTransportToken = getAndDecryptTransportToken;
+function getTransportKey() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+            yield generateTransportTokenKeys();
+        }
+        return fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+    });
+}
+exports.getTransportKey = getTransportKey;
 function generateTransportTokenKeys() {
     return __awaiter(this, void 0, void 0, function* () {
         const transportTokenKeys = yield rsa.genKeys();

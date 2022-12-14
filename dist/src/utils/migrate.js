@@ -42,8 +42,18 @@ function migrateMuted() {
         }
     });
 }
+function clearTransportTokens() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield models_1.models.RequestsTransportTokens.destroy({
+            truncate: true,
+        });
+    });
+}
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT');
+        yield clearTransportTokens();
+        addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'notify', 'BIGINT');
         yield migrateMuted();
         addTableColumn('sphinx_messages', 'push', 'BOOLEAN');
