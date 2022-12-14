@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     strategy:
       fail-fast: false
       matrix:
@@ -52,7 +52,7 @@ jobs:
           path: relay
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.18.0
+          node-version: 16
       - name: Build Relay
         working-directory: ./relay
         run: |
