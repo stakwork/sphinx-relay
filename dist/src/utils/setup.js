@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupPersonUuid = exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
+exports.updateLsat = exports.setupPersonUuid = exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
 const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
@@ -24,6 +24,7 @@ const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
+const constants_1 = require("../constants");
 const USER_VERSION = 7;
 const config = (0, config_1.loadConfig)();
 const setupDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -114,6 +115,22 @@ const setupPersonUuid = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.setupPersonUuid = setupPersonUuid;
+const updateLsat = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const timestamp = new Date(1669658385 * 1000);
+        const lsats = (yield models_1.models.Lsat.findAll({
+            where: { createdAt: { [sequelize_1.Op.lt]: timestamp }, status: 1 },
+        }));
+        for (let i = 0; i < lsats.length; i++) {
+            const lsat = lsats[i];
+            lsat.update({ status: constants_1.default.lsat_statuses.expired });
+        }
+    }
+    catch (error) {
+        logger_1.sphinxLogger.info(['error trying to update lsat status', error], logger_1.logging.Lsat);
+    }
+});
+exports.updateLsat = updateLsat;
 const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     yield new Promise((resolve, reject) => {
         const migration = (0, child_process_1.exec)('node_modules/.bin/sequelize db:migrate', { env: process.env }, (err, stdout, stderr) => {

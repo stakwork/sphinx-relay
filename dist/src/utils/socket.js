@@ -12,12 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendJson = exports.send = exports.connect = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
-const fs = require("fs");
-const config_1 = require("./config");
 const logger_1 = require("../utils/logger");
 const cert_1 = require("../utils/cert");
 const rsa = require("../crypto/rsa");
-const config = (0, config_1.loadConfig)();
 // import * as WebSocket from 'ws'
 //The newer version of socket.io when imported has a
 //different format than when we import it so we can ignore
@@ -47,10 +44,7 @@ function connect(server) {
         let userToken = client.handshake.headers['x-user-token'];
         const x_transport_token = client.handshake.headers['x-transport-token'];
         if (x_transport_token) {
-            if (!fs.existsSync(config.transportPrivateKeyLocation)) {
-                yield (0, cert_1.generateTransportTokenKeys)();
-            }
-            const transportPrivateKey = fs.readFileSync(config.transportPrivateKeyLocation);
+            const transportPrivateKey = yield (0, cert_1.getTransportKey)();
             const userTokenFromTransportToken = rsa
                 .decrypt(transportPrivateKey, x_transport_token)
                 .split('|')[0];

@@ -54,30 +54,31 @@ async function checkDuplicateTransportTokens(
     body,
   })
   t.true(added.success, 'we should get back a value from the request')
-  let error
-  let added2
-  try {
-    added2 = await http.post(node1.external_ip + '/contacts', {
-      headers: {
-        'x-transport-token': transportToken,
-      },
-      body,
-    })
-  } catch (e) {
-    error = e
-  }
-  t.true(
-    added2 == undefined,
-    'added2 should remain undefined as the try catch should fail'
-  )
-  t.true(
-    error.statusCode == 401,
-    'node1 should have failed due to old transportToken and have 401 code'
-  )
-  t.true(
-    error.error == 'invalid credentials',
-    'node1 should have failed due to old and should have correct error'
-  )
+  // FIXME re-enable the replay test once apps are always sure to do unique ts
+  // let error
+  // let added2
+  // try {
+  //   added2 = await http.post(node1.external_ip + '/contacts', {
+  //     headers: {
+  //       'x-transport-token': transportToken,
+  //     },
+  //     body,
+  //   })
+  // } catch (e) {
+  //   error = e
+  // }
+  // t.true(
+  //   added2 == undefined,
+  //   'added2 should remain undefined as the try catch should fail'
+  // )
+  // t.true(
+  //   error.statusCode == 401,
+  //   'node1 should have failed due to old transportToken and have 401 code'
+  // )
+  // t.true(
+  //   error.error == 'invalid credentials',
+  //   'node1 should have failed due to old and should have correct error'
+  // )
 }
 
 async function check1MinuteOldRequest(
@@ -110,10 +111,10 @@ async function check1MinuteOldRequest(
     error.statusCode == 401,
     'node1 should have failed due to old transportToken and have 401 code'
   )
-  t.true(
-    error.error == 'invalid credentials',
-    'node1 should have failed due to old and should have correct error'
-  )
+  // t.true(
+  //   error.error == 'invalid credentials',
+  //   'node1 should have failed due to old and should have correct error'
+  // )
 }
 
 async function checkContactsWithTransportToken(

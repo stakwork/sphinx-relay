@@ -80,7 +80,7 @@ export async function generateNewUsers() {
 const adminURL = config.proxy_admin_url
   ? config.proxy_admin_url + '/'
   : 'http://localhost:5555/'
-export async function generateNewUser(rootpk: string) {
+export async function generateNewUser(rootpk: string): Promise<any> {
   try {
     const r = await fetch(adminURL + 'generate', {
       method: 'POST',
@@ -99,6 +99,7 @@ export async function generateNewUser(rootpk: string) {
     // set tenant to self!
     created.update({ tenant: created.id })
     sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
+    return created.dataValues
   } catch (e) {
     sphinxLogger.error(`=> could not gen new user ${e}`)
   }

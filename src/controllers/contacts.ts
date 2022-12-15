@@ -23,11 +23,8 @@ import { isProxy, generateNewExternalUser } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
 import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
-import * as fs from 'fs'
-import { loadConfig } from '../utils/config'
+import { getAndDecryptTransportToken, getTransportKey } from '../utils/cert'
 import { Req, Res } from '../types'
-
-const config = loadConfig()
 
 export const getContacts = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -238,14 +235,8 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
   if (typeof xTransportToken !== 'string') {
     token = req.body['token']
   } else {
-    const transportTokenKeys = fs.readFileSync(
-      config.transportPrivateKeyLocation,
-      'utf8'
-    )
-    const tokenAndTimestamp = rsa
-      .decrypt(transportTokenKeys, xTransportToken)
-      .split('|')
-    token = tokenAndTimestamp[0]
+    const decrypted = await getAndDecryptTransportToken(xTransportToken)
+    token = decrypted.token
   }
 
   if (!token) {
@@ -259,10 +250,19 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
     }
   } else {
     // done!
+    let isAdmin = true
     if (isProxy()) {
+      const adminCount = await models.Contact.count({
+        where: { isAdmin: true },
+      })
+      // there can be only 1 admin
+      if (adminCount !== 0) isAdmin = false
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
-    owner.update({ authToken: hash })
+    if (isAdmin) {
+      sphinxLogger.info('Admin signing up!!!')
+    }
+    await owner.update({ authToken: hash, isAdmin })
   }
 
   success(res, {
@@ -274,10 +274,7 @@ export const registerHmacKey = async (req: Req, res: Res): Promise<void> => {
   if (!req.body.encrypted_key) {
     return failure(res, 'no encrypted_key found')
   }
-  const transportTokenKey = fs.readFileSync(
-    config.transportPrivateKeyLocation,
-    'utf8'
-  )
+  const transportTokenKey = await getTransportKey()
   const hmacKey = rsa.decrypt(transportTokenKey, req.body.encrypted_key)
   if (!hmacKey) {
     return failure(res, 'no decrypted hmac key')
