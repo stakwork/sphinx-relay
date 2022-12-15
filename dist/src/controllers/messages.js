@@ -100,6 +100,14 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     res.end();
 });
 exports.getMessages = getMessages;
+/**
+@async
+@function getAllMessages
+@param {Req} req - The request object
+@param {Res} res - The response object
+@returns {Promise<void>}
+@description This function retrieves all messages for the current owner, along with metadata about the messages, such as the associated chat ID and the total number of messages.
+*/
 const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -143,6 +151,18 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
 });
 exports.getAllMessages = getAllMessages;
+/**
+@function
+@async
+@param {Req} req - Express request object.
+@param {Res} res - Express response object.
+@returns {Promise<void>}
+@description
+This route handler is used to retrieve new messages. It accepts two optional query parameters: limit and offset
+to limit the number of messages returned, and date to retrieve messages updated after the specified date.
+The response contains the new_messages array, which is an array of new messages, and the new_messages_total
+property, which indicates the total number of new messages.
+*/
 const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -190,6 +210,12 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.getMsgs = getMsgs;
+/**
+Deletes a message from the database and sends a delete message to the chat.
+@param {Req} req - The request object containing the owner and params.
+@param {Res} res - The response object to send the result.
+@returns {Promise<void>} - Returns a promise that resolves when the operation is complete.
+*/
 function deleteMessage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -225,6 +251,14 @@ function deleteMessage(req, res) {
     });
 }
 exports.deleteMessage = deleteMessage;
+/**
+send a message to a contact or tribe
+
+@param {Req} req - request object
+@param {Res} res - response object
+
+@return {Promise<void>}
+*/
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -357,6 +391,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     network.sendMessage(sendMessageParams);
 });
 exports.sendMessage = sendMessage;
+/**
+Receive a message and store it in the database.
+
+@param {Payload} payload - The message payload containing the sender, chat, and message content.
+@returns {Promise<void>} - A promise that resolves when the message has been received and stored.
+*/
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
     const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, } = yield helpers.parseReceiveParams(payload);
@@ -406,6 +446,11 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveMessage = receiveMessage;
+/**
+Receives a boost message and stores it in the database.
+@param {Payload} payload - The boost message payload.
+@return {Promise<void>} - A promise that resolves when the function completes.
+*/
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
@@ -460,6 +505,12 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.receiveBoost = receiveBoost;
+/**
+Handles the receipt of a repayment.
+
+@param {Payload} payload - The parsed payload of the incoming message.
+@returns {Promise<void>} - A promise that resolves when the receipt of the repayment has been processed.
+*/
 const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, date_string, amount, network_type } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received repayment ${amount}sats`, logger_1.logging.Network);
@@ -489,6 +540,14 @@ const receiveRepayment = (payload) => __awaiter(void 0, void 0, void 0, function
     }, tenant);
 });
 exports.receiveRepayment = receiveRepayment;
+/**
+@async
+@function receiveDeleteMessage
+@param {Payload} payload - The payload object containing information about the deleted message.
+@returns {Promise<void>}
+@example
+receiveDeleteMessage(payload)
+*/
 const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info('=> received delete message', logger_1.logging.Network);
     const { owner, sender, chat, chat_type, msg_uuid } = yield helpers.parseReceiveParams(payload);
@@ -512,6 +571,13 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     }, tenant);
 });
 exports.receiveDeleteMessage = receiveDeleteMessage;
+/**
+Updates the messages in the specified chat to mark them as seen by the owner and sends a notification to the other chat members.
+
+@param {Req} req - The request object containing the chat ID.
+@param {Res} res - The response object used to send the updated chat information.
+@returns {Promise<void>} - An empty promise.
+*/
 const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -546,6 +612,13 @@ const readMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.readMessages = readMessages;
+/**
+This function will clear all messages in the database.
+
+@param {Req} req - The request object containing the owner property.
+@param {Res} res - The response object.
+@returns {Promise<void>} - This function returns a promise that resolves to an empty object on success, or a failure message on failure.
+*/
 const clearMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
