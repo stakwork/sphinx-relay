@@ -539,6 +539,8 @@ function receiveBotRes(dat) {
         const chat = (yield models_1.models.Chat.findOne({
             where: { uuid: chat_uuid, tenant },
         }));
+        if (chat)
+            chat.update({ seen: false });
         if (!chat)
             return logger_1.sphinxLogger.error('=> receiveBotRes Error no chat');
         const tribeOwnerPubKey = chat && chat.ownerPubkey;
