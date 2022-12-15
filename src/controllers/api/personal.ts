@@ -7,7 +7,9 @@ import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
 import { createJWT, scopes } from '../../utils/jwt'
-import { setPersonId } from '../../utils/people'
+import { Badge } from '../../types'
+import { createOrEditBadgeBot } from '../../builtin/badge'
+import constants from '../../constants'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -60,7 +62,6 @@ export async function createPeopleProfile(req, res) {
       priceToMeet: priceToMeet || 0,
       personUuid: person.uuid,
     })
-    setPersonId(person.uuid)
     success(res, person)
   } catch (e) {
     failure(res, e)
@@ -189,5 +190,84 @@ export async function claimOnLiquid(req, res) {
     success(res, r)
   } catch (e) {
     failure(res, e)
+  }
+}
+
+export async function createBadge(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+
+  try {
+    const owner: Contact = (await models.Contact.findOne({
+      where: { tenant, isOwner: true },
+    })) as Contact
+
+    const { name, icon, amount, chat_id, claim_amount, reward_type } = req.body
+    if (
+      typeof name !== 'string' ||
+      typeof icon !== 'string' ||
+      typeof amount !== 'number' ||
+      typeof chat_id !== 'number' ||
+      typeof claim_amount !== 'number' ||
+      typeof reward_type !== 'number'
+    )
+      return failure(res, 'invalid data passed')
+
+    const tribe = await models.Chat.findOne({
+      where: {
+        id: chat_id,
+        ownerPubkey: owner.publicKey,
+        tenant,
+        deleted: false,
+        type: 2,
+      },
+    })
+    if (!tribe) return failure(res, 'invalid tribe')
+    let validRewardType = false
+    for (const key in constants.reward_types) {
+      if (constants.reward_types[key] === reward_type) {
+        validRewardType = true
+      }
+    }
+    if (!validRewardType) return failure(res, 'invalid reward type')
+    const response: Badge = await people.createBadge({
+      host: 'liquid.sphinx.chat',
+      icon,
+      amount,
+      name,
+      owner_pubkey: owner.publicKey,
+    })
+    await createOrEditBadgeBot(
+      chat_id,
+      tenant,
+      response,
+      claim_amount,
+      reward_type
+    )
+    return success(res, response)
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
+export async function transferBadge(req, res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  try {
+    const owner: Contact = (await models.Contact.findOne({
+      where: { tenant, isOwner: true },
+    })) as Contact
+    const { amount, asset, to, memo } = req.body
+    const response = await people.transferBadge({
+      host: 'liquid.sphinx.chat',
+      amount,
+      memo,
+      asset,
+      to,
+      owner_pubkey: owner.publicKey,
+    })
+    return success(res, response)
+  } catch (error) {
+    return failure(res, error)
   }
 }

@@ -17,6 +17,7 @@ import * as queries from './queries'
 import * as gitinfo from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
+import * as admin from './admin'
 import constants from '../constants'
 import * as feed from './feed'
 import { failure } from '../utils/res'
@@ -25,6 +26,7 @@ import * as personal from './api/personal'
 import * as lsats from './lsats'
 import { Req } from '../types'
 import * as action from './actionHistory'
+import * as feeds from './getFeeds'
 
 export async function set(app) {
   builtInBots.init()
@@ -80,10 +82,12 @@ export async function set(app) {
 
   app.post('/profile', personal.createPeopleProfile)
   app.delete('/profile', personal.deletePersonProfile)
-  app.post('/delete_ticket',personal.deleteTicketByAdmin)
+  app.post('/delete_ticket', personal.deleteTicketByAdmin)
   app.post('/public_pic', personal.uploadPublicPic)
   app.get('/refresh_jwt', personal.refreshJWT)
   app.post('/claim_on_liquid', personal.claimOnLiquid)
+  app.post('/create_badge', personal.createBadge)
+  app.post('/transfer_badge', personal.transferBadge)
 
   app.get('/msgs', messages.getMsgs)
   app.get('/allmessages', messages.getAllMessages)
@@ -147,6 +151,8 @@ export async function set(app) {
 
   app.get('/healthcheck', confirmations.healthcheck)
 
+  app.get('/add_user', admin.addProxyUser)
+
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })
   })
@@ -176,6 +182,9 @@ export async function set(app) {
   app.put('/lsats/:identifier', lsats.updateLsat)
   app.delete('/lsats/:identifier', lsats.deleteLsat)
   app.get('/active_lsat', lsats.getActiveLsat)
+
+  // Get feeds
+  app.get('/feeds', feeds.getFeeds)
 }
 
 const msgtypes = constants.message_types

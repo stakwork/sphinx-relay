@@ -24,10 +24,8 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const short = require("short-uuid");
 const git_1 = require("../builtin/git");
-const fs = require("fs");
 const rsa = require("../crypto/rsa");
-const config_1 = require("../utils/config");
-const config = (0, config_1.loadConfig)();
+const cert_1 = require("../utils/cert");
 const getBots = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -506,7 +504,7 @@ const addPatToGitBot = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const tenant = req.owner.id;
     if (!req.body.encrypted_pat)
         return (0, res_1.failure)(res, 'no pat');
-    const transportTokenKey = fs.readFileSync(config.transportPrivateKeyLocation, 'utf8');
+    const transportTokenKey = yield (0, cert_1.getTransportKey)();
     const pat = rsa.decrypt(transportTokenKey, req.body.encrypted_pat);
     if (!pat)
         return (0, res_1.failure)(res, 'failed to decrypt pat');

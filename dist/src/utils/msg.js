@@ -9,10 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.encryptTribeBroadcast = exports.decryptMessage = exports.personalizeMessage = exports.fillmsg = void 0;
+exports.recordLeadershipScore = exports.encryptTribeBroadcast = exports.decryptMessage = exports.personalizeMessage = exports.fillmsg = void 0;
 const ldat_1 = require("./ldat");
 const rsa = require("../crypto/rsa");
 const constants_1 = require("../constants");
+const models = require("../models");
+const logger_1 = require("../utils/logger");
 function addInRemoteText(full, contactId, isTribe) {
     const m = full && full.message;
     if (!(m && m.content))
@@ -174,4 +176,32 @@ exports.fillmsg = fillmsg;
 function fillchatmsg(full, props) {
     return Object.assign(Object.assign({}, full), { chat: Object.assign(Object.assign({}, full.chat), props) });
 }
+function recordLeadershipScore(tenant, amount, chatId, contactId, type) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const receiver = (yield models.ChatMember.findOne({
+                where: {
+                    contactId: contactId,
+                    tenant,
+                    chatId: chatId,
+                },
+            }));
+            if (type === constants_1.default.message_types.boost) {
+                yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
+                    totalEarned: receiver.totalEarned + amount,
+                    reputation: receiver.reputation + 3,
+                }));
+            }
+            else {
+                yield (receiver === null || receiver === void 0 ? void 0 : receiver.update({
+                    totalEarned: receiver.totalEarned + amount,
+                }));
+            }
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`, logger_1.logging.Network);
+        }
+    });
+}
+exports.recordLeadershipScore = recordLeadershipScore;
 //# sourceMappingURL=msg.js.map

@@ -3,6 +3,8 @@ import * as rsa from '../crypto/rsa'
 import constants from '../constants'
 import { Msg, MessageContent, ChatContent } from '../network/interfaces'
 import * as models from '../models'
+import { ChatMemberRecord } from '../models'
+import { logging, sphinxLogger } from '../utils/logger'
 
 function addInRemoteText(full: Partial<Msg>, contactId, isTribe: boolean): Msg {
   const m = full && full.message
@@ -202,4 +204,37 @@ function fillchatmsg(full: Partial<Msg>, props: Partial<ChatContent>): Msg {
   } as Msg
 }
 
-export { personalizeMessage, decryptMessage, encryptTribeBroadcast }
+async function recordLeadershipScore(tenant, amount, chatId, contactId, type) {
+  try {
+    const receiver = (await models.ChatMember.findOne({
+      where: {
+        contactId: contactId,
+        tenant,
+        chatId: chatId!,
+      },
+    })) as ChatMemberRecord
+
+    if (type === constants.message_types.boost) {
+      await receiver?.update({
+        totalEarned: receiver.totalEarned + amount,
+        reputation: receiver.reputation + 3,
+      })
+    } else {
+      await receiver?.update({
+        totalEarned: receiver.totalEarned + amount,
+      })
+    }
+  } catch (error) {
+    sphinxLogger.error(
+      `=> Could not update the totalEarned column on the ChatMember table for Leadership board record ${error}`,
+      logging.Network
+    )
+  }
+}
+
+export {
+  personalizeMessage,
+  decryptMessage,
+  encryptTribeBroadcast,
+  recordLeadershipScore,
+}

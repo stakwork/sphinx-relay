@@ -6,7 +6,11 @@ import {
   ChatMember as ChatMemberModel,
 } from '../models'
 import * as LND from '../grpc/lightning'
-import { personalizeMessage, decryptMessage } from '../utils/msg'
+import {
+  personalizeMessage,
+  decryptMessage,
+  recordLeadershipScore,
+} from '../utils/msg'
 import * as tribes from '../utils/tribes'
 import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
 import { typesToForward } from './receive'
@@ -15,7 +19,6 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
-import * as people from "../utils/people";
 
 const config = loadConfig()
 
@@ -204,6 +207,7 @@ export async function sendMessage({
     // console.log("=> realSatsContactId", realSatsContactId, contactId)
     if (isTribeOwner && amount && realSatsContactId === contactId) {
       mqttTopic = '' // FORCE KEYSEND!!!
+      await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
     }
 
     const m = await personalizeMessage(msg, contact, isTribeOwner)
@@ -329,6 +333,7 @@ export function newmsg(
   if (!includeStatus && message.status) {
     delete message.status
   }
+  console.log('PERSONUUID in newmsg', sender.personUuid)
   const result: Msg = {
     type: type,
     chat: {
@@ -351,12 +356,6 @@ export function newmsg(
       ...(includePhotoUrl && { photo_url: photoUrlToInclude }),
       // ...sender.contactKey && {contact_key: sender.contactKey}
     },
-  };
-  const personId = people.getPersonId();
-  if(personId){
-    result.sender.person = config.people_host + '/' + personId;
-    sphinxLogger.info(`[+] person host full URL  ${result.sender.person}`, logging.Network)
-        return result
   }
   return result
 }

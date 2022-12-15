@@ -13,13 +13,15 @@ exports.saveActionBulk = exports.saveAction = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const helpers_1 = require("../helpers");
+const constants_1 = require("../constants");
 function saveAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { type, meta_data } = req.body;
-        if (!type)
+        const actionTypes = Object.keys(constants_1.default.action_types);
+        if (typeof type !== 'number' || !actionTypes[type])
             return (0, res_1.failure)(res, 'invalid type');
         if (!meta_data)
             return (0, res_1.failure)(res, 'invalid meta_data');
@@ -27,7 +29,7 @@ function saveAction(req, res) {
             yield models_1.models.ActionHistory.create({
                 tenant,
                 metaData: JSON.stringify(meta_data),
-                type,
+                actionType: type,
             });
             return (0, res_1.success)(res, 'Action saved successfully');
         }
@@ -44,17 +46,20 @@ function saveActionBulk(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { data } = req.body;
+        const actionTypes = Object.keys(constants_1.default.action_types);
         if (!Array.isArray(data))
             return (0, res_1.failure)(res, 'invalid data');
         if (data.length === 0)
             return (0, res_1.failure)(res, 'Please provide an array with contents');
         const insertAction = (value) => __awaiter(this, void 0, void 0, function* () {
-            if (value.type && value.meta_data) {
+            if (typeof value.type === 'number' &&
+                actionTypes[value.type] &&
+                value.meta_data) {
                 try {
                     yield models_1.models.ActionHistory.create({
                         tenant,
                         metaData: JSON.stringify(value.meta_data),
-                        type: value.type,
+                        actionType: value.type,
                     });
                 }
                 catch (error) {

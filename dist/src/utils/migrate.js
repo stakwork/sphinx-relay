@@ -42,8 +42,18 @@ function migrateMuted() {
         }
     });
 }
+function clearTransportTokens() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield models_1.models.RequestsTransportTokens.destroy({
+            truncate: true,
+        });
+    });
+}
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT');
+        yield clearTransportTokens();
+        addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'notify', 'BIGINT');
         yield migrateMuted();
         addTableColumn('sphinx_messages', 'push', 'BOOLEAN');
@@ -60,6 +70,8 @@ function migrate() {
         addTableColumn('sphinx_chats', 'skip_broadcast_joins', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'pin');
         addTableColumn('sphinx_chats', 'profile_filters', 'TEXT');
+        addTableColumn('sphinx_chat_members', 'total_earned', 'BIGINT');
+        addTableColumn('sphinx_chat_members', 'reputation', 'BIGINT');
         addTenant('sphinx_chat_members');
         addTenant('sphinx_chats');
         addTenant('sphinx_bots');
@@ -230,17 +242,18 @@ function migrate() {
         try {
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_action_history (
-      id BIGINT NOT NULL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT,
       meta_data TEXT,
       tenant INTEGER,
-			created_at DATETIME,
-      updated_at DATETIME
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
     )`);
         }
         catch (e) {
             //Do nothing here
         }
+        addTableColumn('sphinx_action_history', 'action_type', 'INT');
     });
 }
 exports.default = migrate;

@@ -45,7 +45,18 @@ const configFile = argv.db
     ? path.resolve(process.cwd(), argv.db)
     : path.join(__dirname, '../../config/config.json');
 const env = process.env.NODE_ENV || 'development';
-const config = JSON.parse((0, fs_1.readFileSync)(configFile).toString())[env];
+let config;
+const dialect = process.env.DB_DIALECT;
+const storage = process.env.DB_STORAGE;
+if (dialect && storage) {
+    config = {
+        dialect,
+        storage,
+    };
+}
+else {
+    config = JSON.parse((0, fs_1.readFileSync)(configFile).toString())[env];
+}
 const appConfig = (0, config_1.loadConfig)();
 const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_log === 'true' ? console.log : false, models: [
         chat_1.default,

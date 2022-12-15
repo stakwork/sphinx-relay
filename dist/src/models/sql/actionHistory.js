@@ -26,6 +26,10 @@ __decorate([
     __metadata("design:type", String)
 ], ActionHistory.prototype, "type", void 0);
 __decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], ActionHistory.prototype, "actionType", void 0);
+__decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], ActionHistory.prototype, "metaData", void 0);

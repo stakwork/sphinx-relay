@@ -204,6 +204,27 @@ async function getCertificate(domain: string, port: number, save_ssl: boolean) {
   }
 }
 
+interface GetAndDecryptTransportTokenReturn {
+  token: string
+  timestamp: number
+}
+async function getAndDecryptTransportToken(
+  t: string
+): Promise<GetAndDecryptTransportTokenReturn> {
+  const transportPrivateKey = await getTransportKey()
+  const splitTransportToken = rsa.decrypt(transportPrivateKey, t).split('|')
+  const token = splitTransportToken[0]
+  const timestamp = parseInt(splitTransportToken[1])
+  return { token, timestamp }
+}
+
+async function getTransportKey() {
+  if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+    await generateTransportTokenKeys()
+  }
+  return fs.readFileSync(config.transportPrivateKeyLocation, 'utf8')
+}
+
 async function generateTransportTokenKeys(): Promise<string> {
   const transportTokenKeys = await rsa.genKeys()
   fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
@@ -214,4 +235,9 @@ async function generateTransportTokenKeys(): Promise<string> {
   return transportTokenKeys.public
 }
 
-export { getCertificate, generateTransportTokenKeys }
+export {
+  getCertificate,
+  generateTransportTokenKeys,
+  getTransportKey,
+  getAndDecryptTransportToken,
+}

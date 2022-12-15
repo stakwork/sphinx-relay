@@ -110,11 +110,11 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
 
   t.true(
     responseArray[responseArray.length - 4].type == 'confirmation',
-    'we should get back something when we recieve a message'
+    'we should receive a confirmation'
   )
   t.true(
     responseArray[responseArray.length - 3].type == 'message',
-    'we should get back something when we recieve a message'
+    'we should receive a message'
   )
   t.true(
     responseArray[responseArray.length - 2].type == 'group_join',
@@ -122,7 +122,7 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   )
   t.true(
     responseArray[responseArray.length - 1].type == 'boost',
-    'we should get back something when we recieve a message'
+    'we should receive a boost'
   )
 
   await deleteMessage(t, nodes[0], sentMessage.id)

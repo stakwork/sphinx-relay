@@ -9,12 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setPersonId = exports.getPersonId = exports.setupPersonInfo = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
-const models_1 = require("../models");
 const config = (0, config_1.loadConfig)();
 function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, new_ticket_time, uuid, }, id) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -120,37 +119,63 @@ function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
     });
 }
 exports.claimOnLiquid = claimOnLiquid;
-let person_id;
-function setupPersonInfo() {
+function createBadge({ host, icon, amount, name, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const owner = (yield models_1.models.Contact.findOne({
-            where: { id: 1 },
-        }));
-        let protocol = 'https';
-        if (config.tribes_insecure)
-            protocol = 'http';
-        const url = protocol + '://' + config.people_host + '/person/' + owner.publicKey;
-        logger_1.sphinxLogger.info(`[+] Person url is : ${url}`, logger_1.logging.Tribes);
         try {
-            const arg = yield (0, node_fetch_1.default)(url);
-            const json = yield arg.json();
-            const stringifyJsonResponse = JSON.stringify(json);
-            logger_1.sphinxLogger.info(`[+] Getting person details on url: ${url} with response: ${stringifyJsonResponse}`, logger_1.logging.Tribes);
-            person_id = json.uuid;
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/issue?token=' + token, {
+                method: 'POST',
+                body: JSON.stringify({
+                    icon,
+                    name,
+                    amount,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to create badge ' + r.status;
+            }
+            const res = yield r.json();
+            return res;
         }
-        catch (e) {
-            logger_1.sphinxLogger.error(`[-] Error happened while getting person details for publicKey: ${owner.publicKey}`, logger_1.logging.Tribes);
+        catch (error) {
+            logger_1.sphinxLogger.error('[liquid] Badge was not created', error);
+            throw error;
         }
     });
 }
-exports.setupPersonInfo = setupPersonInfo;
-function getPersonId() {
-    return person_id;
+exports.createBadge = createBadge;
+function transferBadge({ to, asset, amount, memo, owner_pubkey, host, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/transfer?token=' + token, {
+                method: 'POST',
+                body: JSON.stringify({
+                    to,
+                    asset,
+                    amount,
+                    memo,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to create badge ' + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error('[liquid] Badge was not transfered', error);
+            throw error;
+        }
+    });
 }
-exports.getPersonId = getPersonId;
-function setPersonId(uuid) {
-    person_id = uuid;
-    return person_id;
-}
-exports.setPersonId = setPersonId;
+exports.transferBadge = transferBadge;
 //# sourceMappingURL=people.js.map

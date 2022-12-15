@@ -12,6 +12,7 @@ import {
   setupDone,
   setupOwnerContact,
   setupPersonUuid,
+  updateLsat,
 } from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
@@ -22,7 +23,7 @@ import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
-import * as people from './src/utils/people'
+import { leadershipBoardInterval } from './src/leadershipboard'
 
 // force UTC time
 process.env.TZ = 'UTC'
@@ -62,7 +63,7 @@ async function mainSetup() {
 async function finishSetup() {
   await setupOwnerContact()
   await setupPersonUuid()
-  await people.setupPersonInfo()
+  await updateLsat()
   await network.initTribesSubscriptions()
   if (config.hub_api_url) {
     checkInvitesHubInterval(5000)
@@ -71,6 +72,7 @@ async function finishSetup() {
     // IF UNLOCK, start this only after unlocked!
     pingHubInterval(15000)
   }
+  leadershipBoardInterval(1800000)
   setupDone()
 }
 

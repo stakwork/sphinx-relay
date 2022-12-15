@@ -29,7 +29,17 @@ async function migrateMuted() {
   }
 }
 
+async function clearTransportTokens() {
+  await models.RequestsTransportTokens.destroy({
+    truncate: true,
+  })
+}
+
 export default async function migrate(): Promise<void> {
+  addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT')
+  await clearTransportTokens()
+  addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN')
+
   addTableColumn('sphinx_chats', 'notify', 'BIGINT')
 
   await migrateMuted()
@@ -56,6 +66,8 @@ export default async function migrate(): Promise<void> {
 
   addTableColumn('sphinx_chats', 'pin')
   addTableColumn('sphinx_chats', 'profile_filters', 'TEXT')
+  addTableColumn('sphinx_chat_members', 'total_earned', 'BIGINT')
+  addTableColumn('sphinx_chat_members', 'reputation', 'BIGINT')
 
   addTenant('sphinx_chat_members')
   addTenant('sphinx_chats')
@@ -254,16 +266,17 @@ export default async function migrate(): Promise<void> {
   try {
     await sequelize.query(`
     CREATE TABLE sphinx_action_history (
-      id BIGINT NOT NULL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT,
       meta_data TEXT,
       tenant INTEGER,
-			created_at DATETIME,
-      updated_at DATETIME
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
     )`)
   } catch (e) {
     //Do nothing here
   }
+  addTableColumn('sphinx_action_history', 'action_type', 'INT')
 }
 
 async function addTenant(tableName) {

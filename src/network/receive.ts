@@ -13,6 +13,8 @@ import {
   Chat,
   ChatRecord,
   ChatMember,
+  ChatMemberRecord,
+  MessageRecord,
 } from '../models'
 import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import {
@@ -235,7 +237,49 @@ async function onReceive(payload: Payload, dest: string) {
       }
       // make sure alias is unique among chat members
       payload = await uniqueifyAlias(payload, senderContact, chat, owner)
-      if (doAction)
+      if (doAction) {
+        try {
+          const sender = (await models.ChatMember.findOne({
+            where: {
+              contactId: senderContactId,
+              tenant,
+              chatId: chat.id,
+            },
+          })) as ChatMemberRecord
+          if (payload.type === msgtypes.message) {
+            const allMsg = (await models.Message.findAll({
+              limit: 1,
+              order: [['createdAt', 'DESC']],
+              where: {
+                chatId: chat.id,
+                type: { [Op.ne]: msgtypes.confirmation },
+              },
+            })) as MessageRecord[]
+            const contact = (await models.Contact.findOne({
+              where: { publicKey: payload.sender.pub_key, tenant },
+            })) as ContactRecord
+            if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
+              await sender.update({
+                totalSpent: sender.totalSpent + payload.message.amount,
+                reputation: sender.reputation + 1,
+              })
+            }
+          } else if (payload.type === msgtypes.boost) {
+            await sender.update({
+              totalSpent: sender.totalSpent + payload.message.amount,
+              reputation: sender.reputation + 2,
+            })
+          } else {
+            await sender.update({
+              totalSpent: sender.totalSpent + payload.message.amount,
+            })
+          }
+        } catch (error) {
+          sphinxLogger.error(
+            `=> Could not update the totalSpent column on the ChatMember table for Leadership board record ${error}`,
+            logging.Network
+          )
+        }
         forwardMessageToTribe(
           payload,
           senderContact,
@@ -244,7 +288,11 @@ async function onReceive(payload: Payload, dest: string) {
           owner,
           forwardedFromContactId
         )
-      else sphinxLogger.error(`=> insufficient payment for this action`)
+      } else
+        sphinxLogger.error(
+          `=> insufficient payment for this action`,
+          logging.Network
+        )
     }
     if (payload.type === msgtypes.purchase) {
       const chat = maybeChat as ChatRecord
@@ -377,7 +425,7 @@ async function forwardMessageToTribe(
   owner,
   forwardedFromContactId
 ) {
-  // console.log('forwardMessageToTribe')
+  // console.log('forwardMessageToTribe', ogpayload.sender.person)
   const tenant = owner.id
   const chat: Chat = (await models.Chat.findOne({
     where: { uuid: ogpayload.chat.uuid, tenant },
@@ -399,6 +447,14 @@ async function forwardMessageToTribe(
 
   const type = payload.type
   const message = payload.message
+
+  let personUuid = ''
+  if (payload.sender && payload.sender.person) {
+    const person_arr = payload.sender.person.split('/')
+    if (person_arr.length > 1) {
+      personUuid = person_arr[person_arr.length - 1]
+    }
+  }
   sendMessage({
     type,
     message,
@@ -408,7 +464,7 @@ async function forwardMessageToTribe(
       alias: (payload.sender && payload.sender.alias) || '',
       photoUrl: (payload.sender && payload.sender.photo_url) || '',
       role: constants.chat_roles.reader,
-      person: (payload.sender && payload.sender.person) || '',
+      personUuid,
     },
     amount: amtToForwardToRealSatsContactId || 0,
     chat: chat,
