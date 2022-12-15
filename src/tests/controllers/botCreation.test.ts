@@ -36,7 +36,7 @@ async function botCreation(t, node1, node2, node3) {
   await sendTribeMessage(t, node1, tribe, text)
 
   //NODE1 AWAIT REPLY FROM BOT
-  var botAlias = 'MotherBot'
+  let botAlias = 'MotherBot'
   const botReply = await getCheckBotMsg(t, node1, botAlias)
   t.truthy(botReply, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply))

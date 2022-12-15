@@ -29,6 +29,7 @@ const queries = require("./queries");
 const gitinfo = require("../utils/gitinfo");
 const timers = require("../utils/timers");
 const builtInBots = require("../builtin");
+const admin = require("./admin");
 const constants_1 = require("../constants");
 const feed = require("./feed");
 const res_1 = require("../utils/res");
@@ -133,6 +134,7 @@ function set(app) {
         app.delete('/bot/:id', bots.deleteBot);
         app.post('/bot/git', bots.addPatToGitBot);
         app.get('/healthcheck', confirmations.healthcheck);
+        app.get('/add_user', admin.addProxyUser);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 res.send({ version: gitinfo.tag });

@@ -13,6 +13,8 @@ export async function getFeeds(req: Req, res: Response) {
   try {
     const actions = (await models.ActionHistory.findAll({
       where: { tenant },
+      limit: 500,
+      order: [['updatedAt', 'DESC']],
     })) as ActionHistoryRecord[]
     const parsedActions = feedsHelper.parseActionHistory(actions)
     const recommendations = await fetch(`${config.boltwall_server}/feeds`, {

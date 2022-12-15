@@ -92,7 +92,9 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                                 txt &&
                                 txt.startsWith(`${botInTribe.botPrefix} `);
                             const isNotMsg = msgType !== constants_1.default.message_types.message;
-                            if (isMsgAndHasText || isNotMsg) {
+                            if (isMsgAndHasText ||
+                                isNotMsg ||
+                                botInTribe.botPrefix === '/badge') {
                                 didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                             }
                         }

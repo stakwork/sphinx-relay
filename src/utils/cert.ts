@@ -266,11 +266,27 @@ async function getCertificate(domain, port, save_ssl) {
   }
 }
 
-/**
-Generates an RSA key pair and writes the public and private keys to the file system.
+interface GetAndDecryptTransportTokenReturn {
+  token: string
+  timestamp: number
+}
+async function getAndDecryptTransportToken(
+  t: string
+): Promise<GetAndDecryptTransportTokenReturn> {
+  const transportPrivateKey = await getTransportKey()
+  const splitTransportToken = rsa.decrypt(transportPrivateKey, t).split('|')
+  const token = splitTransportToken[0]
+  const timestamp = parseInt(splitTransportToken[1])
+  return { token, timestamp }
+}
 
-@returns {Promise<string>} - A promise that resolves to the generated public key.
-*/
+async function getTransportKey() {
+  if (!fs.existsSync(config.transportPrivateKeyLocation)) {
+    await generateTransportTokenKeys()
+  }
+  return fs.readFileSync(config.transportPrivateKeyLocation, 'utf8')
+}
+
 async function generateTransportTokenKeys(): Promise<string> {
   const transportTokenKeys = await rsa.genKeys()
   fs.writeFileSync(config.transportPublicKeyLocation, transportTokenKeys.public)
@@ -281,4 +297,9 @@ async function generateTransportTokenKeys(): Promise<string> {
   return transportTokenKeys.public
 }
 
-export { getCertificate, generateTransportTokenKeys }
+export {
+  getCertificate,
+  generateTransportTokenKeys,
+  getTransportKey,
+  getAndDecryptTransportToken,
+}

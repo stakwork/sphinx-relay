@@ -40,7 +40,7 @@ function botCreation(t, node1, node2, node3) {
         const text = '/bot help';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
         //NODE1 AWAIT REPLY FROM BOT
-        var botAlias = 'MotherBot';
+        let botAlias = 'MotherBot';
         const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
         t.truthy(botReply, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply))
