@@ -10,6 +10,12 @@ interface ReqBody {
   meta_data: any
 }
 
+/**
+
+    @param {Req} req
+    @param {Response} res
+    @returns {Promise<void>}
+    */
 export async function saveAction(req: Req, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -32,6 +38,14 @@ export async function saveAction(req: Req, res: Response) {
   }
 }
 
+/**
+ * This function saves an action to the database.
+
+@param {Req} req - The request object containing information about the request made to the server.
+@param {Response} res - The response object used to send a response back to the client.
+
+@return {Promise<void>} - A promise that resolves when the function completes, or rejects if an error occurs. If successful, the response will contain a message indicating that the action was saved successfully. If there is an error, the response will contain an error message.
+*/
 export async function saveActionBulk(req: Req, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id

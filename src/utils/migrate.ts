@@ -29,7 +29,17 @@ async function migrateMuted() {
   }
 }
 
+async function clearTransportTokens() {
+  await models.RequestsTransportTokens.destroy({
+    truncate: true,
+  })
+}
+
 export default async function migrate(): Promise<void> {
+  addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT')
+  await clearTransportTokens()
+  addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN')
+
   addTableColumn('sphinx_chats', 'notify', 'BIGINT')
 
   await migrateMuted()

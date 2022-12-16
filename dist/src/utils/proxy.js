@@ -108,6 +108,7 @@ function generateNewUser(rootpk) {
             // set tenant to self!
             created.update({ tenant: created.id });
             logger_1.sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`);
+            return created.dataValues;
         }
         catch (e) {
             logger_1.sphinxLogger.error(`=> could not gen new user ${e}`);

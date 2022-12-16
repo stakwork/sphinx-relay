@@ -95,7 +95,11 @@ export async function isBotMsg(
               txt &&
               txt.startsWith(`${botInTribe.botPrefix} `)
             const isNotMsg = msgType !== constants.message_types.message
-            if (isMsgAndHasText || isNotMsg) {
+            if (
+              isMsgAndHasText ||
+              isNotMsg ||
+              botInTribe.botPrefix === '/badge'
+            ) {
               didEmit = await emitMessageToBot(
                 msg,
                 botInTribe.dataValues,

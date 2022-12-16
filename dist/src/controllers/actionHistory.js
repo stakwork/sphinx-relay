@@ -14,6 +14,12 @@ const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const helpers_1 = require("../helpers");
 const constants_1 = require("../constants");
+/**
+
+    @param {Req} req
+    @param {Response} res
+    @returns {Promise<void>}
+    */
 function saveAction(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -40,6 +46,14 @@ function saveAction(req, res) {
     });
 }
 exports.saveAction = saveAction;
+/**
+ * This function saves an action to the database.
+
+@param {Req} req - The request object containing information about the request made to the server.
+@param {Response} res - The response object used to send a response back to the client.
+
+@return {Promise<void>} - A promise that resolves when the function completes, or rejects if an error occurs. If successful, the response will contain a message indicating that the action was saved successfully. If there is an error, the response will contain an error message.
+*/
 function saveActionBulk(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)

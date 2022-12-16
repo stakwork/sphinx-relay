@@ -1,7 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const config_1 = require("./utils/config");
+const config = (0, config_1.loadConfig)();
 const constants = {
-    min_sat_amount: 3,
+    min_sat_amount: config.min_sat,
+    final_cltv_delta: config.final_cltv_delta,
     invite_statuses: {
         pending: 0,
         ready: 1,
@@ -106,6 +109,11 @@ const constants = {
         boost: 2,
         podcast_clip_comment: 3,
         content_consumed: 4,
+    },
+    reward_types: {
+        earned: 1,
+        spent: 2,
+        post: 3,
     },
 };
 exports.default = constants;

@@ -173,7 +173,15 @@ export async function queryRoute(
   }
   const lightning = await loadLightning(true, ownerPubkey) // try proxy
   return new Promise((resolve, reject) => {
-    const options: { [k: string]: any } = { pub_key, amt }
+    // need to manually add 3 block padding
+    // which is done behind the scenes in SendPayment
+    // https://github.com/lightningnetwork/lnd/issues/3421
+    const final_cltv_delta = constants.final_cltv_delta + 3
+    const options: { [k: string]: any } = {
+      pub_key,
+      amt,
+      final_cltv_delta,
+    }
     if (route_hint && route_hint.includes(':')) {
       const arr = route_hint.split(':')
       const node_id = arr[0]
@@ -300,7 +308,7 @@ export function keysend(
       }
       const options: interfaces.KeysendRequest = {
         amt: Math.max(opts.amt, constants.min_sat_amount || 3),
-        final_cltv_delta: 10,
+        final_cltv_delta: constants.final_cltv_delta,
         dest: ByteBuffer.fromHex(opts.dest),
         dest_custom_records,
         payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
