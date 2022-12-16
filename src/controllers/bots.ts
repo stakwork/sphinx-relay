@@ -562,8 +562,6 @@ export async function receiveBotRes(dat: Payload): Promise<void> {
     where: { uuid: chat_uuid, tenant },
   })) as Chat
 
-  if (chat) chat.update({ seen: false })
-
   if (!chat) return sphinxLogger.error('=> receiveBotRes Error no chat')
 
   const tribeOwnerPubKey = chat && chat.ownerPubkey
