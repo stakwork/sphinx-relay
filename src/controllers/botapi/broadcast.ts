@@ -34,7 +34,7 @@ export default async function broadcast(a: Action): Promise<void> {
   const alias = bot_name || 'Bot'
   const botContactId = -1
 
-  const msg: { [k: string]: string | number | Date | boolean } = {
+  const msg: { [k: string]: string | number | Date } = {
     chatId: chat.id,
     uuid: msg_uuid || short.generate(),
     type: constants.message_types.bot_res,
