@@ -34,7 +34,7 @@ export default async function broadcast(a: Action): Promise<void> {
   const alias = bot_name || 'Bot'
   const botContactId = -1
 
-  const msg: { [k: string]: string | number | Date } = {
+  const msg: { [k: string]: string | number | Date | boolean } = {
     chatId: chat.id,
     uuid: msg_uuid || short.generate(),
     type: constants.message_types.bot_res,
@@ -49,6 +49,7 @@ export default async function broadcast(a: Action): Promise<void> {
     updatedAt: date,
     senderAlias: alias,
     tenant,
+    seen: false,
   }
   if (parent_id) msg.parentId = parent_id
   if (bot_pic) msg.senderPic = bot_pic

@@ -49,6 +49,7 @@ function broadcast(a) {
             updatedAt: date,
             senderAlias: alias,
             tenant,
+            seen: false,
         };
         if (parent_id)
             msg.parentId = parent_id;
