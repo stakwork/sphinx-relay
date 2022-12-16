@@ -49,12 +49,16 @@ function broadcast(a) {
             updatedAt: date,
             senderAlias: alias,
             tenant,
-            seen: false,
         };
         if (parent_id)
             msg.parentId = parent_id;
         if (bot_pic)
             msg.senderPic = bot_pic;
+        let unseenChat = (yield models_1.models.Chat.findOne({
+            where: { id: chat.id, tenant },
+        }));
+        if (unseenChat)
+            unseenChat.update({ seen: false });
         const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
             type: 'message',
