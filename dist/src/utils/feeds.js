@@ -9,7 +9,6 @@ function parseActionHistory(actions) {
         parsedActions[action] = [];
     });
     actions.reverse().forEach((action) => {
-        console.log(actions);
         if (typeof JSON.parse(action.metaData) === 'object' && action.actionType) {
             if (action.actionType === 0) {
                 const meta_data = JSON.parse(action.metaData);
