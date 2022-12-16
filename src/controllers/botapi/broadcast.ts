@@ -52,7 +52,7 @@ export default async function broadcast(a: Action): Promise<void> {
   }
   if (parent_id) msg.parentId = parent_id
   if (bot_pic) msg.senderPic = bot_pic
-  let unseenChat = (await models.Chat.findOne({
+  const unseenChat = (await models.Chat.findOne({
     where: { id: chat.id, tenant },
   })) as ChatRecord
 
