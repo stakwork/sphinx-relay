@@ -16,7 +16,9 @@ export async function getFeeds(req: Req, res: Response) {
       limit: 500,
       order: [['updatedAt', 'DESC']],
     })) as ActionHistoryRecord[]
+    console.log(actions)
     const parsedActions = feedsHelper.parseActionHistory(actions)
+    console.log(parsedActions)
     const recommendations = await fetch(`${config.boltwall_server}/feeds`, {
       method: 'POST',
       body: JSON.stringify(parsedActions),
