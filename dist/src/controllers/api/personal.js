@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.getPersonData = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -267,4 +267,18 @@ function transferBadge(req, res) {
     });
 }
 exports.transferBadge = transferBadge;
+// accessed from the web app (for now the second brain)
+function getPersonData(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const owner = req.owner;
+        return (0, res_1.success)(res, {
+            alias: owner.alias,
+            photoUrl: owner.photoUrl,
+            publicKey: owner.publicKey,
+        });
+    });
+}
+exports.getPersonData = getPersonData;
 //# sourceMappingURL=personal.js.map

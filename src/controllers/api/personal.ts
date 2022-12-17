@@ -7,7 +7,8 @@ import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
 import { createJWT, scopes } from '../../utils/jwt'
-import { Badge } from '../../types'
+import { Badge, Req } from '../../types'
+import { Response } from 'express'
 import { createOrEditBadgeBot } from '../../builtin/badge'
 import constants from '../../constants'
 
@@ -270,4 +271,18 @@ export async function transferBadge(req, res) {
   } catch (error) {
     return failure(res, error)
   }
+}
+
+// accessed from the web app (for now the second brain)
+export async function getPersonData(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const owner: Contact = req.owner
+  return success(res, {
+    alias: owner.alias,
+    photoUrl: owner.photoUrl,
+    publicKey: owner.publicKey,
+  })
 }
