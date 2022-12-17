@@ -13,6 +13,7 @@ exports.actionHistory = void 0;
 const ava_1 = require("ava");
 const nodes_1 = require("../nodes");
 const save_1 = require("../utils/save");
+const get_1 = require("../utils/get");
 /*
 npx ava src/tests/controllers/actionHistory.test.ts --verbose --serial --timeout=2m
 */
@@ -26,6 +27,8 @@ function actionHistory(t, index) {
         const searchTerm = 'search for utxo';
         const saveAction = yield (0, save_1.saveActionHistory)(t, searchTerm, node);
         t.true(saveAction, 'Action needs to be saved on the DB');
+        const checkActionHistory = yield (0, get_1.verifyActionHistorySaved)(searchTerm, node);
+        t.true(checkActionHistory, 'Search term should be in the database');
     });
 }
 exports.actionHistory = actionHistory;
