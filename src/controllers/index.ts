@@ -159,6 +159,7 @@ export async function set(app) {
 
   app.post('/action_history', action.saveAction)
   app.post('/action_history_bulk', action.saveActionBulk)
+  app.get('/action_history', action.getActionHistory)
 
   app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')

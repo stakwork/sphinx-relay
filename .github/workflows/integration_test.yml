@@ -41,6 +41,7 @@ jobs:
             'hmac',
             'socketIO',
             'tribeMember',
+            'actionHistory',
           ]
     steps:
       - name: Enable docker.host.internal for Ubuntu

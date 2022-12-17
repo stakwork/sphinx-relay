@@ -142,6 +142,7 @@ function set(app) {
         });
         app.post('/action_history', action.saveAction);
         app.post('/action_history_bulk', action.saveActionBulk);
+        app.get('/action_history', action.getActionHistory);
         app.get('/latest', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!req.owner)
