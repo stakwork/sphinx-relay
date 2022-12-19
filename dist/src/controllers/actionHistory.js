@@ -60,6 +60,7 @@ function saveActionBulk(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { data } = req.body;
+        console.log(JSON.stringify(data));
         const actionTypes = Object.keys(constants_1.default.action_types);
         if (!Array.isArray(data))
             return (0, res_1.failure)(res, 'invalid data');
