@@ -8,7 +8,7 @@ function parseActionHistory(actions) {
     actionTypes.forEach((action) => {
         parsedActions[action] = [];
     });
-    actions.reverse().forEach((action) => {
+    actions.forEach((action) => {
         if (typeof JSON.parse(action.metaData) === 'object' &&
             typeof action.actionType === 'number') {
             if (action.actionType === 0) {
