@@ -28,7 +28,6 @@ function getFeeds(req, res) {
                 order: [['updatedAt', 'DESC']],
             }));
             const parsedActions = feedsHelper.parseActionHistory(actions);
-            console.log(JSON.stringify(parsedActions));
             const recommendations = yield (0, node_fetch_1.default)(`${config.boltwall_server}/feeds`, {
                 method: 'POST',
                 body: JSON.stringify(parsedActions),

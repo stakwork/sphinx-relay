@@ -50,7 +50,6 @@ export async function saveActionBulk(req: Req, res: Response) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { data } = req.body
-  console.log(JSON.stringify(data))
   const actionTypes = Object.keys(constants.action_types)
   if (!Array.isArray(data)) return failure(res, 'invalid data')
   if (data.length === 0)
