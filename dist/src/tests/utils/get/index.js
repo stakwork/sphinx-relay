@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.verifyActionHistorySaved = exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
@@ -43,4 +43,6 @@ var getCheckMsgs_1 = require("./getCheckMsgs");
 Object.defineProperty(exports, "getCheckMsgs", { enumerable: true, get: function () { return getCheckMsgs_1.getCheckMsgs; } });
 var getCheckAllMessages_1 = require("./getCheckAllMessages");
 Object.defineProperty(exports, "getCheckAllMessages", { enumerable: true, get: function () { return getCheckAllMessages_1.getCheckAllMessages; } });
+var getActionHistory_1 = require("./getActionHistory");
+Object.defineProperty(exports, "verifyActionHistorySaved", { enumerable: true, get: function () { return getActionHistory_1.verifyActionHistorySaved; } });
 //# sourceMappingURL=index.js.map

@@ -83,3 +83,17 @@ export async function saveActionBulk(req: Req, res: Response) {
     return failure(res, error)
   }
 }
+
+export async function getActionHistory(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  try {
+    const results = await models.ActionHistory.findAll({ where: { tenant } })
+    return success(res, results)
+  } catch (error) {
+    return failure(res, error)
+  }
+}

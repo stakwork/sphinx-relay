@@ -1,5 +1,5 @@
 import * as network from '../../network'
-import { models, Message } from '../../models'
+import { models, Message, ChatRecord } from '../../models'
 import * as short from 'short-uuid'
 import * as rsa from '../../crypto/rsa'
 import * as jsonUtils from '../../utils/json'
@@ -52,6 +52,11 @@ export default async function broadcast(a: Action): Promise<void> {
   }
   if (parent_id) msg.parentId = parent_id
   if (bot_pic) msg.senderPic = bot_pic
+  const unseenChat = (await models.Chat.findOne({
+    where: { id: chat.id, tenant },
+  })) as ChatRecord
+
+  if (unseenChat) unseenChat.update({ seen: false })
   const message: Message = (await models.Message.create(msg)) as Message
   socket.sendJson(
     {

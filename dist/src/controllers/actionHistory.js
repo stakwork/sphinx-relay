@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveActionBulk = exports.saveAction = void 0;
+exports.getActionHistory = exports.saveActionBulk = exports.saveAction = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const helpers_1 = require("../helpers");
@@ -97,4 +97,19 @@ function saveActionBulk(req, res) {
     });
 }
 exports.saveActionBulk = saveActionBulk;
+function getActionHistory(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        try {
+            const results = yield models_1.models.ActionHistory.findAll({ where: { tenant } });
+            return (0, res_1.success)(res, results);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.getActionHistory = getActionHistory;
 //# sourceMappingURL=actionHistory.js.map
