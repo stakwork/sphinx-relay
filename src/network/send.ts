@@ -61,8 +61,6 @@ export async function sendMessage({
 
   const isTribe = chat.type === constants.chat_types.tribe
   const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
-  // console.log('-> sender.publicKey', sender.publicKey)
-  // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 
   let aSender = sender
   if ((sender as ContactRecord).dataValues) {
@@ -75,11 +73,7 @@ export async function sendMessage({
   }
   let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false)
 
-  // console.log("=> MSG TO SEND",msg)
-
-  // console.log(type,message)
   if (!(sender && sender.publicKey)) {
-    // console.log("NO SENDER?????");
     return
   }
 
@@ -107,7 +101,6 @@ export async function sendMessage({
       networkType = 'mqtt' // broadcast to all
       // decrypt message.content and message.mediaKey w groupKey
       msg = await decryptMessage(msg, chat)
-      // console.log("SEND.TS isBotMsg")
       sphinxLogger.info(
         `[Network] => isTribeAdmin msg sending... ${msg}`,
         logging.Network
@@ -170,7 +163,6 @@ export async function sendMessage({
   await asyncForEach(contactIds, async (contactId) => {
     if (contactId === tenant) {
       // dont send to self
-      // console.log('=> dont send to self')
       return
     }
 
@@ -328,7 +320,10 @@ export function newmsg(
   if (!includeStatus && message.status) {
     delete message.status
   }
-  console.log('PERSONUUID in newmsg', sender.personUuid)
+  sphinxLogger.info(
+    `PERSONUUID in newmsg ${sender.personUuid}`,
+    logging.Network
+  )
   const result: Msg = {
     type: type,
     chat: {
