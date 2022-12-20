@@ -42,6 +42,23 @@ export interface SendMessageParams {
   realSatsContactId?: number
 }
 
+/**
+ * Sends a message to a chat.
+ *
+ * @param {SendMessageParams} params - The parameters for sending the message.
+ * @param {number} params.type - The type of the message to be sent.
+ * @param {Partial<ChatPlusMembers>} params.chat - The chat object to which the message will be sent.
+ * @param {Partial<MessageContent>} params.message - The message content to be sent.
+ * @param {Partial<ContactRecord | Contact>} params.sender - The sender of the message.
+ * @param {number} [params.amount] - The amount of the message to be sent, if applicable.
+ * @param {(data: any) => void} [params.success] - The callback function to be executed upon successful message send.
+ * @param {(error: any) => void} [params.failure] - The callback function to be executed upon failed message send.
+ * @param {string} [params.skipPubKey] - The public key to be skipped in the message send process, if applicable.
+ * @param {boolean} [params.isForwarded] - A flag indicating whether the message is being forwarded.
+ * @param {number} [params.forwardedFromContactId] - The id of the contact from which the message is being forwarded, if applicable.
+ * @param {number} [params.realSatsContactId] - The id of the contact for which the message is being sent in real sats, if applicable.
+ * @returns {Promise<void>} A promise that resolves when the message send process is complete.
+ */
 export async function sendMessage({
   type,
   chat,
