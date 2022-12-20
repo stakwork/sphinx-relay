@@ -29,10 +29,20 @@ async function tribeTest(
 
   let join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
-  let node1Tribe = await getCheckTribe(t, node1, tribe.id)
+
+  //FETCH TRIBE FROM TRIBE SERVER TO CHECK EDITS
+  console.log('fetch tribe')
+  const tribeFetch = await getTribeByUuid(t, tribe)
+  t.true(typeof tribeFetch === 'object', 'fetched tribe object should exist')
+  t.true(
+    tribeFetch.pin === 'PIN',
+    'tribe server should show correct pinned message'
+  )
+  /*let node1Tribe = await getCheckTribe(t, node1, tribe.id)
   let node2Tribe = await getCheckTribe(t, node2, tribe.id)
   t.true(node1Tribe.pin === 'PIN')
   t.true(node2Tribe.pin === 'PIN')
+	*/
 
   let delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')
