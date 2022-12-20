@@ -1,7 +1,7 @@
 import test, { ExecutionContext } from 'ava'
 import nodes from '../nodes'
 import { deleteTribe } from '../utils/del'
-import { getChats } from '../utils/get'
+import { getCheckTribe } from '../utils/get'
 import { createTribe, pinMsgToTribe, joinTribe } from '../utils/save'
 import { NodeConfig } from '../types'
 
@@ -29,10 +29,10 @@ async function tribeTest(
 
   let join = await joinTribe(t, node2, tribe)
   t.true(join, 'node2 should join tribe')
-  let node1Tribes = await getChats(t, node1)
-  let node2Tribes = await getChats(t, node2)
-  t.true(node1Tribes[node1Tribes.length - 1].pin === 'PIN')
-  t.true(node2Tribes[node2Tribes.length - 1].pin === 'PIN')
+  let node1Tribe = await getCheckTribe(t, node1, tribe.id)
+  let node2Tribe = await getCheckTribe(t, node2, tribe.id)
+  t.true(node1Tribe.pin === 'PIN')
+  t.true(node2Tribe.pin === 'PIN')
 
   let delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')
