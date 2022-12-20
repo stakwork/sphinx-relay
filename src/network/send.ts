@@ -168,7 +168,6 @@ export async function sendMessage({
     logging.Network
   )
   await asyncForEach(contactIds, async (contactId) => {
-    // console.log("=> TENANT", tenant)
     if (contactId === tenant) {
       // dont send to self
       // console.log('=> dont send to self')
@@ -179,32 +178,24 @@ export async function sendMessage({
       where: { id: contactId },
     })) as Contact
     if (!contact) {
-      // console.log('=> sendMessage no contact')
       return // skip if u simply dont have the contact
     }
     if (tenant === -1) {
       // this is a bot sent from me!
       if (contact.isOwner) {
-        // console.log('=> dont MQTT to myself!')
         return // dont MQTT to myself!
       }
     }
 
-    // console.log("=> CONTACT", contactId, contact.publicKey)
     const destkey = contact.publicKey
     if (destkey === skipPubKey) {
-      // console.log('=> skipPubKey', skipPubKey)
       return // skip (for tribe owner broadcasting, not back to the sender)
     }
-    // console.log('-> sending to ', contact.id, destkey)
 
     let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
 
     // sending a payment to one subscriber, buying a pic from OG poster
     // or boost to og poster
-    // console.log("=> istribeOwner", isTribeOwner)
-    // console.log("=> amount", amount)
-    // console.log("=> realSatsContactId", realSatsContactId, contactId)
     if (isTribeOwner && amount && realSatsContactId === contactId) {
       mqttTopic = '' // FORCE KEYSEND!!!
       await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
@@ -219,7 +210,6 @@ export async function sendMessage({
     ) {
       m.message.push = true
     }
-    // console.log('-> personalized msg', m)
     const opts = {
       dest: destkey,
       data: m,
@@ -227,8 +217,6 @@ export async function sendMessage({
       route_hint: contact.routeHint || '',
     }
 
-    // console.log("==> SENDER",sender)
-    // console.log("==> OK SIGN AND SEND", opts);
     try {
       const r = await signAndSend(opts, sender, mqttTopic)
       yes = r
@@ -252,13 +240,21 @@ export interface SignAndSendOpts {
   data: Partial<Msg>
 }
 
+/**
+ * Signs and sends a message to a specified destination.
+ *
+ * @param {SignAndSendOpts} opts - The options for the message to be sent.
+ * @param {Object} owner - The object containing the owner's public key and id.
+ * @param {string} [mqttTopic] - The MQTT topic to be used for publishing the message.
+ * @param {boolean} [replayingHistory] - A flag indicating whether the message is being replayed from history.
+ * @returns {Promise<boolean>} A promise that resolves with a boolean indicating the success or failure of the operation.
+ */
 export function signAndSend(
   opts: SignAndSendOpts,
   owner: { [k: string]: any },
   mqttTopic?: string,
   replayingHistory?: boolean
 ): Promise<boolean> {
-  // console.log('sign and send!',opts)
   const ownerPubkey = owner.publicKey
   const ownerID = owner.id
   return new Promise(async function (resolve, reject) {
@@ -274,7 +270,6 @@ export function signAndSend(
     const sig = await LND.signAscii(data, ownerPubkey)
     data = data + sig
 
-    // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
     try {
       if (mqttTopic) {
         await tribes.publish(mqttTopic, data, ownerPubkey, () => {
