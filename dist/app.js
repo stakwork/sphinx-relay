@@ -67,6 +67,7 @@ function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, setup_1.setupOwnerContact)();
         yield (0, setup_1.setupPersonUuid)();
+        yield (0, setup_1.updateLsat)();
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             (0, hub_1.checkInvitesHubInterval)(5000);

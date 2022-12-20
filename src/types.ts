@@ -6,4 +6,14 @@ export interface Req extends express.Request {
   rawBody: string
 }
 
+export interface Badge {
+  id: number
+  icon: string
+  name: string
+  asset: string
+  token: string
+  amount: number
+  creator: string
+}
+
 export type Res = express.Response

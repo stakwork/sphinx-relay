@@ -1,5 +1,9 @@
+import { loadConfig } from './utils/config'
+const config = loadConfig()
+
 const constants = {
-  min_sat_amount: 3,
+  min_sat_amount: config.min_sat,
+  final_cltv_delta: config.final_cltv_delta,
   invite_statuses: {
     pending: 0,
     ready: 1,
@@ -104,6 +108,11 @@ const constants = {
     boost: 2,
     podcast_clip_comment: 3,
     content_consumed: 4,
+  },
+  reward_types: {
+    earned: 1,
+    spent: 2,
+    post: 3,
   },
 }
 

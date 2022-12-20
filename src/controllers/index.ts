@@ -17,6 +17,7 @@ import * as queries from './queries'
 import * as gitinfo from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
+import * as admin from './admin'
 import constants from '../constants'
 import * as feed from './feed'
 import { failure } from '../utils/res'
@@ -150,12 +151,15 @@ export async function set(app) {
 
   app.get('/healthcheck', confirmations.healthcheck)
 
+  app.get('/add_user', admin.addProxyUser)
+
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })
   })
 
   app.post('/action_history', action.saveAction)
   app.post('/action_history_bulk', action.saveActionBulk)
+  app.get('/action_history', action.getActionHistory)
 
   app.get('/latest', async function (req: Req, res) {
     if (!req.owner) return failure(res, 'no owner')

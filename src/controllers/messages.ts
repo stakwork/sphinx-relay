@@ -108,6 +108,14 @@ export const getMessages = async (req: Req, res: Res): Promise<void> => {
   res.end()
 }
 
+/**
+@async
+@function getAllMessages
+@param {Req} req - The request object
+@param {Res} res - The response object
+@returns {Promise<void>}
+@description This function retrieves all messages for the current owner, along with metadata about the messages, such as the associated chat ID and the total number of messages.
+*/
 export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -169,6 +177,18 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
   })
 }
 
+/**
+@function
+@async
+@param {Req} req - Express request object.
+@param {Res} res - Express response object.
+@returns {Promise<void>}
+@description
+This route handler is used to retrieve new messages. It accepts two optional query parameters: limit and offset
+to limit the number of messages returned, and date to retrieve messages updated after the specified date.
+The response contains the new_messages array, which is an array of new messages, and the new_messages_total
+property, which indicates the total number of new messages.
+*/
 export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -232,6 +252,12 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   })
 }
 
+/**
+Deletes a message from the database and sends a delete message to the chat.
+@param {Req} req - The request object containing the owner and params.
+@param {Res} res - The response object to send the result.
+@returns {Promise<void>} - Returns a promise that resolves when the operation is complete.
+*/
 export async function deleteMessage(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -270,6 +296,14 @@ export async function deleteMessage(req: Req, res: Res): Promise<void> {
   })
 }
 
+/**
+send a message to a contact or tribe
+
+@param {Req} req - request object
+@param {Res} res - response object
+
+@return {Promise<void>}
+*/
 export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -415,6 +449,12 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   network.sendMessage(sendMessageParams)
 }
 
+/**
+Receive a message and store it in the database.
+
+@param {Payload} payload - The message payload containing the sender, chat, and message content.
+@returns {Promise<void>} - A promise that resolves when the message has been received and stored.
+*/
 export const receiveMessage = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received message ${payload}`)
   const {
@@ -495,6 +535,11 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
 
+/**
+Receives a boost message and stores it in the database.
+@param {Payload} payload - The boost message payload.
+@return {Promise<void>} - A promise that resolves when the function completes.
+*/
 export const receiveBoost = async (payload: Payload): Promise<void> => {
   const {
     owner,
@@ -582,6 +627,12 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
   }
 }
 
+/**
+Handles the receipt of a repayment.
+
+@param {Payload} payload - The parsed payload of the incoming message.
+@returns {Promise<void>} - A promise that resolves when the receipt of the repayment has been processed.
+*/
 export const receiveRepayment = async (payload: Payload): Promise<void> => {
   const { owner, sender, chat, date_string, amount, network_type } =
     await helpers.parseReceiveParams(payload)
@@ -618,6 +669,14 @@ export const receiveRepayment = async (payload: Payload): Promise<void> => {
   )
 }
 
+/**
+@async
+@function receiveDeleteMessage
+@param {Payload} payload - The payload object containing information about the deleted message.
+@returns {Promise<void>}
+@example
+receiveDeleteMessage(payload)
+*/
 export const receiveDeleteMessage = async (payload: Payload): Promise<void> => {
   sphinxLogger.info('=> received delete message', logging.Network)
   const { owner, sender, chat, chat_type, msg_uuid } =
@@ -646,6 +705,13 @@ export const receiveDeleteMessage = async (payload: Payload): Promise<void> => {
   )
 }
 
+/**
+Updates the messages in the specified chat to mark them as seen by the owner and sends a notification to the other chat members.
+
+@param {Req} req - The request object containing the chat ID.
+@param {Res} res - The response object used to send the updated chat information.
+@returns {Promise<void>} - An empty promise.
+*/
 export const readMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
 
@@ -686,6 +752,13 @@ export const readMessages = async (req: Req, res: Res): Promise<void> => {
   }
 }
 
+/**
+This function will clear all messages in the database.
+
+@param {Req} req - The request object containing the owner property.
+@param {Res} res - The response object.
+@returns {Promise<void>} - This function returns a promise that resolves to an empty object on success, or a failure message on failure.
+*/
 export const clearMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id

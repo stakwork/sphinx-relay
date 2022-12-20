@@ -13,6 +13,8 @@ const configFile = argv.config
 const env = process.env.NODE_ENV || 'development';
 const config = require(configFile)[env];
 const ENV = process.env;
+const DEFAULT_FINAL_CLTV_DELTA = 141;
+const DEFAULT_MIN_SAT = 3;
 const DEFAULT_HSM_SECRET_PATH = './creds/hsm_secret';
 const DEFAULT_TLS_LOCATION = './creds/ca.pem';
 const DEFAULT_TLS_KEY_LOCATION = './creds/device-key.pem';
@@ -27,9 +29,13 @@ const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444';
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
     const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
+    const min_sat = ENV.MIN_SAT || config.min_sat;
+    const final_cltv_delta = ENV.FINAL_CLTV_DELTA || config.final_cltv_delta;
     return {
         lightning_provider: provider,
         logging: logg || 'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT,BOTS',
+        min_sat: parseInt(min_sat) || DEFAULT_MIN_SAT,
+        final_cltv_delta: parseInt(final_cltv_delta) || DEFAULT_FINAL_CLTV_DELTA,
         senza_url: ENV.SENZA_URL || config.senza_url,
         macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
         router_macaroon_location: ENV.ROUTER_MACAROON_LOCATION || config.router_macaroon_location,

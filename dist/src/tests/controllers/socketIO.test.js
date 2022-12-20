@@ -59,10 +59,10 @@ function testSocketIO(t, legacy) {
         yield (0, save_1.joinTribe)(t, nodes_1.default[1], socketTribe);
         const tribeMessage = yield (0, msg_1.sendTribeMessage)(t, nodes_1.default[1], socketTribe, messageText);
         yield (0, msg_1.sendBoost)(t, nodes_1.default[0], nodes_1.default[1], tribeMessage, 10, socketTribe);
-        t.true(responseArray[responseArray.length - 4].type == 'confirmation', 'we should get back something when we recieve a message');
-        t.true(responseArray[responseArray.length - 3].type == 'message', 'we should get back something when we recieve a message');
+        t.true(responseArray[responseArray.length - 4].type == 'confirmation', 'we should receive a confirmation');
+        t.true(responseArray[responseArray.length - 3].type == 'message', 'we should receive a message');
         t.true(responseArray[responseArray.length - 2].type == 'group_join', 'we should get back something when we join a tribe group chat');
-        t.true(responseArray[responseArray.length - 1].type == 'boost', 'we should get back something when we recieve a message');
+        t.true(responseArray[responseArray.length - 1].type == 'boost', 'we should receive a boost');
         yield (0, del_1.deleteMessage)(t, nodes_1.default[0], sentMessage.id);
         yield (0, helpers_1.sleep)(1000);
         t.true(responseArray[responseArray.length - 1].type == 'delete', 'we should get back a delete type');
