@@ -389,6 +389,15 @@ export function newmsg(
   return result
 }
 
+/**
+ * Detects mentions in a message and returns an array of contact IDs of the mentioned contacts.
+ *
+ * @param {Msg} msg - The message object.
+ * @param {boolean} isForwarded - A flag indicating whether the message is being forwarded.
+ * @param {number} chatId - The ID of the chat the message belongs to.
+ * @param {number} tenant - The tenant of the message.
+ * @returns {Promise<number[]>} An array of contact IDs of the mentioned contacts.
+ */
 async function detectMentions(
   msg: Msg,
   isForwarded: boolean,
