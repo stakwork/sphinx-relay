@@ -6,6 +6,7 @@ import {
   ChatMember as ChatMemberModel,
 } from '../models'
 import * as LND from '../grpc/lightning'
+import { asyncForEach, sleep } from '../helpers'
 import {
   personalizeMessage,
   decryptMessage,
@@ -387,22 +388,6 @@ export function newmsg(
   }
   return result
 }
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
-}
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-// function urlBase64FromHex(ascii){
-//     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }
-// function urlBase64FromBytes(buf){
-//     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }
 
 async function detectMentions(
   msg: Msg,
