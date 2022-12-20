@@ -280,6 +280,10 @@ export function signAndSend(
     data = data + sig
 
     try {
+      /*This happens when a tribe owner wants to send to its members
+        This is because the tribe owner is acting as the gate to get
+        the message through to the rest of the members, but sending
+        to the other members in the chat should not cost sats      */
       if (mqttTopic) {
         await tribes.publish(mqttTopic, data, ownerPubkey, () => {
           if (!replayingHistory) {
