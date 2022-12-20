@@ -303,6 +303,12 @@ export function signAndSend(
   })
 }
 
+/**
+ * Checks if a message should be auto-confirmed and performs the auto-confirmation if necessary.
+ *
+ * @param {Object} data - The data of the message to be checked.
+ * @param {number} tenant - The tenant of the message to be checked.
+ */
 function checkIfAutoConfirm(data, tenant) {
   if (typesToForward.includes(data.type)) {
     if (data.type === constants.message_types.delete) {
@@ -312,6 +318,17 @@ function checkIfAutoConfirm(data, tenant) {
   }
 }
 
+/**
+ * Creates a new message object.
+ *
+ * @param {number} type - The type of the message.
+ * @param {Partial<ChatPlusMembers>} chat - The chat object of the message.
+ * @param {ContactRecord} sender - The sender of the message.
+ * @param {Partial<MessageContent>} message - The message content.
+ * @param {boolean} isForwarded - A flag indicating whether the message is being forwarded.
+ * @param {boolean} [includeStatus] - A flag indicating whether to include the status in the message object.
+ * @returns {Msg} The new message object.
+ */
 export function newmsg(
   type: number,
   chat: Partial<ChatPlusMembers>,
