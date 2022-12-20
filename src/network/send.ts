@@ -178,7 +178,7 @@ export async function sendMessage({
     `=> sending to ${contactIds.length} 'contacts'`,
     logging.Network
   )
-  await asyncForEach(contactIds, async (contactId) => {
+  await asyncForEach(contactIds, async (contactId: number) => {
     if (contactId === tenant) {
       // dont send to self
       return
