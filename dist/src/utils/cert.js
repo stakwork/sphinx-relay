@@ -21,9 +21,22 @@ const forge = require("node-forge");
 const apiUrl = 'https://api.zerossl.com';
 const config_1 = require("../utils/config");
 const config = (0, config_1.loadConfig)();
+/**
+Sleep for a given number of milliseconds
+
+@param {number} ms - The number of milliseconds to sleep for
+@return {Promise} A promise that will be resolved after the given number of milliseconds
+*/
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+/**
+Generates a Certificate Signing Request (CSR) with the given keys and endpoint.
+
+@param {Object} keys The keys to use for generating the CSR.
+@param {string} endpoint The endpoint to associate with the CSR.
+@return {string} The generated CSR.
+*/
 function generateCsr(keys, endpoint) {
     let csr = forge.pki.createCertificationRequest();
     csr.publicKey = keys.publicKey;
@@ -41,6 +54,14 @@ function generateCsr(keys, endpoint) {
     csr = forge.pki.certificationRequestToPem(csr);
     return csr.trim();
 }
+/**
+Makes a request to the specified URL to obtain a certificate.
+
+@param {string} endpoint - The endpoint to request a certificate for.
+@param {string} csr - The certificate signing request (CSR) for the endpoint.
+@param {string} apiKey - The API key to authenticate the request.
+@returns {Object} - The response data from the request.
+*/
 function requestCert(endpoint, csr, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = yield (0, axios_1.default)({
@@ -58,6 +79,18 @@ function requestCert(endpoint, csr, apiKey) {
         return res.data;
     });
 }
+/**
+Validates the provided certificate for the given endpoint by starting a
+temporary HTTP server, issuing a request for validation, and waiting for
+the certificate to be issued.
+
+@param {number} port - The port number to use for the temporary HTTP server.
+@param {object} data - The certificate data returned from the API.
+@param {string} endpoint - The certificate endpoint (e.g. "example.com").
+@param {string} apiKey - The API key for the certificate issuer.
+
+@returns {void}
+*/
 function validateCert(port, data, endpoint, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         const app = express();
@@ -88,6 +121,13 @@ function validateCert(port, data, endpoint, apiKey) {
         return;
     });
 }
+/**
+Requests certificate validation for the specified certificate id.
+
+@param {string} id - The certificate id
+@param {string} apiKey - The API key to use for the request
+@returns {Object} The response data
+*/
 function requestValidation(id, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = yield (0, axios_1.default)({
@@ -108,6 +148,13 @@ function requestValidation(id, apiKey) {
         return res.data;
     });
 }
+/**
+Makes a GET request to the /certificates/{id} endpoint of the SSL API to get certificate data.
+
+@param {string} id - The ID of the certificate to get.
+@param {string} apiKey - The API key for authentication.
+@returns {Object} - The data for the certificate with the specified ID.
+*/
 function getCert(id, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = yield (0, axios_1.default)({
@@ -120,6 +167,13 @@ function getCert(id, apiKey) {
         return res.data;
     });
 }
+/**
+Asynchronously downloads a certificate.
+
+@param {string} id - The certificate ID
+@param {string} apiKey - The API key to authenticate the request
+@return {Promise<Object>} - An object containing the certificate data
+*/
 function downloadCert(id, apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = yield (0, axios_1.default)({
@@ -132,6 +186,14 @@ function downloadCert(id, apiKey) {
         return res.data;
     });
 }
+/**
+Retrieve a TLS certificate for the specified domain.
+
+@param {string} domain - The domain to retrieve a TLS certificate for.
+@param {number} port - The port number to listen on for certificate validation.
+@param {boolean} save_ssl - Whether to save the certificate and private key to disk.
+@returns {Object} - An object containing the private key, certificate, and CA bundle.
+*/
 function getCertificate(domain, port, save_ssl) {
     return __awaiter(this, void 0, void 0, function* () {
         if ((0, fs_1.existsSync)(__dirname + '/zerossl/tls.cert') &&

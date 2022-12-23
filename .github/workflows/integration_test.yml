@@ -42,6 +42,7 @@ jobs:
             'socketIO',
             'tribeMember',
             'badgeBot',
+            'actionHistory',
           ]
     steps:
       - name: Enable docker.host.internal for Ubuntu

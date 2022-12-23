@@ -17,6 +17,13 @@ const tribes = require("../utils/tribes");
 const cert_1 = require("../utils/cert");
 const fs = require("fs");
 const config = (0, config_1.loadConfig)();
+/**
+
+    Verify an auth request.
+    @param {Req} req - The request object
+    @param {Response} res - The response object
+    @returns {Promise<void>}
+  */
 function verifyAuthRequest(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -54,6 +61,13 @@ function verifyAuthRequest(req, res) {
     });
 }
 exports.verifyAuthRequest = verifyAuthRequest;
+/**
+
+    Returns information about the authenticated user
+    @param {Object} req - The request object
+    @param {Object} res - The response object
+    @returns {Object} - Returns an object with information about the authenticated user
+    */
 function requestExternalTokens(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -76,6 +90,14 @@ function requestExternalTokens(req, res) {
     });
 }
 exports.requestExternalTokens = requestExternalTokens;
+/**
+ * This function is an Express.js route handler that is used to handle HTTP requests to the /requestTransportKey endpoint. The function retrieves the transport key (public key) from the specified location in the config object, or generates a new transport key if one is not found. The transport key is then returned in the response.
+
+@param {Req} req - The Express.js request object containing information about the incoming request.
+@param {Response} res - The Express.js response object used to send a response back to the client.
+
+@returns {void} - This function does not return a value. It sends the transport key in the response.
+*/
 function requestTransportKey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let transportPublicKey = null;

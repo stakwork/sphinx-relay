@@ -7,8 +7,11 @@ export function parseActionHistory(actions: ActionHistoryRecord[]) {
   actionTypes.forEach((action) => {
     parsedActions[action] = []
   })
-  actions.reverse().forEach((action) => {
-    if (typeof JSON.parse(action.metaData) === 'object') {
+  actions.forEach((action) => {
+    if (
+      typeof JSON.parse(action.metaData) === 'object' &&
+      typeof action.actionType === 'number'
+    ) {
       if (action.actionType === 0) {
         const meta_data = JSON.parse(action.metaData)
 

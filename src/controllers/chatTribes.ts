@@ -22,6 +22,13 @@ import { logging, sphinxLogger } from '../utils/logger'
 import type { Tribe } from '../models/ts/tribe'
 import { Req, Res } from '../types'
 
+/**
+ * @function joinTribe
+ * @param {Req} req - The request object containing information about the request made to the server.
+ * @param {Res} res - The response object used to send a response back to the client.
+ *
+ * @returns {Promise<void>} - A promise that resolves when the user has successfully joined the tribe, or rejects with an error if something goes wrong.
+ */
 export async function joinTribe(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -163,6 +170,13 @@ export async function joinTribe(req: Req, res: Res) {
   })
 }
 
+/**
+ * @function createChannel
+ * @param {Req} req
+ * @param {res} res
+ *
+ * @returns {Promise<void>}
+ */
 export async function createChannel(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const owner = req.owner
@@ -178,6 +192,13 @@ export async function createChannel(req: Req, res) {
   success(res, channel)
 }
 
+/**
+ * @function deleteChannel
+ * @param {Req} req - The request object containing information about the request made to the server.
+ * @param {res} res - The response object used to send a response back to the client.
+ *
+ * @returns {Promise<void>} - A promise that resolves when the channel has been successfully deleted, or rejects with an error if something goes wrong.
+ */
 export async function deleteChannel(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
 
@@ -191,6 +212,12 @@ export async function deleteChannel(req: Req, res) {
   success(res, channel)
 }
 
+/**
+ * @function receiveMemberRequest
+ * @param {Object} payload - An object containing information about the request to join a tribe.
+ *
+ * @returns {Promise<void>} - A promise that resolves when the member request has been successfully processed, or rejects with an error if something goes wrong.
+ */
 export async function receiveMemberRequest(payload) {
   sphinxLogger.info('=> receiveMemberRequest', logging.Network)
   const {
@@ -307,6 +334,13 @@ export async function receiveMemberRequest(payload) {
   )
 }
 
+/**
+ * @function pinToTribe
+ * @param {Object} req - An Express request object, containing information about the HTTP request.
+ * @param {Object} res - An Express response object, used to send a response to the client.
+ *
+ * @returns {Promise<void>} - A promise that resolves when the pin has been successfully added to the tribe, or rejects with an error if something goes wrong.
+ */
 export async function pinToTribe(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -335,6 +369,14 @@ export async function pinToTribe(req: Req, res) {
   }
 }
 
+/**
+ * Edits the specified tribe.
+ *
+ * @param {Req} req - The request object containing the owner, body, and params. The body should have the following properties: name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, and profile_filters. The params should have the id of the tribe to be edited.
+ * @param {Res} res - The response object used to return the edited tribe.
+ *
+ * @returns {Object} - Returns the edited tribe or an error message if the tribe could not be edited.
+ */
 export async function editTribe(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -431,6 +473,22 @@ export async function editTribe(req: Req, res) {
 }
 
 type ChatMemberStatus = 'approved' | 'rejected'
+
+/**
+ * Approves or rejects a member's request to join a tribe.
+ *
+ * @param {Req} req - The incoming request object.
+ * @param {object} req.owner - The owner object that contains the user's ID and public key.
+ * @param {number} req.owner.id - The user's ID.
+ * @param {string} req.owner.publicKey - The user's public key.
+ * @param {number} req.params.messageId - The ID of the message that the user sent to join the tribe.
+ * @param {number} req.params.contactId - The ID of the user who sent the request to join the tribe.
+ * @param {string} req.params.status - The status of the member request. Can be either "approved" or "rejected".
+ * @param {Res} res - The response object.
+ *
+ * @returns {object} - Returns an object that contains the updated chat and message.
+ * @throws {string} - Returns a string if there is an error.
+ */
 export async function approveOrRejectMember(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -504,6 +562,15 @@ export async function approveOrRejectMember(req: Req, res) {
   })
 }
 
+/**
+ * Receive a message that a member has been approved to join a tribe.
+ *
+ * @param {Object} payload - The message payload from the server.
+ * @param {Object} payload.owner - The owner object for the current user.
+ * @param {Object} payload.chat - The chat object for the tribe.
+ * @param {Object} payload.sender - The sender object for the user who approved the member.
+ * @param {number} payload.network_type - The network type (testnet or mainnet).
+ */
 export async function receiveMemberApprove(payload) {
   sphinxLogger.info('-> receiveMemberApprove', logging.Network)
   const { owner, chat, sender, network_type } =
@@ -565,6 +632,18 @@ export async function receiveMemberApprove(payload) {
   // sendNotification(chat, chat_name, "group", theOwner);
 }
 
+/**
+ * Processes a tribe member rejection notification.
+ *
+ * @param {Object} payload - The notification payload containing details of the rejection.
+ * @param {Object} payload.owner - The owner of the tribe who rejected the member.
+ * @param {Object} payload.chat - The tribe the rejected member belongs to.
+ * @param {Object} payload.sender - The user who sent the member rejection notification.
+ * @param {string} payload.chat_name - The name of the tribe.
+ * @param {string} payload.network_type - The type of network the notification was sent from.
+ *
+ * @returns {Promise<void>}
+ */
 export async function receiveMemberReject(payload) {
   sphinxLogger.info('-> receiveMemberReject', logging.Network)
   const { owner, chat, sender, chat_name, network_type } =
@@ -604,6 +683,17 @@ export async function receiveMemberReject(payload) {
   sendNotification(chat, chat_name, 'reject', owner)
 }
 
+/**
+ * Receives a tribe delete request and updates the chat and sends a notification.
+ *
+ * @param {Object} payload - The payload containing the request information.
+ * @param {Object} payload.owner - The owner of the chat.
+ * @param {Object} payload.chat - The chat that was deleted.
+ * @param {Object} payload.sender - The sender of the request.
+ * @param {string} payload.network_type - The network type.
+ *
+ * @returns {undefined} - Returns nothing.
+ */
 export async function receiveTribeDelete(payload) {
   sphinxLogger.info('-> receiveTribeDelete', logging.Network)
   const { owner, chat, sender, network_type } =
@@ -640,6 +730,12 @@ export async function receiveTribeDelete(payload) {
   )
 }
 
+/**
+ * Replays the chat history for a given contact in the given chat.
+ * @param {Object} chat - The chat object.
+ * @param {Object} contact - The contact object.
+ * @param {Object} ownerRecord - The owner record object.
+ */
 export async function replayChatHistory(chat, contact, ownerRecord) {
   const owner = ownerRecord.dataValues || ownerRecord
   const tenant: number = owner.id
@@ -769,6 +865,26 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
   }
 }
 
+/**
+ * Create tribe chat parameters for a new chat.
+ * @param {Object} owner - The owner of the chat.
+ * @param {number[]} contactIds - An array of contact IDs for the members of the chat.
+ * @param {string} name - The name of the chat.
+ * @param {string} [img] - The image URL for the chat.
+ * @param {number} [price_per_message] - The price per message for the chat.
+ * @param {number} [price_to_join] - The price to join the chat.
+ * @param {number} [escrow_amount] - The escrow amount for the chat.
+ * @param {number} [escrow_millis] - The escrow time in milliseconds for the chat.
+ * @param {boolean} [unlisted] - Whether the chat is unlisted.
+ * @param {boolean} [is_private] - Whether the chat is private.
+ * @param {string} [app_url] - The URL for the chat's app.
+ * @param {string} [feed_url] - The URL for the chat's feed.
+ * @param {number} [feed_type] - The type of feed for the chat.
+ * @param {number} tenant - The tenant ID for the chat.
+ * @param {string} [pin] - The UUID of the pinned message for the chat.
+ * @param {Object} [profile_filters] - The profile filters for the chat.
+ * @returns {Promise<Object>} - An object containing the tribe chat parameters.
+ */
 export async function createTribeChatParams(
   owner,
   contactIds,
@@ -826,6 +942,16 @@ export async function createTribeChatParams(
   }
 }
 
+/**
+ * @async
+ * @function addPendingContactIdsToChat
+ * @description Adds the pending contact IDs of a chat to the chat object
+ * @param {Object} achat - The chat object
+ * @param {number} tenant - The tenant ID
+ * @returns {Object} The updated chat object
+ *
+ * @throws {Error} If the chat object is not valid
+ */
 export async function addPendingContactIdsToChat(achat, tenant) {
   const members: ChatMember[] = (await models.ChatMember.findAll({
     where: {

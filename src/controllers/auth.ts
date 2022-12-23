@@ -18,6 +18,13 @@ interface MeInfo {
   jwt: string
 }
 
+/**
+
+    Verify an auth request.
+    @param {Req} req - The request object
+    @param {Response} res - The response object
+    @returns {Promise<void>}
+  */
 export async function verifyAuthRequest(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   try {
@@ -51,6 +58,13 @@ export async function verifyAuthRequest(req: Req, res) {
   }
 }
 
+/**
+
+    Returns information about the authenticated user
+    @param {Object} req - The request object
+    @param {Object} res - The response object
+    @returns {Object} - Returns an object with information about the authenticated user
+    */
 export async function requestExternalTokens(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   try {
@@ -69,6 +83,14 @@ export async function requestExternalTokens(req: Req, res) {
   }
 }
 
+/**
+ * This function is an Express.js route handler that is used to handle HTTP requests to the /requestTransportKey endpoint. The function retrieves the transport key (public key) from the specified location in the config object, or generates a new transport key if one is not found. The transport key is then returned in the response.
+
+@param {Req} req - The Express.js request object containing information about the incoming request.
+@param {Response} res - The Express.js response object used to send a response back to the client.
+
+@returns {void} - This function does not return a value. It sends the transport key in the response.
+*/
 export async function requestTransportKey(req: Req, res) {
   let transportPublicKey: string | null = null
   try {

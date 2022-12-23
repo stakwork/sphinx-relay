@@ -24,6 +24,13 @@ const chatTribes_1 = require("./chatTribes");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const helpers_1 = require("../helpers");
+/**
+ * Updates a chat.
+ *
+ * @param {Req} req - The request object containing the owner, id, and body of the chat to update.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 function updateChat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -60,6 +67,13 @@ function updateChat(req, res) {
     });
 }
 exports.updateChat = updateChat;
+/**
+ * Kicks a member from a chat.
+ *
+ * @param {Req} req - The request object containing the owner, chat_id, and contact_id of the chat and contact to kick.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 function kickChatMember(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -98,6 +112,12 @@ function kickChatMember(req, res) {
     });
 }
 exports.kickChatMember = kickChatMember;
+/**
+ * Receives a group kick message and processes it.
+ *
+ * @param {Payload} payload - The payload containing the chat, owner, sender, date_string, and network_type of the group kick message.
+ * @returns {Promise<void>}
+ */
 function receiveGroupKick(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> receiveGroupKick`, logger_1.logging.Network);
@@ -145,6 +165,13 @@ function receiveGroupKick(payload) {
     });
 }
 exports.receiveGroupKick = receiveGroupKick;
+/**
+ * Gets a list of chats.
+ *
+ * @param {Req} req - The request object containing the owner.
+ * @param {Response} res - The response object used to send the list of chats.
+ * @returns {Promise<void>}
+ */
 function getChats(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -159,6 +186,13 @@ function getChats(req, res) {
     });
 }
 exports.getChats = getChats;
+/**
+ * Sets the notification level for a chat.
+ *
+ * @param {Req} req - The request object containing the owner, chat_id, and level of the chat to update.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 function setNotifyLevel(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -183,6 +217,13 @@ function setNotifyLevel(req, res) {
     });
 }
 exports.setNotifyLevel = setNotifyLevel;
+/**
+ * Mutes or unmutes a chat.
+ *
+ * @param {Req} req - The request object containing the owner, chat_id, and mute_unmute of the chat to mute or unmute.
+ * @param {Response} res - The response object used to send the updated chat.
+ * @returns {Promise<void>}
+ */
 function mute(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
