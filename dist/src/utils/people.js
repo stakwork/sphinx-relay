@@ -159,7 +159,7 @@ function createBadge({ host, icon, amount, name, owner_pubkey }) {
                             },
                         });
                         if (!paidRes.ok) {
-                            throw 'failed to create badge ' + r.status;
+                            throw 'failed to create badge ' + paidRes.status;
                         }
                         const res = yield paidRes.json();
                         return res;
