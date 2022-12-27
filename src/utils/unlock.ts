@@ -10,7 +10,7 @@ const config = loadConfig()
 "lnd_pwd_path": "/relay/.lnd/.lndpwd"
 */
 
-export async function tryToUnlockLND(): void {
+export async function tryToUnlockLND(): Promise<void> {
   const p = config.lnd_pwd_path
   if (!p) return
 
