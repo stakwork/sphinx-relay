@@ -9,10 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
-const ByteBuffer = require("bytebuffer");
+exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadCredentials = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const fs = require("fs");
-const grpc = require("grpc");
+const grpc = require("@grpc/grpc-js");
+const proto_1 = require("./proto");
 const helpers_1 = require("../helpers");
 const sha = require("js-sha256");
 const crypto = require("crypto");
@@ -26,17 +26,25 @@ const zbase32 = require("../utils/zbase32");
 const secp256k1 = require("secp256k1");
 const libhsmd_1 = require("./libhsmd");
 const greenlight_1 = require("./greenlight");
-// var protoLoader = require('@grpc/proto-loader')
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
-// const IS_LND = config.lightning_provider === "LND";
+const IS_LND = config.lightning_provider === 'LND';
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
 const FEE_LIMIT_SAT = 10000;
-let lightningClient = null;
-let walletUnlocker = null;
-let routerClient = null;
+let lightningClient;
+let walletUnlocker;
+let routerClient;
+// typescript helpers for types
+function isLND(client) {
+    return IS_LND;
+}
+exports.isLND = isLND;
+function isGL(client) {
+    return IS_GREENLIGHT;
+}
+exports.isGL = isGL;
 function loadCredentials(macName) {
     try {
         // console.log('=> loadCredentials', macName)
@@ -66,31 +74,33 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
         // only if specified AND available
         if (tryProxy && (0, proxy_1.isProxy)() && ownerPubkey) {
-            const pl = yield (0, proxy_1.loadProxyLightning)(ownerPubkey);
-            return pl;
+            lightningClient = yield (0, proxy_1.loadProxyLightning)(ownerPubkey);
+            if (!lightningClient) {
+                throw new Error('no lightning client');
+            }
+            return lightningClient;
         }
         if (lightningClient && !noCache) {
             return lightningClient;
         }
         if (IS_GREENLIGHT) {
             const credentials = loadGreenlightCredentials();
-            const descriptor = grpc.load('proto/greenlight.proto');
+            const descriptor = (0, proto_1.loadProto)('greenlight');
             const greenlight = descriptor.greenlight;
             const options = {
                 'grpc.ssl_target_name_override': 'localhost',
             };
             const uri = (0, greenlight_1.get_greenlight_grpc_uri)().split('//');
-            if (!uri[1])
-                return;
-            lightningClient = new greenlight.Node(uri[1], credentials, options);
-            return lightningClient;
+            if (!uri[1]) {
+                throw new Error('no lightning client');
+            }
+            return (lightningClient = new greenlight.Node(uri[1], credentials, options));
         }
         // LND
         const credentials = loadCredentials();
-        const lnrpcDescriptor = grpc.load('proto/lightning.proto');
+        const lnrpcDescriptor = (0, proto_1.loadProto)('lightning');
         const lnrpc = lnrpcDescriptor.lnrpc;
-        lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
-        return lightningClient;
+        return (lightningClient = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials));
     });
 }
 exports.loadLightning = loadLightning;
@@ -101,28 +111,26 @@ function loadWalletUnlocker() {
     else {
         try {
             const credentials = loadCredentials();
-            const lnrpcDescriptor = grpc.load('proto/walletunlocker.proto');
+            const lnrpcDescriptor = (0, proto_1.loadProto)('walletunlocker');
             const lnrpc = lnrpcDescriptor.lnrpc;
-            walletUnlocker = new lnrpc.WalletUnlocker(LND_IP + ':' + config.lnd_port, credentials);
-            return walletUnlocker;
+            return (walletUnlocker = new lnrpc.WalletUnlocker(LND_IP + ':' + config.lnd_port, credentials));
         }
         catch (e) {
             logger_1.sphinxLogger.error(e);
+            throw e;
         }
     }
 }
 exports.loadWalletUnlocker = loadWalletUnlocker;
 function unlockWallet(pwd) {
     return new Promise(function (resolve, reject) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const wu = yield loadWalletUnlocker();
-            wu.unlockWallet({ wallet_password: ByteBuffer.fromUTF8(pwd) }, (err, response) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(response);
-            });
+        const wu = loadWalletUnlocker();
+        wu.unlockWallet({ wallet_password: Buffer.from(pwd, 'utf-8') }, (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve();
         });
     });
 }
@@ -154,14 +162,14 @@ exports.setLock = setLock;
 function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('queryRoute', logger_1.logging.Lightning);
-        if (IS_GREENLIGHT) {
+        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        if (isGL(lightning)) {
             // shim for now
             return {
                 success_prob: 1,
                 routes: [],
             };
         }
-        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
         return new Promise((resolve, reject) => {
             // need to manually add 3 block padding
             // which is done behind the scenes in SendPayment
@@ -182,6 +190,8 @@ function queryRoute(pub_key, amt, route_hint, ownerPubkey) {
                     },
                 ];
             }
+            // TODO remove any
+            ;
             lightning.queryRoutes(options, (err, response) => {
                 if (err) {
                     reject(err);
@@ -201,6 +211,8 @@ function newAddress(type = exports.NESTED_PUBKEY_HASH) {
     return __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         return new Promise((resolve, reject) => {
+            // TODO now lnd only
+            ;
             lightning.newAddress({ type }, (err, response) => {
                 if (err) {
                     reject(err);
@@ -222,13 +234,13 @@ function sendPayment(payment_request, ownerPubkey) {
         logger_1.sphinxLogger.info('sendPayment', logger_1.logging.Lightning);
         const lightning = yield loadLightning(true, ownerPubkey); // try proxy
         return new Promise((resolve, reject) => {
-            if ((0, proxy_1.isProxy)()) {
+            if ((0, proxy_1.isProxy)(lightning)) {
                 const opts = {
                     payment_request,
                     fee_limit: { fixed: FEE_LIMIT_SAT },
                 };
                 lightning.sendPaymentSync(opts, (err, response) => {
-                    if (err) {
+                    if (err || !response) {
                         reject(err);
                     }
                     else {
@@ -242,12 +254,13 @@ function sendPayment(payment_request, ownerPubkey) {
                 });
             }
             else {
-                if (IS_GREENLIGHT) {
+                if (isGL(lightning)) {
                     lightning.pay({
                         bolt11: payment_request,
                         timeout: 12,
                     }, (err, response) => {
-                        if (err == null) {
+                        if (err == null && response) {
+                            // TODO greenlight types
                             resolve(interfaces.keysendResponse(response));
                         }
                         else {
@@ -256,7 +269,7 @@ function sendPayment(payment_request, ownerPubkey) {
                     });
                 }
                 else {
-                    const call = lightning.sendPayment({ payment_request });
+                    const call = lightning.sendPayment();
                     call.on('data', (response) => __awaiter(this, void 0, void 0, function* () {
                         if (response.payment_error) {
                             reject(response.payment_error);
@@ -283,27 +296,26 @@ function keysend(opts, ownerPubkey) {
                 return reject('keysend: invalid pubkey');
             }
             try {
-                const preimage = ByteBuffer.wrap(crypto.randomBytes(32));
+                const preimage = crypto.randomBytes(32);
                 const dest_custom_records = {
                     [`${exports.LND_KEYSEND_KEY}`]: preimage,
                 };
                 if (opts.extra_tlv) {
                     Object.entries(opts.extra_tlv).forEach(([k, v]) => {
-                        dest_custom_records[k] = ByteBuffer.fromUTF8(v);
+                        dest_custom_records[k] = Buffer.from(v, 'utf-8');
                     });
+                }
+                if (opts.data) {
+                    dest_custom_records[`${exports.SPHINX_CUSTOM_RECORD_KEY}`] = Buffer.from(opts.data, 'utf-8');
                 }
                 const options = {
                     amt: Math.max(opts.amt, constants_1.default.min_sat_amount || 3),
                     final_cltv_delta: constants_1.default.final_cltv_delta,
-                    dest: ByteBuffer.fromHex(opts.dest),
+                    dest: Buffer.from(opts.dest, 'hex'),
                     dest_custom_records,
-                    payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
+                    payment_hash: Buffer.from(sha.sha256.arrayBuffer(preimage)),
                     dest_features: [9],
                 };
-                if (opts.data) {
-                    options.dest_custom_records[`${exports.SPHINX_CUSTOM_RECORD_KEY}`] =
-                        ByteBuffer.fromUTF8(opts.data);
-                }
                 // add in route hints
                 if (opts.route_hint && opts.route_hint.includes(':')) {
                     const arr = opts.route_hint.split(':');
@@ -316,12 +328,12 @@ function keysend(opts, ownerPubkey) {
                     ];
                 }
                 // sphinx-proxy sendPaymentSync
-                if ((0, proxy_1.isProxy)()) {
+                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+                if ((0, proxy_1.isProxy)(lightning)) {
                     // console.log("SEND sendPaymentSync", options)
                     options.fee_limit = { fixed: FEE_LIMIT_SAT };
-                    const lightning = yield loadLightning(true, ownerPubkey); // try proxy
                     lightning.sendPaymentSync(options, (err, response) => {
-                        if (err) {
+                        if (err || !response) {
                             reject(err);
                         }
                         else {
@@ -335,12 +347,24 @@ function keysend(opts, ownerPubkey) {
                     });
                 }
                 else {
-                    if (IS_GREENLIGHT) {
-                        const lightning = yield loadLightning(false, ownerPubkey);
-                        const req = interfaces.keysendRequest(options);
+                    const lightning = yield loadLightning(false, ownerPubkey);
+                    if (isGL(lightning)) {
+                        const req = (interfaces.keysendRequest(options));
                         // console.log("KEYSEND REQ", JSON.stringify(req))
+                        // Type 'GreenlightRoutehint[]' is not assignable to type 'Routehint[]'
+                        // from generated types:
+                        // export interface Routehint {
+                        //  hops?: {
+                        //    node_id?: Buffer | Uint8Array | string
+                        //    short_channel_id?: string
+                        //    fee_base?: number | string | Long
+                        //    fee_prop?: number
+                        //    cltv_expiry_delta?: number
+                        //  }[]
+                        //}
                         lightning.keysend(req, function (err, response) {
-                            if (err == null) {
+                            if (err == null && response) {
+                                // TODO greenlight type
                                 resolve(interfaces.keysendResponse(response));
                             }
                             else {
@@ -353,7 +377,7 @@ function keysend(opts, ownerPubkey) {
                         // new sendPayment (with optional route hints)
                         options.fee_limit_sat = FEE_LIMIT_SAT;
                         options.timeout_seconds = 16;
-                        const router = yield loadRouter();
+                        const router = loadRouter();
                         const call = router.sendPaymentV2(options);
                         call.on('data', function (payment) {
                             const state = payment.status || payment.state;
@@ -395,10 +419,9 @@ function loadRouter() {
     }
     else {
         const credentials = loadCredentials('router.macaroon');
-        const descriptor = grpc.load('proto/router.proto');
+        const descriptor = (0, proto_1.loadProto)('router');
         const router = descriptor.routerrpc;
-        routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials);
-        return routerClient;
+        return (routerClient = new router.Router(LND_IP + ':' + config.lnd_port, credentials));
     }
 }
 exports.loadRouter = loadRouter;
@@ -583,6 +606,7 @@ function signBuffer(msg, ownerPubkey) {
     logger_1.sphinxLogger.info('signBuffer', logger_1.logging.Lightning);
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             if (IS_GREENLIGHT) {
                 const pld = interfaces.greenlightSignMessagePayload(msg);
                 const sig = libhsmd_1.default.Handle(1024, 0, null, pld);
@@ -596,11 +620,10 @@ function signBuffer(msg, ownerPubkey) {
                 const finalSig = Buffer.concat([finalRecid, sigBytes], 65);
                 resolve(zbase32.encode(finalSig));
             }
-            else {
-                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+            else if (isLND(lightning)) {
                 const options = { msg };
                 lightning.signMessage(options, function (err, sig) {
-                    if (err || !sig.signature) {
+                    if (err || !sig || !sig.signature) {
                         reject(err);
                     }
                     else {
@@ -627,6 +650,7 @@ function verifyMessage(msg, sig, ownerPubkey) {
     logger_1.sphinxLogger.info('verifyMessage', logger_1.logging.Lightning);
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
             if (IS_GREENLIGHT) {
                 const fullBytes = zbase32.decode(sig);
                 const sigBytes = fullBytes.slice(1);
@@ -648,15 +672,14 @@ function verifyMessage(msg, sig, ownerPubkey) {
                     pubkey: recoveredPubkey.toString('hex'),
                 });
             }
-            else {
-                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-                const options = {
-                    msg: ByteBuffer.fromHex(msg),
-                    signature: sig, // zbase32 encoded string
-                };
-                lightning.verifyMessage(options, function (err, res) {
+            else if (isLND(lightning)) {
+                // sig is zbase32 encoded
+                lightning.verifyMessage({
+                    msg: Buffer.from(msg, 'hex'),
+                    signature: sig,
+                }, function (err, res) {
                     // console.log(res)
-                    if (err || !res.pubkey) {
+                    if (err || !res || !res.pubkey) {
                         reject(err);
                     }
                     else {
@@ -683,7 +706,8 @@ function getInfo(tryProxy, noCache) {
         // log('getInfo')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache); // try proxy
+                // try proxy
+                const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache);
                 lightning.getInfo({}, function (err, response) {
                     if (err == null) {
                         resolve(interfaces.getInfoResponse(response));
@@ -726,7 +750,7 @@ function listPeers(args, ownerPubkey) {
             const lightning = yield loadLightning(true, ownerPubkey);
             const opts = interfaces.listPeersRequest(args);
             lightning.listPeers(opts, function (err, response) {
-                if (err == null) {
+                if (err == null && response) {
                     resolve(interfaces.listPeersResponse(response));
                 }
                 else {
@@ -742,75 +766,112 @@ function listChannels(args, ownerPubkey) {
         logger_1.sphinxLogger.info('listChannels', logger_1.logging.Lightning);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            const cmd = interfaces.listChannelsCommand();
             const opts = interfaces.listChannelsRequest(args);
-            lightning[cmd](opts, function (err, response) {
-                if (err == null) {
-                    resolve(interfaces.listChannelsResponse(response));
-                }
-                else {
-                    reject(err);
-                }
-            });
+            if (isGL(lightning)) {
+                lightning.listPeers(opts, function (err, response) {
+                    if (err == null && response) {
+                        resolve(interfaces.listChannelsResponse(response));
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
+            }
+            else if (isLND(lightning)) {
+                // TODO proxy?
+                ;
+                lightning.listChannels(opts, function (err, response) {
+                    if (err == null && response) {
+                        resolve(interfaces.listChannelsResponse(response));
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
+            }
         }));
     });
 }
 exports.listChannels = listChannels;
+// if separate fields get used in relay, it might be worth to add the types, just copy em from src/grpc/types with go to declaration of your ide
 function pendingChannels(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('pendingChannels', logger_1.logging.Lightning);
-        if (IS_GREENLIGHT)
-            return [];
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        if (isGL(lightning)) {
+            return {
+                total_limbo_balance: '0',
+                pending_open_channels: [],
+                pending_closing_channels: [],
+                pending_force_closing_channels: [],
+                waiting_close_channels: [],
+            };
+        }
+        return new Promise((resolve, reject) => {
+            // no pendingChannels on proxy??????
+            ;
             lightning.pendingChannels({}, function (err, response) {
-                if (err == null) {
+                if (err == null && response) {
                     resolve(response);
                 }
                 else {
                     reject(err);
                 }
             });
-        }));
+        });
     });
 }
 exports.pendingChannels = pendingChannels;
+/** return void for LND, { node_id: string, features: string } for greenlight*/
 function connectPeer(args) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('connectPeer', logger_1.logging.Lightning);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning();
-            const req = interfaces.connectPeerRequest(args);
-            lightning.connectPeer(req, function (err, response) {
-                if (err == null) {
-                    resolve(response);
-                }
-                else {
-                    reject(err);
-                }
-            });
+            if (isGL(lightning)) {
+                const req = interfaces.connectPeerRequest(args);
+                lightning.connectPeer(req, function (err, response) {
+                    if (err == null && response) {
+                        resolve(response);
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
+            }
+            else if (isLND(lightning)) {
+                lightning.connectPeer(args, function (err, response) {
+                    if (err == null && response) {
+                        resolve();
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
+            }
         }));
     });
 }
 exports.connectPeer = connectPeer;
+/** does nothing and returns nothing for greenlight */
 function openChannel(args) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('openChannel', logger_1.logging.Lightning);
         const opts = args || {};
-        if (args && args.node_pubkey) {
-            opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey);
+        const lightning = yield loadLightning();
+        if (isGL(lightning)) {
+            return;
         }
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning();
+        return new Promise((resolve, reject) => {
             lightning.openChannelSync(opts, function (err, response) {
-                if (err == null) {
+                if (err == null && response) {
                     resolve(response);
                 }
                 else {
                     reject(err);
                 }
             });
-        }));
+        });
     });
 }
 exports.openChannel = openChannel;
@@ -835,9 +896,11 @@ function complexBalances(ownerPubkey) {
             const response = yield channelBalance(ownerPubkey);
             return {
                 reserve,
-                full_balance: Math.max(0, parseInt(response.balance)),
+                full_balance: response ? Math.max(0, parseInt(response.balance)) : 0,
                 balance: spendableBalance,
-                pending_open_balance: parseInt(response.pending_open_balance),
+                pending_open_balance: response
+                    ? parseInt(response.pending_open_balance)
+                    : 0,
             };
         }
     });
@@ -846,39 +909,44 @@ exports.complexBalances = complexBalances;
 function channelBalance(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('channelBalance', logger_1.logging.Lightning);
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+        if (isGL(lightning)) {
+            return;
+        }
+        return new Promise((resolve, reject) => {
             lightning.channelBalance({}, function (err, response) {
-                if (err == null) {
+                if (err == null && response) {
                     resolve(response);
                 }
                 else {
                     reject(err);
                 }
             });
-        }));
+        });
     });
 }
 exports.channelBalance = channelBalance;
+/** returns void for greenlight */
 function getChanInfo(chan_id, tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
         // log('getChanInfo')
-        if (IS_GREENLIGHT)
-            return {}; // skip for now
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+        const lightning = yield loadLightning(tryProxy === false ? false : true); // try proxy
+        if (isGL(lightning)) {
+            return; // skip for now
+        }
+        return new Promise((resolve, reject) => {
             if (!chan_id) {
                 return reject('no chan id');
             }
-            const lightning = yield loadLightning(tryProxy === false ? false : true); // try proxy
             lightning.getChanInfo({ chan_id }, function (err, response) {
-                if (err == null) {
+                if (err == null && response) {
                     resolve(response);
                 }
                 else {
                     reject(err);
                 }
             });
-        }));
+        });
     });
 }
 exports.getChanInfo = getChanInfo;

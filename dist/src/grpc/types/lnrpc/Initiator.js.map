@@ -1,0 +1,1 @@
+{"version":3,"file":"Initiator.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/Initiator.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAE1B,QAAA,SAAS,GAAG;IACvB,iBAAiB,EAAE,mBAAmB;IACtC,eAAe,EAAE,iBAAiB;IAClC,gBAAgB,EAAE,kBAAkB;IACpC,cAAc,EAAE,gBAAgB;CACxB,CAAA"}

@@ -10,21 +10,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listUnspent = exports.loadWalletKit = void 0;
-const grpc = require("grpc");
+const proto_1 = require("../grpc/proto");
 const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 let walletClient;
-const loadWalletKit = () => {
+function loadWalletKit() {
     if (walletClient) {
         return walletClient;
     }
     else {
         try {
             const credentials = Lightning.loadCredentials();
-            const lnrpcDescriptor = grpc.load('proto/walletkit.proto');
+            const lnrpcDescriptor = (0, proto_1.loadProto)('walletkit');
             const walletkit = lnrpcDescriptor.walletrpc;
             walletClient = new walletkit.WalletKit(LND_IP + ':' + config.lnd_port, credentials);
             return walletClient;
@@ -34,12 +34,21 @@ const loadWalletKit = () => {
             throw e;
         }
     }
-};
+}
 exports.loadWalletKit = loadWalletKit;
+var AddressType;
+(function (AddressType) {
+    AddressType[AddressType["WITNESS_PUBKEY_HASH"] = 0] = "WITNESS_PUBKEY_HASH";
+    AddressType[AddressType["NESTED_PUBKEY_HASH"] = 1] = "NESTED_PUBKEY_HASH";
+    AddressType[AddressType["UNUSED_WITNESS_PUBKEY_HASH"] = 2] = "UNUSED_WITNESS_PUBKEY_HASH";
+    AddressType[AddressType["UNUSED_NESTED_PUBKEY_HASH"] = 3] = "UNUSED_NESTED_PUBKEY_HASH";
+    AddressType[AddressType["TAPROOT_PUBKEY"] = 4] = "TAPROOT_PUBKEY";
+    AddressType[AddressType["UNUSED_TAPROOT_PUBKEY"] = 5] = "UNUSED_TAPROOT_PUBKEY";
+})(AddressType || (AddressType = {}));
 function listUnspent() {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            const walletkit = yield (0, exports.loadWalletKit)();
+        return new Promise((resolve, reject) => {
+            const walletkit = loadWalletKit();
             try {
                 const opts = { min_confs: 0, max_confs: 10000 };
                 walletkit.listUnspent(opts, function (err, res) {
@@ -54,7 +63,7 @@ function listUnspent() {
             catch (e) {
                 reject(e);
             }
-        }));
+        });
     });
 }
 exports.listUnspent = listUnspent;

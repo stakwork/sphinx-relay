@@ -1,0 +1,1 @@
+{"version":3,"file":"AddressType.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/AddressType.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAE1B,QAAA,WAAW,GAAG;IACzB,mBAAmB,EAAE,qBAAqB;IAC1C,kBAAkB,EAAE,oBAAoB;IACxC,0BAA0B,EAAE,4BAA4B;IACxD,yBAAyB,EAAE,2BAA2B;IACtD,cAAc,EAAE,gBAAgB;IAChC,qBAAqB,EAAE,uBAAuB;CACtC,CAAA"}

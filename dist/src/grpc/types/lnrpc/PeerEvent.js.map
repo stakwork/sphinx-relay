@@ -1,0 +1,1 @@
+{"version":3,"file":"PeerEvent.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/PeerEvent.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAEvC,uCAAuC;AAE1B,QAAA,0BAA0B,GAAG;IACxC,WAAW,EAAE,aAAa;IAC1B,YAAY,EAAE,cAAc;CACpB,CAAA"}

@@ -1,0 +1,28 @@
+import * as grpc from '@grpc/grpc-js'
+import { loadSync, Options } from '@grpc/proto-loader'
+
+import type { ProtoGrpcType as {{Name}}ProtoGrpcType } from './types/{{name}}'
+
+process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
+
+type ProtoName =
+  | '{{name}}'
+
+type ProtoGrpcType =
+  | {{Name}}ProtoGrpcType
+
+const opts: Options = {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+}
+
+export function loadProto(name: '{{name}}'): {{Name}}ProtoGrpcType
+export function loadProto(name: ProtoName): ProtoGrpcType
+export function loadProto(name: ProtoName): ProtoGrpcType {
+  return grpc.loadPackageDefinition(
+    loadSync(`proto/${name}.proto`, opts)
+  ) as unknown as ProtoGrpcType
+}

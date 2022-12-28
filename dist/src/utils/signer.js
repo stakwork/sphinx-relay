@@ -10,26 +10,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyAscii = exports.signAscii = exports.signBuffer = exports.signMessage = exports.loadSigner = void 0;
-const grpc = require("grpc");
+const proto_1 = require("../grpc/proto");
 const Lightning = require("../grpc/lightning");
-const ByteBuffer = require("bytebuffer");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
 // var protoLoader = require('@grpc/proto-loader')
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
-let signerClient = null;
-const loadSigner = () => {
+let signerClient;
+function loadSigner() {
     if (signerClient) {
         return signerClient;
     }
     else {
         try {
             const credentials = Lightning.loadCredentials('signer.macaroon');
-            const lnrpcDescriptor = grpc.load('proto/signer.proto');
+            const lnrpcDescriptor = (0, proto_1.loadProto)('signer');
             const signer = lnrpcDescriptor.signrpc;
-            signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials);
-            return signerClient;
+            return (signerClient = new signer.Signer(LND_IP + ':' + config.lnd_port, credentials));
         }
         catch (e) {
             //only throw here
@@ -37,56 +35,54 @@ const loadSigner = () => {
             throw e;
         }
     }
-};
+}
 exports.loadSigner = loadSigner;
 const signMessage = (msg) => {
-    return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        const signer = yield (0, exports.loadSigner)();
+    const signer = loadSigner();
+    return new Promise((resolve, reject) => {
         try {
             const options = {
-                msg: ByteBuffer.fromHex(msg),
+                msg: Buffer.from(msg, 'hex'),
                 key_loc: { key_family: 6, key_index: 0 },
             };
             signer.signMessage(options, function (err, sig) {
-                if (err || !sig.signature) {
+                if (err || !sig || !sig.signature) {
                     reject(err);
                 }
                 else {
-                    const buf = ByteBuffer.wrap(sig.signature);
-                    resolve(buf.toBase64());
+                    resolve(sig.signature.toString('base64'));
                 }
             });
         }
         catch (e) {
             reject(e);
         }
-    }));
+    });
 };
 exports.signMessage = signMessage;
 const signBuffer = (msg) => {
-    return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        const signer = yield (0, exports.loadSigner)();
+    const signer = loadSigner();
+    return new Promise((resolve, reject) => {
         try {
             const options = { msg };
             signer.signMessage(options, function (err, sig) {
-                if (err || !sig.signature) {
+                if (err || !sig || !sig.signature) {
                     reject(err);
                 }
                 else {
-                    const buf = ByteBuffer.wrap(sig.signature);
-                    resolve(buf.toBase64());
+                    resolve(sig.signature.toString('base64'));
                 }
             });
         }
         catch (e) {
             reject(e);
         }
-    }));
+    });
 };
 exports.signBuffer = signBuffer;
 function verifyMessage(msg, sig, pubkey) {
-    return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-        const signer = yield (0, exports.loadSigner)();
+    const signer = loadSigner();
+    return new Promise((resolve, reject) => {
         if (msg.length === 0) {
             return reject('invalid msg');
         }
@@ -98,12 +94,12 @@ function verifyMessage(msg, sig, pubkey) {
         }
         try {
             const options = {
-                msg: ByteBuffer.fromHex(msg),
-                signature: ByteBuffer.fromBase64(sig),
-                pubkey: ByteBuffer.fromHex(pubkey),
+                msg: Buffer.from(msg, 'hex'),
+                signature: Buffer.from(sig, 'base64'),
+                pubkey: Buffer.from(pubkey, 'hex'),
             };
             signer.verifyMessage(options, function (err, res) {
-                if (err) {
+                if (err || !res) {
                     reject(err);
                 }
                 else {
@@ -114,7 +110,7 @@ function verifyMessage(msg, sig, pubkey) {
         catch (e) {
             reject(e);
         }
-    }));
+    });
 }
 function signAscii(ascii) {
     return __awaiter(this, void 0, void 0, function* () {

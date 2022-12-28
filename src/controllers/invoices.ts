@@ -229,7 +229,8 @@ export const listInvoices = async (req: Req, res: Response): Promise<void> => {
 
   const lightning = await Lightning.loadLightning()
 
-  lightning.listInvoices({}, (err, response) => {
+  // TODO ts complaining
+  ;(<any>lightning).listInvoices({}, (err, response) => {
     sphinxLogger.info({ err, response })
     if (err == null) {
       res.status(200)

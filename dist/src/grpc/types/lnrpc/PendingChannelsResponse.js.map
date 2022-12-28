@@ -1,0 +1,1 @@
+{"version":3,"file":"PendingChannelsResponse.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/PendingChannelsResponse.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAgBvC,uCAAuC;AAE1B,QAAA,6DAA6D,GAAG;IAC3E,KAAK,EAAE,OAAO;IACd,SAAS,EAAE,WAAW;IACtB,IAAI,EAAE,MAAM;CACJ,CAAA"}
