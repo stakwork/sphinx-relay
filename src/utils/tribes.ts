@@ -56,68 +56,66 @@ async function initializeClient(
   host: string,
   onMessage?: (topic: string, message: Buffer) => void
 ): Promise<mqtt.Client> {
-  return new Promise(async (resolve) => {
-    let connected = false
-    async function reconnect() {
-      try {
-        const pwd = await genSignedTimestamp(pubkey)
-        if (connected) return
-        const url = mqttURL(host)
-        const cl = mqtt.connect(url, {
-          username: pubkey,
-          password: pwd,
-          reconnectPeriod: 0, // dont auto reconnect
-        })
-        sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
-        cl.on('connect', async function () {
-          // first check if its already connected to this host (in case it takes a long time)
-          connected = true
-          if (
-            clients[pubkey] &&
-            clients[pubkey][host] &&
-            clients[pubkey][host].connected
-          ) {
-            resolve(clients[pubkey][host])
-            return
+  let connected = false
+  async function reconnect() {
+    try {
+      const pwd = await genSignedTimestamp(pubkey)
+      if (connected) return
+      const url = mqttURL(host)
+      const cl = mqtt.connect(url, {
+        username: pubkey,
+        password: pwd,
+        reconnectPeriod: 0, // dont auto reconnect
+      })
+      sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
+      cl.on('connect', async function () {
+        // first check if its already connected to this host (in case it takes a long time)
+        connected = true
+        if (
+          clients[pubkey] &&
+          clients[pubkey][host] &&
+          clients[pubkey][host].connected
+        ) {
+          return clients[pubkey][host]
+          return
+        }
+        sphinxLogger.info(`connected!`, logging.Tribes)
+        if (!clients[pubkey]) clients[pubkey] = {}
+        clients[pubkey][host] = cl // ADD TO MAIN STATE
+        cl.on('close', function (e) {
+          sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
+          // setTimeout(() => reconnect(), 2000);
+          connected = false
+          if (clients[pubkey] && clients[pubkey][host]) {
+            delete clients[pubkey][host]
           }
-          sphinxLogger.info(`connected!`, logging.Tribes)
-          if (!clients[pubkey]) clients[pubkey] = {}
-          clients[pubkey][host] = cl // ADD TO MAIN STATE
-          cl.on('close', function (e) {
-            sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
-            // setTimeout(() => reconnect(), 2000);
-            connected = false
-            if (clients[pubkey] && clients[pubkey][host]) {
-              delete clients[pubkey][host]
-            }
-          })
-          cl.on('error', function (e) {
-            sphinxLogger.error(`error:  ${e.message}`, logging.Tribes)
-          })
-          cl.on('message', function (topic, message) {
-            // console.log("============>>>>> GOT A MSG", topic, message)
-            if (onMessage) onMessage(topic, message)
-          })
-          cl.subscribe(`${pubkey}/#`, function (err) {
-            if (err)
-              sphinxLogger.error(`error subscribing ${err}`, logging.Tribes)
-            else {
-              sphinxLogger.info(`subscribed! ${pubkey}/#`, logging.Tribes)
-              resolve(cl)
-            }
-          })
         })
-      } catch (e) {
-        sphinxLogger.error(`error initializing ${e}`, logging.Tribes)
-      }
+        cl.on('error', function (e) {
+          sphinxLogger.error(`error:  ${e.message}`, logging.Tribes)
+        })
+        cl.on('message', function (topic, message) {
+          // console.log("============>>>>> GOT A MSG", topic, message)
+          if (onMessage) onMessage(topic, message)
+        })
+        cl.subscribe(`${pubkey}/#`, function (err) {
+          if (err)
+            sphinxLogger.error(`error subscribing ${err}`, logging.Tribes)
+          else {
+            sphinxLogger.info(`subscribed! ${pubkey}/#`, logging.Tribes)
+            return cl
+          }
+        })
+      })
+    } catch (e) {
+      sphinxLogger.error(`error initializing ${e}`, logging.Tribes)
     }
-    while (true) {
-      if (!connected) {
-        reconnect()
-      }
-      await sleep(5000 + Math.round(Math.random() * 8000))
+  }
+  while (true) {
+    if (!connected) {
+      reconnect()
     }
-  })
+    await sleep(5000 + Math.round(Math.random() * 8000))
+  }
 }
 
 async function lazyClient(
