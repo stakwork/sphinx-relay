@@ -40,7 +40,7 @@ export async function getTribeOwnersChatByUUID(uuid: string): Promise<any> {
       AND sphinx_contacts.id = sphinx_chats.tenant
       AND sphinx_chats.uuid = '${uuid}'`,
       {
-        model: models.ChatRecord,
+        model: models.Chat,
         mapToModel: true, // pass true here if you have any mapped fields
       }
     )) as ChatRecord[]
