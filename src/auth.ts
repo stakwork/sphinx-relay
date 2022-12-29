@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import { models, Contact, ContactRecord } from './models'
+import { models, ContactRecord } from './models'
 import * as cryptoJS from 'crypto-js'
 import { success, failure, unauthorized } from './utils/res'
 import { setInMemoryMacaroon } from './utils/macaroon'
