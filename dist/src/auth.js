@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authModule = exports.base64ToHex = exports.ownerMiddleware = exports.hmacMiddleware = exports.unlocker = void 0;
+exports.base64ToHex = exports.ownerMiddleware = exports.hmacMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
 const cryptoJS = require("crypto-js");
@@ -276,55 +276,4 @@ function sleep(ms) {
     });
 }
 const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
-/* deprecated */
-function authModule(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (req.path == '/app' ||
-            req.path == '/' ||
-            req.path == '/unlock' ||
-            req.path == '/info' ||
-            req.path == '/action' ||
-            req.path == '/contacts/tokens' ||
-            req.path == '/latest' ||
-            req.path.startsWith('/static') ||
-            req.path == '/contacts/set_dev' ||
-            req.path == '/connect') {
-            next();
-            return;
-        }
-        if (process.env.HOSTING_PROVIDER === 'true') {
-            // const host = req.headers.origin
-            // const referer = req.headers.referer
-            if (req.path === '/invoices') {
-                next();
-                return;
-            }
-        }
-        const token = req.headers['x-user-token'] ||
-            req.cookies['x-user-token'] ||
-            req.headers['x-admin-token'] ||
-            req.cookies['x-admin-token'];
-        if (token == null) {
-            res.status(401);
-            res.end('Invalid credentials - token is null');
-        }
-        else {
-            const user = (yield models_1.models.Contact.findOne({
-                where: { isOwner: true },
-            }));
-            const hashedToken = crypto
-                .createHash('sha256')
-                .update(token)
-                .digest('base64');
-            if (user.authToken == null || user.authToken != hashedToken) {
-                res.status(401);
-                res.end('Invalid credentials - token doesnt match');
-            }
-            else {
-                next();
-            }
-        }
-    });
-}
-exports.authModule = authModule;
 //# sourceMappingURL=auth.js.map
