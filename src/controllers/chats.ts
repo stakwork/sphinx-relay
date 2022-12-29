@@ -48,21 +48,14 @@ export async function updateChat(req: Req, res: Res): Promise<void> {
   if (!chat) {
     return failure(res, 'chat not found')
   }
-  const { name, photo_url, meta, my_alias, my_photo_url } = req.body
 
-  //const obj: { [k: string]: any } = {}
   const obj: {
     name?: string
     photoUrl?: string
     meta?: string
     myAlias?: string
     myPhotoUrl?: string
-  } = {}
-  if (name) obj.name = name
-  if (photo_url) obj.photoUrl = photo_url
-  if (meta && typeof meta === 'string') obj.meta = meta
-  if (my_alias) obj.myAlias = my_alias
-  if (my_photo_url || my_photo_url === '') obj.myPhotoUrl = my_photo_url
+  } = req.body
 
   if (Object.keys(obj).length > 0) {
     await chat.update(obj)
