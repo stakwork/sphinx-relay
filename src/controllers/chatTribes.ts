@@ -177,7 +177,7 @@ export async function joinTribe(req: Req, res: Res) {
  *
  * @returns {Promise<void>}
  */
-export async function createChannel(req: Req, res) {
+export async function createChannel(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const owner = req.owner
   //const tenant: number = req.owner.id
@@ -199,7 +199,7 @@ export async function createChannel(req: Req, res) {
  *
  * @returns {Promise<void>} - A promise that resolves when the channel has been successfully deleted, or rejects with an error if something goes wrong.
  */
-export async function deleteChannel(req: Req, res) {
+export async function deleteChannel(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
 
   const owner = req.owner
@@ -341,7 +341,7 @@ export async function receiveMemberRequest(payload) {
  *
  * @returns {Promise<void>} - A promise that resolves when the pin has been successfully added to the tribe, or rejects with an error if something goes wrong.
  */
-export async function pinToTribe(req: Req, res) {
+export async function pinToTribe(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { pin } = req.body
@@ -377,7 +377,7 @@ export async function pinToTribe(req: Req, res) {
  *
  * @returns {Object} - Returns the edited tribe or an error message if the tribe could not be edited.
  */
-export async function editTribe(req: Req, res) {
+export async function editTribe(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
@@ -489,7 +489,7 @@ type ChatMemberStatus = 'approved' | 'rejected'
  * @returns {object} - Returns an object that contains the updated chat and message.
  * @throws {string} - Returns a string if there is an error.
  */
-export async function approveOrRejectMember(req: Req, res) {
+export async function approveOrRejectMember(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
