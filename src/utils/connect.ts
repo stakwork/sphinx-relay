@@ -96,7 +96,7 @@ async function makeVarScript(): Promise<string> {
 </script>`
 }
 
-export async function checkPeered(req: Req, res: Res): void {
+export async function checkPeered(req: Req, res: Res): Promise<void> {
   const default_pubkey =
     '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
   const pubkey = req.body.pubkey || default_pubkey
@@ -122,7 +122,7 @@ export async function checkPeered(req: Req, res: Res): void {
   }
 }
 
-export async function connectPeer(req: Req, res: Res): void {
+export async function connectPeer(req: Req, res: Res): Promise<void> {
   try {
     await Lightning.connectPeer({
       addr: {
