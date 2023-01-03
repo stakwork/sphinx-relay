@@ -231,7 +231,6 @@ export async function createBadge(req, res) {
     }
     if (!validRewardType) return failure(res, 'invalid reward type')
     const response: Badge = await people.createBadge({
-      host: 'liquid.sphinx.chat',
       icon,
       amount,
       name,

@@ -132,7 +132,7 @@ export async function claimOnLiquid({
   }
 }
 
-export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
+export async function createBadge({ icon, amount, name, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     const r = await fetch(

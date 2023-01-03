@@ -66,7 +66,6 @@ export function init() {
             const reward_type = Number(arr[5])
             const icon = arr[6]
             const response = await createBadge({
-              host: 'liquid.sphinx.chat',
               icon,
               amount: amount,
               name,

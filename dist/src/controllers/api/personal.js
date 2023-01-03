@@ -226,7 +226,6 @@ function createBadge(req, res) {
             if (!validRewardType)
                 return (0, res_1.failure)(res, 'invalid reward type');
             const response = yield people.createBadge({
-                host: 'liquid.sphinx.chat',
                 icon,
                 amount,
                 name,

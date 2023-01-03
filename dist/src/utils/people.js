@@ -121,7 +121,7 @@ function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
     });
 }
 exports.claimOnLiquid = claimOnLiquid;
-function createBadge({ host, icon, amount, name, owner_pubkey }) {
+function createBadge({ icon, amount, name, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);

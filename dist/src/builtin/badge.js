@@ -58,7 +58,6 @@ function init() {
                         const reward_type = Number(arr[5]);
                         const icon = arr[6];
                         const response = yield (0, people_1.createBadge)({
-                            host: 'liquid.sphinx.chat',
                             icon,
                             amount: amount,
                             name,
