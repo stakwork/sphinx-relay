@@ -259,7 +259,6 @@ export async function transferBadge(req, res) {
     })) as Contact
     const { amount, asset, to, memo } = req.body
     const response = await people.transferBadge({
-      host: 'liquid.sphinx.chat',
       amount,
       memo,
       asset,

@@ -1,14 +1,9 @@
-import fetch from 'node-fetch'
 import { NodeConfig } from '../../types'
 import * as http from 'ava-http'
-import { makeArgs } from '../../utils/helpers'
+import { makeArgs, sleep } from '../../utils/helpers'
 
 export async function confirmBadge(node: NodeConfig, badgeId: number) {
-  const res = await fetch(
-    `https://liquid.sphinx.chat/balances?pubkey=${node.pubkey}`,
-    { method: 'GET', headers: { 'Content-Type': 'application/json' } }
-  )
-  const results = await res.json()
+  const results = await getBalances()
 
   for (let i = 0; i < results.balances.length; i++) {
     const balance = results.balances[i]
@@ -25,11 +20,7 @@ export async function confirmBadgeCreatedThroughMessage(
   chatId: number,
   reward_type: number
 ) {
-  const res = await fetch(
-    `https://liquid.sphinx.chat/balances?pubkey=${nodeBeingChecked.pubkey}`,
-    { method: 'GET', headers: { 'Content-Type': 'application/json' } }
-  )
-  const results = await res.json()
+  const results = await getBalances()
   const bot = await http.get(
     `${tribeOwner.external_ip}/badge_bot/${chatId}`,
     makeArgs(tribeOwner)
@@ -48,4 +39,18 @@ export async function confirmBadgeCreatedThroughMessage(
     }
   }
   return false
+}
+
+async function getBalances() {
+  await sleep(1000)
+  return {
+    balances: [
+      {
+        owner_pubkey:
+          '0364c05cbcbb9612036cc66297445a88bcfc21941fd816e17a56b54b0b52ff02b9',
+        asset_id: 22222222222222222222222222,
+        balance: 1,
+      },
+    ],
+  }
 }

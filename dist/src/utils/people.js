@@ -125,8 +125,6 @@ function createBadge({ host, icon, amount, name, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
-            // let protocol = 'https'
-            // if (config.tribes_insecure) protocol = 'http'
             const r = yield (0, node_fetch_1.default)(config.boltwall_server + '/create_badge?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -179,13 +177,11 @@ function createBadge({ host, icon, amount, name, owner_pubkey }) {
     });
 }
 exports.createBadge = createBadge;
-function transferBadge({ to, asset, amount, memo, owner_pubkey, host, }) {
+function transferBadge({ to, asset, amount, memo, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
-            let protocol = 'https';
-            // if (config.tribes_insecure) protocol = 'http'
-            const r = yield (0, node_fetch_1.default)(protocol + '://' + host + '/transfer?token=' + token, {
+            const r = yield (0, node_fetch_1.default)(config.boltwall_server + '/transfer_badge?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify({
                     to,

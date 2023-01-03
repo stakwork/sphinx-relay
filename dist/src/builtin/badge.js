@@ -175,7 +175,6 @@ function init() {
                                         amount: 1,
                                         memo: '',
                                         owner_pubkey: tribe.ownerPubkey,
-                                        host: 'liquid.sphinx.chat',
                                     });
                                     if (badge.tx) {
                                         const resEmbed = new Sphinx.MessageEmbed()

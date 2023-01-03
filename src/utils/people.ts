@@ -135,8 +135,6 @@ export async function claimOnLiquid({
 export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
-    // let protocol = 'https'
-    // if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(
       config.boltwall_server + '/create_badge?token=' + token,
       {
@@ -196,20 +194,11 @@ export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
   }
 }
 
-export async function transferBadge({
-  to,
-  asset,
-  amount,
-  memo,
-  owner_pubkey,
-  host,
-}) {
+export async function transferBadge({ to, asset, amount, memo, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
-    let protocol = 'https'
-    // if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(
-      protocol + '://' + host + '/transfer?token=' + token,
+      config.boltwall_server + '/transfer_badge?token=' + token,
       {
         method: 'POST',
         body: JSON.stringify({

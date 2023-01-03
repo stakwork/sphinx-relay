@@ -252,7 +252,6 @@ function transferBadge(req, res) {
             }));
             const { amount, asset, to, memo } = req.body;
             const response = yield people.transferBadge({
-                host: 'liquid.sphinx.chat',
                 amount,
                 memo,
                 asset,
