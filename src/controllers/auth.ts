@@ -19,12 +19,11 @@ interface MeInfo {
 }
 
 /**
-
-    Verify an auth request.
-    @param {Req} req - The request object
-    @param {Response} res - The response object
-    @returns {Promise<void>}
-  */
+ *Verify an auth request.
+ *@param {Req} req - The request object
+ *@param {Response} res - The response object
+ *@returns {Promise<void>}
+ **/
 export async function verifyAuthRequest(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   try {
@@ -44,27 +43,17 @@ export async function verifyAuthRequest(req: Req, res) {
       info: bod,
       token,
     })
-    // const protocol = j.host.includes("localhost") ? "http" : "https";
-    // await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
-    //   method: "POST",
-    //   body: JSON.stringify(bod),
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    // });
-    // success(res, 'ok')
   } catch (e) {
     failure(res, e)
   }
 }
 
 /**
-
-    Returns information about the authenticated user
-    @param {Object} req - The request object
-    @param {Object} res - The response object
-    @returns {Object} - Returns an object with information about the authenticated user
-    */
+ *Returns information about the authenticated user
+ *@param {Object} req - The request object
+ *@param {Object} res - The response object
+ *@returns {Object} - Returns an object with information about the authenticated user
+ **/
 export async function requestExternalTokens(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   try {

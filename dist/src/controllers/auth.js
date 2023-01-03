@@ -18,12 +18,11 @@ const cert_1 = require("../utils/cert");
 const fs = require("fs");
 const config = (0, config_1.loadConfig)();
 /**
-
-    Verify an auth request.
-    @param {Req} req - The request object
-    @param {Response} res - The response object
-    @returns {Promise<void>}
-  */
+ *Verify an auth request.
+ *@param {Req} req - The request object
+ *@param {Response} res - The response object
+ *@returns {Promise<void>}
+ **/
 function verifyAuthRequest(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -45,15 +44,6 @@ function verifyAuthRequest(req, res) {
                 info: bod,
                 token,
             });
-            // const protocol = j.host.includes("localhost") ? "http" : "https";
-            // await fetch(`${protocol}://${j.host}/verify/${j.challenge}?token=${token}`, {
-            //   method: "POST",
-            //   body: JSON.stringify(bod),
-            //   headers: {
-            //     "Content-Type": "application/json",
-            //   },
-            // });
-            // success(res, 'ok')
         }
         catch (e) {
             (0, res_1.failure)(res, e);
@@ -62,12 +52,11 @@ function verifyAuthRequest(req, res) {
 }
 exports.verifyAuthRequest = verifyAuthRequest;
 /**
-
-    Returns information about the authenticated user
-    @param {Object} req - The request object
-    @param {Object} res - The response object
-    @returns {Object} - Returns an object with information about the authenticated user
-    */
+ *Returns information about the authenticated user
+ *@param {Object} req - The request object
+ *@param {Object} res - The response object
+ *@returns {Object} - Returns an object with information about the authenticated user
+ **/
 function requestExternalTokens(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)

@@ -7,6 +7,7 @@ import { loadConfig } from './config'
 import { get_hub_pubkey, getSuggestedSatPerByte } from '../controllers/queries'
 import { failure, success } from './res'
 import { sphinxLogger } from './logger'
+import { Req, Res } from '../types'
 import * as fs from 'fs'
 import * as net from 'net'
 
@@ -95,7 +96,7 @@ async function makeVarScript(): Promise<string> {
 </script>`
 }
 
-export async function checkPeered(req, res) {
+export async function checkPeered(req: Req, res: Res): Promise<void> {
   const default_pubkey =
     '023d70f2f76d283c6c4e58109ee3a2816eb9d8feb40b23d62469060a2b2867b77f'
   const pubkey = req.body.pubkey || default_pubkey
@@ -121,7 +122,7 @@ export async function checkPeered(req, res) {
   }
 }
 
-export async function connectPeer(req, res) {
+export async function connectPeer(req: Req, res: Res): Promise<void> {
   try {
     await Lightning.connectPeer({
       addr: {
@@ -137,7 +138,7 @@ export async function connectPeer(req, res) {
   }
 }
 
-export async function genChannel(req, res) {
+export async function genChannel(req: Req, res: Res) {
   const { amount } = req.body
   if (!amount) return failure(res, 'no amount')
   try {
@@ -162,7 +163,7 @@ export async function genChannel(req, res) {
   }
 }
 
-function greenlightConnect(req, res) {
+function greenlightConnect(req: Req, res: Res) {
   fs.readFile('public/index_greenlight.html', async function (error, pgResp) {
     if (error) {
       res.writeHead(404)
@@ -178,7 +179,7 @@ function greenlightConnect(req, res) {
     res.end()
   })
 }
-export async function connect(req, res) {
+export async function connect(req: Req, res: Res) {
   if (IS_GREENLIGHT) return greenlightConnect(req, res)
   fs.readFile('public/index.html', async function (error, pgResp) {
     if (error) {
