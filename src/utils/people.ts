@@ -135,6 +135,7 @@ export async function claimOnLiquid({
 export async function createBadge({ icon, amount, name, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
+    console.log(config.boltwall_server)
     const r = await fetch(
       config.boltwall_server + '/create_badge?token=' + token,
       {
