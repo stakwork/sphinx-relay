@@ -223,15 +223,14 @@ export async function createBadge(req: Req, res: Res) {
       },
     })
     if (!tribe) return failure(res, 'invalid tribe')
-    let validRewardType = false
-    for (const key in constants.reward_types) {
+    let validRewardType: boolean = false
+    for (let key in constants.reward_types) {
       if (constants.reward_types[key] === reward_type) {
         validRewardType = true
       }
     }
     if (!validRewardType) return failure(res, 'invalid reward type')
     const response: Badge = await people.createBadge({
-      host: 'liquid.sphinx.chat',
       icon,
       amount,
       name,
@@ -259,7 +258,6 @@ export async function transferBadge(req: Req, res: Res) {
     })) as Contact
     const { amount, asset, to, memo } = req.body
     const response = await people.transferBadge({
-      host: 'liquid.sphinx.chat',
       amount,
       memo,
       asset,

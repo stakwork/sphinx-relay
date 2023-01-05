@@ -652,3 +652,19 @@ export const addPatToGitBot = async (req: Req, res: Res): Promise<void> => {
     failure(res, 'no bots')
   }
 }
+
+export const getBagdeChatBot = async (req: Req, res: Res): Promise<void> => {
+  if (!req.owner) return failure(res, 'no owner')
+  const chatId = req.params.chatId
+  if (!chatId) return
+  const tenant: number = req.owner.id
+  try {
+    const badgeChatBot = await models.ChatBot.findOne({
+      where: { chatId, tenant, botPrefix: '/badge' },
+    })
+    return success(res, badgeChatBot)
+  } catch (error) {
+    sphinxLogger.error(['=> could bot get badge chat Bot', error], logging.Bots)
+    failure(res, 'could bot get badge chat Bot')
+  }
+}

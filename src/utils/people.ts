@@ -2,6 +2,9 @@ import { loadConfig } from './config'
 import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
 import { sphinxLogger, logging } from './logger'
+import { Lsat } from 'lsat-js'
+import * as Lightning from '../grpc/lightning'
+import { SendPaymentResponse } from '../grpc/interfaces'
 
 const config = loadConfig()
 
@@ -129,22 +132,59 @@ export async function claimOnLiquid({
   }
 }
 
-export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
+export async function createBadge({ icon, amount, name, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
-    let protocol = 'https'
-    if (config.tribes_insecure) protocol = 'http'
-    const r = await fetch(protocol + '://' + host + '/issue?token=' + token, {
-      method: 'POST',
-      body: JSON.stringify({
-        icon,
-        name,
-        amount,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    })
+    const r = await fetch(
+      config.boltwall_server + '/create_badge?token=' + token,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          icon,
+          name,
+          amount,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+
     if (!r.ok) {
-      throw 'failed to create badge ' + r.status
+      if (r.status === 402) {
+        const header: string = r.headers.get('www-authenticate')!
+        const lsat: Lsat = Lsat.fromHeader(header)
+
+        const payment: SendPaymentResponse = await Lightning.sendPayment(
+          lsat.invoice
+        )
+        let preimage: string
+        if (payment.payment_preimage) {
+          preimage = payment.payment_preimage.toString('hex')
+          lsat.setPreimage(preimage)
+          const token = await genSignedTimestamp(owner_pubkey)
+          const paidRes = await fetch(
+            config.boltwall_server + '/create_badge?token=' + token,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                icon,
+                name,
+                amount,
+              }),
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: lsat.toToken(),
+              },
+            }
+          )
+          if (!paidRes.ok) {
+            throw 'failed to create badge ' + paidRes.status
+          }
+          const res = await paidRes.json()
+          return res
+        }
+      } else {
+        throw 'failed to create badge ' + r.status
+      }
     }
     const res = await r.json()
     return res
@@ -154,20 +194,11 @@ export async function createBadge({ host, icon, amount, name, owner_pubkey }) {
   }
 }
 
-export async function transferBadge({
-  to,
-  asset,
-  amount,
-  memo,
-  owner_pubkey,
-  host,
-}) {
+export async function transferBadge({ to, asset, amount, memo, owner_pubkey }) {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
-    let protocol = 'https'
-    if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(
-      protocol + '://' + host + '/transfer?token=' + token,
+      config.boltwall_server + '/transfer_badge?token=' + token,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -180,7 +211,7 @@ export async function transferBadge({
       }
     )
     if (!r.ok) {
-      throw 'failed to create badge ' + r.status
+      throw 'failed to transfer badge ' + r.status
     }
     const res = await r.json()
     return res

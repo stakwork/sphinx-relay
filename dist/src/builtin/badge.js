@@ -34,54 +34,226 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
-        if (isAdmin)
-            return;
+        const arr = (message.content && message.content.split(' ')) || [];
+        const cmd = arr[1];
         const tribe = (yield models_1.models.Chat.findOne({
             where: { uuid: message.channel.id },
         }));
-        const bot = (yield models_1.models.ChatBot.findOne({
-            where: { botPrefix: '/badge' },
-        }));
-        const chatMember = (yield models_1.models.ChatMember.findOne({
-            where: { contactId: parseInt(message.member.id), tenant: tribe.tenant },
-        }));
-        if (bot && typeof bot.meta === 'string') {
-            const rewards = JSON.parse(bot.meta);
-            for (let i = 0; i < rewards.length; i++) {
-                const reward = rewards[i];
-                let doReward = false;
-                if (reward.rewardType === constants_1.default.reward_types.earned) {
-                    if (chatMember.totalEarned === reward.amount ||
-                        chatMember.totalEarned > reward.amount) {
-                        doReward = true;
-                    }
-                }
-                else if (reward.rewardType === constants_1.default.reward_types.spent) {
-                    if (chatMember.totalSpent === reward.amount ||
-                        chatMember.totalSpent > reward.amount) {
-                        doReward = true;
-                    }
-                }
-                if (doReward) {
-                    const hasReward = yield checkReward(parseInt(message.member.id), reward.badgeId, tribe.tenant);
-                    if (!hasReward.status) {
-                        const badge = yield (0, people_1.transferBadge)({
-                            to: hasReward.pubkey,
-                            asset: reward.badgeId,
-                            amount: 1,
-                            memo: '',
+        if (arr[0] === '/badge') {
+            const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
+            if (!isAdmin)
+                return;
+            // typeof name !== 'string' ||
+            // typeof icon !== 'string' ||
+            // typeof amount !== 'number' ||
+            // typeof chat_id !== 'number' ||
+            // typeof claim_amount !== 'number' ||
+            // typeof reward_type !== 'number'
+            switch (cmd) {
+                case 'create':
+                    if (arr.length === 7) {
+                        const name = arr[2];
+                        if (!name) {
+                            const addFields = [
+                                {
+                                    name: 'Badge Bot Error',
+                                    value: 'Provide a valid badge name',
+                                },
+                            ];
+                            botResponse(addFields, 'BadgeBot', 'Badge Error', message);
+                            return;
+                        }
+                        const amount = Number(arr[3]);
+                        if (isNaN(amount)) {
+                            const addFields = [
+                                {
+                                    name: 'Badge Bot Error',
+                                    value: 'Provide a valid amount of badge you would like to create',
+                                },
+                            ];
+                            botResponse(addFields, 'BadgeBot', 'Badge Error', message);
+                            return;
+                        }
+                        const claim_amount = Number(arr[4]);
+                        if (isNaN(claim_amount)) {
+                            const addFields = [
+                                {
+                                    name: 'Badge Bot Error',
+                                    value: 'Provide a valid amount of sats condition a tribe memeber has to complete to earn this badge',
+                                },
+                            ];
+                            botResponse(addFields, 'BadgeBot', 'Badge Error', message);
+                            return;
+                        }
+                        const reward_type = Number(arr[5]);
+                        if (isNaN(reward_type)) {
+                            const addFields = [
+                                {
+                                    name: 'Badge Bot Error',
+                                    value: 'Provide a valid amount of badge you would like to create',
+                                },
+                            ];
+                            botResponse(addFields, 'BadgeBot', 'Badge Error', message);
+                            return;
+                        }
+                        const icon = arr[6];
+                        if (!icon) {
+                            const addFields = [
+                                {
+                                    name: 'Badge Bot Error',
+                                    value: 'Provide a valid Icon url',
+                                },
+                            ];
+                            botResponse(addFields, 'BadgeBot', 'Badge Error', message);
+                            return;
+                        }
+                        const response = yield (0, people_1.createBadge)({
+                            icon,
+                            amount: amount,
+                            name,
                             owner_pubkey: tribe.ownerPubkey,
-                            host: 'liquid.sphinx.chat',
                         });
-                        if (badge.tx) {
-                            const resEmbed = new Sphinx.MessageEmbed()
-                                .setAuthor('BagdeBot')
-                                .setDescription(`${message.member.nickname} just earned the ${reward.name} badge`);
-                            message.channel.send({ embed: resEmbed });
+                        yield createOrEditBadgeBot(tribe.id, tribe.tenant, response, claim_amount, reward_type);
+                        const embed = new Sphinx.MessageEmbed()
+                            .setAuthor('BadgeBot')
+                            .setDescription(response.name + ' badge has been added to this tribe');
+                        message.channel.send({ embed });
+                        return;
+                    }
+                    else {
+                        const resEmbed = new Sphinx.MessageEmbed()
+                            .setAuthor('BadgeBot')
+                            .setTitle('Badge Error:')
+                            .addFields([
+                            {
+                                name: 'Create new badge using the format below',
+                                value: '/badge create {BADGE_NAME} {AMOUNT_OF_BADGE_TO_CREATE} {CONDITION_FOR_BADGE_TO_BE CLAIMED} {BADGE_TYPE} {BADGE_ICON}',
+                            },
+                        ])
+                            .setThumbnail(botSVG);
+                        message.channel.send({ embed: resEmbed });
+                        return;
+                    }
+                case 'types':
+                    const resEmbed = new Sphinx.MessageEmbed()
+                        .setAuthor('BadgeBot')
+                        .setTitle('Badge Types:')
+                        .addFields([
+                        {
+                            name: 'Earn Badge',
+                            value: '{EARN_BADGE_TYPE} value should be {1}',
+                        },
+                        {
+                            name: 'Spend Badge',
+                            value: '{SPEND_BADGE_TYPE} value should be {2}',
+                        },
+                    ])
+                        .setThumbnail(botSVG);
+                    message.channel.send({ embed: resEmbed });
+                    return;
+                default:
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('BadgeBot')
+                        .setTitle('Bot Commands:')
+                        .addFields([
+                        {
+                            name: 'Create new badge bot',
+                            value: '/badge create {BADGE_NAME} {AMOUNT_OF_BADGE_TO_CREATE} {CONDITION_FOR_BADGE_TO_BE CLAIMED} {BADGE_TYPE} {BADGE_ICON}',
+                        },
+                        { name: 'Help', value: '/badge help' },
+                    ])
+                        .setThumbnail(botSVG);
+                    message.channel.send({ embed });
+                    return;
+            }
+        }
+        else {
+            const chatMembers = [];
+            try {
+                const bot = (yield models_1.models.ChatBot.findOne({
+                    where: {
+                        botPrefix: '/badge',
+                        chatId: tribe.id,
+                        tenant: tribe.tenant,
+                    },
+                }));
+                const chatMember = (yield models_1.models.ChatMember.findOne({
+                    where: {
+                        contactId: parseInt(message.member.id),
+                        tenant: tribe.tenant,
+                        chatId: tribe.id,
+                    },
+                }));
+                chatMembers.push(chatMember);
+                if (message.type === constants_1.default.message_types.boost) {
+                    const ogMsg = (yield models_1.models.Message.findOne({
+                        where: { uuid: message.reply_id },
+                    }));
+                    const tribeMember = (yield models_1.models.ChatMember.findOne({
+                        where: {
+                            contactId: ogMsg.sender,
+                            tenant: tribe.tenant,
+                            chatId: tribe.id,
+                        },
+                    }));
+                    chatMembers.push(tribeMember);
+                }
+                if (message.type === constants_1.default.message_types.direct_payment) {
+                    const ogMsg = (yield models_1.models.Message.findOne({
+                        where: { uuid: message.id },
+                    }));
+                    const tribeMember = (yield models_1.models.ChatMember.findOne({
+                        where: {
+                            lastAlias: ogMsg.recipientAlias,
+                            tenant: ogMsg.tenant,
+                            chatId: ogMsg.chatId,
+                        },
+                    }));
+                    chatMembers.push(tribeMember);
+                }
+                if (bot && typeof bot.meta === 'string') {
+                    for (let j = 0; j < chatMembers.length; j++) {
+                        const chatMember = chatMembers[j];
+                        const rewards = JSON.parse(bot.meta);
+                        for (let i = 0; i < rewards.length; i++) {
+                            const reward = rewards[i];
+                            let doReward = false;
+                            if (reward.rewardType === constants_1.default.reward_types.earned) {
+                                if (chatMember.totalEarned === reward.amount ||
+                                    chatMember.totalEarned > reward.amount) {
+                                    doReward = true;
+                                }
+                            }
+                            else if (reward.rewardType === constants_1.default.reward_types.spent) {
+                                if (chatMember.totalSpent === reward.amount ||
+                                    chatMember.totalSpent > reward.amount) {
+                                    doReward = true;
+                                }
+                            }
+                            if (doReward) {
+                                const hasReward = yield checkReward(chatMember.contactId, reward.badgeId, tribe.tenant);
+                                if (!hasReward.status) {
+                                    const badge = yield (0, people_1.transferBadge)({
+                                        to: hasReward.pubkey,
+                                        asset: reward.badgeId,
+                                        amount: 1,
+                                        memo: '',
+                                        owner_pubkey: tribe.ownerPubkey,
+                                    });
+                                    if (badge.tx) {
+                                        const resEmbed = new Sphinx.MessageEmbed()
+                                            .setAuthor('BagdeBot')
+                                            .setDescription(`${chatMember.lastAlias} just earned the ${reward.name} badge!, https://blockstream.info/liquid/asset/${reward.asset} redeem on people.sphinx.chat`);
+                                        message.channel.send({ embed: resEmbed });
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+            }
+            catch (error) {
+                logger_1.sphinxLogger.error(`BADGE BOT ERROR ${error}`, logger_1.logging.Bots);
             }
         }
     }));
@@ -125,6 +297,7 @@ function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
                             amount,
                             badgeId: badge.id,
                             rewardType: rewardType,
+                            asset: badge.asset,
                         });
                         meta = JSON.stringify(temMeta);
                     }
@@ -136,6 +309,7 @@ function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
                         amount,
                         badgeId: badge.id,
                         rewardType: rewardType,
+                        asset: badge.asset,
                     });
                     meta = JSON.stringify(temMeta);
                 }
@@ -149,12 +323,17 @@ function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
                     amount,
                     badgeId: badge.id,
                     rewardType: rewardType,
+                    asset: badge.asset,
                 });
                 const chatBot = {
                     chatId,
                     botPrefix: '/badge',
                     botType: constants_1.default.bot_types.builtin,
-                    msgTypes: JSON.stringify([0]),
+                    msgTypes: JSON.stringify([
+                        constants_1.default.message_types.message,
+                        constants_1.default.message_types.boost,
+                        constants_1.default.message_types.direct_payment,
+                    ]),
                     pricePerUse: 0,
                     tenant,
                     meta: JSON.stringify(temMeta),
@@ -170,4 +349,15 @@ function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
     });
 }
 exports.createOrEditBadgeBot = createOrEditBadgeBot;
+function botResponse(addFields, author, title, message) {
+    const resEmbed = new Sphinx.MessageEmbed()
+        .setAuthor(author)
+        .setTitle(title)
+        .addFields(addFields)
+        .setThumbnail(botSVG);
+    message.channel.send({ embed: resEmbed });
+}
+const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
+  <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
+</svg>`;
 //# sourceMappingURL=badge.js.map
