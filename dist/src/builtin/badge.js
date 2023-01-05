@@ -114,6 +114,10 @@ function init() {
                             owner_pubkey: tribe.ownerPubkey,
                         });
                         yield createOrEditBadgeBot(tribe.id, tribe.tenant, response, claim_amount, reward_type);
+                        const embed = new Sphinx.MessageEmbed()
+                            .setAuthor('BadgeBot')
+                            .setDescription(response.name + ' badge has been added to this tribe');
+                        message.channel.send({ embed });
                         return;
                     }
                     else {

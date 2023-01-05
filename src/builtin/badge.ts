@@ -132,6 +132,12 @@ export function init() {
               claim_amount,
               reward_type
             )
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor('BadgeBot')
+              .setDescription(
+                response.name + ' badge has been added to this tribe'
+              )
+            message.channel.send({ embed })
             return
           } else {
             const resEmbed = new Sphinx.MessageEmbed()
