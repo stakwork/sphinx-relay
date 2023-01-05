@@ -85,7 +85,6 @@ export function init() {
             }
             const claim_amount = Number(arr[4])
             if (isNaN(claim_amount)) {
-              console.log('Wrong claim amount')
               const addFields = [
                 {
                   name: 'Badge Bot Error',

@@ -125,7 +125,6 @@ function createBadge({ icon, amount, name, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
-            console.log(config.boltwall_server);
             const r = yield (0, node_fetch_1.default)(config.boltwall_server + '/create_badge?token=' + token, {
                 method: 'POST',
                 body: JSON.stringify({
