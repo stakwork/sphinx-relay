@@ -64,7 +64,7 @@ function init() {
                             return;
                         }
                         const amount = Number(arr[3]);
-                        if (typeof amount !== 'number') {
+                        if (isNaN(amount)) {
                             const addFields = [
                                 {
                                     name: 'Badge Bot Error',
@@ -75,7 +75,8 @@ function init() {
                             return;
                         }
                         const claim_amount = Number(arr[4]);
-                        if (typeof claim_amount !== 'number') {
+                        if (isNaN(claim_amount)) {
+                            console.log('Wrong claim amount');
                             const addFields = [
                                 {
                                     name: 'Badge Bot Error',
@@ -86,7 +87,7 @@ function init() {
                             return;
                         }
                         const reward_type = Number(arr[5]);
-                        if (typeof reward_type !== 'number') {
+                        if (isNaN(reward_type)) {
                             const addFields = [
                                 {
                                     name: 'Badge Bot Error',
