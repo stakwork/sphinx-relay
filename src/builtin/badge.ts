@@ -61,10 +61,63 @@ export function init() {
         case 'create':
           if (arr.length === 7) {
             const name = arr[2]
+            if (!name) {
+              const addFields = [
+                {
+                  name: 'Badge Bot Error',
+                  value: 'Provide a valid badge name',
+                },
+              ]
+              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              return
+            }
             const amount = Number(arr[3])
+            if (typeof amount !== 'number') {
+              const addFields = [
+                {
+                  name: 'Badge Bot Error',
+                  value:
+                    'Provide a valid amount of badge you would like to create',
+                },
+              ]
+              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              return
+            }
             const claim_amount = Number(arr[4])
+            if (typeof claim_amount !== 'number') {
+              const addFields = [
+                {
+                  name: 'Badge Bot Error',
+                  value:
+                    'Provide a valid amount of sats condition a tribe memeber has to complete to earn this badge',
+                },
+              ]
+              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              return
+            }
             const reward_type = Number(arr[5])
+            if (typeof reward_type !== 'number') {
+              const addFields = [
+                {
+                  name: 'Badge Bot Error',
+                  value:
+                    'Provide a valid amount of badge you would like to create',
+                },
+              ]
+              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              return
+            }
             const icon = arr[6]
+            if (!icon) {
+              const addFields = [
+                {
+                  name: 'Badge Bot Error',
+                  value: 'Provide a valid Icon url',
+                },
+              ]
+              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              return
+            }
             const response = await createBadge({
               icon,
               amount: amount,
@@ -81,6 +134,18 @@ export function init() {
             )
             return
           } else {
+            const resEmbed = new Sphinx.MessageEmbed()
+              .setAuthor('BadgeBot')
+              .setTitle('Badge Error:')
+              .addFields([
+                {
+                  name: 'Create new badge using the format below',
+                  value:
+                    '/badge create {BADGE_NAME} {AMOUNT_OF_BADGE_TO_CREATE} {CONDITION_FOR_BADGE_TO_BE CLAIMED} {BADGE_TYPE} {BADGE_ICON}',
+                },
+              ])
+              .setThumbnail(botSVG)
+            message.channel.send({ embed: resEmbed })
             return
           }
         case 'types':
@@ -317,6 +382,15 @@ export async function createOrEditBadgeBot(
     sphinxLogger.error(`BADGE BOT ERROR ${error}`, logging.Bots)
     return false
   }
+}
+
+function botResponse(addFields, author, title, message) {
+  const resEmbed = new Sphinx.MessageEmbed()
+    .setAuthor(author)
+    .setTitle(title)
+    .addFields(addFields)
+    .setThumbnail(botSVG)
+  message.channel.send({ embed: resEmbed })
 }
 
 const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
