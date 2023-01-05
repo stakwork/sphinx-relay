@@ -218,7 +218,7 @@ function createBadge(req, res) {
             if (!tribe)
                 return (0, res_1.failure)(res, 'invalid tribe');
             let validRewardType = false;
-            for (let key in constants_1.default.reward_types) {
+            for (const key in constants_1.default.reward_types) {
                 if (constants_1.default.reward_types[key] === reward_type) {
                     validRewardType = true;
                 }
