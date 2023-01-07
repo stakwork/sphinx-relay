@@ -231,6 +231,7 @@ function onReceive(payload, dest) {
                             },
                         }));
                         if (sender) {
+                            yield sender.update({ totalMessages: sender.totalMessages + 1 });
                             if (payload.type === msgtypes.message) {
                                 const allMsg = (yield models_1.models.Message.findAll({
                                     limit: 1,

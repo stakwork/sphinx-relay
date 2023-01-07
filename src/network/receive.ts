@@ -247,6 +247,7 @@ async function onReceive(payload: Payload, dest: string) {
             },
           })) as ChatMemberRecord
           if (sender) {
+            await sender.update({ totalMessages: sender.totalMessages + 1 })
             if (payload.type === msgtypes.message) {
               const allMsg = (await models.Message.findAll({
                 limit: 1,

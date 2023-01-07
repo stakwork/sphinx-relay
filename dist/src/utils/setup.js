@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateLsat = exports.setupPersonUuid = exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
+exports.updateTotalMsgPerTribe = exports.updateLsat = exports.setupPersonUuid = exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
 const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
@@ -127,7 +127,7 @@ const updateLsat = () => __awaiter(void 0, void 0, void 0, function* () {
         }
     }
     catch (error) {
-        logger_1.sphinxLogger.info(['error trying to update lsat status', error], logger_1.logging.Lsat);
+        logger_1.sphinxLogger.error(['error trying to update lsat status', error], logger_1.logging.Lsat);
     }
 });
 exports.updateLsat = updateLsat;
@@ -147,6 +147,33 @@ const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.runMigrations = runMigrations;
+const updateTotalMsgPerTribe = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = (yield models_1.sequelize.query(`
+      SELECT * FROM sphinx_contacts
+      INNER JOIN sphinx_chats
+      ON sphinx_contacts.public_key = sphinx_chats.owner_pubkey
+      INNER JOIN sphinx_chat_members
+      ON sphinx_chats.id = sphinx_chat_members.chat_id
+      WHERE sphinx_contacts.is_owner = 1`, {
+            model: models_1.models.ChatMember,
+            mapToModel: true, // pass true here if you have any mapped fields
+        }));
+        if (result.length > 0 && result[0].totalMessages === null) {
+            for (let i = 0; i < result.length; i++) {
+                const member = result[i];
+                const totalMessages = yield models_1.models.Message.count({
+                    where: { sender: member.contactId, chatId: member.chatId },
+                });
+                yield member.update({ totalMessages });
+            }
+        }
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(['error trying to update Total Messages in Chat Member Table', error], logger_1.logging.DB);
+    }
+});
+exports.updateTotalMsgPerTribe = updateTotalMsgPerTribe;
 function setupDone() {
     return __awaiter(this, void 0, void 0, function* () {
         yield printGitInfo();

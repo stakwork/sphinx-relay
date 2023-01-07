@@ -1,5 +1,12 @@
 import * as Lightning from '../grpc/lightning'
-import { sequelize, models, Contact, ContactRecord, Lsat } from '../models'
+import {
+  sequelize,
+  models,
+  Contact,
+  ContactRecord,
+  Lsat,
+  ChatMemberRecord,
+} from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
 import * as gitinfo from '../utils/gitinfo'
@@ -121,7 +128,7 @@ const updateLsat = async (): Promise<void> => {
       lsat.update({ status: constants.lsat_statuses.expired })
     }
   } catch (error) {
-    sphinxLogger.info(
+    sphinxLogger.error(
       ['error trying to update lsat status', error],
       logging.Lsat
     )
@@ -148,6 +155,39 @@ const runMigrations = async () => {
   })
 }
 
+const updateTotalMsgPerTribe = async () => {
+  try {
+    const result = (await sequelize.query(
+      `
+      SELECT * FROM sphinx_contacts
+      INNER JOIN sphinx_chats
+      ON sphinx_contacts.public_key = sphinx_chats.owner_pubkey
+      INNER JOIN sphinx_chat_members
+      ON sphinx_chats.id = sphinx_chat_members.chat_id
+      WHERE sphinx_contacts.is_owner = 1`,
+      {
+        model: models.ChatMember,
+        mapToModel: true, // pass true here if you have any mapped fields
+      }
+    )) as ChatMemberRecord[]
+
+    if (result.length > 0 && result[0].totalMessages === null) {
+      for (let i = 0; i < result.length; i++) {
+        const member = result[i]
+        const totalMessages = await models.Message.count({
+          where: { sender: member.contactId, chatId: member.chatId },
+        })
+        await member.update({ totalMessages })
+      }
+    }
+  } catch (error) {
+    sphinxLogger.error(
+      ['error trying to update Total Messages in Chat Member Table', error],
+      logging.DB
+    )
+  }
+}
+
 export {
   setupDatabase,
   setupOwnerContact,
@@ -155,6 +195,7 @@ export {
   setupDone,
   setupPersonUuid,
   updateLsat,
+  updateTotalMsgPerTribe,
 }
 
 async function setupDone() {
