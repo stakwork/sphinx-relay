@@ -154,6 +154,7 @@ export async function set(app) {
 
   app.get('/add_user', admin.addProxyUser)
   app.get('/list_users', admin.listUsers)
+  app.get('/has_admin', admin.hasAdmin)
 
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })
