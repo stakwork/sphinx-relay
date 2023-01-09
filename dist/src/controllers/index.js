@@ -136,6 +136,7 @@ function set(app) {
         app.get('/badge_bot/:chatId', bots.getBagdeChatBot);
         app.get('/healthcheck', confirmations.healthcheck);
         app.get('/add_user', admin.addProxyUser);
+        app.get('/list_users', admin.listUsers);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 res.send({ version: gitinfo.tag });
