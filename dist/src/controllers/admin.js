@@ -9,9 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addProxyUser = void 0;
+exports.listUsers = exports.addProxyUser = void 0;
 const res_1 = require("../utils/res");
 const proxy_1 = require("../utils/proxy");
+const models_1 = require("../models");
 function addProxyUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -31,4 +32,26 @@ function addProxyUser(req, res) {
     });
 }
 exports.addProxyUser = addProxyUser;
+function listUsers(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        if (!req.owner.isAdmin)
+            return (0, res_1.failure)(res, 'not admin');
+        if (!(0, proxy_1.isProxy)())
+            return (0, res_1.failure)(res, 'not proxy');
+        try {
+            const users = (yield models_1.models.Contact.findAll({
+                where: {
+                    isOwner: true,
+                },
+            }));
+            (0, res_1.success)(res, { users });
+        }
+        catch (e) {
+            (0, res_1.failure)(res, e);
+        }
+    });
+}
+exports.listUsers = listUsers;
 //# sourceMappingURL=admin.js.map
