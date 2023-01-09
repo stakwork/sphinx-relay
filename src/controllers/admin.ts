@@ -3,6 +3,21 @@ import { Req, Res } from '../types'
 import { generateNewUser, getProxyRootPubkey, isProxy } from '../utils/proxy'
 import { models, ContactRecord } from '../models'
 
+export async function hasAdmin(req: Req, res: Res): Promise<void> {
+  if (!isProxy()) return failure(res, 'not proxy')
+  try {
+    const admin: ContactRecord = (await models.Contact.findOne({
+      where: {
+        isOwner: true,
+        isAdmin: true,
+      },
+    })) as ContactRecord
+    success(res, admin ? true : false)
+  } catch (e) {
+    failure(res, e)
+  }
+}
+
 export async function addProxyUser(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   if (!req.owner.isAdmin) return failure(res, 'not admin')

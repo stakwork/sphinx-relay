@@ -125,7 +125,8 @@ function no_auth(path) {
         path == '/connect_peer' ||
         path == '/peered' ||
         path == '/request_transport_key' ||
-        path == '/webhook');
+        path == '/webhook' ||
+        path == '/has_admin');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
