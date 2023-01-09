@@ -24,6 +24,11 @@ const builtInBotMsgTypes = {
     constants.message_types.message,
     constants.message_types.group_join,
   ],
+  badge: [
+    constants.message_types.message,
+    constants.message_types.boost,
+    constants.message_types.direct_payment,
+  ],
 }
 
 const builtInBotNames = {

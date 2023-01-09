@@ -6,6 +6,7 @@ import {
   ChatMember as ChatMemberModel,
 } from '../models'
 import * as LND from '../grpc/lightning'
+import { asyncForEach, sleep } from '../helpers'
 import {
   personalizeMessage,
   decryptMessage,
@@ -42,6 +43,23 @@ export interface SendMessageParams {
   realSatsContactId?: number
 }
 
+/**
+ * Sends a message to a chat.
+ *
+ * @param {SendMessageParams} params - The parameters for sending the message.
+ * @param {number} params.type - The type of the message to be sent.
+ * @param {Partial<ChatPlusMembers>} params.chat - The chat object to which the message will be sent.
+ * @param {Partial<MessageContent>} params.message - The message content to be sent.
+ * @param {Partial<ContactRecord | Contact>} params.sender - The sender of the message.
+ * @param {number} [params.amount] - The amount of the message to be sent, if applicable.
+ * @param {(data: any) => void} [params.success] - The callback function to be executed upon successful message send.
+ * @param {(error: any) => void} [params.failure] - The callback function to be executed upon failed message send.
+ * @param {string} [params.skipPubKey] - The public key to be skipped in the message send process, if applicable.
+ * @param {boolean} [params.isForwarded] - A flag indicating whether the message is being forwarded.
+ * @param {number} [params.forwardedFromContactId] - The id of the contact from which the message is being forwarded, if applicable.
+ * @param {number} [params.realSatsContactId] - The id of the contact for which the message is being sent in real sats, if applicable.
+ * @returns {Promise<void>} A promise that resolves when the message send process is complete.
+ */
 export async function sendMessage({
   type,
   chat,
@@ -61,8 +79,6 @@ export async function sendMessage({
 
   const isTribe = chat.type === constants.chat_types.tribe
   const isTribeOwner = isTribe && sender.publicKey === chat.ownerPubkey
-  // console.log('-> sender.publicKey', sender.publicKey)
-  // console.log('-> chat.ownerPubkey', chat.ownerPubkey)
 
   let aSender = sender
   if ((sender as ContactRecord).dataValues) {
@@ -75,11 +91,7 @@ export async function sendMessage({
   }
   let msg = newmsg(type, chat, theSender, message, isForwarded ? true : false)
 
-  // console.log("=> MSG TO SEND",msg)
-
-  // console.log(type,message)
   if (!(sender && sender.publicKey)) {
-    // console.log("NO SENDER?????");
     return
   }
 
@@ -107,7 +119,6 @@ export async function sendMessage({
       networkType = 'mqtt' // broadcast to all
       // decrypt message.content and message.mediaKey w groupKey
       msg = await decryptMessage(msg, chat)
-      // console.log("SEND.TS isBotMsg")
       sphinxLogger.info(
         `[Network] => isTribeAdmin msg sending... ${msg}`,
         logging.Network
@@ -167,11 +178,9 @@ export async function sendMessage({
     `=> sending to ${contactIds.length} 'contacts'`,
     logging.Network
   )
-  await asyncForEach(contactIds, async (contactId) => {
-    // console.log("=> TENANT", tenant)
+  await asyncForEach(contactIds, async (contactId: number) => {
     if (contactId === tenant) {
       // dont send to self
-      // console.log('=> dont send to self')
       return
     }
 
@@ -179,32 +188,24 @@ export async function sendMessage({
       where: { id: contactId },
     })) as Contact
     if (!contact) {
-      // console.log('=> sendMessage no contact')
       return // skip if u simply dont have the contact
     }
     if (tenant === -1) {
       // this is a bot sent from me!
       if (contact.isOwner) {
-        // console.log('=> dont MQTT to myself!')
         return // dont MQTT to myself!
       }
     }
 
-    // console.log("=> CONTACT", contactId, contact.publicKey)
     const destkey = contact.publicKey
     if (destkey === skipPubKey) {
-      // console.log('=> skipPubKey', skipPubKey)
       return // skip (for tribe owner broadcasting, not back to the sender)
     }
-    // console.log('-> sending to ', contact.id, destkey)
 
     let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
 
     // sending a payment to one subscriber, buying a pic from OG poster
     // or boost to og poster
-    // console.log("=> istribeOwner", isTribeOwner)
-    // console.log("=> amount", amount)
-    // console.log("=> realSatsContactId", realSatsContactId, contactId)
     if (isTribeOwner && amount && realSatsContactId === contactId) {
       mqttTopic = '' // FORCE KEYSEND!!!
       await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
@@ -219,7 +220,6 @@ export async function sendMessage({
     ) {
       m.message.push = true
     }
-    // console.log('-> personalized msg', m)
     const opts = {
       dest: destkey,
       data: m,
@@ -227,8 +227,6 @@ export async function sendMessage({
       route_hint: contact.routeHint || '',
     }
 
-    // console.log("==> SENDER",sender)
-    // console.log("==> OK SIGN AND SEND", opts);
     try {
       const r = await signAndSend(opts, sender, mqttTopic)
       yes = r
@@ -252,13 +250,21 @@ export interface SignAndSendOpts {
   data: Partial<Msg>
 }
 
+/**
+ * Signs and sends a message to a specified destination.
+ *
+ * @param {SignAndSendOpts} opts - The options for the message to be sent.
+ * @param {Object} owner - The object containing the owner's public key and id.
+ * @param {string} [mqttTopic] - The MQTT topic to be used for publishing the message.
+ * @param {boolean} [replayingHistory] - A flag indicating whether the message is being replayed from history.
+ * @returns {Promise<boolean>} A promise that resolves with a boolean indicating the success or failure of the operation.
+ */
 export function signAndSend(
   opts: SignAndSendOpts,
   owner: { [k: string]: any },
   mqttTopic?: string,
   replayingHistory?: boolean
 ): Promise<boolean> {
-  // console.log('sign and send!',opts)
   const ownerPubkey = owner.publicKey
   const ownerID = owner.id
   return new Promise(async function (resolve, reject) {
@@ -274,8 +280,11 @@ export function signAndSend(
     const sig = await LND.signAscii(data, ownerPubkey)
     data = data + sig
 
-    // console.log("-> ACTUALLY SEND: topic:", mqttTopic)
     try {
+      /*This happens when a tribe owner wants to send to its members
+        This is because the tribe owner is acting as the gate to get
+        the message through to the rest of the members, but sending
+        to the other members in the chat should not cost sats      */
       if (mqttTopic) {
         await tribes.publish(mqttTopic, data, ownerPubkey, () => {
           if (!replayingHistory) {
@@ -295,6 +304,12 @@ export function signAndSend(
   })
 }
 
+/**
+ * Checks if a message should be auto-confirmed and performs the auto-confirmation if necessary.
+ *
+ * @param {Object} data - The data of the message to be checked.
+ * @param {number} tenant - The tenant of the message to be checked.
+ */
 function checkIfAutoConfirm(data, tenant) {
   if (typesToForward.includes(data.type)) {
     if (data.type === constants.message_types.delete) {
@@ -304,6 +319,17 @@ function checkIfAutoConfirm(data, tenant) {
   }
 }
 
+/**
+ * Creates a new message object.
+ *
+ * @param {number} type - The type of the message.
+ * @param {Partial<ChatPlusMembers>} chat - The chat object of the message.
+ * @param {ContactRecord} sender - The sender of the message.
+ * @param {Partial<MessageContent>} message - The message content.
+ * @param {boolean} isForwarded - A flag indicating whether the message is being forwarded.
+ * @param {boolean} [includeStatus] - A flag indicating whether to include the status in the message object.
+ * @returns {Msg} The new message object.
+ */
 export function newmsg(
   type: number,
   chat: Partial<ChatPlusMembers>,
@@ -333,7 +359,10 @@ export function newmsg(
   if (!includeStatus && message.status) {
     delete message.status
   }
-  console.log('PERSONUUID in newmsg', sender.personUuid)
+  sphinxLogger.info(
+    `PERSONUUID in newmsg ${sender.personUuid}`,
+    logging.Network
+  )
   const result: Msg = {
     type: type,
     chat: {
@@ -360,22 +389,15 @@ export function newmsg(
   return result
 }
 
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
-}
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-// function urlBase64FromHex(ascii){
-//     return Buffer.from(ascii,'hex').toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }
-// function urlBase64FromBytes(buf){
-//     return Buffer.from(buf).toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
-// }
-
+/**
+ * Detects mentions in a message and returns an array of contact IDs of the mentioned contacts.
+ *
+ * @param {Msg} msg - The message object.
+ * @param {boolean} isForwarded - A flag indicating whether the message is being forwarded.
+ * @param {number} chatId - The ID of the chat the message belongs to.
+ * @param {number} tenant - The tenant of the message.
+ * @returns {Promise<number[]>} An array of contact IDs of the mentioned contacts.
+ */
 async function detectMentions(
   msg: Msg,
   isForwarded: boolean,

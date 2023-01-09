@@ -41,6 +41,7 @@ jobs:
             'hmac',
             'socketIO',
             'tribeMember',
+            'badgeBot',
             'actionHistory',
           ]
     steps:

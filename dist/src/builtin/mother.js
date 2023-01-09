@@ -31,6 +31,11 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.message,
         constants_1.default.message_types.group_join,
     ],
+    badge: [
+        constants_1.default.message_types.message,
+        constants_1.default.message_types.boost,
+        constants_1.default.message_types.direct_payment,
+    ],
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',

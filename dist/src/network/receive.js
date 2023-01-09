@@ -230,35 +230,38 @@ function onReceive(payload, dest) {
                                 chatId: chat.id,
                             },
                         }));
-                        if (payload.type === msgtypes.message) {
-                            const allMsg = (yield models_1.models.Message.findAll({
-                                limit: 1,
-                                order: [['createdAt', 'DESC']],
-                                where: {
-                                    chatId: chat.id,
-                                    type: { [sequelize_1.Op.ne]: msgtypes.confirmation },
-                                },
-                            }));
-                            const contact = (yield models_1.models.Contact.findOne({
-                                where: { publicKey: payload.sender.pub_key, tenant },
-                            }));
-                            if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
+                        if (sender) {
+                            yield sender.update({ totalMessages: sender.totalMessages + 1 });
+                            if (payload.type === msgtypes.message) {
+                                const allMsg = (yield models_1.models.Message.findAll({
+                                    limit: 1,
+                                    order: [['createdAt', 'DESC']],
+                                    where: {
+                                        chatId: chat.id,
+                                        type: { [sequelize_1.Op.ne]: msgtypes.confirmation },
+                                    },
+                                }));
+                                const contact = (yield models_1.models.Contact.findOne({
+                                    where: { publicKey: payload.sender.pub_key, tenant },
+                                }));
+                                if (allMsg.length === 0 || allMsg[0].sender !== contact.id) {
+                                    yield sender.update({
+                                        totalSpent: sender.totalSpent + payload.message.amount,
+                                        reputation: sender.reputation + 1,
+                                    });
+                                }
+                            }
+                            else if (payload.type === msgtypes.boost) {
                                 yield sender.update({
                                     totalSpent: sender.totalSpent + payload.message.amount,
-                                    reputation: sender.reputation + 1,
+                                    reputation: sender.reputation + 2,
                                 });
                             }
-                        }
-                        else if (payload.type === msgtypes.boost) {
-                            yield sender.update({
-                                totalSpent: sender.totalSpent + payload.message.amount,
-                                reputation: sender.reputation + 2,
-                            });
-                        }
-                        else {
-                            yield sender.update({
-                                totalSpent: sender.totalSpent + payload.message.amount,
-                            });
+                            else {
+                                yield sender.update({
+                                    totalSpent: sender.totalSpent + payload.message.amount,
+                                });
+                            }
                         }
                     }
                     catch (error) {

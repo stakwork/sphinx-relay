@@ -7,14 +7,14 @@ import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
 import { createJWT, scopes } from '../../utils/jwt'
-import { Badge } from '../../types'
+import { Badge, Req, Res } from '../../types'
 import { createOrEditBadgeBot } from '../../builtin/badge'
 import constants from '../../constants'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
 // U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
-export async function createPeopleProfile(req, res) {
+export async function createPeopleProfile(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -69,7 +69,7 @@ export async function createPeopleProfile(req, res) {
 }
 
 // accessed from people.sphinx.chat website
-export async function deletePersonProfile(req, res) {
+export async function deletePersonProfile(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -91,7 +91,7 @@ export async function deletePersonProfile(req, res) {
   }
 }
 
-export async function deleteTicketByAdmin(req, res) {
+export async function deleteTicketByAdmin(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
 
   try {
@@ -110,7 +110,7 @@ export async function deleteTicketByAdmin(req, res) {
   }
 }
 
-export async function uploadPublicPic(req, res) {
+export async function uploadPublicPic(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
 
   const { img_base64, img_type } = req.body
@@ -159,7 +159,7 @@ export async function uploadPublicPic(req, res) {
   }
 }
 
-export async function refreshJWT(req, res) {
+export async function refreshJWT(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const sc = [scopes.PERSONAL]
   const jot = createJWT(req.owner.publicKey, sc, 10080) // one week
@@ -168,7 +168,7 @@ export async function refreshJWT(req, res) {
   })
 }
 
-export async function claimOnLiquid(req, res) {
+export async function claimOnLiquid(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -193,7 +193,7 @@ export async function claimOnLiquid(req, res) {
   }
 }
 
-export async function createBadge(req, res) {
+export async function createBadge(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -231,7 +231,6 @@ export async function createBadge(req, res) {
     }
     if (!validRewardType) return failure(res, 'invalid reward type')
     const response: Badge = await people.createBadge({
-      host: 'liquid.sphinx.chat',
       icon,
       amount,
       name,
@@ -250,7 +249,7 @@ export async function createBadge(req, res) {
   }
 }
 
-export async function transferBadge(req, res) {
+export async function transferBadge(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -259,7 +258,6 @@ export async function transferBadge(req, res) {
     })) as Contact
     const { amount, asset, to, memo } = req.body
     const response = await people.transferBadge({
-      host: 'liquid.sphinx.chat',
       amount,
       memo,
       asset,
