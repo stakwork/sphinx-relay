@@ -359,7 +359,7 @@ function editTribe(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, } = req.body;
+        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook, } = req.body;
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
@@ -370,6 +370,16 @@ function editTribe(req, res) {
             }
             else {
                 profile_filters = profile_filters.join(',');
+            }
+        }
+        if (call_recording) {
+            if (typeof call_recording !== 'number') {
+                return (0, res_1.failure)(res, 'invalid call recording value');
+            }
+            else {
+                if (call_recording !== 0 && call_recording !== 1) {
+                    return (0, res_1.failure)(res, 'invalid call recording value');
+                }
             }
         }
         const chat = (yield models_1.models.Chat.findOne({
@@ -434,7 +444,18 @@ function editTribe(req, res) {
                 obj.feedType = feed_type;
             if (req.body.private || req.body.private === false)
                 obj.private = req.body.private;
-            obj.profileFilters = profile_filters || '';
+            if (profile_filters)
+                obj.profileFilters = profile_filters;
+            if (call_recording || call_recording === 0)
+                obj.callRecording = call_recording;
+            if (meme_server_location)
+                obj.memeServerLocation = meme_server_location;
+            if (jitsi_server)
+                obj.jitsiServer = jitsi_server;
+            if (stakwork_api_key)
+                obj.stakworkApiKey = stakwork_api_key;
+            if (stakwork_webhook)
+                obj.stakworkWebhook = stakwork_webhook;
             if (Object.keys(obj).length > 0) {
                 yield chat.update(obj);
             }
