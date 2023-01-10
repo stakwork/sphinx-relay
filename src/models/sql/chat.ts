@@ -122,6 +122,21 @@ export default class Chat extends Model<Chat> {
 
   @Column(DataType.TEXT)
   profileFilters: string
+
+  @Column
+  callRecording: number
+
+  @Column(DataType.TEXT)
+  memeServerLocation: string
+
+  @Column(DataType.TEXT)
+  jitsiServer: string
+
+  @Column(DataType.TEXT)
+  stakworkApiKey: string
+
+  @Column(DataType.TEXT)
+  stakworkWebhook: string
 }
 
 export interface ChatRecord extends Chat {
