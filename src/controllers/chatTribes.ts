@@ -901,7 +901,12 @@ export async function createTribeChatParams(
   feed_type,
   tenant,
   pin,
-  profile_filters
+  profile_filters,
+  call_recording,
+  meme_server_location,
+  jitsi_server,
+  stakwork_api_key,
+  stakwork_webhook
 ): Promise<{ [k: string]: any }> {
   const date = new Date()
   date.setMilliseconds(0)
@@ -939,6 +944,11 @@ export async function createTribeChatParams(
     tenant,
     pin: pin || '',
     profileFilters: profile_filters,
+    callRecording: call_recording || 0,
+    memeServerLocation: meme_server_location || '',
+    jitsiServer: jitsi_server || '',
+    stakworkApiKey: stakwork_api_key || '',
+    stakworkWebhook: stakwork_webhook || '',
   }
 }
 

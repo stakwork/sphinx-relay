@@ -123,6 +123,7 @@ export default class Chat extends Model<Chat> {
   @Column(DataType.TEXT)
   profileFilters: string
 
+  // This value is always 1 or 0, which means on or off
   @Column
   callRecording: number
 
