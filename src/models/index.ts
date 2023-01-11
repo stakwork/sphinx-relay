@@ -22,6 +22,7 @@ import { loadConfig } from '../utils/config'
 import { isProxy } from '../utils/proxy'
 import { readFileSync } from 'fs'
 import ActionHistory, { ActionHistoryRecord } from './sql/actionHistory'
+import CallRecording, { CallRecordingRecord } from './sql/callRecording'
 
 const argv = minimist(process.argv.slice(2))
 
@@ -64,6 +65,7 @@ const opts = {
     Lsat,
     RequestsTransportTokens,
     ActionHistory,
+    CallRecording,
   ],
 }
 if (isProxy()) {
@@ -107,4 +109,6 @@ export {
   RequestsTransportTokens,
   ActionHistory,
   ActionHistoryRecord,
+  CallRecording,
+  CallRecordingRecord,
 }

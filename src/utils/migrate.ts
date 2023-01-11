@@ -282,6 +282,27 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_chats', 'jitsi_server', 'TEXT')
   addTableColumn('sphinx_chars', 'stakwork_api_key', 'TEXT')
   addTableColumn('sphinx_chats', 'stakwork_webhook', 'TEXT')
+
+  // add call recording table
+
+  try {
+    sphinxLogger.info('adding call recording table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_call_recording (
+      id BIGINT NOT NULL PRIMARY KEY,
+      recording_id TEXT,
+      created_at DATETIME,
+      updated_at DATETIME,
+      created_by INTEGER,
+      file_name TEXT,
+      participants INTEGER,
+      call_length BIGINT,
+      chat_id INTEGER,
+      status INTEGER
+    )`)
+  } catch (e) {
+    // sphinxLogger.error(['problem adding call recording table:', e.message], logging.DB)
+  }
 }
 
 async function addTenant(tableName) {
