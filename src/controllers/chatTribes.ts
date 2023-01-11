@@ -21,6 +21,7 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import type { Tribe } from '../models/ts/tribe'
 import { Req, Res } from '../types'
+import { Response } from 'express'
 
 /**
  * @function joinTribe
@@ -29,7 +30,7 @@ import { Req, Res } from '../types'
  *
  * @returns {Promise<void>} - A promise that resolves when the user has successfully joined the tribe, or rejects with an error if something goes wrong.
  */
-export async function joinTribe(req: Req, res: Res) {
+export async function joinTribe(req: Req, res: Res): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -177,7 +178,10 @@ export async function joinTribe(req: Req, res: Res) {
  *
  * @returns {Promise<void>}
  */
-export async function createChannel(req: Req, res) {
+export async function createChannel(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const owner = req.owner
   //const tenant: number = req.owner.id
@@ -199,7 +203,10 @@ export async function createChannel(req: Req, res) {
  *
  * @returns {Promise<void>} - A promise that resolves when the channel has been successfully deleted, or rejects with an error if something goes wrong.
  */
-export async function deleteChannel(req: Req, res) {
+export async function deleteChannel(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
 
   const owner = req.owner
@@ -341,7 +348,7 @@ export async function receiveMemberRequest(payload) {
  *
  * @returns {Promise<void>} - A promise that resolves when the pin has been successfully added to the tribe, or rejects with an error if something goes wrong.
  */
-export async function pinToTribe(req: Req, res) {
+export async function pinToTribe(req: Req, res: Res): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { pin } = req.body
@@ -377,7 +384,7 @@ export async function pinToTribe(req: Req, res) {
  *
  * @returns {Object} - Returns the edited tribe or an error message if the tribe could not be edited.
  */
-export async function editTribe(req: Req, res) {
+export async function editTribe(req: Req, res: Res): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const {
@@ -394,6 +401,11 @@ export async function editTribe(req: Req, res) {
     feed_url,
     feed_type,
     pin,
+    call_recording,
+    meme_server_location,
+    jitsi_server,
+    stakwork_api_key,
+    stakwork_webhook,
   } = req.body
   const { id } = req.params
 
@@ -404,6 +416,15 @@ export async function editTribe(req: Req, res) {
       return failure(res, 'invalid profile filters')
     } else {
       profile_filters = profile_filters.join(',')
+    }
+  }
+  if (call_recording) {
+    if (typeof call_recording !== 'number') {
+      return failure(res, 'invalid call recording value')
+    } else {
+      if (call_recording !== 0 && call_recording !== 1) {
+        return failure(res, 'invalid call recording value')
+      }
     }
   }
 
@@ -462,7 +483,13 @@ export async function editTribe(req: Req, res) {
     if (feed_type) obj.feedType = feed_type
     if (req.body.private || req.body.private === false)
       obj.private = req.body.private
-    obj.profileFilters = profile_filters || ''
+    if (profile_filters) obj.profileFilters = profile_filters
+    if (call_recording || call_recording === 0)
+      obj.callRecording = call_recording
+    if (meme_server_location) obj.memeServerLocation = meme_server_location
+    if (jitsi_server) obj.jitsiServer = jitsi_server
+    if (stakwork_api_key) obj.stakworkApiKey = stakwork_api_key
+    if (stakwork_webhook) obj.stakworkWebhook = stakwork_webhook
     if (Object.keys(obj).length > 0) {
       await chat.update(obj)
     }
@@ -888,20 +915,25 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
 export async function createTribeChatParams(
   owner,
   contactIds,
-  name,
-  img,
-  price_per_message,
-  price_to_join,
-  escrow_amount,
-  escrow_millis,
-  unlisted,
-  is_private,
-  app_url,
-  feed_url,
-  feed_type,
-  tenant,
-  pin,
-  profile_filters
+  name: string,
+  img: string,
+  price_per_message: number,
+  price_to_join: number,
+  escrow_amount: number,
+  escrow_millis: number,
+  unlisted: boolean,
+  is_private: boolean,
+  app_url: string,
+  feed_url: string,
+  feed_type: number,
+  tenant: number,
+  pin: string,
+  profile_filters: string,
+  call_recording: number,
+  meme_server_location: string,
+  jitsi_server: string,
+  stakwork_api_key: string,
+  stakwork_webhook: string
 ): Promise<{ [k: string]: any }> {
   const date = new Date()
   date.setMilliseconds(0)
@@ -939,6 +971,11 @@ export async function createTribeChatParams(
     tenant,
     pin: pin || '',
     profileFilters: profile_filters,
+    callRecording: call_recording || 0,
+    memeServerLocation: meme_server_location || '',
+    jitsiServer: jitsi_server || '',
+    stakworkApiKey: stakwork_api_key || '',
+    stakworkWebhook: stakwork_webhook || '',
   }
 }
 

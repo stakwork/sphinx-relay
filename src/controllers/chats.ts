@@ -280,6 +280,11 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
     feed_url,
     feed_type,
     pin,
+    call_recording,
+    meme_server_location,
+    jitsi_server,
+    stakwork_api_key,
+    stakwork_webhook,
   } = req.body
 
   let { profile_filters } = req.body
@@ -288,6 +293,16 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
       return failure(res, 'invalid profile filters')
     } else {
       profile_filters = profile_filters.join(',')
+    }
+  }
+
+  if (call_recording) {
+    if (typeof call_recording !== 'number') {
+      return failure(res, 'invalid call recording value')
+    } else {
+      if (call_recording !== 0 && call_recording !== 1) {
+        return failure(res, 'invalid call recording value')
+      }
     }
   }
 
@@ -329,7 +344,12 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
       feed_type,
       tenant,
       pin,
-      profile_filters || ''
+      profile_filters || '',
+      call_recording,
+      meme_server_location,
+      jitsi_server,
+      stakwork_api_key,
+      stakwork_webhook
     )) as Chat
     if (chatParams.uuid) {
       // publish to tribe server
