@@ -31,6 +31,8 @@ export async function createTribe(
     feed_url: '',
     feed_type: 0,
     pin: 'A pinned message',
+    jitsi_server: 'https://jitsi.sphinx.chat',
+    call_recording: 1,
   }
 
   //node1 creates new tribe

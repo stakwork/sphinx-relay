@@ -34,6 +34,8 @@ function createTribe(t, node, escrowAmount, escrowMillis, ppm, privacy) {
             feed_url: '',
             feed_type: 0,
             pin: 'A pinned message',
+            jitsi_server: 'https://jitsi.sphinx.chat',
+            call_recording: 1,
         };
         //node1 creates new tribe
         let c = yield http.post(node.external_ip + '/group', (0, helpers_1.makeArgs)(node, newTribe));
