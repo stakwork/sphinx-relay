@@ -94,6 +94,7 @@ function init() {
                             // If recording not found after specified time then it returns an error
                             if (timeActive === 180000 && !file.ok) {
                                 clearInterval(interval);
+                                callRecord.update({ status: constants_1.default.call_status.in_actve });
                                 const embed = new Sphinx.MessageEmbed()
                                     .setAuthor('CallRecordingBot')
                                     .setDescription('Call was not recorded on the s3 server');
