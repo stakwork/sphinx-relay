@@ -13,7 +13,7 @@ import {
   setupOwnerContact,
   setupPersonUuid,
   updateLsat,
-  updateTotalMsgPerTribe,
+  // updateTotalMsgPerTribe,
 } from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
@@ -68,7 +68,7 @@ async function finishSetup() {
   console.log('setupPersonUuid')
   await updateLsat()
   console.log('updateLsat')
-  await updateTotalMsgPerTribe()
+  // await updateTotalMsgPerTribe()
   console.log('updateTotalMsgPerTribe')
   await network.initTribesSubscriptions()
   console.log('initTribesSubscriptions')

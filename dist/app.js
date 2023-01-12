@@ -71,7 +71,7 @@ function finishSetup() {
         console.log('setupPersonUuid');
         yield (0, setup_1.updateLsat)();
         console.log('updateLsat');
-        yield (0, setup_1.updateTotalMsgPerTribe)();
+        // await updateTotalMsgPerTribe()
         console.log('updateTotalMsgPerTribe');
         yield network.initTribesSubscriptions();
         console.log('initTribesSubscriptions');
