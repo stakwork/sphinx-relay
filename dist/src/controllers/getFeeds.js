@@ -26,7 +26,7 @@ function getFeeds(req, res) {
             // limit set to 90 because request size was getting to large
             const actions = (yield models_1.models.ActionHistory.findAll({
                 where: { tenant },
-                limit: 90,
+                limit: 25,
                 order: [['updatedAt', 'DESC']],
             }));
             const parsedActions = feedsHelper.parseActionHistory(actions);
