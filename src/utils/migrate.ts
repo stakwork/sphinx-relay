@@ -280,7 +280,7 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_chats', 'call_recording', 'INT')
   addTableColumn('sphinx_chats', 'meme_server_location', 'TEXT')
   addTableColumn('sphinx_chats', 'jitsi_server', 'TEXT')
-  addTableColumn('sphinx_chars', 'stakwork_api_key', 'TEXT')
+  addTableColumn('sphinx_chats', 'stakwork_api_key', 'TEXT')
   addTableColumn('sphinx_chats', 'stakwork_webhook', 'TEXT')
 }
 
