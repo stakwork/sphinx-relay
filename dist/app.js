@@ -66,18 +66,26 @@ function mainSetup() {
 function finishSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, setup_1.setupOwnerContact)();
+        console.log('setupOwnerContact');
         yield (0, setup_1.setupPersonUuid)();
+        console.log('setupPersonUuid');
         yield (0, setup_1.updateLsat)();
+        console.log('updateLsat');
         yield (0, setup_1.updateTotalMsgPerTribe)();
+        console.log('updateTotalMsgPerTribe');
         yield network.initTribesSubscriptions();
+        console.log('initTribesSubscriptions');
         if (config.hub_api_url) {
             (0, hub_1.checkInvitesHubInterval)(5000);
+            console.log('checkInvitesHubInterval');
         }
         if (config.unlock) {
             // IF UNLOCK, start this only after unlocked!
             (0, hub_1.pingHubInterval)(15000);
+            console.log('pingHubInterval');
         }
         (0, leadershipboard_1.leadershipBoardInterval)(1800000);
+        console.log('leadershipBoardInterval');
         (0, setup_1.setupDone)();
     });
 }

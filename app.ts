@@ -63,18 +63,26 @@ async function mainSetup() {
 
 async function finishSetup() {
   await setupOwnerContact()
+  console.log('setupOwnerContact')
   await setupPersonUuid()
+  console.log('setupPersonUuid')
   await updateLsat()
+  console.log('updateLsat')
   await updateTotalMsgPerTribe()
+  console.log('updateTotalMsgPerTribe')
   await network.initTribesSubscriptions()
+  console.log('initTribesSubscriptions')
   if (config.hub_api_url) {
     checkInvitesHubInterval(5000)
+    console.log('checkInvitesHubInterval')
   }
   if (config.unlock) {
     // IF UNLOCK, start this only after unlocked!
     pingHubInterval(15000)
+    console.log('pingHubInterval')
   }
   leadershipBoardInterval(1800000)
+  console.log('leadershipBoardInterval')
   setupDone()
 }
 
