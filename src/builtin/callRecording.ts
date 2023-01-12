@@ -1,7 +1,9 @@
 import * as Sphinx from 'sphinx-bot'
 import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
-import { ChatRecord, models } from '../models'
+import { CallRecordingRecord, ChatRecord, models } from '../models'
+import constants from '../constants'
+import fetch from 'node-fetch'
 
 /**
  *
@@ -44,10 +46,95 @@ export function init() {
         if (
           tribe.callRecording === 1 &&
           tribe.jitsiServer.length !== 0 &&
-          tribe.jitsiServer === jitsiServer
+          tribe.jitsiServer === jitsiServer &&
+          tribe.memeServerLocation &&
+          tribe.stakworkApiKey &&
+          tribe.stakworkWebhook
         ) {
-          console.log(jitsiServer)
-          console.log(updatedCallId)
+          const callRecord = (await models.CallRecording.create({
+            recordingId: updatedCallId,
+            chatId: tribe.id,
+            createdBy: message.member.id!,
+            status: constants.call_status.new,
+          })) as CallRecordingRecord
+          let timeActive = 0
+          const interval = setInterval(async function () {
+            timeActive += 60000
+            const file = await fetch(`${tribe.memeServerLocation}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+            })
+            // If recording is found
+            if (file.ok) {
+              console.log('File was gotten successfully')
+              // Push to stakwork
+              //   const sendFile = await fetch(`${tribe.memeServerLocation}`, {
+              //     method: 'POST',
+              //     headers: {
+              //       'Content-Type': 'application/json',
+              //       Authorization: `Bearer ${tribe.stakworkApiKey}`,
+              //     },
+              //     body: JSON.stringify({
+              //       webhook: tribe.stakworkWebhook,
+              //     }),
+              //   })
+              //   console.log(sendFile)
+              //update call record to stored
+              callRecord.update({ status: constants.call_status.stored })
+              clearInterval(interval)
+              const embed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription('Call was recorded successfully')
+              message.channel.send({ embed })
+              return
+            }
+            // If recording not found after specified time then it returns an error
+            if (timeActive === 180000 && !file.ok) {
+              clearInterval(interval)
+              const embed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription('Call was not recorded on the s3 server')
+              message.channel.send({ embed })
+              return
+            }
+          }, 60000)
+        } else {
+          if (tribe.callRecording && !tribe.jitsiServer) {
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(
+                `You can't record call because you don't have a specified jitsi server for your tribe`
+              )
+            message.channel.send({ embed })
+            return
+          }
+          if (tribe.callRecording && !tribe.memeServerLocation) {
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(
+                `You can't record call because you don't have a specified s3 server where call recordings would be stored`
+              )
+            message.channel.send({ embed })
+            return
+          }
+          if (tribe.callRecording && !tribe.stakworkWebhook) {
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(
+                `You can't record call because you don't have a specified webhook where your processed call for your tribe would be sent too`
+              )
+            message.channel.send({ embed })
+            return
+          }
+          if (tribe.callRecording && !tribe.stakworkApiKey) {
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(
+                `You can't record call because you don't have stakwork api key for your tribe`
+              )
+            message.channel.send({ embed })
+            return
+          }
         }
       }
     } catch (error) {
