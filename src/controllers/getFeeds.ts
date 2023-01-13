@@ -15,7 +15,7 @@ export async function getFeeds(req: Req, res: Response) {
     // limit set to 90 because request size was getting to large
     const actions = (await models.ActionHistory.findAll({
       where: { tenant },
-      limit: 90,
+      limit: 25,
       order: [['updatedAt', 'DESC']],
     })) as ActionHistoryRecord[]
     const parsedActions = feedsHelper.parseActionHistory(actions)
