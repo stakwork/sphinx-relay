@@ -298,7 +298,8 @@ export default async function migrate(): Promise<void> {
       participants INTEGER,
       call_length BIGINT,
       chat_id INTEGER,
-      status INTEGER
+      status INTEGER,
+      stakwork_project_id TEXT
     )`)
   } catch (e) {
     // sphinxLogger.error(['problem adding call recording table:', e.message], logging.DB)

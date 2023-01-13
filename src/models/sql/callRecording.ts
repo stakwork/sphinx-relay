@@ -36,6 +36,9 @@ export default class CallRecording extends Model<CallRecording> {
 
   @Column
   updatedAt: Date
+
+  @Column
+  stakworkProjectId: string
 }
 
 export interface CallRecordingRecord extends CallRecording {

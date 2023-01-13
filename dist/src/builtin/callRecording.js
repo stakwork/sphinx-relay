@@ -53,6 +53,7 @@ function init() {
                             where: { chatId: tribe.id },
                         }));
                         let returnMsg = '';
+                        console.log(calls);
                         if (calls && calls.length > 0) {
                             calls.forEach((call) => {
                                 returnMsg = `${returnMsg}${JSON.parse(call.createdBy).nickname} created ${call.recordingId} on ${call.createdAt} and it was ${status[Number(call.status) - 1]} \n`;
@@ -98,7 +99,7 @@ function init() {
                         const callRecord = (yield models_1.models.CallRecording.create({
                             recordingId: updatedCallId,
                             chatId: tribe.id,
-                            createdBy: message.member.id,
+                            createdBy: JSON.stringify(message.member),
                             status: constants_1.default.call_status.new,
                         }));
                         let timeActive = 0;
@@ -133,9 +134,11 @@ function init() {
                                     });
                                     if (sendFile.ok) {
                                         const res = yield sendFile.json();
-                                        console.log(res.data);
                                         //update call record to stored
-                                        callRecord.update({ status: constants_1.default.call_status.stored });
+                                        callRecord.update({
+                                            status: constants_1.default.call_status.stored,
+                                            stakworkProjectId: res.data.project_id,
+                                        });
                                         clearInterval(interval);
                                         const embed = new Sphinx.MessageEmbed()
                                             .setAuthor('CallRecordingBot')

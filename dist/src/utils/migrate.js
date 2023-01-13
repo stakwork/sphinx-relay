@@ -273,7 +273,8 @@ function migrate() {
       participants INTEGER,
       call_length BIGINT,
       chat_id INTEGER,
-      status INTEGER
+      status INTEGER,
+      stakwork_project_id TEXT
     )`);
         }
         catch (e) {

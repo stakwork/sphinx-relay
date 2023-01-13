@@ -102,7 +102,7 @@ export function init() {
             const callRecord = (await models.CallRecording.create({
               recordingId: updatedCallId,
               chatId: tribe.id,
-              createdBy: message.member.id!,
+              createdBy: JSON.stringify(message.member),
               status: constants.call_status.new,
             })) as CallRecordingRecord
             let timeActive = 0
@@ -139,9 +139,11 @@ export function init() {
                 )
                 if (sendFile.ok) {
                   const res = await sendFile.json()
-                  console.log(res.data)
                   //update call record to stored
-                  callRecord.update({ status: constants.call_status.stored })
+                  callRecord.update({
+                    status: constants.call_status.stored,
+                    stakworkProjectId: res.data.project_id,
+                  })
                   clearInterval(interval)
                   const embed = new Sphinx.MessageEmbed()
                     .setAuthor('CallRecordingBot')
