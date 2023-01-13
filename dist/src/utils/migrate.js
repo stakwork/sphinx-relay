@@ -259,6 +259,27 @@ function migrate() {
         addTableColumn('sphinx_chats', 'jitsi_server', 'TEXT');
         addTableColumn('sphinx_chats', 'stakwork_api_key', 'TEXT');
         addTableColumn('sphinx_chats', 'stakwork_webhook', 'TEXT');
+        // add call recording table
+        try {
+            logger_1.sphinxLogger.info('adding call recording table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_call_recording (
+      id BIGINT NOT NULL PRIMARY KEY,
+      recording_id TEXT,
+      created_at DATETIME,
+      updated_at DATETIME,
+      created_by TEXT,
+      file_name TEXT,
+      participants INTEGER,
+      call_length BIGINT,
+      chat_id INTEGER,
+      status INTEGER,
+      stakwork_project_id TEXT
+    )`);
+        }
+        catch (e) {
+            // sphinxLogger.error(['problem adding call recording table:', e.message], logging.DB)
+        }
     });
 }
 exports.default = migrate;

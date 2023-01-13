@@ -10,7 +10,7 @@ import nodes from '../nodes'
 //var r = require('../test-config')
 
 /*
-npx ava test-30-botCreation.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2m
 */
 
 test('test-30-botCreation: create tribe, create bot, add bot to tribe, delete bot, delete tribe', async (t) => {

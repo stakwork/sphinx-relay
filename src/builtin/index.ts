@@ -4,6 +4,7 @@ import * as MotherBot from './mother'
 import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
 import * as BadgeBot from './badge'
+import * as CallRecordingBot from './callRecording'
 import { BotMsg } from '../network/interfaces'
 import * as GitBot from './git'
 import { buildBotPayload } from '../controllers/bots'
@@ -14,6 +15,7 @@ async function init() {
   LoopBot.init()
   GitBot.init()
   BadgeBot.init()
+  CallRecordingBot.init()
 }
 
 function builtinBotEmit(msg: BotMsg) {

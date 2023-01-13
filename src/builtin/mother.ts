@@ -16,7 +16,7 @@ const msg_types = Sphinx.MSG_TYPE
 
 const config = loadConfig()
 
-const builtinBots = ['welcome', 'loopout', 'git', 'badge']
+const builtinBots = ['welcome', 'loopout', 'git', 'badge', 'callRecording']
 
 // else just message type
 const builtInBotMsgTypes = {
@@ -36,6 +36,7 @@ const builtInBotNames = {
   loopout: 'LoopBot',
   git: 'GitBot',
   badge: 'BadgeBot',
+  callRecording: 'CallRecordingBot',
 }
 
 export function init() {

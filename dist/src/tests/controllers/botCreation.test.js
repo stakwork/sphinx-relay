@@ -19,7 +19,7 @@ const nodes_1 = require("../nodes");
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
 /*
-npx ava test-30-botCreation.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test-30-botCreation: create tribe, create bot, add bot to tribe, delete bot, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield botCreation(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);

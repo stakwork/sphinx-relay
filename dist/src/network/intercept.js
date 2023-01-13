@@ -80,6 +80,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                 },
             }));
             logger_1.sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logger_1.logging.Network); //, payload)
+            const botInterceptMsg = ['/badge', '/callRecording'];
             if (!(botsInTribe && botsInTribe.length))
                 return false;
             yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
@@ -94,7 +95,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                             const isNotMsg = msgType !== constants_1.default.message_types.message;
                             if (isMsgAndHasText ||
                                 isNotMsg ||
-                                botInTribe.botPrefix === '/badge') {
+                                botInterceptMsg.includes(botInTribe.botPrefix)) {
                                 didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                             }
                         }

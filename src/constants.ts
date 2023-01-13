@@ -114,6 +114,13 @@ const constants = {
     spent: 2,
     post: 3,
   },
+  call_status: {
+    new: 1,
+    in_progress: 2,
+    completed: 3,
+    stored: 4,
+    in_actve: 5,
+  },
 }
 
 export default constants
