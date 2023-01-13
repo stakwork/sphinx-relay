@@ -39,18 +39,11 @@ function botCreation(t, node1, node2, node3) {
         //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
         const text = '/bot help';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
-        const textCall = '/bot install callRecording';
-        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, textCall);
         //NODE1 AWAIT REPLY FROM BOT
         let botAlias = 'MotherBot';
         const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
         t.truthy(botReply, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply))
-        // const meeting =
-        //   'https://jitsi.sphinx.chat/sphinx.call.694995623.221505#config.startAudioOnly=true'
-        // await sendTribeMessage(t, node1, tribe, meeting)
-        const callHistory = '/call history';
-        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, callHistory);
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
         const text2 = '/bot install welcome';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);

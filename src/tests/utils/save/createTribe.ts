@@ -31,12 +31,6 @@ export async function createTribe(
     feed_url: '',
     feed_type: 0,
     pin: 'A pinned message',
-    jitsi_server: 'https://jitsi.sphinx.chat',
-    call_recording: 1,
-    meme_server_location:
-      'https://stakwork-uploads.s3.amazonaws.com/sphinx-private-graph',
-    stakwork_api_key: '12345678',
-    stakwork_webhook: 'https://stakwork-webhook.com',
   }
 
   //node1 creates new tribe

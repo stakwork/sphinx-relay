@@ -35,21 +35,11 @@ async function botCreation(t, node1, node2, node3) {
   const text = '/bot help'
   await sendTribeMessage(t, node1, tribe, text)
 
-  const textCall = '/bot install callRecording'
-  await sendTribeMessage(t, node1, tribe, textCall)
-
   //NODE1 AWAIT REPLY FROM BOT
   let botAlias = 'MotherBot'
   const botReply = await getCheckBotMsg(t, node1, botAlias)
   t.truthy(botReply, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply))
-
-  // const meeting =
-  //   'https://jitsi.sphinx.chat/sphinx.call.694995623.221505#config.startAudioOnly=true'
-  // await sendTribeMessage(t, node1, tribe, meeting)
-
-  const callHistory = '/call history'
-  await sendTribeMessage(t, node1, tribe, callHistory)
 
   //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
   const text2 = '/bot install welcome'

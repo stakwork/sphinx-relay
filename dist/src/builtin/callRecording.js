@@ -102,27 +102,41 @@ function init() {
                                 });
                                 // If recording is found
                                 if (file.ok) {
-                                    console.log('File was gotten successfully');
                                     // Push to stakwork
-                                    //   const sendFile = await fetch(`${tribe.memeServerLocation}`, {
-                                    //     method: 'POST',
-                                    //     headers: {
-                                    //       'Content-Type': 'application/json',
-                                    //       Authorization: `Bearer ${tribe.stakworkApiKey}`,
-                                    //     },
-                                    //     body: JSON.stringify({
-                                    //       webhook: tribe.stakworkWebhook,
-                                    //     }),
-                                    //   })
-                                    //   console.log(sendFile)
-                                    //update call record to stored
-                                    callRecord.update({ status: constants_1.default.call_status.stored });
-                                    clearInterval(interval);
-                                    const embed = new Sphinx.MessageEmbed()
-                                        .setAuthor('CallRecordingBot')
-                                        .setDescription('Call was recorded successfully');
-                                    message.channel.send({ embed });
-                                    return;
+                                    const sendFile = yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            Authorization: `Token token="${tribe.stakworkApiKey}"`,
+                                        },
+                                        body: JSON.stringify({
+                                            name: `${updatedCallId} file`,
+                                            workflow_id: 3235,
+                                            webhook_url: `${tribe.stakworkWebhook}`,
+                                            workflow_params: {
+                                                media_to_local: {
+                                                    params: {
+                                                        media_url: `${tribe.memeServerLocation}`,
+                                                    },
+                                                },
+                                            },
+                                        }),
+                                    });
+                                    if (sendFile.ok) {
+                                        const res = yield sendFile.json();
+                                        console.log(res.data);
+                                        //update call record to stored
+                                        callRecord.update({ status: constants_1.default.call_status.stored });
+                                        clearInterval(interval);
+                                        const embed = new Sphinx.MessageEmbed()
+                                            .setAuthor('CallRecordingBot')
+                                            .setDescription('Call was recorded successfully');
+                                        message.channel.send({ embed });
+                                        return;
+                                    }
+                                    else {
+                                        throw `Could not store in stakwork ${sendFile.status}`;
+                                    }
                                 }
                                 // If recording not found after specified time then it returns an error
                                 if (timeActive === 180000 && !file.ok) {
