@@ -51,7 +51,7 @@ export function init() {
               calls.forEach((call) => {
                 returnMsg = `${returnMsg}${
                   JSON.parse(call.createdBy).nickname
-                } created ${call.recordingId} on ${call.createdAt} and it was ${
+                } created ${call.fileName} on ${call.createdAt} and it was ${
                   status[Number(call.status) - 1]
                 } \n`
               })
@@ -99,19 +99,30 @@ export function init() {
             tribe.stakworkApiKey &&
             tribe.stakworkWebhook
           ) {
+            let filename = `${updatedCallId}.mp4`
+            if (
+              tribe.memeServerLocation[tribe.memeServerLocation.length - 1] !==
+              '/'
+            ) {
+              filename = `/${filename}`
+            }
             const callRecord = (await models.CallRecording.create({
               recordingId: updatedCallId,
               chatId: tribe.id,
+              fileName: `${updatedCallId}.mp4`,
               createdBy: JSON.stringify(message.member),
               status: constants.call_status.new,
             })) as CallRecordingRecord
             let timeActive = 0
             const interval = setInterval(async function () {
               timeActive += 60000
-              const file = await fetch(`${tribe.memeServerLocation}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-              })
+              const file = await fetch(
+                `${tribe.memeServerLocation}${filename}`,
+                {
+                  method: 'GET',
+                  headers: { 'Content-Type': 'application/json' },
+                }
+              )
               // If recording is found
               if (file.ok) {
                 // Push to stakwork

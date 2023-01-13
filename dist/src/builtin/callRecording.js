@@ -53,10 +53,9 @@ function init() {
                             where: { chatId: tribe.id },
                         }));
                         let returnMsg = '';
-                        console.log(calls);
                         if (calls && calls.length > 0) {
                             calls.forEach((call) => {
-                                returnMsg = `${returnMsg}${JSON.parse(call.createdBy).nickname} created ${call.recordingId} on ${call.createdAt} and it was ${status[Number(call.status) - 1]} \n`;
+                                returnMsg = `${returnMsg}${JSON.parse(call.createdBy).nickname} created ${call.fileName} on ${call.createdAt} and it was ${status[Number(call.status) - 1]} \n`;
                             });
                         }
                         else {
@@ -96,9 +95,15 @@ function init() {
                         tribe.memeServerLocation &&
                         tribe.stakworkApiKey &&
                         tribe.stakworkWebhook) {
+                        let filename = `${updatedCallId}.mp4`;
+                        if (tribe.memeServerLocation[tribe.memeServerLocation.length - 1] !==
+                            '/') {
+                            filename = `/${filename}`;
+                        }
                         const callRecord = (yield models_1.models.CallRecording.create({
                             recordingId: updatedCallId,
                             chatId: tribe.id,
+                            fileName: `${updatedCallId}.mp4`,
                             createdBy: JSON.stringify(message.member),
                             status: constants_1.default.call_status.new,
                         }));
@@ -106,7 +111,7 @@ function init() {
                         const interval = setInterval(function () {
                             return __awaiter(this, void 0, void 0, function* () {
                                 timeActive += 60000;
-                                const file = yield (0, node_fetch_1.default)(`${tribe.memeServerLocation}`, {
+                                const file = yield (0, node_fetch_1.default)(`${tribe.memeServerLocation}${filename}`, {
                                     method: 'GET',
                                     headers: { 'Content-Type': 'application/json' },
                                 });

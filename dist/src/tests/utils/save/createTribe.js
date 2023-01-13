@@ -36,7 +36,7 @@ function createTribe(t, node, escrowAmount, escrowMillis, ppm, privacy) {
             pin: 'A pinned message',
             jitsi_server: 'https://jitsi.sphinx.chat',
             call_recording: 1,
-            meme_server_location: 'https://stakwork-uploads.s3.amazonaws.com/sphinx-private-graph',
+            meme_server_location: 'https://stakwork-uploads.s3.amazonaws.com/sphinx-private-graph/',
             stakwork_api_key: '690d8f037df0fdb002836edfddf4b626',
             stakwork_webhook: 'https://stakwork-webhook.com',
         };
