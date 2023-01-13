@@ -27,7 +27,7 @@ __decorate([
 ], CallRecording.prototype, "recordingId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
+    __metadata("design:type", String)
 ], CallRecording.prototype, "createdBy", void 0);
 __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),

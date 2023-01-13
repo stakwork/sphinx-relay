@@ -42,14 +42,26 @@ export function init() {
         if (!isAdmin) return
         switch (cmd) {
           case 'history':
-            // console.log({ tribe: tribe.dataValues })
-            console.log('I got here at this point')
+            const status = Object.keys(constants.call_status)
             const calls = (await models.CallRecording.findAll({
               where: { chatId: tribe.id },
             })) as CallRecordingRecord[]
-            calls.forEach((call) => {
-              console.log(call.dataValues)
-            })
+            let returnMsg = ''
+            if (calls && calls.length > 0) {
+              calls.forEach((call) => {
+                returnMsg = `${returnMsg}${
+                  JSON.parse(call.createdBy).nickname
+                } created ${call.recordingId} on ${call.createdAt} and it was ${
+                  status[Number(call.status) - 1]
+                } \n`
+              })
+            } else {
+              returnMsg = 'There is no call recording for this tribe'
+            }
+            const resEmbed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(returnMsg)
+            message.channel.send({ embed: resEmbed })
             return
           default:
             const embed = new Sphinx.MessageEmbed()

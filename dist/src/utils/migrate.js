@@ -268,7 +268,7 @@ function migrate() {
       recording_id TEXT,
       created_at DATETIME,
       updated_at DATETIME,
-      created_by INTEGER,
+      created_by TEXT,
       file_name TEXT,
       participants INTEGER,
       call_length BIGINT,

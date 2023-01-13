@@ -14,7 +14,7 @@ export default class CallRecording extends Model<CallRecording> {
   recordingId: string
 
   @Column
-  createdBy: number
+  createdBy: string
 
   @Column(DataType.TEXT)
   fileName: string
