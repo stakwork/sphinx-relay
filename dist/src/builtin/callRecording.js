@@ -37,101 +37,135 @@ function init() {
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const arr = (message.content && message.content.split(' ')) || [];
+            const cmd = arr[1];
             const tribe = (yield models_1.models.Chat.findOne({
                 where: { uuid: message.channel.id },
             }));
-            if (message.content) {
-                let jitsiServer = message.content.substring(0, tribe.jitsiServer.length);
-                let callId = message.content.substring(tribe.jitsiServer.length, message.content.length);
-                let updatedCallId = callId.split('#')[0];
-                if (updatedCallId[0] === '/') {
-                    updatedCallId = updatedCallId.substring(1, updatedCallId.length);
-                }
-                if (tribe.callRecording === 1 &&
-                    tribe.jitsiServer.length !== 0 &&
-                    tribe.jitsiServer === jitsiServer &&
-                    tribe.memeServerLocation &&
-                    tribe.stakworkApiKey &&
-                    tribe.stakworkWebhook) {
-                    const callRecord = (yield models_1.models.CallRecording.create({
-                        recordingId: updatedCallId,
-                        chatId: tribe.id,
-                        createdBy: message.member.id,
-                        status: constants_1.default.call_status.new,
-                    }));
-                    let timeActive = 0;
-                    const interval = setInterval(function () {
-                        return __awaiter(this, void 0, void 0, function* () {
-                            timeActive += 60000;
-                            const file = yield (0, node_fetch_1.default)(`${tribe.memeServerLocation}`, {
-                                method: 'GET',
-                                headers: { 'Content-Type': 'application/json' },
-                            });
-                            // If recording is found
-                            if (file.ok) {
-                                console.log('File was gotten successfully');
-                                // Push to stakwork
-                                //   const sendFile = await fetch(`${tribe.memeServerLocation}`, {
-                                //     method: 'POST',
-                                //     headers: {
-                                //       'Content-Type': 'application/json',
-                                //       Authorization: `Bearer ${tribe.stakworkApiKey}`,
-                                //     },
-                                //     body: JSON.stringify({
-                                //       webhook: tribe.stakworkWebhook,
-                                //     }),
-                                //   })
-                                //   console.log(sendFile)
-                                //update call record to stored
-                                callRecord.update({ status: constants_1.default.call_status.stored });
-                                clearInterval(interval);
-                                const embed = new Sphinx.MessageEmbed()
-                                    .setAuthor('CallRecordingBot')
-                                    .setDescription('Call was recorded successfully');
-                                message.channel.send({ embed });
-                                return;
-                            }
-                            // If recording not found after specified time then it returns an error
-                            if (timeActive === 180000 && !file.ok) {
-                                clearInterval(interval);
-                                callRecord.update({ status: constants_1.default.call_status.in_actve });
-                                const embed = new Sphinx.MessageEmbed()
-                                    .setAuthor('CallRecordingBot')
-                                    .setDescription('Call was not recorded on the s3 server');
-                                message.channel.send({ embed });
-                                return;
-                            }
+            if (arr[0] === '/call') {
+                const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
+                if (!isAdmin)
+                    return;
+                switch (cmd) {
+                    case 'history':
+                        // console.log({ tribe: tribe.dataValues })
+                        console.log('I got here at this point');
+                        const calls = (yield models_1.models.CallRecording.findAll({
+                            where: { chatId: tribe.id },
+                        }));
+                        calls.forEach((call) => {
+                            console.log(call.dataValues);
                         });
-                    }, 60000);
+                        return;
+                    default:
+                        const embed = new Sphinx.MessageEmbed()
+                            .setAuthor('CallRecordingBot')
+                            .setTitle('Bot Commands:')
+                            .addFields([
+                            {
+                                name: 'Get Call History',
+                                value: '/call history',
+                            },
+                        ])
+                            .setThumbnail(botSVG);
+                        message.channel.send({ embed });
+                        return;
                 }
-                else {
-                    if (tribe.callRecording && !tribe.jitsiServer) {
-                        const embed = new Sphinx.MessageEmbed()
-                            .setAuthor('CallRecordingBot')
-                            .setDescription(`You can't record call because you don't have a specified jitsi server for your tribe`);
-                        message.channel.send({ embed });
-                        return;
+            }
+            else {
+                if (message.content) {
+                    let jitsiServer = message.content.substring(0, tribe.jitsiServer.length);
+                    let callId = message.content.substring(tribe.jitsiServer.length, message.content.length);
+                    let updatedCallId = callId.split('#')[0];
+                    if (updatedCallId[0] === '/') {
+                        updatedCallId = updatedCallId.substring(1, updatedCallId.length);
                     }
-                    if (tribe.callRecording && !tribe.memeServerLocation) {
-                        const embed = new Sphinx.MessageEmbed()
-                            .setAuthor('CallRecordingBot')
-                            .setDescription(`You can't record call because you don't have a specified s3 server where call recordings would be stored`);
-                        message.channel.send({ embed });
-                        return;
+                    if (tribe.callRecording === 1 &&
+                        tribe.jitsiServer.length !== 0 &&
+                        tribe.jitsiServer === jitsiServer &&
+                        tribe.memeServerLocation &&
+                        tribe.stakworkApiKey &&
+                        tribe.stakworkWebhook) {
+                        const callRecord = (yield models_1.models.CallRecording.create({
+                            recordingId: updatedCallId,
+                            chatId: tribe.id,
+                            createdBy: message.member.id,
+                            status: constants_1.default.call_status.new,
+                        }));
+                        let timeActive = 0;
+                        const interval = setInterval(function () {
+                            return __awaiter(this, void 0, void 0, function* () {
+                                timeActive += 60000;
+                                const file = yield (0, node_fetch_1.default)(`${tribe.memeServerLocation}`, {
+                                    method: 'GET',
+                                    headers: { 'Content-Type': 'application/json' },
+                                });
+                                // If recording is found
+                                if (file.ok) {
+                                    console.log('File was gotten successfully');
+                                    // Push to stakwork
+                                    //   const sendFile = await fetch(`${tribe.memeServerLocation}`, {
+                                    //     method: 'POST',
+                                    //     headers: {
+                                    //       'Content-Type': 'application/json',
+                                    //       Authorization: `Bearer ${tribe.stakworkApiKey}`,
+                                    //     },
+                                    //     body: JSON.stringify({
+                                    //       webhook: tribe.stakworkWebhook,
+                                    //     }),
+                                    //   })
+                                    //   console.log(sendFile)
+                                    //update call record to stored
+                                    callRecord.update({ status: constants_1.default.call_status.stored });
+                                    clearInterval(interval);
+                                    const embed = new Sphinx.MessageEmbed()
+                                        .setAuthor('CallRecordingBot')
+                                        .setDescription('Call was recorded successfully');
+                                    message.channel.send({ embed });
+                                    return;
+                                }
+                                // If recording not found after specified time then it returns an error
+                                if (timeActive === 180000 && !file.ok) {
+                                    clearInterval(interval);
+                                    callRecord.update({ status: constants_1.default.call_status.in_actve });
+                                    const embed = new Sphinx.MessageEmbed()
+                                        .setAuthor('CallRecordingBot')
+                                        .setDescription('Call was not recorded on the s3 server');
+                                    message.channel.send({ embed });
+                                    return;
+                                }
+                            });
+                        }, 60000);
                     }
-                    if (tribe.callRecording && !tribe.stakworkWebhook) {
-                        const embed = new Sphinx.MessageEmbed()
-                            .setAuthor('CallRecordingBot')
-                            .setDescription(`You can't record call because you don't have a specified webhook where your processed call for your tribe would be sent too`);
-                        message.channel.send({ embed });
-                        return;
-                    }
-                    if (tribe.callRecording && !tribe.stakworkApiKey) {
-                        const embed = new Sphinx.MessageEmbed()
-                            .setAuthor('CallRecordingBot')
-                            .setDescription(`You can't record call because you don't have stakwork api key for your tribe`);
-                        message.channel.send({ embed });
-                        return;
+                    else {
+                        if (tribe.callRecording && !tribe.jitsiServer) {
+                            const embed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription(`You can't record call because you don't have a specified jitsi server for your tribe`);
+                            message.channel.send({ embed });
+                            return;
+                        }
+                        if (tribe.callRecording && !tribe.memeServerLocation) {
+                            const embed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription(`You can't record call because you don't have a specified s3 server where call recordings would be stored`);
+                            message.channel.send({ embed });
+                            return;
+                        }
+                        if (tribe.callRecording && !tribe.stakworkWebhook) {
+                            const embed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription(`You can't record call because you don't have a specified webhook where your processed call for your tribe would be sent too`);
+                            message.channel.send({ embed });
+                            return;
+                        }
+                        if (tribe.callRecording && !tribe.stakworkApiKey) {
+                            const embed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription(`You can't record call because you don't have stakwork api key for your tribe`);
+                            message.channel.send({ embed });
+                            return;
+                        }
                     }
                 }
             }
@@ -142,4 +176,7 @@ function init() {
     }));
 }
 exports.init = init;
+const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
+  <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
+</svg>`;
 //# sourceMappingURL=callRecording.js.map
