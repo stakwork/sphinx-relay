@@ -1,10 +1,13 @@
-import { models } from '../models'
+import { GraphSubscriptionRecord, models, Lsat } from '../models'
 import { Req } from '../types'
 import { Response } from 'express'
 import { failure, success } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
 
-export async function addGraphSubscription(req: Req, res: Response) {
+export async function addGraphSubscription(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -38,6 +41,39 @@ export async function addGraphSubscription(req: Req, res: Response) {
       tenant,
     })
     return success(res, 'Graph Subscription added successfully')
+  } catch (error) {
+    console.log(error)
+    return failure(res, 'An internal error occured')
+  }
+}
+
+export async function getGraphSubscription(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  try {
+    const graphs =
+      (await models.GraphSubscription.findAll()) as GraphSubscriptionRecord[]
+
+    const newGraphs: {
+      client_name: string
+      prediction_endpoint: string
+      lsat: string
+    }[] = []
+    for (let i = 0; i < graphs.length; i++) {
+      const graph = graphs[i]
+      const lsat = (await models.Lsat.findOne({
+        where: { paths: graph.address, status: 1 },
+      })) as Lsat
+      const obj = {
+        client_name: graph.name,
+        prediction_endpoint: graph.address,
+        lsat: lsat ? `${lsat.macaroon}:${lsat.preimage}` : '',
+      }
+      newGraphs.push(obj)
+    }
+    return success(res, newGraphs)
   } catch (error) {
     console.log(error)
     return failure(res, 'An internal error occured')

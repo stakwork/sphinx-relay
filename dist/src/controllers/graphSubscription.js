@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addGraphSubscription = void 0;
+exports.getGraphSubscription = exports.addGraphSubscription = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
@@ -51,4 +51,32 @@ function addGraphSubscription(req, res) {
     });
 }
 exports.addGraphSubscription = addGraphSubscription;
+function getGraphSubscription(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        try {
+            const graphs = (yield models_1.models.GraphSubscription.findAll());
+            const newGraphs = [];
+            for (let i = 0; i < graphs.length; i++) {
+                const graph = graphs[i];
+                const lsat = (yield models_1.models.Lsat.findOne({
+                    where: { paths: graph.address, status: 1 },
+                }));
+                const obj = {
+                    client_name: graph.name,
+                    prediction_endpoint: graph.address,
+                    lsat: lsat ? `${lsat.macaroon}:${lsat.preimage}` : '',
+                };
+                newGraphs.push(obj);
+            }
+            return (0, res_1.success)(res, newGraphs);
+        }
+        catch (error) {
+            console.log(error);
+            return (0, res_1.failure)(res, 'An internal error occured');
+        }
+    });
+}
+exports.getGraphSubscription = getGraphSubscription;
 //# sourceMappingURL=graphSubscription.js.map

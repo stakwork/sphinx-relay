@@ -193,6 +193,7 @@ export async function set(app) {
 
   // Graph Subscription
   app.post('/addGraph', graphSubscription.addGraphSubscription)
+  app.get('/getGraph', graphSubscription.getGraphSubscription)
 }
 
 const msgtypes = constants.message_types
