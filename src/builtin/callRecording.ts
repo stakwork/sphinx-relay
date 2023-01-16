@@ -229,6 +229,7 @@ export function init() {
             const interval = setInterval(async function () {
               timeActive += 60000
               const filePathAndName = `${tribe.memeServerLocation}${filename}`
+              const todaysDate = new Date(Date.now()).toDateString()
               const file = await fetch(filePathAndName, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
@@ -236,6 +237,8 @@ export function init() {
               // If recording is found
               if (file.ok) {
                 // Push to stakwork
+
+                // Transcription Job
                 const sendFile = await fetch(
                   `https://jobs.stakwork.com/api/v1/projects`,
                   {
@@ -258,26 +261,71 @@ export function init() {
                     }),
                   }
                 )
-                if (sendFile.ok) {
+
+                // Audio tagging job
+                const sendFile2 = await fetch(
+                  `https://jobs.stakwork.com/api/v1/projects`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Token token="${tribe.stakworkApiKey}"`,
+                    },
+                    body: JSON.stringify({
+                      name: `${updatedCallId} file`,
+                      workflow_id: 3268,
+                      webhook_url: `${tribe.stakworkWebhook}`,
+                      workflow_params: {
+                        media_to_local: {
+                          params: {
+                            media_url: filePathAndName,
+                          },
+                        },
+                        audio_tagging: {
+                          subskill_id: 2014,
+                          params: {
+                            media_url: filePathAndName,
+                          },
+                          attributes: {
+                            episode_title: `Jitsi Call on ${todaysDate}`,
+                            show_img_url:
+                              'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
+                            show_title: 'Sphinx',
+                            publish_date: `${todaysDate}`,
+                            episode_image:
+                              'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
+                          },
+                        },
+                      },
+                    }),
+                  }
+                )
+                if (sendFile.ok && sendFile2.ok) {
                   const res = await sendFile.json()
                   //update call record to stored
+
+                  // TODO: Add sendFile2 project Id since
+                  // we are only tracking one
                   callRecord.update({
                     status: constants.call_status.stored,
                     stakworkProjectId: res.data.project_id,
                   })
+
                   clearInterval(interval)
+
                   const embed = new Sphinx.MessageEmbed()
                     .setAuthor('CallRecordingBot')
                     .setDescription('Call was recorded successfully')
                   message.channel.send({ embed })
                   return
                 } else {
-                  throw `Could not store in stakwork ${sendFile.status}`
+                  throw `Could not store in stakwork Transcription response: ${sendFile.status}, Audio Tagging response ${sendFile2.status}`
                 }
               }
               // If recording not found after specified time then it returns an error
               if (timeActive === 10800000 && !file.ok) {
                 clearInterval(interval)
+
                 callRecord.update({ status: constants.call_status.in_actve })
                 const embed = new Sphinx.MessageEmbed()
                   .setAuthor('CallRecordingBot')

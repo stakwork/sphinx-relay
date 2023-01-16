@@ -196,6 +196,7 @@ function init() {
                             return __awaiter(this, void 0, void 0, function* () {
                                 timeActive += 60000;
                                 const filePathAndName = `${tribe.memeServerLocation}${filename}`;
+                                const todaysDate = new Date(Date.now()).toDateString();
                                 const file = yield (0, node_fetch_1.default)(filePathAndName, {
                                     method: 'GET',
                                     headers: { 'Content-Type': 'application/json' },
@@ -203,6 +204,7 @@ function init() {
                                 // If recording is found
                                 if (file.ok) {
                                     // Push to stakwork
+                                    // Transcription Job
                                     const sendFile = yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects`, {
                                         method: 'POST',
                                         headers: {
@@ -222,9 +224,44 @@ function init() {
                                             },
                                         }),
                                     });
-                                    if (sendFile.ok) {
+                                    // Audio tagging job
+                                    const sendFile2 = yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            Authorization: `Token token="${tribe.stakworkApiKey}"`,
+                                        },
+                                        body: JSON.stringify({
+                                            name: `${updatedCallId} file`,
+                                            workflow_id: 3268,
+                                            webhook_url: `${tribe.stakworkWebhook}`,
+                                            workflow_params: {
+                                                media_to_local: {
+                                                    params: {
+                                                        media_url: filePathAndName,
+                                                    },
+                                                },
+                                                audio_tagging: {
+                                                    subskill_id: 2014,
+                                                    params: {
+                                                        media_url: filePathAndName,
+                                                    },
+                                                    attributes: {
+                                                        episode_title: `Jitsi Call on ${todaysDate}`,
+                                                        show_img_url: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
+                                                        show_title: 'Sphinx',
+                                                        publish_date: `${todaysDate}`,
+                                                        episode_image: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
+                                                    },
+                                                },
+                                            },
+                                        }),
+                                    });
+                                    if (sendFile.ok && sendFile2.ok) {
                                         const res = yield sendFile.json();
                                         //update call record to stored
+                                        // TODO: Add sendFile2 project Id since
+                                        // we are only tracking one
                                         callRecord.update({
                                             status: constants_1.default.call_status.stored,
                                             stakworkProjectId: res.data.project_id,
@@ -237,7 +274,7 @@ function init() {
                                         return;
                                     }
                                     else {
-                                        throw `Could not store in stakwork ${sendFile.status}`;
+                                        throw `Could not store in stakwork Transcription response: ${sendFile.status}, Audio Tagging response ${sendFile2.status}`;
                                     }
                                 }
                                 // If recording not found after specified time then it returns an error
