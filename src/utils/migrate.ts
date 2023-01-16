@@ -304,6 +304,24 @@ export default async function migrate(): Promise<void> {
   } catch (e) {
     // sphinxLogger.error(['problem adding call recording table:', e.message], logging.DB)
   }
+
+  // add graph subscription table
+  try {
+    sphinxLogger.info('adding graph subscription table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_graph_subscription (
+      id BIGINT NOT NULL PRIMARY KEY,
+      name TEXT,
+      created_at DATETIME,
+      updated_at DATETIME,
+      address TEXT,
+      weight TEXT,
+      status INTEGER,
+      chat_ids TEXT
+    )`)
+  } catch (e) {
+    // sphinxLogger.error(['problem adding graph subscription table:', e.message], logging.DB)
+  }
 }
 
 async function addTenant(tableName) {

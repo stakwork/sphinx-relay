@@ -280,6 +280,24 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding call recording table:', e.message], logging.DB)
         }
+        // add graph subscription table
+        try {
+            logger_1.sphinxLogger.info('adding graph subscription table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_graph_subscription (
+      id BIGINT NOT NULL PRIMARY KEY,
+      name TEXT,
+      created_at DATETIME,
+      updated_at DATETIME,
+      address TEXT,
+      weight TEXT,
+      status INTEGER,
+      chat_ids TEXT
+    )`);
+        }
+        catch (e) {
+            // sphinxLogger.error(['problem adding graph subscription table:', e.message], logging.DB)
+        }
     });
 }
 exports.default = migrate;

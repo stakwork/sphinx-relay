@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
+exports.GraphSubscription = exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
 // parse BIGINTs to number
 const pg = require("pg");
 pg.defaults.parseInt8 = true;
@@ -42,6 +42,8 @@ const actionHistory_1 = require("./sql/actionHistory");
 exports.ActionHistory = actionHistory_1.default;
 const callRecording_1 = require("./sql/callRecording");
 exports.CallRecording = callRecording_1.default;
+const graphSubscription_1 = require("./sql/graphSubscription");
+exports.GraphSubscription = graphSubscription_1.default;
 const argv = minimist(process.argv.slice(2));
 const configFile = argv.db
     ? path.resolve(process.cwd(), argv.db)
@@ -77,6 +79,7 @@ const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_l
         requestsTransportTokens_1.default,
         actionHistory_1.default,
         callRecording_1.default,
+        graphSubscription_1.default,
     ] });
 if ((0, proxy_1.isProxy)()) {
     opts.pool = {
