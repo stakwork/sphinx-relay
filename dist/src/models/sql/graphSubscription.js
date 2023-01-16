@@ -43,6 +43,10 @@ __decorate([
 ], GraphSubscription.prototype, "chatIds", void 0);
 __decorate([
     sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], GraphSubscription.prototype, "tenant", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], GraphSubscription.prototype, "createdAt", void 0);
 __decorate([

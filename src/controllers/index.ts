@@ -27,6 +27,7 @@ import * as lsats from './lsats'
 import { Req } from '../types'
 import * as action from './actionHistory'
 import * as feeds from './getFeeds'
+import * as graphSubscription from './graphSubscription'
 
 export async function set(app) {
   builtInBots.init()
@@ -189,6 +190,9 @@ export async function set(app) {
 
   // Get feeds
   app.get('/feeds', feeds.getFeeds)
+
+  // Graph Subscription
+  app.post('/addGraph', graphSubscription.addGraphSubscription)
 }
 
 const msgtypes = constants.message_types

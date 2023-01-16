@@ -28,6 +28,9 @@ export default class GraphSubscription extends Model<GraphSubscription> {
   chatIds: string
 
   @Column
+  tenant: number
+
+  @Column
   createdAt: Date
 
   @Column

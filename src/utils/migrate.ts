@@ -317,6 +317,7 @@ export default async function migrate(): Promise<void> {
       address TEXT,
       weight TEXT,
       status INTEGER,
+      tenant INTEGER,
       chat_ids TEXT
     )`)
   } catch (e) {
