@@ -195,7 +195,8 @@ function init() {
                         const interval = setInterval(function () {
                             return __awaiter(this, void 0, void 0, function* () {
                                 timeActive += 60000;
-                                const file = yield (0, node_fetch_1.default)(`${tribe.memeServerLocation}${filename}`, {
+                                const filePathAndName = `${tribe.memeServerLocation}${filename}`;
+                                const file = yield (0, node_fetch_1.default)(filePathAndName, {
                                     method: 'GET',
                                     headers: { 'Content-Type': 'application/json' },
                                 });
@@ -215,7 +216,7 @@ function init() {
                                             workflow_params: {
                                                 media_to_local: {
                                                     params: {
-                                                        media_url: `${tribe.memeServerLocation}`,
+                                                        media_url: filePathAndName,
                                                     },
                                                 },
                                             },

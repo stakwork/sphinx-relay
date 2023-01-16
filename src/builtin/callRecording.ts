@@ -228,13 +228,11 @@ export function init() {
             let timeActive = 0
             const interval = setInterval(async function () {
               timeActive += 60000
-              const file = await fetch(
-                `${tribe.memeServerLocation}${filename}`,
-                {
-                  method: 'GET',
-                  headers: { 'Content-Type': 'application/json' },
-                }
-              )
+              const filePathAndName = `${tribe.memeServerLocation}${filename}`
+              const file = await fetch(filePathAndName, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+              })
               // If recording is found
               if (file.ok) {
                 // Push to stakwork
@@ -253,7 +251,7 @@ export function init() {
                       workflow_params: {
                         media_to_local: {
                           params: {
-                            media_url: `${tribe.memeServerLocation}`,
+                            media_url: filePathAndName,
                           },
                         },
                       },
