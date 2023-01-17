@@ -279,6 +279,7 @@ export function init() {
                         `${chatMember.lastAlias} just earned the ${reward.name} badge!, https://blockstream.info/liquid/asset/${reward.asset} redeem on people.sphinx.chat`
                       )
                     message.channel.send({ embed: resEmbed })
+                    return
                   }
                 }
               }

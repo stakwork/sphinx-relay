@@ -79,7 +79,6 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                     tenant,
                 },
             }));
-            console.log(botsInTribe);
             logger_1.sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logger_1.logging.Network); //, payload)
             const botInterceptMsg = ['/badge', '/callRecording'];
             if (!(botsInTribe && botsInTribe.length))
@@ -97,7 +96,6 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                             if (isMsgAndHasText ||
                                 isNotMsg ||
                                 botInterceptMsg.includes(botInTribe.botPrefix)) {
-                                console.log(botInTribe.dataValues);
                                 didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                             }
                         }
