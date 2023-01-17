@@ -88,7 +88,6 @@ export async function isBotMsg(
 
     await asyncForEach(botsInTribe, async (botInTribe) => {
       if (botInTribe.msgTypes) {
-        console.log(botInTribe.dataValues)
         // console.log('=> botInTribe.msgTypes', botInTribe)
         try {
           const msgTypes = JSON.parse(botInTribe.msgTypes)
@@ -103,6 +102,7 @@ export async function isBotMsg(
               isNotMsg ||
               botInterceptMsg.includes(botInTribe.botPrefix)
             ) {
+              console.log(botInTribe.dataValues)
               didEmit = await emitMessageToBot(
                 msg,
                 botInTribe.dataValues,

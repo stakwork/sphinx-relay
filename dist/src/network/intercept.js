@@ -86,7 +86,6 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                 return false;
             yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
                 if (botInTribe.msgTypes) {
-                    console.log(botInTribe.dataValues);
                     // console.log('=> botInTribe.msgTypes', botInTribe)
                     try {
                         const msgTypes = JSON.parse(botInTribe.msgTypes);
@@ -98,6 +97,7 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                             if (isMsgAndHasText ||
                                 isNotMsg ||
                                 botInterceptMsg.includes(botInTribe.botPrefix)) {
+                                console.log(botInTribe.dataValues);
                                 didEmit = yield emitMessageToBot(msg, botInTribe.dataValues, sender);
                             }
                         }
