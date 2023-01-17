@@ -80,6 +80,7 @@ export async function isBotMsg(
         tenant,
       },
     })) as Bot[]
+    console.log(botsInTribe)
     sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logging.Network) //, payload)
 
     const botInterceptMsg = ['/badge', '/callRecording']
@@ -87,6 +88,7 @@ export async function isBotMsg(
 
     await asyncForEach(botsInTribe, async (botInTribe) => {
       if (botInTribe.msgTypes) {
+        console.log(botInTribe.dataValues)
         // console.log('=> botInTribe.msgTypes', botInTribe)
         try {
           const msgTypes = JSON.parse(botInTribe.msgTypes)

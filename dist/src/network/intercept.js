@@ -79,12 +79,14 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                     tenant,
                 },
             }));
+            console.log(botsInTribe);
             logger_1.sphinxLogger.info(`=> botsInTribe ${botsInTribe.length}`, logger_1.logging.Network); //, payload)
             const botInterceptMsg = ['/badge', '/callRecording'];
             if (!(botsInTribe && botsInTribe.length))
                 return false;
             yield asyncForEach(botsInTribe, (botInTribe) => __awaiter(this, void 0, void 0, function* () {
                 if (botInTribe.msgTypes) {
+                    console.log(botInTribe.dataValues);
                     // console.log('=> botInTribe.msgTypes', botInTribe)
                     try {
                         const msgTypes = JSON.parse(botInTribe.msgTypes);
