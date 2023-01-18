@@ -8,6 +8,7 @@ import * as CallRecordingBot from './callRecording'
 import { BotMsg } from '../network/interfaces'
 import * as GitBot from './git'
 import { buildBotPayload } from '../controllers/bots'
+import * as SearchBot from './search'
 
 async function init() {
   MotherBot.init()
@@ -16,6 +17,7 @@ async function init() {
   GitBot.init()
   BadgeBot.init()
   CallRecordingBot.init()
+  SearchBot.init()
 }
 
 function builtinBotEmit(msg: BotMsg) {

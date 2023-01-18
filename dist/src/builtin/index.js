@@ -20,6 +20,7 @@ const CallRecordingBot = require("./callRecording");
 const GitBot = require("./git");
 const bots_1 = require("../controllers/bots");
 Object.defineProperty(exports, "buildBotPayload", { enumerable: true, get: function () { return bots_1.buildBotPayload; } });
+const SearchBot = require("./search");
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         MotherBot.init();
@@ -28,6 +29,7 @@ function init() {
         GitBot.init();
         BadgeBot.init();
         CallRecordingBot.init();
+        SearchBot.init();
     });
 }
 exports.init = init;
