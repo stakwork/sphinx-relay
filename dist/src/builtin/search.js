@@ -40,11 +40,12 @@ function init() {
             switch (cmd) {
                 case 'search':
                     const graphs = (yield models_1.models.GraphSubscription.findAll());
-                    const subscriptions = yield settleLsat(graphs);
+                    const searchWord = `${arr.slice(1, arr.length).join(' ')}`;
+                    const subscriptions = yield settleLsat(graphs, searchWord);
                     const request = {
                         company_name: 'Sphinx',
                         tribe_name: tribe.name,
-                        search_word: `${arr.slice(1, arr.length).join(' ')}`,
+                        search_word: searchWord,
                         subscriptions,
                     };
                     const response = yield (0, node_fetch_1.default)('http://3.95.131.14:5000/prediction/query', {
@@ -90,6 +91,22 @@ function init() {
                         return;
                     }
                 case 'graph':
+                    if (arr.length !== 4)
+                        return;
+                    const name = arr[2];
+                    const address = arr[3];
+                    yield models_1.models.GraphSubscription.create({
+                        name,
+                        address,
+                        status: 1,
+                        tenant: message.member.id,
+                        chatIds: JSON.stringify([tribe.id]),
+                    });
+                    const resEmbed = new Sphinx.MessageEmbed()
+                        .setAuthor('SearchBot')
+                        .setDescription(`Graph Subscription was added successfully`);
+                    message.channel.send({ embed: resEmbed });
+                    return;
             }
         }
         catch (error) {
@@ -98,18 +115,20 @@ function init() {
     }));
 }
 exports.init = init;
-function settleLsat(graphs) {
+function settleLsat(graphs, word) {
     return __awaiter(this, void 0, void 0, function* () {
         const newGraphs = [];
         for (let i = 0; i < graphs.length; i++) {
             const graph = graphs[i];
-            const lsat = (yield models_1.models.Lsat.findOne({
-                where: { paths: graph.address, status: 1 },
-            }));
+            // const lsat = (await models.Lsat.findOne({
+            //   where: { paths: graph.address, status: 1 },
+            // })) as Lsat
             const obj = {
                 client_name: graph.name,
-                prediction_endpoint: graph.address,
-                lsat: lsat ? `LSAT ${lsat.macaroon}:${lsat.preimage}` : '',
+                prediction_endpoint: `${graph.address}?word=${word}`,
+                //Correct Implementation
+                //   lsat: lsat ? `LSAT ${lsat.macaroon}:${lsat.preimage}` : '',
+                lsat: `LSAT AgEba25vd2xlZGdlLWdyYXBoLnNwaGlueC5jaGF0AoQBMDAwMGMzN2QzNjI0NTM3YmVkY2UxZThmYTdmM2Y5ZmVkNDYyMTU2MWJiMmJmODY2YWMzYjMzZmM1NDVjNmY3NjE3NzFhZWU5YmZlYzljOTRhMDI2MDU5ZWZlMzk2MTllNDVkY2Q1YWQ5OWI1Y2JjZDA4MzdlNDUzMjM5OGNiMmQyNjFiAAAGIIB-8uA1VZ5gb1rNaRjjFPfBqlF16JnnQd1fK-VuwebL:cb8779ec0e386c62acc88c409f0730707e643e306678b15018676177c7d336f9`,
             };
             newGraphs.push(obj);
         }

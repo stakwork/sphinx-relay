@@ -1,7 +1,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
-import { models, ChatRecord, GraphSubscriptionRecord, Lsat } from '../models'
+import { models, ChatRecord, GraphSubscriptionRecord } from '../models'
 import fetch from 'node-fetch'
 
 const msg_types = Sphinx.MSG_TYPE
@@ -35,11 +35,12 @@ export function init() {
         case 'search':
           const graphs =
             (await models.GraphSubscription.findAll()) as GraphSubscriptionRecord[]
-          const subscriptions = await settleLsat(graphs)
+          const searchWord = `${arr.slice(1, arr.length).join(' ')}`
+          const subscriptions = await settleLsat(graphs, searchWord)
           const request = {
             company_name: 'Sphinx',
             tribe_name: tribe.name,
-            search_word: `${arr.slice(1, arr.length).join(' ')}`,
+            search_word: searchWord,
             subscriptions,
           }
           const response = await fetch(
@@ -90,6 +91,22 @@ export function init() {
             return
           }
         case 'graph':
+          if (arr.length !== 4) return
+          const name = arr[2]
+          const address = arr[3]
+
+          await models.GraphSubscription.create({
+            name,
+            address,
+            status: 1,
+            tenant: message.member.id,
+            chatIds: JSON.stringify([tribe.id]),
+          })
+          const resEmbed = new Sphinx.MessageEmbed()
+            .setAuthor('SearchBot')
+            .setDescription(`Graph Subscription was added successfully`)
+          message.channel.send({ embed: resEmbed })
+          return
       }
     } catch (error) {
       sphinxLogger.error(`SEARCH BOT ERROR ${error}`, logging.Bots)
@@ -97,7 +114,10 @@ export function init() {
   })
 }
 
-export async function settleLsat(graphs: GraphSubscriptionRecord[]) {
+export async function settleLsat(
+  graphs: GraphSubscriptionRecord[],
+  word: string
+) {
   const newGraphs: {
     client_name: string
     prediction_endpoint: string
@@ -105,13 +125,15 @@ export async function settleLsat(graphs: GraphSubscriptionRecord[]) {
   }[] = []
   for (let i = 0; i < graphs.length; i++) {
     const graph = graphs[i]
-    const lsat = (await models.Lsat.findOne({
-      where: { paths: graph.address, status: 1 },
-    })) as Lsat
+    // const lsat = (await models.Lsat.findOne({
+    //   where: { paths: graph.address, status: 1 },
+    // })) as Lsat
     const obj = {
       client_name: graph.name,
-      prediction_endpoint: graph.address,
-      lsat: lsat ? `LSAT ${lsat.macaroon}:${lsat.preimage}` : '',
+      prediction_endpoint: `${graph.address}?word=${word}`,
+      //Correct Implementation
+      //   lsat: lsat ? `LSAT ${lsat.macaroon}:${lsat.preimage}` : '',
+      lsat: `LSAT AgEba25vd2xlZGdlLWdyYXBoLnNwaGlueC5jaGF0AoQBMDAwMGMzN2QzNjI0NTM3YmVkY2UxZThmYTdmM2Y5ZmVkNDYyMTU2MWJiMmJmODY2YWMzYjMzZmM1NDVjNmY3NjE3NzFhZWU5YmZlYzljOTRhMDI2MDU5ZWZlMzk2MTllNDVkY2Q1YWQ5OWI1Y2JjZDA4MzdlNDUzMjM5OGNiMmQyNjFiAAAGIIB-8uA1VZ5gb1rNaRjjFPfBqlF16JnnQd1fK-VuwebL:cb8779ec0e386c62acc88c409f0730707e643e306678b15018676177c7d336f9`,
     }
     newGraphs.push(obj)
   }
