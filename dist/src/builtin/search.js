@@ -24,7 +24,7 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         if (!message.content)
             return;
         const arr = message.content.split(' ');
@@ -57,13 +57,14 @@ function init() {
                     });
                     if (response.ok) {
                         const parsedRes = yield response.json();
+                        console.log(parsedRes);
                         let internalRes = [];
                         if ((_a = parsedRes.internal) === null || _a === void 0 ? void 0 : _a.exact) {
                             internalRes = (_b = parsedRes.internal) === null || _b === void 0 ? void 0 : _b.exact.slice(0, 5);
                         }
                         let externalRes = [];
-                        if (parsedRes.external.exact) {
-                            externalRes = (_c = parsedRes.external) === null || _c === void 0 ? void 0 : _c.exact.slice(0, 5);
+                        if ((_c = parsedRes.external) === null || _c === void 0 ? void 0 : _c.exact) {
+                            externalRes = (_d = parsedRes.external) === null || _d === void 0 ? void 0 : _d.exact.slice(0, 5);
                         }
                         let returnMsg = '';
                         for (let i = 0; i < internalRes.length; i++) {

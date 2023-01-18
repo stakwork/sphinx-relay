@@ -55,13 +55,14 @@ export function init() {
           )
           if (response.ok) {
             const parsedRes = await response.json()
+            console.log(parsedRes)
             let internalRes: SearchResult[] = []
             if (parsedRes.internal?.exact) {
               internalRes = parsedRes.internal?.exact.slice(0, 5)
             }
 
             let externalRes: SearchResult[] = []
-            if (parsedRes.external.exact) {
+            if (parsedRes.external?.exact) {
               externalRes = parsedRes.external?.exact.slice(0, 5)
             }
             let returnMsg = ''
