@@ -55,6 +55,7 @@ function migrate() {
         yield clearTransportTokens();
         addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'notify', 'BIGINT');
+        addTableColumn('sphinx_chats', 'default_join', 'BOOLEAN');
         yield migrateMuted();
         addTableColumn('sphinx_messages', 'push', 'BOOLEAN');
         addTableColumn('sphinx_messages', 'forwarded_sats', 'BOOLEAN');

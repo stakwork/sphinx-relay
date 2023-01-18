@@ -186,6 +186,14 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Chat.prototype, "stakworkWebhook", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+    }),
+    __metadata("design:type", Boolean)
+], Chat.prototype, "defaultJoin", void 0);
 Chat = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_chats', underscored: true })
 ], Chat);

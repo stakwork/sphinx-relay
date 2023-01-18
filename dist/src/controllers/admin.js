@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listUsers = exports.addProxyUser = exports.hasAdmin = void 0;
+exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.hasAdmin = void 0;
 const res_1 = require("../utils/res");
 const proxy_1 = require("../utils/proxy");
 const models_1 = require("../models");
@@ -32,6 +32,58 @@ function hasAdmin(req, res) {
     });
 }
 exports.hasAdmin = hasAdmin;
+function addDefaultJoinTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        if (!req.owner.isAdmin)
+            return (0, res_1.failure)(res, 'not admin');
+        if (!(0, proxy_1.isProxy)())
+            return (0, res_1.failure)(res, 'not proxy');
+        const id = parseInt(req.params.id);
+        if (!id)
+            return (0, res_1.failure)(res, 'no id specified');
+        try {
+            const chat = (yield models_1.models.Chat.findOne({
+                where: { id },
+            }));
+            if (!chat)
+                return (0, res_1.failure)(res, 'chat not found');
+            yield chat.update({ defaultJoin: true });
+            (0, res_1.success)(res, true);
+        }
+        catch (e) {
+            (0, res_1.failure)(res, e);
+        }
+    });
+}
+exports.addDefaultJoinTribe = addDefaultJoinTribe;
+function removeDefaultJoinTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        if (!req.owner.isAdmin)
+            return (0, res_1.failure)(res, 'not admin');
+        if (!(0, proxy_1.isProxy)())
+            return (0, res_1.failure)(res, 'not proxy');
+        const id = parseInt(req.params.id);
+        if (!id)
+            return (0, res_1.failure)(res, 'no id specified');
+        try {
+            const chat = (yield models_1.models.Chat.findOne({
+                where: { id },
+            }));
+            if (!chat)
+                return (0, res_1.failure)(res, 'chat not found');
+            yield chat.update({ defaultJoin: false });
+            (0, res_1.success)(res, true);
+        }
+        catch (e) {
+            (0, res_1.failure)(res, e);
+        }
+    });
+}
+exports.removeDefaultJoinTribe = removeDefaultJoinTribe;
 function addProxyUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
