@@ -63,6 +63,118 @@ export function init() {
               .setDescription(returnMsg)
             message.channel.send({ embed: resEmbed })
             return
+          case 'update':
+            if (arr.length === 7) {
+              const callRecording = Number(arr[2])
+              if (isNaN(callRecording) || callRecording > 1) {
+                const addFields = [
+                  {
+                    name: 'Call Recording Bot Error',
+                    value:
+                      'Please provide a valid call recording option 1 or 0',
+                  },
+                ]
+                botResponse(
+                  addFields,
+                  'CallRecordingBot',
+                  'Call Recording Error',
+                  message
+                )
+                return
+              }
+              const jitsiServer = arr[3]
+              if (!jitsiServer) {
+                const addFields = [
+                  {
+                    name: 'Call Recording Bot Error',
+                    value: 'Provide a valid Jitsi Server url',
+                  },
+                ]
+                botResponse(
+                  addFields,
+                  'CallRecordingBot',
+                  'Call Recording Error',
+                  message
+                )
+                return
+              }
+              const memeServerLocation = arr[4]
+              if (!memeServerLocation) {
+                const addFields = [
+                  {
+                    name: 'Call Recording Bot Error',
+                    value: 'Provide a valid S3 Bucket url',
+                  },
+                ]
+                botResponse(
+                  addFields,
+                  'CallRecordingBot',
+                  'Call Recording Error',
+                  message
+                )
+                return
+              }
+              const stakworkApiKey = arr[5]
+              if (!stakworkApiKey) {
+                const addFields = [
+                  {
+                    name: 'Call Recording Bot Error',
+                    value: 'Provide a valid Stakwork API Key',
+                  },
+                ]
+                botResponse(
+                  addFields,
+                  'CallRecordingBot',
+                  'Call Recording Error',
+                  message
+                )
+                return
+              }
+              const stakworkWebhook = arr[6]
+              if (!stakworkWebhook) {
+                const addFields = [
+                  {
+                    name: 'Call Recording Bot Error',
+                    value: 'Provide a valid Webhook',
+                  },
+                ]
+                botResponse(
+                  addFields,
+                  'CallRecordingBot',
+                  'Call Recording Error',
+                  message
+                )
+                return
+              }
+              await tribe.update({
+                callRecording,
+                jitsiServer,
+                memeServerLocation,
+                stakworkApiKey,
+                stakworkWebhook,
+              })
+              const embed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription(
+                  'Call Recording has been configured Successfully'
+                )
+              message.channel.send({ embed })
+              return
+            } else {
+              const resEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setTitle('Call Recording Error:')
+                .addFields([
+                  {
+                    name: 'Update tribe to configure call recording using the commands below',
+                    value:
+                      '/call update {CALL_RECORDIND 1 or 0} {JITSI_SERVER} {S3_BUCKET_URL} {STARKWORK_API_KEY} {WEBHOOK_URL}',
+                  },
+                ])
+                .setThumbnail(botSVG)
+              message.channel.send({ embed: resEmbed })
+              return
+            }
           default:
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('CallRecordingBot')
@@ -116,16 +228,17 @@ export function init() {
             let timeActive = 0
             const interval = setInterval(async function () {
               timeActive += 60000
-              const file = await fetch(
-                `${tribe.memeServerLocation}${filename}`,
-                {
-                  method: 'GET',
-                  headers: { 'Content-Type': 'application/json' },
-                }
-              )
+              const filePathAndName = `${tribe.memeServerLocation}${filename}`
+              const todaysDate = new Date(Date.now()).toDateString()
+              const file = await fetch(filePathAndName, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+              })
               // If recording is found
               if (file.ok) {
                 // Push to stakwork
+
+                // Transcription Job
                 const sendFile = await fetch(
                   `https://jobs.stakwork.com/api/v1/projects`,
                   {
@@ -141,33 +254,78 @@ export function init() {
                       workflow_params: {
                         media_to_local: {
                           params: {
-                            media_url: `${tribe.memeServerLocation}`,
+                            media_url: filePathAndName,
                           },
                         },
                       },
                     }),
                   }
                 )
-                if (sendFile.ok) {
+
+                // Audio tagging job
+                const sendFile2 = await fetch(
+                  `https://jobs.stakwork.com/api/v1/projects`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Token token="${tribe.stakworkApiKey}"`,
+                    },
+                    body: JSON.stringify({
+                      name: `${updatedCallId} file`,
+                      workflow_id: 3268,
+                      webhook_url: `${tribe.stakworkWebhook}`,
+                      workflow_params: {
+                        media_to_local: {
+                          params: {
+                            media_url: filePathAndName,
+                          },
+                        },
+                        audio_tagging: {
+                          subskill_id: 2014,
+                          params: {
+                            media_url: filePathAndName,
+                          },
+                          attributes: {
+                            episode_title: `Jitsi Call on ${todaysDate}`,
+                            show_img_url:
+                              'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
+                            show_title: 'Sphinx',
+                            publish_date: `${todaysDate}`,
+                            episode_image:
+                              'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
+                          },
+                        },
+                      },
+                    }),
+                  }
+                )
+                if (sendFile.ok && sendFile2.ok) {
                   const res = await sendFile.json()
                   //update call record to stored
+
+                  // TODO: Add sendFile2 project Id since
+                  // we are only tracking one
                   callRecord.update({
                     status: constants.call_status.stored,
                     stakworkProjectId: res.data.project_id,
                   })
+
                   clearInterval(interval)
+
                   const embed = new Sphinx.MessageEmbed()
                     .setAuthor('CallRecordingBot')
                     .setDescription('Call was recorded successfully')
                   message.channel.send({ embed })
                   return
                 } else {
-                  throw `Could not store in stakwork ${sendFile.status}`
+                  throw `Could not store in stakwork Transcription response: ${sendFile.status}, Audio Tagging response ${sendFile2.status}`
                 }
               }
               // If recording not found after specified time then it returns an error
               if (timeActive === 10800000 && !file.ok) {
                 clearInterval(interval)
+
                 callRecord.update({ status: constants.call_status.in_actve })
                 const embed = new Sphinx.MessageEmbed()
                   .setAuthor('CallRecordingBot')
@@ -225,3 +383,12 @@ export function init() {
 const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
   <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
 </svg>`
+
+function botResponse(addFields, author, title, message) {
+  const resEmbed = new Sphinx.MessageEmbed()
+    .setAuthor(author)
+    .setTitle(title)
+    .addFields(addFields)
+    .setThumbnail(botSVG)
+  message.channel.send({ embed: resEmbed })
+}
