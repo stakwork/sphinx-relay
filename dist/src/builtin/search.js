@@ -57,7 +57,6 @@ function init() {
                     });
                     if (response.ok) {
                         const parsedRes = yield response.json();
-                        console.log(parsedRes);
                         let internalRes = [];
                         if ((_a = parsedRes.internal) === null || _a === void 0 ? void 0 : _a.exact) {
                             internalRes = (_b = parsedRes.internal) === null || _b === void 0 ? void 0 : _b.exact.slice(0, 5);

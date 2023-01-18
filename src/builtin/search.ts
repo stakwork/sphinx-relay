@@ -55,7 +55,6 @@ export function init() {
           )
           if (response.ok) {
             const parsedRes = await response.json()
-            console.log(parsedRes)
             let internalRes: SearchResult[] = []
             if (parsedRes.internal?.exact) {
               internalRes = parsedRes.internal?.exact.slice(0, 5)
