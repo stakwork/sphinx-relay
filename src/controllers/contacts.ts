@@ -256,7 +256,11 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
         where: { isAdmin: true },
       })
       // there can be only 1 admin
-      if (adminCount !== 0) isAdmin = false
+      if (adminCount !== 0) {
+        isAdmin = false
+      } else {
+        await joinDefaultTribes(owner)
+      }
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
     if (isAdmin) {
@@ -268,6 +272,12 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
   success(res, {
     id: (owner && owner.id) || 0,
   })
+}
+
+async function joinDefaultTribes(contac: Contact) {
+  // const defaultTribes = (await models.Chat.findAll({
+  //   where: { defaultJoin: true },
+  // })) as Chat[]
 }
 
 export const registerHmacKey = async (req: Req, res: Res): Promise<void> => {

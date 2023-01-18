@@ -237,8 +237,12 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 where: { isAdmin: true },
             });
             // there can be only 1 admin
-            if (adminCount !== 0)
+            if (adminCount !== 0) {
                 isAdmin = false;
+            }
+            else {
+                yield joinDefaultTribes(owner);
+            }
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
         if (isAdmin) {
@@ -251,6 +255,13 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
 });
 exports.generateToken = generateToken;
+function joinDefaultTribes(contac) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // const defaultTribes = (await models.Chat.findAll({
+        //   where: { defaultJoin: true },
+        // })) as Chat[]
+    });
+}
 const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body.encrypted_key) {
         return (0, res_1.failure)(res, 'no encrypted_key found');
