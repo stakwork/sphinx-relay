@@ -3,6 +3,7 @@ import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import { models, ChatRecord, GraphSubscriptionRecord } from '../models'
 import fetch from 'node-fetch'
+import { loadConfig } from '../utils/config'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -12,6 +13,8 @@ interface SearchResult {
   description: string
   show_title: string
 }
+
+const config = loadConfig()
 
 export function init() {
   if (initted) return
@@ -44,7 +47,7 @@ export function init() {
             subscriptions,
           }
           const response = await fetch(
-            'http://3.95.131.14:5000/prediction/query',
+            `${config.private_graph}/prediction/query`,
             {
               method: 'POST',
               body: JSON.stringify(request),

@@ -32,6 +32,7 @@ const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION =
   './creds/transportTokenPrivateKey.pem'
 const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1
 const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444'
+const DEFAULT_PRIVATE_GRAPH = 'http://3.95.131.14:5000'
 
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
@@ -134,5 +135,6 @@ export function loadConfig() {
       config.length_of_time_for_transport_token_clear ||
       DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING,
     boltwall_server: config.boltwall_server || DEFAULT_BOLTWALL_SERVER,
+    private_graph: DEFAULT_PRIVATE_GRAPH,
   }
 }

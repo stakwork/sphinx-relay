@@ -15,8 +15,10 @@ const logger_1 = require("../utils/logger");
 const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
+const config_1 = require("../utils/config");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
+const config = (0, config_1.loadConfig)();
 function init() {
     if (initted)
         return;
@@ -48,7 +50,7 @@ function init() {
                         search_word: searchWord,
                         subscriptions,
                     };
-                    const response = yield (0, node_fetch_1.default)('http://3.95.131.14:5000/prediction/query', {
+                    const response = yield (0, node_fetch_1.default)(`${config.private_graph}/prediction/query`, {
                         method: 'POST',
                         body: JSON.stringify(request),
                         headers: {
