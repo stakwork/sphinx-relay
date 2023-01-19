@@ -133,7 +133,7 @@ function emitMessageToBot(msg, botInTribe, sender) {
         }
         switch (botInTribe.botType) {
             case constants_1.default.bot_types.builtin:
-                (0, builtin_1.builtinBotEmit)(msg);
+                (0, builtin_1.builtinBotEmit)(msg, botInTribe.botPrefix);
                 return true;
             case constants_1.default.bot_types.local: {
                 const bot = (yield models_1.models.Bot.findOne({

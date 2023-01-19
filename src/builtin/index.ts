@@ -20,9 +20,9 @@ async function init() {
   SearchBot.init()
 }
 
-function builtinBotEmit(msg: BotMsg) {
+function builtinBotEmit(msg: BotMsg, botPrefix?: string) {
   setTimeout(() => {
-    SphinxBot._emit('message', buildBotPayload(msg))
+    SphinxBot._emit('message', buildBotPayload(msg, botPrefix))
   }, 1200)
 }
 

@@ -477,7 +477,7 @@ exports.postToBotServer = postToBotServer;
  * @param {BotMsg} msg The BotMsg to convert to a SphinxBot message.
  * @returns {SphinxBot.Message} The created SphinxBot message.
  */
-function buildBotPayload(msg) {
+function buildBotPayload(msg, botPrefix) {
     const chat_uuid = msg.chat && msg.chat.uuid;
     const m = {
         id: msg.message.uuid,
@@ -495,6 +495,7 @@ function buildBotPayload(msg) {
             nickname: msg.sender.alias,
             roles: [],
         },
+        author: { bot: botPrefix },
     };
     if (msg.sender.role === constants_1.default.chat_roles.owner) {
         if (m.member)
