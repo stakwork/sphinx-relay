@@ -90,10 +90,13 @@ exports.generateNewUsers = generateNewUsers;
 const adminURL = config.proxy_admin_url
     ? config.proxy_admin_url + '/'
     : 'http://localhost:5555/';
-function generateNewUser(rootpk) {
+function generateNewUser(rootpk, initial_sat) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield (0, node_fetch_1.default)(adminURL + 'generate', {
+            let route = 'generate';
+            if (initial_sat)
+                route = `generate?sats=${initial_sat}`;
+            const r = yield (0, node_fetch_1.default)(adminURL + route, {
                 method: 'POST',
                 headers: { 'x-admin-token': config.proxy_admin_token },
             });

@@ -15,7 +15,7 @@ import { isClean } from './nodeinfo'
 import { getQR } from './connect'
 import { loadConfig } from './config'
 import migrate from './migrate'
-import { isProxy } from '../utils/proxy'
+import { isProxy, getProxyRootPubkey } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
@@ -57,20 +57,16 @@ const setupOwnerContact = async () => {
         where: { isOwner: true, id: 1 },
       })
       if (!one) {
-        let authToken: string | null = null
-        let tenant: number | null = null
-        // dont allow "signup" on root contact of proxy node
+        let publicKey = info.identity_pubkey
         if (isProxy()) {
-          authToken = '_'
-        } else {
-          tenant = 1 // add tenant here
+          // init on root contact of proxy node
+          publicKey = await getProxyRootPubkey()
         }
         const contact: Contact = (await models.Contact.create({
           id: 1,
-          publicKey: info.identity_pubkey,
+          tenant: 1,
+          publicKey,
           isOwner: true,
-          authToken,
-          tenant,
         })) as Contact
         sphinxLogger.info(
           ['created node owner contact, id:', contact.id],

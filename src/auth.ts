@@ -120,7 +120,8 @@ function no_auth(path) {
     path == '/peered' ||
     path == '/request_transport_key' ||
     path == '/webhook' ||
-    path == '/has_admin'
+    path == '/has_admin' ||
+    path == '/initial_admin_pubkey'
   )
 }
 

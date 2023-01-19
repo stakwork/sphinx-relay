@@ -140,6 +140,7 @@ function set(app) {
         app.get('/has_admin', admin.hasAdmin);
         app.post('/default_tribe/:id', admin.addDefaultJoinTribe);
         app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe);
+        app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 res.send({ version: gitinfo.tag });

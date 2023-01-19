@@ -157,6 +157,7 @@ export async function set(app) {
   app.get('/has_admin', admin.hasAdmin)
   app.post('/default_tribe/:id', admin.addDefaultJoinTribe)
   app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe)
+  app.get('/initial_admin_pubkey', admin.initialAdminPubkey)
 
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.hasAdmin = void 0;
+exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.initialAdminPubkey = exports.hasAdmin = void 0;
 const res_1 = require("../utils/res");
 const proxy_1 = require("../utils/proxy");
 const models_1 = require("../models");
@@ -32,6 +32,27 @@ function hasAdmin(req, res) {
     });
 }
 exports.hasAdmin = hasAdmin;
+// this is needed for the initial admin token generation
+function initialAdminPubkey(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!(0, proxy_1.isProxy)())
+            return (0, res_1.failure)(res, 'not proxy');
+        try {
+            const contacts = (yield models_1.models.Contact.findAll());
+            if (contacts.length !== 1)
+                return (0, res_1.failure)(res, 'too late');
+            const admin = contacts[0];
+            if (admin.authToken || admin.contactKey)
+                return (0, res_1.failure)(res, 'too late');
+            const pubkey = admin.publicKey;
+            (0, res_1.success)(res, { pubkey });
+        }
+        catch (e) {
+            (0, res_1.failure)(res, e);
+        }
+    });
+}
+exports.initialAdminPubkey = initialAdminPubkey;
 function addDefaultJoinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -93,8 +114,9 @@ function addProxyUser(req, res) {
         if (!(0, proxy_1.isProxy)())
             return (0, res_1.failure)(res, 'not proxy');
         try {
+            const initial_sat = parseInt(req.params.sat);
             const rpk = yield (0, proxy_1.getProxyRootPubkey)();
-            const created = yield (0, proxy_1.generateNewUser)(rpk);
+            const created = yield (0, proxy_1.generateNewUser)(rpk, initial_sat || 0);
             (0, res_1.success)(res, created);
         }
         catch (e) {

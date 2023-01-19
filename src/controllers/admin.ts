@@ -18,6 +18,21 @@ export async function hasAdmin(req: Req, res: Res): Promise<void> {
   }
 }
 
+// this is needed for the initial admin token generation
+export async function initialAdminPubkey(req: Req, res: Res): Promise<void> {
+  if (!isProxy()) return failure(res, 'not proxy')
+  try {
+    const contacts = (await models.Contact.findAll()) as ContactRecord[]
+    if (contacts.length !== 1) return failure(res, 'too late')
+    const admin = contacts[0]
+    if (admin.authToken || admin.contactKey) return failure(res, 'too late')
+    const pubkey = admin.publicKey
+    success(res, { pubkey })
+  } catch (e) {
+    failure(res, e)
+  }
+}
+
 export async function addDefaultJoinTribe(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   if (!req.owner.isAdmin) return failure(res, 'not admin')
@@ -65,8 +80,9 @@ export async function addProxyUser(req: Req, res: Res): Promise<void> {
   if (!isProxy()) return failure(res, 'not proxy')
 
   try {
+    const initial_sat = parseInt(req.params.sat)
     const rpk = await getProxyRootPubkey()
-    const created = await generateNewUser(rpk)
+    const created = await generateNewUser(rpk, initial_sat || 0)
     success(res, created)
   } catch (e) {
     failure(res, e)
