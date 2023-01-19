@@ -207,7 +207,7 @@ function init() {
                                 // If recording is found
                                 if (file.ok) {
                                     // Push to stakwork
-                                    // Transcription Job
+                                    // Audio tagging job
                                     const sendFile = yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects`, {
                                         method: 'POST',
                                         headers: {
@@ -216,55 +216,31 @@ function init() {
                                         },
                                         body: JSON.stringify({
                                             name: `${updatedCallId} file`,
-                                            workflow_id: 3235,
-                                            webhook_url: `${tribe.stakworkWebhook}`,
+                                            workflow_id: 5579,
                                             workflow_params: {
-                                                media_to_local: {
-                                                    params: {
-                                                        media_url: filePathAndName,
-                                                    },
-                                                },
-                                            },
-                                        }),
-                                    });
-                                    // Audio tagging job
-                                    const sendFile2 = yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects`, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            Authorization: `Token token="${tribe.stakworkApiKey}"`,
-                                        },
-                                        body: JSON.stringify({
-                                            name: `${updatedCallId} file`,
-                                            workflow_id: 3268,
-                                            webhook_url: `${tribe.stakworkWebhook}`,
-                                            workflow_params: {
-                                                media_to_local: {
-                                                    params: {
-                                                        media_url: filePathAndName,
-                                                    },
-                                                },
-                                                audio_tagging: {
-                                                    subskill_id: 2014,
-                                                    params: {
-                                                        media_url: filePathAndName,
-                                                    },
+                                                set_var: {
                                                     attributes: {
-                                                        episode_title: `Jitsi Call on ${todaysDate}`,
-                                                        show_img_url: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
-                                                        show_title: 'Sphinx',
-                                                        publish_date: `${todaysDate}`,
-                                                        episode_image: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
+                                                        vars: {
+                                                            media_url: filePathAndName,
+                                                            episode_title: `Jitsi Call on ${todaysDate}`,
+                                                            clip_description: 'My Clip Description',
+                                                            publish_date: `${todaysDate}`,
+                                                            episode_image: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
+                                                            show_img_url: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
+                                                            webhook_url: `${tribe.stakworkWebhook}`,
+                                                            pubkey: tribe.ownerPubkey,
+                                                            unique_id: filename.slice(0, -4),
+                                                            clip_length: 10,
+                                                            show_title: `Sphinx ${tribe.name}`,
+                                                        },
                                                     },
                                                 },
                                             },
                                         }),
                                     });
-                                    if (sendFile.ok && sendFile2.ok) {
+                                    if (sendFile.ok) {
                                         const res = yield sendFile.json();
                                         //update call record to stored
-                                        // TODO: Add sendFile2 project Id since
-                                        // we are only tracking one
                                         callRecord.update({
                                             status: constants_1.default.call_status.stored,
                                             stakworkProjectId: res.data.project_id,
@@ -277,7 +253,7 @@ function init() {
                                         return;
                                     }
                                     else {
-                                        throw `Could not store in stakwork Transcription response: ${sendFile.status}, Audio Tagging response ${sendFile2.status}`;
+                                        throw `Could not store in stakwork Transcription response: ${sendFile.status}`;
                                     }
                                 }
                                 // If recording not found after specified time then it returns an error
