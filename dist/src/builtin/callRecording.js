@@ -36,6 +36,9 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== '/callRecording')
+            return;
         try {
             const arr = (message.content && message.content.split(' ')) || [];
             const cmd = arr[1];

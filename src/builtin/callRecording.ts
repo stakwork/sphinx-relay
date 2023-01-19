@@ -29,6 +29,7 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
+    if (message.author?.bot !== '/callRecording') return
     try {
       const arr = (message.content && message.content.split(' ')) || []
       const cmd = arr[1]

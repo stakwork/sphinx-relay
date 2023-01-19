@@ -34,6 +34,9 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== '/badge')
+            return;
         const arr = (message.content && message.content.split(' ')) || [];
         const cmd = arr[1];
         const tribe = (yield models_1.models.Chat.findOne({
@@ -245,6 +248,7 @@ function init() {
                                             .setAuthor('BagdeBot')
                                             .setDescription(`${chatMember.lastAlias} just earned the ${reward.name} badge!, https://blockstream.info/liquid/asset/${reward.asset} redeem on people.sphinx.chat`);
                                         message.channel.send({ embed: resEmbed });
+                                        return;
                                     }
                                 }
                             }
