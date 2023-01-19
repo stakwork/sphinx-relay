@@ -29,7 +29,7 @@ function getFeeds(req, res) {
                 limit: 25,
                 order: [['updatedAt', 'DESC']],
             }));
-            const parsedActions = feedsHelper.parseActionHistory(actions);
+            const parsedActions = Object.assign(Object.assign({}, feedsHelper.parseActionHistory(actions)), { publicKey: req.owner.publicKey });
             const recommendations = yield (0, node_fetch_1.default)(`${config.boltwall_server}/feeds`, {
                 method: 'POST',
                 body: JSON.stringify(parsedActions),

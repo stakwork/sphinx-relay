@@ -3,6 +3,7 @@ import constants from '../constants'
 
 export function parseActionHistory(actions: ActionHistoryRecord[]) {
   const actionTypes = Object.keys(constants.action_types)
+
   const parsedActions: { [k: string]: { type: string; meta_data: any }[] } = {}
   actionTypes.forEach((action) => {
     parsedActions[action] = []
