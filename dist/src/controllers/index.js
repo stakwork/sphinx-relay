@@ -177,6 +177,7 @@ function set(app) {
         // Graph Subscription
         app.post('/addGraph', graphSubscription.addGraphSubscription);
         app.get('/getGraph', graphSubscription.getGraphSubscription);
+        app.get('/getGraphTribe/:id', graphSubscription.getGraphSubscriptionForTribe);
     });
 }
 exports.set = set;

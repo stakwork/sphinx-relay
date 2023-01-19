@@ -1,4 +1,10 @@
-import { GraphSubscriptionRecord, models, Lsat, ChatRecord } from '../models'
+import {
+  GraphSubscriptionRecord,
+  models,
+  Lsat,
+  ChatRecord,
+  sequelize,
+} from '../models'
 import { Req } from '../types'
 import { Response } from 'express'
 import { failure, success } from '../utils/res'
@@ -66,7 +72,10 @@ export async function addGraphSubscription(
     }
     return success(res, 'Graph Subscription added successfully')
   } catch (error) {
-    console.log(error)
+    sphinxLogger.error(
+      `=> saveGraphSubscription error: ${error}`,
+      logging.Express
+    )
     return failure(res, 'An internal error occured')
   }
 }
@@ -99,7 +108,54 @@ export async function getGraphSubscription(
     }
     return success(res, newGraphs)
   } catch (error) {
-    console.log(error)
+    sphinxLogger.error(
+      `=> getGraphSubscription error: ${error}`,
+      logging.Express
+    )
+    return failure(res, 'An internal error occured')
+  }
+}
+
+export async function getGraphSubscriptionForTribe(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const { id } = req.params
+  if (!id) return failure(res, 'Provide valid tribe id')
+  try {
+    // const tribe = await models.Chat.findOne({ where: { id: tribeId } })
+    const tribe = (await models.Chat.findOne({
+      where: { id },
+    })) as ChatRecord
+    if (!tribe) return failure(res, 'Tribe does not exist')
+    const results = (await sequelize.query(
+      `
+      SELECT * FROM sphinx_graph_subscription_chat
+      INNER JOIN sphinx_graph_subscription
+      ON sphinx_graph_subscription_chat.subscription_id = sphinx_graph_subscription.id
+      WHERE sphinx_graph_subscription_chat.chat_id = ${id}`,
+      {
+        model: models.GraphSubscription,
+        mapToModel: true, // pass true here if you have any mapped fields
+      }
+    )) as GraphSubscriptionRecord[]
+    const finalRes: { name: string; address: string; weight: string }[] = []
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i]
+      const obj = {
+        name: result.name,
+        address: result.address,
+        weight: result.weight,
+      }
+      finalRes.push(obj)
+    }
+    return success(res, finalRes)
+  } catch (error) {
+    sphinxLogger.error(
+      `=> getGraphSubscriptionForTribe error: ${error}`,
+      logging.Express
+    )
     return failure(res, 'An internal error occured')
   }
 }

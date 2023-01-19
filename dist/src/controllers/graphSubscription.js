@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGraphSubscription = exports.addGraphSubscription = void 0;
+exports.getGraphSubscriptionForTribe = exports.getGraphSubscription = exports.addGraphSubscription = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
@@ -70,7 +70,7 @@ function addGraphSubscription(req, res) {
             return (0, res_1.success)(res, 'Graph Subscription added successfully');
         }
         catch (error) {
-            console.log(error);
+            logger_1.sphinxLogger.error(`=> saveGraphSubscription error: ${error}`, logger_1.logging.Express);
             return (0, res_1.failure)(res, 'An internal error occured');
         }
     });
@@ -98,10 +98,51 @@ function getGraphSubscription(req, res) {
             return (0, res_1.success)(res, newGraphs);
         }
         catch (error) {
-            console.log(error);
+            logger_1.sphinxLogger.error(`=> getGraphSubscription error: ${error}`, logger_1.logging.Express);
             return (0, res_1.failure)(res, 'An internal error occured');
         }
     });
 }
 exports.getGraphSubscription = getGraphSubscription;
+function getGraphSubscriptionForTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const { id } = req.params;
+        if (!id)
+            return (0, res_1.failure)(res, 'Provide valid tribe id');
+        try {
+            // const tribe = await models.Chat.findOne({ where: { id: tribeId } })
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: { id },
+            }));
+            if (!tribe)
+                return (0, res_1.failure)(res, 'Tribe does not exist');
+            const results = (yield models_1.sequelize.query(`
+      SELECT * FROM sphinx_graph_subscription_chat
+      INNER JOIN sphinx_graph_subscription
+      ON sphinx_graph_subscription_chat.subscription_id = sphinx_graph_subscription.id
+      WHERE sphinx_graph_subscription_chat.chat_id = ${id}`, {
+                model: models_1.models.GraphSubscription,
+                mapToModel: true, // pass true here if you have any mapped fields
+            }));
+            const finalRes = [];
+            for (let i = 0; i < results.length; i++) {
+                const result = results[i];
+                const obj = {
+                    name: result.name,
+                    address: result.address,
+                    weight: result.weight,
+                };
+                finalRes.push(obj);
+            }
+            return (0, res_1.success)(res, finalRes);
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`=> getGraphSubscriptionForTribe error: ${error}`, logger_1.logging.Express);
+            return (0, res_1.failure)(res, 'An internal error occured');
+        }
+    });
+}
+exports.getGraphSubscriptionForTribe = getGraphSubscriptionForTribe;
 //# sourceMappingURL=graphSubscription.js.map
