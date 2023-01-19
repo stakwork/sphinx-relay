@@ -292,12 +292,26 @@ function migrate() {
       address TEXT,
       weight TEXT,
       status INTEGER,
-      tenant INTEGER,
-      chat_ids TEXT
+      tenant INTEGER
     )`);
         }
         catch (e) {
             // sphinxLogger.error(['problem adding graph subscription table:', e.message], logging.DB)
+        }
+        // add graph subscription chat table
+        try {
+            logger_1.sphinxLogger.info('adding graph subscription chat table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_graph_subscription_chat (
+      id BIGINT NOT NULL PRIMARY KEY,
+      chat_id BIGINT,
+      graph_subscription_id BIGINT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`);
+        }
+        catch (e) {
+            // sphinxLogger.error(['problem adding graph subscription chat table:', e.message], logging.DB)
         }
     });
 }

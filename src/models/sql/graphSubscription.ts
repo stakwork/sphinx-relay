@@ -23,10 +23,6 @@ export default class GraphSubscription extends Model<GraphSubscription> {
   @Column
   status: number
 
-  //   The value of this could be ALL or an Array of tribes IDs
-  @Column
-  chatIds: string
-
   @Column
   tenant: number
 

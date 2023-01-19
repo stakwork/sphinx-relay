@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
-let GraphSubscription = class GraphSubscription extends sequelize_typescript_1.Model {
+let GraphSubscriptionChat = class GraphSubscriptionChat extends sequelize_typescript_1.Model {
 };
 __decorate([
     (0, sequelize_typescript_1.Column)({
@@ -20,37 +20,25 @@ __decorate([
         autoIncrement: true,
     }),
     __metadata("design:type", Number)
-], GraphSubscription.prototype, "id", void 0);
+], GraphSubscriptionChat.prototype, "id", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
-    __metadata("design:type", String)
-], GraphSubscription.prototype, "name", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
-], GraphSubscription.prototype, "address", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
-    __metadata("design:type", String)
-], GraphSubscription.prototype, "weight", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
-], GraphSubscription.prototype, "status", void 0);
+], GraphSubscriptionChat.prototype, "graphSubscriptionId", void 0);
 __decorate([
-    sequelize_typescript_1.Column,
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
-], GraphSubscription.prototype, "tenant", void 0);
+], GraphSubscriptionChat.prototype, "chatId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], GraphSubscription.prototype, "createdAt", void 0);
+], GraphSubscriptionChat.prototype, "createdAt", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], GraphSubscription.prototype, "updatedAt", void 0);
-GraphSubscription = __decorate([
-    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_graph_subscription', underscored: true })
-], GraphSubscription);
-exports.default = GraphSubscription;
-//# sourceMappingURL=graphSubscription.js.map
+], GraphSubscriptionChat.prototype, "updatedAt", void 0);
+GraphSubscriptionChat = __decorate([
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_graph_subscription_chat', underscored: true })
+], GraphSubscriptionChat);
+exports.default = GraphSubscriptionChat;
+//# sourceMappingURL=graphSubscriptionChat.js.map

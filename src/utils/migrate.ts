@@ -317,11 +317,25 @@ export default async function migrate(): Promise<void> {
       address TEXT,
       weight TEXT,
       status INTEGER,
-      tenant INTEGER,
-      chat_ids TEXT
+      tenant INTEGER
     )`)
   } catch (e) {
     // sphinxLogger.error(['problem adding graph subscription table:', e.message], logging.DB)
+  }
+
+  // add graph subscription chat table
+  try {
+    sphinxLogger.info('adding graph subscription chat table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_graph_subscription_chat (
+      id BIGINT NOT NULL PRIMARY KEY,
+      chat_id BIGINT,
+      graph_subscription_id BIGINT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch (e) {
+    // sphinxLogger.error(['problem adding graph subscription chat table:', e.message], logging.DB)
   }
 }
 
