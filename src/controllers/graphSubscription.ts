@@ -1,14 +1,9 @@
-import {
-  GraphSubscriptionRecord,
-  models,
-  Lsat,
-  ChatRecord,
-  sequelize,
-} from '../models'
+import { GraphSubscriptionRecord, models, Lsat, ChatRecord } from '../models'
 import { Req } from '../types'
 import { Response } from 'express'
 import { failure, success } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
+import { graphQuery } from '../utils/graphSubscription'
 
 export async function addGraphSubscription(
   req: Req,
@@ -129,17 +124,7 @@ export async function getGraphSubscriptionForTribe(
       where: { id },
     })) as ChatRecord
     if (!tribe) return failure(res, 'Tribe does not exist')
-    const results = (await sequelize.query(
-      `
-      SELECT * FROM sphinx_graph_subscription_chat
-      INNER JOIN sphinx_graph_subscription
-      ON sphinx_graph_subscription_chat.subscription_id = sphinx_graph_subscription.id
-      WHERE sphinx_graph_subscription_chat.chat_id = ${id}`,
-      {
-        model: models.GraphSubscription,
-        mapToModel: true, // pass true here if you have any mapped fields
-      }
-    )) as GraphSubscriptionRecord[]
+    const results = await graphQuery(id)
     const finalRes: { name: string; address: string; weight: string }[] = []
     for (let i = 0; i < results.length; i++) {
       const result = results[i]

@@ -13,6 +13,7 @@ exports.getGraphSubscriptionForTribe = exports.getGraphSubscription = exports.ad
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
+const graphSubscription_1 = require("../utils/graphSubscription");
 function addGraphSubscription(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -118,14 +119,7 @@ function getGraphSubscriptionForTribe(req, res) {
             }));
             if (!tribe)
                 return (0, res_1.failure)(res, 'Tribe does not exist');
-            const results = (yield models_1.sequelize.query(`
-      SELECT * FROM sphinx_graph_subscription_chat
-      INNER JOIN sphinx_graph_subscription
-      ON sphinx_graph_subscription_chat.subscription_id = sphinx_graph_subscription.id
-      WHERE sphinx_graph_subscription_chat.chat_id = ${id}`, {
-                model: models_1.models.GraphSubscription,
-                mapToModel: true, // pass true here if you have any mapped fields
-            }));
+            const results = yield (0, graphSubscription_1.graphQuery)(id);
             const finalRes = [];
             for (let i = 0; i < results.length; i++) {
                 const result = results[i];
