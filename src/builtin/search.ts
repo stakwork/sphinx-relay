@@ -4,6 +4,7 @@ import { finalAction } from '../controllers/botapi'
 import { models, ChatRecord, GraphSubscriptionRecord } from '../models'
 import fetch from 'node-fetch'
 import { loadConfig } from '../utils/config'
+import { graphQuery } from '../utils/graphSubscription'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -36,8 +37,7 @@ export function init() {
       })) as ChatRecord
       switch (cmd) {
         case 'search':
-          const graphs =
-            (await models.GraphSubscription.findAll()) as GraphSubscriptionRecord[]
+          const graphs = await graphQuery(tribe.id)
           const searchWord = `${arr.slice(1, arr.length).join(' ')}`
           const subscriptions = await settleLsat(graphs, searchWord)
           const request = {
@@ -98,12 +98,15 @@ export function init() {
           const name = arr[2]
           const address = arr[3]
 
-          await models.GraphSubscription.create({
+          const graph = (await models.GraphSubscription.create({
             name,
             address,
             status: 1,
             tenant: message.member.id,
-            chatIds: JSON.stringify([tribe.id]),
+          })) as GraphSubscriptionRecord
+          await models.GraphSubscriptionChat.create({
+            chatId: tribe.id,
+            subscriptionId: graph.id,
           })
           const resEmbed = new Sphinx.MessageEmbed()
             .setAuthor('SearchBot')

@@ -16,6 +16,7 @@ const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const config_1 = require("../utils/config");
+const graphSubscription_1 = require("../utils/graphSubscription");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const config = (0, config_1.loadConfig)();
@@ -41,7 +42,7 @@ function init() {
             }));
             switch (cmd) {
                 case 'search':
-                    const graphs = (yield models_1.models.GraphSubscription.findAll());
+                    const graphs = yield (0, graphSubscription_1.graphQuery)(tribe.id);
                     const searchWord = `${arr.slice(1, arr.length).join(' ')}`;
                     const subscriptions = yield settleLsat(graphs, searchWord);
                     const request = {
@@ -97,12 +98,15 @@ function init() {
                         return;
                     const name = arr[2];
                     const address = arr[3];
-                    yield models_1.models.GraphSubscription.create({
+                    const graph = (yield models_1.models.GraphSubscription.create({
                         name,
                         address,
                         status: 1,
                         tenant: message.member.id,
-                        chatIds: JSON.stringify([tribe.id]),
+                    }));
+                    yield models_1.models.GraphSubscriptionChat.create({
+                        chatId: tribe.id,
+                        subscriptionId: graph.id,
                     });
                     const resEmbed = new Sphinx.MessageEmbed()
                         .setAuthor('SearchBot')
