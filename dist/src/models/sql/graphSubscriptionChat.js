@@ -24,7 +24,7 @@ __decorate([
 __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)
-], GraphSubscriptionChat.prototype, "graphSubscriptionId", void 0);
+], GraphSubscriptionChat.prototype, "subscriptionId", void 0);
 __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
     __metadata("design:type", Number)

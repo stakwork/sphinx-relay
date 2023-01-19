@@ -11,7 +11,7 @@ export default class GraphSubscriptionChat extends Model<GraphSubscriptionChat> 
   id: number
 
   @Column(DataType.BIGINT)
-  graphSubscriptionId: number
+  subscriptionId: number
 
   @Column(DataType.BIGINT)
   chatId: number

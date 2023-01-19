@@ -1,4 +1,4 @@
-import { GraphSubscriptionRecord, models, Lsat } from '../models'
+import { GraphSubscriptionRecord, models, Lsat, ChatRecord } from '../models'
 import { Req } from '../types'
 import { Response } from 'express'
 import { failure, success } from '../utils/res'
@@ -10,8 +10,9 @@ export async function addGraphSubscription(
 ): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
+  const owner = req.owner
 
-  sphinxLogger.info(`=> saveLsat`, logging.Express)
+  sphinxLogger.info(`=> saveGraphSubscription`, logging.Express)
 
   const { name, address, weight, status } = req.body
   let { chatIds } = req.body
@@ -27,19 +28,42 @@ export async function addGraphSubscription(
     return failure(res, 'Provide valid tribe Id')
   }
 
-  if (Array.isArray(chatIds)) {
-    chatIds = JSON.stringify(chatIds)
-  }
-
   try {
-    await models.GraphSubscription.create({
+    const graph = (await models.GraphSubscription.create({
       name,
       address,
       weight,
       status,
-      chatIds,
       tenant,
-    })
+    })) as GraphSubscriptionRecord
+
+    if (Array.isArray(chatIds)) {
+      for (let i = 0; i < chatIds.length; i++) {
+        const chatId = Number(chatIds[i])
+        if (!isNaN(chatId)) {
+          const chat = (await models.Chat.findOne({
+            where: { id: chatId },
+          })) as ChatRecord
+          if (chat && chat.ownerPubkey === owner.publicKey) {
+            await models.GraphSubscriptionChat.create({
+              chatId: chat.id,
+              subscriptionId: graph.id,
+            })
+          }
+        }
+      }
+    } else if (chatIds === 'all') {
+      const chats = (await models.Chat.findAll({
+        where: { ownerPubkey: owner.publicKey },
+      })) as ChatRecord[]
+      for (let i = 0; i < chats.length; i++) {
+        const chat = chats[i]
+        await models.GraphSubscriptionChat.create({
+          chatId: chat.id,
+          subscriptionId: graph.id,
+        })
+      }
+    }
     return success(res, 'Graph Subscription added successfully')
   } catch (error) {
     console.log(error)

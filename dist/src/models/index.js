@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GraphSubscription = exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
+exports.GraphSubscriptionChat = exports.GraphSubscription = exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
 // parse BIGINTs to number
 const pg = require("pg");
 pg.defaults.parseInt8 = true;
@@ -44,6 +44,8 @@ const callRecording_1 = require("./sql/callRecording");
 exports.CallRecording = callRecording_1.default;
 const graphSubscription_1 = require("./sql/graphSubscription");
 exports.GraphSubscription = graphSubscription_1.default;
+const graphSubscriptionChat_1 = require("./sql/graphSubscriptionChat");
+exports.GraphSubscriptionChat = graphSubscriptionChat_1.default;
 const argv = minimist(process.argv.slice(2));
 const configFile = argv.db
     ? path.resolve(process.cwd(), argv.db)
@@ -80,6 +82,7 @@ const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_l
         actionHistory_1.default,
         callRecording_1.default,
         graphSubscription_1.default,
+        graphSubscriptionChat_1.default,
     ] });
 if ((0, proxy_1.isProxy)()) {
     opts.pool = {

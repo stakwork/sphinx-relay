@@ -18,7 +18,8 @@ function addGraphSubscription(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        logger_1.sphinxLogger.info(`=> saveLsat`, logger_1.logging.Express);
+        const owner = req.owner;
+        logger_1.sphinxLogger.info(`=> saveGraphSubscription`, logger_1.logging.Express);
         const { name, address, weight, status } = req.body;
         let { chatIds } = req.body;
         if (!name || !address || !weight) {
@@ -30,18 +31,42 @@ function addGraphSubscription(req, res) {
         if (chatIds !== 'all' && !Array.isArray(chatIds)) {
             return (0, res_1.failure)(res, 'Provide valid tribe Id');
         }
-        if (Array.isArray(chatIds)) {
-            chatIds = JSON.stringify(chatIds);
-        }
         try {
-            yield models_1.models.GraphSubscription.create({
+            const graph = (yield models_1.models.GraphSubscription.create({
                 name,
                 address,
                 weight,
                 status,
-                chatIds,
                 tenant,
-            });
+            }));
+            if (Array.isArray(chatIds)) {
+                for (let i = 0; i < chatIds.length; i++) {
+                    const chatId = Number(chatIds[i]);
+                    if (!isNaN(chatId)) {
+                        const chat = (yield models_1.models.Chat.findOne({
+                            where: { id: chatId },
+                        }));
+                        if (chat && chat.ownerPubkey === owner.publicKey) {
+                            yield models_1.models.GraphSubscriptionChat.create({
+                                chatId: chat.id,
+                                subscriptionId: graph.id,
+                            });
+                        }
+                    }
+                }
+            }
+            else if (chatIds === 'all') {
+                const chats = (yield models_1.models.Chat.findAll({
+                    where: { ownerPubkey: owner.publicKey },
+                }));
+                for (let i = 0; i < chats.length; i++) {
+                    const chat = chats[i];
+                    yield models_1.models.GraphSubscriptionChat.create({
+                        chatId: chat.id,
+                        subscriptionId: graph.id,
+                    });
+                }
+            }
             return (0, res_1.success)(res, 'Graph Subscription added successfully');
         }
         catch (error) {

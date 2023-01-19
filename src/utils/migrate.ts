@@ -328,9 +328,9 @@ export default async function migrate(): Promise<void> {
     sphinxLogger.info('adding graph subscription chat table', logging.DB)
     await sequelize.query(`
     CREATE TABLE sphinx_graph_subscription_chat (
-      id BIGINT NOT NULL PRIMARY KEY,
+      id BIGINT NOT NULL PRIMARY KEY AUTOINCREMENT,
       chat_id BIGINT,
-      graph_subscription_id BIGINT,
+      subscription_id BIGINT,
       created_at DATETIME,
       updated_at DATETIME
     )`)

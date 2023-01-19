@@ -26,6 +26,9 @@ import CallRecording, { CallRecordingRecord } from './sql/callRecording'
 import GraphSubscription, {
   GraphSubscriptionRecord,
 } from './sql/graphSubscription'
+import GraphSubscriptionChat, {
+  GraphSubscriptionChatRecord,
+} from './sql/graphSubscriptionChat'
 
 const argv = minimist(process.argv.slice(2))
 
@@ -70,6 +73,7 @@ const opts = {
     ActionHistory,
     CallRecording,
     GraphSubscription,
+    GraphSubscriptionChat,
   ],
 }
 if (isProxy()) {
@@ -117,4 +121,6 @@ export {
   CallRecordingRecord,
   GraphSubscription,
   GraphSubscriptionRecord,
+  GraphSubscriptionChat,
+  GraphSubscriptionChatRecord,
 }
