@@ -230,7 +230,7 @@ export function init() {
             const interval = setInterval(async function () {
               timeActive += 60000
               const filePathAndName = `${tribe.memeServerLocation}${filename}`
-              const todaysDate = new Date(Date.now()).toDateString()
+              const todaysDate = new Date(Date.now()).toUTCString()
               const file = await fetch(filePathAndName, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
@@ -265,8 +265,8 @@ export function init() {
                               webhook_url: `${tribe.stakworkWebhook}`,
                               pubkey: tribe.ownerPubkey,
                               unique_id: filename.slice(0, -4),
-                              clip_length: 10,
-                              show_title: `Sphinx ${tribe.name}`,
+                              clip_length: 30,
+                              show_title: `${tribe.name}`,
                             },
                           },
                         },
