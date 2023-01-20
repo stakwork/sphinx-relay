@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.base64ToHex = exports.ownerMiddleware = exports.hmacMiddleware = exports.unlocker = void 0;
+exports.base64ToHex = exports.ownerMiddleware = exports.proxyAdminMiddleware = exports.hmacMiddleware = exports.unlocker = void 0;
 const crypto = require("crypto");
 const models_1 = require("./models");
 const cryptoJS = require("crypto-js");
@@ -110,6 +110,22 @@ function hmacMiddleware(req, res, next) {
     });
 }
 exports.hmacMiddleware = hmacMiddleware;
+function proxyAdminMiddleware(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (no_auth(req.path)) {
+            next();
+            return;
+        }
+        if (!req.owner)
+            return (0, res_1.unauthorized)(res);
+        if (!req.owner.isAdmin)
+            return (0, res_1.unauthorized)(res);
+        if (!(0, proxy_1.isProxy)())
+            return (0, res_1.unauthorized)(res);
+        next();
+    });
+}
+exports.proxyAdminMiddleware = proxyAdminMiddleware;
 function no_auth(path) {
     return (path == '/app' ||
         path == '/is_setup' ||

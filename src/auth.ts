@@ -103,6 +103,21 @@ export async function hmacMiddleware(req: Req, res: Res, next): Promise<void> {
   next()
 }
 
+export async function proxyAdminMiddleware(
+  req: Req,
+  res: Res,
+  next
+): Promise<void> {
+  if (no_auth(req.path)) {
+    next()
+    return
+  }
+  if (!req.owner) return unauthorized(res)
+  if (!req.owner.isAdmin) return unauthorized(res)
+  if (!isProxy()) return unauthorized(res)
+  next()
+}
+
 function no_auth(path) {
   return (
     path == '/app' ||

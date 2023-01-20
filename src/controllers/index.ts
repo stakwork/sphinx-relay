@@ -1,4 +1,5 @@
 import { models, Message } from '../models'
+import { proxyAdminMiddleware } from '../auth'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -152,13 +153,6 @@ export async function set(app) {
 
   app.get('/healthcheck', confirmations.healthcheck)
 
-  app.get('/add_user', admin.addProxyUser)
-  app.get('/list_users', admin.listUsers)
-  app.get('/has_admin', admin.hasAdmin)
-  app.post('/default_tribe/:id', admin.addDefaultJoinTribe)
-  app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe)
-  app.get('/initial_admin_pubkey', admin.initialAdminPubkey)
-
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })
   })
@@ -192,6 +186,17 @@ export async function set(app) {
 
   // Get feeds
   app.get('/feeds', feeds.getFeeds)
+
+  // open
+  app.get('/has_admin', admin.hasAdmin)
+  app.get('/initial_admin_pubkey', admin.initialAdminPubkey)
+
+  // following routes are only for proxy admin user (isAdmin=true)
+  app.use(proxyAdminMiddleware)
+  app.get('/add_user', admin.addProxyUser)
+  app.get('/list_users', admin.listUsers)
+  app.post('/default_tribe/:id', admin.addDefaultJoinTribe)
+  app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe)
 }
 
 const msgtypes = constants.message_types

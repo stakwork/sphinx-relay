@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ACTIONS = exports.set = void 0;
 const models_1 = require("../models");
+const auth_1 = require("../auth");
 const chats = require("./chats");
 const chatTribes = require("./chatTribes");
 const bots = require("./bots");
@@ -135,12 +136,6 @@ function set(app) {
         app.post('/bot/git', bots.addPatToGitBot);
         app.get('/badge_bot/:chatId', bots.getBagdeChatBot);
         app.get('/healthcheck', confirmations.healthcheck);
-        app.get('/add_user', admin.addProxyUser);
-        app.get('/list_users', admin.listUsers);
-        app.get('/has_admin', admin.hasAdmin);
-        app.post('/default_tribe/:id', admin.addDefaultJoinTribe);
-        app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe);
-        app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
         app.get('/version', function (req, res) {
             return __awaiter(this, void 0, void 0, function* () {
                 res.send({ version: gitinfo.tag });
@@ -176,6 +171,15 @@ function set(app) {
         app.get('/active_lsat', lsats.getActiveLsat);
         // Get feeds
         app.get('/feeds', feeds.getFeeds);
+        // open
+        app.get('/has_admin', admin.hasAdmin);
+        app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
+        // following routes are only for proxy admin user (isAdmin=true)
+        app.use(auth_1.proxyAdminMiddleware);
+        app.get('/add_user', admin.addProxyUser);
+        app.get('/list_users', admin.listUsers);
+        app.post('/default_tribe/:id', admin.addDefaultJoinTribe);
+        app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe);
     });
 }
 exports.set = set;
