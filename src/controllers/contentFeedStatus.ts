@@ -22,7 +22,12 @@ interface ContentFeedRes {
   subscription_status: boolean
   chat_id: number
   item_id: string
-  episodes_status: object
+  episodes_status: {
+    episode_id: {
+      duration: number
+      current_time: number
+    }
+  }[]
   sats_per_minute: number
   player_speed: number
 }
