@@ -193,6 +193,7 @@ export async function set(app) {
 
   // Content Feed Status
   app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus)
+  app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus)
 }
 
 const msgtypes = constants.message_types

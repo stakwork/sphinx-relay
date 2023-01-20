@@ -176,6 +176,7 @@ function set(app) {
         app.get('/feeds', feeds.getFeeds);
         // Content Feed Status
         app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus);
+        app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus);
     });
 }
 exports.set = set;

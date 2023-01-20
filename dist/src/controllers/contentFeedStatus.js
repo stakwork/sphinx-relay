@@ -9,9 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addContentFeedStatus = void 0;
+exports.getContentFeedStatus = exports.addContentFeedStatus = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
+const logger_1 = require("../utils/logger");
 function addContentFeedStatus(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -20,6 +21,7 @@ function addContentFeedStatus(req, res) {
         const { contents } = req.body;
         if (!Array.isArray(contents))
             return (0, res_1.failure)(res, 'Invalid Content Feed Status');
+        logger_1.sphinxLogger.info(`=> Saving Content Feed Status`, logger_1.logging.Express);
         try {
             yield models_1.models.ContentFeedStatus.destroy({
                 where: { tenant },
@@ -51,6 +53,7 @@ function addContentFeedStatus(req, res) {
             return (0, res_1.success)(res, 'Content Feed Status added successfully');
         }
         catch (error) {
+            logger_1.sphinxLogger.error(`=> Error Saving Content Feed Status: ${error}`, logger_1.logging.Express);
             let errorMsg = 'An internal error occured';
             if (error === 'Invalid Content Feed Status') {
                 errorMsg = 'Invalid Content Feed Status';
@@ -60,4 +63,42 @@ function addContentFeedStatus(req, res) {
     });
 }
 exports.addContentFeedStatus = addContentFeedStatus;
+function getContentFeedStatus(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const limit = (req.query.limit && parseInt(req.query.limit)) || 1000;
+        const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+        logger_1.sphinxLogger.info(`=> getContentFeedStatus, limit: ${limit}, offset: ${offset}`, logger_1.logging.Express);
+        try {
+            const result = (yield models_1.models.ContentFeedStatus.findAll({
+                where: { tenant },
+                limit,
+                offset,
+            }));
+            const parsedContent = [];
+            for (let i = 0; i < result.length; i++) {
+                const content = result[i];
+                const contentObj = {
+                    feed_id: content.feedId,
+                    feed_url: content.feedUrl,
+                    subscription_status: content.subscriptionStatus,
+                    chat_id: content.chatId,
+                    item_id: content.itemId,
+                    episodes_status: JSON.parse(content.episodesStatus),
+                    sats_per_minute: content.satsPerMinute,
+                    player_speed: content.playerSpeed,
+                };
+                parsedContent.push(contentObj);
+            }
+            return (0, res_1.success)(res, parsedContent);
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`=> Error Getting Content Feed Status: ${error}`, logger_1.logging.Express);
+            return (0, res_1.failure)(res, 'Internal Server Error');
+        }
+    });
+}
+exports.getContentFeedStatus = getContentFeedStatus;
 //# sourceMappingURL=contentFeedStatus.js.map
