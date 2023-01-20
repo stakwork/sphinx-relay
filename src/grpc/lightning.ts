@@ -33,6 +33,7 @@ let routerClient = <any>null
 
 export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   try {
+    console.log('=> loadCredentials', macName)
     const lndCert = fs.readFileSync(config.tls_location)
     const sslCreds = grpc.credentials.createSsl(lndCert)
     const macaroon = getMacaroon(macName)
@@ -46,7 +47,7 @@ export function loadCredentials(macName?: string): grpc.ChannelCredentials {
 
     return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds)
   } catch (e) {
-    // console.log(e)
+    console.log('loadCredentials error', e)
     throw 'cannot read LND macaroon or cert'
   }
 }
