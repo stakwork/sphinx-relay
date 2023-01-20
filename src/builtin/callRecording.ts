@@ -265,7 +265,7 @@ export function init() {
                               webhook_url: `${tribe.stakworkWebhook}`,
                               pubkey: tribe.ownerPubkey,
                               unique_id: filename.slice(0, -4),
-                              clip_length: 10,
+                              clip_length: 30,
                               show_title: `Sphinx ${tribe.name}`,
                             },
                           },
