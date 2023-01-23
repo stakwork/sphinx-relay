@@ -43,9 +43,15 @@ export function init() {
         if (!isAdmin) return
         switch (cmd) {
           case 'history':
+            let limit = Number(arr[2])
+            if (!limit || isNaN(limit)) {
+              limit = 10
+            }
             const status = Object.keys(constants.call_status)
             const calls = (await models.CallRecording.findAll({
               where: { chatId: tribe.id },
+              limit,
+              order: [['createdAt', 'DESC']],
             })) as CallRecordingRecord[]
             let returnMsg = ''
             if (calls && calls.length > 0) {

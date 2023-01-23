@@ -51,9 +51,15 @@ function init() {
                     return;
                 switch (cmd) {
                     case 'history':
+                        let limit = Number(arr[2]);
+                        if (!limit || isNaN(limit)) {
+                            limit = 10;
+                        }
                         const status = Object.keys(constants_1.default.call_status);
                         const calls = (yield models_1.models.CallRecording.findAll({
                             where: { chatId: tribe.id },
+                            limit,
+                            order: [['createdAt', 'DESC']],
                         }));
                         let returnMsg = '';
                         if (calls && calls.length > 0) {
