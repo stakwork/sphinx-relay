@@ -26,6 +26,7 @@ const logger_1 = require("../utils/logger");
 const moment = require("moment");
 const rsa = require("../crypto/rsa");
 const cert_1 = require("../utils/cert");
+const chatTribes_1 = require("./chatTribes");
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -233,15 +234,13 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // done!
         let isAdmin = true;
         if ((0, proxy_1.isProxy)()) {
-            const adminCount = yield models_1.models.Contact.count({
+            const theAdmin = (yield models_1.models.Contact.findOne({
                 where: { isAdmin: true },
-            });
+            }));
             // there can be only 1 admin
-            if (adminCount !== 0) {
+            if (theAdmin) {
                 isAdmin = false;
-            }
-            else {
-                yield joinDefaultTribes(owner);
+                yield joinDefaultTribes(owner, theAdmin);
             }
             tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
         }
@@ -255,11 +254,24 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
 });
 exports.generateToken = generateToken;
-function joinDefaultTribes(contac) {
+function joinDefaultTribes(owner, admin) {
     return __awaiter(this, void 0, void 0, function* () {
-        // const defaultTribes = (await models.Chat.findAll({
-        //   where: { defaultJoin: true },
-        // })) as Chat[]
+        const defaultTribes = (yield models_1.models.Chat.findAll({
+            where: { defaultJoin: true },
+        }));
+        helpers.asyncForEach(defaultTribes, (t) => __awaiter(this, void 0, void 0, function* () {
+            const body = {
+                uuid: t.uuid,
+                group_key: t.groupKey,
+                name: t.name,
+                amount: t.priceToJoin,
+                img: t.photoUrl,
+                owner_pubkey: t.ownerPubkey,
+                owner_route_hint: admin.routeHint,
+                owner_alias: admin.alias,
+            };
+            yield (0, chatTribes_1.doJoinTribe)(body, owner);
+        }));
     });
 }
 const registerHmacKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

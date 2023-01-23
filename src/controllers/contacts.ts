@@ -25,6 +25,7 @@ import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
 import { getAndDecryptTransportToken, getTransportKey } from '../utils/cert'
 import { Req, Res } from '../types'
+import { doJoinTribe } from './chatTribes'
 
 export const getContacts = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -252,14 +253,13 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
     // done!
     let isAdmin = true
     if (isProxy()) {
-      const adminCount = await models.Contact.count({
+      const theAdmin = (await models.Contact.findOne({
         where: { isAdmin: true },
-      })
+      })) as Contact
       // there can be only 1 admin
-      if (adminCount !== 0) {
+      if (theAdmin) {
         isAdmin = false
-      } else {
-        await joinDefaultTribes(owner)
+        await joinDefaultTribes(owner, theAdmin)
       }
       tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
     }
@@ -274,10 +274,24 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
   })
 }
 
-async function joinDefaultTribes(contac: Contact) {
-  // const defaultTribes = (await models.Chat.findAll({
-  //   where: { defaultJoin: true },
-  // })) as Chat[]
+async function joinDefaultTribes(owner: Contact, admin: Contact) {
+  const defaultTribes = (await models.Chat.findAll({
+    where: { defaultJoin: true },
+  })) as Chat[]
+  await helpers.asyncForEach(defaultTribes, async (t) => {
+    const body = {
+      uuid: t.uuid,
+      group_key: t.groupKey,
+      name: t.name,
+      amount: t.priceToJoin,
+      img: t.photoUrl,
+      owner_pubkey: t.ownerPubkey,
+      private: t.private,
+      owner_route_hint: admin.routeHint,
+      owner_alias: admin.alias,
+    }
+    await doJoinTribe(body, owner)
+  })
 }
 
 export const registerHmacKey = async (req: Req, res: Res): Promise<void> => {
