@@ -66,7 +66,7 @@ function addDefaultJoinTribe(req, res) {
             return (0, res_1.failure)(res, 'no id specified');
         try {
             const chat = (yield models_1.models.Chat.findOne({
-                where: { id },
+                where: { id, tenant: req.owner.id },
             }));
             if (!chat)
                 return (0, res_1.failure)(res, 'chat not found');
@@ -92,7 +92,7 @@ function removeDefaultJoinTribe(req, res) {
             return (0, res_1.failure)(res, 'no id specified');
         try {
             const chat = (yield models_1.models.Chat.findOne({
-                where: { id },
+                where: { id, tenant: req.owner.id },
             }));
             if (!chat)
                 return (0, res_1.failure)(res, 'chat not found');

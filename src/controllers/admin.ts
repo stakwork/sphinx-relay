@@ -42,7 +42,7 @@ export async function addDefaultJoinTribe(req: Req, res: Res): Promise<void> {
   if (!id) return failure(res, 'no id specified')
   try {
     const chat = (await models.Chat.findOne({
-      where: { id },
+      where: { id, tenant: req.owner.id },
     })) as Chat
     if (!chat) return failure(res, 'chat not found')
     await chat.update({ defaultJoin: true })
@@ -64,7 +64,7 @@ export async function removeDefaultJoinTribe(
   if (!id) return failure(res, 'no id specified')
   try {
     const chat = (await models.Chat.findOne({
-      where: { id },
+      where: { id, tenant: req.owner.id },
     })) as Chat
     if (!chat) return failure(res, 'chat not found')
     await chat.update({ defaultJoin: false })
