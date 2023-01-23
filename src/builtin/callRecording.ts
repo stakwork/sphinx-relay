@@ -221,7 +221,6 @@ export function init() {
                 )
                 if (toStakwork.ok) {
                   const res = await toStakwork.json()
-                  console.log(res)
                   //update call record to stored
 
                   callRecording.update({
@@ -313,45 +312,19 @@ export function init() {
               if (file.ok) {
                 // Push to stakwork
                 // Audio tagging job
-                const sendFile = await fetch(
-                  `https://jobs.stakwork.com/api/v1/projects`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Authorization: `Token token="${tribe.stakworkApiKey}"`,
-                    },
-                    body: JSON.stringify({
-                      name: `${updatedCallId} file`,
-                      workflow_id: 5579,
-                      workflow_params: {
-                        set_var: {
-                          attributes: {
-                            vars: {
-                              media_url: filePathAndName,
-                              episode_title: `Jitsi Call on ${todaysDate}`,
-                              clip_description: 'My Clip Description',
-                              publish_date: `${todaysDate}`,
-                              episode_image:
-                                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
-                              show_img_url:
-                                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
-                              webhook_url: `${tribe.stakworkWebhook}`,
-                              pubkey: tribe.ownerPubkey,
-                              unique_id: filename.slice(0, -4),
-                              clip_length: 30,
-                              show_title: `${tribe.name}`,
-                            },
-                          },
-                        },
-                      },
-                    }),
-                  }
+                const sendFile = await sendToStakwork(
+                  tribe.stakworkApiKey,
+                  updatedCallId,
+                  filePathAndName,
+                  todaysDate,
+                  tribe.stakworkWebhook,
+                  tribe.ownerPubkey,
+                  filename,
+                  tribe.name
                 )
                 if (sendFile.ok) {
                   const res = await sendFile.json()
                   //update call record to stored
-
                   callRecord.update({
                     status: constants.call_status.stored,
                     stakworkProjectId: res.data.project_id,
