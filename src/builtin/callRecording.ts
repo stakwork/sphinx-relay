@@ -47,7 +47,6 @@ export function init() {
             if (!limit || isNaN(limit)) {
               limit = 10
             }
-            const status = Object.keys(constants.call_status)
             const calls = (await models.CallRecording.findAll({
               where: { chatId: tribe.id },
               limit,
@@ -58,8 +57,10 @@ export function init() {
               calls.forEach((call) => {
                 returnMsg = `${returnMsg}${
                   JSON.parse(call.createdBy).nickname
-                } created ${call.fileName} on ${call.createdAt} and it was ${
-                  status[Number(call.status) - 1]
+                } created ${call.recordingId}${
+                  Number(call.status) === 5
+                    ? ', recording was not successful'
+                    : ''
                 } \n`
               })
             } else {

@@ -55,7 +55,6 @@ function init() {
                         if (!limit || isNaN(limit)) {
                             limit = 10;
                         }
-                        const status = Object.keys(constants_1.default.call_status);
                         const calls = (yield models_1.models.CallRecording.findAll({
                             where: { chatId: tribe.id },
                             limit,
@@ -64,7 +63,9 @@ function init() {
                         let returnMsg = '';
                         if (calls && calls.length > 0) {
                             calls.forEach((call) => {
-                                returnMsg = `${returnMsg}${JSON.parse(call.createdBy).nickname} created ${call.fileName} on ${call.createdAt} and it was ${status[Number(call.status) - 1]} \n`;
+                                returnMsg = `${returnMsg}${JSON.parse(call.createdBy).nickname} created ${call.recordingId}${Number(call.status) === 5
+                                    ? ', recording was not successful'
+                                    : ''} \n`;
                             });
                         }
                         else {
