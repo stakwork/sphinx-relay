@@ -4,6 +4,7 @@ import { finalAction } from '../controllers/botapi'
 import { CallRecordingRecord, ChatRecord, models } from '../models'
 import constants from '../constants'
 import fetch from 'node-fetch'
+import { Op } from 'sequelize'
 
 /**
  *
@@ -183,6 +184,68 @@ export function init() {
               message.channel.send({ embed: resEmbed })
               return
             }
+          case 'retry':
+            const callRecordings = (await models.CallRecording.findAll({
+              where: {
+                chatId: tribe.id,
+                status: { [Op.not]: constants.call_status.stored },
+              },
+            })) as CallRecordingRecord[]
+
+            let botMessage = ''
+            for (let i = 0; i < callRecordings.length; i++) {
+              const callRecording = callRecordings[i]
+              let filename = callRecording.fileName
+              if (
+                tribe.memeServerLocation[
+                  tribe.memeServerLocation.length - 1
+                ] !== '/'
+              ) {
+                filename = `/${filename}`
+              }
+              let filePathAndName = `${tribe.memeServerLocation}${filename}`
+              const file = await fetch(filePathAndName, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+              })
+              if (file.ok) {
+                const toStakwork = await sendToStakwork(
+                  tribe.stakworkApiKey,
+                  callRecording.recordingId,
+                  filePathAndName,
+                  new Date(Date.now()).toUTCString(),
+                  tribe.stakworkWebhook,
+                  tribe.ownerPubkey,
+                  callRecording.fileName,
+                  tribe.name
+                )
+                if (toStakwork.ok) {
+                  const res = await toStakwork.json()
+                  console.log(res)
+                  //update call record to stored
+
+                  callRecording.update({
+                    status: constants.call_status.stored,
+                    stakworkProjectId: res.data.project_id,
+                  })
+                  botMessage = `${botMessage} ${callRecording.fileName} Call was recorded successfully\n`
+                } else {
+                  callRecording.update({
+                    status: constants.call_status.in_actve,
+                  })
+
+                  botMessage = `${botMessage} ${callRecording.fileName} Call was not stored\n`
+                }
+              } else {
+                botMessage = `${botMessage} ${callRecording.fileName} call was not found\n`
+              }
+            }
+            const newEmbed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(botMessage)
+            message.channel.send({ embed: newEmbed })
+            return
+
           default:
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('CallRecordingBot')
@@ -191,6 +254,10 @@ export function init() {
                 {
                   name: 'Get Call History',
                   value: '/call history',
+                },
+                {
+                  name: 'Retry a call',
+                  value: '/call retry',
                 },
               ])
               .setThumbnail(botSVG)
@@ -370,4 +437,48 @@ function botResponse(addFields, author, title, message) {
     .addFields(addFields)
     .setThumbnail(botSVG)
   message.channel.send({ embed: resEmbed })
+}
+
+async function sendToStakwork(
+  apikey: string,
+  callId: string,
+  filePathAndName: string,
+  todaysDate: string,
+  webhook: string,
+  ownerPubkey: string,
+  filename: string,
+  tribeName: string
+) {
+  return await fetch(`https://jobs.stakwork.com/api/v1/projects`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Token token="${apikey}"`,
+    },
+    body: JSON.stringify({
+      name: `${callId} file`,
+      workflow_id: 5579,
+      workflow_params: {
+        set_var: {
+          attributes: {
+            vars: {
+              media_url: filePathAndName,
+              episode_title: `Jitsi Call on ${todaysDate}`,
+              clip_description: 'My Clip Description',
+              publish_date: `${todaysDate}`,
+              episode_image:
+                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
+              show_img_url:
+                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
+              webhook_url: `${webhook}`,
+              pubkey: ownerPubkey,
+              unique_id: filename.slice(0, -4),
+              clip_length: 30,
+              show_title: `${tribeName}`,
+            },
+          },
+        },
+      },
+    }),
+  })
 }
