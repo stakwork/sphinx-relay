@@ -40,7 +40,7 @@ function initialAdminPubkey(req, res) {
         try {
             const contacts = (yield models_1.models.Contact.findAll());
             if (contacts.length !== 1)
-                return (0, res_1.failure)(res, 'too late');
+                return (0, res_1.failure)(res, 'too late' + contacts.length);
             const admin = contacts[0];
             if (admin.authToken || admin.contactKey)
                 return (0, res_1.failure)(res, 'too late');

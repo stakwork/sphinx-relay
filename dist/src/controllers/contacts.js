@@ -259,7 +259,7 @@ function joinDefaultTribes(owner, admin) {
         const defaultTribes = (yield models_1.models.Chat.findAll({
             where: { defaultJoin: true },
         }));
-        helpers.asyncForEach(defaultTribes, (t) => __awaiter(this, void 0, void 0, function* () {
+        yield helpers.asyncForEach(defaultTribes, (t) => __awaiter(this, void 0, void 0, function* () {
             const body = {
                 uuid: t.uuid,
                 group_key: t.groupKey,
@@ -267,6 +267,7 @@ function joinDefaultTribes(owner, admin) {
                 amount: t.priceToJoin,
                 img: t.photoUrl,
                 owner_pubkey: t.ownerPubkey,
+                private: t.private,
                 owner_route_hint: admin.routeHint,
                 owner_alias: admin.alias,
             };

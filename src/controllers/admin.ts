@@ -23,7 +23,7 @@ export async function initialAdminPubkey(req: Req, res: Res): Promise<void> {
   if (!isProxy()) return failure(res, 'not proxy')
   try {
     const contacts = (await models.Contact.findAll()) as ContactRecord[]
-    if (contacts.length !== 1) return failure(res, 'too late')
+    if (contacts.length !== 1) return failure(res, 'too late' + contacts.length)
     const admin = contacts[0]
     if (admin.authToken || admin.contactKey) return failure(res, 'too late')
     const pubkey = admin.publicKey
