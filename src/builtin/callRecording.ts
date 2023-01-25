@@ -213,7 +213,6 @@ export function init() {
                   tribe.stakworkApiKey,
                   callRecording.recordingId,
                   filePathAndName,
-                  new Date(Date.now()).toUTCString(),
                   tribe.stakworkWebhook,
                   tribe.ownerPubkey,
                   callRecording.fileName,
@@ -303,11 +302,12 @@ export function init() {
             const interval = setInterval(async function () {
               timeActive += 60000
               const filePathAndName = `${tribe.memeServerLocation}${filename}`
-              const todaysDate = new Date(Date.now()).toUTCString()
+
               const file = await fetch(filePathAndName, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
               })
+
               // If recording is found
               if (file.ok) {
                 // Push to stakwork
@@ -316,7 +316,6 @@ export function init() {
                   tribe.stakworkApiKey,
                   updatedCallId,
                   filePathAndName,
-                  todaysDate,
                   tribe.stakworkWebhook,
                   tribe.ownerPubkey,
                   filename,
@@ -416,12 +415,14 @@ async function sendToStakwork(
   apikey: string,
   callId: string,
   filePathAndName: string,
-  todaysDate: string,
   webhook: string,
   ownerPubkey: string,
   filename: string,
   tribeName: string
 ) {
+  const dateInUTC = new Date(Date.now()).toUTCString()
+  const dateInUnix = new Date(Date.now()).getTime() / 1000
+
   return await fetch(`https://jobs.stakwork.com/api/v1/projects`, {
     method: 'POST',
     headers: {
@@ -436,9 +437,9 @@ async function sendToStakwork(
           attributes: {
             vars: {
               media_url: filePathAndName,
-              episode_title: `Jitsi Call on ${todaysDate}`,
+              episode_title: `Jitsi Call on ${dateInUTC}`,
               clip_description: 'My Clip Description',
-              publish_date: `${todaysDate}`,
+              publish_date: `${dateInUnix}`,
               episode_image:
                 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
               show_img_url:
@@ -446,7 +447,7 @@ async function sendToStakwork(
               webhook_url: `${webhook}`,
               pubkey: ownerPubkey,
               unique_id: filename.slice(0, -4),
-              clip_length: 30,
+              clip_length: 60,
               show_title: `${tribeName}`,
             },
           },
