@@ -304,6 +304,7 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding content feed status table:', e.message], logging.DB)
         }
+        addTableColumn('sphinx_bot_members', 'hidden_commands');
     });
 }
 exports.default = migrate;
