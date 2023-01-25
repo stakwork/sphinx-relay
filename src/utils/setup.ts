@@ -164,12 +164,12 @@ const updateTotalMsgPerTribe = async () => {
     for (let i = 0; i < contacts.length; i++) {
       const contact = contacts[i]
       const tribes = (await models.Chat.findAll({
-        where: { ownerPubkey: contact.publicKey },
+        where: { ownerPubkey: contact.publicKey, tenant: contact.id },
       })) as ChatRecord[]
       for (let j = 0; j < tribes.length; j++) {
         const tribe = tribes[j]
         const tribeMembers = (await models.ChatMember.findAll({
-          where: { chatId: tribe.id },
+          where: { chatId: tribe.id, tenant: contact.id },
         })) as ChatMemberRecord[]
         for (let k = 0; k < tribeMembers.length; k++) {
           const member = tribeMembers[k]
@@ -177,7 +177,11 @@ const updateTotalMsgPerTribe = async () => {
             return
           }
           const totalMessages = await models.Message.count({
-            where: { sender: member.contactId, chatId: tribe.id },
+            where: {
+              sender: member.contactId,
+              chatId: tribe.id,
+              tenant: contact.id,
+            },
           })
           member.update({ totalMessages })
         }
