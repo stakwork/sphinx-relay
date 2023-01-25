@@ -331,7 +331,7 @@ export default async function migrate(): Promise<void> {
     // sphinxLogger.error(['problem adding content feed status table:', e.message], logging.DB)
   }
 
-  addTableColumn('sphinx_bot_members', 'hidden_commands')
+  addTableColumn('sphinx_chat_bots', 'hidden_commands')
 }
 
 async function addTenant(tableName) {

@@ -31,6 +31,7 @@ function init() {
     if (initted)
         return;
     initted = true;
+    const commands = ['types', 'hide', 'create'];
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
@@ -46,12 +47,6 @@ function init() {
             const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
             if (!isAdmin)
                 return;
-            // typeof name !== 'string' ||
-            // typeof icon !== 'string' ||
-            // typeof amount !== 'number' ||
-            // typeof chat_id !== 'number' ||
-            // typeof claim_amount !== 'number' ||
-            // typeof reward_type !== 'number'
             switch (cmd) {
                 case 'create':
                     if (arr.length === 7) {
@@ -154,6 +149,63 @@ function init() {
                         .setThumbnail(botSVG);
                     message.channel.send({ embed: resEmbed });
                     return;
+                case 'hide':
+                    const hideCommand = arr[2];
+                    if (hideCommand) {
+                        if (commands.includes(hideCommand)) {
+                            const bot = (yield models_1.models.ChatBot.findOne({
+                                where: { botPrefix: '/badge' },
+                            }));
+                            console.log(bot.dataValues);
+                            if (!bot.hiddenCommands) {
+                                yield bot.update({
+                                    hiddenCommands: JSON.stringify([hideCommand]),
+                                });
+                                const embed = new Sphinx.MessageEmbed()
+                                    .setAuthor('BadgeBot')
+                                    .setDescription('Command was added successfully');
+                                message.channel.send({ embed });
+                                return;
+                            }
+                            else {
+                                let savedCommands = JSON.parse(bot.hiddenCommands);
+                                if (!savedCommands.includes(hideCommand)) {
+                                    yield bot.update({
+                                        hiddenCommands: JSON.stringify([
+                                            ...savedCommands,
+                                            hideCommand,
+                                        ]),
+                                    });
+                                    const embed = new Sphinx.MessageEmbed()
+                                        .setAuthor('BadgeBot')
+                                        .setDescription('Command was added successfully');
+                                    message.channel.send({ embed });
+                                    return;
+                                }
+                                else {
+                                    const embed = new Sphinx.MessageEmbed()
+                                        .setAuthor('BadgeBot')
+                                        .setDescription('Command was added already successfully');
+                                    message.channel.send({ embed });
+                                    return;
+                                }
+                            }
+                        }
+                        else {
+                            const embed = new Sphinx.MessageEmbed()
+                                .setAuthor('BadgeBot')
+                                .setDescription('Please this command is not valid');
+                            message.channel.send({ embed });
+                            return;
+                        }
+                    }
+                    else {
+                        const embed = new Sphinx.MessageEmbed()
+                            .setAuthor('BadgeBot')
+                            .setDescription('Please provide a valid command you would like to hide');
+                        message.channel.send({ embed });
+                        return;
+                    }
                 default:
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('BadgeBot')
