@@ -143,10 +143,10 @@ export async function sendMessage({
           const bots = (await models.ChatBot.findAll({
             where: { tenant, chatId: newChat.id },
           })) as ChatBotRecord[]
+          const content = msg.message.content as string
+          let splitedContent = content.split(' ')
           for (let i = 0; i < bots.length; i++) {
             const bot = bots[0]
-            const content = msg.message.content as string
-            let splitedContent = content.split(' ')
             if (
               bot.botPrefix === splitedContent[0] &&
               bot.hiddenCommands &&
