@@ -37,6 +37,7 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.direct_payment,
     ],
 };
+const defaultHiddenCommands = ['hide'];
 const builtInBotNames = {
     welcome: 'WelcomeBot',
     loopout: 'LoopBot',
@@ -92,6 +93,7 @@ function init() {
                         msgTypes: JSON.stringify(msgTypes),
                         pricePerUse: 0,
                         tenant: chat.tenant,
+                        hiddenCommands: JSON.stringify(defaultHiddenCommands),
                     };
                     if (botName === 'git') {
                         yield (0, git_1.getOrCreateGitBot)(chat.tenant);

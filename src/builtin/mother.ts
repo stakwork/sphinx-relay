@@ -31,6 +31,8 @@ const builtInBotMsgTypes = {
   ],
 }
 
+const defaultHiddenCommands = ['hide']
+
 const builtInBotNames = {
   welcome: 'WelcomeBot',
   loopout: 'LoopBot',
@@ -87,6 +89,7 @@ export function init() {
             msgTypes: JSON.stringify(msgTypes),
             pricePerUse: 0,
             tenant: chat.tenant,
+            hiddenCommands: JSON.stringify(defaultHiddenCommands),
           }
           if (botName === 'git') {
             await getOrCreateGitBot(chat.tenant)
