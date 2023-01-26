@@ -6,6 +6,7 @@ import {
   ContactRecord,
   Lsat,
   ChatMemberRecord,
+  ChatBotRecord,
 } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
@@ -188,6 +189,27 @@ const updateTotalMsgPerTribe = async () => {
   }
 }
 
+const setupHiddenBotCommands = async () => {
+  const defaultHiddenCommands = ['hide']
+  try {
+    const bots = (await models.ChatBot.findAll({
+      where: { hiddenCommands: null },
+    })) as ChatBotRecord[]
+    for (let i = 0; i < bots.length; i++) {
+      const bot = bots[i]
+      console.log(bot.dataValues)
+      await bot.update({
+        hiddenCommands: JSON.stringify(defaultHiddenCommands),
+      })
+    }
+  } catch (error) {
+    sphinxLogger.error(
+      ['error trying to setup default hidden commands for bots', error],
+      logging.DB
+    )
+  }
+}
+
 export {
   setupDatabase,
   setupOwnerContact,
@@ -196,6 +218,7 @@ export {
   setupPersonUuid,
   updateLsat,
   updateTotalMsgPerTribe,
+  setupHiddenBotCommands,
 }
 
 async function setupDone() {
