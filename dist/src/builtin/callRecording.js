@@ -41,7 +41,7 @@ function init() {
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         var _a;
-        if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== '/callRecording')
+        if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== botPrefix)
             return;
         try {
             const arr = (message.content && message.content.split(' ')) || [];
@@ -49,7 +49,7 @@ function init() {
             const tribe = (yield models_1.models.Chat.findOne({
                 where: { uuid: message.channel.id },
             }));
-            if (arr[0] === '/call') {
+            if (arr[0] === botPrefix) {
                 const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
                 if (!isAdmin)
                     return;

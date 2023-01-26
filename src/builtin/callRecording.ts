@@ -35,14 +35,14 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    if (message.author?.bot !== '/callRecording') return
+    if (message.author?.bot !== botPrefix) return
     try {
       const arr = (message.content && message.content.split(' ')) || []
       const cmd = arr[1]
       const tribe = (await models.Chat.findOne({
         where: { uuid: message.channel.id },
       })) as ChatRecord
-      if (arr[0] === '/call') {
+      if (arr[0] === botPrefix) {
         const isAdmin = message.member.roles.find(
           (role) => role.name === 'Admin'
         )
