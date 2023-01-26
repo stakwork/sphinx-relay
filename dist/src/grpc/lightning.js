@@ -278,6 +278,9 @@ function keysend(opts, ownerPubkey) {
     logger_1.sphinxLogger.info('keysend', logger_1.logging.Lightning);
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (opts.dest.length !== 66) {
+                return reject('keysend: invalid pubkey');
+            }
             try {
                 const preimage = ByteBuffer.wrap(crypto.randomBytes(32));
                 const dest_custom_records = {
