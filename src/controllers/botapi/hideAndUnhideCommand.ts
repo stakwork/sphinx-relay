@@ -5,10 +5,10 @@ export async function hideCommandHandler(
   hideCommand: string,
   commands: string[],
   tribeId: number,
-  message,
+  message: Sphinx.Message,
   botName: string,
   botPrefix: string
-) {
+): Promise<void> {
   if (hideCommand) {
     if (commands.includes(hideCommand)) {
       const bot = (await models.ChatBot.findOne({
@@ -67,8 +67,8 @@ export async function hideCommandHandler(
 export async function determineOwnerOnly(
   botPrefix: string,
   command: string,
-  tribeId
-) {
+  tribeId: number
+): Promise<boolean> {
   try {
     const getBot = (await models.ChatBot.findOne({
       where: { botPrefix, chatId: tribeId },
