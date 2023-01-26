@@ -7,6 +7,7 @@ import {
   Lsat,
   ChatMemberRecord,
   ChatBotRecord,
+  ChatRecord,
 } from '../models'
 import { exec } from 'child_process'
 import * as QRCode from 'qrcode'
@@ -158,27 +159,33 @@ const runMigrations = async () => {
 
 const updateTotalMsgPerTribe = async () => {
   try {
-    const result = (await sequelize.query(
-      `
-      SELECT * FROM sphinx_contacts
-      INNER JOIN sphinx_chats
-      ON sphinx_contacts.public_key = sphinx_chats.owner_pubkey
-      INNER JOIN sphinx_chat_members
-      ON sphinx_chats.id = sphinx_chat_members.chat_id
-      WHERE sphinx_contacts.is_owner = 1`,
-      {
-        model: models.ChatMember,
-        mapToModel: true, // pass true here if you have any mapped fields
-      }
-    )) as ChatMemberRecord[]
-
-    if (result.length > 0 && result[0].totalMessages === null) {
-      for (let i = 0; i < result.length; i++) {
-        const member = result[i]
-        const totalMessages = await models.Message.count({
-          where: { sender: member.contactId, chatId: member.chatId },
-        })
-        await member.update({ totalMessages })
+    const contacts = (await models.Contact.findAll({
+      where: { isOwner: true },
+    })) as ContactRecord[]
+    for (let i = 0; i < contacts.length; i++) {
+      const contact = contacts[i]
+      const tribes = (await models.Chat.findAll({
+        where: { ownerPubkey: contact.publicKey, tenant: contact.id },
+      })) as ChatRecord[]
+      for (let j = 0; j < tribes.length; j++) {
+        const tribe = tribes[j]
+        const tribeMembers = (await models.ChatMember.findAll({
+          where: { chatId: tribe.id, tenant: contact.id },
+        })) as ChatMemberRecord[]
+        for (let k = 0; k < tribeMembers.length; k++) {
+          const member = tribeMembers[k]
+          if (k === 0 && member.totalMessages !== null) {
+            return
+          }
+          const totalMessages = await models.Message.count({
+            where: {
+              sender: member.contactId,
+              chatId: tribe.id,
+              tenant: contact.id,
+            },
+          })
+          member.update({ totalMessages })
+        }
       }
     }
   } catch (error) {

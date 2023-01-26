@@ -151,6 +151,10 @@ export const performKeysendMessage = async ({
   sender: any
   extra_tlv?: { [k: string]: any }
 }): Promise<void> => {
+  if (!destination_key) {
+    if (failure) failure(new Error('=> no destination_key'))
+    return
+  }
   const opts = {
     dest: destination_key,
     data: msg || {},

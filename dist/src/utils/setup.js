@@ -149,23 +149,33 @@ const runMigrations = () => __awaiter(void 0, void 0, void 0, function* () {
 exports.runMigrations = runMigrations;
 const updateTotalMsgPerTribe = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = (yield models_1.sequelize.query(`
-      SELECT * FROM sphinx_contacts
-      INNER JOIN sphinx_chats
-      ON sphinx_contacts.public_key = sphinx_chats.owner_pubkey
-      INNER JOIN sphinx_chat_members
-      ON sphinx_chats.id = sphinx_chat_members.chat_id
-      WHERE sphinx_contacts.is_owner = 1`, {
-            model: models_1.models.ChatMember,
-            mapToModel: true, // pass true here if you have any mapped fields
+        const contacts = (yield models_1.models.Contact.findAll({
+            where: { isOwner: true },
         }));
-        if (result.length > 0 && result[0].totalMessages === null) {
-            for (let i = 0; i < result.length; i++) {
-                const member = result[i];
-                const totalMessages = yield models_1.models.Message.count({
-                    where: { sender: member.contactId, chatId: member.chatId },
-                });
-                yield member.update({ totalMessages });
+        for (let i = 0; i < contacts.length; i++) {
+            const contact = contacts[i];
+            const tribes = (yield models_1.models.Chat.findAll({
+                where: { ownerPubkey: contact.publicKey, tenant: contact.id },
+            }));
+            for (let j = 0; j < tribes.length; j++) {
+                const tribe = tribes[j];
+                const tribeMembers = (yield models_1.models.ChatMember.findAll({
+                    where: { chatId: tribe.id, tenant: contact.id },
+                }));
+                for (let k = 0; k < tribeMembers.length; k++) {
+                    const member = tribeMembers[k];
+                    if (k === 0 && member.totalMessages !== null) {
+                        return;
+                    }
+                    const totalMessages = yield models_1.models.Message.count({
+                        where: {
+                            sender: member.contactId,
+                            chatId: tribe.id,
+                            tenant: contact.id,
+                        },
+                    });
+                    member.update({ totalMessages });
+                }
             }
         }
     }
