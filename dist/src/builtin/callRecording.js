@@ -17,6 +17,7 @@ const models_1 = require("../models");
 const constants_1 = require("../constants");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
+const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
 /**
  *
  ** TODO **
@@ -34,6 +35,7 @@ function init() {
     if (initted)
         return;
     initted = true;
+    const commands = ['history', 'update', 'retry', 'hide'];
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
@@ -206,6 +208,9 @@ function init() {
                             .setAuthor('CallRecordingBot')
                             .setDescription(botMessage);
                         message.channel.send({ embed: newEmbed });
+                        return;
+                    case 'hide':
+                        yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'CallRecordingBot', '/callRecording');
                         return;
                     default:
                         const embed = new Sphinx.MessageEmbed()

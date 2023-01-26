@@ -176,6 +176,7 @@ export function init() {
             'BadgeBot',
             '/badge'
           )
+          return
         default:
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('BadgeBot')

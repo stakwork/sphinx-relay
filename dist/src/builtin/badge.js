@@ -152,6 +152,7 @@ function init() {
                     return;
                 case 'hide':
                     yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'BadgeBot', '/badge');
+                    return;
                 default:
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('BadgeBot')

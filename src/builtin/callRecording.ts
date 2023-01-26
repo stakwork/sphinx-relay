@@ -5,6 +5,7 @@ import { CallRecordingRecord, ChatRecord, models } from '../models'
 import constants from '../constants'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
+import { hideCommandHandler } from '../controllers/botapi/hideAndUnhideCommand'
 
 /**
  *
@@ -25,7 +26,7 @@ let initted = false
 export function init() {
   if (initted) return
   initted = true
-
+  const commands = ['history', 'update', 'retry', 'hide']
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
@@ -243,7 +244,16 @@ export function init() {
               .setDescription(botMessage)
             message.channel.send({ embed: newEmbed })
             return
-
+          case 'hide':
+            await hideCommandHandler(
+              arr[2],
+              commands,
+              tribe.id,
+              message,
+              'CallRecordingBot',
+              '/callRecording'
+            )
+            return
           default:
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('CallRecordingBot')
