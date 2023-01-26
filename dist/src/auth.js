@@ -156,9 +156,9 @@ function ownerMiddleware(req, res, next) {
         const x_transport_token = req.headers['x-transport-token'] || req.cookies['x-transport-token'];
         const x_admin_token = req.headers['x-admin-token'] || req.cookies['x-admin-token'];
         // default assign token to x-user-token
-        let token = x_user_token;
+        let token = x_user_token || x_admin_token;
         let timestamp = 0;
-        if (x_admin_token || x_transport_token) {
+        if (x_transport_token) {
             const decrypted = yield (0, cert_1.getAndDecryptTransportToken)(x_transport_token);
             token = decrypted.token;
             timestamp = decrypted.timestamp;
@@ -205,6 +205,13 @@ function ownerMiddleware(req, res, next) {
             owner = (yield models_1.models.Contact.findOne({
                 where: { authToken: hashedToken, isOwner: true },
             }));
+            if (x_admin_token) {
+                if (!owner.isAdmin) {
+                    res.status(401);
+                    res.end('Invalid credentials - not admin');
+                    return;
+                }
+            }
         }
         // find by JWT
         if (jwt) {
@@ -224,7 +231,7 @@ function ownerMiddleware(req, res, next) {
             res.end('Invalid credentials - no owner');
             return;
         }
-        if (x_admin_token || x_transport_token) {
+        if (x_transport_token) {
             if (!timestamp) {
                 res.status(401);
                 res.end('Invalid credentials - no ts');
@@ -239,13 +246,6 @@ function ownerMiddleware(req, res, next) {
                     // if (!thisTimestamp.isAfter(lastTimestamp)) {
                     res.status(401);
                     res.end('Invalid credentials - timestamp too soon');
-                    return;
-                }
-            }
-            if (x_admin_token) {
-                if (!owner.isAdmin) {
-                    res.status(401);
-                    res.end('Invalid credentials - not admin');
                     return;
                 }
             }
