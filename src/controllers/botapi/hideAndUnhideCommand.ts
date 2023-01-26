@@ -22,6 +22,7 @@ export async function hideCommandHandler(
         const embed = new Sphinx.MessageEmbed()
           .setAuthor(botName)
           .setDescription('Command was added successfully')
+          .setOnlyOwner(await determineOwnerOnly(botPrefix, 'hide', tribeId))
         message.channel.send({ embed })
         return
       } else {
@@ -33,12 +34,14 @@ export async function hideCommandHandler(
           const embed = new Sphinx.MessageEmbed()
             .setAuthor(botName)
             .setDescription('Command was added successfully')
+            .setOnlyOwner(await determineOwnerOnly(botPrefix, 'hide', tribeId))
           message.channel.send({ embed })
           return
         } else {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor(botName)
             .setDescription('Command was already added')
+            .setOnlyOwner(await determineOwnerOnly(botPrefix, 'hide', tribeId))
           message.channel.send({ embed })
           return
         }
@@ -47,6 +50,7 @@ export async function hideCommandHandler(
       const embed = new Sphinx.MessageEmbed()
         .setAuthor(botName)
         .setDescription('Please this command is not valid')
+        .setOnlyOwner(await determineOwnerOnly(botPrefix, 'hide', tribeId))
       message.channel.send({ embed })
       return
     }
@@ -54,7 +58,30 @@ export async function hideCommandHandler(
     const embed = new Sphinx.MessageEmbed()
       .setAuthor(botName)
       .setDescription('Please provide a valid command you would like to hide')
+      .setOnlyOwner(await determineOwnerOnly(botPrefix, 'hide', tribeId))
     message.channel.send({ embed })
     return
+  }
+}
+
+export async function determineOwnerOnly(
+  botPrefix: string,
+  command: string,
+  tribeId
+) {
+  try {
+    const getBot = (await models.ChatBot.findOne({
+      where: { botPrefix, chatId: tribeId },
+    })) as ChatBotRecord
+    if (
+      getBot &&
+      getBot.hiddenCommands &&
+      JSON.parse(getBot.hiddenCommands).includes(command)
+    ) {
+      return true
+    }
+    return false
+  } catch (error) {
+    return false
   }
 }

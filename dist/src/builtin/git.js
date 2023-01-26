@@ -96,13 +96,15 @@ function init() {
                     yield chatBot.update({ meta: JSON.stringify(meta) });
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
-                        .setDescription(repo + ' repo has been added!');
+                        .setDescription(repo + ' repo has been added!')
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(prefix, cmd, tribe.id));
                     return message.channel.send({ embed });
                 }
                 catch (e) {
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
-                        .setDescription('Error: ' + e.message);
+                        .setDescription('Error: ' + e.message)
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(prefix, cmd, tribe.id));
                     return message.channel.send({ embed });
                 }
             case 'remove':
@@ -117,13 +119,15 @@ function init() {
                     });
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
-                        .setDescription(repo + ' repo has been removed!');
+                        .setDescription(repo + ' repo has been removed!')
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(prefix, cmd, tribe.id));
                     return message.channel.send({ embed });
                 }
                 catch (e) {
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('GitBot')
-                        .setDescription('Error: ' + e.message);
+                        .setDescription('Error: ' + e.message)
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(prefix, cmd, tribe.id));
                     return message.channel.send({ embed });
                 }
             case 'list':
@@ -137,7 +141,8 @@ function init() {
                         .setTitle('Repos:')
                         .addFields(stuff.meta.repos.map((b, i) => {
                         return { name: i + 1 + ':', value: b.path, inline: true };
-                    }));
+                    }))
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(prefix, cmd, tribe.id));
                     return message.channel.send({ embed: embed3 });
                 }
                 catch (e) {

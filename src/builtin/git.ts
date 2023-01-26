@@ -10,7 +10,10 @@ import { getIP } from '../utils/connect'
 import { all_webhook_events } from '../utils/githook'
 import { sphinxLogger } from '../utils/logger'
 import 'url' // for "new URL"
-import { hideCommandHandler } from '../controllers/botapi/hideAndUnhideCommand'
+import {
+  hideCommandHandler,
+  determineOwnerOnly,
+} from '../controllers/botapi/hideAndUnhideCommand'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -98,11 +101,13 @@ export function init(): void {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription(repo + ' repo has been added!')
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         } catch (e) {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription('Error: ' + e.message)
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         }
 
@@ -121,11 +126,13 @@ export function init(): void {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription(repo + ' repo has been removed!')
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         } catch (e) {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription('Error: ' + e.message)
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         }
 
@@ -142,6 +149,7 @@ export function init(): void {
                 return { name: i + 1 + ':', value: b.path, inline: true }
               })
             )
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed: embed3 })
         } catch (e) {
           const embed = new Sphinx.MessageEmbed()
