@@ -6,6 +6,7 @@ import { models } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import { sphinxLogger } from '../utils/logger'
+import { hideCommandHandler } from '../controllers/botapi/hideAndUnhideCommand'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -14,7 +15,7 @@ let initted = false
 export function init() {
   if (initted) return
   initted = true
-
+  const commands = ['setmessage', 'hide']
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
@@ -85,7 +86,19 @@ export function init() {
           .setDescription('Your welcome message has been updated')
         message.channel.send({ embed: resEmbed })
         return
-
+      case 'hide':
+        const tribe = (await models.Chat.findOne({
+          where: { uuid: message.channel.id },
+        })) as ChatRecord
+        await hideCommandHandler(
+          arr[2],
+          commands,
+          tribe.id,
+          message,
+          'WelcomeBot',
+          '/welcome'
+        )
+        return
       default:
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('WelcomeBot')

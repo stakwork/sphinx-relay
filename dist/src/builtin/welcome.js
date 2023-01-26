@@ -17,12 +17,14 @@ const models_1 = require("../models");
 const constants_1 = require("../constants");
 const tribes_1 = require("../utils/tribes");
 const logger_1 = require("../utils/logger");
+const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 function init() {
     if (initted)
         return;
     initted = true;
+    const commands = ['setmessage', 'hide'];
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
@@ -95,6 +97,12 @@ function init() {
                     .setAuthor('WelcomeBot')
                     .setDescription('Your welcome message has been updated');
                 message.channel.send({ embed: resEmbed });
+                return;
+            case 'hide':
+                const tribe = (yield models_1.models.Chat.findOne({
+                    where: { uuid: message.channel.id },
+                }));
+                yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'WelcomeBot', '/welcome');
                 return;
             default:
                 const embed = new Sphinx.MessageEmbed()
