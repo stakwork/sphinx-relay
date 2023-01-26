@@ -22,6 +22,7 @@ const connect_1 = require("../utils/connect");
 const githook_1 = require("../utils/githook");
 const logger_1 = require("../utils/logger");
 require("url"); // for "new URL"
+const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const prefix = '/git';
@@ -61,6 +62,7 @@ function init() {
     if (initted)
         return;
     initted = true;
+    const commands = ['pay', 'add', 'remove', 'list', 'hide'];
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
@@ -71,6 +73,9 @@ function init() {
         const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
         if (!isAdmin)
             return;
+        const tribe = (yield models_1.models.Chat.findOne({
+            where: { uuid: message.channel.id },
+        }));
         switch (cmd) {
             case 'pay':
                 console.log('pay user');
@@ -141,6 +146,9 @@ function init() {
                         .setDescription('Error: ' + e.message);
                     return message.channel.send({ embed });
                 }
+            case 'hide':
+                yield (0, hideAndUnhideCommand_1.hideCommandHandler)(words[2], commands, tribe.id, message, 'GitBot', '/git');
+                return;
             default:
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('GitBot')
