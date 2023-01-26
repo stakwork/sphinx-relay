@@ -13,6 +13,7 @@ import constants from '../constants'
 import fetch from 'node-fetch'
 import { transferBadge, createBadge } from '../utils/people'
 import { Badge } from '../types'
+import { hideCommandHandler } from '../controllers/botapi/hideAndUnhideCommand'
 
 interface BadgeRewards {
   badgeId: number
@@ -167,60 +168,14 @@ export function init() {
           message.channel.send({ embed: resEmbed })
           return
         case 'hide':
-          const hideCommand = arr[2]
-          if (hideCommand) {
-            if (commands.includes(hideCommand)) {
-              const bot = (await models.ChatBot.findOne({
-                where: { botPrefix: '/badge', chatId: tribe.id },
-              })) as ChatBotRecord
-              console.log(bot.dataValues)
-              if (!bot.hiddenCommands) {
-                await bot.update({
-                  hiddenCommands: JSON.stringify([hideCommand]),
-                })
-                const embed = new Sphinx.MessageEmbed()
-                  .setAuthor('BadgeBot')
-                  .setDescription('Command was added successfully')
-                message.channel.send({ embed })
-                return
-              } else {
-                let savedCommands = JSON.parse(bot.hiddenCommands)
-                if (!savedCommands.includes(hideCommand)) {
-                  await bot.update({
-                    hiddenCommands: JSON.stringify([
-                      ...savedCommands,
-                      hideCommand,
-                    ]),
-                  })
-                  const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('BadgeBot')
-                    .setDescription('Command was added successfully')
-                  message.channel.send({ embed })
-                  return
-                } else {
-                  const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('BadgeBot')
-                    .setDescription('Command was added already successfully')
-                  message.channel.send({ embed })
-                  return
-                }
-              }
-            } else {
-              const embed = new Sphinx.MessageEmbed()
-                .setAuthor('BadgeBot')
-                .setDescription('Please this command is not valid')
-              message.channel.send({ embed })
-              return
-            }
-          } else {
-            const embed = new Sphinx.MessageEmbed()
-              .setAuthor('BadgeBot')
-              .setDescription(
-                'Please provide a valid command you would like to hide'
-              )
-            message.channel.send({ embed })
-            return
-          }
+          await hideCommandHandler(
+            arr[2],
+            commands,
+            tribe.id,
+            message,
+            'BadgeBot',
+            '/badge'
+          )
         default:
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('BadgeBot')

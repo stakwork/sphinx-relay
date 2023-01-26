@@ -17,6 +17,7 @@ const models_1 = require("../models");
 const constants_1 = require("../constants");
 const node_fetch_1 = require("node-fetch");
 const people_1 = require("../utils/people");
+const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 // check who the message came from
@@ -150,62 +151,7 @@ function init() {
                     message.channel.send({ embed: resEmbed });
                     return;
                 case 'hide':
-                    const hideCommand = arr[2];
-                    if (hideCommand) {
-                        if (commands.includes(hideCommand)) {
-                            const bot = (yield models_1.models.ChatBot.findOne({
-                                where: { botPrefix: '/badge', chatId: tribe.id },
-                            }));
-                            console.log(bot.dataValues);
-                            if (!bot.hiddenCommands) {
-                                yield bot.update({
-                                    hiddenCommands: JSON.stringify([hideCommand]),
-                                });
-                                const embed = new Sphinx.MessageEmbed()
-                                    .setAuthor('BadgeBot')
-                                    .setDescription('Command was added successfully');
-                                message.channel.send({ embed });
-                                return;
-                            }
-                            else {
-                                let savedCommands = JSON.parse(bot.hiddenCommands);
-                                if (!savedCommands.includes(hideCommand)) {
-                                    yield bot.update({
-                                        hiddenCommands: JSON.stringify([
-                                            ...savedCommands,
-                                            hideCommand,
-                                        ]),
-                                    });
-                                    const embed = new Sphinx.MessageEmbed()
-                                        .setAuthor('BadgeBot')
-                                        .setDescription('Command was added successfully');
-                                    message.channel.send({ embed });
-                                    return;
-                                }
-                                else {
-                                    const embed = new Sphinx.MessageEmbed()
-                                        .setAuthor('BadgeBot')
-                                        .setDescription('Command was added already successfully');
-                                    message.channel.send({ embed });
-                                    return;
-                                }
-                            }
-                        }
-                        else {
-                            const embed = new Sphinx.MessageEmbed()
-                                .setAuthor('BadgeBot')
-                                .setDescription('Please this command is not valid');
-                            message.channel.send({ embed });
-                            return;
-                        }
-                    }
-                    else {
-                        const embed = new Sphinx.MessageEmbed()
-                            .setAuthor('BadgeBot')
-                            .setDescription('Please provide a valid command you would like to hide');
-                        message.channel.send({ embed });
-                        return;
-                    }
+                    yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'BadgeBot', '/badge');
                 default:
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('BadgeBot')
