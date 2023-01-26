@@ -90,6 +90,29 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
+                if (msg.sender.role === constants_1.default.chat_roles.owner && msg.type === 0) {
+                    try {
+                        const newChat = (yield models_1.models.Chat.findOne({
+                            where: { uuid: msg.chat.uuid },
+                        }));
+                        const bots = (yield models_1.models.ChatBot.findAll({
+                            where: { tenant, chatId: newChat.id },
+                        }));
+                        for (let i = 0; i < bots.length; i++) {
+                            const bot = bots[0];
+                            const content = msg.message.content;
+                            let splitedContent = content.split(' ');
+                            if (bot.botPrefix === splitedContent[0] &&
+                                bot.hiddenCommands &&
+                                JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
+                                justMe = true;
+                            }
+                        }
+                    }
+                    catch (error) {
+                        logger_1.sphinxLogger.error('Failed to check if hidden command', logger_1.logging.Network);
+                    }
+                }
                 mentionContactIds = yield detectMentions(msg, isForwarded ? true : false, chat.id, tenant);
             }
             // stop here if just me

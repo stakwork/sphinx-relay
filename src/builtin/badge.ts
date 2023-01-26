@@ -171,7 +171,7 @@ export function init() {
           if (hideCommand) {
             if (commands.includes(hideCommand)) {
               const bot = (await models.ChatBot.findOne({
-                where: { botPrefix: '/badge' },
+                where: { botPrefix: '/badge', chatId: tribe.id },
               })) as ChatBotRecord
               console.log(bot.dataValues)
               if (!bot.hiddenCommands) {

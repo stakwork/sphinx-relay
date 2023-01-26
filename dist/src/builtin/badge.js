@@ -154,7 +154,7 @@ function init() {
                     if (hideCommand) {
                         if (commands.includes(hideCommand)) {
                             const bot = (yield models_1.models.ChatBot.findOne({
-                                where: { botPrefix: '/badge' },
+                                where: { botPrefix: '/badge', chatId: tribe.id },
                             }));
                             console.log(bot.dataValues);
                             if (!bot.hiddenCommands) {

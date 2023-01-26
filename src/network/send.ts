@@ -4,6 +4,8 @@ import {
   ContactRecord,
   Contact,
   ChatMember as ChatMemberModel,
+  ChatRecord,
+  ChatBotRecord,
 } from '../models'
 import * as LND from '../grpc/lightning'
 import { asyncForEach, sleep } from '../helpers'
@@ -132,6 +134,33 @@ export async function sendMessage({
       if (isBotMsg === true) {
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
+      }
+      if (msg.sender.role === constants.chat_roles.owner && msg.type === 0) {
+        try {
+          const newChat = (await models.Chat.findOne({
+            where: { uuid: msg.chat.uuid },
+          })) as ChatRecord
+          const bots = (await models.ChatBot.findAll({
+            where: { tenant, chatId: newChat.id },
+          })) as ChatBotRecord[]
+          for (let i = 0; i < bots.length; i++) {
+            const bot = bots[0]
+            const content = msg.message.content as string
+            let splitedContent = content.split(' ')
+            if (
+              bot.botPrefix === splitedContent[0] &&
+              bot.hiddenCommands &&
+              JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
+            ) {
+              justMe = true
+            }
+          }
+        } catch (error) {
+          sphinxLogger.error(
+            'Failed to check if hidden command',
+            logging.Network
+          )
+        }
       }
       mentionContactIds = await detectMentions(
         msg,
