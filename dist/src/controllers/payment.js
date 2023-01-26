@@ -35,6 +35,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         (0, feed_1.anonymousKeysend)(owner, destination_key, route_hint, amount || '', text || '', function (body) {
             (0, res_1.success)(res, body);
         }, function (error) {
+            logger_1.sphinxLogger.info(`[send payment] ERROR ${error}`);
             res.status(200);
             res.json({ success: false, error });
             res.end();
