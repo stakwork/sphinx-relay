@@ -145,13 +145,16 @@ export async function sendMessage({
           })) as ChatBotRecord[]
           const content = msg.message.content as string
           let splitedContent = content.split(' ')
+          console.log(splitedContent)
           for (let i = 0; i < bots.length; i++) {
             const bot = bots[0]
+            console.log(bot.dataValues)
             if (
               bot.botPrefix === splitedContent[0] &&
               bot.hiddenCommands &&
               JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
             ) {
+              console.log(splitedContent)
               justMe = true
             }
           }
