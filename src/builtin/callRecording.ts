@@ -5,6 +5,10 @@ import { CallRecordingRecord, ChatRecord, models } from '../models'
 import constants from '../constants'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
+import {
+  hideCommandHandler,
+  determineOwnerOnly,
+} from '../controllers/botapi/hideAndUnhideCommand'
 
 /**
  *
@@ -21,23 +25,24 @@ import { Op } from 'sequelize'
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
+const botPrefix = '/callRecording'
 
 export function init() {
   if (initted) return
   initted = true
-
+  const commands = ['history', 'update', 'retry', 'hide']
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    if (message.author?.bot !== '/callRecording') return
+    if (message.author?.bot !== botPrefix) return
     try {
       const arr = (message.content && message.content.split(' ')) || []
       const cmd = arr[1]
       const tribe = (await models.Chat.findOne({
         where: { uuid: message.channel.id },
       })) as ChatRecord
-      if (arr[0] === '/call') {
+      if (arr[0] === botPrefix) {
         const isAdmin = message.member.roles.find(
           (role) => role.name === 'Admin'
         )
@@ -70,6 +75,7 @@ export function init() {
             const resEmbed = new Sphinx.MessageEmbed()
               .setAuthor('CallRecordingBot')
               .setDescription(returnMsg)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed: resEmbed })
             return
           case 'update':
@@ -87,7 +93,9 @@ export function init() {
                   addFields,
                   'CallRecordingBot',
                   'Call Recording Error',
-                  message
+                  message,
+                  cmd,
+                  tribe.id
                 )
                 return
               }
@@ -103,7 +111,9 @@ export function init() {
                   addFields,
                   'CallRecordingBot',
                   'Call Recording Error',
-                  message
+                  message,
+                  cmd,
+                  tribe.id
                 )
                 return
               }
@@ -119,7 +129,9 @@ export function init() {
                   addFields,
                   'CallRecordingBot',
                   'Call Recording Error',
-                  message
+                  message,
+                  cmd,
+                  tribe.id
                 )
                 return
               }
@@ -135,7 +147,9 @@ export function init() {
                   addFields,
                   'CallRecordingBot',
                   'Call Recording Error',
-                  message
+                  message,
+                  cmd,
+                  tribe.id
                 )
                 return
               }
@@ -151,7 +165,9 @@ export function init() {
                   addFields,
                   'CallRecordingBot',
                   'Call Recording Error',
-                  message
+                  message,
+                  cmd,
+                  tribe.id
                 )
                 return
               }
@@ -167,6 +183,9 @@ export function init() {
                 .setDescription(
                   'Call Recording has been configured Successfully'
                 )
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
               message.channel.send({ embed })
               return
             } else {
@@ -181,6 +200,9 @@ export function init() {
                   },
                 ])
                 .setThumbnail(botSVG)
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
               message.channel.send({ embed: resEmbed })
               return
             }
@@ -241,9 +263,19 @@ export function init() {
             const newEmbed = new Sphinx.MessageEmbed()
               .setAuthor('CallRecordingBot')
               .setDescription(botMessage)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed: newEmbed })
             return
-
+          case 'hide':
+            await hideCommandHandler(
+              arr[2],
+              commands,
+              tribe.id,
+              message,
+              'CallRecordingBot',
+              '/callRecording'
+            )
+            return
           default:
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('CallRecordingBot')
@@ -259,6 +291,7 @@ export function init() {
                 },
               ])
               .setThumbnail(botSVG)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed })
             return
         }
@@ -334,6 +367,9 @@ export function init() {
                   const embed = new Sphinx.MessageEmbed()
                     .setAuthor('CallRecordingBot')
                     .setDescription('Call was recorded successfully')
+                    .setOnlyOwner(
+                      await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                    )
                   message.channel.send({ embed })
                   return
                 } else {
@@ -402,12 +438,13 @@ const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white"
   <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
 </svg>`
 
-function botResponse(addFields, author, title, message) {
+async function botResponse(addFields, author, title, message, cmd, tribeId) {
   const resEmbed = new Sphinx.MessageEmbed()
     .setAuthor(author)
     .setTitle(title)
     .addFields(addFields)
     .setThumbnail(botSVG)
+    .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribeId))
   message.channel.send({ embed: resEmbed })
 }
 

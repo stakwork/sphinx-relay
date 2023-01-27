@@ -13,6 +13,10 @@ import constants from '../constants'
 import fetch from 'node-fetch'
 import { transferBadge, createBadge } from '../utils/people'
 import { Badge } from '../types'
+import {
+  hideCommandHandler,
+  determineOwnerOnly,
+} from '../controllers/botapi/hideAndUnhideCommand'
 
 interface BadgeRewards {
   badgeId: number
@@ -25,6 +29,7 @@ interface BadgeRewards {
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
+const botPrefix = '/badge'
 
 // check who the message came from
 // check their Member table to see if it cross the amount
@@ -38,7 +43,7 @@ let initted = false
 export function init() {
   if (initted) return
   initted = true
-
+  const commands = ['types', 'hide', 'create']
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
@@ -49,15 +54,9 @@ export function init() {
     const tribe = (await models.Chat.findOne({
       where: { uuid: message.channel.id },
     })) as ChatRecord
-    if (arr[0] === '/badge') {
+    if (arr[0] === botPrefix) {
       const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
       if (!isAdmin) return
-      // typeof name !== 'string' ||
-      // typeof icon !== 'string' ||
-      // typeof amount !== 'number' ||
-      // typeof chat_id !== 'number' ||
-      // typeof claim_amount !== 'number' ||
-      // typeof reward_type !== 'number'
       switch (cmd) {
         case 'create':
           if (arr.length === 7) {
@@ -69,7 +68,14 @@ export function init() {
                   value: 'Provide a valid badge name',
                 },
               ]
-              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              botResponse(
+                addFields,
+                'BadgeBot',
+                'Badge Error',
+                message,
+                cmd,
+                tribe.id
+              )
               return
             }
             const amount = Number(arr[3])
@@ -81,7 +87,14 @@ export function init() {
                     'Provide a valid amount of badge you would like to create',
                 },
               ]
-              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              botResponse(
+                addFields,
+                'BadgeBot',
+                'Badge Error',
+                message,
+                cmd,
+                tribe.id
+              )
               return
             }
             const claim_amount = Number(arr[4])
@@ -93,7 +106,14 @@ export function init() {
                     'Provide a valid amount of sats condition a tribe memeber has to complete to earn this badge',
                 },
               ]
-              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              botResponse(
+                addFields,
+                'BadgeBot',
+                'Badge Error',
+                message,
+                cmd,
+                tribe.id
+              )
               return
             }
             const reward_type = Number(arr[5])
@@ -105,7 +125,14 @@ export function init() {
                     'Provide a valid amount of badge you would like to create',
                 },
               ]
-              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              botResponse(
+                addFields,
+                'BadgeBot',
+                'Badge Error',
+                message,
+                cmd,
+                tribe.id
+              )
               return
             }
             const icon = arr[6]
@@ -116,7 +143,14 @@ export function init() {
                   value: 'Provide a valid Icon url',
                 },
               ]
-              botResponse(addFields, 'BadgeBot', 'Badge Error', message)
+              botResponse(
+                addFields,
+                'BadgeBot',
+                'Badge Error',
+                message,
+                cmd,
+                tribe.id
+              )
               return
             }
             const response = await createBadge({
@@ -138,6 +172,7 @@ export function init() {
               .setDescription(
                 response.name + ' badge has been added to this tribe'
               )
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed })
             return
           } else {
@@ -152,6 +187,7 @@ export function init() {
                 },
               ])
               .setThumbnail(botSVG)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed: resEmbed })
             return
           }
@@ -170,7 +206,18 @@ export function init() {
               },
             ])
             .setThumbnail(botSVG)
+            .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
           message.channel.send({ embed: resEmbed })
+          return
+        case 'hide':
+          await hideCommandHandler(
+            arr[2],
+            commands,
+            tribe.id,
+            message,
+            'BadgeBot',
+            botPrefix
+          )
           return
         default:
           const embed = new Sphinx.MessageEmbed()
@@ -392,12 +439,13 @@ export async function createOrEditBadgeBot(
   }
 }
 
-function botResponse(addFields, author, title, message) {
+async function botResponse(addFields, author, title, message, cmd, tribeId) {
   const resEmbed = new Sphinx.MessageEmbed()
     .setAuthor(author)
     .setTitle(title)
     .addFields(addFields)
     .setThumbnail(botSVG)
+    .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribeId))
   message.channel.send({ embed: resEmbed })
 }
 

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTotalMsgPerTribe = exports.updateLsat = exports.setupPersonUuid = exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
+exports.setupHiddenBotCommands = exports.updateTotalMsgPerTribe = exports.updateLsat = exports.setupPersonUuid = exports.setupDone = exports.runMigrations = exports.setupOwnerContact = exports.setupDatabase = void 0;
 const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
 const child_process_1 = require("child_process");
@@ -184,6 +184,25 @@ const updateTotalMsgPerTribe = () => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updateTotalMsgPerTribe = updateTotalMsgPerTribe;
+const setupHiddenBotCommands = () => __awaiter(void 0, void 0, void 0, function* () {
+    const builtInHiddenCmd = {
+        '/callRecording': ['hide', 'update'],
+    };
+    try {
+        const bots = (yield models_1.models.ChatBot.findAll());
+        for (let i = 0; i < bots.length; i++) {
+            const bot = bots[i];
+            const defaultHiddenCommands = builtInHiddenCmd[bot.botPrefix] || ['hide'];
+            yield bot.update({
+                hiddenCommands: JSON.stringify(defaultHiddenCommands),
+            });
+        }
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(['error trying to setup default hidden commands for bots', error], logger_1.logging.DB);
+    }
+});
+exports.setupHiddenBotCommands = setupHiddenBotCommands;
 function setupDone() {
     return __awaiter(this, void 0, void 0, function* () {
         yield printGitInfo();

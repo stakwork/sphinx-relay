@@ -10,6 +10,10 @@ import { getIP } from '../utils/connect'
 import { all_webhook_events } from '../utils/githook'
 import { sphinxLogger } from '../utils/logger'
 import 'url' // for "new URL"
+import {
+  hideCommandHandler,
+  determineOwnerOnly,
+} from '../controllers/botapi/hideAndUnhideCommand'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -61,7 +65,7 @@ async function getStuff(
 export function init(): void {
   if (initted) return
   initted = true
-
+  const commands = ['pay', 'add', 'remove', 'list', 'hide']
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
@@ -72,7 +76,9 @@ export function init(): void {
 
     const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
     if (!isAdmin) return
-
+    const tribe = (await models.Chat.findOne({
+      where: { uuid: message.channel.id },
+    })) as ChatRecord
     switch (cmd) {
       case 'pay':
         console.log('pay user')
@@ -95,11 +101,13 @@ export function init(): void {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription(repo + ' repo has been added!')
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         } catch (e) {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription('Error: ' + e.message)
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         }
 
@@ -118,11 +126,13 @@ export function init(): void {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription(repo + ' repo has been removed!')
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         } catch (e) {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('GitBot')
             .setDescription('Error: ' + e.message)
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed })
         }
 
@@ -139,6 +149,7 @@ export function init(): void {
                 return { name: i + 1 + ':', value: b.path, inline: true }
               })
             )
+            .setOnlyOwner(await determineOwnerOnly(prefix, cmd, tribe.id))
           return message.channel.send({ embed: embed3 })
         } catch (e) {
           const embed = new Sphinx.MessageEmbed()
@@ -146,7 +157,16 @@ export function init(): void {
             .setDescription('Error: ' + e.message)
           return message.channel.send({ embed })
         }
-
+      case 'hide':
+        await hideCommandHandler(
+          words[2],
+          commands,
+          tribe.id,
+          message,
+          'GitBot',
+          '/git'
+        )
+        return
       default:
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('GitBot')

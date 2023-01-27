@@ -4,6 +4,8 @@ import {
   ContactRecord,
   Contact,
   ChatMember as ChatMemberModel,
+  ChatRecord,
+  ChatBotRecord,
 } from '../models'
 import * as LND from '../grpc/lightning'
 import { asyncForEach, sleep } from '../helpers'
@@ -132,6 +134,10 @@ export async function sendMessage({
       if (isBotMsg === true) {
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
+      }
+      if (msg.sender.role === constants.chat_roles.owner && msg.type === 0) {
+        const hiddenCmd = await interceptTribeMsgForHiddenCmds(msg, tenant)
+        justMe = hiddenCmd ? hiddenCmd : justMe
       }
       mentionContactIds = await detectMentions(
         msg,
@@ -476,4 +482,37 @@ function compareAliases(alias1: string, alias2: string): boolean {
     }
   })
   return match
+}
+
+async function interceptTribeMsgForHiddenCmds(
+  msg: Msg,
+  tenant: number
+): Promise<boolean> {
+  try {
+    const newChat = (await models.Chat.findOne({
+      where: { uuid: msg.chat.uuid },
+    })) as ChatRecord
+    const bots = (await models.ChatBot.findAll({
+      where: { tenant, chatId: newChat.id },
+    })) as ChatBotRecord[]
+    const content = msg.message.content as string
+    let splitedContent = content.split(' ')
+    for (let i = 0; i < bots.length; i++) {
+      const bot = bots[i]
+      if (
+        bot.botPrefix === splitedContent[0] &&
+        bot.hiddenCommands &&
+        JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
+      ) {
+        return true
+      }
+    }
+    return false
+  } catch (error) {
+    sphinxLogger.error(
+      `Failed to check if hidden command ${error}`,
+      logging.Network
+    )
+    return false
+  }
 }

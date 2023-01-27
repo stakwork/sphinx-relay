@@ -18,6 +18,7 @@ export default async function broadcast(a: Action): Promise<void> {
     reply_uuid,
     parent_id,
     bot_pic,
+    only_owner,
   } = a
 
   sphinxLogger.info(`=> BOT BROADCAST`)
@@ -67,27 +68,29 @@ export default async function broadcast(a: Action): Promise<void> {
   )
   // console.log("BOT BROADCASE MSG", owner.dataValues)
   // console.log('+++++++++> MSG TO BROADCAST', message.dataValues)
-  await network.sendMessage({
-    chat: chat as ChatPlusMembers,
-    sender: {
-      ...owner.dataValues,
-      alias,
-      id: botContactId,
-      role: constants.chat_roles.reader,
-      ...(bot_pic && { photoUrl: bot_pic }),
-    },
-    message: {
-      content: textMap,
-      id: message.id,
-      uuid: message.uuid,
-      replyUuid: message.replyUuid,
-      parentId: message.parentId || 0,
-    },
-    type: constants.message_types.bot_res,
-    success: () => ({ success: true }),
-    failure: (e) => {
-      return sphinxLogger.error(e)
-    },
-    isForwarded: true,
-  })
+  if (!only_owner) {
+    await network.sendMessage({
+      chat: chat as ChatPlusMembers,
+      sender: {
+        ...owner.dataValues,
+        alias,
+        id: botContactId,
+        role: constants.chat_roles.reader,
+        ...(bot_pic && { photoUrl: bot_pic }),
+      },
+      message: {
+        content: textMap,
+        id: message.id,
+        uuid: message.uuid,
+        replyUuid: message.replyUuid,
+        parentId: message.parentId || 0,
+      },
+      type: constants.message_types.bot_res,
+      success: () => ({ success: true }),
+      failure: (e) => {
+        return sphinxLogger.error(e)
+      },
+      isForwarded: true,
+    })
+  }
 }

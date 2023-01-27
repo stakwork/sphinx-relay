@@ -6,6 +6,7 @@ import {
   ContactRecord,
   Lsat,
   ChatMemberRecord,
+  ChatBotRecord,
   ChatRecord,
 } from '../models'
 import { exec } from 'child_process'
@@ -25,7 +26,7 @@ import constants from '../constants'
 const USER_VERSION = 7
 const config = loadConfig()
 
-const setupDatabase = async () => {
+const setupDatabase = async (): Promise<void> => {
   sphinxLogger.info('starting setup', logging.DB)
   await setVersion()
   sphinxLogger.info('sync now', logging.DB)
@@ -47,7 +48,7 @@ async function setVersion() {
   }
 }
 
-const setupOwnerContact = async () => {
+const setupOwnerContact = async (): Promise<void> => {
   const owner = await models.Contact.findOne({
     where: { isOwner: true, id: 1 },
   })
@@ -87,7 +88,7 @@ const setupOwnerContact = async () => {
   }
 }
 
-const setupPersonUuid = async () => {
+const setupPersonUuid = async (): Promise<void> => {
   let protocol = 'https'
   if (config.tribes_insecure) protocol = 'http'
 
@@ -136,7 +137,7 @@ const updateLsat = async (): Promise<void> => {
   }
 }
 
-const runMigrations = async () => {
+const runMigrations = async (): Promise<void> => {
   await new Promise((resolve, reject) => {
     const migration: any = exec(
       'node_modules/.bin/sequelize db:migrate',
@@ -156,7 +157,7 @@ const runMigrations = async () => {
   })
 }
 
-const updateTotalMsgPerTribe = async () => {
+const updateTotalMsgPerTribe = async (): Promise<void> => {
   try {
     const contacts = (await models.Contact.findAll({
       where: { isOwner: true },
@@ -195,6 +196,27 @@ const updateTotalMsgPerTribe = async () => {
   }
 }
 
+const setupHiddenBotCommands = async (): Promise<void> => {
+  const builtInHiddenCmd = {
+    '/callRecording': ['hide', 'update'],
+  }
+  try {
+    const bots = (await models.ChatBot.findAll()) as ChatBotRecord[]
+    for (let i = 0; i < bots.length; i++) {
+      const bot = bots[i]
+      const defaultHiddenCommands = builtInHiddenCmd[bot.botPrefix] || ['hide']
+      await bot.update({
+        hiddenCommands: JSON.stringify(defaultHiddenCommands),
+      })
+    }
+  } catch (error) {
+    sphinxLogger.error(
+      ['error trying to setup default hidden commands for bots', error],
+      logging.DB
+    )
+  }
+}
+
 export {
   setupDatabase,
   setupOwnerContact,
@@ -203,6 +225,7 @@ export {
   setupPersonUuid,
   updateLsat,
   updateTotalMsgPerTribe,
+  setupHiddenBotCommands,
 }
 
 async function setupDone() {

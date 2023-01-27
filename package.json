@@ -24,9 +24,16 @@
   "author": "",
   "license": "ISC",
   "ava": {
-    "files": ["!src/tests/utils/**", "!src/tests/types"],
-    "extensions": ["ts"],
-    "require": ["ts-node/register"]
+    "files": [
+      "!src/tests/utils/**",
+      "!src/tests/types"
+    ],
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
@@ -92,7 +99,7 @@
     "short-uuid": "^3.1.1",
     "sjcl": "^1.0.8",
     "socket.io": "^4.4.1",
-    "sphinx-bot": "^0.2.21",
+    "sphinx-bot": "^0.2.37",
     "sqlite3": "5.0.11",
     "tail": "^2.0.3",
     "ts-jest": "^28.0.8",
@@ -130,7 +137,10 @@
     "socket.io-client-legacy": "npm:socket.io-client@^2.4.0"
   },
   "pkg": {
-    "assets": ["config/*", "dist/config/*"]
+    "assets": [
+      "config/*",
+      "dist/config/*"
+    ]
   },
   "husky": {
     "hooks": {
