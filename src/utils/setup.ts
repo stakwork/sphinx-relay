@@ -197,14 +197,14 @@ const updateTotalMsgPerTribe = async (): Promise<void> => {
 }
 
 const setupHiddenBotCommands = async (): Promise<void> => {
-  const defaultHiddenCommands = ['hide']
+  const builtInHiddenCmd = {
+    '/callRecording': ['hide', 'update'],
+  }
   try {
-    const bots = (await models.ChatBot.findAll({
-      where: { hiddenCommands: null },
-    })) as ChatBotRecord[]
+    const bots = (await models.ChatBot.findAll()) as ChatBotRecord[]
     for (let i = 0; i < bots.length; i++) {
       const bot = bots[i]
-      console.log(bot.dataValues)
+      const defaultHiddenCommands = builtInHiddenCmd[bot.botPrefix] || ['hide']
       await bot.update({
         hiddenCommands: JSON.stringify(defaultHiddenCommands),
       })

@@ -185,14 +185,14 @@ const updateTotalMsgPerTribe = () => __awaiter(void 0, void 0, void 0, function*
 });
 exports.updateTotalMsgPerTribe = updateTotalMsgPerTribe;
 const setupHiddenBotCommands = () => __awaiter(void 0, void 0, void 0, function* () {
-    const defaultHiddenCommands = ['hide'];
+    const builtInHiddenCmd = {
+        '/callRecording': ['hide', 'update'],
+    };
     try {
-        const bots = (yield models_1.models.ChatBot.findAll({
-            where: { hiddenCommands: null },
-        }));
+        const bots = (yield models_1.models.ChatBot.findAll());
         for (let i = 0; i < bots.length; i++) {
             const bot = bots[i];
-            console.log(bot.dataValues);
+            const defaultHiddenCommands = builtInHiddenCmd[bot.botPrefix] || ['hide'];
             yield bot.update({
                 hiddenCommands: JSON.stringify(defaultHiddenCommands),
             });
