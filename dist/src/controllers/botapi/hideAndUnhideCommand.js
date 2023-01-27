@@ -31,7 +31,7 @@ function hideCommandHandler(hideCommand, commands, tribeId, message, botName, bo
                     return;
                 }
                 else {
-                    let savedCommands = JSON.parse(bot.hiddenCommands);
+                    const savedCommands = JSON.parse(bot.hiddenCommands);
                     if (!savedCommands.includes(hideCommand)) {
                         yield bot.update({
                             hiddenCommands: JSON.stringify([...savedCommands, hideCommand]),
