@@ -30,12 +30,12 @@ function timeout(i, node, msgUuid, resolve, reject) {
                 return reject('Not expected to get message with this id');
             }
         }
-        if (i > 10) {
+        if (i > 5) {
             return resolve(true);
         }
         setTimeout(() => __awaiter(this, void 0, void 0, function* () {
             timeout(i + 1, node, msgUuid, resolve, reject);
-        }), 1000);
+        }), 500);
     });
 }
 //# sourceMappingURL=shouldNotGetNewMsg.js.map

@@ -224,15 +224,14 @@ function init() {
                             .addFields([
                             {
                                 name: 'Get Call History',
-                                value: '/call history ${NUMBER_OF_CALLS_YOU_WOULD_LIKE_TO_SEE}',
+                                value: '/callRecording history ${NUMBER_OF_CALLS_YOU_WOULD_LIKE_TO_SEE}',
                             },
                             {
                                 name: 'Retry a call',
-                                value: '/call retry',
+                                value: '/callRecording retry',
                             },
                         ])
-                            .setThumbnail(botSVG)
-                            .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            .setThumbnail(botSVG);
                         message.channel.send({ embed });
                         return;
                 }
