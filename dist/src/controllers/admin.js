@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.initialAdminPubkey = exports.hasAdmin = void 0;
 const res_1 = require("../utils/res");
+const json = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
 const models_1 = require("../models");
 function hasAdmin(req, res) {
@@ -139,7 +140,7 @@ function listUsers(req, res) {
                     isOwner: true,
                 },
             }));
-            (0, res_1.success)(res, { users });
+            (0, res_1.success)(res, { users: users.map((u) => json.contactToJson(u)) });
         }
         catch (e) {
             (0, res_1.failure)(res, e);

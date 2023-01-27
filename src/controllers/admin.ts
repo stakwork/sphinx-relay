@@ -1,5 +1,6 @@
 import { success, failure } from '../utils/res'
 import { Req, Res } from '../types'
+import * as json from '../utils/json'
 import { generateNewUser, getProxyRootPubkey, isProxy } from '../utils/proxy'
 import { models, ContactRecord, Chat } from '../models'
 
@@ -100,7 +101,7 @@ export async function listUsers(req: Req, res: Res): Promise<void> {
         isOwner: true,
       },
     })) as ContactRecord[]
-    success(res, { users })
+    success(res, { users: users.map((u) => json.contactToJson(u)) })
   } catch (e) {
     failure(res, e)
   }
