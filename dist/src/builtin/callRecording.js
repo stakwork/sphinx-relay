@@ -224,7 +224,7 @@ function init() {
                             .addFields([
                             {
                                 name: 'Get Call History',
-                                value: '/call history',
+                                value: '/call history ${NUMBER_OF_CALLS_YOU_WOULD_LIKE_TO_SEE}',
                             },
                             {
                                 name: 'Retry a call',
