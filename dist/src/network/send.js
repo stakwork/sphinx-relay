@@ -102,7 +102,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                         let splitedContent = content.split(' ');
                         console.log(splitedContent);
                         for (let i = 0; i < bots.length; i++) {
-                            const bot = bots[0];
+                            const bot = bots[i];
                             console.log(bot.dataValues);
                             if (bot.botPrefix === splitedContent[0] &&
                                 bot.hiddenCommands &&

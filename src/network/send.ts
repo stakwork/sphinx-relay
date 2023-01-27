@@ -147,7 +147,7 @@ export async function sendMessage({
           let splitedContent = content.split(' ')
           console.log(splitedContent)
           for (let i = 0; i < bots.length; i++) {
-            const bot = bots[0]
+            const bot = bots[i]
             console.log(bot.dataValues)
             if (
               bot.botPrefix === splitedContent[0] &&
