@@ -43,6 +43,7 @@ jobs:
             'tribeMember',
             'badgeBot',
             'actionHistory',
+            'silentTribeBotMsg',
           ]
     steps:
       - name: Enable docker.host.internal for Ubuntu

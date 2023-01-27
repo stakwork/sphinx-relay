@@ -283,15 +283,15 @@ export function init() {
               .addFields([
                 {
                   name: 'Get Call History',
-                  value: '/call history',
+                  value:
+                    '/callRecording history ${NUMBER_OF_CALLS_YOU_WOULD_LIKE_TO_SEE}',
                 },
                 {
                   name: 'Retry a call',
-                  value: '/call retry',
+                  value: '/callRecording retry',
                 },
               ])
               .setThumbnail(botSVG)
-              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed })
             return
         }
