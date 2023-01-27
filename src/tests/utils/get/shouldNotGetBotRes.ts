@@ -25,10 +25,10 @@ export function shouldNotGetBotRes(t, node, botAlias) {
           }
         }
       }
-      if (i > 10) {
+      if (i > 5) {
         clearInterval(interval)
         resolve(true)
       }
-    }, 1000)
+    }, 500)
   })
 }

@@ -32,10 +32,10 @@ async function timeout(
       return reject('Not expected to get message with this id')
     }
   }
-  if (i > 10) {
+  if (i > 5) {
     return resolve(true)
   }
   setTimeout(async () => {
     timeout(i + 1, node, msgUuid, resolve, reject)
-  }, 1000)
+  }, 500)
 }

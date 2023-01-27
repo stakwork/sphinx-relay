@@ -76,24 +76,58 @@ async function silentTribeBotMsg(t, node1, node2, node3) {
   t.truthy(botReply3, 'CallRecordingBot should not reply to NODE3')
 
   //NODE1 USES THE THE HIDE COMMAND TO HIDE THE SETMESSAGE WELCOME BOT COMMAND
+  const hideMsg = '/welcome hide setmessage'
+  const hideMsgRes = await sendTribeMessage(t, node1, tribe, hideMsg)
+
+  // NODE1 SHOULD SEE THE HIDE SETMESSAGE COMMAND
+  const checkHideCmd = await getCheckNewMsgs(t, node1, hideMsgRes.uuid)
+  t.truthy(checkHideCmd, 'NODE 1 SHOULD SEE THE HIDE COMMAND')
+
+  //NODE2 SHOULD NOT SEE THE HIDE MESSAGE COMMAND
+  const checkHideCmd2 = await shouldNotGetNewMsgs(t, node2, hideMsgRes.uuid)
+  t.true(checkHideCmd2, 'NODE 2 SHOULD NOT SEE THE HIDE COMMAND')
+
+  //NODE3 SHOULD NOT SEE THE HIDE MESSAGE COMMAND
+  const checkHideCmd3 = await shouldNotGetNewMsgs(t, node3, hideMsgRes.uuid)
+  t.true(checkHideCmd3, 'NODE 3 SHOULD NOT SEE THE HIDE COMMAND')
 
   //NODE1 SHOULD SEE THE BOT RESPONSE FOR THE HIDE COMMAND
+  let welcomeBotRes = 'WelcomeBot'
+  const welcomeBotReply = await getCheckBotMsg(t, node1, welcomeBotRes)
+  t.truthy(welcomeBotReply, 'WelcomeBot should reply')
 
   //NODE2 SHOULD NOT SEE THE BOT RESPONSE FOR THE HIDE SET MESSAGE COMMAND
+  const welcomeBotReply1 = await shouldNotGetBotRes(t, node2, welcomeBotRes)
+  t.truthy(welcomeBotReply1, 'WelcomeBot should not reply')
 
   //NODE3 SHOULD NOT SEE THE BOT RESPONSE FOR THE HIDE SET MESSAGE COMMAND
+  const welcomeBotReply2 = await shouldNotGetBotRes(t, node3, welcomeBotRes)
+  t.truthy(welcomeBotReply2, 'WelcomeBot should not reply')
 
   //NODE1 SETS WELCOME BOT MESSAGE
+  const setMsg = '/welcome setmessage Welcome to the new tribe'
+  const setMsgRes = await sendTribeMessage(t, node1, tribe, setMsg)
 
   //NODE2 SHOULD NOT TO SEE THE MESSAGE USED TO SET THE WELCOME MESSAGE
+  const checkSetMsgCmd = await shouldNotGetNewMsgs(t, node2, setMsgRes.uuid)
+  t.true(checkSetMsgCmd, 'NODE 2 SHOULD NOT SEE THE SETMESSAGE COMMAND')
 
   //NODE3 SHOULD NOT TO SEE THE MESSAGE USED TO SET THE WELCOME MESSAGE
+  const checkSetMsgCmd2 = await shouldNotGetNewMsgs(t, node3, setMsgRes.uuid)
+  t.true(checkSetMsgCmd2, 'NODE 3 SHOULD NOT SEE THE SETMESSAGE COMMAND')
 
   //NODE1 SHOULD SEE THE BOT RESPONSE FOR THE SET MESSAGE COMMAND
+  let welcomeBotAlias = 'WelcomeBot'
+  const setMsgReply = await getCheckBotMsg(t, node1, welcomeBotAlias)
+  t.truthy(setMsgReply, 'WelcomeBot should reply')
 
   //NODE2 SHOULD NOT SEE THE BOT RESPONSE FOR THE SET MESSAGE COMMAND
+  const welcomeBotReply3 = await shouldNotGetBotRes(t, node2, welcomeBotAlias)
+  t.truthy(welcomeBotReply3, 'WelcomeBot should not reply')
 
   //NODE3 SHOULD NOT SEE THE BOT RESPONSE FOR THE SET MESSAGE COMMAND
+  const welcomeBotReply4 = await shouldNotGetBotRes(t, node3, welcomeBotAlias)
+  t.truthy(welcomeBotReply4, 'WelcomeBot should not reply')
 
   //NODE2 LEAVES THE TRIBE
   let left = await leaveTribe(t, node2, tribe)
