@@ -31,7 +31,9 @@ const builtInBotMsgTypes = {
   ],
 }
 
-const defaultHiddenCommands = ['hide']
+const builtInHiddenCmd = {
+  callRecording: ['hide', 'update'],
+}
 
 const builtInBotNames = {
   welcome: 'WelcomeBot',
@@ -82,6 +84,7 @@ export function init() {
           const msgTypes = builtInBotMsgTypes[botName] || [
             constants.message_types.message,
           ]
+          const defaultHiddenCommands = builtInHiddenCmd[botName] || ['hide']
           const chatBot: { [k: string]: any } = {
             chatId: chat.id,
             botPrefix: '/' + botName,

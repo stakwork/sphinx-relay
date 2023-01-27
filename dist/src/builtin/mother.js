@@ -37,7 +37,9 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.direct_payment,
     ],
 };
-const defaultHiddenCommands = ['hide'];
+const builtInHiddenCmd = {
+    callRecording: ['hide', 'update'],
+};
 const builtInBotNames = {
     welcome: 'WelcomeBot',
     loopout: 'LoopBot',
@@ -86,6 +88,7 @@ function init() {
                     const msgTypes = builtInBotMsgTypes[botName] || [
                         constants_1.default.message_types.message,
                     ];
+                    const defaultHiddenCommands = builtInHiddenCmd[botName] || ['hide'];
                     const chatBot = {
                         chatId: chat.id,
                         botPrefix: '/' + botName,
