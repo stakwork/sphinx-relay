@@ -91,27 +91,8 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
                 if (msg.sender.role === constants_1.default.chat_roles.owner && msg.type === 0) {
-                    try {
-                        const newChat = (yield models_1.models.Chat.findOne({
-                            where: { uuid: msg.chat.uuid },
-                        }));
-                        const bots = (yield models_1.models.ChatBot.findAll({
-                            where: { tenant, chatId: newChat.id },
-                        }));
-                        const content = msg.message.content;
-                        let splitedContent = content.split(' ');
-                        for (let i = 0; i < bots.length; i++) {
-                            const bot = bots[i];
-                            if (bot.botPrefix === splitedContent[0] &&
-                                bot.hiddenCommands &&
-                                JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
-                                justMe = true;
-                            }
-                        }
-                    }
-                    catch (error) {
-                        logger_1.sphinxLogger.error('Failed to check if hidden command', logger_1.logging.Network);
-                    }
+                    const hiddenCmd = yield interceptTribeMsgForHiddenCmds(msg, tenant);
+                    justMe = hiddenCmd ? hiddenCmd : justMe;
                 }
                 mentionContactIds = yield detectMentions(msg, isForwarded ? true : false, chat.id, tenant);
             }
@@ -403,5 +384,32 @@ function compareAliases(alias1, alias2) {
         }
     });
     return match;
+}
+function interceptTribeMsgForHiddenCmds(msg, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const newChat = (yield models_1.models.Chat.findOne({
+                where: { uuid: msg.chat.uuid },
+            }));
+            const bots = (yield models_1.models.ChatBot.findAll({
+                where: { tenant, chatId: newChat.id },
+            }));
+            const content = msg.message.content;
+            let splitedContent = content.split(' ');
+            for (let i = 0; i < bots.length; i++) {
+                const bot = bots[i];
+                if (bot.botPrefix === splitedContent[0] &&
+                    bot.hiddenCommands &&
+                    JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`Failed to check if hidden command ${error}`, logger_1.logging.Network);
+            return false;
+        }
+    });
 }
 //# sourceMappingURL=send.js.map
