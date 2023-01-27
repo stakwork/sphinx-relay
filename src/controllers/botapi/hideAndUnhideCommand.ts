@@ -26,7 +26,7 @@ export async function hideCommandHandler(
         message.channel.send({ embed })
         return
       } else {
-        let savedCommands = JSON.parse(bot.hiddenCommands)
+        const savedCommands = JSON.parse(bot.hiddenCommands)
         if (!savedCommands.includes(hideCommand)) {
           await bot.update({
             hiddenCommands: JSON.stringify([...savedCommands, hideCommand]),
