@@ -28,6 +28,7 @@ import * as lsats from './lsats'
 import { Req } from '../types'
 import * as action from './actionHistory'
 import * as feeds from './getFeeds'
+import * as contentFeedStatus from './contentFeedStatus'
 
 export async function set(app) {
   builtInBots.init()
@@ -186,6 +187,10 @@ export async function set(app) {
 
   // Get feeds
   app.get('/feeds', feeds.getFeeds)
+
+  // Content Feed Status
+  app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus)
+  app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus)
 
   // open
   app.get('/has_admin', admin.hasAdmin)

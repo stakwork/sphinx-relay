@@ -281,6 +281,31 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding call recording table:', e.message], logging.DB)
         }
+        // add content feed status
+        // @Column
+        // tenant: number
+        try {
+            logger_1.sphinxLogger.info('adding content feed status table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_content_feed_status (
+      id BIGINT NOT NULL PRIMARY KEY AUTOINCREMENT,
+      feed_id TEXT NOT NULL,
+      feed_url TEXT NOT NULL,
+      subscription_status: BOOLEAN NOT NULL,
+      item_id TEXT,
+      episodes_status TEXT,
+      chat_id INTEGER,
+      sats_per_minute INTEGER,
+      player_speed REAL,
+      tenant INTEGER,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`);
+        }
+        catch (e) {
+            // sphinxLogger.error(['problem adding content feed status table:', e.message], logging.DB)
+        }
+        addTableColumn('sphinx_chat_bots', 'hidden_commands');
     });
 }
 exports.default = migrate;

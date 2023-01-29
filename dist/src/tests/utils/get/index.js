@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyActionHistorySaved = exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.shouldNotGetBotRes = exports.shouldNotGetNewMsgs = exports.verifyActionHistorySaved = exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
@@ -45,4 +45,8 @@ var getCheckAllMessages_1 = require("./getCheckAllMessages");
 Object.defineProperty(exports, "getCheckAllMessages", { enumerable: true, get: function () { return getCheckAllMessages_1.getCheckAllMessages; } });
 var getActionHistory_1 = require("./getActionHistory");
 Object.defineProperty(exports, "verifyActionHistorySaved", { enumerable: true, get: function () { return getActionHistory_1.verifyActionHistorySaved; } });
+var shouldNotGetNewMsg_1 = require("./shouldNotGetNewMsg");
+Object.defineProperty(exports, "shouldNotGetNewMsgs", { enumerable: true, get: function () { return shouldNotGetNewMsg_1.shouldNotGetNewMsgs; } });
+var shouldNotGetBotRes_1 = require("./shouldNotGetBotRes");
+Object.defineProperty(exports, "shouldNotGetBotRes", { enumerable: true, get: function () { return shouldNotGetBotRes_1.shouldNotGetBotRes; } });
 //# sourceMappingURL=index.js.map

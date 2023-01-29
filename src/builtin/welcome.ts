@@ -6,15 +6,20 @@ import { models } from '../models'
 import constants from '../constants'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import { sphinxLogger } from '../utils/logger'
+import {
+  hideCommandHandler,
+  determineOwnerOnly,
+} from '../controllers/botapi/hideAndUnhideCommand'
 
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
+const botPrefix = '/welcome'
 
 export function init() {
   if (initted) return
   initted = true
-
+  const commands = ['setmessage', 'hide']
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
@@ -61,7 +66,9 @@ export function init() {
 
     const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
     if (!isAdmin) return
-
+    const tribe = (await models.Chat.findOne({
+      where: { uuid: message.channel.id },
+    })) as ChatRecord
     switch (cmd) {
       case 'setmessage':
         if (arr.length < 3) return
@@ -83,9 +90,19 @@ export function init() {
         const resEmbed = new Sphinx.MessageEmbed()
           .setAuthor('WelcomeBot')
           .setDescription('Your welcome message has been updated')
+          .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
         message.channel.send({ embed: resEmbed })
         return
-
+      case 'hide':
+        await hideCommandHandler(
+          arr[2],
+          commands,
+          tribe.id,
+          message,
+          'WelcomeBot',
+          '/welcome'
+        )
+        return
       default:
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('WelcomeBot')

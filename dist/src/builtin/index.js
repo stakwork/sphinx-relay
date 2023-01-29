@@ -31,9 +31,9 @@ function init() {
     });
 }
 exports.init = init;
-function builtinBotEmit(msg) {
+function builtinBotEmit(msg, botPrefix) {
     setTimeout(() => {
-        SphinxBot._emit('message', (0, bots_1.buildBotPayload)(msg));
+        SphinxBot._emit('message', (0, bots_1.buildBotPayload)(msg, botPrefix));
     }, 1200);
 }
 exports.builtinBotEmit = builtinBotEmit;

@@ -39,6 +39,7 @@ const personal = require("./api/personal");
 const lsats = require("./lsats");
 const action = require("./actionHistory");
 const feeds = require("./getFeeds");
+const contentFeedStatus = require("./contentFeedStatus");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -171,6 +172,9 @@ function set(app) {
         app.get('/active_lsat', lsats.getActiveLsat);
         // Get feeds
         app.get('/feeds', feeds.getFeeds);
+        // Content Feed Status
+        app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus);
+        app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus);
         // open
         app.get('/has_admin', admin.hasAdmin);
         app.get('/initial_admin_pubkey', admin.initialAdminPubkey);

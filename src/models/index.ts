@@ -23,6 +23,9 @@ import { isProxy } from '../utils/proxy'
 import { readFileSync } from 'fs'
 import ActionHistory, { ActionHistoryRecord } from './sql/actionHistory'
 import CallRecording, { CallRecordingRecord } from './sql/callRecording'
+import ContentFeedStatus, {
+  ContentFeedStatusRecord,
+} from './sql/contentFeedStatus'
 
 const argv = minimist(process.argv.slice(2))
 
@@ -66,6 +69,7 @@ const opts = {
     RequestsTransportTokens,
     ActionHistory,
     CallRecording,
+    ContentFeedStatus,
   ],
 }
 if (isProxy()) {
@@ -111,4 +115,6 @@ export {
   ActionHistoryRecord,
   CallRecording,
   CallRecordingRecord,
+  ContentFeedStatus,
+  ContentFeedStatusRecord,
 }

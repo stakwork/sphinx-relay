@@ -44,6 +44,7 @@ export interface Action {
   recipient_id?: number
   parent_id?: number
   bot_pic?: string
+  only_owner?: boolean
 }
 
 export async function processWebhook(req: Req, res: Res): Promise<void> {

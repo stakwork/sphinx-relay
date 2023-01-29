@@ -18,15 +18,22 @@
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
     "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
     "start-ecs": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js",
-    "lint": "eslint src --fix --max-warnings 478"
+    "lint": "eslint src --fix --max-warnings 457"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "ava": {
-    "files": ["!src/tests/utils/**", "!src/tests/types"],
-    "extensions": ["ts"],
-    "require": ["ts-node/register"]
+    "files": [
+      "!src/tests/utils/**",
+      "!src/tests/types"
+    ],
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",
@@ -92,7 +99,7 @@
     "short-uuid": "^3.1.1",
     "sjcl": "^1.0.8",
     "socket.io": "^4.4.1",
-    "sphinx-bot": "^0.2.21",
+    "sphinx-bot": "^0.2.37",
     "sqlite3": "5.0.11",
     "tail": "^2.0.3",
     "ts-jest": "^28.0.8",
@@ -130,7 +137,10 @@
     "socket.io-client-legacy": "npm:socket.io-client@^2.4.0"
   },
   "pkg": {
-    "assets": ["config/*", "dist/config/*"]
+    "assets": [
+      "config/*",
+      "dist/config/*"
+    ]
   },
   "husky": {
     "hooks": {

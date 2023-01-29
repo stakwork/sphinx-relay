@@ -139,7 +139,7 @@ async function emitMessageToBot(msg, botInTribe, sender): Promise<boolean> {
   }
   switch (botInTribe.botType) {
     case constants.bot_types.builtin:
-      builtinBotEmit(msg)
+      builtinBotEmit(msg, botInTribe.botPrefix)
       return true
     case constants.bot_types.local: {
       const bot: Bot = (await models.Bot.findOne({
