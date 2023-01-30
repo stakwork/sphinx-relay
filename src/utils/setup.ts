@@ -205,9 +205,23 @@ const setupHiddenBotCommands = async (): Promise<void> => {
     for (let i = 0; i < bots.length; i++) {
       const bot = bots[i]
       const defaultHiddenCommands = builtInHiddenCmd[bot.botPrefix] || ['hide']
-      await bot.update({
-        hiddenCommands: JSON.stringify(defaultHiddenCommands),
-      })
+      if (bot.hiddenCommands) {
+        const commands = [...JSON.parse(bot.hiddenCommands)]
+        if (!commands.includes('hide')) {
+          commands.push('hide')
+        }
+        if (
+          bot.botPrefix === '/callRecording' &&
+          !commands.includes('update')
+        ) {
+          commands.push('update')
+        }
+        await bot.update({ hiddenCommands: JSON.stringify(commands) })
+      } else {
+        await bot.update({
+          hiddenCommands: JSON.stringify(defaultHiddenCommands),
+        })
+      }
     }
   } catch (error) {
     sphinxLogger.error(

@@ -193,9 +193,22 @@ const setupHiddenBotCommands = () => __awaiter(void 0, void 0, void 0, function*
         for (let i = 0; i < bots.length; i++) {
             const bot = bots[i];
             const defaultHiddenCommands = builtInHiddenCmd[bot.botPrefix] || ['hide'];
-            yield bot.update({
-                hiddenCommands: JSON.stringify(defaultHiddenCommands),
-            });
+            if (bot.hiddenCommands) {
+                const commands = [...JSON.parse(bot.hiddenCommands)];
+                if (!commands.includes('hide')) {
+                    commands.push('hide');
+                }
+                if (bot.botPrefix === '/callRecording' &&
+                    !commands.includes('update')) {
+                    commands.push('update');
+                }
+                yield bot.update({ hiddenCommands: JSON.stringify(commands) });
+            }
+            else {
+                yield bot.update({
+                    hiddenCommands: JSON.stringify(defaultHiddenCommands),
+                });
+            }
         }
     }
     catch (error) {
