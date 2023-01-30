@@ -290,7 +290,7 @@ function migrate() {
       id BIGINT NOT NULL PRIMARY KEY,
       feed_id TEXT NOT NULL,
       feed_url TEXT NOT NULL,
-      subscription_status: BOOLEAN NOT NULL,
+      subscription_status BOOLEAN NOT NULL,
       item_id TEXT,
       episodes_status TEXT,
       chat_id INTEGER,
