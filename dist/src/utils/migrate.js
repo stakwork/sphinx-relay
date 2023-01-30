@@ -304,6 +304,26 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding content feed status table:', e.message], logging.DB)
         }
+        try {
+            logger_1.sphinxLogger.info('adding badge table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_badge (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      badge_id INTEGER,
+      name TEXT,
+      host TEXT,
+      memo TEXT,
+      type INTEGER,
+      deleted BOOLEAN,
+      asset TEXT,
+      tenant INTEGER,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`);
+        }
+        catch (e) {
+            // sphinxLogger.error(['problem adding badge table:', e], logging.DB)
+        }
         addTableColumn('sphinx_chat_bots', 'hidden_commands');
     });
 }

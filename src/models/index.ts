@@ -26,6 +26,7 @@ import CallRecording, { CallRecordingRecord } from './sql/callRecording'
 import ContentFeedStatus, {
   ContentFeedStatusRecord,
 } from './sql/contentFeedStatus'
+import Badge, { BadgeRecord } from './sql/badge'
 
 const argv = minimist(process.argv.slice(2))
 
@@ -70,6 +71,7 @@ const opts = {
     ActionHistory,
     CallRecording,
     ContentFeedStatus,
+    Badge,
   ],
 }
 if (isProxy()) {
@@ -117,4 +119,6 @@ export {
   CallRecordingRecord,
   ContentFeedStatus,
   ContentFeedStatusRecord,
+  Badge,
+  BadgeRecord,
 }
