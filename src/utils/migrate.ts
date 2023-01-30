@@ -314,7 +314,7 @@ export default async function migrate(): Promise<void> {
     sphinxLogger.info('adding content feed status table', logging.DB)
     await sequelize.query(`
     CREATE TABLE sphinx_content_feed_status (
-      id BIGINT NOT NULL PRIMARY KEY AUTOINCREMENT,
+      id BIGINT NOT NULL PRIMARY KEY,
       feed_id TEXT NOT NULL,
       feed_url TEXT NOT NULL,
       subscription_status: BOOLEAN NOT NULL,
