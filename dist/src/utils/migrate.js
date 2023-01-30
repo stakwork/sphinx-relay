@@ -302,7 +302,7 @@ function migrate() {
     )`);
         }
         catch (e) {
-            // sphinxLogger.error(['problem adding content feed status table:', e.message], logging.DB)
+            logger_1.sphinxLogger.error(['problem adding content feed status table:', e.message], logger_1.logging.DB);
         }
         addTableColumn('sphinx_chat_bots', 'hidden_commands');
     });
