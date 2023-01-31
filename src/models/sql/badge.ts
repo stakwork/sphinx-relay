@@ -34,6 +34,12 @@ export default class Badge extends Model<Badge> {
   @Column(DataType.BOOLEAN)
   deleted: boolean
 
+  @Column(DataType.BIGINT)
+  amount: number
+
+  @Column
+  icon: string
+
   @Column
   createdAt: Date
 

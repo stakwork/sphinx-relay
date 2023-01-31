@@ -54,6 +54,14 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Badge.prototype, "deleted", void 0);
 __decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
+    __metadata("design:type", Number)
+], Badge.prototype, "amount", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], Badge.prototype, "icon", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], Badge.prototype, "createdAt", void 0);

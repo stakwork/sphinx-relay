@@ -8,7 +8,7 @@ import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
 import { createJWT, scopes } from '../../utils/jwt'
 import { Badge, Req, Res } from '../../types'
-import { createOrEditBadgeBot } from '../../builtin/badge'
+// import { createOrEditBadgeBot } from '../../builtin/badge'
 import constants from '../../constants'
 
 const config = loadConfig()
@@ -202,47 +202,34 @@ export async function createBadge(req: Req, res: Res) {
       where: { tenant, isOwner: true },
     })) as Contact
 
-    const { name, icon, amount, chat_id, claim_amount, reward_type } = req.body
+    const { name, icon, amount, memo } = req.body
     if (
       typeof name !== 'string' ||
       typeof icon !== 'string' ||
-      typeof amount !== 'number' ||
-      typeof chat_id !== 'number' ||
-      typeof claim_amount !== 'number' ||
-      typeof reward_type !== 'number'
+      typeof amount !== 'number'
     )
       return failure(res, 'invalid data passed')
 
-    const tribe = await models.Chat.findOne({
-      where: {
-        id: chat_id,
-        ownerPubkey: owner.publicKey,
-        tenant,
-        deleted: false,
-        type: 2,
-      },
-    })
-    if (!tribe) return failure(res, 'invalid tribe')
-    let validRewardType = false
-    for (const key in constants.reward_types) {
-      if (constants.reward_types[key] === reward_type) {
-        validRewardType = true
-      }
-    }
-    if (!validRewardType) return failure(res, 'invalid reward type')
     const response: Badge = await people.createBadge({
       icon,
       amount,
       name,
       owner_pubkey: owner.publicKey,
     })
-    await createOrEditBadgeBot(
-      chat_id,
+
+    await models.Badge.create({
+      badgeId: response.id,
+      name: response.name,
+      amount: response.amount,
+      memo,
+      asset: response.asset,
+      deleted: false,
       tenant,
-      response,
-      claim_amount,
-      reward_type
-    )
+      type: constants.badge_type.liquid,
+      host: config.boltwall_server, //This is subject to change
+      icon: response.icon,
+    })
+
     return success(res, response)
   } catch (error) {
     return failure(res, error)

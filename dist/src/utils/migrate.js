@@ -317,6 +317,8 @@ function migrate() {
       deleted BOOLEAN,
       asset TEXT,
       tenant INTEGER,
+      amount BIGINT,
+      icon TEXT,
       created_at DATETIME,
       updated_at DATETIME
     )`);
