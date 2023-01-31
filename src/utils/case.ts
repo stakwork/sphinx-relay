@@ -11,6 +11,7 @@ const boolKeys = [
   'private',
   'privatePhoto',
   'skipBroadcastJoins',
+  'defaultJoin',
 ]
 
 function toSnake(obj) {

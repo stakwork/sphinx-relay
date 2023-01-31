@@ -39,6 +39,7 @@ let walletUnlocker = null;
 let routerClient = null;
 function loadCredentials(macName) {
     try {
+        console.log('=> loadCredentials', macName);
         const lndCert = fs.readFileSync(config.tls_location);
         const sslCreds = grpc.credentials.createSsl(lndCert);
         const macaroon = (0, macaroon_1.getMacaroon)(macName);
@@ -50,7 +51,7 @@ function loadCredentials(macName) {
         return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
     }
     catch (e) {
-        // console.log(e)
+        console.log('loadCredentials error', e);
         throw 'cannot read LND macaroon or cert';
     }
 }

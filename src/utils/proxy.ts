@@ -80,9 +80,14 @@ export async function generateNewUsers() {
 const adminURL = config.proxy_admin_url
   ? config.proxy_admin_url + '/'
   : 'http://localhost:5555/'
-export async function generateNewUser(rootpk: string): Promise<any> {
+export async function generateNewUser(
+  rootpk: string,
+  initial_sat?: number
+): Promise<any> {
   try {
-    const r = await fetch(adminURL + 'generate', {
+    let route = 'generate'
+    if (initial_sat) route = `generate?sats=${initial_sat}`
+    const r = await fetch(adminURL + route, {
       method: 'POST',
       headers: { 'x-admin-token': config.proxy_admin_token },
     })

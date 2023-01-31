@@ -42,6 +42,8 @@ export default async function migrate(): Promise<void> {
 
   addTableColumn('sphinx_chats', 'notify', 'BIGINT')
 
+  addTableColumn('sphinx_chats', 'default_join', 'BOOLEAN')
+
   await migrateMuted()
 
   addTableColumn('sphinx_messages', 'push', 'BOOLEAN')

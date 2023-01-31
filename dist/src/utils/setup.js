@@ -63,21 +63,16 @@ const setupOwnerContact = () => __awaiter(void 0, void 0, void 0, function* () {
                 where: { isOwner: true, id: 1 },
             });
             if (!one) {
-                let authToken = null;
-                let tenant = null;
-                // dont allow "signup" on root contact of proxy node
+                let publicKey = info.identity_pubkey;
                 if ((0, proxy_1.isProxy)()) {
-                    authToken = '_';
-                }
-                else {
-                    tenant = 1; // add tenant here
+                    // init on root contact of proxy node
+                    publicKey = yield (0, proxy_1.getProxyRootPubkey)();
                 }
                 const contact = (yield models_1.models.Contact.create({
                     id: 1,
-                    publicKey: info.identity_pubkey,
+                    tenant: 1,
+                    publicKey,
                     isOwner: true,
-                    authToken,
-                    tenant,
                 }));
                 logger_1.sphinxLogger.info(['created node owner contact, id:', contact.id], logger_1.logging.DB);
             }
