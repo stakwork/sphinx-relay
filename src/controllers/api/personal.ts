@@ -230,7 +230,7 @@ export async function createBadge(req: Req, res: Res) {
       icon: response.icon,
     })
 
-    return success(res, response)
+    return success(res, 'Badge Created Successfully')
   } catch (error) {
     return failure(res, error)
   }

@@ -221,7 +221,7 @@ function createBadge(req, res) {
                 host: config.boltwall_server,
                 icon: response.icon,
             });
-            return (0, res_1.success)(res, response);
+            return (0, res_1.success)(res, 'Badge Created Successfully');
         }
         catch (error) {
             return (0, res_1.failure)(res, error);
