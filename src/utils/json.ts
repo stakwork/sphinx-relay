@@ -36,7 +36,9 @@ function messageToJson(msg, chat?, contact?) {
 
 function contactToJson(contact) {
   if (!contact) return {}
-  return toSnake(contact.dataValues || contact)
+  const c = contact.dataValues || contact
+  if (c.authToken) delete c.authToken
+  return toSnake(c)
 }
 
 const inviteToJson = (invite) => toSnake(invite.dataValues || invite)

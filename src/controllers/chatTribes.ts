@@ -32,9 +32,16 @@ import { Response } from 'express'
  */
 export async function joinTribe(req: Req, res: Res): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
-  const tenant: number = req.owner.id
-
   sphinxLogger.info('=> joinTribe', logging.Express)
+  try {
+    const json = await doJoinTribe(req.body, req.owner)
+    success(res, json)
+  } catch (e) {
+    failure(res, e)
+  }
+}
+
+export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
   const {
     uuid,
     group_key,
@@ -47,127 +54,133 @@ export async function joinTribe(req: Req, res: Res): Promise<void | Response> {
     owner_alias,
     my_alias,
     my_photo_url,
-  } = req.body
+  } = body
   sphinxLogger.info(
     ['received owner route hint', owner_route_hint],
     logging.Express
   )
-  const is_private = req.body.private ? true : false
+  const is_private = body.private ? true : false
+  const tenant = owner.id
 
-  const existing: Chat = (await models.Chat.findOne({
-    where: { uuid, tenant },
-  })) as Chat
-  if (existing) {
-    sphinxLogger.error('You are already in this tribe', logging.Tribes)
-    return failure(res, 'cant find tribe')
-  }
-
-  if (!owner_pubkey || !group_key || !uuid) {
-    sphinxLogger.error('missing required params', logging.Tribes)
-    return failure(res, 'missing required params')
-  }
-
-  const ownerPubKey = owner_pubkey
-  // verify signature here?
-
-  const tribeOwner: Contact = (await models.Contact.findOne({
-    where: { publicKey: ownerPubKey, tenant },
-  })) as Contact
-
-  let theTribeOwner
-  const owner = req.owner
-
-  const contactIds = [owner.id]
-  if (tribeOwner) {
-    theTribeOwner = tribeOwner // might already include??
-    if (tribeOwner.routeHint !== owner_route_hint) {
-      await tribeOwner.update({ routeHint: owner_route_hint })
+  return new Promise(async (resolve, reject) => {
+    const existing: Chat = (await models.Chat.findOne({
+      where: { uuid, tenant },
+    })) as Chat
+    if (existing) {
+      sphinxLogger.error('You are already in this tribe', logging.Tribes)
+      reject('cant find tribe')
     }
-    if (!contactIds.includes(tribeOwner.id)) contactIds.push(tribeOwner.id)
-  } else {
-    const createdContact: Contact = (await models.Contact.create({
-      publicKey: ownerPubKey,
-      contactKey: '',
-      alias: owner_alias || 'Unknown',
-      status: 1,
-      fromGroup: true,
-      tenant,
-      routeHint: owner_route_hint || '',
+
+    if (!owner_pubkey || !group_key || !uuid) {
+      sphinxLogger.error('missing required params', logging.Tribes)
+      reject('missing required params')
+    }
+
+    const ownerPubKey = owner_pubkey
+    // verify signature here?
+
+    const tribeOwner: Contact = (await models.Contact.findOne({
+      where: { publicKey: ownerPubKey, tenant },
     })) as Contact
-    theTribeOwner = createdContact
-    // console.log("CREATE TRIBE OWNER", createdContact);
-    contactIds.push(createdContact.id)
-  }
-  const date = new Date()
-  date.setMilliseconds(0)
 
-  const chatStatus = is_private
-    ? constants.chat_statuses.pending
-    : constants.chat_statuses.approved
-  const chatParams: Partial<Chat> = {
-    uuid: uuid,
-    contactIds: JSON.stringify(contactIds),
-    photoUrl: img || '',
-    createdAt: date,
-    updatedAt: date,
-    name: name,
-    type: constants.chat_types.tribe,
-    host: host || tribes.getHost(),
-    groupKey: group_key,
-    ownerPubkey: owner_pubkey,
-    private: is_private || false,
-    status: chatStatus,
-    priceToJoin: amount || 0,
-    tenant,
-  }
-  if (my_alias) chatParams.myAlias = my_alias
-  if (my_photo_url) chatParams.myPhotoUrl = my_photo_url
+    let theTribeOwner
 
-  const typeToSend = is_private
-    ? constants.message_types.member_request
-    : constants.message_types.group_join
-  const contactIdsToSend: string = is_private
-    ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
-    : JSON.stringify(contactIds)
-  // console.log("=> joinTribe: typeToSend", typeToSend);
-  // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
-  // set my alias to be the custom one
-  const theOwner = owner
-  if (my_alias) theOwner.alias = my_alias
-  network.sendMessage({
-    // send my data to tribe owner
-    chat: {
-      ...chatParams,
-      contactIds: contactIdsToSend,
-      members: {
-        [owner.publicKey]: {
-          key: owner.contactKey,
-          alias: my_alias || owner.alias || '',
+    const contactIds = [owner.id]
+    if (tribeOwner) {
+      theTribeOwner = tribeOwner // might already include??
+      if (tribeOwner.routeHint !== owner_route_hint) {
+        await tribeOwner.update({ routeHint: owner_route_hint })
+      }
+      if (!contactIds.includes(tribeOwner.id)) contactIds.push(tribeOwner.id)
+    } else {
+      const createdContact: Contact = (await models.Contact.create({
+        publicKey: ownerPubKey,
+        contactKey: '',
+        alias: owner_alias || 'Unknown',
+        status: 1,
+        fromGroup: true,
+        tenant,
+        routeHint: owner_route_hint || '',
+      })) as Contact
+      theTribeOwner = createdContact
+      // console.log("CREATE TRIBE OWNER", createdContact);
+      contactIds.push(createdContact.id)
+    }
+    const date = new Date()
+    date.setMilliseconds(0)
+
+    const chatStatus = is_private
+      ? constants.chat_statuses.pending
+      : constants.chat_statuses.approved
+    const chatParams: Partial<Chat> = {
+      uuid: uuid,
+      contactIds: JSON.stringify(contactIds),
+      photoUrl: img || '',
+      createdAt: date,
+      updatedAt: date,
+      name: name,
+      type: constants.chat_types.tribe,
+      host: host || tribes.getHost(),
+      groupKey: group_key,
+      ownerPubkey: owner_pubkey,
+      private: is_private || false,
+      status: chatStatus,
+      priceToJoin: amount || 0,
+      tenant,
+    }
+    if (my_alias) chatParams.myAlias = my_alias
+    if (my_photo_url) chatParams.myPhotoUrl = my_photo_url
+
+    const typeToSend = is_private
+      ? constants.message_types.member_request
+      : constants.message_types.group_join
+    const contactIdsToSend: string = is_private
+      ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
+      : JSON.stringify(contactIds)
+    // console.log("=> joinTribe: typeToSend", typeToSend);
+    // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
+    // set my alias to be the custom one
+    const theOwner = owner
+    if (my_alias) theOwner.alias = my_alias
+    network.sendMessage({
+      // send my data to tribe owner
+      chat: {
+        ...chatParams,
+        contactIds: contactIdsToSend,
+        members: {
+          [owner.publicKey]: {
+            key: owner.contactKey,
+            alias: my_alias || owner.alias || '',
+          },
         },
       },
-    },
-    amount: amount || 0,
-    sender: theOwner,
-    message: {},
-    type: typeToSend,
-    failure: function (e) {
-      failure(res, e)
-    },
-    success: async function () {
-      // console.log("=> joinTribe: CREATE CHAT RECORD NOW");
-      const chat: Chat = (await models.Chat.create(chatParams)) as Chat
-      models.ChatMember.create({
-        contactId: theTribeOwner.id,
-        chatId: chat.id,
-        role: constants.chat_roles.owner,
-        lastActive: date,
-        status: constants.chat_statuses.approved,
-        tenant,
-      })
-      // console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
-      tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage)
-      success(res, jsonUtils.chatToJson(chat))
-    },
+      amount: amount || 0,
+      sender: theOwner,
+      message: {},
+      type: typeToSend,
+      failure: function (e) {
+        reject(e)
+      },
+      success: async function () {
+        // console.log("=> joinTribe: CREATE CHAT RECORD NOW");
+        const chat: Chat = (await models.Chat.create(chatParams)) as Chat
+        models.ChatMember.create({
+          contactId: theTribeOwner.id,
+          chatId: chat.id,
+          role: constants.chat_roles.owner,
+          lastActive: date,
+          status: constants.chat_statuses.approved,
+          tenant,
+        })
+        // console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
+        tribes.addExtraHost(
+          theOwner.publicKey,
+          host,
+          network.receiveMqttMessage
+        )
+        resolve(jsonUtils.chatToJson(chat))
+      },
+    })
   })
 }
 

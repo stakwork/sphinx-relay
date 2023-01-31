@@ -32,7 +32,10 @@ exports.messageToJson = messageToJson;
 function contactToJson(contact) {
     if (!contact)
         return {};
-    return (0, case_1.toSnake)(contact.dataValues || contact);
+    const c = contact.dataValues || contact;
+    if (c.authToken)
+        delete c.authToken;
+    return (0, case_1.toSnake)(c);
 }
 exports.contactToJson = contactToJson;
 const inviteToJson = (invite) => (0, case_1.toSnake)(invite.dataValues || invite);

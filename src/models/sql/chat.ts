@@ -138,6 +138,13 @@ export default class Chat extends Model<Chat> {
 
   @Column(DataType.TEXT)
   stakworkWebhook: string
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  })
+  defaultJoin: boolean
 }
 
 export interface ChatRecord extends Chat {
