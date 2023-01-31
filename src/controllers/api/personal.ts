@@ -2,7 +2,7 @@ import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'
 import * as people from '../../utils/people'
-import { models, Contact } from '../../models'
+import { models, Contact, BadgeRecord } from '../../models'
 import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
@@ -14,6 +14,16 @@ import constants from '../../constants'
 const config = loadConfig()
 // accessed from people.sphinx.chat website
 // U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
+
+interface Badges {
+  badge_id: number
+  name: string
+  amount_created: number
+  amount_issued: number
+  memo: string
+  asset: string
+  icon: string
+}
 export async function createPeopleProfile(req: Req, res: Res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
@@ -252,6 +262,49 @@ export async function transferBadge(req: Req, res: Res) {
       owner_pubkey: owner.publicKey,
     })
     return success(res, response)
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
+export async function getAllBadge(req: Req, res: Res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const limit = (req.query.limit && parseInt(req.query.limit as string)) || 100
+  const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
+
+  try {
+    const badges = (await models.Badge.findAll({
+      where: { tenant, deleted: false },
+      limit,
+      offset,
+    })) as BadgeRecord[]
+    const response = await fetch(
+      `${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`,
+      { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+    )
+    const results = await response.json()
+    const balObject = {}
+    for (let i = 0; i < results.balances.length; i++) {
+      const balance = results.balances[i]
+      balObject[balance.asset_id] = balance
+    }
+    const finalRes: Badges[] = []
+    for (let j = 0; j < badges.length; j++) {
+      const badge = badges[j]
+      if (balObject[badge.badgeId]) {
+        finalRes.push({
+          badge_id: badge.badgeId,
+          icon: badge.icon,
+          amount_created: badge.amount,
+          amount_issued: badge.amount - balObject[badge.badgeId].balance,
+          asset: badge.asset,
+          memo: badge.memo,
+          name: badge.name,
+        })
+      }
+    }
+    return success(res, finalRes)
   } catch (error) {
     return failure(res, error)
   }

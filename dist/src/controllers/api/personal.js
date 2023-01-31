@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -22,8 +22,6 @@ const jwt_1 = require("../../utils/jwt");
 // import { createOrEditBadgeBot } from '../../builtin/badge'
 const constants_1 = require("../../constants");
 const config = (0, config_1.loadConfig)();
-// accessed from people.sphinx.chat website
-// U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -254,4 +252,47 @@ function transferBadge(req, res) {
     });
 }
 exports.transferBadge = transferBadge;
+function getAllBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
+        const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+        try {
+            const badges = (yield models_1.models.Badge.findAll({
+                where: { tenant, deleted: false },
+                limit,
+                offset,
+            }));
+            const response = yield (0, node_fetch_1.default)(`${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const results = yield response.json();
+            const balObject = {};
+            for (let i = 0; i < results.balances.length; i++) {
+                const balance = results.balances[i];
+                balObject[balance.asset_id] = balance;
+            }
+            const finalRes = [];
+            for (let j = 0; j < badges.length; j++) {
+                const badge = badges[j];
+                if (balObject[badge.badgeId]) {
+                    finalRes.push({
+                        badge_id: badge.badgeId,
+                        icon: badge.icon,
+                        amount_created: badge.amount,
+                        amount_issued: badge.amount - balObject[badge.badgeId].balance,
+                        asset: badge.asset,
+                        memo: badge.memo,
+                        name: badge.name,
+                    });
+                }
+            }
+            return (0, res_1.success)(res, finalRes);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.getAllBadge = getAllBadge;
 //# sourceMappingURL=personal.js.map
