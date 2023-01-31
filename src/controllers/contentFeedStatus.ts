@@ -77,6 +77,7 @@ export async function addContentFeedStatus(
       `=> Error Saving Content Feed Status: ${error}`,
       logging.Express
     )
+    console.log(`=> Error Saving Content Feed Status: ${error}`)
     let errorMsg = 'An internal error occured'
     if (error === 'Invalid Content Feed Status') {
       errorMsg = 'Invalid Content Feed Status'

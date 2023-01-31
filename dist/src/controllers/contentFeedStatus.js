@@ -54,6 +54,7 @@ function addContentFeedStatus(req, res) {
         }
         catch (error) {
             logger_1.sphinxLogger.error(`=> Error Saving Content Feed Status: ${error}`, logger_1.logging.Express);
+            console.log(`=> Error Saving Content Feed Status: ${error}`);
             let errorMsg = 'An internal error occured';
             if (error === 'Invalid Content Feed Status') {
                 errorMsg = 'Invalid Content Feed Status';
