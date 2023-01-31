@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -19,11 +19,9 @@ const jsonUtils = require("../../utils/json");
 const res_1 = require("../../utils/res");
 const config_1 = require("../../utils/config");
 const jwt_1 = require("../../utils/jwt");
-const badge_1 = require("../../builtin/badge");
+// import { createOrEditBadgeBot } from '../../builtin/badge'
 const constants_1 = require("../../constants");
 const config = (0, config_1.loadConfig)();
-// accessed from people.sphinx.chat website
-// U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -198,41 +196,30 @@ function createBadge(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { name, icon, amount, chat_id, claim_amount, reward_type } = req.body;
+            const { name, icon, amount, memo } = req.body;
             if (typeof name !== 'string' ||
                 typeof icon !== 'string' ||
-                typeof amount !== 'number' ||
-                typeof chat_id !== 'number' ||
-                typeof claim_amount !== 'number' ||
-                typeof reward_type !== 'number')
+                typeof amount !== 'number')
                 return (0, res_1.failure)(res, 'invalid data passed');
-            const tribe = yield models_1.models.Chat.findOne({
-                where: {
-                    id: chat_id,
-                    ownerPubkey: owner.publicKey,
-                    tenant,
-                    deleted: false,
-                    type: 2,
-                },
-            });
-            if (!tribe)
-                return (0, res_1.failure)(res, 'invalid tribe');
-            let validRewardType = false;
-            for (const key in constants_1.default.reward_types) {
-                if (constants_1.default.reward_types[key] === reward_type) {
-                    validRewardType = true;
-                }
-            }
-            if (!validRewardType)
-                return (0, res_1.failure)(res, 'invalid reward type');
             const response = yield people.createBadge({
                 icon,
                 amount,
                 name,
                 owner_pubkey: owner.publicKey,
             });
-            yield (0, badge_1.createOrEditBadgeBot)(chat_id, tenant, response, claim_amount, reward_type);
-            return (0, res_1.success)(res, response);
+            yield models_1.models.Badge.create({
+                badgeId: response.id,
+                name: response.name,
+                amount: response.amount,
+                memo,
+                asset: response.asset,
+                deleted: false,
+                tenant,
+                type: constants_1.default.badge_type.liquid,
+                host: config.boltwall_server,
+                icon: response.icon,
+            });
+            return (0, res_1.success)(res, 'Badge Created Successfully');
         }
         catch (error) {
             return (0, res_1.failure)(res, error);
@@ -265,4 +252,71 @@ function transferBadge(req, res) {
     });
 }
 exports.transferBadge = transferBadge;
+function getAllBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
+        const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+        try {
+            const badges = (yield models_1.models.Badge.findAll({
+                where: { tenant, deleted: false },
+                limit,
+                offset,
+            }));
+            const response = yield (0, node_fetch_1.default)(`${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const results = yield response.json();
+            const balObject = {};
+            for (let i = 0; i < results.balances.length; i++) {
+                const balance = results.balances[i];
+                balObject[balance.asset_id] = balance;
+            }
+            const finalRes = [];
+            for (let j = 0; j < badges.length; j++) {
+                const badge = badges[j];
+                if (balObject[badge.badgeId]) {
+                    finalRes.push({
+                        badge_id: badge.badgeId,
+                        icon: badge.icon,
+                        amount_created: badge.amount,
+                        amount_issued: badge.amount - balObject[badge.badgeId].balance,
+                        asset: badge.asset,
+                        memo: badge.memo,
+                        name: badge.name,
+                    });
+                }
+            }
+            return (0, res_1.success)(res, finalRes);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.getAllBadge = getAllBadge;
+function deleteBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const badgeId = req.params.id;
+        try {
+            const badge = (yield models_1.models.Badge.findOne({
+                where: { tenant, badgeId, deleted: false },
+            }));
+            if (!badge) {
+                return (0, res_1.failure)(res, 'Badge does not exist');
+            }
+            else {
+                yield badge.update({ deleted: true });
+                return (0, res_1.success)(res, `${badge.name} was deleted successfully`);
+            }
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.deleteBadge = deleteBadge;
 //# sourceMappingURL=personal.js.map

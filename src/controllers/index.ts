@@ -90,6 +90,8 @@ export async function set(app) {
   app.post('/claim_on_liquid', personal.claimOnLiquid)
   app.post('/create_badge', personal.createBadge)
   app.post('/transfer_badge', personal.transferBadge)
+  app.get('/badges', personal.getAllBadge)
+  app.delete('/badge/:id', personal.deleteBadge)
 
   app.get('/msgs', messages.getMsgs)
   app.get('/allmessages', messages.getAllMessages)

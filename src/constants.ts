@@ -121,6 +121,10 @@ const constants = {
     stored: 4,
     in_actve: 5,
   },
+
+  badge_type: {
+    liquid: 1,
+  },
 }
 
 export default constants
