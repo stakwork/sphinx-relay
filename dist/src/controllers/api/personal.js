@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -295,4 +295,28 @@ function getAllBadge(req, res) {
     });
 }
 exports.getAllBadge = getAllBadge;
+function deleteBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const badgeId = req.params.id;
+        try {
+            const badge = (yield models_1.models.Badge.findOne({
+                where: { tenant, badgeId, deleted: false },
+            }));
+            if (!badge) {
+                return (0, res_1.failure)(res, 'Badge does not exist');
+            }
+            else {
+                yield badge.update({ deleted: true });
+                return (0, res_1.success)(res, `${badge.name} was deleted successfully`);
+            }
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.deleteBadge = deleteBadge;
 //# sourceMappingURL=personal.js.map

@@ -309,3 +309,23 @@ export async function getAllBadge(req: Req, res: Res) {
     return failure(res, error)
   }
 }
+
+export async function deleteBadge(req: Req, res: Res) {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const badgeId = req.params.id
+
+  try {
+    const badge = (await models.Badge.findOne({
+      where: { tenant, badgeId, deleted: false },
+    })) as BadgeRecord
+    if (!badge) {
+      return failure(res, 'Badge does not exist')
+    } else {
+      await badge.update({ deleted: true })
+      return success(res, `${badge.name} was deleted successfully`)
+    }
+  } catch (error) {
+    return failure(res, error)
+  }
+}
