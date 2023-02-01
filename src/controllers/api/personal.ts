@@ -2,7 +2,7 @@ import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'
 import * as people from '../../utils/people'
-import { models, Contact, BadgeRecord } from '../../models'
+import { models, Contact, BadgeRecord, ChatRecord } from '../../models'
 import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
@@ -354,7 +354,61 @@ export async function deleteBadge(
   }
 }
 
-export async function addBadgeToTrine(
+export async function addBadgeToTribe(
   req: Req,
   res: Res
-): Promise<void | Response> {}
+): Promise<void | Response> {
+  const tenant: number = req.owner.id
+  const { chat_id, reward_type, reward_requirement, badge_id } = req.body
+
+  if (!chat_id || !reward_type || !reward_requirement || !badge_id) {
+    return failure(res, 'Invalid data passed')
+  }
+  let validRewardType = false
+
+  for (const key in constants.reward_types) {
+    if (constants.reward_types[key] === reward_type) {
+      validRewardType = true
+    }
+  }
+
+  if (typeof reward_requirement !== 'number') {
+    return failure(res, 'Invalid reward requirement')
+  }
+
+  if (!validRewardType) return failure(res, 'invalid reward type')
+  try {
+    const tribe = (await models.Chat.findOne({
+      where: {
+        id: chat_id,
+        ownerPubkey: req.owner.publicKey,
+        deleted: false,
+        tenant,
+      },
+    })) as ChatRecord
+    if (!tribe) {
+      return failure(res, 'Invalid tribe')
+    }
+    const badge = (await models.Badge.findOne({
+      where: { badgeId: badge_id, tenant },
+    })) as BadgeRecord
+    if (!badge) {
+      return failure(res, 'Invalid Badge')
+    }
+    const badgeExist = await models.TribeBadge.findOne({
+      where: { chatId: tribe.id, badgeId: badge.id },
+    })
+    if (badgeExist) {
+      return failure(res, 'Badge already exist in tribe')
+    }
+    await models.TribeBadge.create({
+      rewardType: reward_type,
+      rewardRequirement: reward_requirement,
+      badgeId: badge.id,
+      chatId: tribe.id,
+    })
+    return success(res, 'Badge was added to tribe successfully')
+  } catch (error) {
+    return failure(res, error)
+  }
+}

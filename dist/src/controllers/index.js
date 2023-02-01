@@ -91,6 +91,7 @@ function set(app) {
         app.post('/transfer_badge', personal.transferBadge);
         app.get('/badges', personal.getAllBadge);
         app.delete('/badge/:id', personal.deleteBadge);
+        app.post('/add_badge', personal.addBadgeToTribe);
         app.get('/msgs', messages.getMsgs);
         app.get('/allmessages', messages.getAllMessages);
         app.get('/messages', messages.getMessages);
