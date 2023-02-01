@@ -39,7 +39,7 @@ let walletUnlocker = null;
 let routerClient = null;
 function loadCredentials(macName) {
     try {
-        console.log('=> loadCredentials', macName);
+        // console.log('=> loadCredentials', macName)
         const lndCert = fs.readFileSync(config.tls_location);
         const sslCreds = grpc.credentials.createSsl(lndCert);
         const macaroon = (0, macaroon_1.getMacaroon)(macName);
