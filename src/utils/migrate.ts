@@ -355,6 +355,22 @@ export default async function migrate(): Promise<void> {
     // sphinxLogger.error(['problem adding badge table:', e], logging.DB)
   }
 
+  try {
+    sphinxLogger.info('adding tribe badge table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_tribe_badge (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      badge_id INTEGER,
+      chat_id INTEGER,
+      reward_type INTEGER,
+      reward_requirement INTEGER,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch (e) {
+    // sphinxLogger.error(['problem adding tribe badge table:', e], logging.DB)
+  }
+
   addTableColumn('sphinx_chat_bots', 'hidden_commands')
 }
 

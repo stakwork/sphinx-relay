@@ -327,6 +327,22 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding badge table:', e], logging.DB)
         }
+        try {
+            logger_1.sphinxLogger.info('adding tribe badge table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_tribe_badge (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      badge_id INTEGER,
+      chat_id INTEGER,
+      reward_type INTEGER,
+      reward_requirement INTEGER,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`);
+        }
+        catch (e) {
+            // sphinxLogger.error(['problem adding tribe badge table:', e], logging.DB)
+        }
         addTableColumn('sphinx_chat_bots', 'hidden_commands');
     });
 }
