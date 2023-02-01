@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.addBadgeToTrine = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -319,4 +319,8 @@ function deleteBadge(req, res) {
     });
 }
 exports.deleteBadge = deleteBadge;
+function addBadgeToTrine(req, res) {
+    return __awaiter(this, void 0, void 0, function* () { });
+}
+exports.addBadgeToTrine = addBadgeToTrine;
 //# sourceMappingURL=personal.js.map

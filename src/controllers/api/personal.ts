@@ -24,7 +24,10 @@ interface Badges {
   asset: string
   icon: string
 }
-export async function createPeopleProfile(req: Req, res: Res) {
+export async function createPeopleProfile(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -79,7 +82,10 @@ export async function createPeopleProfile(req: Req, res: Res) {
 }
 
 // accessed from people.sphinx.chat website
-export async function deletePersonProfile(req: Req, res: Res) {
+export async function deletePersonProfile(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -101,7 +107,10 @@ export async function deletePersonProfile(req: Req, res: Res) {
   }
 }
 
-export async function deleteTicketByAdmin(req: Req, res: Res) {
+export async function deleteTicketByAdmin(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
 
   try {
@@ -120,7 +129,10 @@ export async function deleteTicketByAdmin(req: Req, res: Res) {
   }
 }
 
-export async function uploadPublicPic(req: Req, res: Res) {
+export async function uploadPublicPic(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
 
   const { img_base64, img_type } = req.body
@@ -169,7 +181,7 @@ export async function uploadPublicPic(req: Req, res: Res) {
   }
 }
 
-export async function refreshJWT(req: Req, res: Res) {
+export async function refreshJWT(req: Req, res: Res): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const sc = [scopes.PERSONAL]
   const jot = createJWT(req.owner.publicKey, sc, 10080) // one week
@@ -203,7 +215,10 @@ export async function claimOnLiquid(req: Req, res: Res) {
   }
 }
 
-export async function createBadge(req: Req, res: Res) {
+export async function createBadge(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -246,7 +261,10 @@ export async function createBadge(req: Req, res: Res) {
   }
 }
 
-export async function transferBadge(req: Req, res: Res) {
+export async function transferBadge(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
@@ -267,7 +285,10 @@ export async function transferBadge(req: Req, res: Res) {
   }
 }
 
-export async function getAllBadge(req: Req, res: Res) {
+export async function getAllBadge(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const limit = (req.query.limit && parseInt(req.query.limit as string)) || 100
@@ -310,7 +331,10 @@ export async function getAllBadge(req: Req, res: Res) {
   }
 }
 
-export async function deleteBadge(req: Req, res: Res) {
+export async function deleteBadge(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const badgeId = req.params.id
@@ -329,3 +353,8 @@ export async function deleteBadge(req: Req, res: Res) {
     return failure(res, error)
   }
 }
+
+export async function addBadgeToTrine(
+  req: Req,
+  res: Res
+): Promise<void | Response> {}
