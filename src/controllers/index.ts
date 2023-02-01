@@ -193,6 +193,10 @@ export async function set(app) {
   // Content Feed Status
   app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus)
   app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus)
+  app.put(
+    '/content_feed_status/:feed_id',
+    contentFeedStatus.updateContentFeedStatus
+  )
 
   // open
   app.get('/has_admin', admin.hasAdmin)
