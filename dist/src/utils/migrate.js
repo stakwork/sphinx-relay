@@ -288,10 +288,10 @@ function migrate() {
             logger_1.sphinxLogger.info('adding content feed status table', logger_1.logging.DB);
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_content_feed_status (
-      id BIGINT NOT NULL PRIMARY KEY AUTOINCREMENT,
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
       feed_id TEXT NOT NULL,
       feed_url TEXT NOT NULL,
-      subscription_status: BOOLEAN NOT NULL,
+      subscription_status BOOLEAN NOT NULL,
       item_id TEXT,
       episodes_status TEXT,
       chat_id INTEGER,
