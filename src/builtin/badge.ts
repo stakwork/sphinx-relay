@@ -20,7 +20,6 @@ import {
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
 import { loadConfig } from '../utils/config'
-import { createBadgeBot } from '../utils/badgeBot'
 
 interface BadgeRewards {
   badgeId: number
@@ -153,6 +152,9 @@ export function init() {
               cmd,
               message
             )
+            if (!badgeName) {
+              return
+            }
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('BadgeBot')
               .setDescription(badgeName + ' badge has been added to this tribe')
@@ -480,6 +482,6 @@ async function addBadgeToTribe(
     deleted: false,
   })
 
-  await createBadgeBot(tribeId, tenant)
+  console.log('++++++++++++++', badge.name)
   return badge.name
 }

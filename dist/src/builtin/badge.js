@@ -19,7 +19,6 @@ const node_fetch_1 = require("node-fetch");
 const people_1 = require("../utils/people");
 const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
 const config_1 = require("../utils/config");
-const badgeBot_1 = require("../utils/badgeBot");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const botPrefix = '/badge';
@@ -105,6 +104,9 @@ function init() {
                             return;
                         }
                         const badgeName = yield addBadgeToTribe(badgeId, message.member.id, tribe.id, rewardRequirement, rewardType, cmd, message);
+                        if (!badgeName) {
+                            return;
+                        }
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('BadgeBot')
                             .setDescription(badgeName + ' badge has been added to this tribe')
@@ -394,7 +396,7 @@ function addBadgeToTribe(badgeId, tenant, tribeId, reward_requirement, reward_ty
             chatId: tribeId,
             deleted: false,
         });
-        yield (0, badgeBot_1.createBadgeBot)(tribeId, tenant);
+        console.log('++++++++++++++', badge.name);
         return badge.name;
     });
 }
