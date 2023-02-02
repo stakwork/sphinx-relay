@@ -19,8 +19,15 @@ export default class TribeBadge extends Model<TribeBadge> {
   @Column
   rewardType: number
 
-  @Column(DataType.TEXT)
+  @Column
   rewardRequirement: number
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  })
+  deleted: boolean
 
   @Column
   createdAt: Date

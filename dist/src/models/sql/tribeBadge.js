@@ -34,9 +34,17 @@ __decorate([
     __metadata("design:type", Number)
 ], TribeBadge.prototype, "rewardType", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
+    sequelize_typescript_1.Column,
     __metadata("design:type", Number)
 ], TribeBadge.prototype, "rewardRequirement", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+    }),
+    __metadata("design:type", Boolean)
+], TribeBadge.prototype, "deleted", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)

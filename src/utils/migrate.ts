@@ -364,6 +364,7 @@ export default async function migrate(): Promise<void> {
       chat_id INTEGER,
       reward_type INTEGER,
       reward_requirement INTEGER,
+      deleted BOOLEAN,
       created_at DATETIME,
       updated_at DATETIME
     )`)

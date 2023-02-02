@@ -406,6 +406,7 @@ export async function addBadgeToTribe(
       rewardRequirement: reward_requirement,
       badgeId: badge.id,
       chatId: tribe.id,
+      deleted: false,
     })
     return success(res, 'Badge was added to tribe successfully')
   } catch (error) {
