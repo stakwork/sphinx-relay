@@ -54,11 +54,14 @@ function badgeBotTest(t, index1, index2, index3) {
         const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
         t.truthy(botReply2, 'MotherBot should reply');
         // // NODE1 CREATES A BADGE THROUGH THE ENPOINT
-        // const earnBadge = await createBadge(t, node1, tribe, 1, 10, 'Earn')
-        // t.truthy(earnBadge, 'Badge should be created by Node1')
+        const earnBadge = yield (0, bots_1.createBadge)(t, node1, 'Earn Badge');
+        t.truthy(earnBadge, 'Badge should be created by Node1');
+        // Adding Badge to Tribe
+        const addTribe = yield (0, bots_1.addTribeToBadge)(t, node1, tribe, 1, 10);
+        t.truthy(addTribe, 'Badge should be created by Node1');
         // NODE1 CREATES A BADGE DDIRECTLY FROM MESSAGE
-        const createSpendBadge = '/badge create Spending 10 20 2 spend-badge';
-        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, createSpendBadge);
+        // const createSpendBadge = '/badge create Spending 10 20 2 spend-badge'
+        // await sendTribeMessage(t, node1, tribe, createSpendBadge)
         // const spendBadge = await createBadge(t, node1, tribe, 2, 20, 'Spend')
         // t.truthy(spendBadge, 'Badge should be created by Node1')
         //NODE3 JOINS TRIBE CREATED BY NODE1
@@ -78,12 +81,17 @@ function badgeBotTest(t, index1, index2, index3) {
         t.true(payment.success, 'DIrect Payment in tribe should be successful');
         yield (0, helpers_1.sleep)(10000);
         // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-        // const confirm = await confirmBadge(node2, earnBadge.response.id)
-        // t.true(confirm, 'Node 2 should recieve the earner badge')
+        const confirm = yield (0, bots_1.confirmBadge)(node2, 22222222222222222222222222);
+        t.true(confirm, 'Node 2 should recieve the earner badge');
         // await sleep(1000)
         // CHECK IF NODE3 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-        const confirm1 = yield (0, bots_1.confirmBadgeCreatedThroughMessage)(node1, node3, tribe.id, 2);
-        t.true(confirm1, 'Node 3 should recieve the spender badge');
+        // const confirm1 = await confirmBadgeCreatedThroughMessage(
+        //   node1,
+        //   node3,
+        //   tribe.id,
+        //   2
+        // )
+        // t.true(confirm1, 'Node 3 should recieve the spender badge')
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');

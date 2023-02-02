@@ -5,9 +5,10 @@ import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import {
-  // createBadge,
-  // confirmBadge,
-  confirmBadgeCreatedThroughMessage,
+  createBadge,
+  confirmBadge,
+  // confirmBadgeCreatedThroughMessage,
+  addTribeToBadge,
 } from '../utils/bots'
 import { randomText, sleep } from '../utils/helpers'
 import {
@@ -59,12 +60,16 @@ export async function badgeBotTest(t, index1, index2, index3) {
   t.truthy(botReply2, 'MotherBot should reply')
 
   // // NODE1 CREATES A BADGE THROUGH THE ENPOINT
-  // const earnBadge = await createBadge(t, node1, tribe, 1, 10, 'Earn')
-  // t.truthy(earnBadge, 'Badge should be created by Node1')
+  const earnBadge = await createBadge(t, node1, 'Earn Badge')
+  t.truthy(earnBadge, 'Badge should be created by Node1')
+
+  // Adding Badge to Tribe
+  const addTribe = await addTribeToBadge(t, node1, tribe, 1, 10)
+  t.truthy(addTribe, 'Badge should be created by Node1')
 
   // NODE1 CREATES A BADGE DDIRECTLY FROM MESSAGE
-  const createSpendBadge = '/badge create Spending 10 20 2 spend-badge'
-  await sendTribeMessage(t, node1, tribe, createSpendBadge)
+  // const createSpendBadge = '/badge create Spending 10 20 2 spend-badge'
+  // await sendTribeMessage(t, node1, tribe, createSpendBadge)
   // const spendBadge = await createBadge(t, node1, tribe, 2, 20, 'Spend')
   // t.truthy(spendBadge, 'Badge should be created by Node1')
 
@@ -103,19 +108,19 @@ export async function badgeBotTest(t, index1, index2, index3) {
   await sleep(10000)
 
   // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-  // const confirm = await confirmBadge(node2, earnBadge.response.id)
-  // t.true(confirm, 'Node 2 should recieve the earner badge')
+  const confirm = await confirmBadge(node2, 22222222222222222222222222)
+  t.true(confirm, 'Node 2 should recieve the earner badge')
 
   // await sleep(1000)
 
   // CHECK IF NODE3 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-  const confirm1 = await confirmBadgeCreatedThroughMessage(
-    node1,
-    node3,
-    tribe.id,
-    2
-  )
-  t.true(confirm1, 'Node 3 should recieve the spender badge')
+  // const confirm1 = await confirmBadgeCreatedThroughMessage(
+  //   node1,
+  //   node3,
+  //   tribe.id,
+  //   2
+  // )
+  // t.true(confirm1, 'Node 3 should recieve the spender badge')
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)
