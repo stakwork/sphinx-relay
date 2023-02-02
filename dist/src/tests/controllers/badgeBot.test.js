@@ -75,7 +75,7 @@ function badgeBotTest(t, index1, index2, index3) {
         const addTribe = yield (0, bots_1.addTribeToBadge)(t, node1, tribe, 1, 10);
         t.truthy(addTribe, 'Badge should be created by Node1');
         // NODE1 ADD A BADGE DDIRECTLY FROM MESSAGE
-        const createSpendBadge = '/badge add 22222222222222222222222222 2 10';
+        const createSpendBadge = `/badge add ${earnBadge.response.badge_id} 2 10`;
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe2, createSpendBadge);
         // const spendBadge = await createBadge(t, node1, tribe, 2, 20, 'Spend')
         // t.truthy(spendBadge, 'Badge should be created by Node1')
@@ -107,7 +107,7 @@ function badgeBotTest(t, index1, index2, index3) {
         t.true(payment2.success, 'Direct Payment in tribe should be successful');
         yield (0, helpers_1.sleep)(10000);
         // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-        const confirm = yield (0, bots_1.confirmBadge)(node2, 22222222222222222222222222);
+        const confirm = yield (0, bots_1.confirmBadge)(node2, earnBadge.response.badge_id);
         t.true(confirm, 'Node 2 should recieve the earner badge');
         // await sleep(1000)
         // CHECK IF NODE3 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER

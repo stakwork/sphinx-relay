@@ -86,7 +86,7 @@ export async function badgeBotTest(t, index1, index2, index3) {
   t.truthy(addTribe, 'Badge should be created by Node1')
 
   // NODE1 ADD A BADGE DDIRECTLY FROM MESSAGE
-  const createSpendBadge = '/badge add 22222222222222222222222222 2 10'
+  const createSpendBadge = `/badge add ${earnBadge.response.badge_id} 2 10`
   await sendTribeMessage(t, node1, tribe2, createSpendBadge)
   // const spendBadge = await createBadge(t, node1, tribe, 2, 20, 'Spend')
   // t.truthy(spendBadge, 'Badge should be created by Node1')
@@ -152,7 +152,7 @@ export async function badgeBotTest(t, index1, index2, index3) {
   await sleep(10000)
 
   // CHECK IF NODE2 ACTUALLY RECIEVED THE BAGDE ON THE ELEMENT SERVER
-  const confirm = await confirmBadge(node2, 22222222222222222222222222)
+  const confirm = await confirmBadge(node2, earnBadge.response.badge_id)
   t.true(confirm, 'Node 2 should recieve the earner badge')
 
   // await sleep(1000)
