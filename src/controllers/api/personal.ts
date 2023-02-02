@@ -243,7 +243,7 @@ export async function createBadge(
       owner_pubkey: owner.publicKey,
     })
 
-    await models.Badge.create({
+    const badge = (await models.Badge.create({
       badgeId: response.id,
       name: response.name,
       amount: response.amount,
@@ -254,9 +254,16 @@ export async function createBadge(
       type: constants.badge_type.liquid,
       host: config.boltwall_server, //This is subject to change
       icon: response.icon,
-    })
+    })) as BadgeRecord
 
-    return success(res, 'Badge Created Successfully')
+    return success(res, {
+      badge_id: badge.badgeId,
+      icon: badge.icon,
+      amount_created: badge.amount,
+      asset: badge.asset,
+      memo: badge.memo,
+      name: badge.name,
+    })
   } catch (error) {
     return failure(res, error)
   }

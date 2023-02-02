@@ -208,7 +208,7 @@ function createBadge(req, res) {
                 name,
                 owner_pubkey: owner.publicKey,
             });
-            yield models_1.models.Badge.create({
+            const badge = (yield models_1.models.Badge.create({
                 badgeId: response.id,
                 name: response.name,
                 amount: response.amount,
@@ -219,8 +219,15 @@ function createBadge(req, res) {
                 type: constants_1.default.badge_type.liquid,
                 host: config.boltwall_server,
                 icon: response.icon,
+            }));
+            return (0, res_1.success)(res, {
+                badge_id: badge.badgeId,
+                icon: badge.icon,
+                amount_created: badge.amount,
+                asset: badge.asset,
+                memo: badge.memo,
+                name: badge.name,
             });
-            return (0, res_1.success)(res, 'Badge Created Successfully');
         }
         catch (error) {
             return (0, res_1.failure)(res, error);
