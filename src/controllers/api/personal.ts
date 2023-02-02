@@ -10,6 +10,7 @@ import { createJWT, scopes } from '../../utils/jwt'
 import { Badge, Req, Res } from '../../types'
 // import { createOrEditBadgeBot } from '../../builtin/badge'
 import constants from '../../constants'
+import { createBadgeBot } from '../../utils/badgeBot'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -408,6 +409,8 @@ export async function addBadgeToTribe(
       chatId: tribe.id,
       deleted: false,
     })
+
+    await createBadgeBot(tribe.id, tenant)
     return success(res, 'Badge was added to tribe successfully')
   } catch (error) {
     return failure(res, error)

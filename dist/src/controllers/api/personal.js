@@ -21,6 +21,7 @@ const config_1 = require("../../utils/config");
 const jwt_1 = require("../../utils/jwt");
 // import { createOrEditBadgeBot } from '../../builtin/badge'
 const constants_1 = require("../../constants");
+const badgeBot_1 = require("../../utils/badgeBot");
 const config = (0, config_1.loadConfig)();
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -368,6 +369,7 @@ function addBadgeToTribe(req, res) {
                 chatId: tribe.id,
                 deleted: false,
             });
+            yield (0, badgeBot_1.createBadgeBot)(tribe.id, tenant);
             return (0, res_1.success)(res, 'Badge was added to tribe successfully');
         }
         catch (error) {
