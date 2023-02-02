@@ -94,8 +94,10 @@ function generateNewUser(rootpk, initial_sat) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let route = 'generate';
-            if (initial_sat)
+            if (initial_sat) {
                 route = `generate?sats=${initial_sat}`;
+                logger_1.sphinxLogger.info(`new user with sats: ${initial_sat}`, logger_1.logging.Proxy);
+            }
             const r = yield (0, node_fetch_1.default)(adminURL + route, {
                 method: 'POST',
                 headers: { 'x-admin-token': config.proxy_admin_token },

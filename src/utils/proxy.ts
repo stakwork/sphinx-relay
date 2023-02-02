@@ -86,7 +86,10 @@ export async function generateNewUser(
 ): Promise<any> {
   try {
     let route = 'generate'
-    if (initial_sat) route = `generate?sats=${initial_sat}`
+    if (initial_sat) {
+      route = `generate?sats=${initial_sat}`
+      sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
+    }
     const r = await fetch(adminURL + route, {
       method: 'POST',
       headers: { 'x-admin-token': config.proxy_admin_token },
