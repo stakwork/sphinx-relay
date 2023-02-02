@@ -13,13 +13,14 @@ import {
 } from '../models'
 import constants from '../constants'
 import fetch from 'node-fetch'
-import { transferBadge, createBadge } from '../utils/people'
+import { transferBadge } from '../utils/people'
 import { Badge } from '../types'
 import {
   hideCommandHandler,
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
 import { loadConfig } from '../utils/config'
+import { createBadgeBot } from '../utils/badgeBot'
 
 interface BadgeRewards {
   badgeId: number
@@ -62,14 +63,14 @@ export function init() {
       const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
       if (!isAdmin) return
       switch (cmd) {
-        case 'create':
-          if (arr.length === 7) {
-            const name = arr[2]
-            if (!name) {
+        case 'add':
+          if (arr.length === 5) {
+            const badgeId = Number(arr[2])
+            if (isNaN(badgeId)) {
               const addFields = [
                 {
                   name: 'Badge Bot Error',
-                  value: 'Provide a valid badge name',
+                  value: 'Provide a valid badge id',
                 },
               ]
               botResponse(
@@ -82,13 +83,12 @@ export function init() {
               )
               return
             }
-            const amount = Number(arr[3])
-            if (isNaN(amount)) {
+            const rewardType = Number(arr[3])
+            if (isNaN(rewardType)) {
               const addFields = [
                 {
                   name: 'Badge Bot Error',
-                  value:
-                    'Provide a valid amount of badge you would like to create',
+                  value: 'Provide a valid reward type',
                 },
               ]
               botResponse(
@@ -101,8 +101,31 @@ export function init() {
               )
               return
             }
-            const claim_amount = Number(arr[4])
-            if (isNaN(claim_amount)) {
+            let validRewardType = false
+            for (const key in constants.reward_types) {
+              if (constants.reward_types[key] === rewardType) {
+                validRewardType = true
+              }
+            }
+            if (!validRewardType) {
+              const addFields = [
+                {
+                  name: 'Badge Bot Error',
+                  value: 'Provide a valid reward type',
+                },
+              ]
+              botResponse(
+                addFields,
+                'BadgeBot',
+                'Badge Error',
+                message,
+                cmd,
+                tribe.id
+              )
+              return
+            }
+            const rewardRequirement = Number(arr[4])
+            if (isNaN(rewardRequirement) || rewardRequirement === 0) {
               const addFields = [
                 {
                   name: 'Badge Bot Error',
@@ -120,62 +143,19 @@ export function init() {
               )
               return
             }
-            const reward_type = Number(arr[5])
-            if (isNaN(reward_type)) {
-              const addFields = [
-                {
-                  name: 'Badge Bot Error',
-                  value:
-                    'Provide a valid amount of badge you would like to create',
-                },
-              ]
-              botResponse(
-                addFields,
-                'BadgeBot',
-                'Badge Error',
-                message,
-                cmd,
-                tribe.id
-              )
-              return
-            }
-            const icon = arr[6]
-            if (!icon) {
-              const addFields = [
-                {
-                  name: 'Badge Bot Error',
-                  value: 'Provide a valid Icon url',
-                },
-              ]
-              botResponse(
-                addFields,
-                'BadgeBot',
-                'Badge Error',
-                message,
-                cmd,
-                tribe.id
-              )
-              return
-            }
-            const response = await createBadge({
-              icon,
-              amount: amount,
-              name,
-              owner_pubkey: tribe.ownerPubkey,
-            })
 
-            await createOrEditBadgeBot(
+            const badgeName = await addBadgeToTribe(
+              badgeId,
+              message.member.id!,
               tribe.id,
-              tribe.tenant,
-              response,
-              claim_amount,
-              reward_type
+              rewardRequirement,
+              rewardType,
+              cmd,
+              message
             )
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('BadgeBot')
-              .setDescription(
-                response.name + ' badge has been added to this tribe'
-              )
+              .setDescription(badgeName + ' badge has been added to this tribe')
               .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed })
             return
@@ -231,7 +211,7 @@ export function init() {
               {
                 name: 'Create new badge bot',
                 value:
-                  '/badge create {BADGE_NAME} {AMOUNT_OF_BADGE_TO_CREATE} {CONDITION_FOR_BADGE_TO_BE CLAIMED} {BADGE_TYPE} {BADGE_ICON}',
+                  '/badge add {BADGE_ID} {BADGE_TYPE} {CONDITION_FOR_BADGE_TO_BE CLAIMED}',
               },
               { name: 'Help', value: '/badge help' },
             ])
@@ -456,3 +436,50 @@ async function botResponse(addFields, author, title, message, cmd, tribeId) {
 const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white">
   <path d="M300 328a60 60 0 10120 0 60 60 0 10-120 0zM852 64H172c-17.7 0-32 14.3-32 32v660c0 17.7 14.3 32 32 32h680c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-32 660H204V128h616v596zM604 328a60 60 0 10120 0 60 60 0 10-120 0zm250.2 556H169.8c-16.5 0-29.8 14.3-29.8 32v36c0 4.4 3.3 8 7.4 8h729.1c4.1 0 7.4-3.6 7.4-8v-36c.1-17.7-13.2-32-29.7-32zM664 508H360c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h304c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8z" />
 </svg>`
+
+async function addBadgeToTribe(
+  badgeId,
+  tenant,
+  tribeId,
+  reward_requirement,
+  reward_type,
+  cmd,
+  message
+) {
+  const badge = (await models.Badge.findOne({
+    where: { badgeId, tenant },
+  })) as BadgeRecord
+  if (!badge) {
+    const addFields = [
+      {
+        name: 'Badge Bot Error',
+        value: 'Invalid Badge',
+      },
+    ]
+    botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribeId)
+    return
+  }
+  const badgeExist = await models.TribeBadge.findOne({
+    where: { chatId: tribeId, badgeId: badge.id },
+  })
+  if (badgeExist) {
+    const addFields = [
+      {
+        name: 'Badge Bot Error',
+        value: 'Badge already exist in tribe',
+      },
+    ]
+    botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribeId)
+    return
+  }
+  await models.TribeBadge.create({
+    rewardType: reward_type,
+    rewardRequirement: reward_requirement,
+    badgeId: badge.id,
+    chatId: tribeId,
+    deleted: false,
+  })
+
+  await createBadgeBot(tribeId, tenant)
+  return badge.name
+}
