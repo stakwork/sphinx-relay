@@ -18,9 +18,11 @@ const constants_1 = require("../constants");
 const node_fetch_1 = require("node-fetch");
 const people_1 = require("../utils/people");
 const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
+const config_1 = require("../utils/config");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const botPrefix = '/badge';
+const config = (0, config_1.loadConfig)();
 // check who the message came from
 // check their Member table to see if it cross the amount
 // reward the badge (by calling "/transfer" on element server)
@@ -176,13 +178,6 @@ function init() {
         else {
             const chatMembers = [];
             try {
-                const bot = (yield models_1.models.ChatBot.findOne({
-                    where: {
-                        botPrefix: '/badge',
-                        chatId: tribe.id,
-                        tenant: tribe.tenant,
-                    },
-                }));
                 const chatMember = (yield models_1.models.ChatMember.findOne({
                     where: {
                         contactId: parseInt(message.member.id),
@@ -217,31 +212,36 @@ function init() {
                     }));
                     chatMembers.push(tribeMember);
                 }
-                if (bot && typeof bot.meta === 'string') {
+                const tribeBadges = (yield models_1.models.TribeBadge.findAll({
+                    where: { chatId: tribe.id },
+                }));
+                if (tribeBadges && tribeBadges.length > 0) {
                     for (let j = 0; j < chatMembers.length; j++) {
                         const chatMember = chatMembers[j];
-                        const rewards = JSON.parse(bot.meta);
-                        for (let i = 0; i < rewards.length; i++) {
-                            const reward = rewards[i];
+                        for (let i = 0; i < tribeBadges.length; i++) {
+                            const tribeBadge = tribeBadges[i];
                             let doReward = false;
-                            if (reward.rewardType === constants_1.default.reward_types.earned) {
-                                if (chatMember.totalEarned === reward.amount ||
-                                    chatMember.totalEarned > reward.amount) {
+                            if (tribeBadge.rewardType === constants_1.default.reward_types.earned) {
+                                if (chatMember.totalEarned === tribeBadge.rewardRequirement ||
+                                    chatMember.totalEarned > tribeBadge.rewardRequirement) {
                                     doReward = true;
                                 }
                             }
-                            else if (reward.rewardType === constants_1.default.reward_types.spent) {
-                                if (chatMember.totalSpent === reward.amount ||
-                                    chatMember.totalSpent > reward.amount) {
+                            else if (tribeBadge.rewardType === constants_1.default.reward_types.spent) {
+                                if (chatMember.totalSpent === tribeBadge.rewardRequirement ||
+                                    chatMember.totalSpent > tribeBadge.rewardRequirement) {
                                     doReward = true;
                                 }
                             }
                             if (doReward) {
-                                const hasReward = yield checkReward(chatMember.contactId, reward.badgeId, tribe.tenant);
+                                const ogBadge = (yield models_1.models.Badge.findOne({
+                                    where: { id: tribeBadge.badgeId },
+                                }));
+                                const hasReward = yield checkReward(chatMember.contactId, ogBadge.badgeId, tribe.tenant);
                                 if (!hasReward.status) {
                                     const badge = yield (0, people_1.transferBadge)({
                                         to: hasReward.pubkey,
-                                        asset: reward.badgeId,
+                                        asset: ogBadge.badgeId,
                                         amount: 1,
                                         memo: '',
                                         owner_pubkey: tribe.ownerPubkey,
@@ -249,7 +249,7 @@ function init() {
                                     if (badge.tx) {
                                         const resEmbed = new Sphinx.MessageEmbed()
                                             .setAuthor('BagdeBot')
-                                            .setDescription(`${chatMember.lastAlias} just earned the ${reward.name} badge!, https://blockstream.info/liquid/asset/${reward.asset} redeem on people.sphinx.chat`);
+                                            .setDescription(`${chatMember.lastAlias} just earned the ${ogBadge.name} badge!, https://blockstream.info/liquid/asset/${ogBadge.asset} redeem on people.sphinx.chat`);
                                         message.channel.send({ embed: resEmbed });
                                         return;
                                     }
@@ -268,7 +268,7 @@ function init() {
 exports.init = init;
 function getReward(pubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        const res = yield (0, node_fetch_1.default)(`https://liquid.sphinx.chat/balances?pubkey=${pubkey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const res = yield (0, node_fetch_1.default)(`${config.boltwall_server}/badge_balance?pubkey=${pubkey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
         const results = yield res.json();
         return results.balances;
     });

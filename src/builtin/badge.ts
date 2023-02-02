@@ -2,12 +2,14 @@ import * as Sphinx from 'sphinx-bot'
 import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import {
+  BadgeRecord,
   ChatBotRecord,
   ChatMemberRecord,
   ChatRecord,
   ContactRecord,
   MessageRecord,
   models,
+  TribeBadgeRecord,
 } from '../models'
 import constants from '../constants'
 import fetch from 'node-fetch'
@@ -17,6 +19,7 @@ import {
   hideCommandHandler,
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
+import { loadConfig } from '../utils/config'
 
 interface BadgeRewards {
   badgeId: number
@@ -30,6 +33,7 @@ const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
 const botPrefix = '/badge'
+const config = loadConfig()
 
 // check who the message came from
 // check their Member table to see if it cross the amount
@@ -239,13 +243,6 @@ export function init() {
       const chatMembers: ChatMemberRecord[] = []
 
       try {
-        const bot = (await models.ChatBot.findOne({
-          where: {
-            botPrefix: '/badge',
-            chatId: tribe.id,
-            tenant: tribe.tenant,
-          },
-        })) as ChatBotRecord
         const chatMember = (await models.ChatMember.findOne({
           where: {
             contactId: parseInt(message.member.id!),
@@ -283,39 +280,46 @@ export function init() {
           })) as ChatMemberRecord
           chatMembers.push(tribeMember)
         }
+        const tribeBadges = (await models.TribeBadge.findAll({
+          where: { chatId: tribe.id },
+        })) as TribeBadgeRecord[]
 
-        if (bot && typeof bot.meta === 'string') {
+        if (tribeBadges && tribeBadges.length > 0) {
           for (let j = 0; j < chatMembers.length; j++) {
             const chatMember: ChatMemberRecord = chatMembers[j]
-            const rewards: BadgeRewards[] = JSON.parse(bot.meta)
-            for (let i = 0; i < rewards.length; i++) {
-              const reward = rewards[i]
+            for (let i = 0; i < tribeBadges.length; i++) {
+              const tribeBadge = tribeBadges[i]
               let doReward = false
-              if (reward.rewardType === constants.reward_types.earned) {
+              if (tribeBadge.rewardType === constants.reward_types.earned) {
                 if (
-                  chatMember.totalEarned === reward.amount ||
-                  chatMember.totalEarned > reward.amount
+                  chatMember.totalEarned === tribeBadge.rewardRequirement ||
+                  chatMember.totalEarned > tribeBadge.rewardRequirement
                 ) {
                   doReward = true
                 }
-              } else if (reward.rewardType === constants.reward_types.spent) {
+              } else if (
+                tribeBadge.rewardType === constants.reward_types.spent
+              ) {
                 if (
-                  chatMember.totalSpent === reward.amount ||
-                  chatMember.totalSpent > reward.amount
+                  chatMember.totalSpent === tribeBadge.rewardRequirement ||
+                  chatMember.totalSpent > tribeBadge.rewardRequirement
                 ) {
                   doReward = true
                 }
               }
               if (doReward) {
+                const ogBadge = (await models.Badge.findOne({
+                  where: { id: tribeBadge.badgeId },
+                })) as BadgeRecord
                 const hasReward = await checkReward(
                   chatMember.contactId,
-                  reward.badgeId,
+                  ogBadge.badgeId,
                   tribe.tenant
                 )
                 if (!hasReward.status) {
                   const badge = await transferBadge({
                     to: hasReward.pubkey,
-                    asset: reward.badgeId,
+                    asset: ogBadge.badgeId,
                     amount: 1,
                     memo: '',
                     owner_pubkey: tribe.ownerPubkey,
@@ -324,7 +328,7 @@ export function init() {
                     const resEmbed = new Sphinx.MessageEmbed()
                       .setAuthor('BagdeBot')
                       .setDescription(
-                        `${chatMember.lastAlias} just earned the ${reward.name} badge!, https://blockstream.info/liquid/asset/${reward.asset} redeem on people.sphinx.chat`
+                        `${chatMember.lastAlias} just earned the ${ogBadge.name} badge!, https://blockstream.info/liquid/asset/${ogBadge.asset} redeem on people.sphinx.chat`
                       )
                     message.channel.send({ embed: resEmbed })
                     return
@@ -343,7 +347,7 @@ export function init() {
 
 async function getReward(pubkey: string) {
   const res = await fetch(
-    `https://liquid.sphinx.chat/balances?pubkey=${pubkey}`,
+    `${config.boltwall_server}/badge_balance?pubkey=${pubkey}`,
     { method: 'GET', headers: { 'Content-Type': 'application/json' } }
   )
   const results = await res.json()
