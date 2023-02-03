@@ -76,7 +76,7 @@ async function initializeClient(
           clients[pubkey][host] &&
           clients[pubkey][host].connected
         ) {
-          resolve(clients[pubkey][host])
+          return clients[pubkey][host]
           return
         }
         sphinxLogger.info(`connected!`, logging.Tribes)
@@ -102,7 +102,7 @@ async function initializeClient(
             sphinxLogger.error(`error subscribing ${err}`, logging.Tribes)
           else {
             sphinxLogger.info(`subscribed! ${pubkey}/#`, logging.Tribes)
-            resolve(cl)
+            return cl
           }
         })
       })
