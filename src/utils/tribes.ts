@@ -68,6 +68,7 @@ async function initializeClient(
         username: pubkey,
         password: pwd,
         reconnectPeriod: 0, // dont auto reconnect
+        clientId: 'test-relay-mqtt-log',
       })
       sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
       cl.on('connect', async function () {

@@ -73,7 +73,8 @@ function initializeClient(pubkey, host, onMessage) {
                     const cl = mqtt.connect(url, {
                         username: pubkey,
                         password: pwd,
-                        reconnectPeriod: 0, // dont auto reconnect
+                        reconnectPeriod: 0,
+                        clientId: 'test-relay-mqtt-log',
                     });
                     logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
                     cl.on('connect', function () {
