@@ -9,6 +9,20 @@ import { getCheckNewMsgs, getTribeByUuid, getCheckTribe } from '../utils/get'
 
 import nodes from '../nodes'
 
+const emptyNodeConfig = {
+  alias: '',
+  pubkey: '',
+  ip: '',
+  external_ip: '',
+  authToken: '',
+  transportToken: '',
+  contact_key: '',
+  privkey: '',
+  exported_keys: '',
+  pin: '',
+  routeHint: '',
+}
+
 /*
 npx ava test-10-tribe3Msgs.js --verbose --serial --timeout=2m
 */
@@ -21,8 +35,8 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   //This is checking if the proxy nodes exist and if they
   // do then we'll use them
   let useProxyNodes = false
-  let proxyNode1 = null
-  let proxyNode2 = null
+  let proxyNode1 = emptyNodeConfig
+  let proxyNode2 = emptyNodeConfig
   if (nodes.length > 4) {
     useProxyNodes = true
     proxyNode1 = nodes[3]
