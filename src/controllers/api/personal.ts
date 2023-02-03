@@ -11,6 +11,7 @@ import { Badge, Req, Res } from '../../types'
 // import { createOrEditBadgeBot } from '../../builtin/badge'
 import constants from '../../constants'
 import { createBadgeBot } from '../../utils/badgeBot'
+import { genSignedTimestamp } from '../../utils/tribes'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -366,6 +367,7 @@ export async function addBadgeToTribe(
   req: Req,
   res: Res
 ): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { chat_id, reward_type, reward_requirement, badge_id } = req.body
 
@@ -419,6 +421,49 @@ export async function addBadgeToTribe(
 
     await createBadgeBot(tribe.id, tenant)
     return success(res, 'Badge was added to tribe successfully')
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
+export async function updateBadge(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { badge_id, icon } = req.body
+
+  if (!badge_id || !icon) {
+    return failure(res, 'Missing required data')
+  }
+
+  try {
+    const badge = await models.Badge.findOne({
+      where: { badgeId: badge_id, tenant },
+    })
+    if (!badge) {
+      return failure(res, "You can't update this badge")
+    }
+    const token = await genSignedTimestamp(req.owner.publicKey)
+    const response = await fetch(
+      `${config.boltwall_server}/update_badge?token=${token}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: badge_id, icon }),
+      }
+    )
+    if (!response.ok) {
+      console.log(response)
+      const newRes = await response.json()
+      return failure(res, newRes)
+    }
+    console.log(response)
+    const newRes = await response.json()
+    console.log(newRes)
+    await badge.update({ icon })
+    return success(res, 'Badge Icon updated successfully')
   } catch (error) {
     return failure(res, error)
   }

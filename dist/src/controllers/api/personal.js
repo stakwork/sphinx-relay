@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -22,6 +22,7 @@ const jwt_1 = require("../../utils/jwt");
 // import { createOrEditBadgeBot } from '../../builtin/badge'
 const constants_1 = require("../../constants");
 const badgeBot_1 = require("../../utils/badgeBot");
+const tribes_1 = require("../../utils/tribes");
 const config = (0, config_1.loadConfig)();
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -329,6 +330,8 @@ function deleteBadge(req, res) {
 exports.deleteBadge = deleteBadge;
 function addBadgeToTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { chat_id, reward_type, reward_requirement, badge_id } = req.body;
         if (!chat_id || !reward_type || !reward_requirement || !badge_id) {
@@ -385,4 +388,43 @@ function addBadgeToTribe(req, res) {
     });
 }
 exports.addBadgeToTribe = addBadgeToTribe;
+function updateBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { badge_id, icon } = req.body;
+        if (!badge_id || !icon) {
+            return (0, res_1.failure)(res, 'Missing required data');
+        }
+        try {
+            const badge = yield models_1.models.Badge.findOne({
+                where: { badgeId: badge_id, tenant },
+            });
+            if (!badge) {
+                return (0, res_1.failure)(res, "You can't update this badge");
+            }
+            const token = yield (0, tribes_1.genSignedTimestamp)(req.owner.publicKey);
+            const response = yield (0, node_fetch_1.default)(`${config.boltwall_server}/update_badge?token=${token}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: badge_id, icon }),
+            });
+            if (!response.ok) {
+                console.log(response);
+                const newRes = yield response.json();
+                return (0, res_1.failure)(res, newRes);
+            }
+            console.log(response);
+            const newRes = yield response.json();
+            console.log(newRes);
+            yield badge.update({ icon });
+            return (0, res_1.success)(res, 'Badge Icon updated successfully');
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.updateBadge = updateBadge;
 //# sourceMappingURL=personal.js.map
