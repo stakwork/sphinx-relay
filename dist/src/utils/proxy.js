@@ -116,7 +116,7 @@ function generateNewUser(rootpk, initial_sat) {
             return created.dataValues;
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`=> could not gen new user ${e}`);
+            // sphinxLogger.error(`=> could not gen new user ${e}`)
         }
     });
 }

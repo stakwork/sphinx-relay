@@ -109,7 +109,7 @@ export async function generateNewUser(
     sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
     return created.dataValues
   } catch (e) {
-    sphinxLogger.error(`=> could not gen new user ${e}`)
+    // sphinxLogger.error(`=> could not gen new user ${e}`)
   }
 }
 
