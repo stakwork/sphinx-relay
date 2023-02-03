@@ -62,8 +62,9 @@ async function initializeClient(
     try {
       const pwd = await genSignedTimestamp(pubkey)
       if (connected) return
-      const url = mqttURL(host)
-      console.log('mqtt url', url)
+      let url = mqttURL(host)
+      console.log('mqtt url', url, pubkey, pwd)
+      url = 'tribes.sphinx.chat:8883'
       const cl = mqtt.connect(url, {
         username: pubkey,
         password: pwd,
