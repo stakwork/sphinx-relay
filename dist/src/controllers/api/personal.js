@@ -373,7 +373,7 @@ function addBadgeToTribe(req, res) {
             if (!validRewardType)
                 return (0, res_1.failure)(res, 'invalid reward type');
         }
-        if (typeof reward_requirement !== 'number') {
+        if (reward_requirement && typeof reward_requirement !== 'number') {
             return (0, res_1.failure)(res, 'Invalid reward requirement');
         }
         try {
@@ -402,7 +402,7 @@ function addBadgeToTribe(req, res) {
             }
             if ((!badge.rewardType && !reward_type) ||
                 (!badge.rewardRequirement && !reward_requirement)) {
-                return (0, res_1.failure)(res, 'Please provide valid imformations');
+                return (0, res_1.failure)(res, 'Please provide reward type and reward requirement');
             }
             yield models_1.models.TribeBadge.create({
                 rewardType: badge.rewardType ? badge.rewardType : reward_type,

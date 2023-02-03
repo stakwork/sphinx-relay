@@ -420,7 +420,7 @@ export async function addBadgeToTribe(
     if (!validRewardType) return failure(res, 'invalid reward type')
   }
 
-  if (typeof reward_requirement !== 'number') {
+  if (reward_requirement && typeof reward_requirement !== 'number') {
     return failure(res, 'Invalid reward requirement')
   }
   try {
@@ -451,7 +451,7 @@ export async function addBadgeToTribe(
       (!badge.rewardType && !reward_type) ||
       (!badge.rewardRequirement && !reward_requirement)
     ) {
-      return failure(res, 'Please provide valid imformations')
+      return failure(res, 'Please provide reward type and reward requirement')
     }
     await models.TribeBadge.create({
       rewardType: badge.rewardType ? badge.rewardType : reward_type,
