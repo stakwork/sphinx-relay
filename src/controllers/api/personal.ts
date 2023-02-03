@@ -228,13 +228,32 @@ export async function createBadge(
       where: { tenant, isOwner: true },
     })) as Contact
 
-    const { name, icon, amount, memo } = req.body
+    const { name, icon, amount, memo, reward_type, reward_requirement } =
+      req.body
     if (
       typeof name !== 'string' ||
       typeof icon !== 'string' ||
       typeof amount !== 'number'
     )
       return failure(res, 'invalid data passed')
+
+    if (reward_requirement && !reward_type) {
+      return failure(res, 'Please provide reward type')
+    }
+
+    if (reward_type && !reward_requirement) {
+      return failure(res, 'Please provide reward requirement')
+    }
+
+    if (reward_type) {
+      let validRewardType = false
+      for (const key in constants.reward_types) {
+        if (constants.reward_types[key] === reward_type) {
+          validRewardType = true
+        }
+      }
+      if (!validRewardType) return failure(res, 'invalid reward type')
+    }
 
     const response: Badge = await people.createBadge({
       icon,
@@ -249,11 +268,13 @@ export async function createBadge(
       amount: response.amount,
       memo,
       asset: response.asset,
-      deleted: false,
+      active: false,
       tenant,
       type: constants.badge_type.liquid,
       host: config.boltwall_server, //This is subject to change
       icon: response.icon,
+      rewardRequirement: reward_requirement ? reward_requirement : null,
+      rewardType: reward_type ? reward_type : null,
     })) as BadgeRecord
 
     return success(res, {
@@ -304,7 +325,7 @@ export async function getAllBadge(
 
   try {
     const badges = (await models.Badge.findAll({
-      where: { tenant, deleted: false },
+      where: { tenant, active: false },
       limit,
       offset,
     })) as BadgeRecord[]
@@ -349,12 +370,12 @@ export async function deleteBadge(
 
   try {
     const badge = (await models.Badge.findOne({
-      where: { tenant, badgeId, deleted: false },
+      where: { tenant, badgeId, active: false },
     })) as BadgeRecord
     if (!badge) {
       return failure(res, 'Badge does not exist')
     } else {
-      await badge.update({ deleted: true })
+      await badge.update({ active: true })
       return success(res, `${badge.name} was deleted successfully`)
     }
   } catch (error) {

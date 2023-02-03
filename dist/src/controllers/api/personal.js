@@ -197,11 +197,27 @@ function createBadge(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { name, icon, amount, memo } = req.body;
+            const { name, icon, amount, memo, reward_type, reward_requirement } = req.body;
             if (typeof name !== 'string' ||
                 typeof icon !== 'string' ||
                 typeof amount !== 'number')
                 return (0, res_1.failure)(res, 'invalid data passed');
+            if (reward_requirement && !reward_type) {
+                return (0, res_1.failure)(res, 'Please provide reward type');
+            }
+            if (reward_type && !reward_requirement) {
+                return (0, res_1.failure)(res, 'Please provide reward requirement');
+            }
+            if (reward_type) {
+                let validRewardType = false;
+                for (const key in constants_1.default.reward_types) {
+                    if (constants_1.default.reward_types[key] === reward_type) {
+                        validRewardType = true;
+                    }
+                }
+                if (!validRewardType)
+                    return (0, res_1.failure)(res, 'invalid reward type');
+            }
             const response = yield people.createBadge({
                 icon,
                 amount,
@@ -214,11 +230,13 @@ function createBadge(req, res) {
                 amount: response.amount,
                 memo,
                 asset: response.asset,
-                deleted: false,
+                active: false,
                 tenant,
                 type: constants_1.default.badge_type.liquid,
                 host: config.boltwall_server,
                 icon: response.icon,
+                rewardRequirement: reward_requirement ? reward_requirement : null,
+                rewardType: reward_type ? reward_type : null,
             }));
             return (0, res_1.success)(res, {
                 badge_id: badge.badgeId,
@@ -269,7 +287,7 @@ function getAllBadge(req, res) {
         const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
         try {
             const badges = (yield models_1.models.Badge.findAll({
-                where: { tenant, deleted: false },
+                where: { tenant, active: false },
                 limit,
                 offset,
             }));
@@ -311,13 +329,13 @@ function deleteBadge(req, res) {
         const badgeId = req.params.id;
         try {
             const badge = (yield models_1.models.Badge.findOne({
-                where: { tenant, badgeId, deleted: false },
+                where: { tenant, badgeId, active: false },
             }));
             if (!badge) {
                 return (0, res_1.failure)(res, 'Badge does not exist');
             }
             else {
-                yield badge.update({ deleted: true });
+                yield badge.update({ active: true });
                 return (0, res_1.success)(res, `${badge.name} was deleted successfully`);
             }
         }

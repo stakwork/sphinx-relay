@@ -373,8 +373,8 @@ export default async function migrate(): Promise<void> {
   }
 
   addTableColumn('sphinx_chat_bots', 'hidden_commands')
-  addTableColumn('sphinx_badge', 'rewardType', 'INTEGER')
-  addTableColumn('sphinx_badge', 'rewardRequirement', 'INTEGER')
+  addTableColumn('sphinx_badge', 'reward_type', 'INTEGER')
+  addTableColumn('sphinx_badge', 'reward_requirement', 'INTEGER')
   addTableColumn('sphinx_badge', 'active', 'BOOLEAN')
 }
 
