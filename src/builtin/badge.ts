@@ -455,7 +455,7 @@ async function addBadgeToTribe(
   message
 ) {
   const badge = (await models.Badge.findOne({
-    where: { badgeId, tenant },
+    where: { badgeId, tenant, active: true },
   })) as BadgeRecord
   if (!badge) {
     const addFields = [

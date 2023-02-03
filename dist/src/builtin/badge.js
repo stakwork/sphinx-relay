@@ -370,7 +370,7 @@ const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white"
 function addBadgeToTribe(badgeId, tenant, tribeId, reward_requirement, reward_type, cmd, message) {
     return __awaiter(this, void 0, void 0, function* () {
         const badge = (yield models_1.models.Badge.findOne({
-            where: { badgeId, tenant },
+            where: { badgeId, tenant, active: true },
         }));
         if (!badge) {
             const addFields = [

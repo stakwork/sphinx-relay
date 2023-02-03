@@ -274,7 +274,7 @@ export async function createBadge(
       amount: response.amount,
       memo,
       asset: response.asset,
-      active: false,
+      active: true,
       tenant,
       type: constants.badge_type.liquid,
       host: config.boltwall_server, //This is subject to change
@@ -331,7 +331,7 @@ export async function getAllBadge(
 
   try {
     const badges = (await models.Badge.findAll({
-      where: { tenant, active: false },
+      where: { tenant, active: true },
       limit,
       offset,
     })) as BadgeRecord[]
@@ -378,12 +378,12 @@ export async function deleteBadge(
 
   try {
     const badge = (await models.Badge.findOne({
-      where: { tenant, badgeId, active: false },
+      where: { tenant, badgeId, active: true },
     })) as BadgeRecord
     if (!badge) {
       return failure(res, 'Badge does not exist')
     } else {
-      await badge.update({ active: true })
+      await badge.update({ active: false })
       return success(res, `${badge.name} was deleted successfully`)
     }
   } catch (error) {

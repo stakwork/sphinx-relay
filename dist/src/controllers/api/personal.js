@@ -233,7 +233,7 @@ function createBadge(req, res) {
                 amount: response.amount,
                 memo,
                 asset: response.asset,
-                active: false,
+                active: true,
                 tenant,
                 type: constants_1.default.badge_type.liquid,
                 host: config.boltwall_server,
@@ -290,7 +290,7 @@ function getAllBadge(req, res) {
         const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
         try {
             const badges = (yield models_1.models.Badge.findAll({
-                where: { tenant, active: false },
+                where: { tenant, active: true },
                 limit,
                 offset,
             }));
@@ -334,13 +334,13 @@ function deleteBadge(req, res) {
         const badgeId = req.params.id;
         try {
             const badge = (yield models_1.models.Badge.findOne({
-                where: { tenant, badgeId, active: false },
+                where: { tenant, badgeId, active: true },
             }));
             if (!badge) {
                 return (0, res_1.failure)(res, 'Badge does not exist');
             }
             else {
-                yield badge.update({ active: true });
+                yield badge.update({ active: false });
                 return (0, res_1.success)(res, `${badge.name} was deleted successfully`);
             }
         }
