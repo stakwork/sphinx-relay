@@ -74,6 +74,7 @@ function initializeClient(pubkey, host, onMessage) {
                         username: pubkey,
                         password: pwd,
                         // reconnectPeriod: 0, // dont auto reconnect
+                        clientId: 'test-client-id-again',
                     });
                     logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
                     cl.on('connect', function () {
