@@ -257,7 +257,7 @@ export async function createBadge(
       if (!validRewardType) return failure(res, 'invalid reward type')
     }
 
-    if (typeof reward_requirement !== 'number') {
+    if (reward_requirement && typeof reward_requirement !== 'number') {
       return failure(res, 'Invalid reward requirement')
     }
 

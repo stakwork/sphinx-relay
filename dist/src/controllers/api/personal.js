@@ -218,7 +218,7 @@ function createBadge(req, res) {
                 if (!validRewardType)
                     return (0, res_1.failure)(res, 'invalid reward type');
             }
-            if (typeof reward_requirement !== 'number') {
+            if (reward_requirement && typeof reward_requirement !== 'number') {
                 return (0, res_1.failure)(res, 'Invalid reward requirement');
             }
             const response = yield people.createBadge({
