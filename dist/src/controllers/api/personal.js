@@ -310,6 +310,8 @@ function getAllBadge(req, res) {
                         asset: badge.asset,
                         memo: badge.memo,
                         name: badge.name,
+                        reward_requirement: badge.rewardRequirement,
+                        reward_type: badge.rewardType,
                     });
                 }
             }

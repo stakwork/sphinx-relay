@@ -24,6 +24,8 @@ interface Badges {
   memo: string
   asset: string
   icon: string
+  reward_type: number
+  reward_requirement: number
 }
 export async function createPeopleProfile(
   req: Req,
@@ -351,6 +353,8 @@ export async function getAllBadge(
           asset: badge.asset,
           memo: badge.memo,
           name: badge.name,
+          reward_requirement: badge.rewardRequirement,
+          reward_type: badge.rewardType,
         })
       }
     }
