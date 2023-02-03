@@ -149,10 +149,15 @@ function initAndSubscribeTopics(onMessage) {
                 }));
                 if (!(allOwners && allOwners.length))
                     return;
+                console.log('allOwners', allOwners.length);
                 (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+                    console.log('c.pubkey c.id ', c.publicKey, c.id);
                     if (c.publicKey && c.publicKey.length === 66) {
+                        console.log('lazyClient ', c.publicKey);
                         yield lazyClient(c.publicKey, host, onMessage);
+                        console.log('subExtraHostsForTenant');
                         yield subExtraHostsForTenant(c.id, c.publicKey, onMessage); // 1 is the tenant id on non-proxy
+                        console.log('next');
                     }
                 }));
             }

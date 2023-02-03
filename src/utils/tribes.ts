@@ -144,10 +144,15 @@ async function initAndSubscribeTopics(
         where: { isOwner: true },
       })) as Contact[]
       if (!(allOwners && allOwners.length)) return
+      console.log('allOwners', allOwners.length)
       asyncForEach(allOwners, async (c) => {
+        console.log('c.pubkey c.id ', c.publicKey, c.id)
         if (c.publicKey && c.publicKey.length === 66) {
+          console.log('lazyClient ', c.publicKey)
           await lazyClient(c.publicKey, host, onMessage)
+          console.log('subExtraHostsForTenant')
           await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
+          console.log('next')
         }
       })
     } else {
