@@ -424,6 +424,7 @@ export async function addBadgeToTribe(
   }
 }
 
+// hardcoded for now
 export async function badgeTemplates(
   req: Req,
   res: Res
