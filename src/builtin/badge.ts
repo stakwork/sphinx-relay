@@ -3,7 +3,6 @@ import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import {
   BadgeRecord,
-  ChatBotRecord,
   ChatMemberRecord,
   ChatRecord,
   ContactRecord,
@@ -14,20 +13,11 @@ import {
 import constants from '../constants'
 import fetch from 'node-fetch'
 import { transferBadge } from '../utils/people'
-import { Badge } from '../types'
 import {
   hideCommandHandler,
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
 import { loadConfig } from '../utils/config'
-
-interface BadgeRewards {
-  badgeId: number
-  rewardType: number
-  amount: number
-  name: string
-  asset: string
-}
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -63,7 +53,7 @@ export function init() {
       if (!isAdmin) return
       switch (cmd) {
         case 'add':
-          if (arr.length === 5) {
+          if (arr.length === 5 || arr.length === 3) {
             const badgeId = Number(arr[2])
             if (isNaN(badgeId)) {
               const addFields = [
@@ -358,77 +348,6 @@ async function checkReward(
     }
   }
   return { pubkey: contact.publicKey, status: false }
-}
-
-export async function createOrEditBadgeBot(
-  chatId: number,
-  tenant: number,
-  badge: Badge,
-  amount: number,
-  rewardType: number
-): Promise<boolean> {
-  try {
-    const botExist = (await models.ChatBot.findOne({
-      where: { botPrefix: '/badge', chatId },
-    })) as ChatBotRecord
-
-    if (botExist) {
-      let meta: string = ''
-      if (typeof botExist.meta === 'string') {
-        let temMeta: BadgeRewards[] = JSON.parse(botExist.meta)
-        if (Array.isArray(temMeta)) {
-          temMeta.push({
-            name: badge.name,
-            amount,
-            badgeId: badge.id,
-            rewardType: rewardType,
-            asset: badge.asset,
-          })
-          meta = JSON.stringify(temMeta)
-        }
-      } else {
-        let temMeta: BadgeRewards[] = []
-        temMeta.push({
-          name: badge.name,
-          amount,
-          badgeId: badge.id,
-          rewardType: rewardType,
-          asset: badge.asset,
-        })
-        meta = JSON.stringify(temMeta)
-      }
-      await botExist.update({ meta })
-      return true
-    } else {
-      let temMeta: BadgeRewards[] = []
-      temMeta.push({
-        name: badge.name,
-        amount,
-        badgeId: badge.id,
-        rewardType: rewardType,
-        asset: badge.asset,
-      })
-
-      const chatBot: { [k: string]: any } = {
-        chatId,
-        botPrefix: '/badge',
-        botType: constants.bot_types.builtin,
-        msgTypes: JSON.stringify([
-          constants.message_types.message,
-          constants.message_types.boost,
-          constants.message_types.direct_payment,
-        ]),
-        pricePerUse: 0,
-        tenant,
-        meta: JSON.stringify(temMeta),
-      }
-      await models.ChatBot.create(chatBot)
-      return true
-    }
-  } catch (error) {
-    sphinxLogger.error(`BADGE BOT ERROR ${error}`, logging.Bots)
-    return false
-  }
 }
 
 async function botResponse(addFields, author, title, message, cmd, tribeId) {
