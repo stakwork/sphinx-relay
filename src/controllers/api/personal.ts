@@ -257,6 +257,10 @@ export async function createBadge(
       if (!validRewardType) return failure(res, 'invalid reward type')
     }
 
+    if (typeof reward_requirement !== 'number') {
+      return failure(res, 'Invalid reward requirement')
+    }
+
     const response: Badge = await people.createBadge({
       icon,
       amount,
@@ -394,22 +398,31 @@ export async function addBadgeToTribe(
   const tenant: number = req.owner.id
   const { chat_id, reward_type, reward_requirement, badge_id } = req.body
 
-  if (!chat_id || !reward_type || !reward_requirement || !badge_id) {
+  if (!chat_id || !badge_id) {
     return failure(res, 'Invalid data passed')
   }
-  let validRewardType = false
 
-  for (const key in constants.reward_types) {
-    if (constants.reward_types[key] === reward_type) {
-      validRewardType = true
+  if (reward_requirement && !reward_type) {
+    return failure(res, 'Please provide reward type')
+  }
+
+  if (reward_type && !reward_requirement) {
+    return failure(res, 'Please provide reward requirement')
+  }
+
+  if (reward_type) {
+    let validRewardType = false
+    for (const key in constants.reward_types) {
+      if (constants.reward_types[key] === reward_type) {
+        validRewardType = true
+      }
     }
+    if (!validRewardType) return failure(res, 'invalid reward type')
   }
 
   if (typeof reward_requirement !== 'number') {
     return failure(res, 'Invalid reward requirement')
   }
-
-  if (!validRewardType) return failure(res, 'invalid reward type')
   try {
     const tribe = (await models.Chat.findOne({
       where: {
@@ -423,7 +436,7 @@ export async function addBadgeToTribe(
       return failure(res, 'Invalid tribe')
     }
     const badge = (await models.Badge.findOne({
-      where: { badgeId: badge_id, tenant },
+      where: { badgeId: badge_id, tenant, active: true },
     })) as BadgeRecord
     if (!badge) {
       return failure(res, 'Invalid Badge')
@@ -435,8 +448,10 @@ export async function addBadgeToTribe(
       return failure(res, 'Badge already exist in tribe')
     }
     await models.TribeBadge.create({
-      rewardType: reward_type,
-      rewardRequirement: reward_requirement,
+      rewardType: badge.rewardType ? badge.rewardType : reward_type,
+      rewardRequirement: badge.rewardRequirement
+        ? badge.rewardRequirement
+        : reward_requirement,
       badgeId: badge.id,
       chatId: tribe.id,
       deleted: false,

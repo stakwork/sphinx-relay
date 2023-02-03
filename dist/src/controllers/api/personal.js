@@ -218,6 +218,9 @@ function createBadge(req, res) {
                 if (!validRewardType)
                     return (0, res_1.failure)(res, 'invalid reward type');
             }
+            if (typeof reward_requirement !== 'number') {
+                return (0, res_1.failure)(res, 'Invalid reward requirement');
+            }
             const response = yield people.createBadge({
                 icon,
                 amount,
@@ -351,20 +354,28 @@ function addBadgeToTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = req.owner.id;
         const { chat_id, reward_type, reward_requirement, badge_id } = req.body;
-        if (!chat_id || !reward_type || !reward_requirement || !badge_id) {
+        if (!chat_id || !badge_id) {
             return (0, res_1.failure)(res, 'Invalid data passed');
         }
-        let validRewardType = false;
-        for (const key in constants_1.default.reward_types) {
-            if (constants_1.default.reward_types[key] === reward_type) {
-                validRewardType = true;
+        if (reward_requirement && !reward_type) {
+            return (0, res_1.failure)(res, 'Please provide reward type');
+        }
+        if (reward_type && !reward_requirement) {
+            return (0, res_1.failure)(res, 'Please provide reward requirement');
+        }
+        if (reward_type) {
+            let validRewardType = false;
+            for (const key in constants_1.default.reward_types) {
+                if (constants_1.default.reward_types[key] === reward_type) {
+                    validRewardType = true;
+                }
             }
+            if (!validRewardType)
+                return (0, res_1.failure)(res, 'invalid reward type');
         }
         if (typeof reward_requirement !== 'number') {
             return (0, res_1.failure)(res, 'Invalid reward requirement');
         }
-        if (!validRewardType)
-            return (0, res_1.failure)(res, 'invalid reward type');
         try {
             const tribe = (yield models_1.models.Chat.findOne({
                 where: {
@@ -378,7 +389,7 @@ function addBadgeToTribe(req, res) {
                 return (0, res_1.failure)(res, 'Invalid tribe');
             }
             const badge = (yield models_1.models.Badge.findOne({
-                where: { badgeId: badge_id, tenant },
+                where: { badgeId: badge_id, tenant, active: true },
             }));
             if (!badge) {
                 return (0, res_1.failure)(res, 'Invalid Badge');
@@ -390,8 +401,10 @@ function addBadgeToTribe(req, res) {
                 return (0, res_1.failure)(res, 'Badge already exist in tribe');
             }
             yield models_1.models.TribeBadge.create({
-                rewardType: reward_type,
-                rewardRequirement: reward_requirement,
+                rewardType: badge.rewardType ? badge.rewardType : reward_type,
+                rewardRequirement: badge.rewardRequirement
+                    ? badge.rewardRequirement
+                    : reward_requirement,
                 badgeId: badge.id,
                 chatId: tribe.id,
                 deleted: false,
