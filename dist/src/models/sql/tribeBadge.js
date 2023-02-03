@@ -46,6 +46,14 @@ __decorate([
     __metadata("design:type", Boolean)
 ], TribeBadge.prototype, "deleted", void 0);
 __decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: true,
+        allowNull: false,
+    }),
+    __metadata("design:type", Boolean)
+], TribeBadge.prototype, "active", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], TribeBadge.prototype, "createdAt", void 0);

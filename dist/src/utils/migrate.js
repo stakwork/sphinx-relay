@@ -348,6 +348,7 @@ function migrate() {
         addTableColumn('sphinx_badge', 'reward_type', 'INTEGER');
         addTableColumn('sphinx_badge', 'reward_requirement', 'INTEGER');
         addTableColumn('sphinx_badge', 'active', 'BOOLEAN');
+        addTableColumn('sphinx_tribe_badge', 'active', 'BOOLEAN');
     });
 }
 exports.default = migrate;

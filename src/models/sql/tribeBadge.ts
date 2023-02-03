@@ -22,12 +22,20 @@ export default class TribeBadge extends Model<TribeBadge> {
   @Column
   rewardRequirement: number
 
+  // This column is not needed any longer
   @Column({
     type: DataType.BOOLEAN,
     defaultValue: false,
     allowNull: false,
   })
   deleted: boolean
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: true,
+    allowNull: false,
+  })
+  active: boolean
 
   @Column
   createdAt: Date
