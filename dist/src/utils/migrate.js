@@ -345,6 +345,9 @@ function migrate() {
             // sphinxLogger.error(['problem adding tribe badge table:', e], logging.DB)
         }
         addTableColumn('sphinx_chat_bots', 'hidden_commands');
+        addTableColumn('sphinx_badge', 'rewardType', 'INTEGER');
+        addTableColumn('sphinx_badge', 'rewardRequirement', 'INTEGER');
+        addTableColumn('sphinx_badge', 'active', 'BOOLEAN');
     });
 }
 exports.default = migrate;
