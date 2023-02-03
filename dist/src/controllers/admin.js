@@ -118,7 +118,10 @@ function addProxyUser(req, res) {
             const initial_sat = parseInt(req.query.sats);
             const rpk = yield (0, proxy_1.getProxyRootPubkey)();
             const created = yield (0, proxy_1.generateNewUser)(rpk, initial_sat || 0);
-            (0, res_1.success)(res, created);
+            if (created)
+                (0, res_1.success)(res, created);
+            else
+                (0, res_1.failure)(res, 'failed to create new proxy user');
         }
         catch (e) {
             (0, res_1.failure)(res, e);
