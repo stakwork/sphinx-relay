@@ -65,45 +65,51 @@ function init() {
                             botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
                             return;
                         }
-                        const rewardType = Number(arr[3]);
-                        if (isNaN(rewardType)) {
-                            const addFields = [
-                                {
-                                    name: 'Badge Bot Error',
-                                    value: 'Provide a valid reward type',
-                                },
-                            ];
-                            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
-                            return;
-                        }
-                        let validRewardType = false;
-                        for (const key in constants_1.default.reward_types) {
-                            if (constants_1.default.reward_types[key] === rewardType) {
-                                validRewardType = true;
+                        const rewardType = arr[3];
+                        if (rewardType) {
+                            let rewardType = Number(arr[3]);
+                            if (isNaN(rewardType)) {
+                                const addFields = [
+                                    {
+                                        name: 'Badge Bot Error',
+                                        value: 'Provide a valid reward type',
+                                    },
+                                ];
+                                botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
+                                return;
+                            }
+                            let validRewardType = false;
+                            for (const key in constants_1.default.reward_types) {
+                                if (constants_1.default.reward_types[key] === rewardType) {
+                                    validRewardType = true;
+                                }
+                            }
+                            if (!validRewardType) {
+                                const addFields = [
+                                    {
+                                        name: 'Badge Bot Error',
+                                        value: 'Provide a valid reward type',
+                                    },
+                                ];
+                                botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
+                                return;
                             }
                         }
-                        if (!validRewardType) {
-                            const addFields = [
-                                {
-                                    name: 'Badge Bot Error',
-                                    value: 'Provide a valid reward type',
-                                },
-                            ];
-                            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
-                            return;
+                        const rewardRequirement = arr[4];
+                        if (rewardRequirement) {
+                            let rewardRequirement = Number(arr[4]);
+                            if (isNaN(rewardRequirement) || rewardRequirement === 0) {
+                                const addFields = [
+                                    {
+                                        name: 'Badge Bot Error',
+                                        value: 'Provide a valid amount of sats condition a tribe memeber has to complete to earn this badge',
+                                    },
+                                ];
+                                botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
+                                return;
+                            }
                         }
-                        const rewardRequirement = Number(arr[4]);
-                        if (isNaN(rewardRequirement) || rewardRequirement === 0) {
-                            const addFields = [
-                                {
-                                    name: 'Badge Bot Error',
-                                    value: 'Provide a valid amount of sats condition a tribe memeber has to complete to earn this badge',
-                                },
-                            ];
-                            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
-                            return;
-                        }
-                        const badgeName = yield addBadgeToTribe(badgeId, message.member.id, tribe.id, rewardRequirement, rewardType, cmd, message);
+                        const badgeName = yield addBadgeToTribe(badgeId, message.member.id, tribe.id, Number(rewardRequirement), Number(rewardType), cmd, message);
                         if (!badgeName) {
                             return;
                         }
@@ -389,14 +395,26 @@ function addBadgeToTribe(badgeId, tenant, tribeId, reward_requirement, reward_ty
             botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribeId);
             return;
         }
+        if ((isNaN(reward_type) && !badge.rewardType) ||
+            (isNaN(reward_requirement) && !badge.rewardRequirement)) {
+            const addFields = [
+                {
+                    name: 'Badge Bot Error',
+                    value: 'Provide adequate badge conditions',
+                },
+            ];
+            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribeId);
+            return;
+        }
         yield models_1.models.TribeBadge.create({
-            rewardType: reward_type,
-            rewardRequirement: reward_requirement,
+            rewardType: badge.rewardType ? badge.rewardType : reward_type,
+            rewardRequirement: badge.rewardRequirement
+                ? badge.rewardRequirement
+                : reward_requirement,
             badgeId: badge.id,
             chatId: tribeId,
             deleted: false,
         });
-        console.log('++++++++++++++', badge.name);
         return badge.name;
     });
 }
