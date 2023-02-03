@@ -411,7 +411,7 @@ function addBadgeToTribe(req, res) {
                     : reward_requirement,
                 badgeId: badge.id,
                 chatId: tribe.id,
-                deleted: false,
+                active: true,
             });
             yield (0, badgeBot_1.createBadgeBot)(tribe.id, tenant);
             return (0, res_1.success)(res, 'Badge was added to tribe successfully');

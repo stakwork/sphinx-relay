@@ -460,7 +460,7 @@ export async function addBadgeToTribe(
         : reward_requirement,
       badgeId: badge.id,
       chatId: tribe.id,
-      deleted: false,
+      active: true,
     })
 
     await createBadgeBot(tribe.id, tenant)

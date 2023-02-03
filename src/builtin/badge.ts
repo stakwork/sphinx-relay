@@ -269,7 +269,7 @@ export function init() {
           chatMembers.push(tribeMember)
         }
         const tribeBadges = (await models.TribeBadge.findAll({
-          where: { chatId: tribe.id },
+          where: { chatId: tribe.id, active: true },
         })) as TribeBadgeRecord[]
 
         if (tribeBadges && tribeBadges.length > 0) {
@@ -500,7 +500,7 @@ async function addBadgeToTribe(
       : reward_requirement,
     badgeId: badge.id,
     chatId: tribeId,
-    deleted: false,
+    active: true,
   })
 
   return badge.name

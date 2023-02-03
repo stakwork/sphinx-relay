@@ -210,7 +210,7 @@ function init() {
                     chatMembers.push(tribeMember);
                 }
                 const tribeBadges = (yield models_1.models.TribeBadge.findAll({
-                    where: { chatId: tribe.id },
+                    where: { chatId: tribe.id, active: true },
                 }));
                 if (tribeBadges && tribeBadges.length > 0) {
                     for (let j = 0; j < chatMembers.length; j++) {
@@ -413,7 +413,7 @@ function addBadgeToTribe(badgeId, tenant, tribeId, reward_requirement, reward_ty
                 : reward_requirement,
             badgeId: badge.id,
             chatId: tribeId,
-            deleted: false,
+            active: true,
         });
         return badge.name;
     });
