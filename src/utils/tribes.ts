@@ -58,10 +58,12 @@ async function initializeClient(
 ): Promise<mqtt.Client> {
   let connected = false
   async function reconnect() {
+    console.log('reconencnt now')
     try {
       const pwd = await genSignedTimestamp(pubkey)
       if (connected) return
       const url = mqttURL(host)
+      console.log('mqtt url', url)
       const cl = mqtt.connect(url, {
         username: pubkey,
         password: pwd,
@@ -123,6 +125,7 @@ async function lazyClient(
   host: string,
   onMessage?: (topic: string, message: Buffer) => void
 ): Promise<mqtt.Client> {
+  console.log('laxy client')
   if (
     clients[pubkey] &&
     clients[pubkey][host] &&
@@ -130,6 +133,7 @@ async function lazyClient(
   ) {
     return clients[pubkey][host]
   }
+  console.log('initialize now')
   const cl = await initializeClient(pubkey, host, onMessage)
   return cl
 }
@@ -143,10 +147,13 @@ async function initAndSubscribeTopics(
       const allOwners: Contact[] = (await models.Contact.findAll({
         where: { isOwner: true },
       })) as Contact[]
+      console.log('PROXY USERS LENGTH', allOwners.length)
       if (!(allOwners && allOwners.length)) return
       asyncForEach(allOwners, async (c) => {
+        console.log('C . ID', c.id)
         if (c.id === 1) return // the proxy non user
         if (c.publicKey && c.publicKey.length === 66) {
+          console.log('OK DO NOW!', c.publicKey)
           await lazyClient(c.publicKey, host, onMessage)
           await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
         }

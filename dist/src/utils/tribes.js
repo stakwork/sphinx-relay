@@ -63,11 +63,13 @@ function initializeClient(pubkey, host, onMessage) {
         let connected = false;
         function reconnect() {
             return __awaiter(this, void 0, void 0, function* () {
+                console.log('reconencnt now');
                 try {
                     const pwd = yield genSignedTimestamp(pubkey);
                     if (connected)
                         return;
                     const url = mqttURL(host);
+                    console.log('mqtt url', url);
                     const cl = mqtt.connect(url, {
                         username: pubkey,
                         password: pwd,
@@ -130,11 +132,13 @@ function initializeClient(pubkey, host, onMessage) {
 }
 function lazyClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('laxy client');
         if (clients[pubkey] &&
             clients[pubkey][host] &&
             clients[pubkey][host].connected) {
             return clients[pubkey][host];
         }
+        console.log('initialize now');
         const cl = yield initializeClient(pubkey, host, onMessage);
         return cl;
     });
@@ -147,12 +151,15 @@ function initAndSubscribeTopics(onMessage) {
                 const allOwners = (yield models_1.models.Contact.findAll({
                     where: { isOwner: true },
                 }));
+                console.log('PROXY USERS LENGTH', allOwners.length);
                 if (!(allOwners && allOwners.length))
                     return;
                 (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+                    console.log('C . ID', c.id);
                     if (c.id === 1)
                         return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
+                        console.log('OK DO NOW!', c.publicKey);
                         yield lazyClient(c.publicKey, host, onMessage);
                         yield subExtraHostsForTenant(c.id, c.publicKey, onMessage); // 1 is the tenant id on non-proxy
                     }
