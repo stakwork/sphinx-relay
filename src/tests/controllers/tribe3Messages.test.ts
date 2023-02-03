@@ -18,6 +18,17 @@ test('test-10-tribe3Msgs: create tribe, two nodes join tribe, send messages, 2 n
 })
 
 export async function tribe3Msgs(t, node1, node2, node3) {
+  //This is checking if the proxy nodes exist and if they
+  // do then we'll use them
+  let useProxyNodes = false
+  let proxyNode1 = null
+  let proxyNode2 = null
+  if (nodes.length > 4) {
+    useProxyNodes = true
+    proxyNode1 = nodes[3]
+    proxyNode2 = nodes[4]
+  }
+
   // if running "no-alice" version with local relay
   const internalTribeHost = node1.ip.includes('host.docker.internal')
     ? config.tribeHost
@@ -27,6 +38,7 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   t.truthy(node3, 'this test requires three nodes')
 
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
+  console.log(`also using proxy ${proxyNode1.alias}, ${proxyNode2.alias}`)
 
   //NODE1 CREATES A TRIBE
   let tribe = await createTribe(t, node1)
@@ -41,6 +53,16 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
   let join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
+
+  if (useProxyNodes) {
+    //PROXYNODE1 JOINS TRIBE CREATED BY NODE1
+    let joinProxy1 = await joinTribe(t, proxyNode1, tribe)
+    t.true(joinProxy1, 'proxyNode1 should join tribe')
+
+    //PROXYNODE2 JOINS TRIBE CREATED BY NODE1
+    let proxyJoin2 = await joinTribe(t, proxyNode2, tribe)
+    t.true(proxyJoin2, 'proxyNode2 should join tribe')
+  }
 
   //NODE1 SENDS A TEXT MESSAGE IN TRIBE
   const text = randomText()
