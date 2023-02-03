@@ -67,7 +67,7 @@ async function initializeClient(
       const cl = mqtt.connect(url, {
         username: pubkey,
         password: pwd,
-        reconnectPeriod: 0, // dont auto reconnect
+        // reconnectPeriod: 0, // dont auto reconnect
       })
       sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
       cl.on('connect', async function () {
@@ -98,6 +98,9 @@ async function initializeClient(
         cl.on('message', function (topic, message) {
           // console.log("============>>>>> GOT A MSG", topic, message)
           if (onMessage) onMessage(topic, message)
+        })
+        cl.on('reconnect', () => {
+          console.log('reconnecting!')
         })
         cl.subscribe(`${pubkey}/#`, function (err) {
           if (err)
