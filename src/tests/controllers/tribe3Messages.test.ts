@@ -130,6 +130,55 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   )
   t.true(n2check2, 'node2 should have read and decrypted node3 message')
 
+  if (useProxyNodes) {
+    //proxyNode1 SENDS A TEXT MESSAGE IN TRIBE
+    const text4 = randomText()
+    let tribeMessage4 = await sendTribeMessage(t, proxyNode2, tribe, text4)
+
+    //CHECK THAT proxyNode1'S DECRYPTED MESSAGE IS SAME AS INPUT From node1's point of view
+    const n1check3 = await checkMessageDecryption(
+      t,
+      node1,
+      tribeMessage4.uuid,
+      text4
+    )
+    t.true(
+      n1check3,
+      "node1 should have read and decrypted proxyNode1's message"
+    )
+
+    //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
+    const n4check2 = await checkMessageDecryption(
+      t,
+      proxyNode1,
+      tribeMessage2.uuid,
+      text2
+    )
+    t.true(n4check2, 'proxyNode1 should have read and decrypted node2 message')
+
+    //PROXYNODE2 SENDS A TEXT MESSAGE IN TRIBE
+    const text5 = randomText()
+    let tribeMessage5 = await sendTribeMessage(t, proxyNode2, tribe, text5)
+
+    //CHECK THAT NODE3'S DECRYPTED MESSAGE IS SAME AS INPUT AS NODE1
+    const n5check2 = await checkMessageDecryption(
+      t,
+      node1,
+      tribeMessage5.uuid,
+      text5
+    )
+    t.true(n5check2, 'node1 should have read and decrypted node3 message')
+
+    //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
+    const n5check3 = await checkMessageDecryption(
+      t,
+      proxyNode2,
+      tribeMessage2.uuid,
+      text2
+    )
+    t.true(n5check3, 'node2 should have read and decrypted node3 message')
+  }
+
   /*****
 				Here we want to create a new message channel for a tribe
 ******/
