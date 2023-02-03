@@ -73,8 +73,7 @@ function initializeClient(pubkey, host, onMessage) {
                     const cl = mqtt.connect(url, {
                         username: pubkey,
                         password: pwd,
-                        reconnectPeriod: 0,
-                        clientId: 'test-relay-mqtt-log',
+                        reconnectPeriod: 0, // dont auto reconnect
                     });
                     logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
                     cl.on('connect', function () {
@@ -87,7 +86,7 @@ function initializeClient(pubkey, host, onMessage) {
                                 return clients[pubkey][host];
                                 return;
                             }
-                            logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Tribes);
+                            logger_1.sphinxLogger.info(`MQTT connected!`, logger_1.logging.Tribes);
                             if (!clients[pubkey])
                                 clients[pubkey] = {};
                             clients[pubkey][host] = cl; // ADD TO MAIN STATE
@@ -127,7 +126,7 @@ function initializeClient(pubkey, host, onMessage) {
             if (!connected) {
                 reconnect();
             }
-            yield (0, helpers_1.sleep)(5000 + Math.round(Math.random() * 8000));
+            yield (0, helpers_1.sleep)(20000 + Math.round(Math.random() * 8000));
         }
     });
 }

@@ -68,7 +68,6 @@ async function initializeClient(
         username: pubkey,
         password: pwd,
         reconnectPeriod: 0, // dont auto reconnect
-        clientId: 'test-relay-mqtt-log',
       })
       sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
       cl.on('connect', async function () {
@@ -82,7 +81,7 @@ async function initializeClient(
           return clients[pubkey][host]
           return
         }
-        sphinxLogger.info(`connected!`, logging.Tribes)
+        sphinxLogger.info(`MQTT connected!`, logging.Tribes)
         if (!clients[pubkey]) clients[pubkey] = {}
         clients[pubkey][host] = cl // ADD TO MAIN STATE
         cl.on('close', function (e) {
@@ -117,7 +116,7 @@ async function initializeClient(
     if (!connected) {
       reconnect()
     }
-    await sleep(5000 + Math.round(Math.random() * 8000))
+    await sleep(20000 + Math.round(Math.random() * 8000))
   }
 }
 
