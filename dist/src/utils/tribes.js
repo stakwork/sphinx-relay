@@ -60,72 +60,74 @@ function getTribeOwnersChatByUUID(uuid) {
 exports.getTribeOwnersChatByUUID = getTribeOwnersChatByUUID;
 function initializeClient(pubkey, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        let connected = false;
-        function reconnect() {
-            return __awaiter(this, void 0, void 0, function* () {
-                try {
-                    const pwd = yield genSignedTimestamp(pubkey);
-                    if (connected)
-                        return;
-                    const url = mqttURL(host);
-                    const cl = mqtt.connect(url, {
-                        username: pubkey,
-                        password: pwd,
-                        reconnectPeriod: 0, // dont auto reconnect
-                    });
-                    logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
-                    cl.on('connect', function () {
-                        return __awaiter(this, void 0, void 0, function* () {
-                            // first check if its already connected to this host (in case it takes a long time)
-                            connected = true;
-                            if (clients[pubkey] &&
-                                clients[pubkey][host] &&
-                                clients[pubkey][host].connected) {
-                                return clients[pubkey][host];
-                                return;
-                            }
-                            logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Tribes);
-                            if (!clients[pubkey])
-                                clients[pubkey] = {};
-                            clients[pubkey][host] = cl; // ADD TO MAIN STATE
-                            cl.on('close', function (e) {
-                                logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
-                                // setTimeout(() => reconnect(), 2000);
-                                connected = false;
-                                if (clients[pubkey] && clients[pubkey][host]) {
-                                    delete clients[pubkey][host];
+        return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+            let connected = false;
+            function reconnect() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        const pwd = yield genSignedTimestamp(pubkey);
+                        if (connected)
+                            return;
+                        const url = mqttURL(host);
+                        const cl = mqtt.connect(url, {
+                            username: pubkey,
+                            password: pwd,
+                            reconnectPeriod: 0, // dont auto reconnect
+                        });
+                        logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
+                        cl.on('connect', function () {
+                            return __awaiter(this, void 0, void 0, function* () {
+                                // first check if its already connected to this host (in case it takes a long time)
+                                connected = true;
+                                if (clients[pubkey] &&
+                                    clients[pubkey][host] &&
+                                    clients[pubkey][host].connected) {
+                                    resolve(clients[pubkey][host]);
+                                    return;
                                 }
-                            });
-                            cl.on('error', function (e) {
-                                logger_1.sphinxLogger.error(`error:  ${e.message}`, logger_1.logging.Tribes);
-                            });
-                            cl.on('message', function (topic, message) {
-                                // console.log("============>>>>> GOT A MSG", topic, message)
-                                if (onMessage)
-                                    onMessage(topic, message);
-                            });
-                            cl.subscribe(`${pubkey}/#`, function (err) {
-                                if (err)
-                                    logger_1.sphinxLogger.error(`error subscribing ${err}`, logger_1.logging.Tribes);
-                                else {
-                                    logger_1.sphinxLogger.info(`subscribed! ${pubkey}/#`, logger_1.logging.Tribes);
-                                    return cl;
-                                }
+                                logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Tribes);
+                                if (!clients[pubkey])
+                                    clients[pubkey] = {};
+                                clients[pubkey][host] = cl; // ADD TO MAIN STATE
+                                cl.on('close', function (e) {
+                                    logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
+                                    // setTimeout(() => reconnect(), 2000);
+                                    connected = false;
+                                    if (clients[pubkey] && clients[pubkey][host]) {
+                                        delete clients[pubkey][host];
+                                    }
+                                });
+                                cl.on('error', function (e) {
+                                    logger_1.sphinxLogger.error(`error:  ${e.message}`, logger_1.logging.Tribes);
+                                });
+                                cl.on('message', function (topic, message) {
+                                    // console.log("============>>>>> GOT A MSG", topic, message)
+                                    if (onMessage)
+                                        onMessage(topic, message);
+                                });
+                                cl.subscribe(`${pubkey}/#`, function (err) {
+                                    if (err)
+                                        logger_1.sphinxLogger.error(`error subscribing ${err}`, logger_1.logging.Tribes);
+                                    else {
+                                        logger_1.sphinxLogger.info(`subscribed! ${pubkey}/#`, logger_1.logging.Tribes);
+                                        resolve(cl);
+                                    }
+                                });
                             });
                         });
-                    });
-                }
-                catch (e) {
-                    logger_1.sphinxLogger.error(`error initializing ${e}`, logger_1.logging.Tribes);
-                }
-            });
-        }
-        while (true) {
-            if (!connected) {
-                reconnect();
+                    }
+                    catch (e) {
+                        logger_1.sphinxLogger.error(`error initializing ${e}`, logger_1.logging.Tribes);
+                    }
+                });
             }
-            yield (0, helpers_1.sleep)(5000 + Math.round(Math.random() * 8000));
-        }
+            while (true) {
+                if (!connected) {
+                    reconnect();
+                }
+                yield (0, helpers_1.sleep)(5000 + Math.round(Math.random() * 8000));
+            }
+        }));
     });
 }
 function lazyClient(pubkey, host, onMessage) {
