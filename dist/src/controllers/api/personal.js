@@ -400,6 +400,10 @@ function addBadgeToTribe(req, res) {
             if (badgeExist) {
                 return (0, res_1.failure)(res, 'Badge already exist in tribe');
             }
+            if ((!badge.rewardType && !reward_type) ||
+                (!badge.rewardRequirement && !reward_requirement)) {
+                return (0, res_1.failure)(res, 'Please provide valid imformations');
+            }
             yield models_1.models.TribeBadge.create({
                 rewardType: badge.rewardType ? badge.rewardType : reward_type,
                 rewardRequirement: badge.rewardRequirement

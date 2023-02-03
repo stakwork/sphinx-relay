@@ -447,6 +447,12 @@ export async function addBadgeToTribe(
     if (badgeExist) {
       return failure(res, 'Badge already exist in tribe')
     }
+    if (
+      (!badge.rewardType && !reward_type) ||
+      (!badge.rewardRequirement && !reward_requirement)
+    ) {
+      return failure(res, 'Please provide valid imformations')
+    }
     await models.TribeBadge.create({
       rewardType: badge.rewardType ? badge.rewardType : reward_type,
       rewardRequirement: badge.rewardRequirement
