@@ -150,8 +150,6 @@ function initAndSubscribeTopics(onMessage) {
                 if (!(allOwners && allOwners.length))
                     return;
                 (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
-                    if (c.id === 1)
-                        return; // the proxy non user
                     if (c.publicKey && c.publicKey.length === 66) {
                         yield lazyClient(c.publicKey, host, onMessage);
                         yield subExtraHostsForTenant(c.id, c.publicKey, onMessage); // 1 is the tenant id on non-proxy

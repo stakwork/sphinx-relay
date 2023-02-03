@@ -145,7 +145,6 @@ async function initAndSubscribeTopics(
       })) as Contact[]
       if (!(allOwners && allOwners.length)) return
       asyncForEach(allOwners, async (c) => {
-        if (c.id === 1) return // the proxy non user
         if (c.publicKey && c.publicKey.length === 66) {
           await lazyClient(c.publicKey, host, onMessage)
           await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
