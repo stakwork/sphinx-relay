@@ -78,9 +78,7 @@ jobs:
         working-directory: ./stack
         run: |
           sleep 240;
-          docker-compose ps
-          docker logs meme.sphinx
-          docker logs dave.sphinx
+          cat stack/relay/NODES.json
           docker wait stack_relaysetup_1;
       - name: copy file
         uses: canastro/copy-file-action@master
