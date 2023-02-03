@@ -93,6 +93,7 @@ export async function set(app) {
   app.get('/badges', personal.getAllBadge)
   app.delete('/badge/:id', personal.deleteBadge)
   app.post('/add_badge', personal.addBadgeToTribe)
+  app.get('/badge_templates', personal.badgeTemplates)
 
   app.get('/msgs', messages.getMsgs)
   app.get('/allmessages', messages.getAllMessages)

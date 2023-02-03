@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.badgeTemplates = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -385,4 +385,24 @@ function addBadgeToTribe(req, res) {
     });
 }
 exports.addBadgeToTribe = addBadgeToTribe;
+function badgeTemplates(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ts = [
+            {
+                rewardType: 1,
+                rewardRequirement: 1000,
+                icon: 'https://community.sphinx.chat/static/1K.svg',
+                name: 'Big Earner',
+            },
+            {
+                rewardType: 2,
+                rewardRequirement: 1000,
+                icon: 'https://community.sphinx.chat/static/VIP.svg',
+                name: 'Big Spender',
+            },
+        ];
+        return (0, res_1.success)(res, ts);
+    });
+}
+exports.badgeTemplates = badgeTemplates;
 //# sourceMappingURL=personal.js.map

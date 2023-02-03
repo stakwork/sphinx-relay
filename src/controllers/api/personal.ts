@@ -423,3 +423,24 @@ export async function addBadgeToTribe(
     return failure(res, error)
   }
 }
+
+export async function badgeTemplates(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  const ts = [
+    {
+      rewardType: 1, // earned
+      rewardRequirement: 1000,
+      icon: 'https://community.sphinx.chat/static/1K.svg',
+      name: 'Big Earner',
+    },
+    {
+      rewardType: 2, // spent
+      rewardRequirement: 1000,
+      icon: 'https://community.sphinx.chat/static/VIP.svg',
+      name: 'Big Spender',
+    },
+  ]
+  return success(res, ts)
+}
