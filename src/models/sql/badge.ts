@@ -31,11 +31,21 @@ export default class Badge extends Model<Badge> {
   @Column
   asset: string
 
+  // This column would not be used any longer
   @Column(DataType.BOOLEAN)
   deleted: boolean
 
+  @Column(DataType.BOOLEAN)
+  active: boolean
+
   @Column(DataType.BIGINT)
   amount: number
+
+  @Column
+  rewardType: number
+
+  @Column
+  rewardRequirement: number
 
   @Column
   icon: string
