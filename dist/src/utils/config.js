@@ -25,8 +25,8 @@ const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt';
 const DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION = './creds/transportTokenPublicKey.pem';
 const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION = './creds/transportTokenPrivateKey.pem';
 const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1;
-// const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444'
-const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444';
+const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444';
+// const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444'
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
     const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
