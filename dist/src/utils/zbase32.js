@@ -9,7 +9,7 @@ function encode(buf) {
     for (let i = 0; i < buf.length; i += 5) {
         // calculate chunk lengths
         const byteLength = Math.min(5, buf.length - i);
-        const zbase32Length = Math.ceil(byteLength * 8 / 5);
+        const zbase32Length = Math.ceil((byteLength * 8) / 5);
         // bytes -> bigint
         const n = BigInt(buf.readUintBE(i, byteLength)) << BigInt((5 - byteLength) * 8);
         // bigint -> zbase32
@@ -25,7 +25,7 @@ function decode(str) {
     for (let i = 0; i < str.length; i += 8) {
         // calculate chunk lengths
         const zbase32Length = Math.min(8, str.length - i);
-        const byteLength = Math.floor(zbase32Length * 5 / 8);
+        const byteLength = Math.floor((zbase32Length * 5) / 8);
         // zbase32 -> bigint
         let n = BigInt(0);
         for (let j = 0; j < zbase32Length; j++) {
