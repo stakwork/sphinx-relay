@@ -198,7 +198,7 @@ function createBadge(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { name, icon, amount, memo, reward_type, reward_requirement } = req.body;
+            const { name, icon, amount, memo, reward_type, reward_requirement, chat_id, } = req.body;
             if (typeof name !== 'string' ||
                 typeof icon !== 'string' ||
                 typeof amount !== 'number')
@@ -208,6 +208,9 @@ function createBadge(req, res) {
             }
             if (reward_type && !reward_requirement) {
                 return (0, res_1.failure)(res, 'Please provide reward requirement');
+            }
+            if (chat_id && typeof chat_id !== 'number') {
+                return (0, res_1.failure)(res, 'Please provide valid chat id');
             }
             if (reward_type) {
                 let validRewardType = false;
@@ -242,6 +245,26 @@ function createBadge(req, res) {
                 rewardRequirement: reward_requirement ? reward_requirement : null,
                 rewardType: reward_type ? reward_type : null,
             }));
+            if (chat_id && reward_requirement && reward_type) {
+                const tribe = (yield models_1.models.Chat.findOne({
+                    where: {
+                        id: chat_id,
+                        ownerPubkey: req.owner.publicKey,
+                        deleted: false,
+                        tenant,
+                    },
+                }));
+                if (tribe) {
+                    yield models_1.models.TribeBadge.create({
+                        rewardType: badge.rewardType,
+                        rewardRequirement: badge.rewardRequirement,
+                        badgeId: badge.id,
+                        chatId: tribe.id,
+                        active: true,
+                    });
+                    yield (0, badgeBot_1.createBadgeBot)(tribe.id, tenant);
+                }
+            }
             return (0, res_1.success)(res, {
                 badge_id: badge.badgeId,
                 icon: badge.icon,

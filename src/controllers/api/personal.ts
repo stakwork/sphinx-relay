@@ -231,8 +231,15 @@ export async function createBadge(
       where: { tenant, isOwner: true },
     })) as Contact
 
-    const { name, icon, amount, memo, reward_type, reward_requirement } =
-      req.body
+    const {
+      name,
+      icon,
+      amount,
+      memo,
+      reward_type,
+      reward_requirement,
+      chat_id,
+    } = req.body
     if (
       typeof name !== 'string' ||
       typeof icon !== 'string' ||
@@ -246,6 +253,10 @@ export async function createBadge(
 
     if (reward_type && !reward_requirement) {
       return failure(res, 'Please provide reward requirement')
+    }
+
+    if (chat_id && typeof chat_id !== 'number') {
+      return failure(res, 'Please provide valid chat id')
     }
 
     if (reward_type) {
@@ -284,6 +295,28 @@ export async function createBadge(
       rewardType: reward_type ? reward_type : null,
     })) as BadgeRecord
 
+    if (chat_id && reward_requirement && reward_type) {
+      const tribe = (await models.Chat.findOne({
+        where: {
+          id: chat_id,
+          ownerPubkey: req.owner.publicKey,
+          deleted: false,
+          tenant,
+        },
+      })) as ChatRecord
+
+      if (tribe) {
+        await models.TribeBadge.create({
+          rewardType: badge.rewardType,
+          rewardRequirement: badge.rewardRequirement,
+          badgeId: badge.id,
+          chatId: tribe.id,
+          active: true,
+        })
+
+        await createBadgeBot(tribe.id, tenant)
+      }
+    }
     return success(res, {
       badge_id: badge.badgeId,
       icon: badge.icon,
