@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createOrEditBadgeBot = exports.init = void 0;
+exports.init = void 0;
 const Sphinx = require("sphinx-bot");
 const logger_1 = require("../utils/logger");
 const botapi_1 = require("../controllers/botapi");
@@ -53,7 +53,7 @@ function init() {
                 return;
             switch (cmd) {
                 case 'add':
-                    if (arr.length === 5) {
+                    if (arr.length === 5 || arr.length === 3) {
                         const badgeId = Number(arr[2]);
                         if (isNaN(badgeId)) {
                             const addFields = [
@@ -65,45 +65,51 @@ function init() {
                             botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
                             return;
                         }
-                        const rewardType = Number(arr[3]);
-                        if (isNaN(rewardType)) {
-                            const addFields = [
-                                {
-                                    name: 'Badge Bot Error',
-                                    value: 'Provide a valid reward type',
-                                },
-                            ];
-                            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
-                            return;
-                        }
-                        let validRewardType = false;
-                        for (const key in constants_1.default.reward_types) {
-                            if (constants_1.default.reward_types[key] === rewardType) {
-                                validRewardType = true;
+                        const rewardType = arr[3];
+                        if (rewardType) {
+                            let rewardType = Number(arr[3]);
+                            if (isNaN(rewardType)) {
+                                const addFields = [
+                                    {
+                                        name: 'Badge Bot Error',
+                                        value: 'Provide a valid reward type',
+                                    },
+                                ];
+                                botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
+                                return;
+                            }
+                            let validRewardType = false;
+                            for (const key in constants_1.default.reward_types) {
+                                if (constants_1.default.reward_types[key] === rewardType) {
+                                    validRewardType = true;
+                                }
+                            }
+                            if (!validRewardType) {
+                                const addFields = [
+                                    {
+                                        name: 'Badge Bot Error',
+                                        value: 'Provide a valid reward type',
+                                    },
+                                ];
+                                botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
+                                return;
                             }
                         }
-                        if (!validRewardType) {
-                            const addFields = [
-                                {
-                                    name: 'Badge Bot Error',
-                                    value: 'Provide a valid reward type',
-                                },
-                            ];
-                            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
-                            return;
+                        const rewardRequirement = arr[4];
+                        if (rewardRequirement) {
+                            let rewardRequirement = Number(arr[4]);
+                            if (isNaN(rewardRequirement) || rewardRequirement === 0) {
+                                const addFields = [
+                                    {
+                                        name: 'Badge Bot Error',
+                                        value: 'Provide a valid amount of sats condition a tribe memeber has to complete to earn this badge',
+                                    },
+                                ];
+                                botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
+                                return;
+                            }
                         }
-                        const rewardRequirement = Number(arr[4]);
-                        if (isNaN(rewardRequirement) || rewardRequirement === 0) {
-                            const addFields = [
-                                {
-                                    name: 'Badge Bot Error',
-                                    value: 'Provide a valid amount of sats condition a tribe memeber has to complete to earn this badge',
-                                },
-                            ];
-                            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribe.id);
-                            return;
-                        }
-                        const badgeName = yield addBadgeToTribe(badgeId, message.member.id, tribe.id, rewardRequirement, rewardType, cmd, message);
+                        const badgeName = yield addBadgeToTribe(badgeId, message.member.id, tribe.id, Number(rewardRequirement), Number(rewardType), cmd, message);
                         if (!badgeName) {
                             return;
                         }
@@ -204,7 +210,7 @@ function init() {
                     chatMembers.push(tribeMember);
                 }
                 const tribeBadges = (yield models_1.models.TribeBadge.findAll({
-                    where: { chatId: tribe.id },
+                    where: { chatId: tribe.id, active: true },
                 }));
                 if (tribeBadges && tribeBadges.length > 0) {
                     for (let j = 0; j < chatMembers.length; j++) {
@@ -279,74 +285,6 @@ function checkReward(contactId, rewardId, tenant) {
         return { pubkey: contact.publicKey, status: false };
     });
 }
-function createOrEditBadgeBot(chatId, tenant, badge, amount, rewardType) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const botExist = (yield models_1.models.ChatBot.findOne({
-                where: { botPrefix: '/badge', chatId },
-            }));
-            if (botExist) {
-                let meta = '';
-                if (typeof botExist.meta === 'string') {
-                    let temMeta = JSON.parse(botExist.meta);
-                    if (Array.isArray(temMeta)) {
-                        temMeta.push({
-                            name: badge.name,
-                            amount,
-                            badgeId: badge.id,
-                            rewardType: rewardType,
-                            asset: badge.asset,
-                        });
-                        meta = JSON.stringify(temMeta);
-                    }
-                }
-                else {
-                    let temMeta = [];
-                    temMeta.push({
-                        name: badge.name,
-                        amount,
-                        badgeId: badge.id,
-                        rewardType: rewardType,
-                        asset: badge.asset,
-                    });
-                    meta = JSON.stringify(temMeta);
-                }
-                yield botExist.update({ meta });
-                return true;
-            }
-            else {
-                let temMeta = [];
-                temMeta.push({
-                    name: badge.name,
-                    amount,
-                    badgeId: badge.id,
-                    rewardType: rewardType,
-                    asset: badge.asset,
-                });
-                const chatBot = {
-                    chatId,
-                    botPrefix: '/badge',
-                    botType: constants_1.default.bot_types.builtin,
-                    msgTypes: JSON.stringify([
-                        constants_1.default.message_types.message,
-                        constants_1.default.message_types.boost,
-                        constants_1.default.message_types.direct_payment,
-                    ]),
-                    pricePerUse: 0,
-                    tenant,
-                    meta: JSON.stringify(temMeta),
-                };
-                yield models_1.models.ChatBot.create(chatBot);
-                return true;
-            }
-        }
-        catch (error) {
-            logger_1.sphinxLogger.error(`BADGE BOT ERROR ${error}`, logger_1.logging.Bots);
-            return false;
-        }
-    });
-}
-exports.createOrEditBadgeBot = createOrEditBadgeBot;
 function botResponse(addFields, author, title, message, cmd, tribeId) {
     return __awaiter(this, void 0, void 0, function* () {
         const resEmbed = new Sphinx.MessageEmbed()
@@ -364,7 +302,7 @@ const botSVG = `<svg viewBox="64 64 896 896" height="12" width="12" fill="white"
 function addBadgeToTribe(badgeId, tenant, tribeId, reward_requirement, reward_type, cmd, message) {
     return __awaiter(this, void 0, void 0, function* () {
         const badge = (yield models_1.models.Badge.findOne({
-            where: { badgeId, tenant },
+            where: { badgeId, tenant, active: true },
         }));
         if (!badge) {
             const addFields = [
@@ -389,14 +327,26 @@ function addBadgeToTribe(badgeId, tenant, tribeId, reward_requirement, reward_ty
             botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribeId);
             return;
         }
+        if ((isNaN(reward_type) && !badge.rewardType) ||
+            (isNaN(reward_requirement) && !badge.rewardRequirement)) {
+            const addFields = [
+                {
+                    name: 'Badge Bot Error',
+                    value: 'Provide adequate badge conditions',
+                },
+            ];
+            botResponse(addFields, 'BadgeBot', 'Badge Error', message, cmd, tribeId);
+            return;
+        }
         yield models_1.models.TribeBadge.create({
-            rewardType: reward_type,
-            rewardRequirement: reward_requirement,
+            rewardType: badge.rewardType ? badge.rewardType : reward_type,
+            rewardRequirement: badge.rewardRequirement
+                ? badge.rewardRequirement
+                : reward_requirement,
             badgeId: badge.id,
             chatId: tribeId,
-            deleted: false,
+            active: true,
         });
-        console.log('++++++++++++++', badge.name);
         return badge.name;
     });
 }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -198,11 +198,30 @@ function createBadge(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { name, icon, amount, memo } = req.body;
+            const { name, icon, amount, memo, reward_type, reward_requirement } = req.body;
             if (typeof name !== 'string' ||
                 typeof icon !== 'string' ||
                 typeof amount !== 'number')
                 return (0, res_1.failure)(res, 'invalid data passed');
+            if (reward_requirement && !reward_type) {
+                return (0, res_1.failure)(res, 'Please provide reward type');
+            }
+            if (reward_type && !reward_requirement) {
+                return (0, res_1.failure)(res, 'Please provide reward requirement');
+            }
+            if (reward_type) {
+                let validRewardType = false;
+                for (const key in constants_1.default.reward_types) {
+                    if (constants_1.default.reward_types[key] === reward_type) {
+                        validRewardType = true;
+                    }
+                }
+                if (!validRewardType)
+                    return (0, res_1.failure)(res, 'invalid reward type');
+            }
+            if (reward_requirement && typeof reward_requirement !== 'number') {
+                return (0, res_1.failure)(res, 'Invalid reward requirement');
+            }
             const response = yield people.createBadge({
                 icon,
                 amount,
@@ -215,11 +234,13 @@ function createBadge(req, res) {
                 amount: response.amount,
                 memo,
                 asset: response.asset,
-                deleted: false,
+                active: true,
                 tenant,
                 type: constants_1.default.badge_type.liquid,
                 host: config.boltwall_server,
                 icon: response.icon,
+                rewardRequirement: reward_requirement ? reward_requirement : null,
+                rewardType: reward_type ? reward_type : null,
             }));
             return (0, res_1.success)(res, {
                 badge_id: badge.badgeId,
@@ -270,7 +291,7 @@ function getAllBadge(req, res) {
         const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
         try {
             const badges = (yield models_1.models.Badge.findAll({
-                where: { tenant, deleted: false },
+                where: { tenant, active: true },
                 limit,
                 offset,
             }));
@@ -293,6 +314,8 @@ function getAllBadge(req, res) {
                         asset: badge.asset,
                         memo: badge.memo,
                         name: badge.name,
+                        reward_requirement: badge.rewardRequirement,
+                        reward_type: badge.rewardType,
                     });
                 }
             }
@@ -312,13 +335,13 @@ function deleteBadge(req, res) {
         const badgeId = req.params.id;
         try {
             const badge = (yield models_1.models.Badge.findOne({
-                where: { tenant, badgeId, deleted: false },
+                where: { tenant, badgeId, active: true },
             }));
             if (!badge) {
                 return (0, res_1.failure)(res, 'Badge does not exist');
             }
             else {
-                yield badge.update({ deleted: true });
+                yield badge.update({ active: false });
                 return (0, res_1.success)(res, `${badge.name} was deleted successfully`);
             }
         }
@@ -334,20 +357,28 @@ function addBadgeToTribe(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         const { chat_id, reward_type, reward_requirement, badge_id } = req.body;
-        if (!chat_id || !reward_type || !reward_requirement || !badge_id) {
+        if (!chat_id || !badge_id) {
             return (0, res_1.failure)(res, 'Invalid data passed');
         }
-        let validRewardType = false;
-        for (const key in constants_1.default.reward_types) {
-            if (constants_1.default.reward_types[key] === reward_type) {
-                validRewardType = true;
-            }
+        if (reward_requirement && !reward_type) {
+            return (0, res_1.failure)(res, 'Please provide reward type');
         }
-        if (typeof reward_requirement !== 'number') {
+        if (reward_type && !reward_requirement) {
+            return (0, res_1.failure)(res, 'Please provide reward requirement');
+        }
+        if (reward_type) {
+            let validRewardType = false;
+            for (const key in constants_1.default.reward_types) {
+                if (constants_1.default.reward_types[key] === reward_type) {
+                    validRewardType = true;
+                }
+            }
+            if (!validRewardType)
+                return (0, res_1.failure)(res, 'invalid reward type');
+        }
+        if (reward_requirement && typeof reward_requirement !== 'number') {
             return (0, res_1.failure)(res, 'Invalid reward requirement');
         }
-        if (!validRewardType)
-            return (0, res_1.failure)(res, 'invalid reward type');
         try {
             const tribe = (yield models_1.models.Chat.findOne({
                 where: {
@@ -361,7 +392,7 @@ function addBadgeToTribe(req, res) {
                 return (0, res_1.failure)(res, 'Invalid tribe');
             }
             const badge = (yield models_1.models.Badge.findOne({
-                where: { badgeId: badge_id, tenant },
+                where: { badgeId: badge_id, tenant, active: true },
             }));
             if (!badge) {
                 return (0, res_1.failure)(res, 'Invalid Badge');
@@ -372,12 +403,18 @@ function addBadgeToTribe(req, res) {
             if (badgeExist) {
                 return (0, res_1.failure)(res, 'Badge already exist in tribe');
             }
+            if ((!badge.rewardType && !reward_type) ||
+                (!badge.rewardRequirement && !reward_requirement)) {
+                return (0, res_1.failure)(res, 'Please provide reward type and reward requirement');
+            }
             yield models_1.models.TribeBadge.create({
-                rewardType: reward_type,
-                rewardRequirement: reward_requirement,
+                rewardType: badge.rewardType ? badge.rewardType : reward_type,
+                rewardRequirement: badge.rewardRequirement
+                    ? badge.rewardRequirement
+                    : reward_requirement,
                 badgeId: badge.id,
                 chatId: tribe.id,
-                deleted: false,
+                active: true,
             });
             yield (0, badgeBot_1.createBadgeBot)(tribe.id, tenant);
             return (0, res_1.success)(res, 'Badge was added to tribe successfully');
@@ -427,4 +464,25 @@ function updateBadge(req, res) {
     });
 }
 exports.updateBadge = updateBadge;
+// hardcoded for now
+function badgeTemplates(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ts = [
+            {
+                rewardType: 1,
+                rewardRequirement: 1000,
+                icon: 'https://community.sphinx.chat/static/1K.svg',
+                name: 'Big Earner',
+            },
+            {
+                rewardType: 2,
+                rewardRequirement: 1000,
+                icon: 'https://community.sphinx.chat/static/VIP.svg',
+                name: 'Big Spender',
+            },
+        ];
+        return (0, res_1.success)(res, ts);
+    });
+}
+exports.badgeTemplates = badgeTemplates;
 //# sourceMappingURL=personal.js.map

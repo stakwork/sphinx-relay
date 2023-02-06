@@ -25,6 +25,8 @@ interface Badges {
   memo: string
   asset: string
   icon: string
+  reward_type: number
+  reward_requirement: number
 }
 export async function createPeopleProfile(
   req: Req,
@@ -229,13 +231,36 @@ export async function createBadge(
       where: { tenant, isOwner: true },
     })) as Contact
 
-    const { name, icon, amount, memo } = req.body
+    const { name, icon, amount, memo, reward_type, reward_requirement } =
+      req.body
     if (
       typeof name !== 'string' ||
       typeof icon !== 'string' ||
       typeof amount !== 'number'
     )
       return failure(res, 'invalid data passed')
+
+    if (reward_requirement && !reward_type) {
+      return failure(res, 'Please provide reward type')
+    }
+
+    if (reward_type && !reward_requirement) {
+      return failure(res, 'Please provide reward requirement')
+    }
+
+    if (reward_type) {
+      let validRewardType = false
+      for (const key in constants.reward_types) {
+        if (constants.reward_types[key] === reward_type) {
+          validRewardType = true
+        }
+      }
+      if (!validRewardType) return failure(res, 'invalid reward type')
+    }
+
+    if (reward_requirement && typeof reward_requirement !== 'number') {
+      return failure(res, 'Invalid reward requirement')
+    }
 
     const response: Badge = await people.createBadge({
       icon,
@@ -250,11 +275,13 @@ export async function createBadge(
       amount: response.amount,
       memo,
       asset: response.asset,
-      deleted: false,
+      active: true,
       tenant,
       type: constants.badge_type.liquid,
       host: config.boltwall_server, //This is subject to change
       icon: response.icon,
+      rewardRequirement: reward_requirement ? reward_requirement : null,
+      rewardType: reward_type ? reward_type : null,
     })) as BadgeRecord
 
     return success(res, {
@@ -305,7 +332,7 @@ export async function getAllBadge(
 
   try {
     const badges = (await models.Badge.findAll({
-      where: { tenant, deleted: false },
+      where: { tenant, active: true },
       limit,
       offset,
     })) as BadgeRecord[]
@@ -331,6 +358,8 @@ export async function getAllBadge(
           asset: badge.asset,
           memo: badge.memo,
           name: badge.name,
+          reward_requirement: badge.rewardRequirement,
+          reward_type: badge.rewardType,
         })
       }
     }
@@ -350,12 +379,12 @@ export async function deleteBadge(
 
   try {
     const badge = (await models.Badge.findOne({
-      where: { tenant, badgeId, deleted: false },
+      where: { tenant, badgeId, active: true },
     })) as BadgeRecord
     if (!badge) {
       return failure(res, 'Badge does not exist')
     } else {
-      await badge.update({ deleted: true })
+      await badge.update({ active: false })
       return success(res, `${badge.name} was deleted successfully`)
     }
   } catch (error) {
@@ -371,22 +400,31 @@ export async function addBadgeToTribe(
   const tenant: number = req.owner.id
   const { chat_id, reward_type, reward_requirement, badge_id } = req.body
 
-  if (!chat_id || !reward_type || !reward_requirement || !badge_id) {
+  if (!chat_id || !badge_id) {
     return failure(res, 'Invalid data passed')
   }
-  let validRewardType = false
 
-  for (const key in constants.reward_types) {
-    if (constants.reward_types[key] === reward_type) {
-      validRewardType = true
-    }
+  if (reward_requirement && !reward_type) {
+    return failure(res, 'Please provide reward type')
   }
 
-  if (typeof reward_requirement !== 'number') {
+  if (reward_type && !reward_requirement) {
+    return failure(res, 'Please provide reward requirement')
+  }
+
+  if (reward_type) {
+    let validRewardType = false
+    for (const key in constants.reward_types) {
+      if (constants.reward_types[key] === reward_type) {
+        validRewardType = true
+      }
+    }
+    if (!validRewardType) return failure(res, 'invalid reward type')
+  }
+
+  if (reward_requirement && typeof reward_requirement !== 'number') {
     return failure(res, 'Invalid reward requirement')
   }
-
-  if (!validRewardType) return failure(res, 'invalid reward type')
   try {
     const tribe = (await models.Chat.findOne({
       where: {
@@ -400,7 +438,7 @@ export async function addBadgeToTribe(
       return failure(res, 'Invalid tribe')
     }
     const badge = (await models.Badge.findOne({
-      where: { badgeId: badge_id, tenant },
+      where: { badgeId: badge_id, tenant, active: true },
     })) as BadgeRecord
     if (!badge) {
       return failure(res, 'Invalid Badge')
@@ -411,12 +449,20 @@ export async function addBadgeToTribe(
     if (badgeExist) {
       return failure(res, 'Badge already exist in tribe')
     }
+    if (
+      (!badge.rewardType && !reward_type) ||
+      (!badge.rewardRequirement && !reward_requirement)
+    ) {
+      return failure(res, 'Please provide reward type and reward requirement')
+    }
     await models.TribeBadge.create({
-      rewardType: reward_type,
-      rewardRequirement: reward_requirement,
+      rewardType: badge.rewardType ? badge.rewardType : reward_type,
+      rewardRequirement: badge.rewardRequirement
+        ? badge.rewardRequirement
+        : reward_requirement,
       badgeId: badge.id,
       chatId: tribe.id,
-      deleted: false,
+      active: true,
     })
 
     await createBadgeBot(tribe.id, tenant)
@@ -467,4 +513,26 @@ export async function updateBadge(
   } catch (error) {
     return failure(res, error)
   }
+}
+
+// hardcoded for now
+export async function badgeTemplates(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  const ts = [
+    {
+      rewardType: 1, // earned
+      rewardRequirement: 1000,
+      icon: 'https://community.sphinx.chat/static/1K.svg',
+      name: 'Big Earner',
+    },
+    {
+      rewardType: 2, // spent
+      rewardRequirement: 1000,
+      icon: 'https://community.sphinx.chat/static/VIP.svg',
+      name: 'Big Spender',
+    },
+  ]
+  return success(res, ts)
 }
