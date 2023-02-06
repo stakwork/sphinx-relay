@@ -94,6 +94,7 @@ function set(app) {
         app.post('/add_badge', personal.addBadgeToTribe);
         app.put('/update_badge', personal.updateBadge);
         app.get('/badge_templates', personal.badgeTemplates);
+        app.get('/badge_per_tribe/:chat_id', personal.getBadgePerTribe);
         app.get('/msgs', messages.getMsgs);
         app.get('/allmessages', messages.getAllMessages);
         app.get('/messages', messages.getMessages);

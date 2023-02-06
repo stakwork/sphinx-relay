@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.getBadgePerTribe = exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -504,4 +504,70 @@ function badgeTemplates(req, res) {
     });
 }
 exports.badgeTemplates = badgeTemplates;
+function getBadgePerTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
+        const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+        const chat_id = req.params.chat_id;
+        try {
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: {
+                    id: chat_id,
+                    ownerPubkey: req.owner.publicKey,
+                    deleted: false,
+                    tenant,
+                },
+            }));
+            if (!tribe) {
+                return (0, res_1.failure)(res, 'Invalid tribe');
+            }
+            const badges = (yield models_1.models.Badge.findAll({
+                where: { tenant, active: true },
+                limit,
+                offset,
+            }));
+            const tribeBadges = (yield models_1.models.TribeBadge.findAll({
+                where: { chatId: tribe.id },
+            }));
+            const badgeInTribe = {};
+            for (let i = 0; i < tribeBadges.length; i++) {
+                const tribeBadge = tribeBadges[i];
+                badgeInTribe[tribeBadge.badgeId] = true;
+            }
+            const response = yield (0, node_fetch_1.default)(`${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const results = yield response.json();
+            const balObject = {};
+            for (let i = 0; i < results.balances.length; i++) {
+                const balance = results.balances[i];
+                balObject[balance.asset_id] = balance;
+            }
+            const finalRes = [];
+            for (let j = 0; j < badges.length; j++) {
+                const badge = badges[j];
+                if (balObject[badge.badgeId]) {
+                    finalRes.push({
+                        badge_id: badge.badgeId,
+                        icon: badge.icon,
+                        amount_created: badge.amount,
+                        amount_issued: badge.amount - balObject[badge.badgeId].balance,
+                        asset: badge.asset,
+                        memo: badge.memo,
+                        name: badge.name,
+                        reward_requirement: badge.rewardRequirement,
+                        reward_type: badge.rewardType,
+                        active: badgeInTribe[badge.id] ? true : false,
+                    });
+                }
+            }
+            return (0, res_1.success)(res, finalRes);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.getBadgePerTribe = getBadgePerTribe;
 //# sourceMappingURL=personal.js.map

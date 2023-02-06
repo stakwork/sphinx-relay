@@ -2,7 +2,13 @@ import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'
 import * as people from '../../utils/people'
-import { models, Contact, BadgeRecord, ChatRecord } from '../../models'
+import {
+  models,
+  Contact,
+  BadgeRecord,
+  ChatRecord,
+  TribeBadgeRecord,
+} from '../../models'
 import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
@@ -27,6 +33,7 @@ interface Badges {
   icon: string
   reward_type: number
   reward_requirement: number
+  active: boolean
 }
 export async function createPeopleProfile(
   req: Req,
@@ -379,7 +386,7 @@ export async function getAllBadge(
       const balance = results.balances[i]
       balObject[balance.asset_id] = balance
     }
-    const finalRes: Badges[] = []
+    const finalRes: Partial<Badges>[] = []
     for (let j = 0; j < badges.length; j++) {
       const badge = badges[j]
       if (balObject[badge.badgeId]) {
@@ -564,4 +571,74 @@ export async function badgeTemplates(
     },
   ]
   return success(res, ts)
+}
+
+export async function getBadgePerTribe(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const limit = (req.query.limit && parseInt(req.query.limit as string)) || 100
+  const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
+  const chat_id = req.params.chat_id
+
+  try {
+    const tribe = (await models.Chat.findOne({
+      where: {
+        id: chat_id,
+        ownerPubkey: req.owner.publicKey,
+        deleted: false,
+        tenant,
+      },
+    })) as ChatRecord
+    if (!tribe) {
+      return failure(res, 'Invalid tribe')
+    }
+    const badges = (await models.Badge.findAll({
+      where: { tenant, active: true },
+      limit,
+      offset,
+    })) as BadgeRecord[]
+
+    const tribeBadges = (await models.TribeBadge.findAll({
+      where: { chatId: tribe.id },
+    })) as TribeBadgeRecord[]
+    const badgeInTribe = {}
+    for (let i = 0; i < tribeBadges.length; i++) {
+      const tribeBadge = tribeBadges[i]
+      badgeInTribe[tribeBadge.badgeId] = true
+    }
+    const response = await fetch(
+      `${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`,
+      { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+    )
+    const results = await response.json()
+    const balObject = {}
+    for (let i = 0; i < results.balances.length; i++) {
+      const balance = results.balances[i]
+      balObject[balance.asset_id] = balance
+    }
+    const finalRes: Badges[] = []
+    for (let j = 0; j < badges.length; j++) {
+      const badge = badges[j]
+      if (balObject[badge.badgeId]) {
+        finalRes.push({
+          badge_id: badge.badgeId,
+          icon: badge.icon,
+          amount_created: badge.amount,
+          amount_issued: badge.amount - balObject[badge.badgeId].balance,
+          asset: badge.asset,
+          memo: badge.memo,
+          name: badge.name,
+          reward_requirement: badge.rewardRequirement,
+          reward_type: badge.rewardType,
+          active: badgeInTribe[badge.id] ? true : false,
+        })
+      }
+    }
+    return success(res, finalRes)
+  } catch (error) {
+    return failure(res, error)
+  }
 }
