@@ -501,13 +501,9 @@ export async function updateBadge(
       }
     )
     if (!response.ok) {
-      console.log(response)
       const newRes = await response.json()
       return failure(res, newRes)
     }
-    console.log(response)
-    const newRes = await response.json()
-    console.log(newRes)
     await badge.update({ icon })
     return success(res, 'Badge Icon updated successfully')
   } catch (error) {

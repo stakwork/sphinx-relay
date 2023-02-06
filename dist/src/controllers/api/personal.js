@@ -448,13 +448,9 @@ function updateBadge(req, res) {
                 body: JSON.stringify({ id: badge_id, icon }),
             });
             if (!response.ok) {
-                console.log(response);
                 const newRes = yield response.json();
                 return (0, res_1.failure)(res, newRes);
             }
-            console.log(response);
-            const newRes = yield response.json();
-            console.log(newRes);
             yield badge.update({ icon });
             return (0, res_1.success)(res, 'Badge Icon updated successfully');
         }
