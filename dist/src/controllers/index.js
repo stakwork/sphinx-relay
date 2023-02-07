@@ -181,8 +181,9 @@ function set(app) {
         app.get('/feeds', feeds.getFeeds);
         // Content Feed Status
         app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus);
-        app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus);
+        app.get('/content_feed_status', contentFeedStatus.getAllContentFeedStatus);
         app.put('/content_feed_status/:feed_id', contentFeedStatus.updateContentFeedStatus);
+        app.get('/content_feed_status/:feed_id', contentFeedStatus.getContentFeedStatus);
         // open
         app.get('/has_admin', admin.hasAdmin);
         app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
