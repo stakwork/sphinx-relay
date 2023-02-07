@@ -2,7 +2,13 @@ import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'
 import * as people from '../../utils/people'
-import { models, Contact, BadgeRecord, ChatRecord } from '../../models'
+import {
+  models,
+  Contact,
+  BadgeRecord,
+  ChatRecord,
+  TribeBadgeRecord,
+} from '../../models'
 import * as jsonUtils from '../../utils/json'
 import { success, failure } from '../../utils/res'
 import { loadConfig } from '../../utils/config'
@@ -11,6 +17,7 @@ import { Badge, Req, Res } from '../../types'
 // import { createOrEditBadgeBot } from '../../builtin/badge'
 import constants from '../../constants'
 import { createBadgeBot } from '../../utils/badgeBot'
+import { genSignedTimestamp } from '../../utils/tribes'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -26,6 +33,7 @@ interface Badges {
   icon: string
   reward_type: number
   reward_requirement: number
+  active: boolean
 }
 export async function createPeopleProfile(
   req: Req,
@@ -230,8 +238,15 @@ export async function createBadge(
       where: { tenant, isOwner: true },
     })) as Contact
 
-    const { name, icon, amount, memo, reward_type, reward_requirement } =
-      req.body
+    const {
+      name,
+      icon,
+      amount,
+      memo,
+      reward_type,
+      reward_requirement,
+      chat_id,
+    } = req.body
     if (
       typeof name !== 'string' ||
       typeof icon !== 'string' ||
@@ -245,6 +260,10 @@ export async function createBadge(
 
     if (reward_type && !reward_requirement) {
       return failure(res, 'Please provide reward requirement')
+    }
+
+    if (chat_id && typeof chat_id !== 'number') {
+      return failure(res, 'Please provide valid chat id')
     }
 
     if (reward_type) {
@@ -283,6 +302,28 @@ export async function createBadge(
       rewardType: reward_type ? reward_type : null,
     })) as BadgeRecord
 
+    if (chat_id && reward_requirement && reward_type) {
+      const tribe = (await models.Chat.findOne({
+        where: {
+          id: chat_id,
+          ownerPubkey: req.owner.publicKey,
+          deleted: false,
+          tenant,
+        },
+      })) as ChatRecord
+
+      if (tribe) {
+        await models.TribeBadge.create({
+          rewardType: badge.rewardType,
+          rewardRequirement: badge.rewardRequirement,
+          badgeId: badge.id,
+          chatId: tribe.id,
+          active: true,
+        })
+
+        await createBadgeBot(tribe.id, tenant)
+      }
+    }
     return success(res, {
       badge_id: badge.badgeId,
       icon: badge.icon,
@@ -345,7 +386,7 @@ export async function getAllBadge(
       const balance = results.balances[i]
       balObject[balance.asset_id] = balance
     }
-    const finalRes: Badges[] = []
+    const finalRes: Partial<Badges>[] = []
     for (let j = 0; j < badges.length; j++) {
       const badge = badges[j]
       if (balObject[badge.badgeId]) {
@@ -395,6 +436,7 @@ export async function addBadgeToTribe(
   req: Req,
   res: Res
 ): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { chat_id, reward_type, reward_requirement, badge_id } = req.body
 
@@ -441,30 +483,83 @@ export async function addBadgeToTribe(
     if (!badge) {
       return failure(res, 'Invalid Badge')
     }
-    const badgeExist = await models.TribeBadge.findOne({
+    
+    const badgeExist = (await models.TribeBadge.findOne({
       where: { chatId: tribe.id, badgeId: badge.id },
-    })
-    if (badgeExist) {
+    })) as TribeBadgeRecord
+
+    if (badgeExist && badgeExist.active === true) {
       return failure(res, 'Badge already exist in tribe')
     }
+    
     if (
       (!badge.rewardType && !reward_type) ||
       (!badge.rewardRequirement && !reward_requirement)
     ) {
       return failure(res, 'Please provide reward type and reward requirement')
     }
-    await models.TribeBadge.create({
-      rewardType: badge.rewardType ? badge.rewardType : reward_type,
-      rewardRequirement: badge.rewardRequirement
-        ? badge.rewardRequirement
-        : reward_requirement,
-      badgeId: badge.id,
-      chatId: tribe.id,
-      active: true,
-    })
+
+    if (badgeExist && badgeExist.active === false) {
+      await badgeExist.update({
+        active: true,
+        rewardType: badge.rewardType ? badge.rewardType : reward_type,
+        rewardRequirement: badge.rewardRequirement
+          ? badge.rewardRequirement
+          : reward_requirement,
+      })
+    } else {
+      await models.TribeBadge.create({
+        rewardType: badge.rewardType ? badge.rewardType : reward_type,
+        rewardRequirement: badge.rewardRequirement
+          ? badge.rewardRequirement
+          : reward_requirement,
+        badgeId: badge.id,
+        chatId: tribe.id,
+        active: true,
+      })
+    }
 
     await createBadgeBot(tribe.id, tenant)
     return success(res, 'Badge was added to tribe successfully')
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
+export async function updateBadge(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { badge_id, icon } = req.body
+
+  if (!badge_id || !icon) {
+    return failure(res, 'Missing required data')
+  }
+
+  try {
+    const badge = await models.Badge.findOne({
+      where: { badgeId: badge_id, tenant },
+    })
+    if (!badge) {
+      return failure(res, "You can't update this badge")
+    }
+    const token = await genSignedTimestamp(req.owner.publicKey)
+    const response = await fetch(
+      `${config.boltwall_server}/update_badge?token=${token}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: badge_id, icon }),
+      }
+    )
+    if (!response.ok) {
+      const newRes = await response.json()
+      return failure(res, newRes)
+    }
+    await badge.update({ icon })
+    return success(res, 'Badge Icon updated successfully')
   } catch (error) {
     return failure(res, error)
   }
@@ -490,4 +585,128 @@ export async function badgeTemplates(
     },
   ]
   return success(res, ts)
+}
+
+export async function getBadgePerTribe(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const limit = (req.query.limit && parseInt(req.query.limit as string)) || 100
+  const offset = (req.query.offset && parseInt(req.query.offset as string)) || 0
+  const chat_id = req.params.chat_id
+
+  try {
+    const tribe = (await models.Chat.findOne({
+      where: {
+        id: chat_id,
+        ownerPubkey: req.owner.publicKey,
+        deleted: false,
+        tenant,
+      },
+    })) as ChatRecord
+    if (!tribe) {
+      return failure(res, 'Invalid tribe')
+    }
+    const badges = (await models.Badge.findAll({
+      where: { tenant, active: true },
+      limit,
+      offset,
+    })) as BadgeRecord[]
+
+    const tribeBadges = (await models.TribeBadge.findAll({
+      where: { chatId: tribe.id, active: true },
+    })) as TribeBadgeRecord[]
+
+    const badgeInTribe = {}
+    for (let i = 0; i < tribeBadges.length; i++) {
+      const tribeBadge = tribeBadges[i]
+      badgeInTribe[tribeBadge.badgeId] = true
+    }
+    const response = await fetch(
+      `${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`,
+      { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+    )
+    const results = await response.json()
+    const balObject = {}
+    for (let i = 0; i < results.balances.length; i++) {
+      const balance = results.balances[i]
+      balObject[balance.asset_id] = balance
+    }
+    const finalRes: Badges[] = []
+    for (let j = 0; j < badges.length; j++) {
+      const badge = badges[j]
+      if (balObject[badge.badgeId]) {
+        finalRes.push({
+          badge_id: badge.badgeId,
+          icon: badge.icon,
+          amount_created: badge.amount,
+          amount_issued: badge.amount - balObject[badge.badgeId].balance,
+          asset: badge.asset,
+          memo: badge.memo,
+          name: badge.name,
+          reward_requirement: badge.rewardRequirement,
+          reward_type: badge.rewardType,
+          active: badgeInTribe[badge.id] ? true : false,
+        })
+      }
+    }
+    return success(res, finalRes)
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
+export async function removeBadgeFromTribe(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { chat_id, badge_id } = req.body
+
+  if (
+    !chat_id ||
+    typeof chat_id !== 'number' ||
+    !badge_id ||
+    typeof badge_id !== 'number'
+  ) {
+    return failure(res, 'Invalid chat id or badge id')
+  }
+
+  try {
+    const tribe = (await models.Chat.findOne({
+      where: {
+        id: chat_id,
+        ownerPubkey: req.owner.publicKey,
+        deleted: false,
+        tenant,
+      },
+    })) as ChatRecord
+
+    if (!tribe) {
+      return failure(res, 'Invalid tribe')
+    }
+
+    const badge = (await models.Badge.findOne({
+      where: { tenant, badgeId: badge_id },
+    })) as BadgeRecord
+
+    if (!badge) {
+      return failure(res, 'Badge does not exist')
+    }
+
+    const badgeTribe = (await models.TribeBadge.findOne({
+      where: { badgeId: badge.id, chatId: chat_id, active: true },
+    })) as TribeBadgeRecord
+
+    if (!badgeTribe) {
+      return failure(res, 'Badge does not exist in tribe')
+    }
+    await badgeTribe.update({ active: false })
+    return success(res, 'Badge deactivated successfully')
+  } catch (error) {
+    return failure(res, error)
+  }
 }

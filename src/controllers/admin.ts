@@ -81,10 +81,12 @@ export async function addProxyUser(req: Req, res: Res): Promise<void> {
   if (!isProxy()) return failure(res, 'not proxy')
 
   try {
-    const initial_sat = parseInt(req.params.sat)
+    const initial_sat = parseInt(req.query.sats as string)
+    console.log('-> addProxyUser initial sats', initial_sat)
     const rpk = await getProxyRootPubkey()
     const created = await generateNewUser(rpk, initial_sat || 0)
-    success(res, created)
+    if (created) success(res, created)
+    else failure(res, 'failed to create new proxy user')
   } catch (e) {
     failure(res, e)
   }
