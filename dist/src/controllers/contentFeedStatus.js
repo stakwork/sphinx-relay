@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateContentFeedStatus = exports.getContentFeedStatus = exports.addContentFeedStatus = void 0;
+exports.getContentFeedStatus = exports.updateContentFeedStatus = exports.getAllContentFeedStatus = exports.addContentFeedStatus = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
@@ -63,7 +63,7 @@ function addContentFeedStatus(req, res) {
     });
 }
 exports.addContentFeedStatus = addContentFeedStatus;
-function getContentFeedStatus(req, res) {
+function getAllContentFeedStatus(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
@@ -100,7 +100,7 @@ function getContentFeedStatus(req, res) {
         }
     });
 }
-exports.getContentFeedStatus = getContentFeedStatus;
+exports.getAllContentFeedStatus = getAllContentFeedStatus;
 function updateContentFeedStatus(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -160,4 +160,35 @@ function updateContentFeedStatus(req, res) {
     });
 }
 exports.updateContentFeedStatus = updateContentFeedStatus;
+function getContentFeedStatus(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const feedId = req.params.feed_id;
+        try {
+            const contentFeed = (yield models_1.models.ContentFeedStatus.findOne({
+                where: { feedId, tenant },
+            }));
+            if (!contentFeed) {
+                return (0, res_1.failure)(res, 'Content Feed does not exist');
+            }
+            const resContent = {
+                feed_id: contentFeed.feedId,
+                feed_url: contentFeed.feedUrl,
+                subscription_status: contentFeed.subscriptionStatus,
+                chat_id: contentFeed.chatId,
+                item_id: contentFeed.itemId,
+                episodes_status: JSON.parse(contentFeed.episodesStatus),
+                sats_per_minute: contentFeed.satsPerMinute,
+                player_speed: contentFeed.playerSpeed,
+            };
+            return (0, res_1.success)(res, resContent);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.getContentFeedStatus = getContentFeedStatus;
 //# sourceMappingURL=contentFeedStatus.js.map

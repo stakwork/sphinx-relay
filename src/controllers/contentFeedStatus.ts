@@ -85,7 +85,7 @@ export async function addContentFeedStatus(
   }
 }
 
-export async function getContentFeedStatus(
+export async function getAllContentFeedStatus(
   req: Req,
   res: Response
 ): Promise<void | Response> {
@@ -188,5 +188,36 @@ export async function updateContentFeedStatus(
       logging.Express
     )
     return failure(res, 'Internal Server Error')
+  }
+}
+
+export async function getContentFeedStatus(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const feedId = req.params.feed_id
+
+  try {
+    const contentFeed = (await models.ContentFeedStatus.findOne({
+      where: { feedId, tenant },
+    })) as ContentFeedStatusRecord
+    if (!contentFeed) {
+      return failure(res, 'Content Feed does not exist')
+    }
+    const resContent: ContentFeedRes = {
+      feed_id: contentFeed.feedId,
+      feed_url: contentFeed.feedUrl,
+      subscription_status: contentFeed.subscriptionStatus,
+      chat_id: contentFeed.chatId,
+      item_id: contentFeed.itemId,
+      episodes_status: JSON.parse(contentFeed.episodesStatus),
+      sats_per_minute: contentFeed.satsPerMinute,
+      player_speed: contentFeed.playerSpeed,
+    }
+    return success(res, resContent)
+  } catch (error) {
+    return failure(res, error)
   }
 }
