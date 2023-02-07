@@ -15,7 +15,7 @@ export function encode(buf: Buffer): string {
 
     // bytes -> bigint
     const n =
-      BigInt(buf.readUintBE(i, byteLength)) << BigInt((5 - byteLength) * 8)
+      BigInt(buf.readUIntBE(i, byteLength)) << BigInt((5 - byteLength) * 8)
 
     // bigint -> zbase32
     for (let j = 0; j < zbase32Length; j++) {
@@ -44,7 +44,7 @@ export function decode(str: string): Buffer {
 
     // bigint -> bytes
     const chunk = Buffer.allocUnsafe(byteLength)
-    chunk.writeUintBE(Number(n >> BigInt((5 - byteLength) * 8)), 0, byteLength)
+    chunk.writeUIntBE(Number(n >> BigInt((5 - byteLength) * 8)), 0, byteLength)
     chunks.push(chunk)
   }
 
