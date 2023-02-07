@@ -483,27 +483,40 @@ export async function addBadgeToTribe(
     if (!badge) {
       return failure(res, 'Invalid Badge')
     }
-    const badgeExist = await models.TribeBadge.findOne({
+    const badgeExist = (await models.TribeBadge.findOne({
       where: { chatId: tribe.id, badgeId: badge.id },
-    })
-    if (badgeExist) {
+    })) as TribeBadgeRecord
+
+    if (badgeExist && badgeExist.active === true) {
       return failure(res, 'Badge already exist in tribe')
     }
+
     if (
       (!badge.rewardType && !reward_type) ||
       (!badge.rewardRequirement && !reward_requirement)
     ) {
       return failure(res, 'Please provide reward type and reward requirement')
     }
-    await models.TribeBadge.create({
-      rewardType: badge.rewardType ? badge.rewardType : reward_type,
-      rewardRequirement: badge.rewardRequirement
-        ? badge.rewardRequirement
-        : reward_requirement,
-      badgeId: badge.id,
-      chatId: tribe.id,
-      active: true,
-    })
+
+    if (badgeExist && badgeExist.active === false) {
+      badgeExist.update({
+        active: true,
+        rewardType: badge.rewardType ? badge.rewardType : reward_type,
+        rewardRequirement: badge.rewardRequirement
+          ? badge.rewardRequirement
+          : reward_requirement,
+      })
+    } else {
+      await models.TribeBadge.create({
+        rewardType: badge.rewardType ? badge.rewardType : reward_type,
+        rewardRequirement: badge.rewardRequirement
+          ? badge.rewardRequirement
+          : reward_requirement,
+        badgeId: badge.id,
+        chatId: tribe.id,
+        active: true,
+      })
+    }
 
     await createBadgeBot(tribe.id, tenant)
     return success(res, 'Badge was added to tribe successfully')

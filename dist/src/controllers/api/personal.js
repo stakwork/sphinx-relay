@@ -420,25 +420,36 @@ function addBadgeToTribe(req, res) {
             if (!badge) {
                 return (0, res_1.failure)(res, 'Invalid Badge');
             }
-            const badgeExist = yield models_1.models.TribeBadge.findOne({
+            const badgeExist = (yield models_1.models.TribeBadge.findOne({
                 where: { chatId: tribe.id, badgeId: badge.id },
-            });
-            if (badgeExist) {
+            }));
+            if (badgeExist && badgeExist.active === true) {
                 return (0, res_1.failure)(res, 'Badge already exist in tribe');
             }
             if ((!badge.rewardType && !reward_type) ||
                 (!badge.rewardRequirement && !reward_requirement)) {
                 return (0, res_1.failure)(res, 'Please provide reward type and reward requirement');
             }
-            yield models_1.models.TribeBadge.create({
-                rewardType: badge.rewardType ? badge.rewardType : reward_type,
-                rewardRequirement: badge.rewardRequirement
-                    ? badge.rewardRequirement
-                    : reward_requirement,
-                badgeId: badge.id,
-                chatId: tribe.id,
-                active: true,
-            });
+            if (badgeExist && badgeExist.active === false) {
+                badgeExist.update({
+                    active: true,
+                    rewardType: badge.rewardType ? badge.rewardType : reward_type,
+                    rewardRequirement: badge.rewardRequirement
+                        ? badge.rewardRequirement
+                        : reward_requirement,
+                });
+            }
+            else {
+                yield models_1.models.TribeBadge.create({
+                    rewardType: badge.rewardType ? badge.rewardType : reward_type,
+                    rewardRequirement: badge.rewardRequirement
+                        ? badge.rewardRequirement
+                        : reward_requirement,
+                    badgeId: badge.id,
+                    chatId: tribe.id,
+                    active: true,
+                });
+            }
             yield (0, badgeBot_1.createBadgeBot)(tribe.id, tenant);
             return (0, res_1.success)(res, 'Badge was added to tribe successfully');
         }
