@@ -499,7 +499,7 @@ export async function addBadgeToTribe(
     }
 
     if (badgeExist && badgeExist.active === false) {
-      badgeExist.update({
+      await badgeExist.update({
         active: true,
         rewardType: badge.rewardType ? badge.rewardType : reward_type,
         rewardRequirement: badge.rewardRequirement
@@ -615,8 +615,9 @@ export async function getBadgePerTribe(
     })) as BadgeRecord[]
 
     const tribeBadges = (await models.TribeBadge.findAll({
-      where: { chatId: tribe.id },
+      where: { chatId: tribe.id, active: true },
     })) as TribeBadgeRecord[]
+
     const badgeInTribe = {}
     for (let i = 0; i < tribeBadges.length; i++) {
       const tribeBadge = tribeBadges[i]
@@ -651,6 +652,59 @@ export async function getBadgePerTribe(
       }
     }
     return success(res, finalRes)
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
+export async function removeBadgeFromTribe(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { chat_id, badge_id } = req.body
+
+  if (
+    !chat_id ||
+    typeof chat_id !== 'number' ||
+    !badge_id ||
+    typeof badge_id !== 'number'
+  ) {
+    return failure(res, 'Invalid chat id or badge id')
+  }
+
+  try {
+    const tribe = (await models.Chat.findOne({
+      where: {
+        id: chat_id,
+        ownerPubkey: req.owner.publicKey,
+        deleted: false,
+        tenant,
+      },
+    })) as ChatRecord
+
+    if (!tribe) {
+      return failure(res, 'Invalid tribe')
+    }
+
+    const badge = (await models.Badge.findOne({
+      where: { tenant, badgeId: badge_id },
+    })) as BadgeRecord
+
+    if (!badge) {
+      return failure(res, 'Badge does not exist')
+    }
+
+    const badgeTribe = (await models.TribeBadge.findOne({
+      where: { badgeId: badge.id, chatId: chat_id, active: true },
+    })) as TribeBadgeRecord
+
+    if (!badgeTribe) {
+      return failure(res, 'Badge does not exist in tribe')
+    }
+    await badgeTribe.update({ active: false })
+    return success(res, 'Badge deactivated successfully')
   } catch (error) {
     return failure(res, error)
   }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBadgePerTribe = exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.removeBadgeFromTribe = exports.getBadgePerTribe = exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -431,7 +431,7 @@ function addBadgeToTribe(req, res) {
                 return (0, res_1.failure)(res, 'Please provide reward type and reward requirement');
             }
             if (badgeExist && badgeExist.active === false) {
-                badgeExist.update({
+                yield badgeExist.update({
                     active: true,
                     rewardType: badge.rewardType ? badge.rewardType : reward_type,
                     rewardRequirement: badge.rewardRequirement
@@ -541,7 +541,7 @@ function getBadgePerTribe(req, res) {
                 offset,
             }));
             const tribeBadges = (yield models_1.models.TribeBadge.findAll({
-                where: { chatId: tribe.id },
+                where: { chatId: tribe.id, active: true },
             }));
             const badgeInTribe = {};
             for (let i = 0; i < tribeBadges.length; i++) {
@@ -581,4 +581,49 @@ function getBadgePerTribe(req, res) {
     });
 }
 exports.getBadgePerTribe = getBadgePerTribe;
+function removeBadgeFromTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { chat_id, badge_id } = req.body;
+        if (!chat_id ||
+            typeof chat_id !== 'number' ||
+            !badge_id ||
+            typeof badge_id !== 'number') {
+            return (0, res_1.failure)(res, 'Invalid chat id or badge id');
+        }
+        try {
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: {
+                    id: chat_id,
+                    ownerPubkey: req.owner.publicKey,
+                    deleted: false,
+                    tenant,
+                },
+            }));
+            if (!tribe) {
+                return (0, res_1.failure)(res, 'Invalid tribe');
+            }
+            const badge = (yield models_1.models.Badge.findOne({
+                where: { tenant, badgeId: badge_id },
+            }));
+            if (!badge) {
+                return (0, res_1.failure)(res, 'Badge does not exist');
+            }
+            const badgeTribe = (yield models_1.models.TribeBadge.findOne({
+                where: { badgeId: badge.id, chatId: chat_id, active: true },
+            }));
+            if (!badgeTribe) {
+                return (0, res_1.failure)(res, 'Badge does not exist in tribe');
+            }
+            yield badgeTribe.update({ active: false });
+            return (0, res_1.success)(res, 'Badge deactivated successfully');
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.removeBadgeFromTribe = removeBadgeFromTribe;
 //# sourceMappingURL=personal.js.map
