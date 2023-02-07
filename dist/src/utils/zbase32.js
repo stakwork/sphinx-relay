@@ -21,6 +21,7 @@ function encode(buf) {
 }
 exports.encode = encode;
 function decode(str) {
+    console.log('DECODE', str);
     const chunks = [];
     for (let i = 0; i < str.length; i += 8) {
         // calculate chunk lengths

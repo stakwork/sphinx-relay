@@ -27,6 +27,7 @@ export function encode(buf: Buffer): string {
 }
 
 export function decode(str: string): Buffer {
+  console.log('DECODE', str)
   const chunks: Buffer[] = []
 
   for (let i = 0; i < str.length; i += 8) {
