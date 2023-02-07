@@ -144,7 +144,25 @@ export async function updateContentFeedStatus(
       where: { tenant, feedId },
     })) as ContentFeedStatusRecord
     if (!contentExist) {
-      return failure(res, 'Content not found')
+      if (
+        content.feed_url &&
+        typeof content.subscription_status === 'boolean'
+      ) {
+        await models.ContentFeedStatus.create({
+          feedId,
+          feedUrl: content.feed_url,
+          subscriptionStatus: content.subscription_status,
+          chatId: content.chat_id,
+          itemId: content.item_id,
+          episodesStatus: JSON.stringify(content.episodes_status),
+          satsPerMinute: content.sats_per_minute,
+          playerSpeed: content.player_speed,
+          tenant,
+        })
+        return success(res, 'Content Status Added Successfully')
+      } else {
+        return failure(res, 'Content not found')
+      }
     } else {
       const updatedContent: Partial<ContentFeed> = {}
       if (content?.feed_url) updatedContent.feedUrl = content.feed_url

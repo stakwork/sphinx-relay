@@ -113,7 +113,24 @@ function updateContentFeedStatus(req, res) {
                 where: { tenant, feedId },
             }));
             if (!contentExist) {
-                return (0, res_1.failure)(res, 'Content not found');
+                if (content.feed_url &&
+                    typeof content.subscription_status === 'boolean') {
+                    yield models_1.models.ContentFeedStatus.create({
+                        feedId,
+                        feedUrl: content.feed_url,
+                        subscriptionStatus: content.subscription_status,
+                        chatId: content.chat_id,
+                        itemId: content.item_id,
+                        episodesStatus: JSON.stringify(content.episodes_status),
+                        satsPerMinute: content.sats_per_minute,
+                        playerSpeed: content.player_speed,
+                        tenant,
+                    });
+                    return (0, res_1.success)(res, 'Content Status Added Successfully');
+                }
+                else {
+                    return (0, res_1.failure)(res, 'Content not found');
+                }
             }
             else {
                 const updatedContent = {};
