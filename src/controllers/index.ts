@@ -1,4 +1,5 @@
 import { models, Message } from '../models'
+import { proxyAdminMiddleware } from '../auth'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -89,6 +90,13 @@ export async function set(app) {
   app.post('/claim_on_liquid', personal.claimOnLiquid)
   app.post('/create_badge', personal.createBadge)
   app.post('/transfer_badge', personal.transferBadge)
+  app.get('/badges', personal.getAllBadge)
+  app.delete('/badge/:id', personal.deleteBadge)
+  app.post('/add_badge', personal.addBadgeToTribe)
+  app.put('/update_badge', personal.updateBadge)
+  app.get('/badge_templates', personal.badgeTemplates)
+  app.get('/badge_per_tribe/:chat_id', personal.getBadgePerTribe)
+  app.post('/remove_badge', personal.removeBadgeFromTribe)
 
   app.get('/msgs', messages.getMsgs)
   app.get('/allmessages', messages.getAllMessages)
@@ -153,10 +161,6 @@ export async function set(app) {
 
   app.get('/healthcheck', confirmations.healthcheck)
 
-  app.get('/add_user', admin.addProxyUser)
-  app.get('/list_users', admin.listUsers)
-  app.get('/has_admin', admin.hasAdmin)
-
   app.get('/version', async function (req: Req, res) {
     res.send({ version: gitinfo.tag })
   })
@@ -194,6 +198,21 @@ export async function set(app) {
   // Content Feed Status
   app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus)
   app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus)
+  app.put(
+    '/content_feed_status/:feed_id',
+    contentFeedStatus.updateContentFeedStatus
+  )
+
+  // open
+  app.get('/has_admin', admin.hasAdmin)
+  app.get('/initial_admin_pubkey', admin.initialAdminPubkey)
+
+  // following routes are only for proxy admin user (isAdmin=true)
+  app.use(proxyAdminMiddleware)
+  app.get('/add_user', admin.addProxyUser)
+  app.get('/list_users', admin.listUsers)
+  app.post('/default_tribe/:id', admin.addDefaultJoinTribe)
+  app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe)
 }
 
 const msgtypes = constants.message_types

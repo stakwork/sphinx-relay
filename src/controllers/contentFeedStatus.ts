@@ -130,3 +130,45 @@ export async function getContentFeedStatus(
     return failure(res, 'Internal Server Error')
   }
 }
+
+export async function updateContentFeedStatus(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const feedId = req.params.feed_id
+  const { content } = req.body
+  try {
+    const contentExist = (await models.ContentFeedStatus.findOne({
+      where: { tenant, feedId },
+    })) as ContentFeedStatusRecord
+    if (!contentExist) {
+      return failure(res, 'Content not found')
+    } else {
+      const updatedContent: Partial<ContentFeed> = {}
+      if (content?.feed_url) updatedContent.feedUrl = content.feed_url
+      if (
+        content?.subscription_status ||
+        content?.subscription_status === false
+      )
+        updatedContent.subscriptionStatus = content.subscription_status
+      if (content?.chat_id) updatedContent.chatId = content.chat_id
+      if (content?.item_id) updatedContent.itemId = content.item_id
+      if (content?.episodes_status)
+        updatedContent.episodesStatus = JSON.stringify(content.episodes_status)
+      if (content?.sats_per_minute || content?.sats_per_minute === 0)
+        updatedContent.satsPerMinute = content.sats_per_minute
+      if (content?.player_speed)
+        updatedContent.playerSpeed = content.player_speed
+      await contentExist.update(updatedContent)
+      return success(res, 'Content updated Successfully')
+    }
+  } catch (error) {
+    sphinxLogger.error(
+      `=> Error Updating Content Feed Status: ${error}`,
+      logging.Express
+    )
+    return failure(res, 'Internal Server Error')
+  }
+}

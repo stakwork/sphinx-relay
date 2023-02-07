@@ -122,6 +122,9 @@ const constants = {
         stored: 4,
         in_actve: 5,
     },
+    badge_type: {
+        liquid: 1,
+    },
 };
 exports.default = constants;
 //# sourceMappingURL=constants.js.map

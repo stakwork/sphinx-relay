@@ -80,9 +80,17 @@ export async function generateNewUsers() {
 const adminURL = config.proxy_admin_url
   ? config.proxy_admin_url + '/'
   : 'http://localhost:5555/'
-export async function generateNewUser(rootpk: string): Promise<any> {
+export async function generateNewUser(
+  rootpk: string,
+  initial_sat?: number
+): Promise<any> {
   try {
-    const r = await fetch(adminURL + 'generate', {
+    let route = 'generate'
+    if (initial_sat) {
+      route = `generate?sats=${initial_sat}`
+      sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
+    }
+    const r = await fetch(adminURL + route, {
       method: 'POST',
       headers: { 'x-admin-token': config.proxy_admin_token },
     })
@@ -101,7 +109,7 @@ export async function generateNewUser(rootpk: string): Promise<any> {
     sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
     return created.dataValues
   } catch (e) {
-    sphinxLogger.error(`=> could not gen new user ${e}`)
+    // sphinxLogger.error(`=> could not gen new user ${e}`)
   }
 }
 

@@ -42,6 +42,8 @@ export default async function migrate(): Promise<void> {
 
   addTableColumn('sphinx_chats', 'notify', 'BIGINT')
 
+  addTableColumn('sphinx_chats', 'default_join', 'BOOLEAN')
+
   await migrateMuted()
 
   addTableColumn('sphinx_messages', 'push', 'BOOLEAN')
@@ -314,10 +316,10 @@ export default async function migrate(): Promise<void> {
     sphinxLogger.info('adding content feed status table', logging.DB)
     await sequelize.query(`
     CREATE TABLE sphinx_content_feed_status (
-      id BIGINT NOT NULL PRIMARY KEY AUTOINCREMENT,
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
       feed_id TEXT NOT NULL,
       feed_url TEXT NOT NULL,
-      subscription_status: BOOLEAN NOT NULL,
+      subscription_status BOOLEAN NOT NULL,
       item_id TEXT,
       episodes_status TEXT,
       chat_id INTEGER,
@@ -331,7 +333,50 @@ export default async function migrate(): Promise<void> {
     // sphinxLogger.error(['problem adding content feed status table:', e.message], logging.DB)
   }
 
+  try {
+    sphinxLogger.info('adding badge table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_badge (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      badge_id INTEGER,
+      name TEXT,
+      host TEXT,
+      memo TEXT,
+      type INTEGER,
+      deleted BOOLEAN,
+      asset TEXT,
+      tenant INTEGER,
+      amount BIGINT,
+      icon TEXT,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch (e) {
+    // sphinxLogger.error(['problem adding badge table:', e], logging.DB)
+  }
+
+  try {
+    sphinxLogger.info('adding tribe badge table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_tribe_badge (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      badge_id INTEGER,
+      chat_id INTEGER,
+      reward_type INTEGER,
+      reward_requirement INTEGER,
+      deleted BOOLEAN,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch (e) {
+    // sphinxLogger.error(['problem adding tribe badge table:', e], logging.DB)
+  }
+
   addTableColumn('sphinx_chat_bots', 'hidden_commands')
+  addTableColumn('sphinx_badge', 'reward_type', 'INTEGER')
+  addTableColumn('sphinx_badge', 'reward_requirement', 'INTEGER')
+  addTableColumn('sphinx_badge', 'active', 'BOOLEAN')
+  addTableColumn('sphinx_tribe_badge', 'active', 'BOOLEAN')
 }
 
 async function addTenant(tableName) {

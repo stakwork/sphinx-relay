@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.removeBadgeFromTribe = exports.getBadgePerTribe = exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -19,11 +19,11 @@ const jsonUtils = require("../../utils/json");
 const res_1 = require("../../utils/res");
 const config_1 = require("../../utils/config");
 const jwt_1 = require("../../utils/jwt");
-const badge_1 = require("../../builtin/badge");
+// import { createOrEditBadgeBot } from '../../builtin/badge'
 const constants_1 = require("../../constants");
+const badgeBot_1 = require("../../utils/badgeBot");
+const tribes_1 = require("../../utils/tribes");
 const config = (0, config_1.loadConfig)();
-// accessed from people.sphinx.chat website
-// U3BoaW54IFZlcmlmaWNhdGlvbg== : "Sphinx Verification"
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)
@@ -198,41 +198,81 @@ function createBadge(req, res) {
             const owner = (yield models_1.models.Contact.findOne({
                 where: { tenant, isOwner: true },
             }));
-            const { name, icon, amount, chat_id, claim_amount, reward_type } = req.body;
+            const { name, icon, amount, memo, reward_type, reward_requirement, chat_id, } = req.body;
             if (typeof name !== 'string' ||
                 typeof icon !== 'string' ||
-                typeof amount !== 'number' ||
-                typeof chat_id !== 'number' ||
-                typeof claim_amount !== 'number' ||
-                typeof reward_type !== 'number')
+                typeof amount !== 'number')
                 return (0, res_1.failure)(res, 'invalid data passed');
-            const tribe = yield models_1.models.Chat.findOne({
-                where: {
-                    id: chat_id,
-                    ownerPubkey: owner.publicKey,
-                    tenant,
-                    deleted: false,
-                    type: 2,
-                },
-            });
-            if (!tribe)
-                return (0, res_1.failure)(res, 'invalid tribe');
-            let validRewardType = false;
-            for (const key in constants_1.default.reward_types) {
-                if (constants_1.default.reward_types[key] === reward_type) {
-                    validRewardType = true;
-                }
+            if (reward_requirement && !reward_type) {
+                return (0, res_1.failure)(res, 'Please provide reward type');
             }
-            if (!validRewardType)
-                return (0, res_1.failure)(res, 'invalid reward type');
+            if (reward_type && !reward_requirement) {
+                return (0, res_1.failure)(res, 'Please provide reward requirement');
+            }
+            if (chat_id && typeof chat_id !== 'number') {
+                return (0, res_1.failure)(res, 'Please provide valid chat id');
+            }
+            if (reward_type) {
+                let validRewardType = false;
+                for (const key in constants_1.default.reward_types) {
+                    if (constants_1.default.reward_types[key] === reward_type) {
+                        validRewardType = true;
+                    }
+                }
+                if (!validRewardType)
+                    return (0, res_1.failure)(res, 'invalid reward type');
+            }
+            if (reward_requirement && typeof reward_requirement !== 'number') {
+                return (0, res_1.failure)(res, 'Invalid reward requirement');
+            }
             const response = yield people.createBadge({
                 icon,
                 amount,
                 name,
                 owner_pubkey: owner.publicKey,
             });
-            yield (0, badge_1.createOrEditBadgeBot)(chat_id, tenant, response, claim_amount, reward_type);
-            return (0, res_1.success)(res, response);
+            const badge = (yield models_1.models.Badge.create({
+                badgeId: response.id,
+                name: response.name,
+                amount: response.amount,
+                memo,
+                asset: response.asset,
+                active: true,
+                tenant,
+                type: constants_1.default.badge_type.liquid,
+                host: config.boltwall_server,
+                icon: response.icon,
+                rewardRequirement: reward_requirement ? reward_requirement : null,
+                rewardType: reward_type ? reward_type : null,
+            }));
+            if (chat_id && reward_requirement && reward_type) {
+                const tribe = (yield models_1.models.Chat.findOne({
+                    where: {
+                        id: chat_id,
+                        ownerPubkey: req.owner.publicKey,
+                        deleted: false,
+                        tenant,
+                    },
+                }));
+                if (tribe) {
+                    yield models_1.models.TribeBadge.create({
+                        rewardType: badge.rewardType,
+                        rewardRequirement: badge.rewardRequirement,
+                        badgeId: badge.id,
+                        chatId: tribe.id,
+                        active: true,
+                    });
+                    yield (0, badgeBot_1.createBadgeBot)(tribe.id, tenant);
+                }
+            }
+            return (0, res_1.success)(res, {
+                badge_id: badge.badgeId,
+                icon: badge.icon,
+                amount_created: badge.amount,
+                asset: badge.asset,
+                memo: badge.memo,
+                name: badge.name,
+            });
         }
         catch (error) {
             return (0, res_1.failure)(res, error);
@@ -265,4 +305,325 @@ function transferBadge(req, res) {
     });
 }
 exports.transferBadge = transferBadge;
+function getAllBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
+        const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+        try {
+            const badges = (yield models_1.models.Badge.findAll({
+                where: { tenant, active: true },
+                limit,
+                offset,
+            }));
+            const response = yield (0, node_fetch_1.default)(`${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const results = yield response.json();
+            const balObject = {};
+            for (let i = 0; i < results.balances.length; i++) {
+                const balance = results.balances[i];
+                balObject[balance.asset_id] = balance;
+            }
+            const finalRes = [];
+            for (let j = 0; j < badges.length; j++) {
+                const badge = badges[j];
+                if (balObject[badge.badgeId]) {
+                    finalRes.push({
+                        badge_id: badge.badgeId,
+                        icon: badge.icon,
+                        amount_created: badge.amount,
+                        amount_issued: badge.amount - balObject[badge.badgeId].balance,
+                        asset: badge.asset,
+                        memo: badge.memo,
+                        name: badge.name,
+                        reward_requirement: badge.rewardRequirement,
+                        reward_type: badge.rewardType,
+                    });
+                }
+            }
+            return (0, res_1.success)(res, finalRes);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.getAllBadge = getAllBadge;
+function deleteBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const badgeId = req.params.id;
+        try {
+            const badge = (yield models_1.models.Badge.findOne({
+                where: { tenant, badgeId, active: true },
+            }));
+            if (!badge) {
+                return (0, res_1.failure)(res, 'Badge does not exist');
+            }
+            else {
+                yield badge.update({ active: false });
+                return (0, res_1.success)(res, `${badge.name} was deleted successfully`);
+            }
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.deleteBadge = deleteBadge;
+function addBadgeToTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { chat_id, reward_type, reward_requirement, badge_id } = req.body;
+        if (!chat_id || !badge_id) {
+            return (0, res_1.failure)(res, 'Invalid data passed');
+        }
+        if (reward_requirement && !reward_type) {
+            return (0, res_1.failure)(res, 'Please provide reward type');
+        }
+        if (reward_type && !reward_requirement) {
+            return (0, res_1.failure)(res, 'Please provide reward requirement');
+        }
+        if (reward_type) {
+            let validRewardType = false;
+            for (const key in constants_1.default.reward_types) {
+                if (constants_1.default.reward_types[key] === reward_type) {
+                    validRewardType = true;
+                }
+            }
+            if (!validRewardType)
+                return (0, res_1.failure)(res, 'invalid reward type');
+        }
+        if (reward_requirement && typeof reward_requirement !== 'number') {
+            return (0, res_1.failure)(res, 'Invalid reward requirement');
+        }
+        try {
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: {
+                    id: chat_id,
+                    ownerPubkey: req.owner.publicKey,
+                    deleted: false,
+                    tenant,
+                },
+            }));
+            if (!tribe) {
+                return (0, res_1.failure)(res, 'Invalid tribe');
+            }
+            const badge = (yield models_1.models.Badge.findOne({
+                where: { badgeId: badge_id, tenant, active: true },
+            }));
+            if (!badge) {
+                return (0, res_1.failure)(res, 'Invalid Badge');
+            }
+            const badgeExist = (yield models_1.models.TribeBadge.findOne({
+                where: { chatId: tribe.id, badgeId: badge.id },
+            }));
+            if (badgeExist && badgeExist.active === true) {
+                return (0, res_1.failure)(res, 'Badge already exist in tribe');
+            }
+            if ((!badge.rewardType && !reward_type) ||
+                (!badge.rewardRequirement && !reward_requirement)) {
+                return (0, res_1.failure)(res, 'Please provide reward type and reward requirement');
+            }
+            if (badgeExist && badgeExist.active === false) {
+                yield badgeExist.update({
+                    active: true,
+                    rewardType: badge.rewardType ? badge.rewardType : reward_type,
+                    rewardRequirement: badge.rewardRequirement
+                        ? badge.rewardRequirement
+                        : reward_requirement,
+                });
+            }
+            else {
+                yield models_1.models.TribeBadge.create({
+                    rewardType: badge.rewardType ? badge.rewardType : reward_type,
+                    rewardRequirement: badge.rewardRequirement
+                        ? badge.rewardRequirement
+                        : reward_requirement,
+                    badgeId: badge.id,
+                    chatId: tribe.id,
+                    active: true,
+                });
+            }
+            yield (0, badgeBot_1.createBadgeBot)(tribe.id, tenant);
+            return (0, res_1.success)(res, 'Badge was added to tribe successfully');
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.addBadgeToTribe = addBadgeToTribe;
+function updateBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { badge_id, icon } = req.body;
+        if (!badge_id || !icon) {
+            return (0, res_1.failure)(res, 'Missing required data');
+        }
+        try {
+            const badge = yield models_1.models.Badge.findOne({
+                where: { badgeId: badge_id, tenant },
+            });
+            if (!badge) {
+                return (0, res_1.failure)(res, "You can't update this badge");
+            }
+            const token = yield (0, tribes_1.genSignedTimestamp)(req.owner.publicKey);
+            const response = yield (0, node_fetch_1.default)(`${config.boltwall_server}/update_badge?token=${token}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: badge_id, icon }),
+            });
+            if (!response.ok) {
+                const newRes = yield response.json();
+                return (0, res_1.failure)(res, newRes);
+            }
+            yield badge.update({ icon });
+            return (0, res_1.success)(res, 'Badge Icon updated successfully');
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.updateBadge = updateBadge;
+// hardcoded for now
+function badgeTemplates(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ts = [
+            {
+                rewardType: 1,
+                rewardRequirement: 1000,
+                icon: 'https://community.sphinx.chat/static/1K.svg',
+                name: 'Big Earner',
+            },
+            {
+                rewardType: 2,
+                rewardRequirement: 1000,
+                icon: 'https://community.sphinx.chat/static/VIP.svg',
+                name: 'Big Spender',
+            },
+        ];
+        return (0, res_1.success)(res, ts);
+    });
+}
+exports.badgeTemplates = badgeTemplates;
+function getBadgePerTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const limit = (req.query.limit && parseInt(req.query.limit)) || 100;
+        const offset = (req.query.offset && parseInt(req.query.offset)) || 0;
+        const chat_id = req.params.chat_id;
+        try {
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: {
+                    id: chat_id,
+                    ownerPubkey: req.owner.publicKey,
+                    deleted: false,
+                    tenant,
+                },
+            }));
+            if (!tribe) {
+                return (0, res_1.failure)(res, 'Invalid tribe');
+            }
+            const badges = (yield models_1.models.Badge.findAll({
+                where: { tenant, active: true },
+                limit,
+                offset,
+            }));
+            const tribeBadges = (yield models_1.models.TribeBadge.findAll({
+                where: { chatId: tribe.id, active: true },
+            }));
+            const badgeInTribe = {};
+            for (let i = 0; i < tribeBadges.length; i++) {
+                const tribeBadge = tribeBadges[i];
+                badgeInTribe[tribeBadge.badgeId] = true;
+            }
+            const response = yield (0, node_fetch_1.default)(`${config.boltwall_server}/badge_balance?pubkey=${req.owner.publicKey}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const results = yield response.json();
+            const balObject = {};
+            for (let i = 0; i < results.balances.length; i++) {
+                const balance = results.balances[i];
+                balObject[balance.asset_id] = balance;
+            }
+            const finalRes = [];
+            for (let j = 0; j < badges.length; j++) {
+                const badge = badges[j];
+                if (balObject[badge.badgeId]) {
+                    finalRes.push({
+                        badge_id: badge.badgeId,
+                        icon: badge.icon,
+                        amount_created: badge.amount,
+                        amount_issued: badge.amount - balObject[badge.badgeId].balance,
+                        asset: badge.asset,
+                        memo: badge.memo,
+                        name: badge.name,
+                        reward_requirement: badge.rewardRequirement,
+                        reward_type: badge.rewardType,
+                        active: badgeInTribe[badge.id] ? true : false,
+                    });
+                }
+            }
+            return (0, res_1.success)(res, finalRes);
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.getBadgePerTribe = getBadgePerTribe;
+function removeBadgeFromTribe(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { chat_id, badge_id } = req.body;
+        if (!chat_id ||
+            typeof chat_id !== 'number' ||
+            !badge_id ||
+            typeof badge_id !== 'number') {
+            return (0, res_1.failure)(res, 'Invalid chat id or badge id');
+        }
+        try {
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: {
+                    id: chat_id,
+                    ownerPubkey: req.owner.publicKey,
+                    deleted: false,
+                    tenant,
+                },
+            }));
+            if (!tribe) {
+                return (0, res_1.failure)(res, 'Invalid tribe');
+            }
+            const badge = (yield models_1.models.Badge.findOne({
+                where: { tenant, badgeId: badge_id },
+            }));
+            if (!badge) {
+                return (0, res_1.failure)(res, 'Badge does not exist');
+            }
+            const badgeTribe = (yield models_1.models.TribeBadge.findOne({
+                where: { badgeId: badge.id, chatId: chat_id, active: true },
+            }));
+            if (!badgeTribe) {
+                return (0, res_1.failure)(res, 'Badge does not exist in tribe');
+            }
+            yield badgeTribe.update({ active: false });
+            return (0, res_1.success)(res, 'Badge deactivated successfully');
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.removeBadgeFromTribe = removeBadgeFromTribe;
 //# sourceMappingURL=personal.js.map

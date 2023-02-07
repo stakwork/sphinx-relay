@@ -183,6 +183,10 @@ export function init() {
             { name: 'Search for bots', value: '/bot search {SEARCH_TERM}' },
             { name: 'Install a new bot', value: '/bot install {BOTNAME}' },
             { name: 'Uninstall a bot', value: '/bot uninstall {BOTNAME}' },
+            {
+              name: 'Hide bot command from tribe members',
+              value: '/{BOTNAME} hide {COMMAND_TO_HIDE}',
+            },
             { name: 'Help', value: '/bot help' },
           ])
           .setThumbnail(botSVG)

@@ -103,6 +103,21 @@ export async function hmacMiddleware(req: Req, res: Res, next): Promise<void> {
   next()
 }
 
+export async function proxyAdminMiddleware(
+  req: Req,
+  res: Res,
+  next
+): Promise<void> {
+  if (no_auth(req.path)) {
+    next()
+    return
+  }
+  if (!req.owner) return unauthorized(res)
+  if (!req.owner.isAdmin) return unauthorized(res)
+  if (!isProxy()) return unauthorized(res)
+  next()
+}
+
 function no_auth(path) {
   return (
     path == '/app' ||
@@ -120,7 +135,8 @@ function no_auth(path) {
     path == '/peered' ||
     path == '/request_transport_key' ||
     path == '/webhook' ||
-    path == '/has_admin'
+    path == '/has_admin' ||
+    path == '/initial_admin_pubkey'
   )
 }
 
@@ -139,10 +155,10 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
     req.headers['x-admin-token'] || req.cookies['x-admin-token']
 
   // default assign token to x-user-token
-  let token = x_user_token
+  let token = x_user_token || x_admin_token
   let timestamp = 0
 
-  if (x_admin_token || x_transport_token) {
+  if (x_transport_token) {
     const decrypted = await getAndDecryptTransportToken(x_transport_token)
     token = decrypted.token
     timestamp = decrypted.timestamp
@@ -192,6 +208,13 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
     owner = (await models.Contact.findOne({
       where: { authToken: hashedToken, isOwner: true },
     })) as ContactRecord
+    if (x_admin_token) {
+      if (!owner.isAdmin) {
+        res.status(401)
+        res.end('Invalid credentials - not admin')
+        return
+      }
+    }
   }
 
   // find by JWT
@@ -214,7 +237,7 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
     return
   }
 
-  if (x_admin_token || x_transport_token) {
+  if (x_transport_token) {
     if (!timestamp) {
       res.status(401)
       res.end('Invalid credentials - no ts')
@@ -229,13 +252,6 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
         // if (!thisTimestamp.isAfter(lastTimestamp)) {
         res.status(401)
         res.end('Invalid credentials - timestamp too soon')
-        return
-      }
-    }
-    if (x_admin_token) {
-      if (!owner.isAdmin) {
-        res.status(401)
-        res.end('Invalid credentials - not admin')
         return
       }
     }

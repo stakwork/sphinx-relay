@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getContentFeedStatus = exports.addContentFeedStatus = void 0;
+exports.updateContentFeedStatus = exports.getContentFeedStatus = exports.addContentFeedStatus = void 0;
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
@@ -101,4 +101,46 @@ function getContentFeedStatus(req, res) {
     });
 }
 exports.getContentFeedStatus = getContentFeedStatus;
+function updateContentFeedStatus(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const feedId = req.params.feed_id;
+        const { content } = req.body;
+        try {
+            const contentExist = (yield models_1.models.ContentFeedStatus.findOne({
+                where: { tenant, feedId },
+            }));
+            if (!contentExist) {
+                return (0, res_1.failure)(res, 'Content not found');
+            }
+            else {
+                const updatedContent = {};
+                if (content === null || content === void 0 ? void 0 : content.feed_url)
+                    updatedContent.feedUrl = content.feed_url;
+                if ((content === null || content === void 0 ? void 0 : content.subscription_status) ||
+                    (content === null || content === void 0 ? void 0 : content.subscription_status) === false)
+                    updatedContent.subscriptionStatus = content.subscription_status;
+                if (content === null || content === void 0 ? void 0 : content.chat_id)
+                    updatedContent.chatId = content.chat_id;
+                if (content === null || content === void 0 ? void 0 : content.item_id)
+                    updatedContent.itemId = content.item_id;
+                if (content === null || content === void 0 ? void 0 : content.episodes_status)
+                    updatedContent.episodesStatus = JSON.stringify(content.episodes_status);
+                if ((content === null || content === void 0 ? void 0 : content.sats_per_minute) || (content === null || content === void 0 ? void 0 : content.sats_per_minute) === 0)
+                    updatedContent.satsPerMinute = content.sats_per_minute;
+                if (content === null || content === void 0 ? void 0 : content.player_speed)
+                    updatedContent.playerSpeed = content.player_speed;
+                yield contentExist.update(updatedContent);
+                return (0, res_1.success)(res, 'Content updated Successfully');
+            }
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`=> Error Updating Content Feed Status: ${error}`, logger_1.logging.Express);
+            return (0, res_1.failure)(res, 'Internal Server Error');
+        }
+    });
+}
+exports.updateContentFeedStatus = updateContentFeedStatus;
 //# sourceMappingURL=contentFeedStatus.js.map
