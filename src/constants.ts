@@ -120,6 +120,7 @@ const constants = {
     completed: 3,
     stored: 4,
     in_actve: 5,
+    confirmed: 6,
   },
 
   badge_type: {

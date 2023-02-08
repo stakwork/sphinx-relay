@@ -51,6 +51,10 @@ __decorate([
 ], CallRecording.prototype, "status", void 0);
 __decorate([
     sequelize_typescript_1.Column,
+    __metadata("design:type", Number)
+], CallRecording.prototype, "retry", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], CallRecording.prototype, "createdAt", void 0);
 __decorate([

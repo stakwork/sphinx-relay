@@ -32,6 +32,9 @@ export default class CallRecording extends Model<CallRecording> {
   status: number
 
   @Column
+  retry: number
+
+  @Column
   createdAt: Date
 
   @Column

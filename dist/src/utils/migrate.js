@@ -328,6 +328,7 @@ function migrate() {
             // sphinxLogger.error(['problem adding badge table:', e], logging.DB)
         }
         addTableColumn('sphinx_chat_bots', 'hidden_commands');
+        addTableColumn('sphinx_call_recording', 'retry', 'INTEGER');
     });
 }
 exports.default = migrate;
