@@ -213,7 +213,8 @@ export function init() {
                 status: {
                   [Op.not]: constants.call_status.completed,
                 },
-                retry: { [Op.lt]: 5 },
+
+                retry: { [Op.or]: { [Op.is]: undefined, [Op.lt]: 5 } },
               },
               limit: 10,
             })) as CallRecordingRecord[]

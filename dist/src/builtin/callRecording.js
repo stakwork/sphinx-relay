@@ -174,7 +174,7 @@ function init() {
                                 status: {
                                     [sequelize_1.Op.not]: constants_1.default.call_status.completed,
                                 },
-                                retry: { [sequelize_1.Op.lt]: 5 },
+                                retry: { [sequelize_1.Op.or]: { [sequelize_1.Op.is]: undefined, [sequelize_1.Op.lt]: 5 } },
                             },
                             limit: 10,
                         }));

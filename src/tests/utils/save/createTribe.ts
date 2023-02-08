@@ -31,6 +31,8 @@ export async function createTribe(
     feed_url: '',
     feed_type: 0,
     pin: 'A pinned message',
+    meme_server_location:
+      'https://stakwork-uploads.s3.amazonaws.com/sphinx-private-graph/',
   }
 
   //node1 creates new tribe
