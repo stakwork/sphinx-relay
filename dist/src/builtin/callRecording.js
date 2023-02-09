@@ -427,9 +427,11 @@ function getCallStatusFromStakwork(tribe, callRecording, botMessage, filePathAnd
             },
         });
         if (!status.ok) {
+            console.log('+++++++++Failure', yield status.json());
             return yield processCallAgain(callRecording, tribe, filePathAndName, botMessage);
         }
         else {
+            console.log('+++++++++Success', yield status.json());
             yield callRecording.update({
                 retry: callRecording.retry + 1,
                 status: constants_1.default.call_status.confirmed,

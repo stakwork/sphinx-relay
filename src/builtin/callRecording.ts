@@ -544,6 +544,7 @@ async function getCallStatusFromStakwork(
     }
   )
   if (!status.ok) {
+    console.log('+++++++++Failure', await status.json())
     return await processCallAgain(
       callRecording,
       tribe,
@@ -551,6 +552,7 @@ async function getCallStatusFromStakwork(
       botMessage
     )
   } else {
+    console.log('+++++++++Success', await status.json())
     await callRecording.update({
       retry: callRecording.retry + 1,
       status: constants.call_status.confirmed,
