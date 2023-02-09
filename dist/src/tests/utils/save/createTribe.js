@@ -34,7 +34,6 @@ function createTribe(t, node, escrowAmount, escrowMillis, ppm, privacy) {
             feed_url: '',
             feed_type: 0,
             pin: 'A pinned message',
-            meme_server_location: 'https://stakwork-uploads.s3.amazonaws.com/sphinx-private-graph/',
         };
         //node1 creates new tribe
         let c = yield http.post(node.external_ip + '/group', (0, helpers_1.makeArgs)(node, newTribe));

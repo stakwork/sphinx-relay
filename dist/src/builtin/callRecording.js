@@ -172,7 +172,7 @@ function init() {
                             where: {
                                 chatId: tribe.id,
                                 status: {
-                                    [sequelize_1.Op.not]: constants_1.default.call_status.completed,
+                                    [sequelize_1.Op.not]: constants_1.default.call_status.confirmed,
                                 },
                                 retry: { [sequelize_1.Op.or]: { [sequelize_1.Op.is]: undefined, [sequelize_1.Op.lt]: 5 } },
                             },
@@ -187,10 +187,14 @@ function init() {
                             }
                             let filePathAndName = `${tribe.memeServerLocation}${filename}`;
                             if (callRecording.status === constants_1.default.call_status.stored) {
+                                botMessage = yield getCallStatusFromStakwork(tribe, callRecording, botMessage, filePathAndName);
                             }
                             else {
                                 botMessage = yield processCallAgain(callRecording, tribe, filePathAndName, botMessage);
                             }
+                        }
+                        if (!botMessage) {
+                            botMessage = 'There are no calls to be retried';
                         }
                         const newEmbed = new Sphinx.MessageEmbed()
                             .setAuthor('CallRecordingBot')
@@ -392,7 +396,7 @@ function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
             if (toStakwork.ok) {
                 const res = yield toStakwork.json();
                 //update call record to stored
-                callRecording.update({
+                yield callRecording.update({
                     status: constants_1.default.call_status.stored,
                     stakworkProjectId: res.data.project_id,
                     retry: callRecording.retry + 1,
@@ -400,7 +404,7 @@ function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
                 return `${botMessage} ${callRecording.fileName} Call was recorded successfully\n`;
             }
             else {
-                callRecording.update({
+                yield callRecording.update({
                     retry: callRecording.retry + 1,
                     status: constants_1.default.call_status.in_actve,
                 });
@@ -408,8 +412,29 @@ function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
             }
         }
         else {
-            callRecording.update({ retry: callRecording.retry + 1 });
+            yield callRecording.update({ retry: callRecording.retry + 1 });
             return `${botMessage} ${callRecording.fileName} call was not found\n`;
+        }
+    });
+}
+function getCallStatusFromStakwork(tribe, callRecording, botMessage, filePathAndName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const status = yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects/${callRecording.stakworkProjectId}/status`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Token token="${tribe.stakworkApiKey}"`,
+            },
+        });
+        if (!status.ok) {
+            return yield processCallAgain(callRecording, tribe, filePathAndName, botMessage);
+        }
+        else {
+            yield callRecording.update({
+                retry: callRecording.retry + 1,
+                status: constants_1.default.call_status.confirmed,
+            });
+            return `${botMessage} ${callRecording.fileName} Call successfull in stakwork\n`;
         }
     });
 }

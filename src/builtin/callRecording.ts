@@ -211,9 +211,8 @@ export function init() {
               where: {
                 chatId: tribe.id,
                 status: {
-                  [Op.not]: constants.call_status.completed,
+                  [Op.not]: constants.call_status.confirmed,
                 },
-
                 retry: { [Op.or]: { [Op.is]: undefined, [Op.lt]: 5 } },
               },
               limit: 10,
@@ -232,6 +231,12 @@ export function init() {
               }
               let filePathAndName = `${tribe.memeServerLocation}${filename}`
               if (callRecording.status === constants.call_status.stored) {
+                botMessage = await getCallStatusFromStakwork(
+                  tribe,
+                  callRecording,
+                  botMessage,
+                  filePathAndName
+                )
               } else {
                 botMessage = await processCallAgain(
                   callRecording,
@@ -240,6 +245,9 @@ export function init() {
                   botMessage
                 )
               }
+            }
+            if (!botMessage) {
+              botMessage = 'There are no calls to be retried'
             }
             const newEmbed = new Sphinx.MessageEmbed()
               .setAuthor('CallRecordingBot')
@@ -499,14 +507,14 @@ async function processCallAgain(
       const res = await toStakwork.json()
       //update call record to stored
 
-      callRecording.update({
+      await callRecording.update({
         status: constants.call_status.stored,
         stakworkProjectId: res.data.project_id,
         retry: callRecording.retry + 1,
       })
       return `${botMessage} ${callRecording.fileName} Call was recorded successfully\n`
     } else {
-      callRecording.update({
+      await callRecording.update({
         retry: callRecording.retry + 1,
         status: constants.call_status.in_actve,
       })
@@ -514,7 +522,39 @@ async function processCallAgain(
       return `${botMessage} ${callRecording.fileName} Call was not stored\n`
     }
   } else {
-    callRecording.update({ retry: callRecording.retry + 1 })
+    await callRecording.update({ retry: callRecording.retry + 1 })
     return `${botMessage} ${callRecording.fileName} call was not found\n`
+  }
+}
+
+async function getCallStatusFromStakwork(
+  tribe: ChatRecord,
+  callRecording: CallRecordingRecord,
+  botMessage: string,
+  filePathAndName: string
+) {
+  const status = await fetch(
+    `https://jobs.stakwork.com/api/v1/projects/${callRecording.stakworkProjectId}/status`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Token token="${tribe.stakworkApiKey}"`,
+      },
+    }
+  )
+  if (!status.ok) {
+    return await processCallAgain(
+      callRecording,
+      tribe,
+      filePathAndName,
+      botMessage
+    )
+  } else {
+    await callRecording.update({
+      retry: callRecording.retry + 1,
+      status: constants.call_status.confirmed,
+    })
+    return `${botMessage} ${callRecording.fileName} Call successfull in stakwork\n`
   }
 }
