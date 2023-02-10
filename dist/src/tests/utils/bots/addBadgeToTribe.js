@@ -9,21 +9,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createBadge = void 0;
+exports.addTribeToBadge = void 0;
 const http = require("ava-http");
 const helpers_1 = require("../../utils/helpers");
-function createBadge(t, node1, name) {
+function addTribeToBadge(t, node1, tribe, reward_type, reward_requirement) {
     return __awaiter(this, void 0, void 0, function* () {
         const v = {
-            icon: 'test-asset-icon',
-            name,
-            amount: 10,
-            memo: 'Test Badge created',
+            chat_id: tribe.id,
+            reward_type,
+            reward_requirement,
+            badge_id: 22222222222222222222222222,
         };
-        const r = yield http.post(node1.external_ip + '/create_badge', (0, helpers_1.makeArgs)(node1, v));
-        t.true(r.success, 'Badge bot created.');
+        const r = yield http.post(node1.external_ip + '/add_badge', (0, helpers_1.makeArgs)(node1, v));
+        t.true(r.success, 'Badge was added to tribe');
         return r;
     });
 }
-exports.createBadge = createBadge;
-//# sourceMappingURL=createBadge.js.map
+exports.addTribeToBadge = addTribeToBadge;
+//# sourceMappingURL=addBadgeToTribe.js.map

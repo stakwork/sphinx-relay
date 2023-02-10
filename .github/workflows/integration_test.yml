@@ -5,7 +5,7 @@ on:
       - master
 
 jobs:
-  build:
+  integration-test:
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -45,6 +45,7 @@ jobs:
             'actionHistory',
             'silentTribeBotMsg',
           ]
+        node: [12, 16]
     steps:
       - name: Enable docker.host.internal for Ubuntu
         run: |
@@ -55,7 +56,7 @@ jobs:
           path: relay
       - uses: actions/setup-node@v3
         with:
-          node-version: 12.15
+          node-version: ${{matrix.node}}
       - name: Build Relay
         working-directory: ./relay
         run: |

@@ -91,6 +91,11 @@ function set(app) {
         app.post('/transfer_badge', personal.transferBadge);
         app.get('/badges', personal.getAllBadge);
         app.delete('/badge/:id', personal.deleteBadge);
+        app.post('/add_badge', personal.addBadgeToTribe);
+        app.put('/update_badge', personal.updateBadge);
+        app.get('/badge_templates', personal.badgeTemplates);
+        app.get('/badge_per_tribe/:chat_id', personal.getBadgePerTribe);
+        app.post('/remove_badge', personal.removeBadgeFromTribe);
         app.get('/msgs', messages.getMsgs);
         app.get('/allmessages', messages.getAllMessages);
         app.get('/messages', messages.getMessages);
@@ -176,8 +181,9 @@ function set(app) {
         app.get('/feeds', feeds.getFeeds);
         // Content Feed Status
         app.post('/content_feed_status', contentFeedStatus.addContentFeedStatus);
-        app.get('/content_feed_status', contentFeedStatus.getContentFeedStatus);
+        app.get('/content_feed_status', contentFeedStatus.getAllContentFeedStatus);
         app.put('/content_feed_status/:feed_id', contentFeedStatus.updateContentFeedStatus);
+        app.get('/content_feed_status/:feed_id', contentFeedStatus.getContentFeedStatus);
         // open
         app.get('/has_admin', admin.hasAdmin);
         app.get('/initial_admin_pubkey', admin.initialAdminPubkey);

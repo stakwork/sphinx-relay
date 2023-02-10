@@ -171,8 +171,12 @@ function init() {
                         const callRecordings = (yield models_1.models.CallRecording.findAll({
                             where: {
                                 chatId: tribe.id,
-                                status: { [sequelize_1.Op.not]: constants_1.default.call_status.stored },
+                                status: {
+                                    [sequelize_1.Op.not]: constants_1.default.call_status.confirmed,
+                                },
+                                retry: { [sequelize_1.Op.or]: { [sequelize_1.Op.is]: undefined, [sequelize_1.Op.lt]: 5 } },
                             },
+                            limit: 10,
                         }));
                         let botMessage = '';
                         for (let i = 0; i < callRecordings.length; i++) {
@@ -182,31 +186,15 @@ function init() {
                                 filename = `/${filename}`;
                             }
                             let filePathAndName = `${tribe.memeServerLocation}${filename}`;
-                            const file = yield (0, node_fetch_1.default)(filePathAndName, {
-                                method: 'GET',
-                                headers: { 'Content-Type': 'application/json' },
-                            });
-                            if (file.ok) {
-                                const toStakwork = yield sendToStakwork(tribe.stakworkApiKey, callRecording.recordingId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
-                                if (toStakwork.ok) {
-                                    const res = yield toStakwork.json();
-                                    //update call record to stored
-                                    callRecording.update({
-                                        status: constants_1.default.call_status.stored,
-                                        stakworkProjectId: res.data.project_id,
-                                    });
-                                    botMessage = `${botMessage} ${callRecording.fileName} Call was recorded successfully\n`;
-                                }
-                                else {
-                                    callRecording.update({
-                                        status: constants_1.default.call_status.in_actve,
-                                    });
-                                    botMessage = `${botMessage} ${callRecording.fileName} Call was not stored\n`;
-                                }
+                            if (callRecording.status === constants_1.default.call_status.stored) {
+                                botMessage = yield getCallStatusFromStakwork(tribe, callRecording, botMessage, filePathAndName);
                             }
                             else {
-                                botMessage = `${botMessage} ${callRecording.fileName} call was not found\n`;
+                                botMessage = yield processCallAgain(callRecording, tribe, filePathAndName, botMessage);
                             }
+                        }
+                        if (!botMessage) {
+                            botMessage = 'There are no calls to be retried';
                         }
                         const newEmbed = new Sphinx.MessageEmbed()
                             .setAuthor('CallRecordingBot')
@@ -395,6 +383,61 @@ function sendToStakwork(apikey, callId, filePathAndName, webhook, ownerPubkey, f
                 },
             }),
         });
+    });
+}
+function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const file = yield (0, node_fetch_1.default)(filePathAndName, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (file.ok) {
+            const toStakwork = yield sendToStakwork(tribe.stakworkApiKey, callRecording.recordingId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
+            if (toStakwork.ok) {
+                const res = yield toStakwork.json();
+                //update call record to stored
+                yield callRecording.update({
+                    status: constants_1.default.call_status.stored,
+                    stakworkProjectId: res.data.project_id,
+                    retry: callRecording.retry + 1,
+                });
+                return `${botMessage} ${callRecording.fileName} Call was recorded successfully\n`;
+            }
+            else {
+                yield callRecording.update({
+                    retry: callRecording.retry + 1,
+                    status: constants_1.default.call_status.in_actve,
+                });
+                return `${botMessage} ${callRecording.fileName} Call was not stored\n`;
+            }
+        }
+        else {
+            yield callRecording.update({ retry: callRecording.retry + 1 });
+            return `${botMessage} ${callRecording.fileName} call was not found\n`;
+        }
+    });
+}
+function getCallStatusFromStakwork(tribe, callRecording, botMessage, filePathAndName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const status = yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects/${callRecording.stakworkProjectId}/status`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Token token="${tribe.stakworkApiKey}"`,
+            },
+        });
+        if (!status.ok) {
+            console.log('+++++++++Failure', yield status.json());
+            return yield processCallAgain(callRecording, tribe, filePathAndName, botMessage);
+        }
+        else {
+            console.log('+++++++++Success', yield status.json());
+            yield callRecording.update({
+                retry: callRecording.retry + 1,
+                status: constants_1.default.call_status.confirmed,
+            });
+            return `${botMessage} ${callRecording.fileName} Call successfull in stakwork\n`;
+        }
     });
 }
 //# sourceMappingURL=callRecording.js.map
