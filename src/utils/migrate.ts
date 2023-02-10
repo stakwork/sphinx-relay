@@ -399,6 +399,8 @@ export default async function migrate(): Promise<void> {
   } catch (e) {
     // sphinxLogger.error(['problem adding recurring calls table:', e], logging.DB)
   }
+
+  addTableColumn(`sphinx_call_recording`, `version_id`, 'TEXT')
 }
 
 async function addTenant(tableName) {

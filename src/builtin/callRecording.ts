@@ -9,7 +9,7 @@ import {
   hideCommandHandler,
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
-import { saveRecurringCall } from './utill/callRecording'
+import { saveRecurringCall, sendToStakwork } from './utill/callRecording'
 
 /**
  *
@@ -476,52 +476,6 @@ async function botResponse(addFields, author, title, message, cmd, tribeId) {
     .setThumbnail(botSVG)
     .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribeId))
   message.channel.send({ embed: resEmbed })
-}
-
-async function sendToStakwork(
-  apikey: string,
-  callId: string,
-  filePathAndName: string,
-  webhook: string,
-  ownerPubkey: string,
-  filename: string,
-  tribeName: string
-) {
-  const dateInUTC = new Date(Date.now()).toUTCString()
-  const dateInUnix = new Date(Date.now()).getTime() / 1000
-
-  return await fetch(`https://jobs.stakwork.com/api/v1/projects`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Token token="${apikey}"`,
-    },
-    body: JSON.stringify({
-      name: `${callId} file`,
-      workflow_id: 5579,
-      workflow_params: {
-        set_var: {
-          attributes: {
-            vars: {
-              media_url: filePathAndName,
-              episode_title: `Jitsi Call on ${dateInUTC}`,
-              clip_description: 'My Clip Description',
-              publish_date: `${dateInUnix}`,
-              episode_image:
-                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
-              show_img_url:
-                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
-              webhook_url: `${webhook}`,
-              pubkey: ownerPubkey,
-              unique_id: filename.slice(0, -4),
-              clip_length: 60,
-              show_title: `${tribeName}`,
-            },
-          },
-        },
-      },
-    }),
-  })
 }
 
 async function processCallAgain(

@@ -370,6 +370,7 @@ function migrate() {
         catch (e) {
             // sphinxLogger.error(['problem adding recurring calls table:', e], logging.DB)
         }
+        addTableColumn(`sphinx_call_recording`, `version_id`, 'TEXT');
     });
 }
 exports.default = migrate;

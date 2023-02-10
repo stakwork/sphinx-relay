@@ -299,7 +299,7 @@ function init() {
                                 if (file.ok) {
                                     // Push to stakwork
                                     // Audio tagging job
-                                    const sendFile = yield sendToStakwork(tribe.stakworkApiKey, updatedCallId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, filename, tribe.name);
+                                    const sendFile = yield (0, callRecording_1.sendToStakwork)(tribe.stakworkApiKey, updatedCallId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, filename, tribe.name);
                                     if (sendFile.ok) {
                                         const res = yield sendFile.json();
                                         //update call record to stored
@@ -385,42 +385,6 @@ function botResponse(addFields, author, title, message, cmd, tribeId) {
         message.channel.send({ embed: resEmbed });
     });
 }
-function sendToStakwork(apikey, callId, filePathAndName, webhook, ownerPubkey, filename, tribeName) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const dateInUTC = new Date(Date.now()).toUTCString();
-        const dateInUnix = new Date(Date.now()).getTime() / 1000;
-        return yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Token token="${apikey}"`,
-            },
-            body: JSON.stringify({
-                name: `${callId} file`,
-                workflow_id: 5579,
-                workflow_params: {
-                    set_var: {
-                        attributes: {
-                            vars: {
-                                media_url: filePathAndName,
-                                episode_title: `Jitsi Call on ${dateInUTC}`,
-                                clip_description: 'My Clip Description',
-                                publish_date: `${dateInUnix}`,
-                                episode_image: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
-                                show_img_url: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
-                                webhook_url: `${webhook}`,
-                                pubkey: ownerPubkey,
-                                unique_id: filename.slice(0, -4),
-                                clip_length: 60,
-                                show_title: `${tribeName}`,
-                            },
-                        },
-                    },
-                },
-            }),
-        });
-    });
-}
 function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         const file = yield (0, node_fetch_1.default)(filePathAndName, {
@@ -428,7 +392,7 @@ function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
             headers: { 'Content-Type': 'application/json' },
         });
         if (file.ok) {
-            const toStakwork = yield sendToStakwork(tribe.stakworkApiKey, callRecording.recordingId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
+            const toStakwork = yield (0, callRecording_1.sendToStakwork)(tribe.stakworkApiKey, callRecording.recordingId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
             if (toStakwork.ok) {
                 const res = yield toStakwork.json();
                 //update call record to stored

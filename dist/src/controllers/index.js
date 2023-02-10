@@ -40,11 +40,15 @@ const lsats = require("./lsats");
 const action = require("./actionHistory");
 const feeds = require("./getFeeds");
 const contentFeedStatus = require("./contentFeedStatus");
+const callRecording_1 = require("../builtin/utill/callRecording");
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
         if (models_1.models && models_1.models.Subscription) {
             subcriptions.initializeCronJobs();
+        }
+        if (models_1.models && models_1.models.RecurringCall) {
+            (0, callRecording_1.initializeCronJobsForCallRecordings)();
         }
         // media.cycleMediaToken()
         timers.reloadTimers();

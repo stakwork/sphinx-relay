@@ -65,6 +65,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
 ], CallRecording.prototype, "stakworkProjectId", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], CallRecording.prototype, "versionId", void 0);
 CallRecording = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_call_recording', underscored: true })
 ], CallRecording);
