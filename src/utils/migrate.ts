@@ -379,6 +379,25 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_badge', 'reward_requirement', 'INTEGER')
   addTableColumn('sphinx_badge', 'active', 'BOOLEAN')
   addTableColumn('sphinx_tribe_badge', 'active', 'BOOLEAN')
+
+  // id | Title | Desc | link | current_version_id | chatId | tenant | createdAt | updatedAt
+  try {
+    sphinxLogger.info('adding recurring call table', logging.DB)
+    await sequelize.query(`
+    CREATE TABLE sphinx_recurring_calls (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      title TEXT,
+      description TEXT,
+      link TEXT,
+      current_version_id TEXT,
+      chat_id INTEGER,
+      tenant INTEGER,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`)
+  } catch (e) {
+    // sphinxLogger.error(['problem adding recurring calls table:', e], logging.DB)
+  }
 }
 
 async function addTenant(tableName) {
