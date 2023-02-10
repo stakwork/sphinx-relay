@@ -32,6 +32,13 @@ export default class RecurringCall extends Model<RecurringCall> {
   @Column
   createdAt: Date
 
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  })
+  deleted: boolean
+
   @Column
   updatedAt: Date
 }

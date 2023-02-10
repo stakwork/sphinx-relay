@@ -9,6 +9,7 @@ import {
   hideCommandHandler,
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
+import { saveRecurringCall } from './utill/callRecording'
 
 /**
  *
@@ -255,6 +256,46 @@ export function init() {
               .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed: newEmbed })
             return
+          case 'recurring':
+            const link = arr[2]
+            const title = arr[3]
+            const description = arr[4]
+            if (link) {
+              const call = await saveRecurringCall({
+                link,
+                title,
+                description,
+                tribe,
+                tenant: parseInt(message.member.id!),
+              })
+              if (call.status) {
+                const newEmbed = new Sphinx.MessageEmbed()
+                  .setAuthor('CallRecordingBot')
+                  .setDescription('Recurring Call was Saved Successfully')
+                  .setOnlyOwner(
+                    await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                  )
+                message.channel.send({ embed: newEmbed })
+                return
+              }
+              const newEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription(call.errMsg!)
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
+              message.channel.send({ embed: newEmbed })
+              return
+            } else {
+              const newEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription('Please provide call link')
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
+              message.channel.send({ embed: newEmbed })
+              return
+            }
           case 'hide':
             await hideCommandHandler(
               arr[2],

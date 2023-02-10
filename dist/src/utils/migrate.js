@@ -362,6 +362,7 @@ function migrate() {
       current_version_id TEXT,
       chat_id INTEGER,
       tenant INTEGER,
+      deleted BOOLEAN,
       created_at DATETIME,
       updated_at DATETIME
     )`);

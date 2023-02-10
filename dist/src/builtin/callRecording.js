@@ -18,6 +18,7 @@ const constants_1 = require("../constants");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
+const callRecording_1 = require("./utill/callRecording");
 /**
  *
  ** TODO **
@@ -202,6 +203,41 @@ function init() {
                             .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
                         message.channel.send({ embed: newEmbed });
                         return;
+                    case 'recurring':
+                        const link = arr[2];
+                        const title = arr[3];
+                        const description = arr[4];
+                        if (link) {
+                            const call = yield (0, callRecording_1.saveRecurringCall)({
+                                link,
+                                title,
+                                description,
+                                tribe,
+                                tenant: parseInt(message.member.id),
+                            });
+                            if (call.status) {
+                                const newEmbed = new Sphinx.MessageEmbed()
+                                    .setAuthor('CallRecordingBot')
+                                    .setDescription('Recurring Call was Saved Successfully')
+                                    .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                                message.channel.send({ embed: newEmbed });
+                                return;
+                            }
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription(call.errMsg)
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                        else {
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription('Please provide call link')
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
                     case 'hide':
                         yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'CallRecordingBot', '/callRecording');
                         return;

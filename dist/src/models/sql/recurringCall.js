@@ -51,6 +51,14 @@ __decorate([
     __metadata("design:type", Date)
 ], RecurringCall.prototype, "createdAt", void 0);
 __decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+    }),
+    __metadata("design:type", Boolean)
+], RecurringCall.prototype, "deleted", void 0);
+__decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
 ], RecurringCall.prototype, "updatedAt", void 0);
