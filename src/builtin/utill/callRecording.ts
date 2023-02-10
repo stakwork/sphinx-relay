@@ -73,7 +73,7 @@ export const initializeCronJobsForCallRecordings = async () => {
 
 async function startCallRecordingCronJob(call: RecurringCallRecord) {
   jobs[call.id] = new CronJob(
-    '0 25 * * * *',
+    '0 1 * * * *',
     async function () {
       const recurringCall = (await models.RecurringCall.findOne({
         where: { id: call.id },
@@ -106,7 +106,7 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
       const stakwork = await sendToStakwork(
         tribe.stakworkApiKey,
         `${filename}_${callVersionId}`,
-        filepath,
+        `${filepath}?versionId=${callVersionId}`,
         tribe.stakworkWebhook,
         tribe.ownerPubkey,
         filename,

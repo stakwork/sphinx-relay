@@ -484,15 +484,21 @@ async function processCallAgain(
   filePathAndName: string,
   botMessage: string
 ) {
-  const file = await fetch(filePathAndName, {
+  let filepath = filePathAndName
+  let callId = callRecording.recordingId
+  if (callRecording.versionId) {
+    filepath = `${filepath}?versionId=${callRecording.versionId}`
+    callId = `${callId}_${callRecording.versionId}`
+  }
+  const file = await fetch(filepath, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   })
   if (file.ok) {
     const toStakwork = await sendToStakwork(
       tribe.stakworkApiKey,
-      callRecording.recordingId,
-      filePathAndName,
+      callId,
+      filepath,
       tribe.stakworkWebhook,
       tribe.ownerPubkey,
       callRecording.fileName,

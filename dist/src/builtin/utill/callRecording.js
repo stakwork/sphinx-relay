@@ -63,7 +63,7 @@ const initializeCronJobsForCallRecordings = () => __awaiter(void 0, void 0, void
 exports.initializeCronJobsForCallRecordings = initializeCronJobsForCallRecordings;
 function startCallRecordingCronJob(call) {
     return __awaiter(this, void 0, void 0, function* () {
-        jobs[call.id] = new cron_1.CronJob('0 25 * * * *', function () {
+        jobs[call.id] = new cron_1.CronJob('0 1 * * * *', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const recurringCall = (yield models_1.models.RecurringCall.findOne({
                     where: { id: call.id },
@@ -91,7 +91,7 @@ function startCallRecordingCronJob(call) {
                     return;
                 }
                 yield recurringCall.update({ currentVersionId: callVersionId });
-                const stakwork = yield sendToStakwork(tribe.stakworkApiKey, `${filename}_${callVersionId}`, filepath, tribe.stakworkWebhook, tribe.ownerPubkey, filename, tribe.name);
+                const stakwork = yield sendToStakwork(tribe.stakworkApiKey, `${filename}_${callVersionId}`, `${filepath}?versionId=${callVersionId}`, tribe.stakworkWebhook, tribe.ownerPubkey, filename, tribe.name);
                 const owner = (yield models_1.models.Contact.findOne({
                     where: { tenant: recurringCall.tenant, isOwner: true },
                 }));

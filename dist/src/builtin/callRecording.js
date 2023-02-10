@@ -387,12 +387,18 @@ function botResponse(addFields, author, title, message, cmd, tribeId) {
 }
 function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        const file = yield (0, node_fetch_1.default)(filePathAndName, {
+        let filepath = filePathAndName;
+        let callId = callRecording.recordingId;
+        if (callRecording.versionId) {
+            filepath = `${filepath}?versionId=${callRecording.versionId}`;
+            callId = `${callId}_${callRecording.versionId}`;
+        }
+        const file = yield (0, node_fetch_1.default)(filepath, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });
         if (file.ok) {
-            const toStakwork = yield (0, callRecording_1.sendToStakwork)(tribe.stakworkApiKey, callRecording.recordingId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
+            const toStakwork = yield (0, callRecording_1.sendToStakwork)(tribe.stakworkApiKey, callId, filepath, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
             if (toStakwork.ok) {
                 const res = yield toStakwork.json();
                 //update call record to stored
