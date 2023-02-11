@@ -74,7 +74,7 @@ export const initializeCronJobsForCallRecordings = async () => {
 
 async function startCallRecordingCronJob(call: RecurringCallRecord) {
   jobs[call.id] = new CronJob(
-    '0 27 * * * *',
+    '0 30 * * * *',
     async function () {
       const recurringCall = (await models.RecurringCall.findOne({
         where: { id: call.id },

@@ -64,7 +64,7 @@ const initializeCronJobsForCallRecordings = () => __awaiter(void 0, void 0, void
 exports.initializeCronJobsForCallRecordings = initializeCronJobsForCallRecordings;
 function startCallRecordingCronJob(call) {
     return __awaiter(this, void 0, void 0, function* () {
-        jobs[call.id] = new cron_1.CronJob('0 27 * * * *', function () {
+        jobs[call.id] = new cron_1.CronJob('0 30 * * * *', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const recurringCall = (yield models_1.models.RecurringCall.findOne({
                     where: { id: call.id },
