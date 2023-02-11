@@ -38,14 +38,15 @@ export async function saveRecurringCall({
       errMsg: 'Please configure tribe for call recording',
     }
   }
-  await models.RecurringCall.create({
+  const recurringCall = (await models.RecurringCall.create({
     link: link.split('#')[0],
     title,
     description,
     chatId: tribe.id,
     tenant,
     deleted: false,
-  })
+  })) as RecurringCallRecord
+  startCallRecordingCronJob(recurringCall)
   return { status: true }
 }
 
@@ -73,7 +74,7 @@ export const initializeCronJobsForCallRecordings = async () => {
 
 async function startCallRecordingCronJob(call: RecurringCallRecord) {
   jobs[call.id] = new CronJob(
-    '0 1 * * * *',
+    '0 27 * * * *',
     async function () {
       const recurringCall = (await models.RecurringCall.findOne({
         where: { id: call.id },
@@ -95,7 +96,7 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
         headers: { 'Content-Type': 'application/json' },
       })
       if (!newCall.ok) {
-        console.log('+++++++++++ No file found yet')
+        console.log('+++++++++++ No file found yet for', filename)
         return
       }
       const callVersionId = newCall.headers.raw()['x-amz-version-id'][0]

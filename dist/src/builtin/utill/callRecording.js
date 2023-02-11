@@ -29,14 +29,15 @@ function saveRecurringCall({ link, title, description, tribe, tenant, }) {
                 errMsg: 'Please configure tribe for call recording',
             };
         }
-        yield models_1.models.RecurringCall.create({
+        const recurringCall = (yield models_1.models.RecurringCall.create({
             link: link.split('#')[0],
             title,
             description,
             chatId: tribe.id,
             tenant,
             deleted: false,
-        });
+        }));
+        startCallRecordingCronJob(recurringCall);
         return { status: true };
     });
 }
@@ -63,7 +64,7 @@ const initializeCronJobsForCallRecordings = () => __awaiter(void 0, void 0, void
 exports.initializeCronJobsForCallRecordings = initializeCronJobsForCallRecordings;
 function startCallRecordingCronJob(call) {
     return __awaiter(this, void 0, void 0, function* () {
-        jobs[call.id] = new cron_1.CronJob('0 1 * * * *', function () {
+        jobs[call.id] = new cron_1.CronJob('0 27 * * * *', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const recurringCall = (yield models_1.models.RecurringCall.findOne({
                     where: { id: call.id },
@@ -83,7 +84,7 @@ function startCallRecordingCronJob(call) {
                     headers: { 'Content-Type': 'application/json' },
                 });
                 if (!newCall.ok) {
-                    console.log('+++++++++++ No file found yet');
+                    console.log('+++++++++++ No file found yet for', filename);
                     return;
                 }
                 const callVersionId = newCall.headers.raw()['x-amz-version-id'][0];
