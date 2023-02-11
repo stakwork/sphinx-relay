@@ -254,6 +254,10 @@ function init() {
                                 name: 'Retry a call',
                                 value: '/callRecording retry',
                             },
+                            {
+                                name: 'Add Recurring Call',
+                                value: '/callRecording recurring ${call_url} ${Call_title(OPTIONAL)} ${call_description(OPTIONAL)}',
+                            },
                         ])
                             .setThumbnail(botSVG);
                         message.channel.send({ embed });
