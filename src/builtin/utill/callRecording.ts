@@ -5,7 +5,7 @@ import {
   models,
   RecurringCallRecord,
 } from '../../models'
-import { helpers } from '../../tests/utils'
+import * as helpers from '../../helpers'
 import { sphinxLogger } from '../../utils/logger'
 import { CronJob } from 'cron'
 import fetch from 'node-fetch'

@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendToStakwork = exports.initializeCronJobsForCallRecordings = exports.saveRecurringCall = void 0;
 const models_1 = require("../../models");
-const utils_1 = require("../../tests/utils");
+const helpers = require("../../helpers");
 const logger_1 = require("../../utils/logger");
 const cron_1 = require("cron");
 const node_fetch_1 = require("node-fetch");
@@ -49,7 +49,7 @@ const validateJitsiServer = (link, tribeJitsi) => {
 const jobs = {};
 // init jobs from DB
 const initializeCronJobsForCallRecordings = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield utils_1.helpers.sleep(1000);
+    yield helpers.sleep(1000);
     const calls = yield getAllCallRecording({ where: { deleted: false } });
     calls.length &&
         calls.forEach((call) => {
