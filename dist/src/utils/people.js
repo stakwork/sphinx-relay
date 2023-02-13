@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.determineBadgeHost = exports.updateBadgeInTribe = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
@@ -204,4 +204,35 @@ function transferBadge({ to, asset, amount, memo, owner_pubkey }) {
     });
 }
 exports.transferBadge = transferBadge;
+function updateBadgeInTribe({ tribeId, action, badge, owner_pubkey, tribe_host, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            console.log(`${protocol}://${tribe_host}/badges?token=${token}`);
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${tribe_host}/badges?token=${token}`, {
+                method: 'POST',
+                body: JSON.stringify({ badge, tribeId, action }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw 'failed to update badge in tribe ' + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error('[Badge] Badge was not updated in tribe', error);
+            throw error;
+        }
+    });
+}
+exports.updateBadgeInTribe = updateBadgeInTribe;
+function determineBadgeHost(badgeCode) {
+    const badge_host = { 1: 'liquid.sphinx.chat' };
+    return badge_host[badgeCode];
+}
+exports.determineBadgeHost = determineBadgeHost;
 //# sourceMappingURL=people.js.map

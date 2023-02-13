@@ -23,6 +23,7 @@ const jwt_1 = require("../../utils/jwt");
 const constants_1 = require("../../constants");
 const badgeBot_1 = require("../../utils/badgeBot");
 const tribes_1 = require("../../utils/tribes");
+const people_1 = require("../../utils/people");
 const config = (0, config_1.loadConfig)();
 function createPeopleProfile(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -411,6 +412,7 @@ function addBadgeToTribe(req, res) {
                     tenant,
                 },
             }));
+            console.log(tribe);
             if (!tribe) {
                 return (0, res_1.failure)(res, 'Invalid tribe');
             }
@@ -430,6 +432,7 @@ function addBadgeToTribe(req, res) {
                 (!badge.rewardRequirement && !reward_requirement)) {
                 return (0, res_1.failure)(res, 'Please provide reward type and reward requirement');
             }
+            yield updateTribeServer(badge, tribe, 'add');
             if (badgeExist && badgeExist.active === false) {
                 yield badgeExist.update({
                     active: true,
@@ -617,6 +620,7 @@ function removeBadgeFromTribe(req, res) {
             if (!badgeTribe) {
                 return (0, res_1.failure)(res, 'Badge does not exist in tribe');
             }
+            yield updateTribeServer(badge, tribe, 'remove');
             yield badgeTribe.update({ active: false });
             return (0, res_1.success)(res, 'Badge deactivated successfully');
         }
@@ -626,4 +630,16 @@ function removeBadgeFromTribe(req, res) {
     });
 }
 exports.removeBadgeFromTribe = removeBadgeFromTribe;
+function updateTribeServer(badge, tribe, action) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const badge_host = (0, people_1.determineBadgeHost)(badge.type);
+        yield (0, people_1.updateBadgeInTribe)({
+            tribeId: tribe.uuid,
+            action,
+            badge: `${badge_host}/${badge.badgeId}`,
+            owner_pubkey: tribe.ownerPubkey,
+            tribe_host: tribe.host,
+        });
+    });
+}
 //# sourceMappingURL=personal.js.map
