@@ -10,7 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
-let CallRecording = class CallRecording extends sequelize_typescript_1.Model {
+// id | Title | Desc | link | current_version_id | chatId | tenant | createdAt | updatedAt
+let RecurringCall = class RecurringCall extends sequelize_typescript_1.Model {
 };
 __decorate([
     (0, sequelize_typescript_1.Column)({
@@ -20,57 +21,49 @@ __decorate([
         autoIncrement: true,
     }),
     __metadata("design:type", Number)
-], CallRecording.prototype, "id", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
-    __metadata("design:type", String)
-], CallRecording.prototype, "recordingId", void 0);
+], RecurringCall.prototype, "id", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", String)
-], CallRecording.prototype, "createdBy", void 0);
+], RecurringCall.prototype, "title", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
+    sequelize_typescript_1.Column,
     __metadata("design:type", String)
-], CallRecording.prototype, "fileName", void 0);
+], RecurringCall.prototype, "description", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], RecurringCall.prototype, "link", void 0);
+__decorate([
+    sequelize_typescript_1.Column,
+    __metadata("design:type", String)
+], RecurringCall.prototype, "currentVersionId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
-], CallRecording.prototype, "participants", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.BIGINT),
-    __metadata("design:type", Number)
-], CallRecording.prototype, "callLength", void 0);
+], RecurringCall.prototype, "chatId", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
-], CallRecording.prototype, "chatId", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], CallRecording.prototype, "status", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", Number)
-], CallRecording.prototype, "retry", void 0);
+], RecurringCall.prototype, "tenant", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], CallRecording.prototype, "createdAt", void 0);
+], RecurringCall.prototype, "createdAt", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+    }),
+    __metadata("design:type", Boolean)
+], RecurringCall.prototype, "deleted", void 0);
 __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Date)
-], CallRecording.prototype, "updatedAt", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
-], CallRecording.prototype, "stakworkProjectId", void 0);
-__decorate([
-    sequelize_typescript_1.Column,
-    __metadata("design:type", String)
-], CallRecording.prototype, "versionId", void 0);
-CallRecording = __decorate([
-    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_call_recording', underscored: true })
-], CallRecording);
-exports.default = CallRecording;
-//# sourceMappingURL=callRecording.js.map
+], RecurringCall.prototype, "updatedAt", void 0);
+RecurringCall = __decorate([
+    (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_recurring_calls', underscored: true })
+], RecurringCall);
+exports.default = RecurringCall;
+//# sourceMappingURL=recurringCall.js.map

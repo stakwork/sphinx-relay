@@ -350,6 +350,27 @@ function migrate() {
         addTableColumn('sphinx_badge', 'reward_requirement', 'INTEGER');
         addTableColumn('sphinx_badge', 'active', 'BOOLEAN');
         addTableColumn('sphinx_tribe_badge', 'active', 'BOOLEAN');
+        // id | Title | Desc | link | current_version_id | chatId | tenant | createdAt | updatedAt
+        try {
+            logger_1.sphinxLogger.info('adding recurring call table', logger_1.logging.DB);
+            yield models_1.sequelize.query(`
+    CREATE TABLE sphinx_recurring_calls (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      title TEXT,
+      description TEXT,
+      link TEXT,
+      current_version_id TEXT,
+      chat_id INTEGER,
+      tenant INTEGER,
+      deleted BOOLEAN,
+      created_at DATETIME,
+      updated_at DATETIME
+    )`);
+        }
+        catch (e) {
+            // sphinxLogger.error(['problem adding recurring calls table:', e], logging.DB)
+        }
+        addTableColumn(`sphinx_call_recording`, `version_id`, 'TEXT');
     });
 }
 exports.default = migrate;

@@ -42,6 +42,9 @@ export default class CallRecording extends Model<CallRecording> {
 
   @Column
   stakworkProjectId: string
+
+  @Column
+  versionId: string
 }
 
 export interface CallRecordingRecord extends CallRecording {

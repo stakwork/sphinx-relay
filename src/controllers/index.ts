@@ -29,12 +29,17 @@ import { Req } from '../types'
 import * as action from './actionHistory'
 import * as feeds from './getFeeds'
 import * as contentFeedStatus from './contentFeedStatus'
+import { initializeCronJobsForCallRecordings } from '../builtin/utill/callRecording'
 
 export async function set(app) {
   builtInBots.init()
 
   if (models && models.Subscription) {
     subcriptions.initializeCronJobs()
+  }
+
+  if (models && models.RecurringCall) {
+    initializeCronJobsForCallRecordings()
   }
 
   // media.cycleMediaToken()
