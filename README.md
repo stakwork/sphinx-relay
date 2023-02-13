@@ -98,7 +98,7 @@ Payment status: SUCCEEDED, preimage: <......>
 
 ## Network connectivity
 
-If you have a permanent public IP on your internet connection and you want your mobile or desktop Sphinx client to connect to it over internet, open port `3001/TCP` on your router and create a port forwarding rule for TCP to port 3001 of your machine running Sphinx-Relay. How to do this is not included in this guide. https://www.yougetsignal.com/tools/open-ports/ is one of the many websites that can be used to check if a port is opened on your network.
+If you have a permanent public IP on your internet connection and you want your mobile or desktop Sphinx client to connect to it over internet, open port `3300/TCP` on your router and create a port forwarding rule for TCP to port 3300 of your machine running Sphinx-Relay. How to do this is not included in this guide. https://www.yougetsignal.com/tools/open-ports/ is one of the many websites that can be used to check if a port is opened on your network.
 
 If you plan to use your Sphinx clients within the local network, then you do not have to do anything special.
 
