@@ -687,6 +687,12 @@ enum GreenlightChannelState {
   DUALOPEND_AWAITING_LOCKIN = 'DUALOPEND_AWAITING_LOCKIN',
 }
 
+export function txIndexFromChannelId(int: string): number {
+  const l = long.fromString(int, true)
+  const txIndex = l.shiftRight(16).and(0xffffff)
+  return txIndex.toNumber()
+}
+
 function shortChanIDfromInt64(int: string): string {
   const l = long.fromString(int, true)
   const blockHeight = l.shiftRight(40)
