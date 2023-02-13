@@ -96,7 +96,7 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
         headers: { 'Content-Type': 'application/json' },
       })
       if (!newCall.ok) {
-        console.log('+++++++++++ No file found yet for', filename)
+        sphinxLogger.warning('No file found yet for', filename)
         return
       }
       const callVersionId = newCall.headers.raw()['x-amz-version-id'][0]
@@ -129,7 +129,6 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
         versionId: callVersionId,
       }
       if (!stakwork.ok) {
-        console.log('++++++ Did not save on stakwork')
         callRecording.status = constants.call_status.in_actve
 
         //Logs

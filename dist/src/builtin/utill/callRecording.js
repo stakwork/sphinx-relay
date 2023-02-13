@@ -84,7 +84,7 @@ function startCallRecordingCronJob(call) {
                     headers: { 'Content-Type': 'application/json' },
                 });
                 if (!newCall.ok) {
-                    console.log('+++++++++++ No file found yet for', filename);
+                    logger_1.sphinxLogger.warning('No file found yet for', filename);
                     return;
                 }
                 const callVersionId = newCall.headers.raw()['x-amz-version-id'][0];
@@ -109,7 +109,6 @@ function startCallRecordingCronJob(call) {
                     versionId: callVersionId,
                 };
                 if (!stakwork.ok) {
-                    console.log('++++++ Did not save on stakwork');
                     callRecording.status = constants_1.default.call_status.in_actve;
                     //Logs
                     logger_1.sphinxLogger.error([
