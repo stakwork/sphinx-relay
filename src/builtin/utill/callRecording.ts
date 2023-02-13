@@ -86,8 +86,12 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
 
       sphinxLogger.info(['EXEC CRON =>', recurringCall.id])
       const tribe = (await models.Chat.findOne({
-        where: { id: recurringCall.chatId },
+        where: { id: recurringCall.chatId, deleted: false },
       })) as ChatRecord
+      if (!tribe) {
+        sphinxLogger.error(['Tribe does not exist'])
+        return
+      }
       const filename = extractFileName(recurringCall.link, tribe.jitsiServer)
       const filepath = formFilenameAndPath(filename, tribe.memeServerLocation)
 
@@ -96,11 +100,15 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
         headers: { 'Content-Type': 'application/json' },
       })
       if (!newCall.ok) {
-        sphinxLogger.warning('No file found yet for', filename)
+        sphinxLogger.error([
+          'Invalid s3 bucket or No file found yet for',
+          filename,
+        ])
         return
       }
       const callVersionId = newCall.headers.raw()['x-amz-version-id'][0]
       if (recurringCall.currentVersionId === callVersionId) {
+        sphinxLogger.warning(['No new file found', filename])
         return
       }
       await recurringCall.update({ currentVersionId: callVersionId })

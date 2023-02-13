@@ -75,8 +75,12 @@ function startCallRecordingCronJob(call) {
                 }
                 logger_1.sphinxLogger.info(['EXEC CRON =>', recurringCall.id]);
                 const tribe = (yield models_1.models.Chat.findOne({
-                    where: { id: recurringCall.chatId },
+                    where: { id: recurringCall.chatId, deleted: false },
                 }));
+                if (!tribe) {
+                    logger_1.sphinxLogger.error(['Tribe does not exist']);
+                    return;
+                }
                 const filename = extractFileName(recurringCall.link, tribe.jitsiServer);
                 const filepath = formFilenameAndPath(filename, tribe.memeServerLocation);
                 const newCall = yield (0, node_fetch_1.default)(filepath, {
@@ -84,11 +88,15 @@ function startCallRecordingCronJob(call) {
                     headers: { 'Content-Type': 'application/json' },
                 });
                 if (!newCall.ok) {
-                    logger_1.sphinxLogger.warning('No file found yet for', filename);
+                    logger_1.sphinxLogger.error([
+                        'Invalid s3 bucket or No file found yet for',
+                        filename,
+                    ]);
                     return;
                 }
                 const callVersionId = newCall.headers.raw()['x-amz-version-id'][0];
                 if (recurringCall.currentVersionId === callVersionId) {
+                    logger_1.sphinxLogger.warning(['No new file found', filename]);
                     return;
                 }
                 yield recurringCall.update({ currentVersionId: callVersionId });
