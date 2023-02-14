@@ -72,9 +72,9 @@ jobs:
           chmod 777 -R ./lnd;
           chmod 777 -R ./proxy;
       - name: Check for NODES.json
-        working-directory: ./stack
         uses: nick-fields/retry@v2
         with:
+          working-directory: ./stack
           timeout_minutes: 1 
           max_attempts: 3
           command: |
