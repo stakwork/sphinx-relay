@@ -34,7 +34,7 @@ let io: any = null
 var responseArray: any[] = []
 
 test.serial('test-09-socketIO', async (t: ExecutionContext<Context>) => {
-  //await testSocketIO(t, false)
+  await testSocketIO(t, false)
 
   await testSocketIO(t, true)
 })
