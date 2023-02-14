@@ -71,18 +71,20 @@ jobs:
           chmod 777 -R ./relay;
           chmod 777 -R ./lnd;
           chmod 777 -R ./proxy;
-      - name: Turn on Stack
-        working-directory: ./stack
-        run: |
-          GITACTION_ENV=gitactionenv docker-compose -f alts/proxy.yml --project-dir . up -d
       - name: Check for NODES.json
         working-directory: ./stack
-        run: |
-          sleep 240;
-          docker-compose ps
-          docker logs meme.sphinx
-          docker logs dave.sphinx
-          docker wait stack_relaysetup_1;
+        uses: nick-fields/retry@v2
+        working-directory: ./relay
+        with:
+          timeout_minutes: 1 
+          max_attempts: 3
+          command: |
+            GITACTION_ENV=gitactionenv docker-compose -f alts/proxy.yml --project-dir . up -d;
+            sleep 240;
+            docker-compose ps
+            docker logs meme.sphinx
+            docker logs dave.sphinx
+            docker wait stack_relaysetup_1;
       - name: copy file
         uses: canastro/copy-file-action@master
         with:
@@ -90,5 +92,4 @@ jobs:
           target: 'relay/src/tests/configs/nodes.json'
       - name: Run tests
         working-directory: ./relay
-        run: |
-          npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
+        run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
