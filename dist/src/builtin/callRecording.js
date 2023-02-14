@@ -272,6 +272,24 @@ function init() {
                             .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
                         message.channel.send({ embed: recurringEmbed });
                         return;
+                    case 'remove':
+                        const recurring_keyeword = arr[2];
+                        const url = arr[3];
+                        if (recurring_keyeword !== 'recurring') {
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription('Please provide accurate command')
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                        const msg = yield (0, callRecording_1.removeRecurringCall)(url, tribe);
+                        const newResEmbed = new Sphinx.MessageEmbed()
+                            .setAuthor('CallRecordingBot')
+                            .setDescription(msg)
+                            .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                        message.channel.send({ embed: newResEmbed });
+                        return;
                     case 'hide':
                         yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'CallRecordingBot', '/callRecording');
                         return;

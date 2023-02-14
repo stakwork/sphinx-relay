@@ -237,3 +237,29 @@ export async function sendToStakwork(
     }),
   })
 }
+
+export async function removeRecurringCall(
+  url: string,
+  tribe: ChatRecord
+): Promise<string> {
+  try {
+    const recurringCall = (await models.RecurringCall.findOne({
+      where: { link: url, chatId: tribe.id },
+    })) as RecurringCallRecord
+
+    if (!recurringCall) {
+      sphinxLogger.error(['RECURRING CALL DOES NOT EXIST =>', url])
+      return 'Recurring Call does not exist'
+    }
+    await recurringCall.update({ deleted: true })
+    if (jobs[recurringCall.id]) {
+      jobs[recurringCall.id].stop()
+      delete jobs[recurringCall.id]
+      sphinxLogger.info(['REMOVING RECURRING CALL =>', recurringCall.link])
+    }
+    return 'Recurring Call has been removed successfully'
+  } catch (error) {
+    sphinxLogger.error(['ERROR REMOVING RECURRING CALLS =>', error])
+    return 'Unable to remove recurring call'
+  }
+}

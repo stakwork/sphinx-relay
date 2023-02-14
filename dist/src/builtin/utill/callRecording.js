@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendToStakwork = exports.initializeCronJobsForCallRecordings = exports.saveRecurringCall = void 0;
+exports.removeRecurringCall = exports.sendToStakwork = exports.initializeCronJobsForCallRecordings = exports.saveRecurringCall = void 0;
 const models_1 = require("../../models");
 const helpers = require("../../helpers");
 const logger_1 = require("../../utils/logger");
@@ -203,4 +203,29 @@ function sendToStakwork(apikey, callId, filePathAndName, webhook, ownerPubkey, f
     });
 }
 exports.sendToStakwork = sendToStakwork;
+function removeRecurringCall(url, tribe) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const recurringCall = (yield models_1.models.RecurringCall.findOne({
+                where: { link: url, chatId: tribe.id },
+            }));
+            if (!recurringCall) {
+                logger_1.sphinxLogger.error(['RECURRING CALL DOES NOT EXIST =>', url]);
+                return 'Recurring Call does not exist';
+            }
+            yield recurringCall.update({ deleted: true });
+            if (jobs[recurringCall.id]) {
+                jobs[recurringCall.id].stop();
+                delete jobs[recurringCall.id];
+                logger_1.sphinxLogger.info(['REMOVING RECURRING CALL =>', recurringCall.link]);
+            }
+            return 'Recurring Call has been removed successfully';
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(['ERROR REMOVING RECURRING CALLS =>', error]);
+            return 'Unable to remove recurring call';
+        }
+    });
+}
+exports.removeRecurringCall = removeRecurringCall;
 //# sourceMappingURL=callRecording.js.map

@@ -14,7 +14,11 @@ import {
   hideCommandHandler,
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
-import { saveRecurringCall, sendToStakwork } from './utill/callRecording'
+import {
+  saveRecurringCall,
+  sendToStakwork,
+  removeRecurringCall,
+} from './utill/callRecording'
 
 /**
  *
@@ -337,6 +341,26 @@ export function init() {
               .setDescription(recurringMsg)
               .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed: recurringEmbed })
+            return
+          case 'remove':
+            const recurring_keyeword = arr[2]
+            const url = arr[3]
+            if (recurring_keyeword !== 'recurring') {
+              const newEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription('Please provide accurate command')
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
+              message.channel.send({ embed: newEmbed })
+              return
+            }
+            const msg = await removeRecurringCall(url, tribe)
+            const newResEmbed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(msg)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
+            message.channel.send({ embed: newResEmbed })
             return
           case 'hide':
             await hideCommandHandler(
