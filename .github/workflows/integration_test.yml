@@ -74,13 +74,12 @@ jobs:
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
-          working-directory: ./stack
           timeout_minutes: 1 
           max_attempts: 3
           command: |
-            GITACTION_ENV=gitactionenv docker-compose -f alts/proxy.yml --project-dir . up -d;
+            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/proxy.yml --project-dir ./stack up -d;
             sleep 240;
-            docker-compose ps
+            docker ps
             docker logs meme.sphinx
             docker logs dave.sphinx
             docker wait stack_relaysetup_1;
