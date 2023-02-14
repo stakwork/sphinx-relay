@@ -24,7 +24,7 @@ let handlers = {};
 let io = null;
 var responseArray = [];
 ava_1.default.serial('test-09-socketIO', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    //await testSocketIO(t, false)
+    yield testSocketIO(t, false);
     yield testSocketIO(t, true);
 }));
 function testSocketIO(t, legacy) {
