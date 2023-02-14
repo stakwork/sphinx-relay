@@ -86,8 +86,13 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
 
       sphinxLogger.info(['EXEC CRON =>', recurringCall.id])
       const tribe = (await models.Chat.findOne({
-        where: { id: recurringCall.chatId },
+        where: { id: recurringCall.chatId, deleted: false },
       })) as ChatRecord
+      if (!tribe) {
+        sphinxLogger.error(['Tribe does not exist'])
+        delete jobs[call.id]
+        return this.stop()
+      }
       const filename = extractFileName(recurringCall.link, tribe.jitsiServer)
       const filepath = formFilenameAndPath(filename, tribe.memeServerLocation)
 
@@ -96,11 +101,15 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
         headers: { 'Content-Type': 'application/json' },
       })
       if (!newCall.ok) {
-        console.log('+++++++++++ No file found yet for', filename)
+        sphinxLogger.error([
+          'Invalid s3 bucket or No file found yet for',
+          filename,
+        ])
         return
       }
       const callVersionId = newCall.headers.raw()['x-amz-version-id'][0]
       if (recurringCall.currentVersionId === callVersionId) {
+        sphinxLogger.warning(['No new file found', filename])
         return
       }
       await recurringCall.update({ currentVersionId: callVersionId })
@@ -129,7 +138,6 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
         versionId: callVersionId,
       }
       if (!stakwork.ok) {
-        console.log('++++++ Did not save on stakwork')
         callRecording.status = constants.call_status.in_actve
 
         //Logs
@@ -228,4 +236,30 @@ export async function sendToStakwork(
       },
     }),
   })
+}
+
+export async function removeRecurringCall(
+  url: string,
+  tribe: ChatRecord
+): Promise<string> {
+  try {
+    const recurringCall = (await models.RecurringCall.findOne({
+      where: { link: url, chatId: tribe.id },
+    })) as RecurringCallRecord
+
+    if (!recurringCall) {
+      sphinxLogger.error(['RECURRING CALL DOES NOT EXIST =>', url])
+      return 'Recurring Call does not exist'
+    }
+    await recurringCall.update({ deleted: true })
+    if (jobs[recurringCall.id]) {
+      jobs[recurringCall.id].stop()
+      delete jobs[recurringCall.id]
+      sphinxLogger.info(['REMOVING RECURRING CALL =>', recurringCall.link])
+    }
+    return 'Recurring Call has been removed successfully'
+  } catch (error) {
+    sphinxLogger.error(['ERROR REMOVING RECURRING CALLS =>', error])
+    return 'Unable to remove recurring call'
+  }
 }

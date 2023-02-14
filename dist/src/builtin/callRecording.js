@@ -238,6 +238,58 @@ function init() {
                             message.channel.send({ embed: newEmbed });
                             return;
                         }
+                    case 'list':
+                        const recurring = arr[2];
+                        let limit_value = Number(arr[3]);
+                        if (!limit_value || isNaN(limit_value)) {
+                            limit_value = 10;
+                        }
+                        if (recurring !== 'recurring') {
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription('Please provide accurate command')
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                        const recurring_calls = (yield models_1.models.RecurringCall.findAll({
+                            where: { chatId: tribe.id },
+                            limit: limit_value,
+                            order: [['createdAt', 'DESC']],
+                        }));
+                        let recurringMsg = '';
+                        if (recurring_calls && recurring_calls.length > 0) {
+                            recurring_calls.forEach((call) => {
+                                recurringMsg = `${recurringMsg}${call.title ? call.title : ''} ${call.link} \n`;
+                            });
+                        }
+                        else {
+                            recurringMsg = 'There is no recurring call for this tribe';
+                        }
+                        const recurringEmbed = new Sphinx.MessageEmbed()
+                            .setAuthor('CallRecordingBot')
+                            .setDescription(recurringMsg)
+                            .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                        message.channel.send({ embed: recurringEmbed });
+                        return;
+                    case 'remove':
+                        const recurring_keyeword = arr[2];
+                        const url = arr[3];
+                        if (recurring_keyeword !== 'recurring') {
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription('Please provide accurate command')
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                        const msg = yield (0, callRecording_1.removeRecurringCall)(url, tribe);
+                        const newResEmbed = new Sphinx.MessageEmbed()
+                            .setAuthor('CallRecordingBot')
+                            .setDescription(msg)
+                            .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                        message.channel.send({ embed: newResEmbed });
+                        return;
                     case 'hide':
                         yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'CallRecordingBot', '/callRecording');
                         return;
@@ -257,6 +309,10 @@ function init() {
                             {
                                 name: 'Add Recurring Call',
                                 value: '/callRecording recurring ${call_url} ${Call_title(OPTIONAL)} ${call_description(OPTIONAL)}',
+                            },
+                            {
+                                name: 'List Recurring Call',
+                                value: '/callRecording list recurring ${Call_limit(Defualt is 10, when not specified)}',
                             },
                         ])
                             .setThumbnail(botSVG);
