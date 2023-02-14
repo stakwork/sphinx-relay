@@ -90,7 +90,8 @@ async function startCallRecordingCronJob(call: RecurringCallRecord) {
       })) as ChatRecord
       if (!tribe) {
         sphinxLogger.error(['Tribe does not exist'])
-        return
+        delete jobs[call.id]
+        return this.stop()
       }
       const filename = extractFileName(recurringCall.link, tribe.jitsiServer)
       const filepath = formFilenameAndPath(filename, tribe.memeServerLocation)
