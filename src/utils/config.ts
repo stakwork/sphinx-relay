@@ -134,6 +134,7 @@ export function loadConfig() {
       ENV.LENGTH_OF_TIME_FOR_TRANSPORT_TOKEN_CLEAR ||
       config.length_of_time_for_transport_token_clear ||
       DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING,
-    boltwall_server: config.boltwall_server || DEFAULT_BOLTWALL_SERVER,
+    boltwall_server:
+      ENV.BOLTWALL_SERVER || config.boltwall_server || DEFAULT_BOLTWALL_SERVER,
   }
 }
