@@ -74,7 +74,6 @@ jobs:
       - name: Check for NODES.json
         working-directory: ./stack
         uses: nick-fields/retry@v2
-        working-directory: ./relay
         with:
           timeout_minutes: 1 
           max_attempts: 3
