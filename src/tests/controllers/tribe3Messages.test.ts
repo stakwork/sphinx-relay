@@ -9,6 +9,20 @@ import { getCheckNewMsgs, getTribeByUuid, getCheckTribe } from '../utils/get'
 
 import nodes from '../nodes'
 
+const emptyNodeConfig = {
+  alias: '',
+  pubkey: '',
+  ip: '',
+  external_ip: '',
+  authToken: '',
+  transportToken: '',
+  contact_key: '',
+  privkey: '',
+  exported_keys: '',
+  pin: '',
+  routeHint: '',
+}
+
 /*
 npx ava test-10-tribe3Msgs.js --verbose --serial --timeout=2m
 */
@@ -18,6 +32,17 @@ test('test-10-tribe3Msgs: create tribe, two nodes join tribe, send messages, 2 n
 })
 
 export async function tribe3Msgs(t, node1, node2, node3) {
+  //This is checking if the proxy nodes exist and if they
+  // do then we'll use them
+  let useProxyNodes = false
+  let proxyNode1 = emptyNodeConfig
+  let proxyNode2 = emptyNodeConfig
+  if (nodes.length > 4) {
+    useProxyNodes = true
+    proxyNode1 = nodes[3]
+    proxyNode2 = nodes[4]
+  }
+
   // if running "no-alice" version with local relay
   const internalTribeHost = node1.ip.includes('host.docker.internal')
     ? config.tribeHost
@@ -27,6 +52,7 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   t.truthy(node3, 'this test requires three nodes')
 
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
+  console.log(`also using proxy ${proxyNode1.alias}, ${proxyNode2.alias}`)
 
   //NODE1 CREATES A TRIBE
   let tribe = await createTribe(t, node1)
@@ -41,6 +67,16 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
   let join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
+
+  if (useProxyNodes) {
+    //PROXYNODE1 JOINS TRIBE CREATED BY NODE1
+    let joinProxy1 = await joinTribe(t, proxyNode1, tribe)
+    t.true(joinProxy1, 'proxyNode1 should join tribe')
+
+    //PROXYNODE2 JOINS TRIBE CREATED BY NODE1
+    let proxyJoin2 = await joinTribe(t, proxyNode2, tribe)
+    t.true(proxyJoin2, 'proxyNode2 should join tribe')
+  }
 
   //NODE1 SENDS A TEXT MESSAGE IN TRIBE
   const text = randomText()
@@ -107,6 +143,55 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     text3
   )
   t.true(n2check2, 'node2 should have read and decrypted node3 message')
+
+  if (useProxyNodes) {
+    //proxyNode1 SENDS A TEXT MESSAGE IN TRIBE
+    const text4 = randomText()
+    let tribeMessage4 = await sendTribeMessage(t, proxyNode2, tribe, text4)
+
+    //CHECK THAT proxyNode1'S DECRYPTED MESSAGE IS SAME AS INPUT From node1's point of view
+    const n1check3 = await checkMessageDecryption(
+      t,
+      node1,
+      tribeMessage4.uuid,
+      text4
+    )
+    t.true(
+      n1check3,
+      "node1 should have read and decrypted proxyNode1's message"
+    )
+
+    //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
+    const n4check2 = await checkMessageDecryption(
+      t,
+      proxyNode1,
+      tribeMessage2.uuid,
+      text2
+    )
+    t.true(n4check2, 'proxyNode1 should have read and decrypted node2 message')
+
+    //PROXYNODE2 SENDS A TEXT MESSAGE IN TRIBE
+    const text5 = randomText()
+    let tribeMessage5 = await sendTribeMessage(t, proxyNode2, tribe, text5)
+
+    //CHECK THAT NODE3'S DECRYPTED MESSAGE IS SAME AS INPUT AS NODE1
+    const n5check2 = await checkMessageDecryption(
+      t,
+      node1,
+      tribeMessage5.uuid,
+      text5
+    )
+    t.true(n5check2, 'node1 should have read and decrypted node3 message')
+
+    //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
+    const n5check3 = await checkMessageDecryption(
+      t,
+      proxyNode2,
+      tribeMessage2.uuid,
+      text2
+    )
+    t.true(n5check3, 'node2 should have read and decrypted node3 message')
+  }
 
   /*****
 				Here we want to create a new message channel for a tribe
