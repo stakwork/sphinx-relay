@@ -1,7 +1,12 @@
 import * as Sphinx from 'sphinx-bot'
 import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
-import { CallRecordingRecord, ChatRecord, models } from '../models'
+import {
+  CallRecordingRecord,
+  ChatRecord,
+  models,
+  RecurringCallRecord,
+} from '../models'
 import constants from '../constants'
 import fetch from 'node-fetch'
 import { Op } from 'sequelize'
@@ -9,6 +14,11 @@ import {
   hideCommandHandler,
   determineOwnerOnly,
 } from '../controllers/botapi/hideAndUnhideCommand'
+import {
+  saveRecurringCall,
+  sendToStakwork,
+  removeRecurringCall,
+} from './utill/callRecording'
 
 /**
  *
@@ -255,6 +265,103 @@ export function init() {
               .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed: newEmbed })
             return
+          case 'recurring':
+            const link = arr[2]
+            const title = arr[3]
+            const description = arr[4]
+            if (link) {
+              const call = await saveRecurringCall({
+                link,
+                title,
+                description,
+                tribe,
+                tenant: parseInt(message.member.id!),
+              })
+              if (call.status) {
+                const newEmbed = new Sphinx.MessageEmbed()
+                  .setAuthor('CallRecordingBot')
+                  .setDescription('Recurring Call was Saved Successfully')
+                  .setOnlyOwner(
+                    await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                  )
+                message.channel.send({ embed: newEmbed })
+                return
+              }
+              const newEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription(call.errMsg!)
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
+              message.channel.send({ embed: newEmbed })
+              return
+            } else {
+              const newEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription('Please provide call link')
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
+              message.channel.send({ embed: newEmbed })
+              return
+            }
+          case 'list':
+            const recurring = arr[2]
+            let limit_value = Number(arr[3])
+            if (!limit_value || isNaN(limit_value)) {
+              limit_value = 10
+            }
+            if (recurring !== 'recurring') {
+              const newEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription('Please provide accurate command')
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
+              message.channel.send({ embed: newEmbed })
+              return
+            }
+            const recurring_calls = (await models.RecurringCall.findAll({
+              where: { chatId: tribe.id },
+              limit: limit_value,
+              order: [['createdAt', 'DESC']],
+            })) as RecurringCallRecord[]
+            let recurringMsg = ''
+            if (recurring_calls && recurring_calls.length > 0) {
+              recurring_calls.forEach((call) => {
+                recurringMsg = `${recurringMsg}${
+                  call.title ? call.title : ''
+                } ${call.link} \n`
+              })
+            } else {
+              recurringMsg = 'There is no recurring call for this tribe'
+            }
+            const recurringEmbed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(recurringMsg)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
+            message.channel.send({ embed: recurringEmbed })
+            return
+          case 'remove':
+            const recurring_keyeword = arr[2]
+            const url = arr[3]
+            if (recurring_keyeword !== 'recurring') {
+              const newEmbed = new Sphinx.MessageEmbed()
+                .setAuthor('CallRecordingBot')
+                .setDescription('Please provide accurate command')
+                .setOnlyOwner(
+                  await determineOwnerOnly(botPrefix, cmd, tribe.id)
+                )
+              message.channel.send({ embed: newEmbed })
+              return
+            }
+            const msg = await removeRecurringCall(url, tribe)
+            const newResEmbed = new Sphinx.MessageEmbed()
+              .setAuthor('CallRecordingBot')
+              .setDescription(msg)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
+            message.channel.send({ embed: newResEmbed })
+            return
           case 'hide':
             await hideCommandHandler(
               arr[2],
@@ -278,6 +385,16 @@ export function init() {
                 {
                   name: 'Retry a call',
                   value: '/callRecording retry',
+                },
+                {
+                  name: 'Add Recurring Call',
+                  value:
+                    '/callRecording recurring ${call_url} ${Call_title(OPTIONAL)} ${call_description(OPTIONAL)}',
+                },
+                {
+                  name: 'List Recurring Call',
+                  value:
+                    '/callRecording list recurring ${Call_limit(Defualt is 10, when not specified)}',
                 },
               ])
               .setThumbnail(botSVG)
@@ -437,67 +554,27 @@ async function botResponse(addFields, author, title, message, cmd, tribeId) {
   message.channel.send({ embed: resEmbed })
 }
 
-async function sendToStakwork(
-  apikey: string,
-  callId: string,
-  filePathAndName: string,
-  webhook: string,
-  ownerPubkey: string,
-  filename: string,
-  tribeName: string
-) {
-  const dateInUTC = new Date(Date.now()).toUTCString()
-  const dateInUnix = new Date(Date.now()).getTime() / 1000
-
-  return await fetch(`https://jobs.stakwork.com/api/v1/projects`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Token token="${apikey}"`,
-    },
-    body: JSON.stringify({
-      name: `${callId} file`,
-      workflow_id: 5579,
-      workflow_params: {
-        set_var: {
-          attributes: {
-            vars: {
-              media_url: filePathAndName,
-              episode_title: `Jitsi Call on ${dateInUTC}`,
-              clip_description: 'My Clip Description',
-              publish_date: `${dateInUnix}`,
-              episode_image:
-                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
-              show_img_url:
-                'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
-              webhook_url: `${webhook}`,
-              pubkey: ownerPubkey,
-              unique_id: filename.slice(0, -4),
-              clip_length: 60,
-              show_title: `${tribeName}`,
-            },
-          },
-        },
-      },
-    }),
-  })
-}
-
 async function processCallAgain(
   callRecording: CallRecordingRecord,
   tribe: ChatRecord,
   filePathAndName: string,
   botMessage: string
 ) {
-  const file = await fetch(filePathAndName, {
+  let filepath = filePathAndName
+  let callId = callRecording.recordingId
+  if (callRecording.versionId) {
+    filepath = `${filepath}?versionId=${callRecording.versionId}`
+    callId = `${callId}_${callRecording.versionId}`
+  }
+  const file = await fetch(filepath, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   })
   if (file.ok) {
     const toStakwork = await sendToStakwork(
       tribe.stakworkApiKey,
-      callRecording.recordingId,
-      filePathAndName,
+      callId,
+      filepath,
       tribe.stakworkWebhook,
       tribe.ownerPubkey,
       callRecording.fileName,

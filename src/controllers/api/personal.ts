@@ -18,6 +18,7 @@ import { Badge, Req, Res } from '../../types'
 import constants from '../../constants'
 import { createBadgeBot } from '../../utils/badgeBot'
 import { genSignedTimestamp } from '../../utils/tribes'
+import { updateBadgeInTribe, determineBadgeHost } from '../../utils/people'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -474,6 +475,7 @@ export async function addBadgeToTribe(
         tenant,
       },
     })) as ChatRecord
+    console.log(tribe)
     if (!tribe) {
       return failure(res, 'Invalid tribe')
     }
@@ -497,6 +499,8 @@ export async function addBadgeToTribe(
     ) {
       return failure(res, 'Please provide reward type and reward requirement')
     }
+
+    await updateTribeServer(badge, tribe, 'add')
 
     if (badgeExist && badgeExist.active === false) {
       await badgeExist.update({
@@ -703,9 +707,26 @@ export async function removeBadgeFromTribe(
     if (!badgeTribe) {
       return failure(res, 'Badge does not exist in tribe')
     }
+    await updateTribeServer(badge, tribe, 'remove')
+
     await badgeTribe.update({ active: false })
     return success(res, 'Badge deactivated successfully')
   } catch (error) {
     return failure(res, error)
   }
+}
+
+async function updateTribeServer(
+  badge: BadgeRecord,
+  tribe: ChatRecord,
+  action: string
+) {
+  const badge_host = determineBadgeHost(badge.type)
+  await updateBadgeInTribe({
+    tribeId: tribe.uuid,
+    action,
+    badge: `${badge_host}/${badge.badgeId}`,
+    owner_pubkey: tribe.ownerPubkey,
+    tribe_host: tribe.host,
+  })
 }

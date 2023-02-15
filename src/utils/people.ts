@@ -6,6 +6,14 @@ import { Lsat } from 'lsat-js'
 import * as Lightning from '../grpc/lightning'
 import { SendPaymentResponse } from '../grpc/interfaces'
 
+interface UpdateTribeBadge {
+  tribeId: string
+  owner_pubkey: string
+  action: string
+  badge: string
+  tribe_host: string
+}
+
 const config = loadConfig()
 
 export async function createOrEditPerson(
@@ -219,4 +227,37 @@ export async function transferBadge({ to, asset, amount, memo, owner_pubkey }) {
     sphinxLogger.error('[liquid] Badge was not transfered', error)
     throw error
   }
+}
+
+export async function updateBadgeInTribe({
+  tribeId,
+  action,
+  badge,
+  owner_pubkey,
+  tribe_host,
+}: UpdateTribeBadge) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    console.log(`${protocol}://${tribe_host}/badges?token=${token}`)
+    const r = await fetch(`${protocol}://${tribe_host}/badges?token=${token}`, {
+      method: 'POST',
+      body: JSON.stringify({ badge, tribeId, action }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!r.ok) {
+      throw 'failed to update badge in tribe ' + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    sphinxLogger.error('[Badge] Badge was not updated in tribe', error)
+    throw error
+  }
+}
+
+export function determineBadgeHost(badgeCode: number) {
+  const badge_host = { 1: 'liquid.sphinx.chat' }
+  return badge_host[badgeCode]
 }

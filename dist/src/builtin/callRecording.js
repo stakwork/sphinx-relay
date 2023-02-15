@@ -18,6 +18,7 @@ const constants_1 = require("../constants");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
+const callRecording_1 = require("./utill/callRecording");
 /**
  *
  ** TODO **
@@ -202,6 +203,93 @@ function init() {
                             .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
                         message.channel.send({ embed: newEmbed });
                         return;
+                    case 'recurring':
+                        const link = arr[2];
+                        const title = arr[3];
+                        const description = arr[4];
+                        if (link) {
+                            const call = yield (0, callRecording_1.saveRecurringCall)({
+                                link,
+                                title,
+                                description,
+                                tribe,
+                                tenant: parseInt(message.member.id),
+                            });
+                            if (call.status) {
+                                const newEmbed = new Sphinx.MessageEmbed()
+                                    .setAuthor('CallRecordingBot')
+                                    .setDescription('Recurring Call was Saved Successfully')
+                                    .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                                message.channel.send({ embed: newEmbed });
+                                return;
+                            }
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription(call.errMsg)
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                        else {
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription('Please provide call link')
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                    case 'list':
+                        const recurring = arr[2];
+                        let limit_value = Number(arr[3]);
+                        if (!limit_value || isNaN(limit_value)) {
+                            limit_value = 10;
+                        }
+                        if (recurring !== 'recurring') {
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription('Please provide accurate command')
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                        const recurring_calls = (yield models_1.models.RecurringCall.findAll({
+                            where: { chatId: tribe.id },
+                            limit: limit_value,
+                            order: [['createdAt', 'DESC']],
+                        }));
+                        let recurringMsg = '';
+                        if (recurring_calls && recurring_calls.length > 0) {
+                            recurring_calls.forEach((call) => {
+                                recurringMsg = `${recurringMsg}${call.title ? call.title : ''} ${call.link} \n`;
+                            });
+                        }
+                        else {
+                            recurringMsg = 'There is no recurring call for this tribe';
+                        }
+                        const recurringEmbed = new Sphinx.MessageEmbed()
+                            .setAuthor('CallRecordingBot')
+                            .setDescription(recurringMsg)
+                            .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                        message.channel.send({ embed: recurringEmbed });
+                        return;
+                    case 'remove':
+                        const recurring_keyeword = arr[2];
+                        const url = arr[3];
+                        if (recurring_keyeword !== 'recurring') {
+                            const newEmbed = new Sphinx.MessageEmbed()
+                                .setAuthor('CallRecordingBot')
+                                .setDescription('Please provide accurate command')
+                                .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                            message.channel.send({ embed: newEmbed });
+                            return;
+                        }
+                        const msg = yield (0, callRecording_1.removeRecurringCall)(url, tribe);
+                        const newResEmbed = new Sphinx.MessageEmbed()
+                            .setAuthor('CallRecordingBot')
+                            .setDescription(msg)
+                            .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                        message.channel.send({ embed: newResEmbed });
+                        return;
                     case 'hide':
                         yield (0, hideAndUnhideCommand_1.hideCommandHandler)(arr[2], commands, tribe.id, message, 'CallRecordingBot', '/callRecording');
                         return;
@@ -217,6 +305,14 @@ function init() {
                             {
                                 name: 'Retry a call',
                                 value: '/callRecording retry',
+                            },
+                            {
+                                name: 'Add Recurring Call',
+                                value: '/callRecording recurring ${call_url} ${Call_title(OPTIONAL)} ${call_description(OPTIONAL)}',
+                            },
+                            {
+                                name: 'List Recurring Call',
+                                value: '/callRecording list recurring ${Call_limit(Defualt is 10, when not specified)}',
                             },
                         ])
                             .setThumbnail(botSVG);
@@ -263,7 +359,7 @@ function init() {
                                 if (file.ok) {
                                     // Push to stakwork
                                     // Audio tagging job
-                                    const sendFile = yield sendToStakwork(tribe.stakworkApiKey, updatedCallId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, filename, tribe.name);
+                                    const sendFile = yield (0, callRecording_1.sendToStakwork)(tribe.stakworkApiKey, updatedCallId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, filename, tribe.name);
                                     if (sendFile.ok) {
                                         const res = yield sendFile.json();
                                         //update call record to stored
@@ -349,50 +445,20 @@ function botResponse(addFields, author, title, message, cmd, tribeId) {
         message.channel.send({ embed: resEmbed });
     });
 }
-function sendToStakwork(apikey, callId, filePathAndName, webhook, ownerPubkey, filename, tribeName) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const dateInUTC = new Date(Date.now()).toUTCString();
-        const dateInUnix = new Date(Date.now()).getTime() / 1000;
-        return yield (0, node_fetch_1.default)(`https://jobs.stakwork.com/api/v1/projects`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Token token="${apikey}"`,
-            },
-            body: JSON.stringify({
-                name: `${callId} file`,
-                workflow_id: 5579,
-                workflow_params: {
-                    set_var: {
-                        attributes: {
-                            vars: {
-                                media_url: filePathAndName,
-                                episode_title: `Jitsi Call on ${dateInUTC}`,
-                                clip_description: 'My Clip Description',
-                                publish_date: `${dateInUnix}`,
-                                episode_image: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
-                                show_img_url: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
-                                webhook_url: `${webhook}`,
-                                pubkey: ownerPubkey,
-                                unique_id: filename.slice(0, -4),
-                                clip_length: 60,
-                                show_title: `${tribeName}`,
-                            },
-                        },
-                    },
-                },
-            }),
-        });
-    });
-}
 function processCallAgain(callRecording, tribe, filePathAndName, botMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        const file = yield (0, node_fetch_1.default)(filePathAndName, {
+        let filepath = filePathAndName;
+        let callId = callRecording.recordingId;
+        if (callRecording.versionId) {
+            filepath = `${filepath}?versionId=${callRecording.versionId}`;
+            callId = `${callId}_${callRecording.versionId}`;
+        }
+        const file = yield (0, node_fetch_1.default)(filepath, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });
         if (file.ok) {
-            const toStakwork = yield sendToStakwork(tribe.stakworkApiKey, callRecording.recordingId, filePathAndName, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
+            const toStakwork = yield (0, callRecording_1.sendToStakwork)(tribe.stakworkApiKey, callId, filepath, tribe.stakworkWebhook, tribe.ownerPubkey, callRecording.fileName, tribe.name);
             if (toStakwork.ok) {
                 const res = yield toStakwork.json();
                 //update call record to stored

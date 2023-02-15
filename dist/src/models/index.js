@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TribeBadge = exports.Badge = exports.ContentFeedStatus = exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
+exports.RecurringCall = exports.TribeBadge = exports.Badge = exports.ContentFeedStatus = exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
 // parse BIGINTs to number
 const pg = require("pg");
 pg.defaults.parseInt8 = true;
@@ -48,6 +48,8 @@ const badge_1 = require("./sql/badge");
 exports.Badge = badge_1.default;
 const tribeBadge_1 = require("./sql/tribeBadge");
 exports.TribeBadge = tribeBadge_1.default;
+const recurringCall_1 = require("./sql/recurringCall");
+exports.RecurringCall = recurringCall_1.default;
 const argv = minimist(process.argv.slice(2));
 const configFile = argv.db
     ? path.resolve(process.cwd(), argv.db)
@@ -86,6 +88,7 @@ const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_l
         contentFeedStatus_1.default,
         badge_1.default,
         tribeBadge_1.default,
+        recurringCall_1.default,
     ] });
 if ((0, proxy_1.isProxy)()) {
     opts.pool = {
