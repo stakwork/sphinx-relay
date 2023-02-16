@@ -24,7 +24,14 @@ const logger_1 = require("../utils/logger");
 const git_1 = require("./git");
 const msg_types = Sphinx.MSG_TYPE;
 const config = (0, config_1.loadConfig)();
-const builtinBots = ['welcome', 'loopout', 'git', 'badge', 'callRecording'];
+const builtinBots = [
+    'welcome',
+    'loopout',
+    'git',
+    'badge',
+    'callRecording',
+    'block',
+];
 // else just message type
 const builtInBotMsgTypes = {
     welcome: [
@@ -36,9 +43,11 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.boost,
         constants_1.default.message_types.direct_payment,
     ],
+    block: [constants_1.default.message_types.group_join],
 };
 const builtInHiddenCmd = {
     callRecording: ['hide', 'update'],
+    block: ['hide', 'add', 'remove'],
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
@@ -46,6 +55,7 @@ const builtInBotNames = {
     git: 'GitBot',
     badge: 'BadgeBot',
     callRecording: 'CallRecordingBot',
+    block: 'BlockBot',
 };
 function init() {
     const client = new Sphinx.Client();
