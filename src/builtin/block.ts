@@ -3,6 +3,8 @@ import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import { ChatBotRecord, ChatRecord, ContactRecord, models } from '../models'
 import constants from '../constants'
+import { kickChatMember } from './utill/block'
+import { determineOwnerOnly } from '../controllers/botapi/hideAndUnhideCommand'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -32,13 +34,30 @@ export function init() {
         const contactJoining = (await models.Contact.findOne({
           where: { id: message.member.id!, tenant: tribe.tenant },
         })) as ContactRecord
-        console.log(contactJoining.dataValues)
+
         const bot = (await models.ChatBot.findOne({
           where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
         })) as ChatBotRecord
-        console.log(bot.dataValues)
+        const owner = (await models.Contact.findOne({
+          where: { id: tribe.tenant, isOwner: true, tenant: tribe.tenant },
+        })) as ContactRecord
+
         const blocked = JSON.parse(bot.meta || '[]')
         if (blocked.includes(contactJoining.publicKey)) {
+          await kickChatMember({
+            tribe,
+            contactId: contactJoining.id,
+            tenant: tribe.tenant,
+            owner,
+          })
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor('BlockBot')
+            .setDescription(
+              `${contactJoining.alias} was blocked from joining your tribe`
+            )
+            .setOnlyOwner(await determineOwnerOnly(botPrefix, 'add', tribe.id))
+          message.channel.send({ embed })
+          return
         }
         return
       } catch (error) {

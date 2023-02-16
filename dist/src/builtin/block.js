@@ -15,6 +15,8 @@ const logger_1 = require("../utils/logger");
 const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const constants_1 = require("../constants");
+const block_1 = require("./utill/block");
+const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const botPrefix = '/block';
@@ -42,13 +44,26 @@ function init() {
                 const contactJoining = (yield models_1.models.Contact.findOne({
                     where: { id: message.member.id, tenant: tribe.tenant },
                 }));
-                console.log(contactJoining.dataValues);
                 const bot = (yield models_1.models.ChatBot.findOne({
                     where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
                 }));
-                console.log(bot.dataValues);
+                const owner = (yield models_1.models.Contact.findOne({
+                    where: { id: tribe.tenant, isOwner: true, tenant: tribe.tenant },
+                }));
                 const blocked = JSON.parse(bot.meta || '[]');
                 if (blocked.includes(contactJoining.publicKey)) {
+                    yield (0, block_1.kickChatMember)({
+                        tribe,
+                        contactId: contactJoining.id,
+                        tenant: tribe.tenant,
+                        owner,
+                    });
+                    const embed = new Sphinx.MessageEmbed()
+                        .setAuthor('BlockBot')
+                        .setDescription(`${contactJoining.alias} was blocked from joining your tribe`)
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, 'add', tribe.id));
+                    message.channel.send({ embed });
+                    return;
                 }
                 return;
             }
