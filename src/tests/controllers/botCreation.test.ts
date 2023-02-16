@@ -41,6 +41,9 @@ async function botCreation(t, node1, node2, node3) {
   t.truthy(botReply, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply))
 
+  const block = '/bot install block'
+  await sendTribeMessage(t, node1, tribe, block)
+
   //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
   const text2 = '/bot install welcome'
   await sendTribeMessage(t, node1, tribe, text2)
