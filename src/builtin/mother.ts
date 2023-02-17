@@ -22,7 +22,7 @@ const builtinBots = [
   'git',
   'badge',
   'callRecording',
-  'block',
+  'kick',
 ]
 
 // else just message type
@@ -36,12 +36,12 @@ const builtInBotMsgTypes = {
     constants.message_types.boost,
     constants.message_types.direct_payment,
   ],
-  block: [constants.message_types.group_join, constants.message_types.message],
+  kick: [constants.message_types.group_join, constants.message_types.message],
 }
 
 const builtInHiddenCmd = {
   callRecording: ['hide', 'update'],
-  block: ['hide', 'add', 'remove'],
+  kick: ['hide', 'add', 'remove'],
 }
 
 const builtInBotNames = {
@@ -50,7 +50,7 @@ const builtInBotNames = {
   git: 'GitBot',
   badge: 'BadgeBot',
   callRecording: 'CallRecordingBot',
-  block: 'BlockBot',
+  kick: 'KickBot',
 }
 
 export function init() {

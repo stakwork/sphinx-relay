@@ -30,7 +30,7 @@ const builtinBots = [
     'git',
     'badge',
     'callRecording',
-    'block',
+    'kick',
 ];
 // else just message type
 const builtInBotMsgTypes = {
@@ -43,11 +43,11 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.boost,
         constants_1.default.message_types.direct_payment,
     ],
-    block: [constants_1.default.message_types.group_join, constants_1.default.message_types.message],
+    kick: [constants_1.default.message_types.group_join, constants_1.default.message_types.message],
 };
 const builtInHiddenCmd = {
     callRecording: ['hide', 'update'],
-    block: ['hide', 'add', 'remove'],
+    kick: ['hide', 'add', 'remove'],
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
@@ -55,7 +55,7 @@ const builtInBotNames = {
     git: 'GitBot',
     badge: 'BadgeBot',
     callRecording: 'CallRecordingBot',
-    block: 'BlockBot',
+    kick: 'KickBot',
 };
 function init() {
     const client = new Sphinx.Client();
