@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendImage = void 0;
 const node_fetch_1 = require("node-fetch");
 const http = require("ava-http");
-const RNCryptor = require("jscryptor-kevkevin");
+const RNCryptor = require("jscryptor-3");
 const meme_1 = require("../../electronjs/meme");
 const rsa_1 = require("../../electronjs/rsa");
 const helpers_1 = require("../helpers");
