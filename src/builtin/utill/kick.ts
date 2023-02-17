@@ -9,7 +9,7 @@ import {
 import * as network from '../../network'
 import * as timers from '../../utils/timers'
 
-interface BlockAction {
+interface KickAction {
   tribe: ChatRecord
   botPrefix: string
   pubkey: string
@@ -55,35 +55,31 @@ export async function kickChatMember({
   timers.removeTimersByContactIdChatId(contactId, tribe.id, tenant)
 }
 
-export async function addToBlockedList({
-  tribe,
-  botPrefix,
-  pubkey,
-}: BlockAction) {
+export async function addToBlackList({ tribe, botPrefix, pubkey }: KickAction) {
   const bot = (await models.ChatBot.findOne({
     where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
   })) as ChatBotRecord
-  const blockedList = JSON.parse(bot.meta || '[]')
-  if (!blockedList.includes(pubkey)) {
-    blockedList.push(pubkey)
-    await bot.update({ meta: JSON.stringify(blockedList) })
+  const blackList = JSON.parse(bot.meta || '[]')
+  if (!blackList.includes(pubkey)) {
+    blackList.push(pubkey)
+    await bot.update({ meta: JSON.stringify(blackList) })
   }
   return
 }
 
-export async function removeFromBlockedList({
+export async function removeFromBlackList({
   tribe,
   botPrefix,
   pubkey,
-}: BlockAction): Promise<string> {
+}: KickAction): Promise<string> {
   const bot = (await models.ChatBot.findOne({
     where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
   })) as ChatBotRecord
-  const blockedList = JSON.parse(bot.meta || '[]')
-  if (blockedList.includes(pubkey)) {
-    const newBlockedList = blockedList.filter((pk: string) => pk !== pubkey)
-    await bot.update({ meta: JSON.stringify(newBlockedList) })
-    return 'User unblocked successfully'
+  const blackList = JSON.parse(bot.meta || '[]')
+  if (blackList.includes(pubkey)) {
+    const newBlackList = blackList.filter((pk: string) => pk !== pubkey)
+    await bot.update({ meta: JSON.stringify(newBlackList) })
+    return 'User removed from blacklist successfully'
   }
-  return 'User does not exist in blocked list'
+  return 'User does not exist in blacklist'
 }

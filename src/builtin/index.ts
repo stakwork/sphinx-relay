@@ -5,7 +5,7 @@ import * as WelcomeBot from './welcome'
 import * as LoopBot from './loop'
 import * as BadgeBot from './badge'
 import * as CallRecordingBot from './callRecording'
-import * as BlockBot from './block'
+import * as KickBot from './kick'
 import { BotMsg } from '../network/interfaces'
 import * as GitBot from './git'
 import { buildBotPayload } from '../controllers/bots'
@@ -17,7 +17,7 @@ async function init() {
   GitBot.init()
   BadgeBot.init()
   CallRecordingBot.init()
-  BlockBot.init()
+  KickBot.init()
 }
 
 function builtinBotEmit(msg: BotMsg, botPrefix?: string) {

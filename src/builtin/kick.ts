@@ -11,15 +11,16 @@ import {
 import constants from '../constants'
 import {
   kickChatMember,
-  addToBlockedList,
-  removeFromBlockedList,
-} from './utill/block'
+  addToBlackList,
+  removeFromBlackList,
+} from './utill/kick'
 import { determineOwnerOnly } from '../controllers/botapi/hideAndUnhideCommand'
 
 const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
-const botPrefix = '/block'
+const botPrefix = '/kick'
+const botName = 'KickBot'
 
 export function init() {
   if (initted) return
@@ -53,8 +54,8 @@ export function init() {
           where: { id: tribe.tenant, isOwner: true, tenant: tribe.tenant },
         })) as ContactRecord
 
-        const blocked = JSON.parse(bot.meta || '[]')
-        if (blocked.includes(contactJoining.publicKey)) {
+        const blacklist = JSON.parse(bot.meta || '[]')
+        if (blacklist.includes(contactJoining.publicKey)) {
           await kickChatMember({
             tribe,
             contactId: contactJoining.id,
@@ -62,9 +63,9 @@ export function init() {
             owner,
           })
           const embed = new Sphinx.MessageEmbed()
-            .setAuthor('BlockBot')
+            .setAuthor(botName)
             .setDescription(
-              `${contactJoining.alias} was blocked from joining your tribe`
+              `${contactJoining.alias} was kicked out of your tribe, while trying to join`
             )
             .setOnlyOwner(await determineOwnerOnly(botPrefix, 'add', tribe.id))
           message.channel.send({ embed })
@@ -84,7 +85,7 @@ export function init() {
           const pubkey = arr[2]
           if (pubkey.length !== 66) {
             const embed = new Sphinx.MessageEmbed()
-              .setAuthor('BlockBot')
+              .setAuthor(botName)
               .setDescription(`Invalid Public key`)
               .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed })
@@ -115,11 +116,11 @@ export function init() {
                 tenant: tribe.tenant,
                 owner: owner,
               })
-              await addToBlockedList({ tribe, botPrefix, pubkey })
+              await addToBlackList({ tribe, botPrefix, pubkey })
               const embed = new Sphinx.MessageEmbed()
-                .setAuthor('BlockBot')
+                .setAuthor(botName)
                 .setDescription(
-                  `You've successfully kicked the user out of this tribe and added user to the blocked list`
+                  `You've successfully kicked the user out of this tribe and added user to the blacklist`
                 )
                 .setOnlyOwner(
                   await determineOwnerOnly(botPrefix, cmd, tribe.id)
@@ -128,11 +129,11 @@ export function init() {
               return
             }
           }
-          await addToBlockedList({ tribe, botPrefix, pubkey })
+          await addToBlackList({ tribe, botPrefix, pubkey })
           const resEmbed = new Sphinx.MessageEmbed()
-            .setAuthor('BlockBot')
+            .setAuthor(botName)
             .setDescription(
-              `You've successfully added this user to the blocked list`
+              `You've successfully added this user to the blacklist`
             )
           message.channel.send({ embed: resEmbed })
           return
@@ -140,36 +141,36 @@ export function init() {
           const remove_pubkey = arr[2]
           if (remove_pubkey.length !== 66) {
             const embed = new Sphinx.MessageEmbed()
-              .setAuthor('BlockBot')
+              .setAuthor(botName)
               .setDescription(`Invalid Public key`)
               .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
             message.channel.send({ embed })
             return
           }
-          const msg = await removeFromBlockedList({
+          const msg = await removeFromBlackList({
             tribe,
             botPrefix,
             pubkey: remove_pubkey,
           })
           const newResEmbed = new Sphinx.MessageEmbed()
-            .setAuthor('BlockBot')
+            .setAuthor(botName)
             .setDescription(msg)
           message.channel.send({ embed: newResEmbed })
           return
         default:
           const embed = new Sphinx.MessageEmbed()
-            .setAuthor('BlockBot')
+            .setAuthor(botName)
             .setTitle('Bot Commands:')
             .addFields([
               {
-                name: 'Add User Pubkey to block',
-                value: '/block add ${public_key}',
+                name: 'Add User Pubkey to blacklist',
+                value: '/kick add ${public_key}',
               },
               {
-                name: 'Remove User Pubkey from block list',
-                value: '/block remove ${public_key}',
+                name: 'Remove User Pubkey from blacklist',
+                value: '/kick remove ${public_key}',
               },
-              { name: 'Help', value: '/welcome help' },
+              { name: 'Help', value: '/kick help' },
             ])
             .setThumbnail(botSVG)
           message.channel.send({ embed })
