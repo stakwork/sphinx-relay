@@ -5,6 +5,7 @@ import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
+import { sleep } from '../utils/helpers'
 
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
@@ -65,6 +66,11 @@ async function botCreation(t, node1, node2, node3) {
   const botReply3 = await getCheckBotMsg(t, node1, botAlias)
   t.truthy(botReply3, 'WelcomeBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply3))
+
+  const addBlock = `/block add ${node3.pubkey}`
+  await sendTribeMessage(t, node1, tribe, addBlock)
+
+  await sleep(10000)
 
   //NODE3 JOINS TRIBE CREATED BY NODE1
   if (node1.routeHint) tribe.owner_route_hint = node1.routeHint

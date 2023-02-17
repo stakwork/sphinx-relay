@@ -1,5 +1,11 @@
 import constants from '../../constants'
-import { ChatRecord, ContactRecord, models, Message } from '../../models'
+import {
+  ChatRecord,
+  ContactRecord,
+  models,
+  Message,
+  ChatBotRecord,
+} from '../../models'
 import * as network from '../../network'
 import * as timers from '../../utils/timers'
 
@@ -41,4 +47,24 @@ export async function kickChatMember({
 
   // delete all timers for this member
   timers.removeTimersByContactIdChatId(contactId, tribe.id, tenant)
+}
+
+export async function addToBlockedList({
+  tribe,
+  botPrefix,
+  pubkey,
+}: {
+  tribe: ChatRecord
+  botPrefix: string
+  pubkey: string
+}) {
+  const bot = (await models.ChatBot.findOne({
+    where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+  })) as ChatBotRecord
+  const blockedList = JSON.parse(bot.meta || '[]')
+  if (!blockedList.includes(pubkey)) {
+    blockedList.push(pubkey)
+    await bot.update({ meta: JSON.stringify(blockedList) })
+  }
+  return
 }

@@ -36,7 +36,7 @@ const builtInBotMsgTypes = {
     constants.message_types.boost,
     constants.message_types.direct_payment,
   ],
-  block: [constants.message_types.group_join],
+  block: [constants.message_types.group_join, constants.message_types.message],
 }
 
 const builtInHiddenCmd = {

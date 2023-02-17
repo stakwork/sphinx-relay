@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.kickChatMember = void 0;
+exports.addToBlockedList = exports.kickChatMember = void 0;
 const constants_1 = require("../../constants");
 const models_1 = require("../../models");
 const network = require("../../network");
@@ -40,4 +40,18 @@ function kickChatMember({ tribe, contactId, tenant, owner, }) {
     });
 }
 exports.kickChatMember = kickChatMember;
+function addToBlockedList({ tribe, botPrefix, pubkey, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const bot = (yield models_1.models.ChatBot.findOne({
+            where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+        }));
+        const blockedList = JSON.parse(bot.meta || '[]');
+        if (!blockedList.includes(pubkey)) {
+            blockedList.push(pubkey);
+            yield bot.update({ meta: JSON.stringify(blockedList) });
+        }
+        return;
+    });
+}
+exports.addToBlockedList = addToBlockedList;
 //# sourceMappingURL=block.js.map

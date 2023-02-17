@@ -43,7 +43,7 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.boost,
         constants_1.default.message_types.direct_payment,
     ],
-    block: [constants_1.default.message_types.group_join],
+    block: [constants_1.default.message_types.group_join, constants_1.default.message_types.message],
 };
 const builtInHiddenCmd = {
     callRecording: ['hide', 'update'],
