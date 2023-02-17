@@ -116,7 +116,7 @@ function init() {
                             yield (0, block_1.addToBlockedList)({ tribe, botPrefix, pubkey });
                             const embed = new Sphinx.MessageEmbed()
                                 .setAuthor('BlockBot')
-                                .setDescription(`You've successfully kicked the user out of this tribe and added him to the blocked list`)
+                                .setDescription(`You've successfully kicked the user out of this tribe and added user to the blocked list`)
                                 .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
                             message.channel.send({ embed });
                             return;
@@ -127,6 +127,26 @@ function init() {
                         .setAuthor('BlockBot')
                         .setDescription(`You've successfully added this user to the blocked list`);
                     message.channel.send({ embed: resEmbed });
+                    return;
+                case 'remove':
+                    const remove_pubkey = arr[2];
+                    if (remove_pubkey.length !== 66) {
+                        const embed = new Sphinx.MessageEmbed()
+                            .setAuthor('BlockBot')
+                            .setDescription(`Invalid Public key`)
+                            .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
+                        message.channel.send({ embed });
+                        return;
+                    }
+                    const msg = yield (0, block_1.removeFromBlockedList)({
+                        tribe,
+                        botPrefix,
+                        pubkey: remove_pubkey,
+                    });
+                    const newResEmbed = new Sphinx.MessageEmbed()
+                        .setAuthor('BlockBot')
+                        .setDescription(msg);
+                    message.channel.send({ embed: newResEmbed });
                     return;
                 default:
                     const embed = new Sphinx.MessageEmbed()

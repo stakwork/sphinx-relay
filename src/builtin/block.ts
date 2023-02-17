@@ -9,7 +9,11 @@ import {
   models,
 } from '../models'
 import constants from '../constants'
-import { kickChatMember, addToBlockedList } from './utill/block'
+import {
+  kickChatMember,
+  addToBlockedList,
+  removeFromBlockedList,
+} from './utill/block'
 import { determineOwnerOnly } from '../controllers/botapi/hideAndUnhideCommand'
 
 const msg_types = Sphinx.MSG_TYPE
@@ -115,7 +119,7 @@ export function init() {
               const embed = new Sphinx.MessageEmbed()
                 .setAuthor('BlockBot')
                 .setDescription(
-                  `You've successfully kicked the user out of this tribe and added him to the blocked list`
+                  `You've successfully kicked the user out of this tribe and added user to the blocked list`
                 )
                 .setOnlyOwner(
                   await determineOwnerOnly(botPrefix, cmd, tribe.id)
@@ -131,6 +135,26 @@ export function init() {
               `You've successfully added this user to the blocked list`
             )
           message.channel.send({ embed: resEmbed })
+          return
+        case 'remove':
+          const remove_pubkey = arr[2]
+          if (remove_pubkey.length !== 66) {
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor('BlockBot')
+              .setDescription(`Invalid Public key`)
+              .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
+            message.channel.send({ embed })
+            return
+          }
+          const msg = await removeFromBlockedList({
+            tribe,
+            botPrefix,
+            pubkey: remove_pubkey,
+          })
+          const newResEmbed = new Sphinx.MessageEmbed()
+            .setAuthor('BlockBot')
+            .setDescription(msg)
+          message.channel.send({ embed: newResEmbed })
           return
         default:
           const embed = new Sphinx.MessageEmbed()

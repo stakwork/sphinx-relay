@@ -9,6 +9,12 @@ import {
 import * as network from '../../network'
 import * as timers from '../../utils/timers'
 
+interface BlockAction {
+  tribe: ChatRecord
+  botPrefix: string
+  pubkey: string
+}
+
 export async function kickChatMember({
   tribe,
   contactId,
@@ -53,11 +59,7 @@ export async function addToBlockedList({
   tribe,
   botPrefix,
   pubkey,
-}: {
-  tribe: ChatRecord
-  botPrefix: string
-  pubkey: string
-}) {
+}: BlockAction) {
   const bot = (await models.ChatBot.findOne({
     where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
   })) as ChatBotRecord
@@ -67,4 +69,21 @@ export async function addToBlockedList({
     await bot.update({ meta: JSON.stringify(blockedList) })
   }
   return
+}
+
+export async function removeFromBlockedList({
+  tribe,
+  botPrefix,
+  pubkey,
+}: BlockAction): Promise<string> {
+  const bot = (await models.ChatBot.findOne({
+    where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+  })) as ChatBotRecord
+  const blockedList = JSON.parse(bot.meta || '[]')
+  if (blockedList.includes(pubkey)) {
+    const newBlockedList = blockedList.filter((pk: string) => pk !== pubkey)
+    await bot.update({ meta: JSON.stringify(newBlockedList) })
+    return 'User unblocked successfully'
+  }
+  return 'User does not exist in blocked list'
 }
