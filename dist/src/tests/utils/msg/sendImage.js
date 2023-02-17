@@ -158,7 +158,9 @@ function sendImage(t, node1, node2, image, tribe, price) {
         const dec = RNCryptor.Decrypt(blob.toString('base64'), decryptMediaKey);
         // const b64 = dec.toString('base64')
         // //check equality b64 to b64
-        t.true(dec.toString('base64') === image);
+        // console.log('image', image)
+        // console.log('dec.toStringbase64', dec.toString('base64'))
+        t.true(dec.toString('base64') === image, 'image should match!');
         return true;
     });
 }
