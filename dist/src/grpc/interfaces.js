@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.txIndexFromChannelId = exports.greenlightSignMessagePayload = exports.connectPeerResponse = exports.connectPeerRequest = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listPeersResponse = exports.listPeersRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
 const config_1 = require("../utils/config");
-const ByteBuffer = require("bytebuffer");
 const crypto = require("crypto");
 const lightning_1 = require("./lightning");
 const long = require("long");
@@ -116,7 +115,7 @@ function listChannelsRequest(args) {
     const opts = args || {};
     if (args && args.peer) {
         if (IS_LND)
-            opts.peer = ByteBuffer.fromHex(args.peer);
+            opts.peer = Buffer.from(args.peer, 'hex');
         if (IS_GREENLIGHT)
             opts.node_id = args.peer;
     }
@@ -126,7 +125,7 @@ exports.listChannelsRequest = listChannelsRequest;
 function listPeersRequest(args) {
     const opts = args || {};
     if (IS_GREENLIGHT && args && args.node_id) {
-        opts.node_id = ByteBuffer.fromHex(args.node_id);
+        opts.node_id = Buffer.from(args.node_id, 'hex');
     }
     return opts;
 }
@@ -166,7 +165,7 @@ function keysendRequest(req) {
             r.routehints = req.route_hints.map((rh) => {
                 const hops = rh.hop_hints.map((hh) => {
                     return {
-                        node_id: ByteBuffer.fromHex(hh.node_id),
+                        node_id: Buffer.from(hh.node_id, 'hex'),
                         short_channel_id: shortChanIDfromInt64(hh.chan_id),
                         fee_base: '1000',
                         fee_prop: 1,

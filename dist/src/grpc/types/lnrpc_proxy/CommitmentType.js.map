@@ -1,0 +1,1 @@
+{"version":3,"file":"CommitmentType.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc_proxy/CommitmentType.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAE1B,QAAA,cAAc,GAAG;IAC5B,MAAM,EAAE,QAAQ;IAChB,iBAAiB,EAAE,mBAAmB;IACtC,OAAO,EAAE,SAAS;IAClB,uBAAuB,EAAE,yBAAyB;CAC1C,CAAA"}

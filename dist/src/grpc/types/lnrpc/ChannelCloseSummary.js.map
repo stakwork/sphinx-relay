@@ -1,0 +1,1 @@
+{"version":3,"file":"ChannelCloseSummary.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/ChannelCloseSummary.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAYvC,uCAAuC;AAE1B,QAAA,sCAAsC,GAAG;IACpD,iBAAiB,EAAE,mBAAmB;IACtC,iBAAiB,EAAE,mBAAmB;IACtC,kBAAkB,EAAE,oBAAoB;IACxC,YAAY,EAAE,cAAc;IAC5B,gBAAgB,EAAE,kBAAkB;IACpC,SAAS,EAAE,WAAW;CACd,CAAA"}

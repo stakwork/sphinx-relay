@@ -93,8 +93,8 @@ async function getPendingAccountings(): Promise<Accounting[]> {
         id: a.id,
         pubkey: a.pubkey,
         onchainAddress: utxo.address,
-        amount: utxo.amount_sat,
-        confirmations: utxo.confirmations,
+        amount: parseInt(utxo.amount_sat),
+        confirmations: parseInt(utxo.confirmations),
         sourceApp: a.sourceApp,
         date: a.date,
         onchainTxid: onchainTxid,
@@ -139,11 +139,16 @@ async function genChannelAndConfirmAccounting(acc: Accounting) {
       push_sat: 0,
       sat_per_byte,
     })
+    if (!r) {
+      return
+    }
     sphinxLogger.info(`[WATCH]=> CHANNEL OPENED! ${r}`)
-    const fundingTxidRev = Buffer.from(r.funding_txid_bytes).toString('hex')
-    const fundingTxid = (fundingTxidRev.match(/.{2}/g) as any)
-      .reverse()
-      .join('')
+    let fundingTxid: string
+    if (r.funding_txid === 'funding_txid_str') {
+      fundingTxid = r.funding_txid_str
+    } else {
+      fundingTxid = r.funding_txid_bytes.reverse().toString('hex')
+    }
     await models.Accounting.update(
       {
         status: constants.statuses.received,

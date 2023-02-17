@@ -1,8 +1,10 @@
 import * as fs from 'fs'
-import * as grpc from 'grpc'
+import * as grpc from '@grpc/grpc-js'
+import { loadProto } from './proto'
+import { NodeClient } from './types/greenlight/Node'
+import type { SchedulerClient } from './types/scheduler/Scheduler'
 import libhsmd from './libhsmd'
 import { loadConfig } from '../utils/config'
-import * as ByteBuffer from 'bytebuffer'
 import * as crypto from 'crypto'
 import * as interfaces from './interfaces'
 import { loadLightning } from './lightning'
@@ -27,7 +29,7 @@ export function keepalive(): void {
   }, 59000)
 }
 
-let schedulerClient = <any>null
+// let schedulerClient: SchedulerClient | undefined
 
 const loadSchedulerCredentials = () => {
   const glCert = fs.readFileSync(config.scheduler_tls_location)
@@ -36,19 +38,18 @@ const loadSchedulerCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
-function loadScheduler() {
+function loadScheduler(): SchedulerClient {
   // 35.236.110.178:2601
-  const descriptor = grpc.load('proto/scheduler.proto')
-  const scheduler: any = descriptor.scheduler
+  const descriptor = loadProto('scheduler')
+  const scheduler = descriptor.scheduler
   const options = {
     'grpc.ssl_target_name_override': 'localhost',
   }
-  schedulerClient = new scheduler.Scheduler(
+  return new scheduler.Scheduler(
     '35.236.110.178:2601',
     loadSchedulerCredentials(),
     options
   )
-  return schedulerClient
 }
 
 let GREENLIGHT_GRPC_URI = ''
@@ -109,16 +110,16 @@ interface ScheduleResponse {
 }
 export function schedule(pubkey: string): Promise<ScheduleResponse> {
   sphinxLogger.info('=> Greenlight schedule')
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       const s = loadScheduler()
       s.schedule(
         {
-          node_id: ByteBuffer.fromHex(pubkey),
+          node_id: Buffer.from(pubkey, 'hex'),
         },
         (err, response) => {
           // console.log('=> schedule', err, response);
-          if (!err) {
+          if (!err && response) {
             GREENLIGHT_GRPC_URI = response.grpc_uri
             resolve(response)
           } else {
@@ -185,16 +186,16 @@ async function registerGreenlight(
 }
 
 export function get_challenge(node_id: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       const s = loadScheduler()
       s.getChallenge(
         {
-          node_id: ByteBuffer.fromHex(node_id),
+          node_id: Buffer.from(node_id, 'hex'),
           scope: 'REGISTER',
         },
         (err, response) => {
-          if (!err) {
+          if (!err && response) {
             resolve(Buffer.from(response.challenge).toString('hex'))
           } else {
             reject(err)
@@ -227,20 +228,20 @@ export function register(
   challenge: string,
   signature: string
 ): Promise<RegisterResponse> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       const s = loadScheduler()
       s.register(
         {
-          node_id: ByteBuffer.fromHex(pubkey),
-          bip32_key: ByteBuffer.fromHex(bip32_key),
+          node_id: Buffer.from(pubkey, 'hex'),
+          bip32_key: Buffer.from(bip32_key, 'hex'),
           network: 'bitcoin',
-          challenge: ByteBuffer.fromHex(challenge),
-          signature: ByteBuffer.fromHex(signature),
+          challenge: Buffer.from(challenge, 'hex'),
+          signature: Buffer.from(signature, 'hex'),
         },
         (err, response) => {
           sphinxLogger.info(`${err} ${response}`)
-          if (!err) {
+          if (!err && response) {
             resolve(response)
           } else {
             reject(err)
@@ -258,18 +259,18 @@ export function recover(
   challenge: string,
   signature: string
 ): Promise<RegisterResponse> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       const s = loadScheduler()
       s.recover(
         {
-          node_id: ByteBuffer.fromHex(pubkey),
-          challenge: ByteBuffer.fromHex(challenge),
-          signature: ByteBuffer.fromHex(signature),
+          node_id: Buffer.from(pubkey, 'hex'),
+          challenge: Buffer.from(challenge, 'hex'),
+          signature: Buffer.from(signature, 'hex'),
         },
         (err, response) => {
           sphinxLogger.info(`${err} ${response}`)
-          if (!err) {
+          if (!err && response) {
             resolve(response)
           } else {
             reject(err)
@@ -292,15 +293,12 @@ export interface HsmRequest {
   context: HsmRequestContext
   raw: Buffer
 }
-interface HsmResponse {
-  request_id: number
-  raw: ByteBuffer
-}
+
 export async function streamHsmRequests(): Promise<void> {
   const capabilities_bitset = 1087 // 1 + 2 + 4 + 8 + 16 + 32 + 1024
   try {
     const lightning = await loadLightning(true) // try proxy
-    const call = lightning.streamHsmRequests({})
+    const call = (<NodeClient>lightning).streamHsmRequests({})
     call.on('data', async function (response) {
       sphinxLogger.info(`DATA ${response}`)
       try {
@@ -324,10 +322,10 @@ export async function streamHsmRequests(): Promise<void> {
             response.raw.toString('hex')
           )
         }
-        lightning.respondHsmRequest(
-          <HsmResponse>{
+        ;(<NodeClient>lightning).respondHsmRequest(
+          {
             request_id: response.request_id,
-            raw: ByteBuffer.fromHex(sig),
+            raw: Buffer.from(sig, 'hex'),
           },
           (err, response) => {
             if (err) sphinxLogger.error(`[HSMD] error ${err}`)
@@ -342,7 +340,7 @@ export async function streamHsmRequests(): Promise<void> {
       sphinxLogger.info(`[HSMD] Status ${status.code} ${status}`)
     })
     call.on('error', function (err) {
-      sphinxLogger.error(`[HSMD] Error ${err.code}`)
+      sphinxLogger.error(`[HSMD] Error ${err.name} ${err.message}`)
     })
     call.on('end', function () {
       sphinxLogger.info(`[HSMD] Closed stream`)

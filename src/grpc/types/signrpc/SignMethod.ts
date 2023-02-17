@@ -1,0 +1,21 @@
+// Original file: proto/signer.proto
+
+export const SignMethod = {
+  SIGN_METHOD_WITNESS_V0: 'SIGN_METHOD_WITNESS_V0',
+  SIGN_METHOD_TAPROOT_KEY_SPEND_BIP0086:
+    'SIGN_METHOD_TAPROOT_KEY_SPEND_BIP0086',
+  SIGN_METHOD_TAPROOT_KEY_SPEND: 'SIGN_METHOD_TAPROOT_KEY_SPEND',
+  SIGN_METHOD_TAPROOT_SCRIPT_SPEND: 'SIGN_METHOD_TAPROOT_SCRIPT_SPEND',
+} as const
+
+export type SignMethod =
+  | 'SIGN_METHOD_WITNESS_V0'
+  | 0
+  | 'SIGN_METHOD_TAPROOT_KEY_SPEND_BIP0086'
+  | 1
+  | 'SIGN_METHOD_TAPROOT_KEY_SPEND'
+  | 2
+  | 'SIGN_METHOD_TAPROOT_SCRIPT_SPEND'
+  | 3
+
+export type SignMethod__Output = (typeof SignMethod)[keyof typeof SignMethod]

@@ -1,0 +1,1 @@
+{"version":3,"file":"ChannelEventUpdate.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/ChannelEventUpdate.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAmBvC,uCAAuC;AAE1B,QAAA,oCAAoC,GAAG;IAClD,YAAY,EAAE,cAAc;IAC5B,cAAc,EAAE,gBAAgB;IAChC,cAAc,EAAE,gBAAgB;IAChC,gBAAgB,EAAE,kBAAkB;IACpC,oBAAoB,EAAE,sBAAsB;IAC5C,sBAAsB,EAAE,wBAAwB;CACxC,CAAA"}

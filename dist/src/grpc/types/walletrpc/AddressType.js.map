@@ -1,0 +1,1 @@
+{"version":3,"file":"AddressType.js","sourceRoot":"","sources":["../../../../../src/grpc/types/walletrpc/AddressType.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAE1B,QAAA,WAAW,GAAG;IACzB,OAAO,EAAE,SAAS;IAClB,mBAAmB,EAAE,qBAAqB;IAC1C,0BAA0B,EAAE,4BAA4B;IACxD,iCAAiC,EAAE,mCAAmC;IACtE,cAAc,EAAE,gBAAgB;CACxB,CAAA"}

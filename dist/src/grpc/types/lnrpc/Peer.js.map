@@ -1,0 +1,1 @@
+{"version":3,"file":"Peer.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/Peer.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAYvC,uCAAuC;AAE1B,QAAA,oBAAoB,GAAG;IAClC,YAAY,EAAE,cAAc;IAC5B,WAAW,EAAE,aAAa;IAC1B,YAAY,EAAE,cAAc;IAC5B,WAAW,EAAE,aAAa;CAClB,CAAA"}

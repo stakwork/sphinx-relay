@@ -1,5 +1,7 @@
 import * as fs from 'fs'
-import * as grpc from 'grpc'
+import * as grpc from '@grpc/grpc-js'
+import { loadProto } from '../grpc/proto'
+import { LightningClient as ProxyLightningClient } from '../grpc/types/lnrpc_proxy/Lightning'
 import { loadConfig } from './config'
 import * as Lightning from '../grpc/lightning'
 import { models, ContactRecord } from '../models'
@@ -14,7 +16,9 @@ const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost'
 
 const check_proxy_balance = false
 
-export function isProxy(): boolean {
+export function isProxy(client: any): client is ProxyLightningClient
+export function isProxy(): boolean
+export function isProxy(client?: any): boolean {
   return config.proxy_lnd_port &&
     config.proxy_macaroons_dir &&
     config.proxy_tls_location
@@ -168,7 +172,9 @@ export async function loadProxyCredentials(macPrefix: string) {
   return grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds)
 }
 
-export async function loadProxyLightning(ownerPubkey?: string) {
+export async function loadProxyLightning(
+  ownerPubkey?: string
+): Promise<ProxyLightningClient | undefined> {
   try {
     let macname
     if (ownerPubkey && ownerPubkey.length === 66) {
@@ -181,13 +187,12 @@ export async function loadProxyLightning(ownerPubkey?: string) {
       }
     }
     const credentials = await loadProxyCredentials(macname)
-    const lnrpcDescriptor = grpc.load('proto/rpc_proxy.proto')
-    const lnrpc: any = lnrpcDescriptor.lnrpc_proxy
-    const the = new lnrpc.Lightning(
+    const lnrpcDescriptor = loadProto('rpc_proxy')
+    const lnrpc = lnrpcDescriptor.lnrpc_proxy
+    return new lnrpc.Lightning(
       PROXY_LND_IP + ':' + config.proxy_lnd_port,
       credentials
     )
-    return the
   } catch (e) {
     sphinxLogger.error(`ERROR in loadProxyLightning ${e}`)
   }
@@ -203,11 +208,11 @@ export function getProxyRootPubkey(): Promise<string> {
     }
     // normal client, to get pubkey of LND
     const credentials = Lightning.loadCredentials()
-    const lnrpcDescriptor = grpc.load('proto/lightning.proto')
-    const lnrpc: any = lnrpcDescriptor.lnrpc
+    const lnrpcDescriptor = loadProto('lightning')
+    const lnrpc = lnrpcDescriptor.lnrpc
     const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials)
     lc.getInfo({}, function (err, response) {
-      if (err == null) {
+      if (err == null && response) {
         proxyRootPubkey = response.identity_pubkey
         resolve(proxyRootPubkey)
       } else {
@@ -221,13 +226,13 @@ function getProxyLNDBalance(): Promise<number> {
   return new Promise((resolve, reject) => {
     // normal client, to get pubkey of LND
     const credentials = Lightning.loadCredentials()
-    const lnrpcDescriptor = grpc.load('proto/lightning.proto')
-    const lnrpc: any = lnrpcDescriptor.lnrpc
+    const lnrpcDescriptor = loadProto('lightning')
+    const lnrpc = lnrpcDescriptor.lnrpc
     const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials)
     lc.channelBalance({}, function (err, response) {
-      if (err == null) {
+      if (err == null && response) {
         lc.listChannels({}, function (err, channelList) {
-          if (err == null) {
+          if (err == null && channelList) {
             const { channels } = channelList
             const reserve = channels.reduce(
               (a, chan) => a + parseInt(chan.local_chan_reserve_sat),
