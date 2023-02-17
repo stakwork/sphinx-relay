@@ -1,6 +1,6 @@
 import { decode } from 'base-64'
 import { randomBytes } from 'crypto'
-import { Encrypt } from 'jscryptor-2'
+import { Encrypt } from 'jscryptor-3'
 import fetch from 'node-fetch'
 import * as FormData from 'form-data'
 

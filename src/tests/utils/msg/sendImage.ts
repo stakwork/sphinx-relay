@@ -1,7 +1,7 @@
 import { ExecutionContext } from 'ava'
 import fetch from 'node-fetch'
 import * as http from 'ava-http'
-import * as RNCryptor from 'jscryptor-2'
+import * as RNCryptor from 'jscryptor-3'
 import { uploadMeme } from '../../electronjs/meme'
 import { encrypt, decrypt } from '../../electronjs/rsa'
 import { sleep } from '../helpers'
@@ -203,7 +203,9 @@ export async function sendImage(
 
   // const b64 = dec.toString('base64')
   // //check equality b64 to b64
-  t.true(dec.toString('base64') === image)
+  // console.log('image', image)
+  // console.log('dec.toStringbase64', dec.toString('base64'))
+  t.true(dec.toString('base64') === image, 'image should match!')
 
   return true
 }

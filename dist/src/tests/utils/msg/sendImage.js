@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendImage = void 0;
 const node_fetch_1 = require("node-fetch");
 const http = require("ava-http");
-const RNCryptor = require("jscryptor-2");
+const RNCryptor = require("jscryptor-3");
 const meme_1 = require("../../electronjs/meme");
 const rsa_1 = require("../../electronjs/rsa");
 const helpers_1 = require("../helpers");
@@ -158,7 +158,9 @@ function sendImage(t, node1, node2, image, tribe, price) {
         const dec = RNCryptor.Decrypt(blob.toString('base64'), decryptMediaKey);
         // const b64 = dec.toString('base64')
         // //check equality b64 to b64
-        t.true(dec.toString('base64') === image);
+        // console.log('image', image)
+        // console.log('dec.toStringbase64', dec.toString('base64'))
+        t.true(dec.toString('base64') === image, 'image should match!');
         return true;
     });
 }

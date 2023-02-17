@@ -13,7 +13,7 @@ import {
   Message,
   MediaKey,
 } from '../models'
-import * as RNCryptor from 'jscryptor-2'
+import * as RNCryptor from 'jscryptor-3'
 import { sendMessage } from './send'
 // import { Op } from 'sequelize'
 import constants from '../constants'

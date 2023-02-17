@@ -17,7 +17,7 @@ const crypto = require("crypto");
 const meme = require("../utils/meme");
 const FormData = require("form-data");
 const models_1 = require("../models");
-const RNCryptor = require("jscryptor-2");
+const RNCryptor = require("jscryptor-3");
 const send_1 = require("./send");
 // import { Op } from 'sequelize'
 const constants_1 = require("../constants");

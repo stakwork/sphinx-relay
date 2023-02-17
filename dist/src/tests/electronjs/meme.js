@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadMeme = void 0;
 const base_64_1 = require("base-64");
 const crypto_1 = require("crypto");
-const jscryptor_2_1 = require("jscryptor-2");
+const jscryptor_3_1 = require("jscryptor-3");
 const node_fetch_1 = require("node-fetch");
 const FormData = require("form-data");
 function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
@@ -26,7 +26,7 @@ function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
             }
             else {
                 newKey = (0, crypto_1.randomBytes)(20).toString('hex');
-                const encImgBase64 = (0, jscryptor_2_1.Encrypt)(imgBuf, newKey);
+                const encImgBase64 = (0, jscryptor_3_1.Encrypt)(imgBuf, newKey);
                 finalImgBuffer = Buffer.from(encImgBase64, 'base64');
             }
             const form = new FormData();
