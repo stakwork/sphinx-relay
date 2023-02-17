@@ -1,7 +1,7 @@
 import { ExecutionContext } from 'ava'
 import fetch from 'node-fetch'
 import * as http from 'ava-http'
-import * as RNCryptor from 'jscryptor-2'
+import * as RNCryptor from 'jscryptor-kevkevin'
 import { uploadMeme } from '../../electronjs/meme'
 import { encrypt, decrypt } from '../../electronjs/rsa'
 import { sleep } from '../helpers'
