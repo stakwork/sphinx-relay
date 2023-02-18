@@ -1,0 +1,1 @@
+{"version":3,"file":"Payment.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc_proxy/Payment.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAYvC,uCAAuC;AAE1B,QAAA,kCAAkC,GAAG;IAChD,OAAO,EAAE,SAAS;IAClB,SAAS,EAAE,WAAW;IACtB,SAAS,EAAE,WAAW;IACtB,MAAM,EAAE,QAAQ;CACR,CAAA"}

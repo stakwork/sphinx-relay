@@ -93,8 +93,8 @@ function getPendingAccountings() {
                     id: a.id,
                     pubkey: a.pubkey,
                     onchainAddress: utxo.address,
-                    amount: utxo.amount_sat,
-                    confirmations: utxo.confirmations,
+                    amount: parseInt(utxo.amount_sat),
+                    confirmations: parseInt(utxo.confirmations),
                     sourceApp: a.sourceApp,
                     date: a.date,
                     onchainTxid: onchainTxid,
@@ -143,11 +143,17 @@ function genChannelAndConfirmAccounting(acc) {
                 push_sat: 0,
                 sat_per_byte,
             });
+            if (!r) {
+                return;
+            }
             logger_1.sphinxLogger.info(`[WATCH]=> CHANNEL OPENED! ${r}`);
-            const fundingTxidRev = Buffer.from(r.funding_txid_bytes).toString('hex');
-            const fundingTxid = fundingTxidRev.match(/.{2}/g)
-                .reverse()
-                .join('');
+            let fundingTxid;
+            if (r.funding_txid === 'funding_txid_str') {
+                fundingTxid = r.funding_txid_str;
+            }
+            else {
+                fundingTxid = r.funding_txid_bytes.reverse().toString('hex');
+            }
             yield models_1.models.Accounting.update({
                 status: constants_1.default.statuses.received,
                 fundingTxid: fundingTxid,

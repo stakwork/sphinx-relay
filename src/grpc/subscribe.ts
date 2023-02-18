@@ -21,7 +21,7 @@ export function subscribeInvoices(
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
 
     const cmd = interfaces.subscribeCommand()
-    const call = lightning[cmd]()
+    const call = lightning[cmd]({})
     call.on('data', async function (response) {
       // console.log("=> INVOICE RAW", response)
       const inv = interfaces.subscribeResponse(response)

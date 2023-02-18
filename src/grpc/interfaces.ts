@@ -1,8 +1,8 @@
 import { loadConfig } from '../utils/config'
-import * as ByteBuffer from 'bytebuffer'
 import * as crypto from 'crypto'
 import { LND_KEYSEND_KEY } from './lightning'
 import * as long from 'long'
+import type { SendRequest } from './types/lnrpc_proxy/SendRequest'
 
 const config = loadConfig()
 
@@ -40,7 +40,7 @@ export interface GetInfoResponse {
   testnet: boolean
 }
 interface GreenlightAddress {
-  type: number
+  type: string
   addr: string
   port: number
 }
@@ -173,16 +173,16 @@ export function addInvoiceResponse(
 /* LIST CHANNELS */
 interface ChannelConstraints {
   csv_delay: number
-  chan_reserve_sat: number
-  dust_limit_sat: number
-  max_pending_amt_msat: number
-  min_htlc_msat: number
+  chan_reserve_sat: string
+  dust_limit_sat: string
+  max_pending_amt_msat: string
+  min_htlc_msat: string
   max_accepted_htlcs: number
 }
 interface HTLC {
   incoming: boolean
   amount: string
-  hash_lock: Buf
+  hash_lock: Buffer
   expiration_height: number
   htlc_index: string
   forwarding_channel: string
@@ -199,10 +199,10 @@ export interface Channel {
   commit_fee: string
   commit_weight: string
   fee_per_kw: string
-  unsettled_balance: number
-  total_satoshis_sent: number
-  total_satoshis_received: number
-  num_updates: number
+  unsettled_balance: string
+  total_satoshis_sent: string
+  total_satoshis_received: string
+  num_updates: string
   pending_htlcs: HTLC[]
   csv_delay: number
   private: boolean
@@ -210,22 +210,22 @@ export interface Channel {
   chan_status_flags: string
   local_chan_reserve_sat: string
   remote_chan_reserve_sat: string
-  lifetime: number
-  uptime: number
+  lifetime: string
+  uptime: string
   close_address: string
-  push_amount_sat: number
+  push_amount_sat: string
   thaw_height: number
-  local_constraints: ChannelConstraints
-  remote_constraints: ChannelConstraints
+  local_constraints: ChannelConstraints | null
+  remote_constraints: ChannelConstraints | null
 }
 export interface ListChannelsResponse {
   channels: Channel[]
 }
 interface GreenlightHTLC {
   direction: string
-  id: number
+  id: string
   amount: string // int64
-  expiry: number
+  expiry: string
   payment_hash: string
   state: string
   local_trimmed: boolean
@@ -299,7 +299,7 @@ export function listChannelsRequest(args?: ListChannelsArgs): {
 } {
   const opts: { [k: string]: any } = args || {}
   if (args && args.peer) {
-    if (IS_LND) opts.peer = ByteBuffer.fromHex(args.peer)
+    if (IS_LND) opts.peer = Buffer.from(args.peer, 'hex')
     if (IS_GREENLIGHT) opts.node_id = args.peer
   }
   return opts
@@ -313,7 +313,7 @@ export function listPeersRequest(args?: ListPeersArgs): {
 } {
   const opts: { [k: string]: any } = args || {}
   if (IS_GREENLIGHT && args && args.node_id) {
-    opts.node_id = ByteBuffer.fromHex(args.node_id)
+    opts.node_id = Buffer.from(args.node_id, 'hex')
   }
   return opts
 }
@@ -350,22 +350,21 @@ export function listPeersResponse(
   return <ListPeersResponse>{}
 }
 
-export type Buf = Buffer | ByteBuffer | ArrayBuffer
-type DestCustomRecords = { [k: string]: Buf }
+type DestCustomRecords = { [k: string]: Buffer }
 export interface KeysendRequest {
   amt: number
   final_cltv_delta: number
-  dest: Buf
+  dest: Buffer
   dest_custom_records: DestCustomRecords
-  payment_hash: Buf
-  dest_features: number[]
+  payment_hash: Buffer
+  dest_features: SendRequest['dest_features']
   route_hints?: RouteHint[]
   fee_limit?: { [k: string]: number }
   fee_limit_sat?: number
   timeout_seconds?: number
 }
 interface GreenlightHop {
-  node_id: Buf
+  node_id: Buffer
   short_channel_id: string
   fee_base?: string
   fee_prop?: number
@@ -374,10 +373,10 @@ interface GreenlightHop {
 type GreenlightRoutehint = GreenlightHop[]
 interface GreenlightTLV {
   type: string
-  value: Buf
+  value: Buffer
 }
-interface GreenlightKeysendRequest {
-  node_id: Buf
+export interface GreenlightKeysendRequest {
+  node_id: Buffer
   amount: GreenlightAmount
   label: string
   routehints?: GreenlightRoutehint[]
@@ -397,7 +396,7 @@ export function keysendRequest(
       r.routehints = req.route_hints.map((rh) => {
         const hops: GreenlightHop[] = rh.hop_hints.map((hh) => {
           return <GreenlightHop>{
-            node_id: ByteBuffer.fromHex(hh.node_id),
+            node_id: Buffer.from(hh.node_id, 'hex'),
             short_channel_id: shortChanIDfromInt64(hh.chan_id),
             fee_base: '1000',
             fee_prop: 1,
@@ -440,9 +439,9 @@ export interface Route {
 }
 export interface SendPaymentResponse {
   payment_error: string
-  payment_preimage: Buf
-  payment_route: Route
-  payment_hash: Buf
+  payment_preimage: Buffer
+  payment_route: Route | null
+  payment_hash: Buffer
 }
 enum GreenlightPaymentStatus {
   PENDING = 0,
@@ -450,9 +449,9 @@ enum GreenlightPaymentStatus {
   FAILED = 2,
 }
 export interface GreenlightPayment {
-  destination: Buf
-  payment_hash: Buf
-  payment_preimage: Buf
+  destination: Buffer
+  payment_hash: Buffer
+  payment_preimage: Buffer
   status: GreenlightPaymentStatus
   amount: GreenlightAmount
   amount_sent: GreenlightAmount
@@ -496,26 +495,26 @@ enum InvoiceHTLCState {
 }
 interface InvoiceHTLC {
   chan_id: string
-  htlc_index: number
+  htlc_index: string
   amt_msat: string
   accept_height: number
   accept_time: string
   resolve_time: string
   expiry_height: number
-  state: InvoiceHTLCState
+  state: keyof typeof InvoiceHTLCState
   custom_records: DestCustomRecords
 }
 export interface Invoice {
   memo: string
-  r_preimage: Buf
-  r_hash: Buf
+  r_preimage: Buffer
+  r_hash: Buffer
   value: string
   value_msat: string
   settled: boolean
   creation_date: string
   settle_date: string
   payment_request: string
-  description_hash: Buf
+  description_hash: Buffer
   expiry: string
   fallback_addr: string
   cltv_expiry: string
@@ -526,7 +525,7 @@ export interface Invoice {
   amt_paid: string
   amt_paid_sat: string
   amt_paid_msat: string
-  state: InvoiceState
+  state: keyof typeof InvoiceState
   htlcs: InvoiceHTLC[]
   features: { [k: string]: any }
   is_keysend: boolean
@@ -537,10 +536,10 @@ export interface Payment {
 }
 interface GreenlightOffchainPayment {
   label: string
-  preimage: Buf
+  preimage: Buffer
   amount: GreenlightAmount
   extratlvs: GreenlightTLV[]
-  payment_hash: Buf
+  payment_hash: Buffer
   bolt11: string
 }
 interface GreenlightIncomingPayment {
@@ -590,7 +589,7 @@ export interface Addr {
 export interface ConnectPeerArgs {
   addr: Addr
 }
-interface GreenlightConnectPeerArgs {
+export interface GreenlightConnectPeerArgs {
   node_id: string
   addr: string
 }

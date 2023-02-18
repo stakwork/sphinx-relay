@@ -1,6 +1,11 @@
-import * as ByteBuffer from 'bytebuffer'
 import * as fs from 'fs'
-import * as grpc from 'grpc'
+import * as grpc from '@grpc/grpc-js'
+import { loadProto } from './proto'
+import { LightningClient } from './types/lnrpc/Lightning'
+import { LightningClient as ProxyLightningClient } from './types/lnrpc_proxy/Lightning'
+import { NodeClient } from './types/greenlight/Node'
+import { RouterClient } from './types/routerrpc/Router'
+import { WalletUnlockerClient } from './types/lnrpc/WalletUnlocker'
 import { sleep } from '../helpers'
 import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
@@ -16,10 +21,9 @@ import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight'
 import { Req } from '../types'
 
-// var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
-// const IS_LND = config.lightning_provider === "LND";
+const IS_LND = config.lightning_provider === 'LND'
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
 
 export const LND_KEYSEND_KEY = 5482373484
@@ -27,9 +31,26 @@ export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
 const FEE_LIMIT_SAT = 10000
 
-let lightningClient = <any>null
-let walletUnlocker = <any>null
-let routerClient = <any>null
+let lightningClient:
+  | LightningClient
+  | ProxyLightningClient
+  | NodeClient
+  | undefined
+let walletUnlocker: WalletUnlockerClient | undefined
+let routerClient: RouterClient | undefined
+
+// typescript helpers for types
+export function isLND(
+  client: LightningClient | ProxyLightningClient | NodeClient | undefined
+): client is LightningClient | ProxyLightningClient {
+  return IS_LND
+}
+
+export function isGL(
+  client: LightningClient | ProxyLightningClient | NodeClient | undefined
+): client is NodeClient {
+  return IS_GREENLIGHT
+}
 
 export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   try {
@@ -59,15 +80,29 @@ const loadGreenlightCredentials = () => {
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
+export async function loadLightning(): Promise<LightningClient | NodeClient>
+export async function loadLightning(
+  tryProxy: false,
+  ownerPubkey?: string,
+  noCache?: boolean
+): Promise<LightningClient | NodeClient>
 export async function loadLightning(
   tryProxy?: boolean,
   ownerPubkey?: string,
   noCache?: boolean
-): Promise<any> {
+): Promise<LightningClient | ProxyLightningClient | NodeClient>
+export async function loadLightning(
+  tryProxy?: boolean,
+  ownerPubkey?: string,
+  noCache?: boolean
+): Promise<LightningClient | ProxyLightningClient | NodeClient> {
   // only if specified AND available
   if (tryProxy && isProxy() && ownerPubkey) {
-    const pl = await loadProxyLightning(ownerPubkey)
-    return pl
+    lightningClient = await loadProxyLightning(ownerPubkey)
+    if (!lightningClient) {
+      throw new Error('no lightning client')
+    }
+    return lightningClient
   }
   if (lightningClient && !noCache) {
     return lightningClient
@@ -75,60 +110,57 @@ export async function loadLightning(
 
   if (IS_GREENLIGHT) {
     const credentials = loadGreenlightCredentials()
-    const descriptor = grpc.load('proto/greenlight.proto')
-    const greenlight: any = descriptor.greenlight
+    const descriptor = loadProto('greenlight')
+    const greenlight = descriptor.greenlight
     const options = {
       'grpc.ssl_target_name_override': 'localhost',
     }
     const uri = get_greenlight_grpc_uri().split('//')
-    if (!uri[1]) return
-    lightningClient = new greenlight.Node(uri[1], credentials, options)
-    return lightningClient
+    if (!uri[1]) {
+      throw new Error('no lightning client')
+    }
+    return (lightningClient = new greenlight.Node(uri[1], credentials, options))
   }
 
   // LND
   const credentials = loadCredentials()
-  const lnrpcDescriptor = grpc.load('proto/lightning.proto')
-  const lnrpc: any = lnrpcDescriptor.lnrpc
-  lightningClient = new lnrpc.Lightning(
+  const lnrpcDescriptor = loadProto('lightning')
+  const lnrpc = lnrpcDescriptor.lnrpc
+  return (lightningClient = new lnrpc.Lightning(
     LND_IP + ':' + config.lnd_port,
     credentials
-  )
-  return lightningClient
+  ))
 }
 
-export function loadWalletUnlocker(): any {
+export function loadWalletUnlocker(): WalletUnlockerClient {
   if (walletUnlocker) {
     return walletUnlocker
   } else {
     try {
       const credentials = loadCredentials()
-      const lnrpcDescriptor = grpc.load('proto/walletunlocker.proto')
-      const lnrpc: any = lnrpcDescriptor.lnrpc
-      walletUnlocker = new lnrpc.WalletUnlocker(
+      const lnrpcDescriptor = loadProto('walletunlocker')
+      const lnrpc = lnrpcDescriptor.lnrpc
+      return (walletUnlocker = new lnrpc.WalletUnlocker(
         LND_IP + ':' + config.lnd_port,
         credentials
-      )
-      return walletUnlocker
+      ))
     } catch (e) {
       sphinxLogger.error(e)
+      throw e
     }
   }
 }
 
 export function unlockWallet(pwd: string): Promise<void> {
-  return new Promise(async function (resolve, reject) {
-    const wu = await loadWalletUnlocker()
-    wu.unlockWallet(
-      { wallet_password: ByteBuffer.fromUTF8(pwd) },
-      (err, response) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(response)
+  return new Promise(function (resolve, reject) {
+    const wu = loadWalletUnlocker()
+    wu.unlockWallet({ wallet_password: Buffer.from(pwd, 'utf-8') }, (err) => {
+      if (err) {
+        reject(err)
+        return
       }
-    )
+      resolve()
+    })
   })
 }
 
@@ -165,14 +197,14 @@ export async function queryRoute(
   ownerPubkey?: string
 ): Promise<QueryRouteResponse> {
   sphinxLogger.info('queryRoute', logging.Lightning)
-  if (IS_GREENLIGHT) {
+  const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  if (isGL(lightning)) {
     // shim for now
     return {
       success_prob: 1,
       routes: [],
     }
   }
-  const lightning = await loadLightning(true, ownerPubkey) // try proxy
   return new Promise((resolve, reject) => {
     // need to manually add 3 block padding
     // which is done behind the scenes in SendPayment
@@ -193,7 +225,8 @@ export async function queryRoute(
         },
       ]
     }
-    lightning.queryRoutes(options, (err, response) => {
+    // TODO remove any
+    ;(<any>lightning).queryRoutes(options, (err, response) => {
       if (err) {
         reject(err)
         return
@@ -213,7 +246,8 @@ export async function newAddress(
 ): Promise<string> {
   const lightning = await loadLightning()
   return new Promise((resolve, reject) => {
-    lightning.newAddress({ type }, (err, response) => {
+    // TODO now lnd only
+    ;(<LightningClient>lightning).newAddress({ type }, (err, response) => {
       if (err) {
         reject(err)
         return
@@ -235,13 +269,13 @@ export async function sendPayment(
   sphinxLogger.info('sendPayment', logging.Lightning)
   const lightning = await loadLightning(true, ownerPubkey) // try proxy
   return new Promise((resolve, reject) => {
-    if (isProxy()) {
+    if (isProxy(lightning)) {
       const opts = {
         payment_request,
         fee_limit: { fixed: FEE_LIMIT_SAT },
       }
       lightning.sendPaymentSync(opts, (err, response) => {
-        if (err) {
+        if (err || !response) {
           reject(err)
         } else {
           if (response.payment_error) {
@@ -252,22 +286,23 @@ export async function sendPayment(
         }
       })
     } else {
-      if (IS_GREENLIGHT) {
+      if (isGL(lightning)) {
         lightning.pay(
           {
             bolt11: payment_request,
             timeout: 12,
           },
           (err, response) => {
-            if (err == null) {
-              resolve(interfaces.keysendResponse(response))
+            if (err == null && response) {
+              // TODO greenlight types
+              resolve(interfaces.keysendResponse(<any>response))
             } else {
               reject(err)
             }
           }
         )
       } else {
-        const call = lightning.sendPayment({ payment_request })
+        const call = lightning.sendPayment()
         call.on('data', async (response) => {
           if (response.payment_error) {
             reject(response.payment_error)
@@ -301,26 +336,28 @@ export function keysend(
       return reject('keysend: invalid pubkey')
     }
     try {
-      const preimage = ByteBuffer.wrap(crypto.randomBytes(32))
+      const preimage = crypto.randomBytes(32)
       const dest_custom_records = {
         [`${LND_KEYSEND_KEY}`]: preimage,
       }
       if (opts.extra_tlv) {
         Object.entries(opts.extra_tlv).forEach(([k, v]) => {
-          dest_custom_records[k] = ByteBuffer.fromUTF8(v)
+          dest_custom_records[k] = Buffer.from(v, 'utf-8')
         })
+      }
+      if (opts.data) {
+        dest_custom_records[`${SPHINX_CUSTOM_RECORD_KEY}`] = Buffer.from(
+          opts.data,
+          'utf-8'
+        )
       }
       const options: interfaces.KeysendRequest = {
         amt: Math.max(opts.amt, constants.min_sat_amount || 3),
         final_cltv_delta: constants.final_cltv_delta,
-        dest: ByteBuffer.fromHex(opts.dest),
+        dest: Buffer.from(opts.dest, 'hex'),
         dest_custom_records,
-        payment_hash: sha.sha256.arrayBuffer(preimage.toBuffer()),
+        payment_hash: Buffer.from(sha.sha256.arrayBuffer(preimage)),
         dest_features: [9],
-      }
-      if (opts.data) {
-        options.dest_custom_records[`${SPHINX_CUSTOM_RECORD_KEY}`] =
-          ByteBuffer.fromUTF8(opts.data)
       }
       // add in route hints
       if (opts.route_hint && opts.route_hint.includes(':')) {
@@ -334,12 +371,12 @@ export function keysend(
         ]
       }
       // sphinx-proxy sendPaymentSync
-      if (isProxy()) {
+      const lightning = await loadLightning(true, ownerPubkey) // try proxy
+      if (isProxy(lightning)) {
         // console.log("SEND sendPaymentSync", options)
         options.fee_limit = { fixed: FEE_LIMIT_SAT }
-        const lightning = await loadLightning(true, ownerPubkey) // try proxy
         lightning.sendPaymentSync(options, (err, response) => {
-          if (err) {
+          if (err || !response) {
             reject(err)
           } else {
             if (response.payment_error) {
@@ -350,13 +387,27 @@ export function keysend(
           }
         })
       } else {
-        if (IS_GREENLIGHT) {
-          const lightning = await loadLightning(false, ownerPubkey)
-          const req = interfaces.keysendRequest(options)
+        const lightning = await loadLightning(false, ownerPubkey)
+        if (isGL(lightning)) {
+          const req = <interfaces.GreenlightKeysendRequest>(
+            interfaces.keysendRequest(options)
+          )
           // console.log("KEYSEND REQ", JSON.stringify(req))
-          lightning.keysend(req, function (err, response) {
-            if (err == null) {
-              resolve(interfaces.keysendResponse(response))
+          // Type 'GreenlightRoutehint[]' is not assignable to type 'Routehint[]'
+          // from generated types:
+          // export interface Routehint {
+          //  hops?: {
+          //    node_id?: Buffer | Uint8Array | string
+          //    short_channel_id?: string
+          //    fee_base?: number | string | Long
+          //    fee_prop?: number
+          //    cltv_expiry_delta?: number
+          //  }[]
+          //}
+          lightning.keysend(<any>req, function (err, response) {
+            if (err == null && response) {
+              // TODO greenlight type
+              resolve(interfaces.keysendResponse(<any>response))
             } else {
               reject(err)
             }
@@ -366,7 +417,7 @@ export function keysend(
           // new sendPayment (with optional route hints)
           options.fee_limit_sat = FEE_LIMIT_SAT
           options.timeout_seconds = 16
-          const router = await loadRouter()
+          const router = loadRouter()
           const call = router.sendPaymentV2(options)
           call.on('data', function (payment) {
             const state = payment.status || payment.state
@@ -396,18 +447,17 @@ export function keysend(
   })
 }
 
-export function loadRouter(): any {
+export function loadRouter(): RouterClient {
   if (routerClient) {
     return routerClient
   } else {
     const credentials = loadCredentials('router.macaroon')
-    const descriptor = grpc.load('proto/router.proto')
-    const router: any = descriptor.routerrpc
-    routerClient = new router.Router(
+    const descriptor = loadProto('router')
+    const router = descriptor.routerrpc
+    return (routerClient = new router.Router(
       LND_IP + ':' + config.lnd_port,
       credentials
-    )
-    return routerClient
+    ))
   }
 }
 
@@ -479,7 +529,8 @@ export function listInvoices(): Promise<any> {
   sphinxLogger.info('listInvoices', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
-    lightning.listInvoices(
+    // TODO gl support? proxy?
+    ;(<LightningClient>lightning).listInvoices(
       {
         num_max_invoices: 100000,
         reversed: true,
@@ -522,7 +573,7 @@ function listInvoicesPaginated(
 ): Promise<{ first_index_offset: string; invoices: interfaces.Invoice[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
-    lightning.listInvoices(
+    ;(<LightningClient>lightning).listInvoices(
       {
         num_max_invoices: limit,
         index_offset: offset,
@@ -566,7 +617,7 @@ export function listPaymentsPaginated(
 ): Promise<{ first_index_offset: string; payments: interfaces.Payment[] }> {
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
-    lightning.listPayments(
+    ;(<LightningClient>lightning).listPayments(
       {
         max_payments: limit,
         index_offset: offset,
@@ -580,13 +631,11 @@ export function listPaymentsPaginated(
   })
 }
 
-export function listAllPaymentsFull(): Promise<{
-  payments: interfaces.Payment[]
-}> {
+export function listAllPaymentsFull(): Promise<interfaces.Payment[]> {
   sphinxLogger.info('=> list all payments')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
-    lightning.listPayments({}, (err, response) => {
+    ;(<LightningClient>lightning).listPayments({}, (err, response) => {
       if (!err && response && response.payments) {
         resolve(response.payments)
       } else {
@@ -608,6 +657,7 @@ export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
   sphinxLogger.info('signBuffer', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     try {
+      const lightning = await loadLightning(true, ownerPubkey) // try proxy
       if (IS_GREENLIGHT) {
         const pld = interfaces.greenlightSignMessagePayload(msg)
         const sig = libhsmd.Handle(1024, 0, null, pld)
@@ -620,11 +670,10 @@ export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
         finalRecid.writeUInt8(ecRecid, 0)
         const finalSig = Buffer.concat([finalRecid, sigBytes], 65)
         resolve(zbase32.encode(finalSig))
-      } else {
-        const lightning = await loadLightning(true, ownerPubkey) // try proxy
+      } else if (isLND(lightning)) {
         const options = { msg }
         lightning.signMessage(options, function (err, sig) {
-          if (err || !sig.signature) {
+          if (err || !sig || !sig.signature) {
             reject(err)
           } else {
             resolve(sig.signature)
@@ -658,6 +707,7 @@ export function verifyMessage(
   sphinxLogger.info('verifyMessage', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     try {
+      const lightning = await loadLightning(true, ownerPubkey) // try proxy
       if (IS_GREENLIGHT) {
         const fullBytes = zbase32.decode(sig)
         const sigBytes = fullBytes.slice(1)
@@ -689,20 +739,22 @@ export function verifyMessage(
           valid: true,
           pubkey: recoveredPubkey.toString('hex'),
         })
-      } else {
-        const lightning = await loadLightning(true, ownerPubkey) // try proxy
-        const options = {
-          msg: ByteBuffer.fromHex(msg),
-          signature: sig, // zbase32 encoded string
-        }
-        lightning.verifyMessage(options, function (err, res) {
-          // console.log(res)
-          if (err || !res.pubkey) {
-            reject(err)
-          } else {
-            resolve(res)
+      } else if (isLND(lightning)) {
+        // sig is zbase32 encoded
+        lightning.verifyMessage(
+          {
+            msg: Buffer.from(msg, 'hex'),
+            signature: sig,
+          },
+          function (err, res) {
+            // console.log(res)
+            if (err || !res || !res.pubkey) {
+              reject(err)
+            } else {
+              resolve(res)
+            }
           }
-        })
+        )
       }
     } catch (e) {
       reject(e)
@@ -725,12 +777,14 @@ export async function getInfo(
   // log('getInfo')
   return new Promise(async (resolve, reject) => {
     try {
+      // try proxy
       const lightning = await loadLightning(
         tryProxy === false ? false : true,
         undefined,
         noCache
-      ) // try proxy
-      lightning.getInfo({}, function (err, response) {
+      )
+      // TODO remove any
+      ;(<any>lightning).getInfo({}, function (err, response) {
         if (err == null) {
           resolve(interfaces.getInfoResponse(response))
         } else {
@@ -770,8 +824,8 @@ export async function listPeers(
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey)
     const opts = interfaces.listPeersRequest(args)
-    lightning.listPeers(opts, function (err, response) {
-      if (err == null) {
+    ;(<LightningClient>lightning).listPeers(opts, function (err, response) {
+      if (err == null && response) {
         resolve(interfaces.listPeersResponse(response))
       } else {
         reject(err)
@@ -787,27 +841,54 @@ export async function listChannels(
   sphinxLogger.info('listChannels', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
-    const cmd = interfaces.listChannelsCommand()
     const opts = interfaces.listChannelsRequest(args)
-    lightning[cmd](opts, function (err, response) {
-      if (err == null) {
-        resolve(interfaces.listChannelsResponse(response))
-      } else {
-        reject(err)
-      }
-    })
+    if (isGL(lightning)) {
+      lightning.listPeers(opts, function (err, response) {
+        if (err == null && response) {
+          resolve(interfaces.listChannelsResponse(response))
+        } else {
+          reject(err)
+        }
+      })
+    } else if (isLND(lightning)) {
+      // TODO proxy?
+      ;(<LightningClient>lightning).listChannels(
+        opts,
+        function (err, response) {
+          if (err == null && response) {
+            resolve(interfaces.listChannelsResponse(response))
+          } else {
+            reject(err)
+          }
+        }
+      )
+    }
   })
 }
 
-export async function pendingChannels(
-  ownerPubkey?: string
-): Promise<{ [k: string]: any }> {
+// if separate fields get used in relay, it might be worth to add the types, just copy em from src/grpc/types with go to declaration of your ide
+export async function pendingChannels(ownerPubkey?: string): Promise<{
+  total_limbo_balance: string
+  pending_open_channels: unknown[]
+  pending_closing_channels: unknown[]
+  pending_force_closing_channels: unknown[]
+  waiting_close_channels: unknown[]
+}> {
   sphinxLogger.info('pendingChannels', logging.Lightning)
-  if (IS_GREENLIGHT) return []
-  return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
-    lightning.pendingChannels({}, function (err, response) {
-      if (err == null) {
+  const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  if (isGL(lightning)) {
+    return {
+      total_limbo_balance: '0',
+      pending_open_channels: [],
+      pending_closing_channels: [],
+      pending_force_closing_channels: [],
+      waiting_close_channels: [],
+    }
+  }
+  return new Promise((resolve, reject) => {
+    // no pendingChannels on proxy??????
+    ;(<LightningClient>lightning).pendingChannels({}, function (err, response) {
+      if (err == null && response) {
         resolve(response)
       } else {
         reject(err)
@@ -816,42 +897,73 @@ export async function pendingChannels(
   })
 }
 
+/** return void for LND, { node_id: string, features: string } for greenlight*/
 export async function connectPeer(
   args: interfaces.ConnectPeerArgs
-): Promise<{ [k: string]: any }> {
+): Promise<void | {
+  node_id: string
+  features: string
+}> {
   sphinxLogger.info('connectPeer', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
-    const req = interfaces.connectPeerRequest(args)
-    lightning.connectPeer(req, function (err, response) {
-      if (err == null) {
-        resolve(response)
-      } else {
-        reject(err)
-      }
-    })
+    if (isGL(lightning)) {
+      const req = interfaces.connectPeerRequest(args)
+      lightning.connectPeer(
+        <interfaces.GreenlightConnectPeerArgs>req,
+        function (err, response) {
+          if (err == null && response) {
+            resolve(response)
+          } else {
+            reject(err)
+          }
+        }
+      )
+    } else if (isLND(lightning)) {
+      lightning.connectPeer(args, function (err, response) {
+        if (err == null && response) {
+          resolve()
+        } else {
+          reject(err)
+        }
+      })
+    }
   })
 }
 
 export interface OpenChannelArgs {
-  node_pubkey: any // bytes
+  node_pubkey: string | Buffer // bytes
   local_funding_amount: number
   push_sat: number // 0
   sat_per_byte: number // 75?
 }
+export type OpenChannelResponse =
+  | {
+      funding_txid_bytes: never
+      funding_txid_str: string
+      output_index: number
+      funding_txid: 'funding_txid_str'
+    }
+  | {
+      funding_txid_bytes: Buffer
+      funding_txid_str: never
+      output_index: number
+      funding_txid: 'funding_txid_bytes'
+    }
+/** does nothing and returns nothing for greenlight */
 export async function openChannel(
   args: OpenChannelArgs
-): Promise<{ [k: string]: any }> {
+): Promise<OpenChannelResponse | void> {
   sphinxLogger.info('openChannel', logging.Lightning)
   const opts = args || {}
-  if (args && args.node_pubkey) {
-    opts.node_pubkey = ByteBuffer.fromHex(args.node_pubkey)
+  const lightning = await loadLightning()
+  if (isGL(lightning)) {
+    return
   }
-  return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning()
+  return new Promise((resolve, reject) => {
     lightning.openChannelSync(opts, function (err, response) {
-      if (err == null) {
-        resolve(response)
+      if (err == null && response) {
+        resolve(<OpenChannelResponse>response)
       } else {
         reject(err)
       }
@@ -899,21 +1011,38 @@ export async function complexBalances(
     const response = await channelBalance(ownerPubkey)
     return <ComplexBalances>{
       reserve,
-      full_balance: Math.max(0, parseInt(response.balance)),
+      full_balance: response ? Math.max(0, parseInt(response.balance)) : 0,
       balance: spendableBalance,
-      pending_open_balance: parseInt(response.pending_open_balance),
+      pending_open_balance: response
+        ? parseInt(response.pending_open_balance)
+        : 0,
     }
   }
 }
 
-export async function channelBalance(
-  ownerPubkey?: string
-): Promise<{ [k: string]: any }> {
+interface _lnrpc_Amount__Output {
+  sat: string
+  msat: string
+}
+
+export async function channelBalance(ownerPubkey?: string): Promise<{
+  balance: string
+  pending_open_balance: string
+  local_balance: _lnrpc_Amount__Output | null
+  remote_balance: _lnrpc_Amount__Output | null
+  unsettled_local_balance: _lnrpc_Amount__Output | null
+  unsettled_remote_balance: _lnrpc_Amount__Output | null
+  pending_open_local_balance: _lnrpc_Amount__Output | null
+  pending_open_remote_balance: _lnrpc_Amount__Output | null
+} | void> {
   sphinxLogger.info('channelBalance', logging.Lightning)
-  return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  if (isGL(lightning)) {
+    return
+  }
+  return new Promise((resolve, reject) => {
     lightning.channelBalance({}, function (err, response) {
-      if (err == null) {
+      if (err == null && response) {
         resolve(response)
       } else {
         reject(err)
@@ -922,19 +1051,41 @@ export async function channelBalance(
   })
 }
 
+interface _lnrpc_RoutingPolicy__Output {
+  time_lock_delta: number
+  min_htlc: string
+  fee_base_msat: string
+  fee_rate_milli_msat: string
+  disabled: boolean
+  max_htlc_msat: string
+  last_update: number
+}
+
+/** returns void for greenlight */
 export async function getChanInfo(
   chan_id: number,
   tryProxy?: boolean
-): Promise<{ [k: string]: any }> {
+): Promise<{
+  channel_id: string
+  chan_point: string
+  last_update: number
+  node1_pub: string
+  node2_pub: string
+  capacity: string
+  node1_policy: _lnrpc_RoutingPolicy__Output | null
+  node2_policy: _lnrpc_RoutingPolicy__Output | null
+} | void> {
   // log('getChanInfo')
-  if (IS_GREENLIGHT) return {} // skip for now
-  return new Promise(async (resolve, reject) => {
+  const lightning = await loadLightning(tryProxy === false ? false : true) // try proxy
+  if (isGL(lightning)) {
+    return // skip for now
+  }
+  return new Promise((resolve, reject) => {
     if (!chan_id) {
       return reject('no chan id')
     }
-    const lightning = await loadLightning(tryProxy === false ? false : true) // try proxy
     lightning.getChanInfo({ chan_id }, function (err, response) {
-      if (err == null) {
+      if (err == null && response) {
         resolve(response)
       } else {
         reject(err)

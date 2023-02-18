@@ -1,0 +1,1 @@
+{"version":3,"file":"ResolutionOutcome.js","sourceRoot":"","sources":["../../../../../src/grpc/types/lnrpc/ResolutionOutcome.ts"],"names":[],"mappings":";AAAA,uCAAuC;;;AAE1B,QAAA,iBAAiB,GAAG;IAC/B,eAAe,EAAE,iBAAiB;IAClC,OAAO,EAAE,SAAS;IAClB,SAAS,EAAE,WAAW;IACtB,SAAS,EAAE,WAAW;IACtB,WAAW,EAAE,aAAa;IAC1B,OAAO,EAAE,SAAS;CACV,CAAA"}
