@@ -30,7 +30,7 @@ export type _lnrpc_Peer_SyncType =
   | 3
 
 export type _lnrpc_Peer_SyncType__Output =
-  (typeof _lnrpc_Peer_SyncType)[keyof typeof _lnrpc_Peer_SyncType]
+  typeof _lnrpc_Peer_SyncType[keyof typeof _lnrpc_Peer_SyncType]
 
 export interface Peer {
   pub_key?: string

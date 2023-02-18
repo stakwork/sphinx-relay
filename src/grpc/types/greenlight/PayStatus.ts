@@ -8,4 +8,4 @@ export const PayStatus = {
 
 export type PayStatus = 'PENDING' | 0 | 'COMPLETE' | 1 | 'FAILED' | 2
 
-export type PayStatus__Output = (typeof PayStatus)[keyof typeof PayStatus]
+export type PayStatus__Output = typeof PayStatus[keyof typeof PayStatus]

@@ -9,4 +9,4 @@ export const ChanStatusAction = {
 export type ChanStatusAction = 'ENABLE' | 0 | 'DISABLE' | 1 | 'AUTO' | 2
 
 export type ChanStatusAction__Output =
-  (typeof ChanStatusAction)[keyof typeof ChanStatusAction]
+  typeof ChanStatusAction[keyof typeof ChanStatusAction]

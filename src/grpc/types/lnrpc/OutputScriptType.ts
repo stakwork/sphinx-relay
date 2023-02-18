@@ -36,4 +36,4 @@ export type OutputScriptType =
   | 9
 
 export type OutputScriptType__Output =
-  (typeof OutputScriptType)[keyof typeof OutputScriptType]
+  typeof OutputScriptType[keyof typeof OutputScriptType]

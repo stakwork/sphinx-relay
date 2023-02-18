@@ -75,4 +75,4 @@ export type FailureDetail =
   | 22
 
 export type FailureDetail__Output =
-  (typeof FailureDetail)[keyof typeof FailureDetail]
+  typeof FailureDetail[keyof typeof FailureDetail]

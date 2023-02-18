@@ -8,4 +8,4 @@ export const CloseChannelType = {
 export type CloseChannelType = 'MUTUAL' | 0 | 'UNILATERAL' | 1
 
 export type CloseChannelType__Output =
-  (typeof CloseChannelType)[keyof typeof CloseChannelType]
+  typeof CloseChannelType[keyof typeof CloseChannelType]

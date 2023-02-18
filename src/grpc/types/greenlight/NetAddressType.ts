@@ -10,4 +10,4 @@ export const NetAddressType = {
 export type NetAddressType = 'Ipv4' | 0 | 'Ipv6' | 1 | 'TorV2' | 2 | 'TorV3' | 3
 
 export type NetAddressType__Output =
-  (typeof NetAddressType)[keyof typeof NetAddressType]
+  typeof NetAddressType[keyof typeof NetAddressType]

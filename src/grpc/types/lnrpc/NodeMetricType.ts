@@ -8,4 +8,4 @@ export const NodeMetricType = {
 export type NodeMetricType = 'UNKNOWN' | 0 | 'BETWEENNESS_CENTRALITY' | 1
 
 export type NodeMetricType__Output =
-  (typeof NodeMetricType)[keyof typeof NodeMetricType]
+  typeof NodeMetricType[keyof typeof NodeMetricType]

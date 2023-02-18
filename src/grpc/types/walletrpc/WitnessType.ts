@@ -47,4 +47,4 @@ export type WitnessType =
   | 'COMMITMENT_ANCHOR'
   | 13
 
-export type WitnessType__Output = (typeof WitnessType)[keyof typeof WitnessType]
+export type WitnessType__Output = typeof WitnessType[keyof typeof WitnessType]

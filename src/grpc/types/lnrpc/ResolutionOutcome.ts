@@ -24,4 +24,4 @@ export type ResolutionOutcome =
   | 5
 
 export type ResolutionOutcome__Output =
-  (typeof ResolutionOutcome)[keyof typeof ResolutionOutcome]
+  typeof ResolutionOutcome[keyof typeof ResolutionOutcome]

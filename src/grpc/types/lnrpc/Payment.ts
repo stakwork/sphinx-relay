@@ -30,7 +30,7 @@ export type _lnrpc_Payment_PaymentStatus =
   | 3
 
 export type _lnrpc_Payment_PaymentStatus__Output =
-  (typeof _lnrpc_Payment_PaymentStatus)[keyof typeof _lnrpc_Payment_PaymentStatus]
+  typeof _lnrpc_Payment_PaymentStatus[keyof typeof _lnrpc_Payment_PaymentStatus]
 
 export interface Payment {
   payment_hash?: string

@@ -43,7 +43,7 @@ export type _lnrpc_ChannelEventUpdate_UpdateType =
   | 5
 
 export type _lnrpc_ChannelEventUpdate_UpdateType__Output =
-  (typeof _lnrpc_ChannelEventUpdate_UpdateType)[keyof typeof _lnrpc_ChannelEventUpdate_UpdateType]
+  typeof _lnrpc_ChannelEventUpdate_UpdateType[keyof typeof _lnrpc_ChannelEventUpdate_UpdateType]
 
 export interface ChannelEventUpdate {
   open_channel?: _lnrpc_Channel | null

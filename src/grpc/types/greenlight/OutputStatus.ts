@@ -8,4 +8,4 @@ export const OutputStatus = {
 export type OutputStatus = 'CONFIRMED' | 0 | 'UNCONFIRMED' | 1
 
 export type OutputStatus__Output =
-  (typeof OutputStatus)[keyof typeof OutputStatus]
+  typeof OutputStatus[keyof typeof OutputStatus]

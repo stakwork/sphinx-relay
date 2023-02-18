@@ -21,4 +21,4 @@ export type ResolutionType =
   | 4
 
 export type ResolutionType__Output =
-  (typeof ResolutionType)[keyof typeof ResolutionType]
+  typeof ResolutionType[keyof typeof ResolutionType]

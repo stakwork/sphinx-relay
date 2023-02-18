@@ -25,4 +25,4 @@ export type PaymentFailureReason =
   | 5
 
 export type PaymentFailureReason__Output =
-  (typeof PaymentFailureReason)[keyof typeof PaymentFailureReason]
+  typeof PaymentFailureReason[keyof typeof PaymentFailureReason]

@@ -9,4 +9,4 @@ export const ResolveHoldForwardAction = {
 export type ResolveHoldForwardAction = 'SETTLE' | 0 | 'FAIL' | 1 | 'RESUME' | 2
 
 export type ResolveHoldForwardAction__Output =
-  (typeof ResolveHoldForwardAction)[keyof typeof ResolveHoldForwardAction]
+  typeof ResolveHoldForwardAction[keyof typeof ResolveHoldForwardAction]
