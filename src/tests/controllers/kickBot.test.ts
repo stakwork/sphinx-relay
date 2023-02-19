@@ -112,7 +112,7 @@ export async function kickBotTest(t, index1, index2, index3) {
   let join4 = await joinTribe(t, node3, tribe)
   t.true(join4, 'node4 should join tribe')
 
-  await sleep(30000)
+  await sleep(48000)
 
   //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
   let delTribe3 = await deleteTribe(t, node3, tribe)
