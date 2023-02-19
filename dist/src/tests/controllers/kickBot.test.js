@@ -68,6 +68,10 @@ function kickBotTest(t, index1, index2, index3) {
             tribe.owner_route_hint = node1.routeHint;
         let join2 = yield (0, save_1.joinTribe)(t, node2, tribe);
         t.true(join2, 'node2 should join tribe');
+        //AWAIT KICK BOT RESPONSE
+        botAlias = 'KickBot';
+        const botReply6 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        t.truthy(botReply6, 'MotherBot should reply');
         //NODE2 DELETE TRIBE
         let delTribe2 = yield (0, del_1.deleteTribe)(t, node2, tribe);
         t.true(delTribe2, 'node2 should delete tribe for himself');
@@ -101,9 +105,13 @@ function kickBotTest(t, index1, index2, index3) {
             tribe.owner_route_hint = node1.routeHint;
         let join4 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join4, 'node4 should join tribe');
+        //AWAIT KICK BOT RESPONSE
+        botAlias = 'KickBot';
+        const botReply7 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        t.truthy(botReply7, 'MotherBot should reply');
         //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
         let delTribe3 = yield (0, del_1.deleteTribe)(t, node3, tribe);
-        t.true(delTribe3, 'node2 should delete tribe for himself');
+        t.true(delTribe3, 'node3 should delete tribe for himself');
         //CHECK IF NODE3 IS A TRIBE MEMBER
         const member4 = yield (0, get_1.checkTribeMember)(t, node1, node3, tribe);
         t.false(member4, 'Node3 should not be a member of the tribe');
