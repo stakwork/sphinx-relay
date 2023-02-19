@@ -10,7 +10,7 @@ import { sleep } from '../utils/helpers'
 npx ava src/tests/controllers/kickBot.test.ts --verbose --serial --timeout=2m
 */
 
-test('test badge bot: create tribe, join tribe, send messages, boost messages, leave tribe, delete tribe', async (t) => {
+test('test kick bot: create tribe, join tribe, add user to blacklist, remove user from blacklist, leave tribe, delete tribe', async (t) => {
   await kickBotTest(t, 0, 1, 2)
 })
 
@@ -70,7 +70,7 @@ export async function kickBotTest(t, index1, index2, index3) {
   let join2 = await joinTribe(t, node2, tribe)
   t.true(join2, 'node2 should join tribe')
 
-  await sleep(10000)
+  await sleep(30000)
 
   //NODE2 DELETE TRIBE
   let delTribe2 = await deleteTribe(t, node2, tribe)
@@ -112,7 +112,7 @@ export async function kickBotTest(t, index1, index2, index3) {
   let join4 = await joinTribe(t, node3, tribe)
   t.true(join4, 'node4 should join tribe')
 
-  await sleep(10000)
+  await sleep(30000)
 
   //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
   let delTribe3 = await deleteTribe(t, node3, tribe)

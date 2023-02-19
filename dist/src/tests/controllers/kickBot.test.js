@@ -20,7 +20,7 @@ const helpers_1 = require("../utils/helpers");
 /*
 npx ava src/tests/controllers/kickBot.test.ts --verbose --serial --timeout=2m
 */
-(0, ava_1.default)('test badge bot: create tribe, join tribe, send messages, boost messages, leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
+(0, ava_1.default)('test kick bot: create tribe, join tribe, add user to blacklist, remove user from blacklist, leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield kickBotTest(t, 0, 1, 2);
 }));
 function kickBotTest(t, index1, index2, index3) {
@@ -69,7 +69,7 @@ function kickBotTest(t, index1, index2, index3) {
             tribe.owner_route_hint = node1.routeHint;
         let join2 = yield (0, save_1.joinTribe)(t, node2, tribe);
         t.true(join2, 'node2 should join tribe');
-        yield (0, helpers_1.sleep)(10000);
+        yield (0, helpers_1.sleep)(30000);
         //NODE2 DELETE TRIBE
         let delTribe2 = yield (0, del_1.deleteTribe)(t, node2, tribe);
         t.true(delTribe2, 'node2 should delete tribe for himself');
@@ -103,7 +103,7 @@ function kickBotTest(t, index1, index2, index3) {
             tribe.owner_route_hint = node1.routeHint;
         let join4 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join4, 'node4 should join tribe');
-        yield (0, helpers_1.sleep)(10000);
+        yield (0, helpers_1.sleep)(30000);
         //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
         let delTribe3 = yield (0, del_1.deleteTribe)(t, node3, tribe);
         t.true(delTribe3, 'node3 should delete tribe for himself');
