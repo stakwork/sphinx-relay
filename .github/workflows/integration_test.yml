@@ -92,3 +92,12 @@ jobs:
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
+       - name: Check logs
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker logs alice.sphinx
+            docker logs bob.sphinx
+            docker logs carol.sphinx
+            docker wait stack_relaysetup_1;
