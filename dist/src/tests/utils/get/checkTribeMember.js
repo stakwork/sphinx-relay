@@ -17,7 +17,6 @@ function checkTribeMember(t, node1, node2, tribe) {
         for (let i = 0; i < tribeMembers.length; i++) {
             let tribeMember = tribeMembers[i];
             if (tribeMember.public_key === node2.pubkey) {
-                console.log(tribeMember);
                 return true;
             }
         }
