@@ -46,7 +46,7 @@ export function init() {
         const contactJoining = (await models.Contact.findOne({
           where: { id: message.member.id!, tenant: tribe.tenant },
         })) as ContactRecord
-
+        console.log(contactJoining.dataValues)
         const bot = (await models.ChatBot.findOne({
           where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
         })) as ChatBotRecord
@@ -55,7 +55,9 @@ export function init() {
         })) as ContactRecord
 
         const blacklist = JSON.parse(bot.meta || '[]')
+        console.log(blacklist)
         if (blacklist.includes(contactJoining.publicKey)) {
+          console.log('+++++++++++++', 'User was added to blacklist')
           await kickChatMember({
             tribe,
             contactId: contactJoining.id,
