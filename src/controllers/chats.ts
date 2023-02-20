@@ -701,6 +701,11 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
       isTribeOwner,
     })
 
+    console.log(
+      "+++++++++ The sender details that's wanting to join a tribe",
+      theSender
+    )
+
     if (isTribeOwner) {
       setTimeout(() => {
         replayChatHistory(chat, theSender, owner)
