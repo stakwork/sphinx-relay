@@ -46,6 +46,8 @@ export function init() {
         const contactJoining = (await models.Contact.findOne({
           where: { id: message.member.id!, tenant: tribe.tenant },
         })) as ContactRecord
+
+        console.log('++++++++Message Object', message)
         console.log(contactJoining.dataValues)
         const bot = (await models.ChatBot.findOne({
           where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },

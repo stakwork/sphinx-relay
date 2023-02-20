@@ -46,6 +46,7 @@ function init() {
                 const contactJoining = (yield models_1.models.Contact.findOne({
                     where: { id: message.member.id, tenant: tribe.tenant },
                 }));
+                console.log('++++++++Message Object', message);
                 console.log(contactJoining.dataValues);
                 const bot = (yield models_1.models.ChatBot.findOne({
                     where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
