@@ -178,21 +178,19 @@ function sendToStakwork(apikey, callId, filePathAndName, webhook, ownerPubkey, f
             },
             body: JSON.stringify({
                 name: `${callId} file`,
-                workflow_id: 5579,
+                workflow_id: 6173,
                 workflow_params: {
                     set_var: {
                         attributes: {
                             vars: {
                                 media_url: filePathAndName,
                                 episode_title: `Jitsi Call on ${dateInUTC}`,
-                                clip_description: 'My Clip Description',
                                 publish_date: `${dateInUnix}`,
                                 episode_image: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/jitsi.png',
                                 show_img_url: 'https://stakwork-uploads.s3.amazonaws.com/knowledge-graph-joe/sphinx-logo.png',
                                 webhook_url: `${webhook}`,
                                 pubkey: ownerPubkey,
                                 unique_id: filename.slice(0, -4),
-                                clip_length: 60,
                                 show_title: `${tribeName}`,
                             },
                         },
