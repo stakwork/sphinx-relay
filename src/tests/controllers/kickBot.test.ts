@@ -18,6 +18,7 @@ export async function kickBotTest(t, index1, index2, index3) {
   let node1 = nodes[index1]
   let node2 = nodes[index2]
   let node3 = nodes[index3]
+  console.log(nodes)
 
   console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`)
 
@@ -101,7 +102,7 @@ export async function kickBotTest(t, index1, index2, index3) {
   //NODE1 ADDS NODE3 TO BLACKLIST
   const addPubkey2 = `/kick add ${node3.pubkey}`
   await sendTribeMessage(t, node1, tribe, addPubkey2)
-
+  console.log(node3.pubkey)
   //AWAIT KICK BOT RESPONSE
   botAlias = 'KickBot'
   const botReply5 = await getCheckBotMsg(t, node1, botAlias)
@@ -112,7 +113,7 @@ export async function kickBotTest(t, index1, index2, index3) {
   let join4 = await joinTribe(t, node3, tribe)
   t.true(join4, 'node4 should join tribe')
 
-  await sleep(48000)
+  await sleep(50000)
 
   //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
   let delTribe3 = await deleteTribe(t, node3, tribe)

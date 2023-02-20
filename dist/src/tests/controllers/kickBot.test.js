@@ -28,6 +28,7 @@ function kickBotTest(t, index1, index2, index3) {
         let node1 = nodes_1.default[index1];
         let node2 = nodes_1.default[index2];
         let node3 = nodes_1.default[index3];
+        console.log(nodes_1.default);
         console.log(`${node1.alias} and ${node2.alias} and ${node3.alias}`);
         //NODE1 CREATES A TRIBE
         let tribe = yield (0, save_1.createTribe)(t, node1);
@@ -94,6 +95,7 @@ function kickBotTest(t, index1, index2, index3) {
         //NODE1 ADDS NODE3 TO BLACKLIST
         const addPubkey2 = `/kick add ${node3.pubkey}`;
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, addPubkey2);
+        console.log(node3.pubkey);
         //AWAIT KICK BOT RESPONSE
         botAlias = 'KickBot';
         const botReply5 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
@@ -103,7 +105,7 @@ function kickBotTest(t, index1, index2, index3) {
             tribe.owner_route_hint = node1.routeHint;
         let join4 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join4, 'node4 should join tribe');
-        yield (0, helpers_1.sleep)(48000);
+        yield (0, helpers_1.sleep)(50000);
         //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
         let delTribe3 = yield (0, del_1.deleteTribe)(t, node3, tribe);
         t.true(delTribe3, 'node3 should delete tribe for himself');
