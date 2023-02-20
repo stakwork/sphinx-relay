@@ -92,7 +92,7 @@ jobs:
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
-       - name: Check logs
+      - name: Check logs
         with:
           timeout_minutes: 10
           max_attempts: 3
