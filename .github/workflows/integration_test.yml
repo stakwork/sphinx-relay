@@ -83,9 +83,6 @@ jobs:
             docker ps
             docker logs meme.sphinx
             docker logs dave.sphinx
-            docker logs alice.sphinx
-            docker logs bob.sphinx
-            docker logs carol.sphinx
             docker wait stack_relaysetup_1;
       - name: copy file
         uses: canastro/copy-file-action@master
@@ -95,3 +92,6 @@ jobs:
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
+      - name: log alice.sphinx
+        run: |
+          docker logs alice.sphinx
