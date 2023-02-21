@@ -603,7 +603,6 @@ function receiveGroupJoin(payload) {
                 sender_route_hint,
                 isTribeOwner,
             });
-            console.log("+++++++++ The sender details that's wanting to join a tribe", theSender);
             if (isTribeOwner) {
                 setTimeout(() => {
                     (0, chatTribes_1.replayChatHistory)(chat, theSender, owner);
