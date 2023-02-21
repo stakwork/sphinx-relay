@@ -4,7 +4,6 @@ import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg, checkTribeMember } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import { deleteTribe, leaveTribe } from '../utils/del'
-import { sleep } from '../utils/helpers'
 
 /*
 npx ava src/tests/controllers/kickBot.test.ts --verbose --serial --timeout=2m
@@ -70,7 +69,9 @@ export async function kickBotTest(t, index1, index2, index3) {
   let join2 = await joinTribe(t, node2, tribe)
   t.true(join2, 'node2 should join tribe')
 
-  await sleep(30000)
+  botAlias = 'KickBot'
+  const botReply8 = await getCheckBotMsg(t, node1, botAlias)
+  t.truthy(botReply8, 'MotherBot should reply')
 
   //NODE2 DELETE TRIBE
   let delTribe2 = await deleteTribe(t, node2, tribe)
@@ -119,8 +120,6 @@ export async function kickBotTest(t, index1, index2, index3) {
   //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
   let delTribe3 = await deleteTribe(t, node3, tribe)
   t.true(delTribe3, 'node3 should delete tribe for himself')
-
-  await sleep(50000)
 
   //CHECK IF NODE3 IS A TRIBE MEMBER
   const member4 = await checkTribeMember(t, node1, node3, tribe)
