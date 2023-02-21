@@ -128,9 +128,10 @@ function onReceive(payload, dest) {
                 const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
                 console.log('++++++++++ payload sender', payload.sender);
                 // CHECK THEY ARE IN THE GROUP if message
-                const senderContact = (yield models_1.models.Contact.findOne({
-                    where: { publicKey: payload.sender.pub_key, tenant },
-                }));
+                const senderContact = yield checkContactExist(payload.sender.pub_key, tenant);
+                // (await models.Contact.findOne({
+                //   where: { publicKey: payload.sender.pub_key, tenant },
+                // })) as Contact
                 // if (!senderContact) return console.log("=> no sender contact")
                 console.log('+++++++++++ Senders contact from Contact Table', senderContact);
                 const senderContactId = senderContact && senderContact.id;
@@ -680,6 +681,28 @@ function asyncForEach(array, callback) {
         for (let index = 0; index < array.length; index++) {
             yield callback(array[index], index, array);
         }
+    });
+}
+function checkContactExist(pub_key, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => {
+            let i = 0;
+            const interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
+                i++;
+                console.log('+++++++ Check number', i);
+                const senderContact = (yield models_1.models.Contact.findOne({
+                    where: { publicKey: pub_key, tenant },
+                }));
+                if (senderContact) {
+                    clearInterval(interval);
+                    resolve(senderContact);
+                }
+                if (i > 10) {
+                    clearInterval(interval);
+                    resolve(senderContact);
+                }
+            }), 500);
+        });
     });
 }
 //# sourceMappingURL=receive.js.map
