@@ -125,8 +125,7 @@ export async function sendMessage({
         `[Network] => isTribeAdmin msg sending... ${msg}`,
         logging.Network
       )
-      console.log('+++++++ decrypt message', msg)
-      console.log(forwardedFromContactId)
+
       const isBotMsg = await intercept.isBotMsg(
         msg,
         true,

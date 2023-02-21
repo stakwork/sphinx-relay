@@ -138,7 +138,7 @@ async function onReceive(payload: Payload, dest: string) {
       const needsPricePerMessage = typesThatNeedPricePerMessage.includes(
         payload.type
       )
-      console.log('++++++++++ payload sender', payload.sender)
+
       // CHECK THEY ARE IN THE GROUP if message
       const senderContact: Contact = await checkContactExist(
         payload.sender.pub_key,
@@ -148,10 +148,7 @@ async function onReceive(payload: Payload, dest: string) {
       //   where: { publicKey: payload.sender.pub_key, tenant },
       // })) as Contact
       // if (!senderContact) return console.log("=> no sender contact")
-      console.log(
-        '+++++++++++ Senders contact from Contact Table',
-        senderContact
-      )
+
       const senderContactId = senderContact && senderContact.id
       forwardedFromContactId = senderContactId
       if (needsPricePerMessage && senderContactId) {
@@ -732,7 +729,6 @@ async function checkContactExist(
     let i = 0
     const interval = setInterval(async () => {
       i++
-      console.log('+++++++ Check number', i)
       const senderContact: Contact = (await models.Contact.findOne({
         where: { publicKey: pub_key, tenant },
       })) as Contact

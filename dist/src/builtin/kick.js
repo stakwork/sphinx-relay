@@ -46,8 +46,6 @@ function init() {
                 const contactJoining = (yield models_1.models.Contact.findOne({
                     where: { id: message.member.id, tenant: tribe.tenant },
                 }));
-                console.log('++++++++Message Object', message);
-                console.log(contactJoining.dataValues);
                 const bot = (yield models_1.models.ChatBot.findOne({
                     where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
                 }));
@@ -55,9 +53,7 @@ function init() {
                     where: { id: tribe.tenant, isOwner: true, tenant: tribe.tenant },
                 }));
                 const blacklist = JSON.parse(bot.meta || '[]');
-                console.log(blacklist);
                 if (blacklist.includes(contactJoining.publicKey)) {
-                    console.log('+++++++++++++', 'User was added to blacklist');
                     yield (0, kick_1.kickChatMember)({
                         tribe,
                         contactId: contactJoining.id,

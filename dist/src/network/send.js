@@ -85,8 +85,6 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                 // decrypt message.content and message.mediaKey w groupKey
                 msg = yield (0, msg_1.decryptMessage)(msg, chat);
                 logger_1.sphinxLogger.info(`[Network] => isTribeAdmin msg sending... ${msg}`, logger_1.logging.Network);
-                console.log('+++++++ decrypt message', msg);
-                console.log(forwardedFromContactId);
                 const isBotMsg = yield intercept.isBotMsg(msg, true, sender, forwardedFromContactId);
                 if (isBotMsg === true) {
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
