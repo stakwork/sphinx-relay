@@ -741,6 +741,6 @@ async function checkContactExist(
         clearInterval(interval)
         resolve(senderContact)
       }
-    }, 100)
+    }, 150)
   })
 }
