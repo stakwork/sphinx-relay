@@ -17,6 +17,7 @@ const models_1 = require("../models");
 const constants_1 = require("../constants");
 const kick_1 = require("./utill/kick");
 const hideAndUnhideCommand_1 = require("../controllers/botapi/hideAndUnhideCommand");
+const helpers_1 = require("../helpers");
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const botPrefix = '/kick';
@@ -64,9 +65,8 @@ function init() {
                         .setAuthor(botName)
                         .setDescription(`${contactJoining.alias} was kicked out of your tribe, while trying to join`)
                         .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, 'add', tribe.id));
-                    setTimeout(() => {
-                        message.channel.send({ embed });
-                    }, 3500);
+                    yield (0, helpers_1.sleep)(3500);
+                    message.channel.send({ embed });
                     return;
                 }
                 return;

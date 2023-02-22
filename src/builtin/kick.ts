@@ -15,6 +15,7 @@ import {
   removeFromBlackList,
 } from './utill/kick'
 import { determineOwnerOnly } from '../controllers/botapi/hideAndUnhideCommand'
+import { sleep } from '../helpers'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -69,9 +70,8 @@ export function init() {
               `${contactJoining.alias} was kicked out of your tribe, while trying to join`
             )
             .setOnlyOwner(await determineOwnerOnly(botPrefix, 'add', tribe.id))
-          setTimeout(() => {
-            message.channel.send({ embed })
-          }, 3500)
+          await sleep(3500)
+          message.channel.send({ embed })
           return
         }
         return
