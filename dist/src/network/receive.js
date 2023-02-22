@@ -128,7 +128,6 @@ function onReceive(payload, dest) {
                 const needsPricePerMessage = typesThatNeedPricePerMessage.includes(payload.type);
                 // CHECK THEY ARE IN THE GROUP if message
                 const senderContact = yield checkContactExist(payload.sender.pub_key, tenant);
-                console.log('========+++++++', senderContact);
                 // (await models.Contact.findOne({
                 //   where: { publicKey: payload.sender.pub_key, tenant },
                 // })) as Contact

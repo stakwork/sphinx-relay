@@ -144,7 +144,6 @@ async function onReceive(payload: Payload, dest: string) {
         payload.sender.pub_key,
         tenant
       )
-      console.log('========+++++++', senderContact)
       // (await models.Contact.findOne({
       //   where: { publicKey: payload.sender.pub_key, tenant },
       // })) as Contact
