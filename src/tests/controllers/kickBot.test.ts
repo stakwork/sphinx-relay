@@ -117,11 +117,21 @@ export async function kickBotTest(t, index1, index2, index3) {
   // botAlias = 'KickBot'
   // const botReply7 = await getCheckBotMsg(t, node1, botAlias)
   // t.truthy(botReply7, 'MotherBot should reply')
-  await sleep(30000)
 
   //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
   let delTribe3 = await deleteTribe(t, node3, tribe)
   t.true(delTribe3, 'node3 should delete tribe for himself')
+
+  //NODE3 TRIES TO JOIN TRIBE
+  if (node1.routeHint) tribe.owner_route_hint = node1.routeHint
+  let join5 = await joinTribe(t, node3, tribe)
+  t.true(join5, 'node4 should join tribe')
+
+  //DELETE TRIBE BY NODE3 AFTER BEING KICKED OUT
+  let delTribe5 = await deleteTribe(t, node3, tribe)
+  t.true(delTribe5, 'node3 should delete tribe for himself')
+
+  await sleep(30000)
 
   //CHECK IF NODE3 IS A TRIBE MEMBER
   const member4 = await checkTribeMember(t, node1, node3, tribe)
