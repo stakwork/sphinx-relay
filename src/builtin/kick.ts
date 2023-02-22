@@ -64,7 +64,7 @@ export function init() {
             tenant: tribe.tenant,
             owner,
           })
-          await sleep(3500)
+          await sleep(4500)
           const embed = new Sphinx.MessageEmbed()
             .setAuthor(botName)
             .setDescription(

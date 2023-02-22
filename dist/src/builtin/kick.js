@@ -61,7 +61,7 @@ function init() {
                         tenant: tribe.tenant,
                         owner,
                     });
-                    yield (0, helpers_1.sleep)(3500);
+                    yield (0, helpers_1.sleep)(4500);
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor(botName)
                         .setDescription(`${contactJoining.alias} was kicked out of your tribe, while trying to join`)
