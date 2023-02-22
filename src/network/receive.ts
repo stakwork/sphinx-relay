@@ -725,8 +725,14 @@ async function checkContactExist(
   pub_key: string,
   tenant: number
 ): Promise<Contact> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     let i = 0
+    const senderContact: Contact = (await models.Contact.findOne({
+      where: { publicKey: pub_key, tenant },
+    })) as Contact
+    if (senderContact) {
+      resolve(senderContact)
+    }
     const interval = setInterval(async () => {
       i++
       const senderContact: Contact = (await models.Contact.findOne({
@@ -741,6 +747,6 @@ async function checkContactExist(
         clearInterval(interval)
         resolve(senderContact)
       }
-    }, 250)
+    }, 500)
   })
 }

@@ -683,8 +683,14 @@ function asyncForEach(array, callback) {
 }
 function checkContactExist(pub_key, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let i = 0;
+            const senderContact = (yield models_1.models.Contact.findOne({
+                where: { publicKey: pub_key, tenant },
+            }));
+            if (senderContact) {
+                resolve(senderContact);
+            }
             const interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
                 i++;
                 const senderContact = (yield models_1.models.Contact.findOne({
@@ -698,8 +704,8 @@ function checkContactExist(pub_key, tenant) {
                     clearInterval(interval);
                     resolve(senderContact);
                 }
-            }), 250);
-        });
+            }), 500);
+        }));
     });
 }
 //# sourceMappingURL=receive.js.map
