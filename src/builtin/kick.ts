@@ -138,6 +138,7 @@ export function init() {
             .setDescription(
               `You've successfully added this user to the blacklist`
             )
+            .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
           message.channel.send({ embed: resEmbed })
           return
         case 'remove':
@@ -158,6 +159,7 @@ export function init() {
           const newResEmbed = new Sphinx.MessageEmbed()
             .setAuthor(botName)
             .setDescription(msg)
+            .setOnlyOwner(await determineOwnerOnly(botPrefix, cmd, tribe.id))
           message.channel.send({ embed: newResEmbed })
           return
         default:

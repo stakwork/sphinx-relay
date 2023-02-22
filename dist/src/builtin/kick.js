@@ -128,7 +128,8 @@ function init() {
                     yield (0, kick_1.addToBlackList)({ tribe, botPrefix, pubkey });
                     const resEmbed = new Sphinx.MessageEmbed()
                         .setAuthor(botName)
-                        .setDescription(`You've successfully added this user to the blacklist`);
+                        .setDescription(`You've successfully added this user to the blacklist`)
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
                     message.channel.send({ embed: resEmbed });
                     return;
                 case 'remove':
@@ -148,7 +149,8 @@ function init() {
                     });
                     const newResEmbed = new Sphinx.MessageEmbed()
                         .setAuthor(botName)
-                        .setDescription(msg);
+                        .setDescription(msg)
+                        .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, cmd, tribe.id));
                     message.channel.send({ embed: newResEmbed });
                     return;
                 default:
