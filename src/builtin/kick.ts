@@ -15,7 +15,7 @@ import {
   removeFromBlackList,
 } from './utill/kick'
 import { determineOwnerOnly } from '../controllers/botapi/hideAndUnhideCommand'
-// import { sleep } from '../helpers'
+import { sleep } from '../helpers'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -64,7 +64,7 @@ export function init() {
             tenant: tribe.tenant,
             owner,
           })
-          // await sleep(4500)
+          await sleep(3500)
           const embed = new Sphinx.MessageEmbed()
             .setAuthor(botName)
             .setDescription(
