@@ -64,13 +64,13 @@ export function init() {
             tenant: tribe.tenant,
             owner,
           })
+          await sleep(3500)
           const embed = new Sphinx.MessageEmbed()
             .setAuthor(botName)
             .setDescription(
               `${contactJoining.alias} was kicked out of your tribe, while trying to join`
             )
             .setOnlyOwner(await determineOwnerOnly(botPrefix, 'add', tribe.id))
-          await sleep(3500)
           message.channel.send({ embed })
           return
         }

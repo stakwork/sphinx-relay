@@ -61,11 +61,11 @@ function init() {
                         tenant: tribe.tenant,
                         owner,
                     });
+                    yield (0, helpers_1.sleep)(3500);
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor(botName)
                         .setDescription(`${contactJoining.alias} was kicked out of your tribe, while trying to join`)
                         .setOnlyOwner(yield (0, hideAndUnhideCommand_1.determineOwnerOnly)(botPrefix, 'add', tribe.id));
-                    yield (0, helpers_1.sleep)(3500);
                     message.channel.send({ embed });
                     return;
                 }
