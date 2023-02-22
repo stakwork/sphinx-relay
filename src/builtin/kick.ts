@@ -69,7 +69,9 @@ export function init() {
               `${contactJoining.alias} was kicked out of your tribe, while trying to join`
             )
             .setOnlyOwner(await determineOwnerOnly(botPrefix, 'add', tribe.id))
-          message.channel.send({ embed })
+          setTimeout(() => {
+            message.channel.send({ embed })
+          }, 3500)
           return
         }
         return
