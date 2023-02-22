@@ -140,14 +140,11 @@ async function onReceive(payload: Payload, dest: string) {
       )
 
       // CHECK THEY ARE IN THE GROUP if message
-      const senderContact: Contact = await checkContactExist(
-        payload.sender.pub_key,
-        tenant
-      )
-      // (await models.Contact.findOne({
-      //   where: { publicKey: payload.sender.pub_key, tenant },
-      // })) as Contact
-      // if (!senderContact) return console.log("=> no sender contact")
+      const senderContact: Contact = (await models.Contact.findOne({
+        where: { publicKey: payload.sender.pub_key, tenant },
+      })) as Contact
+
+      // if (!senderContact) return console.log('=> no sender contact')
 
       const senderContactId = senderContact && senderContact.id
       forwardedFromContactId = senderContactId
@@ -719,34 +716,4 @@ async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
   }
-}
-
-async function checkContactExist(
-  pub_key: string,
-  tenant: number
-): Promise<Contact> {
-  return new Promise(async (resolve, reject) => {
-    let i = 0
-    const senderContact: Contact = (await models.Contact.findOne({
-      where: { publicKey: pub_key, tenant },
-    })) as Contact
-    if (senderContact) {
-      resolve(senderContact)
-    }
-    const interval = setInterval(async () => {
-      i++
-      const senderContact: Contact = (await models.Contact.findOne({
-        where: { publicKey: pub_key, tenant },
-      })) as Contact
-
-      if (senderContact) {
-        clearInterval(interval)
-        resolve(senderContact)
-      }
-      if (i > 10) {
-        clearInterval(interval)
-        resolve(senderContact)
-      }
-    }, 20)
-  })
 }
