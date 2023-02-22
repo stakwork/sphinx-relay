@@ -705,7 +705,7 @@ function checkContactExist(pub_key, tenant) {
                     clearInterval(interval);
                     resolve(senderContact);
                 }
-            }), 600);
+            }), 400);
         }));
     });
 }
