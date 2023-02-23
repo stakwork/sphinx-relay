@@ -14,7 +14,6 @@ import {
   setupPersonUuid,
   updateLsat,
   updateTotalMsgPerTribe,
-  setupHiddenBotCommands,
 } from './src/utils/setup'
 import * as controllers from './src/controllers'
 import * as connect from './src/utils/connect'
@@ -67,7 +66,6 @@ async function finishSetup() {
   await setupPersonUuid()
   await updateLsat()
   await updateTotalMsgPerTribe()
-  await setupHiddenBotCommands()
   await network.initTribesSubscriptions()
   if (config.hub_api_url) {
     checkInvitesHubInterval(5000)
