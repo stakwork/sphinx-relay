@@ -745,6 +745,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
                 limit: 40,
             }));
             msgs.reverse();
+            console.log('Tribe messages sent to new user', msgs);
             // if theres a pinned msg in this chat
             if (chat.pin) {
                 const pinned = msgs.find((m) => m.uuid === chat.pin);
