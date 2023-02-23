@@ -24,6 +24,7 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
+    if (message.author?.bot !== botPrefix) return
     const arr = (message.content && message.content.split(' ')) || []
     // console.log("message.type", message.type);
     const isGroupJoin = message.type === constants.message_types.group_join
