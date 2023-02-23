@@ -790,6 +790,7 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
         tenant,
         chatId: chat.id,
         type: { [Op.in]: network.typesToReplay },
+        onlyOwner: { [Op.or]: [false, null] },
       },
       order: [['id', 'desc']],
       limit: 40,
