@@ -510,7 +510,7 @@ async function interceptTribeMsgForHiddenCmds(
           {
             onlyOwner: true,
           },
-          { where: { uuid: msg.message.uuid } }
+          { where: { uuid: msg.message.uuid, tenant } }
         )
 
         return true

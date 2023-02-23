@@ -403,7 +403,7 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                     JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
                     yield models_1.models.Message.update({
                         onlyOwner: true,
-                    }, { where: { uuid: msg.message.uuid } });
+                    }, { where: { uuid: msg.message.uuid, tenant } });
                     return true;
                 }
             }
