@@ -161,6 +161,14 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Boolean)
 ], Message.prototype, "push", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+    }),
+    __metadata("design:type", Boolean)
+], Message.prototype, "onlyOwner", void 0);
 Message = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_messages', underscored: true })
 ], Message);

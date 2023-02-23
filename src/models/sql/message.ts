@@ -115,6 +115,13 @@ export default class Message extends Model<Message> {
 
   @Column
   push: boolean
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  })
+  onlyOwner: boolean
 }
 
 /*
