@@ -130,7 +130,7 @@ function onReceive(payload, dest) {
                 const senderContact = (yield models_1.models.Contact.findOne({
                     where: { publicKey: payload.sender.pub_key, tenant },
                 }));
-                // if (!senderContact) return console.log("=> no sender contact")
+                // if (!senderContact) return console.log('=> no sender contact')
                 const senderContactId = senderContact && senderContact.id;
                 forwardedFromContactId = senderContactId;
                 if (needsPricePerMessage && senderContactId) {

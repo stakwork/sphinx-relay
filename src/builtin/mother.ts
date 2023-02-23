@@ -16,7 +16,14 @@ const msg_types = Sphinx.MSG_TYPE
 
 const config = loadConfig()
 
-const builtinBots = ['welcome', 'loopout', 'git', 'badge', 'callRecording']
+const builtinBots = [
+  'welcome',
+  'loopout',
+  'git',
+  'badge',
+  'callRecording',
+  'kick',
+]
 
 // else just message type
 const builtInBotMsgTypes = {
@@ -29,10 +36,12 @@ const builtInBotMsgTypes = {
     constants.message_types.boost,
     constants.message_types.direct_payment,
   ],
+  kick: [constants.message_types.group_join, constants.message_types.message],
 }
 
 const builtInHiddenCmd = {
   callRecording: ['hide', 'update'],
+  kick: ['hide', 'add', 'remove'],
 }
 
 const builtInBotNames = {
@@ -41,6 +50,7 @@ const builtInBotNames = {
   git: 'GitBot',
   badge: 'BadgeBot',
   callRecording: 'CallRecordingBot',
+  kick: 'KickBot',
 }
 
 export function init() {

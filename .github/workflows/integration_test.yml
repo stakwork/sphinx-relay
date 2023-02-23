@@ -44,6 +44,7 @@ jobs:
             'badgeBot',
             'actionHistory',
             'silentTribeBotMsg',
+            'kickBot',
           ]
         node: [12, 16]
     steps:
@@ -74,7 +75,7 @@ jobs:
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
-          timeout_minutes: 10 
+          timeout_minutes: 10
           max_attempts: 3
           command: |
             GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/proxy.yml --project-dir ./stack up -d;

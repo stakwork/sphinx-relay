@@ -125,6 +125,7 @@ export async function sendMessage({
         `[Network] => isTribeAdmin msg sending... ${msg}`,
         logging.Network
       )
+
       const isBotMsg = await intercept.isBotMsg(
         msg,
         true,
