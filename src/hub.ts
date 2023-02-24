@@ -160,13 +160,13 @@ async function massPingHubFromProxies(rn) {
       clean,
       last_active: o.lastActive,
       route_hint: o.routeHint,
-      relay_commit: rn.relay_commit,
-      lnd_version: rn.lnd_version,
-      relay_version: rn.relay_version,
-      testnet: rn.testnet,
-      ip: rn.ip,
-      public_ip: rn.public_ip,
-      node_alias: rn.node_alias,
+      relay_commit: rn?.relay_commit,
+      lnd_version: rn?.lnd_version,
+      relay_version: rn?.relay_version,
+      testnet: rn?.testnet,
+      ip: rn?.ip,
+      public_ip: rn?.public_ip,
+      node_alias: rn?.node_alias,
     })
   })
   if (logging.Proxy) {
