@@ -18,7 +18,11 @@ import { Badge, Req, Res } from '../../types'
 import constants from '../../constants'
 import { createBadgeBot } from '../../utils/badgeBot'
 import { genSignedTimestamp } from '../../utils/tribes'
-import { updateBadgeInTribe, determineBadgeHost } from '../../utils/people'
+import {
+  updateBadgeInTribe,
+  determineBadgeHost,
+  reissueBadgeOnLiquid,
+} from '../../utils/people'
 
 const config = loadConfig()
 // accessed from people.sphinx.chat website
@@ -729,4 +733,47 @@ async function updateTribeServer(
     owner_pubkey: tribe.ownerPubkey,
     tribe_host: tribe.host,
   })
+}
+
+export async function reissueBadge(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { amount, badge_id } = req.body
+
+  if (
+    !amount ||
+    !badge_id ||
+    typeof amount !== 'number' ||
+    typeof badge_id !== 'number'
+  ) {
+    return failure(res, 'Invalid amount or badge_id')
+  }
+
+  try {
+    const badge = (await models.Badge.findOne({
+      where: { tenant, badgeId: badge_id },
+    })) as BadgeRecord
+
+    if (!badge) {
+      return failure(res, 'invalid badge')
+    }
+
+    // Reach out to liquid server
+    await reissueBadgeOnLiquid({
+      amount,
+      badge_id,
+      owner_pubkey: req.owner.publicKey,
+    })
+
+    //update affected badge row
+    await badge.update({ amount: badge.amount + amount })
+
+    return success(res, 'Badge reissued successfully')
+  } catch (error) {
+    console.log(error)
+    return failure(res, error)
+  }
 }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeBadgeFromTribe = exports.getBadgePerTribe = exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
+exports.reissueBadge = exports.removeBadgeFromTribe = exports.getBadgePerTribe = exports.badgeTemplates = exports.updateBadge = exports.addBadgeToTribe = exports.deleteBadge = exports.getAllBadge = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.refreshJWT = exports.uploadPublicPic = exports.deleteTicketByAdmin = exports.deletePersonProfile = exports.createPeopleProfile = void 0;
 const meme = require("../../utils/meme");
 const FormData = require("form-data");
 const node_fetch_1 = require("node-fetch");
@@ -642,4 +642,40 @@ function updateTribeServer(badge, tribe, action) {
         });
     });
 }
+function reissueBadge(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { amount, badge_id } = req.body;
+        if (!amount ||
+            !badge_id ||
+            typeof amount !== 'number' ||
+            typeof badge_id !== 'number') {
+            return (0, res_1.failure)(res, 'Invalid amount or badge_id');
+        }
+        try {
+            const badge = (yield models_1.models.Badge.findOne({
+                where: { tenant, badgeId: badge_id },
+            }));
+            if (!badge) {
+                return (0, res_1.failure)(res, 'invalid badge');
+            }
+            // Reach out to liquid server
+            yield (0, people_1.reissueBadgeOnLiquid)({
+                amount,
+                badge_id,
+                owner_pubkey: req.owner.publicKey,
+            });
+            //update affected badge row
+            yield badge.update({ amount: badge.amount + amount });
+            return (0, res_1.success)(res, 'Badge reissued successfully');
+        }
+        catch (error) {
+            console.log(error);
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.reissueBadge = reissueBadge;
 //# sourceMappingURL=personal.js.map

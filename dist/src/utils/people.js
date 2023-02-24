@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.determineBadgeHost = exports.updateBadgeInTribe = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
+exports.reissueBadgeOnLiquid = exports.determineBadgeHost = exports.updateBadgeInTribe = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
 const config_1 = require("./config");
 const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
@@ -64,7 +64,7 @@ function deletePerson(host, id, owner_pubkey) {
             // const j = await r.json()
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`unauthorized to delete person`, logger_1.logging.Tribes);
+            logger_1.sphinxLogger.error([`unauthorized to delete person`, logger_1.logging.Tribes]);
             throw e;
         }
     });
@@ -85,7 +85,10 @@ function deleteTicketByAdmin(host, pubkey, created, owner_pubkey) {
             }
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`unauthorized to delete ticket by admin`, logger_1.logging.Tribes);
+            logger_1.sphinxLogger.error([
+                `unauthorized to delete ticket by admin`,
+                logger_1.logging.Tribes,
+            ]);
             throw e;
         }
     });
@@ -115,7 +118,7 @@ function claimOnLiquid({ host, asset, to, amount, memo, owner_pubkey, }) {
             return res;
         }
         catch (e) {
-            logger_1.sphinxLogger.error('[liquid] unauthorized to move asset', e);
+            logger_1.sphinxLogger.error(['[liquid] unauthorized to move asset', e]);
             throw e;
         }
     });
@@ -171,7 +174,7 @@ function createBadge({ icon, amount, name, owner_pubkey }) {
             return res;
         }
         catch (error) {
-            logger_1.sphinxLogger.error('[liquid] Badge was not created', error);
+            logger_1.sphinxLogger.error(['[liquid] Badge was not created', error]);
             throw error;
         }
     });
@@ -198,7 +201,7 @@ function transferBadge({ to, asset, amount, memo, owner_pubkey }) {
             return res;
         }
         catch (error) {
-            logger_1.sphinxLogger.error('[liquid] Badge was not transfered', error);
+            logger_1.sphinxLogger.error(['[liquid] Badge was not transfered', error]);
             throw error;
         }
     });
@@ -235,4 +238,58 @@ function determineBadgeHost(badgeCode) {
     return badge_host[badgeCode];
 }
 exports.determineBadgeHost = determineBadgeHost;
+function reissueBadgeOnLiquid({ amount, badge_id, owner_pubkey, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+            const r = yield (0, node_fetch_1.default)(`${config.boltwall_server}/reissue_badge?token=${token}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    amount,
+                    id: badge_id,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                if (r.status === 402) {
+                    const header = r.headers.get('www-authenticate');
+                    const lsat = lsat_js_1.Lsat.fromHeader(header);
+                    const payment = yield Lightning.sendPayment(lsat.invoice);
+                    let preimage;
+                    if (payment.payment_preimage) {
+                        preimage = payment.payment_preimage.toString('hex');
+                        lsat.setPreimage(preimage);
+                        const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
+                        const paidRes = yield (0, node_fetch_1.default)(`${config.boltwall_server}/reissue_badge?token=${token}`, {
+                            method: 'PUT',
+                            body: JSON.stringify({
+                                amount,
+                                id: badge_id,
+                            }),
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: lsat.toToken(),
+                            },
+                        });
+                        if (!paidRes.ok) {
+                            throw 'failed to reissue badge ' + paidRes.status;
+                        }
+                        const res = yield paidRes.json();
+                        return res;
+                    }
+                }
+                else {
+                    throw 'failed to reissue badge ' + r.status;
+                }
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(['[Badge] Problem reissueing badge', error]);
+            throw error;
+        }
+    });
+}
+exports.reissueBadgeOnLiquid = reissueBadgeOnLiquid;
 //# sourceMappingURL=people.js.map

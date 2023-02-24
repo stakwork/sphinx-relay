@@ -14,6 +14,12 @@ interface UpdateTribeBadge {
   tribe_host: string
 }
 
+interface reissueOnLiquid {
+  amount: number
+  owner_pubkey: string
+  badge_id: number
+}
+
 const config = loadConfig()
 
 export async function createOrEditPerson(
@@ -79,7 +85,7 @@ export async function deletePerson(host, id, owner_pubkey) {
     }
     // const j = await r.json()
   } catch (e) {
-    sphinxLogger.error(`unauthorized to delete person`, logging.Tribes)
+    sphinxLogger.error([`unauthorized to delete person`, logging.Tribes])
     throw e
   }
 }
@@ -99,7 +105,10 @@ export async function deleteTicketByAdmin(host, pubkey, created, owner_pubkey) {
       throw 'failed to delete ticket by admin' + r.status
     }
   } catch (e) {
-    sphinxLogger.error(`unauthorized to delete ticket by admin`, logging.Tribes)
+    sphinxLogger.error([
+      `unauthorized to delete ticket by admin`,
+      logging.Tribes,
+    ])
     throw e
   }
 }
@@ -135,7 +144,7 @@ export async function claimOnLiquid({
     const res = await r.json()
     return res
   } catch (e) {
-    sphinxLogger.error('[liquid] unauthorized to move asset', e)
+    sphinxLogger.error(['[liquid] unauthorized to move asset', e])
     throw e
   }
 }
@@ -197,7 +206,7 @@ export async function createBadge({ icon, amount, name, owner_pubkey }) {
     const res = await r.json()
     return res
   } catch (error) {
-    sphinxLogger.error('[liquid] Badge was not created', error)
+    sphinxLogger.error(['[liquid] Badge was not created', error])
     throw error
   }
 }
@@ -224,7 +233,7 @@ export async function transferBadge({ to, asset, amount, memo, owner_pubkey }) {
     const res = await r.json()
     return res
   } catch (error) {
-    sphinxLogger.error('[liquid] Badge was not transfered', error)
+    sphinxLogger.error(['[liquid] Badge was not transfered', error])
     throw error
   }
 }
@@ -260,4 +269,67 @@ export async function updateBadgeInTribe({
 export function determineBadgeHost(badgeCode: number) {
   const badge_host = { 1: 'liquid.sphinx.chat' }
   return badge_host[badgeCode]
+}
+
+export async function reissueBadgeOnLiquid({
+  amount,
+  badge_id,
+  owner_pubkey,
+}: reissueOnLiquid) {
+  try {
+    const token = await genSignedTimestamp(owner_pubkey)
+    const r = await fetch(
+      `${config.boltwall_server}/reissue_badge?token=${token}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          amount,
+          id: badge_id,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      if (r.status === 402) {
+        const header: string = r.headers.get('www-authenticate')!
+        const lsat: Lsat = Lsat.fromHeader(header)
+
+        const payment: SendPaymentResponse = await Lightning.sendPayment(
+          lsat.invoice
+        )
+        let preimage: string
+        if (payment.payment_preimage) {
+          preimage = payment.payment_preimage.toString('hex')
+          lsat.setPreimage(preimage)
+          const token = await genSignedTimestamp(owner_pubkey)
+          const paidRes = await fetch(
+            `${config.boltwall_server}/reissue_badge?token=${token}`,
+            {
+              method: 'PUT',
+              body: JSON.stringify({
+                amount,
+                id: badge_id,
+              }),
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: lsat.toToken(),
+              },
+            }
+          )
+          if (!paidRes.ok) {
+            throw 'failed to reissue badge ' + paidRes.status
+          }
+          const res = await paidRes.json()
+          return res
+        }
+      } else {
+        throw 'failed to reissue badge ' + r.status
+      }
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    sphinxLogger.error(['[Badge] Problem reissueing badge', error])
+    throw error
+  }
 }
