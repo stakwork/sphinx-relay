@@ -69,7 +69,6 @@ function finishSetup() {
         yield (0, setup_1.setupPersonUuid)();
         yield (0, setup_1.updateLsat)();
         yield (0, setup_1.updateTotalMsgPerTribe)();
-        yield (0, setup_1.setupHiddenBotCommands)();
         yield network.initTribesSubscriptions();
         if (config.hub_api_url) {
             (0, hub_1.checkInvitesHubInterval)(5000);

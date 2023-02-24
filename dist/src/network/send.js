@@ -401,6 +401,9 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 if (bot.botPrefix === splitedContent[0] &&
                     bot.hiddenCommands &&
                     JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
+                    yield models_1.models.Message.update({
+                        onlyOwner: true,
+                    }, { where: { uuid: msg.message.uuid, tenant } });
                     return true;
                 }
             }

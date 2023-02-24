@@ -6,7 +6,6 @@ import {
   ContactRecord,
   Lsat,
   ChatMemberRecord,
-  ChatBotRecord,
   ChatRecord,
 } from '../models'
 import { exec } from 'child_process'
@@ -192,27 +191,6 @@ const updateTotalMsgPerTribe = async (): Promise<void> => {
   }
 }
 
-const setupHiddenBotCommands = async (): Promise<void> => {
-  const builtInHiddenCmd = {
-    '/callRecording': ['hide', 'update'],
-  }
-  try {
-    const bots = (await models.ChatBot.findAll()) as ChatBotRecord[]
-    for (let i = 0; i < bots.length; i++) {
-      const bot = bots[i]
-      const defaultHiddenCommands = builtInHiddenCmd[bot.botPrefix] || ['hide']
-      await bot.update({
-        hiddenCommands: JSON.stringify(defaultHiddenCommands),
-      })
-    }
-  } catch (error) {
-    sphinxLogger.error(
-      ['error trying to setup default hidden commands for bots', error],
-      logging.DB
-    )
-  }
-}
-
 export {
   setupDatabase,
   setupOwnerContact,
@@ -221,7 +199,6 @@ export {
   setupPersonUuid,
   updateLsat,
   updateTotalMsgPerTribe,
-  setupHiddenBotCommands,
 }
 
 async function setupDone() {

@@ -401,6 +401,8 @@ export default async function migrate(): Promise<void> {
   }
 
   addTableColumn(`sphinx_call_recording`, `version_id`, 'TEXT')
+
+  addTableColumn('sphinx_messages', 'only_owner', 'BOOLEAN')
 }
 
 async function addTenant(tableName) {

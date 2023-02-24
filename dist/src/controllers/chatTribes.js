@@ -739,6 +739,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
                     tenant,
                     chatId: chat.id,
                     type: { [sequelize_1.Op.in]: network.typesToReplay },
+                    onlyOwner: { [sequelize_1.Op.or]: [false, null] },
                 },
                 order: [['id', 'desc']],
                 limit: 40,

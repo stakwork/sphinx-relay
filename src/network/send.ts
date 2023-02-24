@@ -493,6 +493,7 @@ async function interceptTribeMsgForHiddenCmds(
     const newChat = (await models.Chat.findOne({
       where: { uuid: msg.chat.uuid },
     })) as ChatRecord
+
     const bots = (await models.ChatBot.findAll({
       where: { tenant, chatId: newChat.id },
     })) as ChatBotRecord[]
@@ -505,6 +506,13 @@ async function interceptTribeMsgForHiddenCmds(
         bot.hiddenCommands &&
         JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
       ) {
+        await models.Message.update(
+          {
+            onlyOwner: true,
+          },
+          { where: { uuid: msg.message.uuid, tenant } }
+        )
+
         return true
       }
     }
