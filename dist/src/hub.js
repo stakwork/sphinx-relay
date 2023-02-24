@@ -144,7 +144,7 @@ function massPingHubFromProxies(rn) {
         yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
             const proxyNodeInfo = yield (0, nodeinfo_1.proxynodeinfo)(o.publicKey);
             const clean = o.authToken === null || o.authToken === '';
-            nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn.relay_commit, lnd_version: rn.lnd_version, relay_version: rn.relay_version, testnet: rn.testnet, ip: rn.ip, public_ip: rn.public_ip, node_alias: rn.node_alias }));
+            nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn === null || rn === void 0 ? void 0 : rn.relay_commit, lnd_version: rn === null || rn === void 0 ? void 0 : rn.lnd_version, relay_version: rn === null || rn === void 0 ? void 0 : rn.relay_version, testnet: rn === null || rn === void 0 ? void 0 : rn.testnet, ip: rn === null || rn === void 0 ? void 0 : rn.ip, public_ip: rn === null || rn === void 0 ? void 0 : rn.public_ip, node_alias: rn === null || rn === void 0 ? void 0 : rn.node_alias }));
         }));
         if (logger_1.logging.Proxy) {
             const cleanNodes = nodes.filter((n) => n.clean);
