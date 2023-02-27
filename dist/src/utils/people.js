@@ -242,7 +242,7 @@ function reissueBadgeOnLiquid({ amount, badge_id, owner_pubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
-            const r = yield (0, node_fetch_1.default)(`${config.boltwall_server}/reissue_badge?token=${token}`, {
+            const r = yield (0, node_fetch_1.default)(`${config.boltwall_server}/v1/reissue_badge?token=${token}`, {
                 method: 'PUT',
                 body: JSON.stringify({
                     amount,
@@ -260,7 +260,7 @@ function reissueBadgeOnLiquid({ amount, badge_id, owner_pubkey, }) {
                         preimage = payment.payment_preimage.toString('hex');
                         lsat.setPreimage(preimage);
                         const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
-                        const paidRes = yield (0, node_fetch_1.default)(`${config.boltwall_server}/reissue_badge?token=${token}`, {
+                        const paidRes = yield (0, node_fetch_1.default)(`${config.boltwall_server}/v1/reissue_badge?token=${token}`, {
                             method: 'PUT',
                             body: JSON.stringify({
                                 amount,

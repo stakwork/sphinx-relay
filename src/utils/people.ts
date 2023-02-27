@@ -279,7 +279,7 @@ export async function reissueBadgeOnLiquid({
   try {
     const token = await genSignedTimestamp(owner_pubkey)
     const r = await fetch(
-      `${config.boltwall_server}/reissue_badge?token=${token}`,
+      `${config.boltwall_server}/v1/reissue_badge?token=${token}`,
       {
         method: 'PUT',
         body: JSON.stringify({
@@ -303,7 +303,7 @@ export async function reissueBadgeOnLiquid({
           lsat.setPreimage(preimage)
           const token = await genSignedTimestamp(owner_pubkey)
           const paidRes = await fetch(
-            `${config.boltwall_server}/reissue_badge?token=${token}`,
+            `${config.boltwall_server}/v1/reissue_badge?token=${token}`,
             {
               method: 'PUT',
               body: JSON.stringify({
