@@ -324,11 +324,13 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     message_price,
     parent_id,
     pay,
+    call,
   } = req.body
 
   let msgtype = constants.message_types.message
   if (boost) msgtype = constants.message_types.boost
   if (pay) msgtype = constants.message_types.direct_payment
+  if (call) msgtype = constants.message_types.call
   let boostOrPay = false
   if (boost || pay) boostOrPay = true
 

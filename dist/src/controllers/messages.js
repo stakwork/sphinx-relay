@@ -268,12 +268,14 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, pay, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, pay, call, } = req.body;
     let msgtype = constants_1.default.message_types.message;
     if (boost)
         msgtype = constants_1.default.message_types.boost;
     if (pay)
         msgtype = constants_1.default.message_types.direct_payment;
+    if (call)
+        msgtype = constants_1.default.message_types.call;
     let boostOrPay = false;
     if (boost || pay)
         boostOrPay = true;
