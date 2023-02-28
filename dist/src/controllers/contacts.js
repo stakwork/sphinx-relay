@@ -612,6 +612,7 @@ function extractAttrs(body) {
         'tip_amount',
         'route_hint',
         'price_to_meet',
+        'push_kit_token',
     ];
     const attrs = {};
     Object.keys(body).forEach((key) => {

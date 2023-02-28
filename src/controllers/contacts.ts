@@ -680,6 +680,7 @@ function extractAttrs(body): {
   tip_amount?: number
   route_hint?: string
   price_to_meet?: number
+  push_kit_token?: string
   tenant?: number
 } {
   const fields_to_update = [
@@ -696,6 +697,7 @@ function extractAttrs(body): {
     'tip_amount',
     'route_hint',
     'price_to_meet',
+    'push_kit_token',
   ]
   const attrs = {}
   Object.keys(body).forEach((key) => {

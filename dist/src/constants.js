@@ -64,6 +64,7 @@ const constants = {
         boost: 29,
         query: 30,
         query_response: 31,
+        call: 32,
     },
     network_types: {
         lightning: 0,

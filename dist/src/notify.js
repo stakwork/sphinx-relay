@@ -9,13 +9,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetNotifyTribeCount = exports.sendNotification = void 0;
+exports.resetNotifyTribeCount = exports.sendNotification = exports.sendVoipNotification = void 0;
 const logger_1 = require("./utils/logger");
 const models_1 = require("./models");
 const node_fetch_1 = require("node-fetch");
 const sequelize_1 = require("sequelize");
 const constants_1 = require("./constants");
 const logger_2 = require("./utils/logger");
+function sendVoipNotification(owner, notification) {
+    const params = {
+        device_id: owner.pushKitToken,
+        type: 'incoming_call',
+        notification,
+    };
+    triggerVoipNotification(params);
+}
+exports.sendVoipNotification = sendVoipNotification;
 const sendNotification = (chat, name, type, owner, amount, push) => __awaiter(void 0, void 0, void 0, function* () {
     if (!owner)
         return logger_2.sphinxLogger.error(`=> sendNotification error: no owner`);
@@ -170,6 +179,15 @@ function triggerNotification(params) {
         headers: { 'Content-Type': 'application/json' },
     }).catch((error) => {
         logger_2.sphinxLogger.error(`[hub error]: triggerNotification ${error}`);
+    });
+}
+function triggerVoipNotification(params) {
+    (0, node_fetch_1.default)('https://hub.sphinx.chat/api/v1/nodes/notify', {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json' },
+    }).catch((error) => {
+        logger_2.sphinxLogger.error(`[hub error]: triggerVoipNotification ${error}`);
     });
 }
 const bounceTimeouts = {};
