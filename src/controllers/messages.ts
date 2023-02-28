@@ -1,7 +1,11 @@
 import { models, Message, Chat } from '../models'
 import { Op, FindOptions } from 'sequelize'
 import { indexBy } from 'underscore'
-import { sendNotification, resetNotifyTribeCount } from '../hub'
+import {
+  sendNotification,
+  resetNotifyTribeCount,
+  sendVoipNotification,
+} from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
@@ -768,4 +772,75 @@ export const clearMessages = async (req: Req, res: Res): Promise<void> => {
   await models.Message.destroy({ where: { tenant }, truncate: true })
 
   success(res, {})
+}
+
+export const receiveVoip = async (payload: Payload): Promise<void> => {
+  sphinxLogger.info(`received Voip ${payload}`)
+  const {
+    owner,
+    sender,
+    chat,
+    content,
+    msg_id,
+    chat_type,
+    sender_alias,
+    msg_uuid,
+    date_string,
+    reply_uuid,
+    parent_id,
+    amount,
+    network_type,
+    sender_photo_url,
+    message_status,
+    hasForwardedSats,
+    person,
+    remote_content,
+  } = await helpers.parseReceiveParams(payload)
+
+  if (!owner || !sender || !chat) {
+    return sphinxLogger.info('=> invalid message')
+  }
+  const tenant: number = owner.id
+  const text = content
+
+  let date = new Date()
+  date.setMilliseconds(0)
+  if (date_string) date = new Date(date_string)
+
+  const msg: { [k: string]: string | number | Date } = {
+    chatId: chat.id,
+    uuid: msg_uuid,
+    type: constants.message_types.call,
+    sender: sender.id,
+    date: date,
+    amount: amount || 0,
+    messageContent: text,
+    createdAt: date,
+    updatedAt: date,
+    network_type,
+    tenant,
+    forwardedSats: hasForwardedSats,
+    status: message_status || constants.statuses.received,
+  }
+  const isTribe = chat_type === constants.chat_types.tribe
+  if (isTribe) {
+    msg.senderAlias = sender_alias
+    msg.senderPic = sender_photo_url
+    if (remote_content) msg.remoteMessageContent = remote_content
+    msg.person = person
+  }
+  if (reply_uuid) msg.replyUuid = reply_uuid
+  if (parent_id) msg.parentId = parent_id
+  const message: Message = (await models.Message.create(msg)) as Message
+
+  socket.sendJson(
+    {
+      type: 'call',
+      response: jsonUtils.messageToJson(message, chat, sender),
+    },
+    tenant
+  )
+  sendVoipNotification(owner, { caller_name: sender.alias, link_url: text })
+
+  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
 }
