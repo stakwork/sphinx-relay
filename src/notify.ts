@@ -15,6 +15,17 @@ type NotificationType =
   | 'keysend'
   | 'boost'
 
+// VoipNotification ONLY in 1-1 conversations
+interface VoipNotification {
+  caller_name: string
+  link_url: string // this is the encrypted message content
+}
+interface VoipParams {
+  device_id: string
+  type: string // "incoming_call"
+  notification: VoipNotification
+}
+
 interface Notification {
   message?: string
   sound?: string
@@ -25,7 +36,19 @@ interface Params {
   notification: Notification
 }
 
-const sendNotification = async (
+export function sendVoipNotification(
+  owner: Contact,
+  notification: VoipNotification
+) {
+  const params = {
+    device_id: owner.pushKitToken,
+    type: 'incoming_call',
+    notification,
+  }
+  triggerVoipNotification(params)
+}
+
+export const sendNotification = async (
   chat: Chat,
   name: string,
   type: NotificationType,
@@ -197,7 +220,15 @@ function triggerNotification(params: Params) {
   })
 }
 
-export { sendNotification }
+function triggerVoipNotification(params: VoipParams) {
+  fetch('https://hub.sphinx.chat/api/v1/nodes/notify', {
+    method: 'POST',
+    body: JSON.stringify(params),
+    headers: { 'Content-Type': 'application/json' },
+  }).catch((error) => {
+    sphinxLogger.error(`[hub error]: triggerVoipNotification ${error}`)
+  })
+}
 
 const bounceTimeouts = {}
 const tribeCounts = {}
