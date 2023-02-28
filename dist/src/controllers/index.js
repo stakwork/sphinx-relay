@@ -232,5 +232,6 @@ exports.ACTIONS = {
     [msgtypes.boost]: messages.receiveBoost,
     [msgtypes.query]: queries.receiveQuery,
     [msgtypes.query_response]: queries.receiveQueryResponse,
+    [msgtypes.call]: messages.receiveVoip,
 };
 //# sourceMappingURL=index.js.map

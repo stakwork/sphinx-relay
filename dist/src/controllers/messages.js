@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
+exports.receiveVoip = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
 const models_1 = require("../models");
 const sequelize_1 = require("sequelize");
 const underscore_1 = require("underscore");
@@ -629,4 +629,52 @@ const clearMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     (0, res_1.success)(res, {});
 });
 exports.clearMessages = clearMessages;
+const receiveVoip = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    logger_1.sphinxLogger.info(`received Voip ${payload}`);
+    const { owner, sender, chat, content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, hasForwardedSats, person, remote_content, } = yield helpers.parseReceiveParams(payload);
+    if (!owner || !sender || !chat) {
+        return logger_1.sphinxLogger.info('=> invalid message');
+    }
+    const tenant = owner.id;
+    const text = content;
+    let date = new Date();
+    date.setMilliseconds(0);
+    if (date_string)
+        date = new Date(date_string);
+    const msg = {
+        chatId: chat.id,
+        uuid: msg_uuid,
+        type: constants_1.default.message_types.call,
+        sender: sender.id,
+        date: date,
+        amount: amount || 0,
+        messageContent: text,
+        createdAt: date,
+        updatedAt: date,
+        network_type,
+        tenant,
+        forwardedSats: hasForwardedSats,
+        status: message_status || constants_1.default.statuses.received,
+    };
+    const isTribe = chat_type === constants_1.default.chat_types.tribe;
+    if (isTribe) {
+        msg.senderAlias = sender_alias;
+        msg.senderPic = sender_photo_url;
+        if (remote_content)
+            msg.remoteMessageContent = remote_content;
+        msg.person = person;
+    }
+    if (reply_uuid)
+        msg.replyUuid = reply_uuid;
+    if (parent_id)
+        msg.parentId = parent_id;
+    const message = (yield models_1.models.Message.create(msg));
+    socket.sendJson({
+        type: 'call',
+        response: jsonUtils.messageToJson(message, chat, sender),
+    }, tenant);
+    (0, hub_1.sendVoipNotification)(owner, { caller_name: sender.alias, link_url: text });
+    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+});
+exports.receiveVoip = receiveVoip;
 //# sourceMappingURL=messages.js.map
