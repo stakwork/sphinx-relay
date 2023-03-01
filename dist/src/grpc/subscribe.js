@@ -31,9 +31,9 @@ function subscribeInvoices(parseKeysendInvoice) {
         const call = lightning[cmd]({});
         call.on('data', function (response) {
             return __awaiter(this, void 0, void 0, function* () {
-                // console.log("=> INVOICE RAW", response)
+                console.log('=> INVOICE RAW', response);
                 const inv = interfaces.subscribeResponse(response);
-                // console.log("INVOICE RECEIVED", inv)
+                console.log('INVOICE RECEIVED', inv);
                 // loginvoice(inv)
                 if (inv.state !== interfaces.InvoiceState.SETTLED) {
                     return;
