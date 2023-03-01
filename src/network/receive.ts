@@ -633,6 +633,7 @@ export async function parseKeysendInvoice(
     return
   }
 
+  console.log('recs', recs)
   const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY]
   const data = buf && buf.toString()
   const value = i && i.value && parseInt(i.value)
@@ -643,13 +644,13 @@ export async function parseKeysendInvoice(
   let isKeysendType = false
   let memo = ''
   let sender_pubkey
-  console.log('parseKeysend')
+  console.log('parseKeysend', data)
   if (data) {
     try {
       const payload: Payload = parsePayload(data)
       console.log('payload', JSON.stringify(payload))
       if (payload && payload.type === constants.message_types.keysend) {
-        // console.log('====> IS KEYSEND TYPE')
+        console.log('====> IS KEYSEND TYPE')
         // console.log('====> MEMOOOO', i.memo)
         isKeysendType = true
         memo = (payload.message && payload.message.content) as string

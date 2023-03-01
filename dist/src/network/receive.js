@@ -590,6 +590,7 @@ function parseKeysendInvoice(i) {
             logger_1.sphinxLogger.error(`=> parseKeysendInvoice ERROR: cant find owner`);
             return;
         }
+        console.log('recs', recs);
         const buf = recs && recs[Lightning.SPHINX_CUSTOM_RECORD_KEY];
         const data = buf && buf.toString();
         const value = i && i.value && parseInt(i.value);
@@ -599,13 +600,13 @@ function parseKeysendInvoice(i) {
         let isKeysendType = false;
         let memo = '';
         let sender_pubkey;
-        console.log('parseKeysend');
+        console.log('parseKeysend', data);
         if (data) {
             try {
                 const payload = parsePayload(data);
                 console.log('payload', JSON.stringify(payload));
                 if (payload && payload.type === constants_1.default.message_types.keysend) {
-                    // console.log('====> IS KEYSEND TYPE')
+                    console.log('====> IS KEYSEND TYPE');
                     // console.log('====> MEMOOOO', i.memo)
                     isKeysendType = true;
                     memo = (payload.message && payload.message.content);
