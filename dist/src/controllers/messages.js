@@ -389,7 +389,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
     }
     // final send
-    // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
+    console.log('==> FINAL SEND MSG PARAMS', sendMessageParams);
     network.sendMessage(sendMessageParams);
 });
 exports.sendMessage = sendMessage;

@@ -451,7 +451,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   }
 
   // final send
-  // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
+  console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
   network.sendMessage(sendMessageParams)
 }
 
