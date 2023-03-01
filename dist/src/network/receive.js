@@ -599,9 +599,11 @@ function parseKeysendInvoice(i) {
         let isKeysendType = false;
         let memo = '';
         let sender_pubkey;
+        console.log('parseKeysend');
         if (data) {
             try {
                 const payload = parsePayload(data);
+                console.log('payload', JSON.stringify(payload));
                 if (payload && payload.type === constants_1.default.message_types.keysend) {
                     // console.log('====> IS KEYSEND TYPE')
                     // console.log('====> MEMOOOO', i.memo)
@@ -618,6 +620,7 @@ function parseKeysendInvoice(i) {
             isKeysendType = true;
         }
         if (isKeysendType) {
+            console.log('IS KEYSEND TPYE');
             if (!memo) {
                 (0, hub_1.sendNotification)(new models_1.Chat(), '', 'keysend', owner, value || 0);
             }
@@ -625,6 +628,7 @@ function parseKeysendInvoice(i) {
             return;
         }
         let payload;
+        console.log('data[0]', data[0]);
         if (data[0] === '{') {
             try {
                 payload = yield parseAndVerifyPayload(data);

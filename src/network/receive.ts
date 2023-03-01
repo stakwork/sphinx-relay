@@ -643,9 +643,11 @@ export async function parseKeysendInvoice(
   let isKeysendType = false
   let memo = ''
   let sender_pubkey
+  console.log('parseKeysend')
   if (data) {
     try {
       const payload: Payload = parsePayload(data)
+      console.log('payload', JSON.stringify(payload))
       if (payload && payload.type === constants.message_types.keysend) {
         // console.log('====> IS KEYSEND TYPE')
         // console.log('====> MEMOOOO', i.memo)
@@ -660,6 +662,7 @@ export async function parseKeysendInvoice(
     isKeysendType = true
   }
   if (isKeysendType) {
+    console.log('IS KEYSEND TPYE')
     if (!memo) {
       sendNotification(new Chat(), '', 'keysend', owner, value || 0)
     }
@@ -668,6 +671,7 @@ export async function parseKeysendInvoice(
   }
 
   let payload
+  console.log('data[0]', data[0])
   if (data[0] === '{') {
     try {
       payload = await parseAndVerifyPayload(data)
