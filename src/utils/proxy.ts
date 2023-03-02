@@ -38,7 +38,9 @@ const NEW_USER_NUM =
   config.proxy_new_nodes || config.proxy_new_nodes === 0
     ? config.proxy_new_nodes
     : 2
-const SATS_PER_USER = config.proxy_initial_sats || 5000
+let SATS_PER_USER = config.proxy_initial_sats
+if (!(SATS_PER_USER || SATS_PER_USER === 0)) SATS_PER_USER = 5000
+
 // isOwner users with no authToken
 export async function generateNewUsers() {
   if (!isProxy()) {
@@ -77,7 +79,7 @@ export async function generateNewUsers() {
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
   await asyncForEach(arr, async () => {
-    await generateNewUser(rootpk)
+    await generateNewUser(rootpk, SATS_PER_USER)
   })
 }
 
@@ -90,7 +92,7 @@ export async function generateNewUser(
 ): Promise<any> {
   try {
     let route = 'generate'
-    if (initial_sat) {
+    if (initial_sat || initial_sat === 0) {
       route = `generate?sats=${initial_sat}`
       sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
     }
@@ -98,7 +100,9 @@ export async function generateNewUser(
       method: 'POST',
       headers: { 'x-admin-token': config.proxy_admin_token },
     })
+
     const j = await r.json()
+
     const contact = {
       publicKey: j.pubkey,
       routeHint: `${rootpk}:${j.channel}`,
@@ -254,5 +258,19 @@ function getProxyLNDBalance(): Promise<number> {
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
+  }
+}
+
+export async function getProxyXpub() {
+  try {
+    const r = await fetch(adminURL + 'origin_xpub', {
+      method: 'GET',
+      headers: { 'x-admin-token': config.proxy_admin_token },
+    })
+    const j = await r.json()
+    return j
+  } catch (e) {
+    console.log(e)
+    throw e
   }
 }

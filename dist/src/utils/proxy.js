@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProxyRootPubkey = exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
+exports.getProxyXpub = exports.getProxyRootPubkey = exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("@grpc/grpc-js");
 const proto_1 = require("../grpc/proto");
@@ -44,7 +44,9 @@ exports.genUsersInterval = genUsersInterval;
 const NEW_USER_NUM = config.proxy_new_nodes || config.proxy_new_nodes === 0
     ? config.proxy_new_nodes
     : 2;
-const SATS_PER_USER = config.proxy_initial_sats || 5000;
+let SATS_PER_USER = config.proxy_initial_sats;
+if (!(SATS_PER_USER || SATS_PER_USER === 0))
+    SATS_PER_USER = 5000;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -83,7 +85,7 @@ function generateNewUsers() {
         const arr = new Array(n);
         const rootpk = yield getProxyRootPubkey();
         yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {
-            yield generateNewUser(rootpk);
+            yield generateNewUser(rootpk, SATS_PER_USER);
         }));
     });
 }
@@ -95,7 +97,7 @@ function generateNewUser(rootpk, initial_sat) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let route = 'generate';
-            if (initial_sat) {
+            if (initial_sat || initial_sat === 0) {
                 route = `generate?sats=${initial_sat}`;
                 logger_1.sphinxLogger.info(`new user with sats: ${initial_sat}`, logger_1.logging.Proxy);
             }
@@ -263,4 +265,21 @@ function asyncForEach(array, callback) {
         }
     });
 }
+function getProxyXpub() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield (0, node_fetch_1.default)(adminURL + 'origin_xpub', {
+                method: 'GET',
+                headers: { 'x-admin-token': config.proxy_admin_token },
+            });
+            const j = yield r.json();
+            return j;
+        }
+        catch (e) {
+            console.log(e);
+            throw e;
+        }
+    });
+}
+exports.getProxyXpub = getProxyXpub;
 //# sourceMappingURL=proxy.js.map

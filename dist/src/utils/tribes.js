@@ -24,6 +24,7 @@ const proxy_1 = require("./proxy");
 const sequelize_1 = require("sequelize");
 const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
+const interfaces_1 = require("../grpc/interfaces");
 const config = (0, config_1.loadConfig)();
 // {pubkey: {host: Client} }
 const clients = {};
@@ -146,17 +147,22 @@ function initAndSubscribeTopics(onMessage) {
         const host = getHost();
         try {
             if ((0, proxy_1.isProxy)()) {
-                const allOwners = (yield models_1.models.Contact.findAll({
-                    where: { isOwner: true },
-                }));
-                if (!(allOwners && allOwners.length))
-                    return;
-                (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
-                    if (c.publicKey && c.publicKey.length === 66) {
-                        yield lazyClient(c.publicKey, host, onMessage);
-                        yield subExtraHostsForTenant(c.id, c.publicKey, onMessage); // 1 is the tenant id on non-proxy
-                    }
-                }));
+                if (config.proxy_hd_keys) {
+                    yield proxy_hd_client(onMessage);
+                }
+                else {
+                    const allOwners = (yield models_1.models.Contact.findAll({
+                        where: { isOwner: true },
+                    }));
+                    if (!(allOwners && allOwners.length))
+                        return;
+                    (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+                        if (c.publicKey && c.publicKey.length === 66) {
+                            yield lazyClient(c.publicKey, host, onMessage);
+                            yield subExtraHostsForTenant(c.id, c.publicKey, onMessage); // 1 is the tenant id on non-proxy
+                        }
+                    }));
+                }
             }
             else {
                 // just me
@@ -566,4 +572,164 @@ exports.getHost = getHost;
 function urlBase64(buf) {
     return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
 }
+function proxy_hd_client(onMessage) {
+    return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+        let connected = false;
+        function reconnect() {
+            return __awaiter(this, void 0, void 0, function* () {
+                try {
+                    const host = getHost();
+                    const xpub_res = yield (0, proxy_1.getProxyXpub)();
+                    console.log(xpub_res);
+                    if (!(xpub_res === null || xpub_res === void 0 ? void 0 : xpub_res.xpub) || !(xpub_res === null || xpub_res === void 0 ? void 0 : xpub_res.pubkey)) {
+                        throw 'Could not get xpub key or pubkey';
+                    }
+                    const xpub = xpub_res.xpub;
+                    const pubkey = xpub_res.pubkey;
+                    // console.log(pubkey)
+                    const pwd = yield genSignedTimestamp(pubkey);
+                    if (connected)
+                        return;
+                    const url = mqttURL(host);
+                    const cl = mqtt.connect(url, {
+                        username: xpub,
+                        password: pwd,
+                        reconnectPeriod: 0, // dont auto reconnect
+                    });
+                    logger_1.sphinxLogger.info(`try to connect: ${url}`, logger_1.logging.Tribes);
+                    cl.on('connect', function () {
+                        return __awaiter(this, void 0, void 0, function* () {
+                            // first check if its already connected to this host (in case it takes a long time)
+                            connected = true;
+                            if (clients[xpub] &&
+                                clients[xpub][host] &&
+                                clients[xpub][host].connected) {
+                                resolve(clients[xpub][host]);
+                                return;
+                            }
+                            logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Tribes);
+                            if (!clients[xpub])
+                                clients[xpub] = {};
+                            clients[xpub][host] = cl; // ADD TO MAIN STATE
+                            cl.on('close', function (e) {
+                                logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
+                                // setTimeout(() => reconnect(), 2000);
+                                connected = false;
+                                if (clients[xpub] && clients[xpub][host]) {
+                                    delete clients[xpub][host];
+                                }
+                            });
+                            cl.on('error', function (e) {
+                                logger_1.sphinxLogger.error(`error:  ${e.message}`, logger_1.logging.Tribes);
+                            });
+                            cl.on('message', function (topic, message) {
+                                // console.log("============>>>>> GOT A MSG", topic, message)
+                                if (onMessage)
+                                    onMessage(topic, message);
+                            });
+                            const allOwners = (yield models_1.models.Contact.findAll({
+                                where: { isOwner: true, id: { [sequelize_1.Op.not]: 1 } },
+                            }));
+                            if (!(allOwners && allOwners.length))
+                                return;
+                            (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+                                try {
+                                    if (c.publicKey && c.publicKey.length === 66) {
+                                        let routeHint = c.routeHint;
+                                        if (!routeHint) {
+                                            throw `Invalid route hint: ${c.routeHint}`;
+                                        }
+                                        const index = yield (0, interfaces_1.txIndexFromChannelId)(routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length));
+                                        yield hdSubscribe(c.publicKey, index, cl);
+                                    }
+                                }
+                                catch (error) {
+                                    logger_1.sphinxLogger.error([`error ${error}`, logger_1.logging.Tribes]);
+                                }
+                            }));
+                        });
+                    });
+                }
+                catch (error) {
+                    logger_1.sphinxLogger.error([`error initializing ${error}`, logger_1.logging.Tribes]);
+                }
+            });
+        }
+        while (true) {
+            if (!connected) {
+                reconnect();
+            }
+            yield (0, helpers_1.sleep)(5000 + Math.round(Math.random() * 8000));
+        }
+    }));
+}
+function hdSubscribe(pubkey, index, client) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield subscribeAndCheck(client, `${pubkey}/#`);
+        }
+        catch (e) {
+            try {
+                console.log('=> first time connect');
+                yield subscribeAndCheck(client, `${pubkey}/INDEX_${index}`);
+                yield subscribeAndCheck(client, `${pubkey}/#`);
+            }
+            catch (error) {
+                console.log(error);
+                logger_1.sphinxLogger.error([`error subscribing`, error, logger_1.logging.Tribes]);
+            }
+        }
+    });
+}
+function subscribeAndCheck(client, topic) {
+    return new Promise((resolve, reject) => {
+        try {
+            client.subscribe(topic, function (err, granted) {
+                if (!err) {
+                    const qos = granted && granted[0] && granted[0].qos;
+                    // https://github.com/mqttjs/MQTT.js/pull/351
+                    if ([0, 1, 2].includes(qos)) {
+                        logger_1.sphinxLogger.info(`subscribed! ${granted[0].topic}`, logger_1.logging.Tribes);
+                        resolve();
+                    }
+                    else {
+                        reject(`Could not subscribe topic: ${topic}`);
+                    }
+                }
+                else {
+                    console.log(err);
+                    logger_1.sphinxLogger.error([`error subscribing`, err], logger_1.logging.Tribes);
+                    reject();
+                }
+            });
+        }
+        catch (error) {
+            console.log(error);
+            reject();
+        }
+    });
+}
+// cl.subscribe(
+//   `${c.publicKey}/INDEX_${index}`,
+//   function (err, granted) {
+//     if (err)
+//       sphinxLogger.error(
+//         `error subscribing ${err}`,
+//         logging.Tribes
+//       )
+//     else {
+//       const qos = granted[0].qos
+//       console.log(granted)
+//       if ([0, 1, 2].includes(qos)) {
+//         sphinxLogger.info(
+//           `subscribed! ${c.publicKey}/INDEX_${index}`,
+//           logging.Tribes
+//         )
+//         resolve(cl)
+//       } else {
+//         console.warn('subscribe error!')
+//       }
+//     }
+//   }
+// )
 //# sourceMappingURL=tribes.js.map

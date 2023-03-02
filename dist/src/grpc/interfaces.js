@@ -356,9 +356,14 @@ var GreenlightChannelState;
     GreenlightChannelState["DUALOPEND_AWAITING_LOCKIN"] = "DUALOPEND_AWAITING_LOCKIN";
 })(GreenlightChannelState || (GreenlightChannelState = {}));
 function txIndexFromChannelId(int) {
-    const l = long.fromString(int, true);
-    const txIndex = l.shiftRight(16).and(0xffffff);
-    return txIndex.toNumber();
+    try {
+        const l = long.fromString(int, true);
+        const txIndex = l.shiftRight(16).and(0xffffff);
+        return txIndex.toNumber();
+    }
+    catch (error) {
+        throw 'XPUB index was not extracted successfully';
+    }
 }
 exports.txIndexFromChannelId = txIndexFromChannelId;
 function shortChanIDfromInt64(int) {

@@ -687,9 +687,13 @@ enum GreenlightChannelState {
 }
 
 export function txIndexFromChannelId(int: string): number {
-  const l = long.fromString(int, true)
-  const txIndex = l.shiftRight(16).and(0xffffff)
-  return txIndex.toNumber()
+  try {
+    const l = long.fromString(int, true)
+    const txIndex = l.shiftRight(16).and(0xffffff)
+    return txIndex.toNumber()
+  } catch (error) {
+    throw 'XPUB index was not extracted successfully'
+  }
 }
 
 function shortChanIDfromInt64(int: string): string {
