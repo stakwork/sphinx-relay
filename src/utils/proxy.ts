@@ -8,6 +8,7 @@ import { models, ContactRecord } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
+import { Op } from 'sequelize'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -48,7 +49,7 @@ export async function generateNewUsers() {
     return
   }
   const newusers = await models.Contact.findAll({
-    where: { isOwner: true, authToken: null },
+    where: { isOwner: true, authToken: null, id: { [Op.ne]: 1 } },
   })
   if (newusers.length >= NEW_USER_NUM) {
     sphinxLogger.info(`already have new users`, logging.Proxy)

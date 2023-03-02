@@ -648,6 +648,7 @@ function proxy_hd_client(onMessage) {
                             }));
                         });
                     });
+                    yield subscribeProxyRootTenant(host, onMessage);
                 }
                 catch (error) {
                     logger_1.sphinxLogger.error([`error initializing ${error}`, logger_1.logging.Tribes]);
@@ -731,4 +732,17 @@ function subscribeAndCheck(client, topic) {
 //     }
 //   }
 // )
+function subscribeProxyRootTenant(host, onMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const nonProxyTenant = (yield models_1.models.Contact.findOne({
+                where: { isOwner: true, id: 1 },
+            }));
+            yield lazyClient(nonProxyTenant.publicKey, host, onMessage);
+        }
+        catch (error) {
+            throw 'Error subscribing proxy root tenant';
+        }
+    });
+}
 //# sourceMappingURL=tribes.js.map

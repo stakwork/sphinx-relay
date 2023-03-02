@@ -19,6 +19,7 @@ const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
+const sequelize_1 = require("sequelize");
 // var protoLoader = require('@grpc/proto-loader')
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -55,7 +56,7 @@ function generateNewUsers() {
             return;
         }
         const newusers = yield models_1.models.Contact.findAll({
-            where: { isOwner: true, authToken: null },
+            where: { isOwner: true, authToken: null, id: { [sequelize_1.Op.ne]: 1 } },
         });
         if (newusers.length >= NEW_USER_NUM) {
             logger_1.sphinxLogger.info(`already have new users`, logger_1.logging.Proxy);

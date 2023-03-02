@@ -4,7 +4,14 @@ import * as LND from '../grpc/lightning'
 import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
-import { Contact, Chat, models, sequelize, ChatRecord } from '../models'
+import {
+  Contact,
+  Chat,
+  models,
+  sequelize,
+  ChatRecord,
+  ContactRecord,
+} from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
 import { isProxy, getProxyXpub } from './proxy'
@@ -722,6 +729,7 @@ function proxy_hd_client(
             }
           })
         })
+        await subscribeProxyRootTenant(host, onMessage)
       } catch (error) {
         sphinxLogger.error([`error initializing ${error}`, logging.Tribes])
       }
@@ -799,3 +807,17 @@ function subscribeAndCheck(client: mqtt.Client, topic: string) {
 //     }
 //   }
 // )
+
+async function subscribeProxyRootTenant(
+  host: string,
+  onMessage?: (topic: string, message: Buffer) => void
+) {
+  try {
+    const nonProxyTenant = (await models.Contact.findOne({
+      where: { isOwner: true, id: 1 },
+    })) as ContactRecord
+    await lazyClient(nonProxyTenant.publicKey, host, onMessage)
+  } catch (error) {
+    throw 'Error subscribing proxy root tenant'
+  }
+}
