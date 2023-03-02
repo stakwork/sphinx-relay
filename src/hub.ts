@@ -10,7 +10,11 @@ import constants from './constants'
 import { loadConfig } from './utils/config'
 import * as https from 'https'
 import { isProxy } from './utils/proxy'
-import { sendNotification, resetNotifyTribeCount } from './notify'
+import {
+  sendNotification,
+  resetNotifyTribeCount,
+  sendVoipNotification,
+} from './notify'
 import { logging, sphinxLogger } from './utils/logger'
 
 const pingAgent = new https.Agent({
@@ -160,13 +164,13 @@ async function massPingHubFromProxies(rn) {
       clean,
       last_active: o.lastActive,
       route_hint: o.routeHint,
-      relay_commit: rn.relay_commit,
-      lnd_version: rn.lnd_version,
-      relay_version: rn.relay_version,
-      testnet: rn.testnet,
-      ip: rn.ip,
-      public_ip: rn.public_ip,
-      node_alias: rn.node_alias,
+      relay_commit: rn?.relay_commit,
+      lnd_version: rn?.lnd_version,
+      relay_version: rn?.relay_version,
+      testnet: rn?.testnet,
+      ip: rn?.ip,
+      public_ip: rn?.public_ip,
+      node_alias: rn?.node_alias,
     })
   })
   if (logging.Proxy) {
@@ -314,6 +318,7 @@ export {
   payInviteInHub,
   payInviteInvoice,
   resetNotifyTribeCount,
+  sendVoipNotification,
 }
 
 async function asyncForEach(array, callback) {

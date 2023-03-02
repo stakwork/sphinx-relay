@@ -94,6 +94,9 @@ export default class Contact extends Model<Contact> {
 
   @Column
   isAdmin: boolean
+
+  @Column
+  pushKitToken: string
 }
 
 export interface ContactRecord extends Contact {

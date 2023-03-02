@@ -580,7 +580,6 @@ function proxy_hd_client(onMessage) {
                 try {
                     const host = getHost();
                     const xpub_res = yield (0, proxy_1.getProxyXpub)();
-                    console.log(xpub_res);
                     if (!(xpub_res === null || xpub_res === void 0 ? void 0 : xpub_res.xpub) || !(xpub_res === null || xpub_res === void 0 ? void 0 : xpub_res.pubkey)) {
                         throw 'Could not get xpub key or pubkey';
                     }

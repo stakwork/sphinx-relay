@@ -39,6 +39,7 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT')
   await clearTransportTokens()
   addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN')
+  addTableColumn('sphinx_contacts', 'push_kit_token')
 
   addTableColumn('sphinx_chats', 'notify', 'BIGINT')
 
