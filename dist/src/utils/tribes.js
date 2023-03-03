@@ -718,7 +718,6 @@ function subscribeProxyRootTenant(host, onMessage) {
             const nonProxyTenant = (yield models_1.models.Contact.findOne({
                 where: { isOwner: true, id: 1 },
             }));
-            console.log(nonProxyTenant.dataValues);
             yield lazyClient(nonProxyTenant.publicKey, host, onMessage);
         }
         catch (error) {

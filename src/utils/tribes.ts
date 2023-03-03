@@ -793,7 +793,7 @@ async function subscribeProxyRootTenant(
     const nonProxyTenant = (await models.Contact.findOne({
       where: { isOwner: true, id: 1 },
     })) as ContactRecord
-    console.log(nonProxyTenant.dataValues)
+
     await lazyClient(nonProxyTenant.publicKey, host, onMessage)
   } catch (error) {
     throw 'Error subscribing proxy root tenant'
